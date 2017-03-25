@@ -25,7 +25,7 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package devcons;
+package com.github.devconslejme;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -37,6 +37,12 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
+import com.github.devconslejme.misc.AutoCompleteI;
+import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
+
+/**
+ * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+ */
 public class JavaScriptI {
 	private static JavaScriptI instance = new JavaScriptI();
 	/**instance*/ public static JavaScriptI i(){return instance;}
@@ -49,6 +55,7 @@ public class JavaScriptI {
 	public JavaScriptI() {
 		jse  = new ScriptEngineManager().getEngineByMimeType("text/javascript");
 		bndJSE = jse.createBindings();
+		astrIdList.add("help");
 	}
 	
 	/**
@@ -57,15 +64,19 @@ public class JavaScriptI {
 	 * @param objBindValue
 	 * @return previous value for id
 	 */
-	private void setIdValue(String strBindId, Object objBindValue){
+	public void setJSBinding(String strBindId, Object objBindValue){
 		if(bndJSE.put(strBindId,objBindValue) != null){
 			throw new NullPointerException("already set: "+strBindId);
 		}
 		
 		astrIdList.add(strBindId);
 	}
-	public void setIdValue(Object objBindValue){
-		setIdValue(objBindValue.getClass().getSimpleName(), objBindValue);
+	/**
+	 * 
+	 * @param objBindValue automatic id based on object class simple name
+	 */
+	public void setJSBinding(Object objBindValue){
+		setJSBinding(objBindValue.getClass().getSimpleName(), objBindValue);
 	}
 	protected void submitUserCommand() {
 		String strJS = ConsolePluginI.i().getInputText();
@@ -73,10 +84,10 @@ public class JavaScriptI {
 		strJS=strJS.trim();
 		if(strJS.isEmpty())return;
 		
-		LoggingI.i().logSubEntry("_____________ UserCommand ____________");
+		LoggingI.i().logMarker("UserCommand");
 		
 		if(strJS.equalsIgnoreCase("help")){
-			for(String str:astrIdList)LoggingI.i().logSubEntry(str);
+			showHelp("");
 		}else{
 			execScript(strJS);
 		}
@@ -84,6 +95,30 @@ public class JavaScriptI {
 		ConsolePluginI.i().scrollToBottom();
 	}
 	
+	public AutoCompleteResult showHelp(String strFilter) {
+//		AutoCompleteResult ar = null;
+//		ArrayList<String> astr;
+//		if(strFilter.isEmpty()){
+//			astr = astrIdList;
+//		}else{
+//			ar = AutoCompleteI.i().autoComplete(strFilter, astrIdList, false, false);
+//			astr = ar.getResultList();
+//		}
+//		
+//		for(String str:astr){
+//			LoggingI.i().logSubEntry(str);
+//		}
+		
+		AutoCompleteResult ar = AutoCompleteI.i().autoComplete(strFilter, astrIdList, false, false);
+		
+		LoggingI.i().logMarker("Help for: "+strFilter);
+		for(String str:ar.getResultList()){
+			LoggingI.i().logSubEntry(str);
+		}
+		
+		return ar;
+	}
+
 	public void execScript(String strJS){
 		try {
 			objJSLastEval=jse.eval(strJS,bndJSE);

@@ -25,27 +25,29 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package devcons;
+package com.github.devconslejme.misc;
 
-public class ClipboardI {
-	private static ClipboardI instance = new ClipboardI();
-	/*instance*/ public static ClipboardI i(){return instance;}
-	
-	public void copy() {
-//		ConsolePluginI.i().getSelectedEntry();
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented yet");
-	}
+import com.jme3.math.FastMath;
+import com.simsilica.lemur.ListBox;
+import com.simsilica.lemur.Panel;
+import com.simsilica.lemur.TextField;
+import com.simsilica.lemur.event.KeyAction;
+import com.simsilica.lemur.event.KeyActionListener;
+import com.simsilica.lemur.event.KeyModifiers;
+import com.simsilica.lemur.grid.GridModel;
 
-	public void paste() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented yet");
-	}
-
-	public void cut() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented yet");
-	}
+/**
+ * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+ */
+public class MiscLemurI {
+	private static MiscLemurI instance = new MiscLemurI();
+	/*instance*/ public static MiscLemurI i(){return instance;}
 	
-	
+	public Integer getEntryHeightPixels(ListBox lstbx){
+		GridModel<Panel> gm = lstbx.getGridPanel().getModel();
+		Panel pnl = gm.getCell(0, 0, null); // create a new cell
+		float fHeight = pnl.getPreferredSize().getY();
+		
+		return (int)FastMath.ceil(fHeight);
+	}
 }

@@ -25,12 +25,15 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package devcons;
+package com.github.devconslejme;
 
 import java.util.ArrayList;
 
 import org.lwjgl.opengl.Display;
 
+import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
+import com.github.devconslejme.misc.MiscJmeI;
+import com.github.devconslejme.misc.MiscLemurI;
 import com.jme3.app.Application;
 import com.jme3.font.BitmapFont;
 import com.jme3.math.ColorRGBA;
@@ -53,6 +56,9 @@ import com.simsilica.lemur.event.KeyActionListener;
 import com.simsilica.lemur.style.Attributes;
 import com.simsilica.lemur.style.Styles;
 
+/**
+ * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+ */
 public class ConsolePluginI {
 	private static ConsolePluginI instance = new ConsolePluginI();
 	/*instance*/ public static ConsolePluginI i(){return instance;}
@@ -83,7 +89,7 @@ public class ConsolePluginI {
 	public void init(Application app, Node nodeParent) {
 		if(bInitialized){return;}
 		
-		JavaScriptI.i().setIdValue(this);
+		JavaScriptI.i().setJSBinding(this);
 		
 		// jme
 		this.app=app;
@@ -165,8 +171,9 @@ public class ConsolePluginI {
 	}
 
 	protected void autoComplete() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented yet");
+		AutoCompleteResult ar = JavaScriptI.i().showHelp(tfInput.getText());
+		tfInput.setText(ar.getImprovedPart());
+		scrollToBottom();
 	}
 	
 

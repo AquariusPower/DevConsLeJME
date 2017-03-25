@@ -25,26 +25,34 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package devcons;
+package com.github.devconslejme.misc;
 
-import com.jme3.math.FastMath;
-import com.simsilica.lemur.ListBox;
-import com.simsilica.lemur.Panel;
-import com.simsilica.lemur.TextField;
-import com.simsilica.lemur.event.KeyAction;
-import com.simsilica.lemur.event.KeyActionListener;
-import com.simsilica.lemur.event.KeyModifiers;
-import com.simsilica.lemur.grid.GridModel;
+import com.jme3.math.ColorRGBA;
 
-public class MiscLemurI {
-	private static MiscLemurI instance = new MiscLemurI();
-	/*instance*/ public static MiscLemurI i(){return instance;}
+/**
+ * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+ */
+public class MiscJmeI {
+	private static MiscJmeI instance = new MiscJmeI();
+	/**instance*/ public static MiscJmeI i(){return instance;}
 	
-	protected Integer getEntryHeightPixels(ListBox lstbx){
-		GridModel<Panel> gm = lstbx.getGridPanel().getModel();
-		Panel pnl = gm.getCell(0, 0, null); // create a new cell
-		float fHeight = pnl.getPreferredSize().getY();
-		
-		return (int)FastMath.ceil(fHeight);
+	public float colorComponentLimit(float f){
+		if(f<=0)f=0;
+		if(f>=1)f=1;
+		return f;
 	}
+	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB){
+		return colorChangeCopy(color,fAddRGB,color.a);
+	}
+	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB, float fAlpha){
+		color = color.clone();
+		
+		color.r=colorComponentLimit(color.r+=fAddRGB);
+		color.g=colorComponentLimit(color.g+=fAddRGB);
+		color.b=colorComponentLimit(color.b+=fAddRGB);
+		
+		color.a=fAlpha;
+		return color;
+	}
+	
 }

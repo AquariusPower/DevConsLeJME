@@ -25,7 +25,7 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package devcons;
+package com.github.devconslejme;
 
 import java.util.ArrayList;
 
@@ -36,6 +36,9 @@ import com.simsilica.lemur.event.KeyAction;
 import com.simsilica.lemur.event.KeyActionListener;
 import com.simsilica.lemur.event.KeyModifiers;
 
+/**
+ * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+ */
 public class BindKeyI {
 	private static BindKeyI instance = new BindKeyI();
 	/**instance*/ public static BindKeyI i(){return instance;}
@@ -44,7 +47,7 @@ public class BindKeyI {
 	private KeyActionListener	kal;
 	
 	public BindKeyI() {
-		JavaScriptI.i().setIdValue(this);
+		JavaScriptI.i().setJSBinding(this);
 	}
 	
 	public static class BindKey{

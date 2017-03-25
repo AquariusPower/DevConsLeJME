@@ -25,57 +25,70 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package devcons;
+package com.github.devconslejme.misc;
 
-import com.simsilica.lemur.ListBox;
-import com.simsilica.lemur.core.VersionedList;
 
-public class LoggingI {
-	private static LoggingI instance = new LoggingI();
-	/**instance*/ public static LoggingI i(){return instance;}
+/**
+* @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+*/
+public class StringI {
+	private static StringI instance = new StringI();
+	/*instance*/ public static StringI i(){return instance;}
 	
-	private VersionedList<String>	vlstrLogEntries;
-	
-	public LoggingI() {
-		JavaScriptI.i().setIdValue(this);
+	public static enum EStringMatchMode{
+		Exact,
+		Contains,
 		
-		vlstrLogEntries = new VersionedList<String>();
+		StartsWith,
+		EndsWith,
+		
+		Regex,
+		
 		/**
-		 * The existance of at least one entry is very important to help on initialization.
-		 * Actually is useful to determine the listbox entry height too.
+		 * like a regex for each letter ex.: "Test"
+		 * regex = ".*[T].*[e].*[s].*[t].*"
 		 */
-		vlstrLogEntries.add("Initializing console.");
+		Fuzzy,
+		;
+	}
+	public boolean containsFuzzyMatch(String strToCheck, String strMatch, EStringMatchMode eMode, boolean bIgnoreCase){
+		if(bIgnoreCase){ 
+			strToCheck=strToCheck.toLowerCase();
+			strMatch=strMatch.toLowerCase();
+		}
+		
+	//	 allow multiline check
+	//	strToCheck=strToCheck.replace("\n"," "); //space to prevent joining words
+		
+		switch (eMode) {
+			case StartsWith:
+				return strToCheck.startsWith(strMatch);
+			case Contains:
+				return strToCheck.contains(strMatch);
+			case EndsWith:
+				return strToCheck.endsWith(strMatch);
+			case Exact:
+				return strToCheck.equals(strMatch);
+			case Fuzzy:
+				int iFuzzyIndex = 0;
+				for(char c : strToCheck.toCharArray()){
+					if(c == strMatch.charAt(iFuzzyIndex)){
+						iFuzzyIndex++;
+						if(strMatch.length()==iFuzzyIndex){
+							return true;
+						}
+					}
+				}
+				return false;
+			case Regex:
+				/**
+				 * about "(?s)" see the javadoc of Pattern.DOTALL, 
+				 * it will let dots match '\n' so if the string is a multiline, it will work!
+				 */
+				return strToCheck.matches("(?s)"+strMatch); 
+		}
+		
+		return false;
 	}
 	
-	public void logExceptionEntry(Exception ex, String strJS) {
-		vlstrLogEntries.add("CmdException: "+strJS);
-		
-		vlstrLogEntries.add(ex.getMessage());
-		
-		Throwable cause = ex;
-		while(true){
-			for(StackTraceElement ste:cause.getStackTrace()){
-				vlstrLogEntries.add(" "+ste);
-			}
-			
-			cause=cause.getCause();
-			if(cause!=null){
-				vlstrLogEntries.add("Caused by:");
-			}else{
-				break;
-			}
-		}
-	}
-
-	public void logSubEntry(String string) {
-		vlstrLogEntries.add(string);
-	}
-
-	public void setModelAt(ListBox<String> lstbx) {
-		lstbx.setModel(vlstrLogEntries);
-	}
-
-	public double getLogEntriesSize() {
-		return vlstrLogEntries.size();
-	}
 }

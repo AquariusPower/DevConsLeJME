@@ -25,31 +25,64 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package devcons;
+package com.github.devconslejme;
 
-import com.jme3.math.ColorRGBA;
+import com.simsilica.lemur.ListBox;
+import com.simsilica.lemur.core.VersionedList;
 
-public class MiscJmeI {
-	private static MiscJmeI instance = new MiscJmeI();
-	/**instance*/ public static MiscJmeI i(){return instance;}
+/**
+ * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+ */
+public class LoggingI {
+	private static LoggingI instance = new LoggingI();
+	/**instance*/ public static LoggingI i(){return instance;}
 	
-	public float colorComponentLimit(float f){
-		if(f<=0)f=0;
-		if(f>=1)f=1;
-		return f;
-	}
-	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB){
-		return colorChangeCopy(color,fAddRGB,color.a);
-	}
-	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB, float fAlpha){
-		color = color.clone();
+	private VersionedList<String>	vlstrLogEntries;
+	
+	public LoggingI() {
+		JavaScriptI.i().setJSBinding(this);
 		
-		color.r=colorComponentLimit(color.r+=fAddRGB);
-		color.g=colorComponentLimit(color.g+=fAddRGB);
-		color.b=colorComponentLimit(color.b+=fAddRGB);
-		
-		color.a=fAlpha;
-		return color;
+		vlstrLogEntries = new VersionedList<String>();
+		/**
+		 * The existance of at least one entry is very important to help on initialization.
+		 * Actually is useful to determine the listbox entry height too.
+		 */
+		vlstrLogEntries.add("Initializing console.");
 	}
 	
+	public void logExceptionEntry(Exception ex, String strJS) {
+		vlstrLogEntries.add("CmdException: "+strJS);
+		
+		vlstrLogEntries.add(ex.getMessage());
+		
+		Throwable cause = ex;
+		while(true){
+			for(StackTraceElement ste:cause.getStackTrace()){
+				vlstrLogEntries.add(" "+ste);
+			}
+			
+			cause=cause.getCause();
+			if(cause!=null){
+				vlstrLogEntries.add("Caused by:");
+			}else{
+				break;
+			}
+		}
+	}
+
+	public void logSubEntry(String string) {
+		vlstrLogEntries.add(" "+string);
+	}
+	
+	public void logMarker(String strInfo){
+		vlstrLogEntries.add("_______________ '"+strInfo+"' _______________");
+	}
+
+	public void setModelAt(ListBox<String> lstbx) {
+		lstbx.setModel(vlstrLogEntries);
+	}
+
+	public double getLogEntriesSize() {
+		return vlstrLogEntries.size();
+	}
 }

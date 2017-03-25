@@ -27,18 +27,16 @@
 
 package test;
 
+import com.github.devconslejme.ConsolePluginI;
+import com.github.devconslejme.JavaScriptI;
 import com.jme3.app.SimpleApplication;
 import com.jme3.system.AppSettings;
 
-import devcons.ConsolePluginI;
-
+/**
+ * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+ */
 public class TestConsole extends SimpleApplication{
 
-	@Override
-	public void simpleInitApp() {
-		ConsolePluginI.i().init(this, getGuiNode());
-	}
-	
 	public static void main(String[] args) {
 		TestConsole tst = new TestConsole();
 		
@@ -53,4 +51,20 @@ public class TestConsole extends SimpleApplication{
 		tst.start();
 	}
 	
+	@Override
+	public void simpleInitApp() {
+		ConsolePluginI.i().init(this, getGuiNode());
+		
+		JavaScriptI.i().setJSBinding(this);
+	}
+	
+	public Object test(Object obj){
+		return obj;
+	}
+	protected Object testProt(Object obj){
+		return obj;
+	}
+	private Object testPriv(Object obj){
+		return obj;
+	}
 }

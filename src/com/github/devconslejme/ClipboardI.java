@@ -25,10 +25,30 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package devcons;
+package com.github.devconslejme;
 
+/**
+ * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+ */
+public class ClipboardI {
+	private static ClipboardI instance = new ClipboardI();
+	/*instance*/ public static ClipboardI i(){return instance;}
+	
+	public void copy() {
+//		ConsolePluginI.i().getSelectedEntry();
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("method not implemented yet");
+	}
 
-public class MiscI {
-	private static MiscI instance = new MiscI();
-	/*instance*/ public static MiscI i(){return instance;}
+	public void paste() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("method not implemented yet");
+	}
+
+	public void cut() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("method not implemented yet");
+	}
+	
+	
 }
