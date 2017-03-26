@@ -88,14 +88,9 @@ public class ConsolePluginI extends AbstractAppState{
 	private Button	btnClipboardShow;
 	private ButtonClick	btnclk;
 	private TextField	tfInput;
-	private ArrayList<String> astrCmdHistory = new ArrayList<String>();
-	private ArrayList<String> astrUserInit = new ArrayList<String>();
-	private int iNavigateCmdHistoryIndex = 0;
 	private int	iKeyCodeToggleConsole = KeyInput.KEY_F10;
 	private String	strInputMappingToggleDeveloperConsole = "ToggleDeveloperConsole";
 	private File	flStorageFolder;
-	private File	flCmdHistory;
-	private File	flUserInit;
 	
 	public ConsolePluginI(){
 		if(instance==null)return;
@@ -114,8 +109,6 @@ public class ConsolePluginI extends AbstractAppState{
 		
 		super.setEnabled(false); //the console starts closed
 		
-		JavaScriptI.i().setJSBinding(this);
-		
 		// jme
 		this.app=app;
 		
@@ -125,21 +118,6 @@ public class ConsolePluginI extends AbstractAppState{
 				+File.separator+app.getClass().getSimpleName() //class with main()
 				+File.separator+ConsolePluginI.class.getSimpleName() //console plugin
 		);
-		
-		flCmdHistory = new File(flStorageFolder,"CommandsHistory.cfg");
-		astrCmdHistory.add(""); //just to avoid empty list when adding new cmd to it
-		if(flCmdHistory.exists()){
-			for(String str:FileI.i().readAllLines(flCmdHistory)){
-				astrCmdHistory.add(str);
-			}
-		}
-		
-		flUserInit = new File(flStorageFolder,"UserInit.cfg");
-		if(flUserInit.exists()){
-			for(String str:FileI.i().readAllLines(flUserInit)){
-				astrUserInit.add(str);
-			}
-		}
 		
 		ActionListener al = new ActionListener(){
       @Override
@@ -153,6 +131,10 @@ public class ConsolePluginI extends AbstractAppState{
 		};
 		app.getInputManager().addMapping(strInputMappingToggleDeveloperConsole , new KeyTrigger(iKeyCodeToggleConsole ));
 		app.getInputManager().addListener(al, strInputMappingToggleDeveloperConsole);
+		
+		// js
+		JavaScriptI.i().init();
+		JavaScriptI.i().setJSBinding(this);
 		
 		// gui
 		font = app.getAssetManager().loadFont("Interface/Fonts/DroidSansMono.fnt");
@@ -181,11 +163,7 @@ public class ConsolePluginI extends AbstractAppState{
 		if(isEnabled()){
 			GuiGlobals.getInstance().requestFocus(tfInput);
 			
-			if(astrUserInit.size()>0){
-				for(String strJS:astrUserInit){
-					JavaScriptI.i().execScript(strJS);
-				}
-			}
+			JavaScriptI.i().update();
 		}
 	}
 	
@@ -209,22 +187,6 @@ public class ConsolePluginI extends AbstractAppState{
 		BindKeyI.i().prepareKeyMappings();
 	}
 	
-	
-	protected void navigateCmdHist(int keyCode) {
-		switch(keyCode){
-			case KeyInput.KEY_UP:
-				iNavigateCmdHistoryIndex--;
-				break;
-			case KeyInput.KEY_DOWN:
-				iNavigateCmdHistoryIndex++;
-				break;
-		}
-		if(iNavigateCmdHistoryIndex<0)iNavigateCmdHistoryIndex=0;
-		if(iNavigateCmdHistoryIndex> (astrCmdHistory.size()-1)  )iNavigateCmdHistoryIndex=astrCmdHistory.size()-1;
-		
-		tfInput.setText(astrCmdHistory.get(iNavigateCmdHistoryIndex));
-	}
-
 	protected void scrollToBottom() {
 		scrollTo(-1);
 	}
@@ -448,35 +410,20 @@ public class ConsolePluginI extends AbstractAppState{
 		tfInput.getActionMap().put(ka, kal);
 	}
 
-	public void addCmdToHistory(String strJS) {
-		strJS=strJS.trim();
-		if(strJS.isEmpty())return;
-		
-		// ignores equals to last cmd
-		boolean b = astrCmdHistory.get(astrCmdHistory.size()-1).equals(strJS);
-		if(!b){
-			astrCmdHistory.add(strJS);
-			FileI.i().appendLine(flCmdHistory, strJS);
-		}
-		
-		// reset navigator index
-		iNavigateCmdHistoryIndex=astrCmdHistory.size();
-	}
-	
-	public ArrayList<String> getCmdHistory(){
-		return astrCmdHistory;
-	}
-	
 	public Integer getSelectedIndex(){
 		return lstbxLoggingSection.getSelectionModel().getSelection();
 	}
 
 	public void setInputText(String str) {
-		tfInput.getDocumentModel().insert(str);
+		tfInput.setText(str);
 	}
 
 	public File getStorageFolder() {
 		return flStorageFolder;
+	}
+
+	public void insertInputTextAtCaratPosition(String str) {
+		tfInput.getDocumentModel().insert(str);
 	}
 
 }

@@ -129,7 +129,7 @@ public class BindKeyI {
 		KeyActionListener actCmdHistoryEntrySelectAction = new KeyActionListener() {
 			@Override
 			public void keyAction(TextEntryComponent source, KeyAction key) {
-				ConsolePluginI.i().navigateCmdHist(key.getKeyCode());
+				JavaScriptI.i().navigateCmdHist(key.getKeyCode());
 			}
 		};
 		ConsolePluginI.i().putActionMapAtInputField(new KeyAction(KeyInput.KEY_UP), actCmdHistoryEntrySelectAction);

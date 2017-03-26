@@ -44,6 +44,7 @@ public class FileI {
 	
 	public void appendLine(File fl, String str){
 		try {
+			if(!fl.exists())fl.getParentFile().mkdirs();
 			Files.append(str+"\n", fl, StandardCharsets.UTF_8);
 		} catch (IOException e) {
 			LoggingI.i().logExceptionEntry(e, null, true); //also prevents recursiveness

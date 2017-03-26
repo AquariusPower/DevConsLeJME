@@ -27,14 +27,13 @@
 
 package com.github.devconslejme;
 
+import java.io.File;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.channels.UnsupportedAddressTypeException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
+import java.util.List;
 
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
@@ -45,6 +44,7 @@ import com.github.devconslejme.misc.AutoCompleteI;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
 import com.github.devconslejme.misc.JavaLangI;
 import com.google.common.primitives.Primitives;
+import com.jme3.input.KeyInput;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -64,21 +64,76 @@ public class JavaScriptI {
 	private boolean bShowAllPublicMembers = false;
 	private Method[] amLastReturnValue;
 	private ArrayList<String>	astrLastReturnValueMethods = new ArrayList<String>();
+	private ArrayList<String> astrCmdHistory = new ArrayList<String>();
+	private ArrayList<String> astrUserInit = new ArrayList<String>();
+	private File	flCmdHistory;
+	private File	flUserInit;
+	private int iNavigateCmdHistoryIndex = 0;
 	
-	enum ECommands{
-		help,
+	enum EBaseCommand{
+		help("filter"),
 		
-		/** append to user init file */
-		ini,
+		ini("append to user init file"),
+		
+		showIni,
+		
+		execFile,
+		
 		;
+		
+		EBaseCommand(){}
+		EBaseCommand(String str){
+			this.strInfo=str;
+		}
+		
+		private String strInfo = "";
+		
 		public String s(){return toString();}
+		
+		public static boolean isAndExecBaseCommand(String strCmd){
+			strCmd=strCmd.trim();
+			String[] astr = strCmd.split(" ");
+			String strBase = astr[0];
+			String strJS = "";
+			if(!strCmd.equals(strBase))strJS=strCmd.substring(strBase.length()+1);
+			
+			EBaseCommand ebc = null;
+			try{
+				ebc=EBaseCommand.valueOf(strBase);
+			}catch(IllegalArgumentException e){
+				//ignore
+			}
+			
+			if(ebc==null)return false;
+			
+			switch(ebc){
+				case help:
+					JavaScriptI.i().showHelp(strJS);
+					return true;
+				case ini:
+					JavaScriptI.i().appendUserInitCommand(strJS);
+					return true;
+				case execFile:
+					LoggingI.i().logExceptionEntry(new UnsupportedOperationException("not implemented"),null);
+					return true;
+				case showIni:
+					LoggingI.i().logMarker("Showing User Init");
+					for(String str:JavaScriptI.i().getUserInit()){
+						LoggingI.i().logEntry(str);
+					}
+					return true;
+			}
+			
+			return false;
+		}
 	}
 	
 	public JavaScriptI() {
 		jse  = new ScriptEngineManager().getEngineByMimeType("text/javascript");
 		bndJSE = jse.createBindings();
-		astrIdList.add(ECommands.help.s());
-		astrIdList.add(ECommands.ini.s()); 
+		for(EBaseCommand ebc:EBaseCommand.values()){
+			astrIdList.add(ebc.s());
+		}
 	}
 	
 	/**
@@ -107,18 +162,11 @@ public class JavaScriptI {
 		strJS=strJS.trim();
 		if(strJS.isEmpty())return;
 		
-		ConsolePluginI.i().addCmdToHistory(strJS);
+		addCmdToHistory(strJS);
 		
-		LoggingI.i().logMarker("UserCommand");
+		LoggingI.i().logMarker("User Command");
 		
-		if(strJS.equalsIgnoreCase("help")){
-			showHelp("");
-		}else
-		if(strJS.startsWith(ECommands.ini.s()+" ")){
-//			ConsolePluginI.i().appendUserInitCommand();
-//			FileI.i().appendLine(fluser, str);
-//			strJS.substring(ECommands.ini.s().length()+1);
-		}else{
+		if(!EBaseCommand.isAndExecBaseCommand(strJS)){
 			execScript(strJS);
 		}
 		
@@ -318,5 +366,85 @@ public class JavaScriptI {
 //		System.out.println(cl.getSimpleName());
 		return false;
 	}
+
+	public void init() {
+		flCmdHistory = new File(ConsolePluginI.i().getStorageFolder(),"CommandsHistory.cfg");
+		astrCmdHistory.add(""); //just to avoid empty list when adding new cmd to it
+		if(flCmdHistory.exists()){
+			for(String str:FileI.i().readAllLines(flCmdHistory)){
+				astrCmdHistory.add(str);
+			}
+			iNavigateCmdHistoryIndex=astrCmdHistory.size()-1;
+		}
+		
+		flUserInit = new File(ConsolePluginI.i().getStorageFolder(),"UserInit.cfg");
+		if(flUserInit.exists()){
+			for(String str:getUserInit()){
+				astrUserInit.add(str);
+			}
+		}
+	}
 	
+	public List<String> getUserInit(){
+		return FileI.i().readAllLines(flUserInit);
+	}
+	
+	public void update() {
+		if(astrUserInit.size()>0){
+			for(String strJS:astrUserInit){
+				LoggingI.i().logEntry("UserInit: "+strJS);
+				execScript(strJS);
+			}
+			astrUserInit.clear();
+		}
+	}
+	
+	public void addCmdToHistory(String strJS) {
+		strJS=strJS.trim();
+		if(strJS.isEmpty())return;
+		
+		// ignores equals to last cmd
+		boolean b = astrCmdHistory.get(astrCmdHistory.size()-1).equals(strJS);
+		if(!b){
+			astrCmdHistory.add(strJS);
+			FileI.i().appendLine(flCmdHistory, strJS);
+		}
+		
+		// reset navigator index
+		iNavigateCmdHistoryIndex=astrCmdHistory.size();
+	}
+	
+	public ArrayList<String> getCmdHistory(){
+		return astrCmdHistory;
+	}
+
+	protected void navigateCmdHist(int keyCode) {
+		switch(keyCode){
+			case KeyInput.KEY_UP:
+				iNavigateCmdHistoryIndex--;
+				break;
+			case KeyInput.KEY_DOWN:
+				iNavigateCmdHistoryIndex++;
+				break;
+		}
+		
+		if(iNavigateCmdHistoryIndex<0){
+			iNavigateCmdHistoryIndex=0;
+		}
+		
+		if(iNavigateCmdHistoryIndex>(astrCmdHistory.size()-1)){
+			iNavigateCmdHistoryIndex=astrCmdHistory.size()-1;
+		}
+		
+		ConsolePluginI.i().setInputText(astrCmdHistory.get(iNavigateCmdHistoryIndex));
+	}
+	
+	public void appendUserInitCommand(String strJS){
+//		if(strJS.startsWith(EBaseCommand.ini.s()+" ")){
+//			strJS=strJS.substring(EBaseCommand.ini.s().length()+1);
+			FileI.i().appendLine(flUserInit, strJS);
+//			return true;
+//		}
+//		return false;
+	}
 }
