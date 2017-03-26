@@ -25,37 +25,38 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package test;
+package com.github.devconslejme;
 
-import com.github.devconslejme.ConsolePluginI;
-import com.github.devconslejme.JavaScriptI;
-import com.jme3.app.SimpleApplication;
-import com.jme3.system.AppSettings;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
+import com.google.common.io.Files;
+
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestConsole extends SimpleApplication{
+public class FileI {
+	private static FileI instance = new FileI();
+	/**instance*/ public static FileI i(){return instance;}
+	
+	public void appendLine(File fl, String str){
+		try {
+			Files.append(str+"\n", fl, StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			LoggingI.i().logExceptionEntry(e, null, true); //also prevents recursiveness
+		}
+	}
 
-	public static void main(String[] args) {
-		TestConsole tst = new TestConsole();
+	public List<String> readAllLines(File fl) {
+		try {
+			return Files.readLines(fl, StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			LoggingI.i().logExceptionEntry(e, null, true); //also prevents recursiveness
+		}
 		
-		AppSettings as = new AppSettings(true);
-		as.setResolution(1230,690);
-		as.setResizable(true);
-		as.setFrameRate(60);
-		tst.setSettings(as);
-		
-		tst.setShowSettings(false);
-		
-		tst.start();
+		return null;
 	}
-	
-	@Override
-	public void simpleInitApp() {
-		ConsolePluginI.i().configure(this,getGuiNode());
-		
-		JavaScriptI.i().setJSBinding(this);
-	}
-	
 }

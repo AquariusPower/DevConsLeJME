@@ -27,9 +27,16 @@
 
 package com.github.devconslejme;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+
+import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.core.VersionedList;
 
@@ -43,9 +50,13 @@ public class LoggingI {
 	private VersionedList<String>	vlstrLogEntries;
 	private int iLogEntriesLimit = 10000;
 	private int iWrapAtColumn = 80;
+	private File	flLog;
 	
 	public LoggingI() {
 		JavaScriptI.i().setJSBinding(this);
+		
+		flLog = new File(ConsolePluginI.i().getStorageFolder(), LoggingI.class.getSimpleName()+".log");
+		flLog.delete();
 		
 		vlstrLogEntries = new VersionedList<String>();
 		/**
@@ -56,19 +67,22 @@ public class LoggingI {
 	}
 	
 	public void logExceptionEntry(Exception ex, String strJS) {
-		logEntry("CmdException: "+strJS);
+		logExceptionEntry(ex,strJS,false);
+	}
+	public void logExceptionEntry(Exception ex, String strJS, boolean bSkipLogFile) {
+		logEntry("CmdException: "+strJS,bSkipLogFile);
 		
-		logEntry(ex.getMessage());
+		logEntry(ex.getMessage(),bSkipLogFile);
 		
 		Throwable cause = ex;
 		while(true){
 			for(StackTraceElement ste:cause.getStackTrace()){
-				logEntry(" "+ste);
+				logEntry(" "+ste,bSkipLogFile);
 			}
 			
 			cause=cause.getCause();
 			if(cause!=null){
-				logEntry("Caused by:");
+				logEntry("Caused by:",bSkipLogFile);
 			}else{
 				break;
 			}
@@ -76,6 +90,10 @@ public class LoggingI {
 	}
 	
 	public void logEntry(String str){
+		logEntry(str,false);
+	}
+	public void logEntry(String str, boolean bSkipLogFile){
+		// log at application console
 		for(String strLine : str.split("\n")){
 			Iterable<String> itstr = Splitter.fixedLength(iWrapAtColumn).split(strLine);
 			String[] astr = Iterables.toArray(itstr, String.class);
@@ -84,6 +102,11 @@ public class LoggingI {
 				if(i<(astr.length-1))strPart+="\\"; //indicates that continue on the next line
 				vlstrLogEntries.add(strPart);
 			}
+		}
+		
+		// log to file
+		if(!bSkipLogFile){
+			FileI.i().appendLine(flLog, str);
 		}
 		
 		// limit log size in memory

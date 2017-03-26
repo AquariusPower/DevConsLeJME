@@ -27,6 +27,8 @@
 
 package com.github.devconslejme;
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 import org.lwjgl.opengl.Display;
@@ -34,8 +36,8 @@ import org.lwjgl.opengl.Display;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
 import com.github.devconslejme.misc.MiscJmeI;
 import com.github.devconslejme.misc.MiscLemurI;
+import com.google.common.io.Files;
 import com.jme3.app.Application;
-import com.jme3.app.StatsAppState;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.font.BitmapFont;
@@ -46,6 +48,8 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.system.JmeSystem;
+import com.jme3.system.JmeSystem.StorageFolderType;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
 import com.simsilica.lemur.Container;
@@ -85,9 +89,13 @@ public class ConsolePluginI extends AbstractAppState{
 	private ButtonClick	btnclk;
 	private TextField	tfInput;
 	private ArrayList<String> astrCmdHistory = new ArrayList<String>();
+	private ArrayList<String> astrUserInit = new ArrayList<String>();
 	private int iNavigateCmdHistoryIndex = 0;
 	private int	iKeyCodeToggleConsole = KeyInput.KEY_F10;
 	private String	strInputMappingToggleDeveloperConsole = "ToggleDeveloperConsole";
+	private File	flStorageFolder;
+	private File	flCmdHistory;
+	private File	flUserInit;
 	
 	public ConsolePluginI(){
 		if(instance==null)return;
@@ -106,12 +114,32 @@ public class ConsolePluginI extends AbstractAppState{
 		
 		super.setEnabled(false); //the console starts closed
 		
-		astrCmdHistory.add(""); //just to avoid empty list when adding new cmd to it
-		
 		JavaScriptI.i().setJSBinding(this);
 		
 		// jme
 		this.app=app;
+		
+		flStorageFolder = new File(
+			JmeSystem.getStorageFolder(StorageFolderType.Internal),
+			app.getClass().getPackage().getName().replace(".",File.separator) //package of main class
+				+File.separator+app.getClass().getSimpleName() //class with main()
+				+File.separator+ConsolePluginI.class.getSimpleName() //console plugin
+		);
+		
+		flCmdHistory = new File(flStorageFolder,"CommandsHistory.cfg");
+		astrCmdHistory.add(""); //just to avoid empty list when adding new cmd to it
+		if(flCmdHistory.exists()){
+			for(String str:FileI.i().readAllLines(flCmdHistory)){
+				astrCmdHistory.add(str);
+			}
+		}
+		
+		flUserInit = new File(flStorageFolder,"UserInit.cfg");
+		if(flUserInit.exists()){
+			for(String str:FileI.i().readAllLines(flUserInit)){
+				astrUserInit.add(str);
+			}
+		}
 		
 		ActionListener al = new ActionListener(){
       @Override
@@ -152,6 +180,12 @@ public class ConsolePluginI extends AbstractAppState{
 		
 		if(isEnabled()){
 			GuiGlobals.getInstance().requestFocus(tfInput);
+			
+			if(astrUserInit.size()>0){
+				for(String strJS:astrUserInit){
+					JavaScriptI.i().execScript(strJS);
+				}
+			}
 		}
 	}
 	
@@ -415,9 +449,15 @@ public class ConsolePluginI extends AbstractAppState{
 	}
 
 	public void addCmdToHistory(String strJS) {
+		strJS=strJS.trim();
+		if(strJS.isEmpty())return;
+		
 		// ignores equals to last cmd
 		boolean b = astrCmdHistory.get(astrCmdHistory.size()-1).equals(strJS);
-		if(!b)astrCmdHistory.add(strJS);
+		if(!b){
+			astrCmdHistory.add(strJS);
+			FileI.i().appendLine(flCmdHistory, strJS);
+		}
 		
 		// reset navigator index
 		iNavigateCmdHistoryIndex=astrCmdHistory.size();
@@ -434,5 +474,9 @@ public class ConsolePluginI extends AbstractAppState{
 	public void setInputText(String str) {
 		tfInput.getDocumentModel().insert(str);
 	}
-	
+
+	public File getStorageFolder() {
+		return flStorageFolder;
+	}
+
 }

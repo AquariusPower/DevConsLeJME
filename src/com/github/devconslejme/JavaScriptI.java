@@ -65,10 +65,20 @@ public class JavaScriptI {
 	private Method[] amLastReturnValue;
 	private ArrayList<String>	astrLastReturnValueMethods = new ArrayList<String>();
 	
+	enum ECommands{
+		help,
+		
+		/** append to user init file */
+		ini,
+		;
+		public String s(){return toString();}
+	}
+	
 	public JavaScriptI() {
 		jse  = new ScriptEngineManager().getEngineByMimeType("text/javascript");
 		bndJSE = jse.createBindings();
-		astrIdList.add("help");
+		astrIdList.add(ECommands.help.s());
+		astrIdList.add(ECommands.ini.s()); 
 	}
 	
 	/**
@@ -103,6 +113,11 @@ public class JavaScriptI {
 		
 		if(strJS.equalsIgnoreCase("help")){
 			showHelp("");
+		}else
+		if(strJS.startsWith(ECommands.ini.s()+" ")){
+//			ConsolePluginI.i().appendUserInitCommand();
+//			FileI.i().appendLine(fluser, str);
+//			strJS.substring(ECommands.ini.s().length()+1);
 		}else{
 			execScript(strJS);
 		}
