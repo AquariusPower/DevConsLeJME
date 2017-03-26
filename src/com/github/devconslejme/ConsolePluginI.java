@@ -35,9 +35,13 @@ import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
 import com.github.devconslejme.misc.MiscJmeI;
 import com.github.devconslejme.misc.MiscLemurI;
 import com.jme3.app.Application;
+import com.jme3.app.StatsAppState;
 import com.jme3.app.state.AbstractAppState;
+import com.jme3.app.state.AppStateManager;
 import com.jme3.font.BitmapFont;
 import com.jme3.input.KeyInput;
+import com.jme3.input.controls.ActionListener;
+import com.jme3.input.controls.KeyTrigger;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
@@ -68,7 +72,6 @@ public class ConsolePluginI extends AbstractAppState{
 	private float	fLemurPreferredThickness = 1f;
 	private Vector3f	v3fConsoleSize;
 	private float	fConsoleHeightPerc = 0.5f;
-	private boolean bInitialized = false;
 	private String strStyle = "console";
 	private ListBox<String>	lstbxLoggingSection;
 	private Container	cntrMain;
@@ -83,14 +86,25 @@ public class ConsolePluginI extends AbstractAppState{
 	private TextField	tfInput;
 	private ArrayList<String> astrCmdHistory = new ArrayList<String>();
 	private int iNavigateCmdHistoryIndex = 0;
+	private int	iKeyCodeToggleConsole = KeyInput.KEY_F10;
+	private String	strInputMappingToggleDeveloperConsole = "ToggleDeveloperConsole";
 	
 	public ConsolePluginI(){
 		if(instance==null)return;
 		if(instance!=this)throw new NullPointerException("use the single instance");
 	}
 	
-	public void init(Application app, Node nodeParent) {
-		if(bInitialized){return;}
+	public void configure(Application app, Node nodeParent) {
+		// gui
+		this.nodeParent = nodeParent;
+		app.getStateManager().attach(this);
+	}
+	
+	@Override
+	public void initialize(AppStateManager stateManager, Application app) {
+		if(isInitialized()){return;}
+		
+		super.setEnabled(false); //the console starts closed
 		
 		astrCmdHistory.add(""); //just to avoid empty list when adding new cmd to it
 		
@@ -99,11 +113,20 @@ public class ConsolePluginI extends AbstractAppState{
 		// jme
 		this.app=app;
 		
-		app.getStateManager().attach(this);
+		ActionListener al = new ActionListener(){
+      @Override
+			public void onAction(String name, boolean value, float tpf) {
+				if(!value)return;
+				
+				if (name.equals(strInputMappingToggleDeveloperConsole)) {
+					setEnabled(!isEnabled());
+				}
+			}
+		};
+		app.getInputManager().addMapping(strInputMappingToggleDeveloperConsole , new KeyTrigger(iKeyCodeToggleConsole ));
+		app.getInputManager().addListener(al, strInputMappingToggleDeveloperConsole);
 		
 		// gui
-		this.nodeParent = nodeParent;
-		
 		font = app.getAssetManager().loadFont("Interface/Fonts/DroidSansMono.fnt");
 		
 		initStyle();
@@ -118,9 +141,31 @@ public class ConsolePluginI extends AbstractAppState{
 		
 		cntrMain.setLocalTranslation(0, Display.getHeight(), 0);
 		
-		GuiGlobals.getInstance().requestFocus(tfInput);
+//		GuiGlobals.getInstance().requestFocus(tfInput);
 		
-		bInitialized=true;
+		super.initialize(stateManager, app);
+	}
+	
+	@Override
+	public void update(float tpf) {
+		super.update(tpf);
+		
+		if(isEnabled()){
+			GuiGlobals.getInstance().requestFocus(tfInput);
+		}
+	}
+	
+	@Override
+	public void setEnabled(boolean enabled) {
+		if(!isInitialized())throw new NullPointerException("not initialized");
+		
+		if(enabled){
+			nodeParent.attachChild(cntrMain);
+		}else{
+			cntrMain.removeFromParent();
+		}
+		
+		super.setEnabled(enabled);
 	}
 	
 	private void initInputSection() {
@@ -313,7 +358,6 @@ public class ConsolePluginI extends AbstractAppState{
 	private void initMainContainer() {
 		cntrMain = new Container(new BorderLayout(), getStyle());
 		cntrMain.setPreferredSize(v3fConsoleSize);
-		nodeParent.attachChild(cntrMain);
 	}
 
 	private void initLoggingSection() {

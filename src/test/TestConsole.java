@@ -53,7 +53,7 @@ public class TestConsole extends SimpleApplication{
 	
 	@Override
 	public void simpleInitApp() {
-		ConsolePluginI.i().init(this, getGuiNode());
+		ConsolePluginI.i().configure(this,getGuiNode());
 		
 		JavaScriptI.i().setJSBinding(this);
 	}

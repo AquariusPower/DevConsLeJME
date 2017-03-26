@@ -28,6 +28,7 @@
 package com.github.devconslejme;
 
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.core.VersionedList;
@@ -40,6 +41,7 @@ public class LoggingI {
 	/**instance*/ public static LoggingI i(){return instance;}
 	
 	private VersionedList<String>	vlstrLogEntries;
+	private int iLogEntriesLimit = 10000;
 	private int iWrapAtColumn = 80;
 	
 	public LoggingI() {
@@ -84,6 +86,11 @@ public class LoggingI {
 			}
 		}
 		
+		// limit log size in memory
+		while(vlstrLogEntries.size()>iLogEntriesLimit){
+			vlstrLogEntries.remove(0);
+		}
+		
 		System.out.println(str);
 	}
 	
@@ -92,7 +99,9 @@ public class LoggingI {
 	}
 	
 	public void logMarker(String strInfo){
-		logEntry("_______________ '"+strInfo+"' _______________");
+		strInfo = Strings.padStart(strInfo, iWrapAtColumn/2 +strInfo.length()/2, '_');
+		strInfo = Strings.padEnd(strInfo, iWrapAtColumn, '_');
+		logEntry(strInfo);
 	}
 
 	public void setModelAt(ListBox<String> lstbx) {
