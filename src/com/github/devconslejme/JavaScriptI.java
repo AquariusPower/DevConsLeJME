@@ -28,9 +28,11 @@
 package com.github.devconslejme;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.Reader;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.nio.channels.UnsupportedAddressTypeException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,9 +42,12 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
+import com.github.devconslejme.QueueI.CallableX;
 import com.github.devconslejme.misc.AutoCompleteI;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
 import com.github.devconslejme.misc.JavaLangI;
+import com.google.common.collect.HashBiMap;
+import com.google.common.io.Files;
 import com.google.common.primitives.Primitives;
 import com.jme3.input.KeyInput;
 
@@ -53,11 +58,12 @@ public class JavaScriptI {
 	private static JavaScriptI instance = new JavaScriptI();
 	/**instance*/ public static JavaScriptI i(){return instance;}
 	
-	static {
-		instance.setJSBinding(instance);
-	}
+//	static {
+//		instance.setJSBinding(instance);
+//	}
 	
-	private Object	objLastReturnValueFromEval;
+	private Object	objRetValUser;
+	private Object	objRetValFile;
 	private ScriptEngine	jse;
 	private Bindings	bndJSE;
 	private ArrayList<String> astrIdList = new ArrayList<String>();
@@ -69,15 +75,16 @@ public class JavaScriptI {
 	private File	flCmdHistory;
 	private File	flUserInit;
 	private int iNavigateCmdHistoryIndex = 0;
+	private HashBiMap<String,Reader> hmFileReaderExecJS = HashBiMap.create(); 
 	
 	enum EBaseCommand{
-		help("filter"),
+		help("[filter]"),
 		
 		ini("append to user init file"),
 		
 		showIni,
 		
-		execFile,
+		exec("[file] runs a script file, mainly at "+ConsolePluginI.i().getStorageFolder()),
 		
 		;
 		
@@ -89,46 +96,46 @@ public class JavaScriptI {
 		private String strInfo = "";
 		
 		public String s(){return toString();}
-		
-		public static boolean isAndExecBaseCommand(String strCmd){
-			strCmd=strCmd.trim();
-			String[] astr = strCmd.split(" ");
-			String strBase = astr[0];
-			String strJS = "";
-			if(!strCmd.equals(strBase))strJS=strCmd.substring(strBase.length()+1);
-			
-			EBaseCommand ebc = null;
-			try{
-				ebc=EBaseCommand.valueOf(strBase);
-			}catch(IllegalArgumentException e){
-				//ignore
-			}
-			
-			if(ebc==null)return false;
-			
-			switch(ebc){
-				case help:
-					JavaScriptI.i().showHelp(strJS);
-					return true;
-				case ini:
-					JavaScriptI.i().appendUserInitCommand(strJS);
-					return true;
-				case execFile:
-					LoggingI.i().logExceptionEntry(new UnsupportedOperationException("not implemented"),null);
-					return true;
-				case showIni:
-					LoggingI.i().logMarker("Showing User Init");
-					for(String str:JavaScriptI.i().getUserInit()){
-						LoggingI.i().logEntry(str);
-					}
-					return true;
-			}
-			
-			return false;
-		}
 	}
 	
-	public JavaScriptI() {
+	public boolean isAndExecBaseCommand(String strCmd){
+		strCmd=strCmd.trim();
+		String[] astr = strCmd.split(" ");
+		String strBase = astr[0];
+		String strParms = "";
+		if(!strCmd.equals(strBase))strParms=strCmd.substring(strBase.length()+1);
+		
+		EBaseCommand ebc = null;
+		try{
+			ebc=EBaseCommand.valueOf(strBase);
+		}catch(IllegalArgumentException e){
+			//ignore
+		}
+		
+		if(ebc==null)return false;
+		
+		switch(ebc){
+			case help:
+				showHelp(strParms);
+				return true;
+			case ini:
+				appendUserInitCommand(strParms);
+				return true;
+			case exec:
+				execFile(strParms);
+				return true;
+			case showIni:
+				LoggingI.i().logMarker("Showing User Init");
+				for(String str:JavaScriptI.i().getUserInit()){
+					LoggingI.i().logEntry(str);
+				}
+				return true;
+		}
+		
+		return false;
+	}
+	
+	public void configure() {
 		jse  = new ScriptEngineManager().getEngineByMimeType("text/javascript");
 		bndJSE = jse.createBindings();
 		for(EBaseCommand ebc:EBaseCommand.values()){
@@ -166,7 +173,7 @@ public class JavaScriptI {
 		
 		LoggingI.i().logMarker("User Command");
 		
-		if(!EBaseCommand.isAndExecBaseCommand(strJS)){
+		if(!isAndExecBaseCommand(strJS)){
 			execScript(strJS);
 		}
 		
@@ -215,23 +222,74 @@ public class JavaScriptI {
 //	}
 //	private ArrayList<PubMembers> apmLastReturnValue = new ArrayList<PubMembers>();
 	
+	public Reader execFile(String strFile){
+		File flJS = null;
+		try {
+			flJS = new File(ConsolePluginI.i().getStorageFolder(),strFile);
+			Reader rd = hmFileReaderExecJS.get(flJS.getCanonicalPath());
+			if(rd==null){
+				rd=Files.newReader(flJS, StandardCharsets.UTF_8);
+				hmFileReaderExecJS.put(flJS.getCanonicalPath(), rd);
+			}
+			
+			execFile(rd);
+			
+			return rd;
+		} catch (IOException e) {
+			LoggingI.i().logExceptionEntry(e, flJS.getName());
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * the script can call itself to create a loop
+	 * @param rd
+	 * @param fDelaySeconds
+	 */
+	public void queueExecFile(final Reader rd, final float fDelaySeconds){
+		QueueI.i().enqueue(new CallableX(fDelaySeconds) {
+			@Override
+			public Boolean call() {
+				execFile(rd);
+				return true;
+			}
+		});
+	}
+	
+	/**
+	 * kept private to prevent infinite self call on the same frame,
+	 * use {@link #queueExecFile(Reader, float)}
+	 * @param rdSelfScript
+	 */
+	private void execFile(Reader rdSelfScript){
+		try {
+			bndJSE.put("rdSelfScript", rdSelfScript);
+			objRetValFile = jse.eval(rdSelfScript,bndJSE);
+		} catch (ScriptException e) {
+			LoggingI.i().logExceptionEntry(e, hmFileReaderExecJS.inverse().get(rdSelfScript));
+			return;
+		}
+	}
+	
 	public void execScript(String strJS){
 		try {
-			objLastReturnValueFromEval=jse.eval(strJS,bndJSE);
-			if(objLastReturnValueFromEval==null){
-				LoggingI.i().logSubEntry("Return is null");
-			}else{
-//				LoggingI.i().logSubEntry("ReturnType: "+objJSLastEval.toString()+" ("+objJSLastEval.getClass()+")");
-				LoggingI.i().logSubEntry("Return type: "+objLastReturnValueFromEval.getClass());
-				if(isCanUserTypeIt(objLastReturnValueFromEval)){ // simple types result in simple and readable strings
-					LoggingI.i().logSubEntry("Return value = '"+objLastReturnValueFromEval+"'");
-				}else
-				if(!isAndShowArray(objLastReturnValueFromEval)){
-					showMethods(objLastReturnValueFromEval);
-				}
-			}
+			objRetValUser=jse.eval(strJS,bndJSE);
 		} catch (ScriptException e) {
 			LoggingI.i().logExceptionEntry(e, strJS);
+		}
+		
+		if(objRetValUser==null){
+			LoggingI.i().logSubEntry("Return is null");
+		}else{
+//				LoggingI.i().logSubEntry("ReturnType: "+objJSLastEval.toString()+" ("+objJSLastEval.getClass()+")");
+			LoggingI.i().logSubEntry("Return type: "+objRetValUser.getClass());
+			if(isCanUserTypeIt(objRetValUser)){ // simple types result in simple and readable strings
+				LoggingI.i().logSubEntry("Return value = '"+objRetValUser+"'");
+			}else
+			if(!isAndShowArray(objRetValUser)){
+				showMethods(objRetValUser);
+			}
 		}
 	}
 	

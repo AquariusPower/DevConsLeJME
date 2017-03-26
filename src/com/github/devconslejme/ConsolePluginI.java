@@ -28,7 +28,6 @@
 package com.github.devconslejme;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 import org.lwjgl.opengl.Display;
@@ -36,7 +35,6 @@ import org.lwjgl.opengl.Display;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
 import com.github.devconslejme.misc.MiscJmeI;
 import com.github.devconslejme.misc.MiscLemurI;
-import com.google.common.io.Files;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
@@ -70,7 +68,7 @@ import com.simsilica.lemur.style.Styles;
  */
 public class ConsolePluginI extends AbstractAppState{
 	private static ConsolePluginI instance = new ConsolePluginI();
-	/*instance*/ public static ConsolePluginI i(){return instance;}
+	/**instance*/ public static ConsolePluginI i(){return instance;}
 	
 	private Vector3f	v3fApplicationWindowSize;
 	private float	fLemurPreferredThickness = 1f;
@@ -101,6 +99,22 @@ public class ConsolePluginI extends AbstractAppState{
 		// gui
 		this.nodeParent = nodeParent;
 		app.getStateManager().attach(this);
+		
+		flStorageFolder = new File(
+			JmeSystem.getStorageFolder(StorageFolderType.Internal),
+			app.getClass().getPackage().getName().replace(".",File.separator) //package of main class
+				+File.separator+app.getClass().getSimpleName() //class with main()
+				+File.separator+ConsolePluginI.class.getSimpleName() //console plugin
+		);
+		
+		JavaScriptI.i().configure(); //before all others
+		
+		JavaScriptI.i().setJSBinding(this);
+		BindKeyI.i().configure();
+		ClipboardI.i().configure();
+		FileI.i().configure();
+		LoggingI.i().configure();
+		QueueI.i().configure(app);
 	}
 	
 	@Override
@@ -111,13 +125,6 @@ public class ConsolePluginI extends AbstractAppState{
 		
 		// jme
 		this.app=app;
-		
-		flStorageFolder = new File(
-			JmeSystem.getStorageFolder(StorageFolderType.Internal),
-			app.getClass().getPackage().getName().replace(".",File.separator) //package of main class
-				+File.separator+app.getClass().getSimpleName() //class with main()
-				+File.separator+ConsolePluginI.class.getSimpleName() //console plugin
-		);
 		
 		ActionListener al = new ActionListener(){
       @Override
@@ -134,7 +141,7 @@ public class ConsolePluginI extends AbstractAppState{
 		
 		// js
 		JavaScriptI.i().init();
-		JavaScriptI.i().setJSBinding(this);
+//		JavaScriptI.i().setJSBinding(this);
 		
 		// gui
 		font = app.getAssetManager().loadFont("Interface/Fonts/DroidSansMono.fnt");
@@ -426,4 +433,8 @@ public class ConsolePluginI extends AbstractAppState{
 		tfInput.getDocumentModel().insert(str);
 	}
 
+//	public Application getApp() {
+//		return app;
+//	}
+	
 }

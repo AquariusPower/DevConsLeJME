@@ -52,7 +52,7 @@ public class LoggingI {
 	private int iWrapAtColumn = 80;
 	private File	flLog;
 	
-	public LoggingI() {
+	public void configure() {
 		JavaScriptI.i().setJSBinding(this);
 		
 		flLog = new File(ConsolePluginI.i().getStorageFolder(), LoggingI.class.getSimpleName()+".log");

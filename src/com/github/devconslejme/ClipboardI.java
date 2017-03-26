@@ -83,5 +83,9 @@ public class ClipboardI {
 		LoggingI.i().deleteLogEntry(ConsolePluginI.i().getSelectedIndex());
 		return str;
 	}
+
+	public void configure() {
+		JavaScriptI.i().setJSBinding(this);
+	}
 	
 }

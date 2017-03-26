@@ -60,4 +60,8 @@ public class FileI {
 		
 		return null;
 	}
+
+	public void configure() {
+		JavaScriptI.i().setJSBinding(this);
+	}
 }
