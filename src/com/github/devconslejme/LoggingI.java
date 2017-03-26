@@ -47,35 +47,40 @@ public class LoggingI {
 		 * The existance of at least one entry is very important to help on initialization.
 		 * Actually is useful to determine the listbox entry height too.
 		 */
-		vlstrLogEntries.add("Initializing console.");
+		logEntry("Initializing console.");
 	}
 	
 	public void logExceptionEntry(Exception ex, String strJS) {
-		vlstrLogEntries.add("CmdException: "+strJS);
+		logEntry("CmdException: "+strJS);
 		
-		vlstrLogEntries.add(ex.getMessage());
+		logEntry(ex.getMessage());
 		
 		Throwable cause = ex;
 		while(true){
 			for(StackTraceElement ste:cause.getStackTrace()){
-				vlstrLogEntries.add(" "+ste);
+				logEntry(" "+ste);
 			}
 			
 			cause=cause.getCause();
 			if(cause!=null){
-				vlstrLogEntries.add("Caused by:");
+				logEntry("Caused by:");
 			}else{
 				break;
 			}
 		}
 	}
-
+	
+	public void logEntry(String str){
+		vlstrLogEntries.add(str);
+		System.out.println(str);
+	}
+	
 	public void logSubEntry(String string) {
-		vlstrLogEntries.add(" "+string);
+		logEntry(" "+string);
 	}
 	
 	public void logMarker(String strInfo){
-		vlstrLogEntries.add("_______________ '"+strInfo+"' _______________");
+		logEntry("_______________ '"+strInfo+"' _______________");
 	}
 
 	public void setModelAt(ListBox<String> lstbx) {

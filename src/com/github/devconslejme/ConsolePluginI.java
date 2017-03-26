@@ -36,6 +36,7 @@ import com.github.devconslejme.misc.MiscJmeI;
 import com.github.devconslejme.misc.MiscLemurI;
 import com.jme3.app.Application;
 import com.jme3.font.BitmapFont;
+import com.jme3.input.KeyInput;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
@@ -80,6 +81,8 @@ public class ConsolePluginI {
 	private Button	btnClipboardShow;
 	private ButtonClick	btnclk;
 	private TextField	tfInput;
+	private ArrayList<String> astrCmdHistory = new ArrayList<String>();
+	private int iNavigateCmdHistoryIndex = 0;
 	
 	public ConsolePluginI(){
 		if(instance==null)return;
@@ -88,6 +91,8 @@ public class ConsolePluginI {
 	
 	public void init(Application app, Node nodeParent) {
 		if(bInitialized){return;}
+		
+		astrCmdHistory.add(""); //just to avoid empty list when adding new cmd to it
 		
 		JavaScriptI.i().setJSBinding(this);
 		
@@ -124,8 +129,19 @@ public class ConsolePluginI {
 	}
 	
 	
-	protected void navigateCmdHistOrHintBox(TextEntryComponent source, int keyCode) {
-		throw new UnsupportedOperationException("method not implemented yet");
+	protected void navigateCmdHist(int keyCode) {
+		switch(keyCode){
+			case KeyInput.KEY_UP:
+				iNavigateCmdHistoryIndex--;
+				break;
+			case KeyInput.KEY_DOWN:
+				iNavigateCmdHistoryIndex++;
+				break;
+		}
+		if(iNavigateCmdHistoryIndex<0)iNavigateCmdHistoryIndex=0;
+		if(iNavigateCmdHistoryIndex> (astrCmdHistory.size()-1)  )iNavigateCmdHistoryIndex=astrCmdHistory.size()-1;
+		
+		tfInput.setText(astrCmdHistory.get(iNavigateCmdHistoryIndex));
 	}
 
 	protected void scrollToBottom() {
@@ -153,7 +169,7 @@ public class ConsolePluginI {
 	}
 
 	protected int getShowRowsAmount() {
-		throw new UnsupportedOperationException("method not implemented yet");
+		return lstbxLoggingSection.getVisibleItems();
 	}
 
 	protected double getScrollDumpAreaFlindex() {
@@ -162,8 +178,7 @@ public class ConsolePluginI {
 	}
 
 	protected void navigateWord(boolean b) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented yet");
+		LoggingI.i().logExceptionEntry(new UnsupportedOperationException("method not implemented yet"), null);
 	}
 
 	protected void clearInput() {
@@ -178,8 +193,7 @@ public class ConsolePluginI {
 	
 
 	protected void closeConsole() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented yet");
+		LoggingI.i().logExceptionEntry(new UnsupportedOperationException("method not implemented yet"), null);
 	}
 
 	public static enum EUserDataMiscJme{
@@ -227,8 +241,7 @@ public class ConsolePluginI {
 	}
 	
 	private void showClipboard() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented yet");
+		LoggingI.i().logExceptionEntry(new UnsupportedOperationException("method not implemented yet"), null);
 	}
 	
 	public static enum EAttribute{
@@ -329,8 +342,7 @@ public class ConsolePluginI {
 	}
 
 	private void updateConsoleHeight() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented yet");
+		LoggingI.i().logExceptionEntry(new UnsupportedOperationException("method not implemented yet"), null);
 	}
 
 	public String getStyle() {
@@ -343,8 +355,7 @@ public class ConsolePluginI {
 	}
 
 	private void updateStyle() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented yet");
+		LoggingI.i().logExceptionEntry(new UnsupportedOperationException("method not implemented yet"), null);
 	}
 
 	public String getInputText() {
@@ -353,6 +364,12 @@ public class ConsolePluginI {
 
 	public void putActionMapAtInputField(KeyAction ka, KeyActionListener kal) {
 		tfInput.getActionMap().put(ka, kal);
+	}
+
+	public void addCmdToHistory(String strJS) {
+		if(astrCmdHistory.get(astrCmdHistory.size()-1).equals(strJS))return;
+		astrCmdHistory.add(strJS);
+		iNavigateCmdHistoryIndex=astrCmdHistory.size()-1;
 	}
 	
 }

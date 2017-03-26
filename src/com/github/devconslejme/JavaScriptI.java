@@ -47,10 +47,15 @@ public class JavaScriptI {
 	private static JavaScriptI instance = new JavaScriptI();
 	/**instance*/ public static JavaScriptI i(){return instance;}
 	
+	static {
+		instance.setJSBinding(instance);
+	}
+	
 	private Object	objJSLastEval;
 	private ScriptEngine	jse;
 	private Bindings	bndJSE;
-	private ArrayList<String> astrIdList = new ArrayList<String>(); 
+	private ArrayList<String> astrIdList = new ArrayList<String>();
+	private boolean bShowAllPublicMembers = false;
 	
 	public JavaScriptI() {
 		jse  = new ScriptEngineManager().getEngineByMimeType("text/javascript");
@@ -83,6 +88,8 @@ public class JavaScriptI {
 		
 		strJS=strJS.trim();
 		if(strJS.isEmpty())return;
+		
+		ConsolePluginI.i().addCmdToHistory(strJS);
 		
 		LoggingI.i().logMarker("UserCommand");
 		
@@ -127,12 +134,18 @@ public class JavaScriptI {
 			}else{
 				LoggingI.i().logSubEntry("Return: "+objJSLastEval.toString()+" ("+objJSLastEval.getClass()+"), accessible methods:");
 				
+				String strConcreteClassSName = objJSLastEval.getClass().getSimpleName();
 				Method[] am = objJSLastEval.getClass().getMethods();
 				ArrayList<String> astr = new ArrayList<String>();
 				for(Method m:am){
 					String strM = "";
-					String strClassSName=m.getDeclaringClass().getSimpleName();
-					strM+=strClassSName+"."+m.getName();
+					String strDeclClassSName=m.getDeclaringClass().getSimpleName();
+//					String strClassSName=strDeclClassSName;
+//					if(!strClassSName.equals(strConcreteClassSName)){
+//						strClassSName=strConcreteClassSName+"<"+strClassSName+">";
+//					}
+					
+					strM+=strConcreteClassSName+"."+m.getName();
 					
 					strM+="(";
 					String strP="";
@@ -152,12 +165,26 @@ public class JavaScriptI {
 						bIsStatic=true;
 					}
 					
+//					if(!strDeclClassSName.equals(strConcreteClassSName)){
+						strM+=" <"+strDeclClassSName+">";
+//					}
+					
 					if(
-							!bIsStatic &&
-							!bHasNonPrimitiveParam && 
-							!strClassSName.equals(Object.class.getSimpleName()) &&
-							!strClassSName.equals(CharSequence.class.getSimpleName())  &&
-							!strClassSName.equals(String.class.getSimpleName())
+							isShowAllPublicMembers() ||
+							(
+								!bIsStatic &&
+								
+								!bHasNonPrimitiveParam &&
+								
+								!strDeclClassSName.equals(Object.class.getSimpleName()) &&
+								!strDeclClassSName.equals(CharSequence.class.getSimpleName())  &&
+								!strDeclClassSName.equals(String.class.getSimpleName()) &&
+								!strDeclClassSName.equals(Integer.class.getSimpleName()) &&
+								!strDeclClassSName.equals(Long.class.getSimpleName()) &&
+								!strDeclClassSName.equals(Float.class.getSimpleName()) &&
+								!strDeclClassSName.equals(Double.class.getSimpleName()) &&
+								!strDeclClassSName.equals(Boolean.class.getSimpleName()) 
+							)
 					){
 						astr.add(strM);
 					}
@@ -170,6 +197,14 @@ public class JavaScriptI {
 		} catch (ScriptException e) {
 			LoggingI.i().logExceptionEntry(e, strJS);
 		}
+	}
+
+	public boolean isShowAllPublicMembers() {
+		return bShowAllPublicMembers;
+	}
+
+	public void setShowAllPublicMembers(boolean bShowAllPublicMembers) {
+		this.bShowAllPublicMembers = bShowAllPublicMembers;
 	}
 	
 }
