@@ -77,16 +77,16 @@ public class BindKeyI {
 				
 				switch(key.getKeyCode()){
 					case KeyInput.KEY_C: 
-						if(bControl)ClipboardI.i().copy();
+						if(bControl)ClipboardI.i().copyToClipboard(LoggingI.i().getSelectedEntry());
 						break;
 					case KeyInput.KEY_ESCAPE: 
 						ConsolePluginI.i().closeConsole();
 						break;
 					case KeyInput.KEY_V: 
-						if(bControl)ClipboardI.i().paste(true);
+						if(bControl)ClipboardI.i().pasteFromClipboard(true);
 						break;
 					case KeyInput.KEY_X: 
-						if(bControl)ClipboardI.i().cut();
+						if(bControl)ClipboardI.i().cutSelectedLogEntryToClipboard();
 						break;
 					case KeyInput.KEY_NUMPADENTER:
 					case KeyInput.KEY_RETURN:

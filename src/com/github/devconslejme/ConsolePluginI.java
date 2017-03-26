@@ -35,6 +35,7 @@ import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
 import com.github.devconslejme.misc.MiscJmeI;
 import com.github.devconslejme.misc.MiscLemurI;
 import com.jme3.app.Application;
+import com.jme3.app.state.AbstractAppState;
 import com.jme3.font.BitmapFont;
 import com.jme3.input.KeyInput;
 import com.jme3.math.ColorRGBA;
@@ -51,7 +52,6 @@ import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
-import com.simsilica.lemur.component.TextEntryComponent;
 import com.simsilica.lemur.event.KeyAction;
 import com.simsilica.lemur.event.KeyActionListener;
 import com.simsilica.lemur.style.Attributes;
@@ -60,7 +60,7 @@ import com.simsilica.lemur.style.Styles;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class ConsolePluginI {
+public class ConsolePluginI extends AbstractAppState{
 	private static ConsolePluginI instance = new ConsolePluginI();
 	/*instance*/ public static ConsolePluginI i(){return instance;}
 	
@@ -98,6 +98,8 @@ public class ConsolePluginI {
 		
 		// jme
 		this.app=app;
+		
+		app.getStateManager().attach(this);
 		
 		// gui
 		this.nodeParent = nodeParent;
@@ -241,7 +243,9 @@ public class ConsolePluginI {
 	}
 	
 	private void showClipboard() {
-		LoggingI.i().logExceptionEntry(new UnsupportedOperationException("method not implemented yet"), null);
+		LoggingI.i().logMarker("Clipboard Contents: begin");
+		LoggingI.i().logEntry(ClipboardI.i().readFromClipboard(false));
+		LoggingI.i().logMarker("Clipboard Contents: end");
 	}
 	
 	public static enum EAttribute{

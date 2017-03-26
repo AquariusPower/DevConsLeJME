@@ -41,11 +41,13 @@ public class ClipboardI {
 	private static ClipboardI instance = new ClipboardI();
 	/*instance*/ public static ClipboardI i(){return instance;}
 	
-	public String copy() {
-		String str = LoggingI.i().getSelectedEntry();
+	public String copyToClipboard(String str) {
+		if(str==null)return null;
+		
 		StringSelection ss = new StringSelection(str);
 		Toolkit.getDefaultToolkit().getSystemClipboard()
 			.setContents(ss, ss);
+		
 		return str;
 	}
 
@@ -54,7 +56,13 @@ public class ClipboardI {
 	 * @param bEscapeNL good to have single line result
 	 * @return
 	 */
-	public String paste(boolean bEscapeNL) {
+	public String pasteFromClipboard(boolean bEscapeNL) {
+		String str = readFromClipboard(bEscapeNL);
+		if(str!=null)ConsolePluginI.i().setInputText(str);
+		return str;
+	}
+	
+	public String readFromClipboard(boolean bEscapeNL){
 		try{
 			Transferable tfbl = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
 			String str = (String) tfbl.getTransferData(DataFlavor.stringFlavor);
@@ -62,22 +70,18 @@ public class ClipboardI {
 				str=str.replace("\n", "\\n");
 			}
 			
-			ConsolePluginI.i().setInputText(str);
-			
 			return str;
 		} catch (UnsupportedFlavorException | IOException e) {
 			LoggingI.i().logExceptionEntry(e,null);
 		}
 		
-		return "";
+		return null;
 	}
 	
-
-	public String cut() {
-		String str = copy();
+	public String cutSelectedLogEntryToClipboard() {
+		String str = copyToClipboard(LoggingI.i().getSelectedEntry());
 		LoggingI.i().deleteLogEntry(ConsolePluginI.i().getSelectedIndex());
 		return str;
 	}
-	
 	
 }

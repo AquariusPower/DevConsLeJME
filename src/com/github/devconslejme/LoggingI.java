@@ -27,6 +27,8 @@
 
 package com.github.devconslejme;
 
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.core.VersionedList;
 
@@ -38,6 +40,7 @@ public class LoggingI {
 	/**instance*/ public static LoggingI i(){return instance;}
 	
 	private VersionedList<String>	vlstrLogEntries;
+	private int iWrapAtColumn = 80;
 	
 	public LoggingI() {
 		JavaScriptI.i().setJSBinding(this);
@@ -71,7 +74,16 @@ public class LoggingI {
 	}
 	
 	public void logEntry(String str){
-		vlstrLogEntries.add(str);
+		for(String strLine : str.split("\n")){
+			Iterable<String> itstr = Splitter.fixedLength(iWrapAtColumn).split(strLine);
+			String[] astr = Iterables.toArray(itstr, String.class);
+			for(int i=0;i<astr.length;i++){
+				String strPart = astr[i];
+				if(i<(astr.length-1))strPart+="\\"; //indicates that continue on the next line
+				vlstrLogEntries.add(strPart);
+			}
+		}
+		
 		System.out.println(str);
 	}
 	
@@ -92,6 +104,7 @@ public class LoggingI {
 	}
 
 	public String getLogEntry(Integer selection) {
+		if(selection==null)return null;
 		return vlstrLogEntries.get(selection);
 	}
 	
@@ -100,7 +113,16 @@ public class LoggingI {
 	}
 
 	public void deleteLogEntry(Integer index) {
-		vlstrLogEntries.remove(index);
+		if(index==null)return;
+		vlstrLogEntries.remove(index.intValue());
+	}
+
+	public int getWrapAtColumn() {
+		return iWrapAtColumn;
+	}
+
+	public void setWrapAtColumn(int iWrapAtColumn) {
+		this.iWrapAtColumn = iWrapAtColumn;
 	}
 	
 }
