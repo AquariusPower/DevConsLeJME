@@ -369,7 +369,11 @@ public class ConsolePluginI {
 	public void addCmdToHistory(String strJS) {
 		if(astrCmdHistory.get(astrCmdHistory.size()-1).equals(strJS))return;
 		astrCmdHistory.add(strJS);
-		iNavigateCmdHistoryIndex=astrCmdHistory.size()-1;
+		iNavigateCmdHistoryIndex=astrCmdHistory.size();
+	}
+	
+	public ArrayList<String> getCmdHistory(){
+		return astrCmdHistory;
 	}
 	
 }

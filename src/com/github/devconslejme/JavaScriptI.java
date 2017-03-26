@@ -31,6 +31,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
@@ -39,6 +42,7 @@ import javax.script.ScriptException;
 
 import com.github.devconslejme.misc.AutoCompleteI;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
+import com.github.devconslejme.misc.JavaLangI;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -51,11 +55,13 @@ public class JavaScriptI {
 		instance.setJSBinding(instance);
 	}
 	
-	private Object	objJSLastEval;
+	private Object	objLastReturnValueFromEval;
 	private ScriptEngine	jse;
 	private Bindings	bndJSE;
 	private ArrayList<String> astrIdList = new ArrayList<String>();
 	private boolean bShowAllPublicMembers = false;
+	private Method[] amLastReturnValue;
+	private ArrayList<String>	astrLastReturnValueMethods = new ArrayList<String>();
 	
 	public JavaScriptI() {
 		jse  = new ScriptEngineManager().getEngineByMimeType("text/javascript");
@@ -100,6 +106,7 @@ public class JavaScriptI {
 		}
 		
 		ConsolePluginI.i().scrollToBottom();
+		ConsolePluginI.i().clearInput();
 	}
 	
 	public AutoCompleteResult showHelp(String strFilter) {
@@ -116,89 +123,144 @@ public class JavaScriptI {
 //			LoggingI.i().logSubEntry(str);
 //		}
 		
-		AutoCompleteResult ar = AutoCompleteI.i().autoComplete(strFilter, astrIdList, false, false);
-		
 		LoggingI.i().logMarker("Help for: "+strFilter);
+		
+		ArrayList<String> astr = new ArrayList<String>();
+		astr.addAll(astrIdList);
+		astr.addAll(astrLastReturnValueMethods);
+		
+		AutoCompleteResult ar = AutoCompleteI.i().autoComplete(strFilter, astr, false, false);
 		for(String str:ar.getResultList()){
 			LoggingI.i().logSubEntry(str);
 		}
 		
 		return ar;
 	}
-
+	
+//	public ArrayList<String> getLastReturnValueMethods(){
+//		ArrayList<String> astr = new ArrayList<String>();
+//		for()
+//		amLastReturnValue
+//	}
+	
+//	public static class PubMembers{
+//		String strMethod;
+//		String strDeclClass;
+//		String strConcreteClass;
+//	}
+//	private ArrayList<PubMembers> apmLastReturnValue = new ArrayList<PubMembers>();
+	
 	public void execScript(String strJS){
 		try {
-			objJSLastEval=jse.eval(strJS,bndJSE);
-			if(objJSLastEval==null){
-				LoggingI.i().logSubEntry("Return: null");
+			objLastReturnValueFromEval=jse.eval(strJS,bndJSE);
+			if(objLastReturnValueFromEval==null){
+				LoggingI.i().logSubEntry("Return is null");
 			}else{
-				LoggingI.i().logSubEntry("Return: "+objJSLastEval.toString()+" ("+objJSLastEval.getClass()+"), accessible methods:");
-				
-				String strConcreteClassSName = objJSLastEval.getClass().getSimpleName();
-				Method[] am = objJSLastEval.getClass().getMethods();
-				ArrayList<String> astr = new ArrayList<String>();
-				for(Method m:am){
-					String strM = "";
-					String strDeclClassSName=m.getDeclaringClass().getSimpleName();
-//					String strClassSName=strDeclClassSName;
-//					if(!strClassSName.equals(strConcreteClassSName)){
-//						strClassSName=strConcreteClassSName+"<"+strClassSName+">";
-//					}
-					
-					strM+=strConcreteClassSName+"."+m.getName();
-					
-					strM+="(";
-					String strP="";
-					boolean bHasNonPrimitiveParam = false;
-					for(Class<?> p:m.getParameterTypes()){
-						if(!p.isPrimitive())bHasNonPrimitiveParam=true;
-						if(!strP.isEmpty())strP+=",";
-						strP+=p.getSimpleName();
-					}
-					strM+=strP+")";
-					
-					strM+=":"+m.getReturnType().getSimpleName();
-					
-					boolean bIsStatic=false;
-					if(Modifier.isStatic(m.getModifiers())){
-						strM+=" <STATIC>";
-						bIsStatic=true;
-					}
-					
-//					if(!strDeclClassSName.equals(strConcreteClassSName)){
-						strM+=" <"+strDeclClassSName+">";
-//					}
-					
-					if(
-							isShowAllPublicMembers() ||
-							(
-								!bIsStatic &&
-								
-								!bHasNonPrimitiveParam &&
-								
-								!strDeclClassSName.equals(Object.class.getSimpleName()) &&
-								!strDeclClassSName.equals(CharSequence.class.getSimpleName())  &&
-								!strDeclClassSName.equals(String.class.getSimpleName()) &&
-								!strDeclClassSName.equals(Integer.class.getSimpleName()) &&
-								!strDeclClassSName.equals(Long.class.getSimpleName()) &&
-								!strDeclClassSName.equals(Float.class.getSimpleName()) &&
-								!strDeclClassSName.equals(Double.class.getSimpleName()) &&
-								!strDeclClassSName.equals(Boolean.class.getSimpleName()) 
-							)
-					){
-						astr.add(strM);
-					}
+//				LoggingI.i().logSubEntry("ReturnType: "+objJSLastEval.toString()+" ("+objJSLastEval.getClass()+")");
+				LoggingI.i().logSubEntry("Return type: "+objLastReturnValueFromEval.getClass());
+				if(JavaLangI.i().isPrimitive(objLastReturnValueFromEval)){
+					LoggingI.i().logSubEntry("Return value = '"+objLastReturnValueFromEval+"'");
+				}else
+				if(!isAndShowArray(objLastReturnValueFromEval)){
+					showMethods(objLastReturnValueFromEval);
 				}
-				
-				Collections.sort(astr);
-				
-				for(String str:astr)LoggingI.i().logSubEntry(str);
 			}
 		} catch (ScriptException e) {
 			LoggingI.i().logExceptionEntry(e, strJS);
 		}
 	}
-
+	
+	private boolean isAndShowArray(Object objValue){
+		Object[] aobjVal=null;
+		Object[] aobjKey=null;
+		
+		if(objValue instanceof Map) { //HashMap TreeMap etc
+			Set<Map.Entry> es = ((Map)objValue).entrySet();
+			aobjVal=new Object[es.size()];
+			aobjKey=new Object[es.size()];
+			int i=0;
+			for(Entry entry:es){
+				aobjKey[i]=entry.getKey();
+				aobjVal[i]=entry.getValue();
+				i++;
+			}
+		}else
+		if(objValue instanceof ArrayList) {
+			ArrayList<?> aobjList = (ArrayList<?>) objValue;
+			aobjVal=aobjList.toArray();
+		}else
+		if(objValue.getClass().isArray()){
+			aobjVal = (Object[])objValue;
+		}
+		
+		if(aobjVal==null)return false;
+		
+		LoggingI.i().logSubEntry("Return array values:");
+		showArray(aobjVal);
+		
+		return true;
+	}
+	
+	private void showArray(Object[] aobj){
+		for(Object obj:aobj){
+			LoggingI.i().logSubEntry(""+obj);
+		}
+	}
+	
+	private void showMethods(Object obj){
+		LoggingI.i().logSubEntry("Accessible Methods:");
+		
+		String strConcreteClassSName = obj.getClass().getSimpleName();
+		amLastReturnValue = obj.getClass().getMethods();
+		astrLastReturnValueMethods.clear();
+		for(Method m:amLastReturnValue){
+			String strM = "";
+			String strDeclClassSName=m.getDeclaringClass().getSimpleName();
+			
+			strM+=strConcreteClassSName+"."+m.getName();
+			
+			strM+="(";
+			String strP="";
+			boolean bHasNonPrimitiveParam = false;
+			for(Class<?> p:m.getParameterTypes()){
+				if(!JavaLangI.i().isPrimitive(p))bHasNonPrimitiveParam=true;
+				if(!strP.isEmpty())strP+=",";
+				strP+=p.getSimpleName();
+			}
+			strM+=strP+")";
+			
+			/**
+			 * as comment to be compatible with scripting 
+			 */
+			strM+=" //"+m.getReturnType().getSimpleName();
+			
+			boolean bIsStatic=false;
+			if(Modifier.isStatic(m.getModifiers())){
+				strM+=" <STATIC>";
+				bIsStatic=true;
+			}
+			
+//			if(!strDeclClassSName.equals(strConcreteClassSName)){
+				strM+=" <"+strDeclClassSName+">";
+//			}
+			
+			if(
+					isShowAllPublicMembers() ||
+					(
+						!bIsStatic &&
+						!bHasNonPrimitiveParam &&
+						!JavaLangI.i().isPrimitive(m.getDeclaringClass())
+					)
+			){
+				astrLastReturnValueMethods.add(strM);
+			}
+		}
+		
+		Collections.sort(astrLastReturnValueMethods);
+		
+		for(String str:astrLastReturnValueMethods)LoggingI.i().logSubEntry(str);
+	}
+	
 	public boolean isShowAllPublicMembers() {
 		return bShowAllPublicMembers;
 	}
