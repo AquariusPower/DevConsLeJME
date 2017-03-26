@@ -27,6 +27,13 @@
 
 package com.github.devconslejme;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.IOException;
+
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
@@ -34,20 +41,42 @@ public class ClipboardI {
 	private static ClipboardI instance = new ClipboardI();
 	/*instance*/ public static ClipboardI i(){return instance;}
 	
-	public void copy() {
-//		ConsolePluginI.i().getSelectedEntry();
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented yet");
+	public String copy() {
+		String str = LoggingI.i().getSelectedEntry();
+		StringSelection ss = new StringSelection(str);
+		Toolkit.getDefaultToolkit().getSystemClipboard()
+			.setContents(ss, ss);
+		return str;
 	}
 
-	public void paste() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented yet");
+	/**
+	 * this is heavy...
+	 * @param bEscapeNL good to have single line result
+	 * @return
+	 */
+	public String paste(boolean bEscapeNL) {
+		try{
+			Transferable tfbl = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
+			String str = (String) tfbl.getTransferData(DataFlavor.stringFlavor);
+			if(bEscapeNL){
+				str=str.replace("\n", "\\n");
+			}
+			
+			ConsolePluginI.i().setInputText(str);
+			
+			return str;
+		} catch (UnsupportedFlavorException | IOException e) {
+			LoggingI.i().logExceptionEntry(e,null);
+		}
+		
+		return "";
 	}
+	
 
-	public void cut() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented yet");
+	public String cut() {
+		String str = copy();
+		LoggingI.i().deleteLogEntry(ConsolePluginI.i().getSelectedIndex());
+		return str;
 	}
 	
 	

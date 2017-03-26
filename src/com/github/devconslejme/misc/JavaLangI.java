@@ -27,6 +27,13 @@
 
 package com.github.devconslejme.misc;
 
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import com.google.common.collect.Lists;
+import com.google.common.primitives.Primitives;
+
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
@@ -34,26 +41,54 @@ public class JavaLangI {
 	private static JavaLangI instance = new JavaLangI();
 	/**instance*/ public static JavaLangI i(){return instance;}
 	
-	public boolean isPrimitive(Object obj){
-		return isPrimitive(obj.getClass());
+	/**
+	 * 
+	 * @param objValue must be a Map, an Iterable or Object[]
+	 * @return Object[][0]=key,Object[][1]=value, the key will be an index for simple arrays
+	 */
+	public Object[][] convertToKeyValueArray(Object objValue){
+		Object[][] aaobjKeyVal=null;
+		
+		if(objValue instanceof Map) { //HashMap TreeMap etc
+			Set<Map.Entry> es = ((Map)objValue).entrySet();
+			aaobjKeyVal = new Object[es.size()][2];
+			int i=0;
+			for(Entry entry:es){
+				aaobjKeyVal[i][0]=entry.getKey();
+				aaobjKeyVal[i][1]=entry.getValue();
+				i++;
+			}
+		}else{
+			Object[] aobjVal=null;
+			if(objValue.getClass().isArray()){
+				aobjVal = (Object[])objValue;
+			}else
+//			if(objValue instanceof ArrayList) {
+//				ArrayList<?> aobjList = (ArrayList<?>) objValue;
+//				aobjVal = aobjList.toArray();
+//			}
+			if(objValue instanceof Iterable){
+				aobjVal = Lists.newLinkedList((Iterable<?>)objValue).toArray();
+//				Iterator ite = ((Iterable)objValue).iterator();
+//				
+//				int iSize=0;
+//				while(ite.hasNext())iSize++;
+//				aobjVal=new Object[iSize];
+//				
+//				int i=0;
+//				while(ite.hasNext())aobjVal[i++]=ite.next();
+			}
+			
+			if(aobjVal!=null){
+				aaobjKeyVal = new Object[aobjVal.length][2];
+				for(int i=0;i<aobjVal.length;i++){
+					aaobjKeyVal[i][0]=i;
+					aaobjKeyVal[i][1]=aobjVal[i];
+				}
+			}
+		}
+		
+		return aaobjKeyVal;
 	}
-	public boolean isPrimitive(Class cl){
-		String str = cl.getSimpleName();
-		
-		if(str.equals(Object.class.getSimpleName()))return true;
-		
-		if(str.equals(Character.class.getSimpleName()))return true;
-		if(str.equals(CharSequence.class.getSimpleName()))return true;
-		if(str.equals(String.class.getSimpleName()))return true;
-		
-		if(str.equals(Integer.class.getSimpleName()))return true;
-		if(str.equals(Long.class.getSimpleName()))return true;
-		if(str.equals(Float.class.getSimpleName()))return true;
-		if(str.equals(Double.class.getSimpleName()))return true;
-		
-		if(str.equals(Boolean.class.getSimpleName()))return true;
-		
-		return false;
-	}
-	
+
 }

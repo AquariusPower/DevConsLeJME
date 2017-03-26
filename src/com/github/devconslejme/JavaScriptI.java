@@ -31,6 +31,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -43,6 +44,7 @@ import javax.script.ScriptException;
 import com.github.devconslejme.misc.AutoCompleteI;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
 import com.github.devconslejme.misc.JavaLangI;
+import com.google.common.primitives.Primitives;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -158,7 +160,7 @@ public class JavaScriptI {
 			}else{
 //				LoggingI.i().logSubEntry("ReturnType: "+objJSLastEval.toString()+" ("+objJSLastEval.getClass()+")");
 				LoggingI.i().logSubEntry("Return type: "+objLastReturnValueFromEval.getClass());
-				if(JavaLangI.i().isPrimitive(objLastReturnValueFromEval)){
+				if(isCanUserTypeIt(objLastReturnValueFromEval)){ // simple types result in simple and readable strings
 					LoggingI.i().logSubEntry("Return value = '"+objLastReturnValueFromEval+"'");
 				}else
 				if(!isAndShowArray(objLastReturnValueFromEval)){
@@ -171,40 +173,44 @@ public class JavaScriptI {
 	}
 	
 	private boolean isAndShowArray(Object objValue){
-		Object[] aobjVal=null;
-		Object[] aobjKey=null;
+		Object[][] aaobjKeyValue = JavaLangI.i().convertToKeyValueArray(objValue);
 		
-		if(objValue instanceof Map) { //HashMap TreeMap etc
-			Set<Map.Entry> es = ((Map)objValue).entrySet();
-			aobjVal=new Object[es.size()];
-			aobjKey=new Object[es.size()];
-			int i=0;
-			for(Entry entry:es){
-				aobjKey[i]=entry.getKey();
-				aobjVal[i]=entry.getValue();
-				i++;
-			}
-		}else
-		if(objValue instanceof ArrayList) {
-			ArrayList<?> aobjList = (ArrayList<?>) objValue;
-			aobjVal=aobjList.toArray();
-		}else
-		if(objValue.getClass().isArray()){
-			aobjVal = (Object[])objValue;
-		}
+//		Object[] aobjVal=null;
+//		Object[] aobjKey=null;
+//		
+//		if(objValue instanceof Map) { //HashMap TreeMap etc
+//			Set<Map.Entry> es = ((Map)objValue).entrySet();
+//			aobjVal=new Object[es.size()];
+//			aobjKey=new Object[es.size()];
+//			int i=0;
+//			for(Entry entry:es){
+//				aobjKey[i]=entry.getKey();
+//				aobjVal[i]=entry.getValue();
+//				i++;
+//			}
+//		}else
+//		if(objValue instanceof ArrayList) {
+//			ArrayList<?> aobjList = (ArrayList<?>) objValue;
+//			aobjVal=aobjList.toArray();
+//		}else
+//		if(objValue.getClass().isArray()){
+//			aobjVal = (Object[])objValue;
+//		}
 		
-		if(aobjVal==null)return false;
+		if(aaobjKeyValue==null)return false;
 		
 		LoggingI.i().logSubEntry("Return array values:");
-		showArray(aobjVal);
+		for(int i=0;i<aaobjKeyValue.length;i++){
+//			Object objVal=aaobjKeyValue[i][1];
+//			String strLog="";
+////			if(aobjKey!=null)strLog+=""+aobjKey[i];
+//			strLog+=""+aaobjKeyValue[i][0];
+//			strLog+=""+objVal;
+			String strLog = "["+aaobjKeyValue[i][0]+"]='"+aaobjKeyValue[i][1]+"'";
+			LoggingI.i().logSubEntry(strLog);
+		}
 		
 		return true;
-	}
-	
-	private void showArray(Object[] aobj){
-		for(Object obj:aobj){
-			LoggingI.i().logSubEntry(""+obj);
-		}
 	}
 	
 	private void showMethods(Object obj){
@@ -221,9 +227,9 @@ public class JavaScriptI {
 			
 			strM+="(";
 			String strP="";
-			boolean bHasNonPrimitiveParam = false;
+			boolean bHasNonUserTypeableParam = false;
 			for(Class<?> p:m.getParameterTypes()){
-				if(!JavaLangI.i().isPrimitive(p))bHasNonPrimitiveParam=true;
+				if(!isCanUserTypeIt(p))bHasNonUserTypeableParam=true;
 				if(!strP.isEmpty())strP+=",";
 				strP+=p.getSimpleName();
 			}
@@ -248,8 +254,9 @@ public class JavaScriptI {
 					isShowAllPublicMembers() ||
 					(
 						!bIsStatic &&
-						!bHasNonPrimitiveParam &&
-						!JavaLangI.i().isPrimitive(m.getDeclaringClass())
+						!bHasNonUserTypeableParam &&
+						!isCanUserTypeIt(m.getDeclaringClass()) && // will show methods for non simple types
+						!m.getDeclaringClass().equals(Object.class)
 					)
 			){
 				astrLastReturnValueMethods.add(strM);
@@ -267,6 +274,34 @@ public class JavaScriptI {
 
 	public void setShowAllPublicMembers(boolean bShowAllPublicMembers) {
 		this.bShowAllPublicMembers = bShowAllPublicMembers;
+	}
+
+	public boolean isCanUserTypeIt(Object obj){
+		return isCanUserTypeIt(obj.getClass());
+	}
+	public boolean isCanUserTypeIt(Class cl){
+		if(String.class==cl)return true;
+		
+		if(cl.isPrimitive())return true;
+		if(Primitives.isWrapperType(cl))return true; //last as is probably "slower"
+		
+//		String str = cl.getSimpleName();
+//		
+//		if(str.equals(Object.class.getSimpleName()))return true;
+//		
+//		if(str.equals(Character.class.getSimpleName()))return true;
+//		if(str.equals(CharSequence.class.getSimpleName()))return true;
+//		if(str.equals(String.class.getSimpleName()))return true;
+//		
+//		if(str.equals(Integer.class.getSimpleName()))return true;
+//		if(str.equals(Long.class.getSimpleName()))return true;
+//		if(str.equals(Float.class.getSimpleName()))return true;
+//		if(str.equals(Double.class.getSimpleName()))return true;
+//		
+//		if(str.equals(Boolean.class.getSimpleName()))return true;
+		
+//		System.out.println(cl.getSimpleName());
+		return false;
 	}
 	
 }

@@ -90,4 +90,17 @@ public class LoggingI {
 	public double getLogEntriesSize() {
 		return vlstrLogEntries.size();
 	}
+
+	public String getLogEntry(Integer selection) {
+		return vlstrLogEntries.get(selection);
+	}
+	
+	public String getSelectedEntry() {
+		return LoggingI.i().getLogEntry(ConsolePluginI.i().getSelectedIndex());
+	}
+
+	public void deleteLogEntry(Integer index) {
+		vlstrLogEntries.remove(index);
+	}
+	
 }

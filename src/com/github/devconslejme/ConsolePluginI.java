@@ -367,13 +367,24 @@ public class ConsolePluginI {
 	}
 
 	public void addCmdToHistory(String strJS) {
-		if(astrCmdHistory.get(astrCmdHistory.size()-1).equals(strJS))return;
-		astrCmdHistory.add(strJS);
+		// ignores equals to last cmd
+		boolean b = astrCmdHistory.get(astrCmdHistory.size()-1).equals(strJS);
+		if(!b)astrCmdHistory.add(strJS);
+		
+		// reset navigator index
 		iNavigateCmdHistoryIndex=astrCmdHistory.size();
 	}
 	
 	public ArrayList<String> getCmdHistory(){
 		return astrCmdHistory;
+	}
+	
+	public Integer getSelectedIndex(){
+		return lstbxLoggingSection.getSelectionModel().getSelection();
+	}
+
+	public void setInputText(String str) {
+		tfInput.getDocumentModel().insert(str);
 	}
 	
 }

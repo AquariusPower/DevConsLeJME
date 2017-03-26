@@ -83,7 +83,7 @@ public class BindKeyI {
 						ConsolePluginI.i().closeConsole();
 						break;
 					case KeyInput.KEY_V: 
-						if(bControl)ClipboardI.i().paste();
+						if(bControl)ClipboardI.i().paste(true);
 						break;
 					case KeyInput.KEY_X: 
 						if(bControl)ClipboardI.i().cut();
