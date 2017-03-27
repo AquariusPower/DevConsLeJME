@@ -113,7 +113,7 @@ public class JavaScriptI {
 		static{
 //			if(astr.size()==0){
 				for(EBaseCommand ebc:EBaseCommand.values()){
-					astr.add(ebc.s()+" -> "+ebc.strInfo+" ("+EBaseCommand.class.getSimpleName()+")");
+					astr.add(ebc.s()+" // "+ebc.strInfo+" ("+EBaseCommand.class.getSimpleName()+")");
 				}
 //			}
 		}
@@ -129,6 +129,9 @@ public class JavaScriptI {
 		String strBase = astr[0];
 		String strParms = "";
 		if(!strCmd.equals(strBase))strParms=strCmd.substring(strBase.length()+1);
+		strParms=strParms.trim();
+		
+		if(strParms.startsWith("//"))strParms=""; //remove comments
 		
 		EBaseCommand ebc = null;
 		try{
@@ -229,7 +232,7 @@ public class JavaScriptI {
 		LoggingI.i().logEntry(strJS);
 		
 		if(!isAndExecBaseCommand(strJS)){
-			execScript(strJS);
+			execScript(strJS,true);
 		}
 		
 		ConsolePluginI.i().scrollToBottom();
@@ -354,10 +357,10 @@ public class JavaScriptI {
 		}
 	}
 	
-	public void execScript(String strJS){
+	public void execScript(String strJS,boolean bShowRetVal){
 		try {
 			objRetValUser=jse.eval(strJS,bndJSE);
-			showRetVal(objRetValUser);
+			if(bShowRetVal)showRetVal(objRetValUser);
 		} catch (ScriptException e) {
 			LoggingI.i().logExceptionEntry(e, strJS);
 		}
@@ -483,7 +486,7 @@ public class JavaScriptI {
 	}
 
 	public void init() {
-		flCmdHistory = new File(ConsolePluginI.i().getStorageFolder(),"CommandsHistory.cfg");
+		flCmdHistory = new File(ConsolePluginI.i().getStorageFolder(),"CommandsHistory.log");
 		astrCmdHistory.add(""); //just to avoid empty list when adding new cmd to it
 		if(flCmdHistory.exists()){
 			for(String str:FileI.i().readAllLines(flCmdHistory)){
@@ -497,6 +500,8 @@ public class JavaScriptI {
 			for(String str:getUserInit()){
 				astrUserInit.add(str);
 			}
+		}else{
+			FileI.i().appendLine(flUserInit, "// put initialization commands on this file, one per line");
 		}
 	}
 	
@@ -506,11 +511,13 @@ public class JavaScriptI {
 	
 	public void update() {
 		if(astrUserInit.size()>0){
+			LoggingI.i().logMarker("UserInit:Begin");
 			for(String strJS:astrUserInit){
-				LoggingI.i().logEntry("UserInit: "+strJS);
-				execScript(strJS);
+				LoggingI.i().logSubEntry(strJS);
+				execScript(strJS,false);
 			}
 			astrUserInit.clear();
+			LoggingI.i().logMarker("UserInit:End");
 		}
 	}
 	
@@ -561,5 +568,6 @@ public class JavaScriptI {
 //			return true;
 //		}
 //		return false;
+			LoggingI.i().logMarker("Appended User Init Cmd");
 	}
 }

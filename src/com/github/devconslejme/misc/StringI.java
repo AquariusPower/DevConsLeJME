@@ -128,4 +128,11 @@ public class StringI {
 		return strLastUid;
 	}
 	
+	public boolean isBlank(char ch){
+		switch(ch){
+			case ' ':return true;
+			case '\t':return true;
+		}
+		return false;
+	}
 }

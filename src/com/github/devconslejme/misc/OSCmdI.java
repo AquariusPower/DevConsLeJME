@@ -25,37 +25,67 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package devconstest;
+package com.github.devconslejme.misc;
 
-import com.github.devconslejme.ConsolePluginI;
-import com.github.devconslejme.JavaScriptI;
-import com.jme3.app.SimpleApplication;
-import com.jme3.system.AppSettings;
+import java.io.IOException;
+import java.lang.ProcessBuilder.Redirect;
+import java.util.ArrayList;
+
+import com.github.devconslejme.CurrentCommandLine;
+import com.github.devconslejme.LoggingI;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestConsole extends SimpleApplication{
-
-	public static void main(String[] args) {
-		TestConsole tst = new TestConsole();
-		
-		AppSettings as = new AppSettings(true);
-		as.setResolution(1230,690);
-		as.setResizable(true);
-		as.setFrameRate(60);
-		tst.setSettings(as);
-		
-		tst.setShowSettings(false);
-		
-		tst.start();
-	}
+public class OSCmdI {
+	private static OSCmdI instance = new OSCmdI();
+	/*instance*/ public static OSCmdI i(){return instance;}
 	
-	@Override
-	public void simpleInitApp() {
-		ConsolePluginI.i().configure(this,getGuiNode());
+	/**
+	 * 
+	 * @param strLine ex.: linux 'ls 123'
+	 * @return
+	 */
+	public boolean runOSCommand(String strLine){
+		boolean bOk=true;
 		
-		JavaScriptI.i().setJSBinding(this);
+		CurrentCommandLine ccl = new CurrentCommandLine(strLine);
+		
+		String strOSName=System.getProperty("os.name");
+		if(!strOSName.equalsIgnoreCase(ccl.getCommand())){
+			/**
+			 * skip message would be just annoying...
+			 */
+			return true; //just skip
+		}
+		
+		ArrayList<String> astrOSCmd = new ArrayList<String>();
+		if(strOSName.equalsIgnoreCase("linux")){
+			astrOSCmd.add("bash");
+			astrOSCmd.add("-c");
+		}
+		astrOSCmd.add(ccl.getParam(1,String.class));
+		
+		try {
+			LoggingI.i().logMarker("Running OS command:Begin");
+			LoggingI.i().logEntry("OSCommand:"+astrOSCmd);
+			
+//			Process p = Runtime.getRuntime().exec(astrOSCmd.toArray(new String[0]));
+//			InputStream isErr = p.getErrorStream();
+			
+			ProcessBuilder pb = new ProcessBuilder(astrOSCmd);
+			pb.redirectOutput(Redirect.INHERIT);
+			pb.redirectError(Redirect.INHERIT);
+			Process p = pb.start();
+			int iExit = p.waitFor();
+			
+			LoggingI.i().logMarker("Running OS command:End:Return="+iExit);
+			bOk = iExit==0;
+		} catch (IOException|InterruptedException e) {
+			LoggingI.i().logExceptionEntry(e, astrOSCmd.toString());
+		}
+		
+		return bOk;
 	}
 	
 }

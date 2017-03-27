@@ -70,9 +70,9 @@ public class LoggingI {
 		logExceptionEntry(ex,strJS,false);
 	}
 	public void logExceptionEntry(Exception ex, String strJS, boolean bSkipLogFile) {
-		logEntry("CmdException: "+strJS,bSkipLogFile,false);
-		
-		logEntry(ex.getMessage(),bSkipLogFile,false);
+		String str="!!!";
+		if(strJS!=null)logEntry(str+"Cmd:"+strJS,bSkipLogFile,false);
+		logEntry(str+ex.getClass().getSimpleName()+":"+ex.getMessage(),bSkipLogFile,false);
 		
 		Throwable cause = ex;
 		while(true){
@@ -160,7 +160,7 @@ public class LoggingI {
 	}
 
 	public void logWarn(String string) {
-		logEntry("WARN: "+string);
+		logEntry("!WARN: "+string);
 	}
 
 	public void clear() {
