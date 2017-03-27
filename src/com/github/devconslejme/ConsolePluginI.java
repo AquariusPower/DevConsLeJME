@@ -32,6 +32,7 @@ import java.util.ArrayList;
 
 import org.lwjgl.opengl.Display;
 
+import com.github.devconslejme.QueueI.CallableX;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
 import com.github.devconslejme.misc.MiscJmeI;
 import com.github.devconslejme.misc.MiscLemurI;
@@ -199,9 +200,9 @@ public class ConsolePluginI extends AbstractAppState{
 	}
 
 	protected void scrollTo(final double dIndexIN) {
-		app.enqueue(new Runnable() {
+		QueueI.i().enqueue(new CallableX(0,false) {
 			@Override
-			public void run() {
+			public Boolean call() {
 				double dIndex = dIndexIN;
 				
 				/**
@@ -214,6 +215,8 @@ public class ConsolePluginI extends AbstractAppState{
 				
 				lstbxLoggingSection.getSlider().getModel().setPercent(dPerc);
 				lstbxLoggingSection.getSlider().getModel().setValue(dIndex); //TODO is this redundant?
+				
+				return true;
 			}
 		});
 	}
@@ -354,7 +357,7 @@ public class ConsolePluginI extends AbstractAppState{
 
 	private void initMainContainer() {
 		cntrMain = new Container(new BorderLayout(), getStyle());
-		cntrMain.setPreferredSize(v3fConsoleSize);
+		updateConsoleHeight();
 	}
 
 	private void initLoggingSection() {
@@ -370,24 +373,41 @@ public class ConsolePluginI extends AbstractAppState{
 			Display.getWidth(),
 			Display.getHeight(),
 			fLemurPreferredThickness );
-			
-		v3fConsoleSize = new Vector3f(
-			v3fApplicationWindowSize.x,
-			(v3fApplicationWindowSize.y * fConsoleHeightPerc),
-			fLemurPreferredThickness);
 	}
 
 	public float getConsoleHeightPerc() {
 		return fConsoleHeightPerc;
 	}
 
-	public void setConsoleHeightPerc(float fConsoleHeightPerc) {
-		this.fConsoleHeightPerc = fConsoleHeightPerc;
+	public void setConsoleHeightPerc(float fConsoleHeightPerc2) {
+		this.fConsoleHeightPerc = fConsoleHeightPerc2;
 		updateConsoleHeight();
 	}
 
 	private void updateConsoleHeight() {
-		LoggingI.i().logExceptionEntry(new UnsupportedOperationException("method not implemented yet"), null);
+		QueueI.i().enqueue(new CallableX(0,false) {
+			@Override
+			public Boolean call() {
+				if(fConsoleHeightPerc>1.0f)fConsoleHeightPerc=1.0f;
+				if(fConsoleHeightPerc<0f)fConsoleHeightPerc=0f; //will be further fixed below
+				
+				float fHeight = (v3fApplicationWindowSize.y * fConsoleHeightPerc);
+				
+				if(fHeight<100){
+					fHeight=100; //TODO this is guess work... areas: info+list+input with 20 each + safety margin
+					fConsoleHeightPerc=fHeight/v3fApplicationWindowSize.y;
+				}
+				
+				v3fConsoleSize = new Vector3f(
+						v3fApplicationWindowSize.x,
+						fHeight,
+						fLemurPreferredThickness);
+					
+				cntrMain.setPreferredSize(v3fConsoleSize);
+				
+				return true;
+			}
+		});
 	}
 
 	public String getStyle() {

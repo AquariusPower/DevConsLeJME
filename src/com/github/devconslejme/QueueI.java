@@ -76,9 +76,12 @@ public class QueueI extends AbstractAppState{
 		private static String strLastUId="0";
 //		private boolean bDone;
 		
+		public CallableX(float fDelaySeconds, boolean bLoop){
+			this(null,fDelaySeconds,bLoop);
+		}
 		public CallableX(String strName, float fDelaySeconds, boolean bLoop){
 			strUId=strLastUId=StringI.i().getNextUniqueId(strLastUId);
-			this.strName=strName;
+			this.strName = strName==null ? this.getClass().getEnclosingMethod().getName() : strName;
 			this.bLoop=bLoop;
 			
 			this.fDelaySeconds=(fDelaySeconds);
@@ -134,6 +137,11 @@ public class QueueI extends AbstractAppState{
 //			bDone=true;
 //		}
 	}
+	
+	/**
+	 * call things that must happen on the proper update moment
+	 * @param cx
+	 */
 	public void enqueue(CallableX cx){
 		acxList.add(cx);
 	}
