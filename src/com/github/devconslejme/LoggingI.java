@@ -70,19 +70,19 @@ public class LoggingI {
 		logExceptionEntry(ex,strJS,false);
 	}
 	public void logExceptionEntry(Exception ex, String strJS, boolean bSkipLogFile) {
-		logEntry("CmdException: "+strJS,bSkipLogFile);
+		logEntry("CmdException: "+strJS,bSkipLogFile,false);
 		
-		logEntry(ex.getMessage(),bSkipLogFile);
+		logEntry(ex.getMessage(),bSkipLogFile,false);
 		
 		Throwable cause = ex;
 		while(true){
 			for(StackTraceElement ste:cause.getStackTrace()){
-				logEntry(" "+ste,bSkipLogFile);
+				logEntry(" "+ste,bSkipLogFile,false);
 			}
 			
 			cause=cause.getCause();
 			if(cause!=null){
-				logEntry("Caused by:",bSkipLogFile);
+				logEntry("Caused by:",bSkipLogFile,false);
 			}else{
 				break;
 			}
@@ -90,9 +90,9 @@ public class LoggingI {
 	}
 	
 	public void logEntry(String str){
-		logEntry(str,false);
+		logEntry(str,false,false);
 	}
-	public void logEntry(String str, boolean bSkipLogFile){
+	public void logEntry(String str, boolean bSkipLogFile, boolean bSkipSysOut){
 		// log at application console
 		for(String strLine : str.split("\n")){
 			Iterable<String> itstr = Splitter.fixedLength(iWrapAtColumn).split(strLine);
@@ -114,7 +114,9 @@ public class LoggingI {
 			vlstrLogEntries.remove(0);
 		}
 		
-		System.out.println(str);
+		if(!bSkipSysOut)System.out.println(str);
+		
+		//dont! ConsolePluginI.i().scrollToBottom();
 	}
 	
 	public void logSubEntry(String string) {

@@ -28,11 +28,11 @@
 package com.github.devconslejme;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
+import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,10 +48,7 @@ import com.github.devconslejme.QueueI.CallableX;
 import com.github.devconslejme.misc.AutoCompleteI;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
 import com.github.devconslejme.misc.JavaLangI;
-import com.google.common.base.Enums;
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 import com.google.common.primitives.Primitives;
 import com.jme3.input.KeyInput;
 
@@ -70,7 +67,7 @@ public class JavaScriptI {
 	private Object	objRetValFile;
 	private ScriptEngine	jse;
 	private Bindings	bndJSE;
-	private ArrayList<String> astrIdList = new ArrayList<String>();
+	private ArrayList<String> astrJSClassBindList = new ArrayList<String>();
 	private boolean bShowAllPublicMembers = false;
 	private Method[] amLastReturnValue;
 	private ArrayList<String>	astrLastReturnValueMethods = new ArrayList<String>();
@@ -79,7 +76,13 @@ public class JavaScriptI {
 	private File	flCmdHistory;
 	private File	flUserInit;
 	private int iNavigateCmdHistoryIndex = 0;
-	private HashBiMap<String,Reader> hmFileReaderExecJS = HashBiMap.create(); 
+	private HashBiMap<String,File> hmFileReaderExecJS = HashBiMap.create(); 
+	
+	enum EJSObjectBind {
+		selfScript,
+		;
+		public String s(){return toString();}
+	}
 	
 	enum EBaseCommand{
 		help("[filter]"),
@@ -90,7 +93,9 @@ public class JavaScriptI {
 		
 		exec("[file] runs a script file, mainly at "+ConsolePluginI.i().getStorageFolder()),
 		
-		clear("clears the log"),
+		clear("clears the console log (not the log file)"),
+		
+		echo("print some text on the console log")
 		;
 		
 		EBaseCommand(){}
@@ -106,7 +111,7 @@ public class JavaScriptI {
 		static{
 //			if(astr.size()==0){
 				for(EBaseCommand ebc:EBaseCommand.values()){
-					astr.add(ebc.s());
+					astr.add(ebc.s()+" -> "+ebc.strInfo+" ("+EBaseCommand.class.getSimpleName()+")");
 				}
 //			}
 		}
@@ -139,6 +144,9 @@ public class JavaScriptI {
 			case clear:
 				LoggingI.i().clear();
 				return true;
+			case echo:
+				LoggingI.i().logEntry(strParms);
+				return true;
 			case ini:
 				appendUserInitCommand(strParms);
 				return true;
@@ -156,8 +164,26 @@ public class JavaScriptI {
 		return false;
 	}
 	
+	/**
+	 * based on: jse.getContext().getWriter() type
+	 */
+	public static class WriterCapture extends PrintWriter{
+		public WriterCapture() {
+			super(System.out, true);
+		}
+		
+		@Override
+		public void write(String s, int off, int len) {
+			super.write(s, off, len);
+			if(!s.equals("\n"))LoggingI.i().logEntry("SysO: "+s,false,true);
+		}
+	}
+	WriterCapture wrc = new WriterCapture();
+	
 	public void configure() {
 		jse  = new ScriptEngineManager().getEngineByMimeType("text/javascript");
+		jse.getContext().setWriter(wrc);
+		
 		bndJSE = jse.createBindings();
 //		for(EBaseCommand ebc:EBaseCommand.values()){
 //			astrIdList.add(ebc.s());
@@ -177,7 +203,7 @@ public class JavaScriptI {
 			throw new NullPointerException("already set: "+strBindId);
 		}
 		
-		astrIdList.add(strBindId);
+		astrJSClassBindList.add(strBindId);
 	}
 	/**
 	 * 
@@ -195,6 +221,7 @@ public class JavaScriptI {
 		addCmdToHistory(strJS);
 		
 		LoggingI.i().logMarker("User Command");
+		LoggingI.i().logEntry(strJS);
 		
 		if(!isAndExecBaseCommand(strJS)){
 			execScript(strJS);
@@ -224,7 +251,7 @@ public class JavaScriptI {
 //		astr.addAll(Arrays.toString(EBaseCommand.values()));
 //		Collections.addAll(astr, Arrays.asList(EBaseCommand.values()).toArray(new String[]{}));
 		astr.addAll(EBaseCommand.valuesAsStringArray());
-		astr.addAll(astrIdList);
+		astr.addAll(astrJSClassBindList);
 		astr.addAll(astrLastReturnValueMethods);
 		
 		AutoCompleteResult ar = AutoCompleteI.i().autoComplete(strFilter, astr, false, false);
@@ -248,7 +275,7 @@ public class JavaScriptI {
 //	}
 //	private ArrayList<PubMembers> apmLastReturnValue = new ArrayList<PubMembers>();
 	
-	public Reader execFile(String strFile){
+	public File execFile(String strFile){
 		if(strFile.isEmpty()){
 			LoggingI.i().logWarn("missing file param");
 			return null;
@@ -256,22 +283,34 @@ public class JavaScriptI {
 		
 		File flJS = null;
 		try {
-			flJS = new File(ConsolePluginI.i().getStorageFolder(),strFile);
+			flJS = new File(strFile); //some absolute location
+			if(!flJS.exists()){ 
+				//relative to storage
+				flJS = new File(ConsolePluginI.i().getStorageFolder(),strFile);
+			}
+			
 			if(!flJS.exists()){
 				flJS.createNewFile();
-				FileI.i().appendLine(flJS, "//tip: "+astrIdList);
+				FileI.i().appendLine(flJS, "//Classes: "+astrJSClassBindList);
+				FileI.i().appendLine(flJS, "//"+EJSObjectBind.class.getSimpleName()+": "+Arrays.toString(EJSObjectBind.values()));
+				LoggingI.i().logWarn("created file "+flJS.getAbsoluteFile());
+				return null;
 			}
 			
-			Reader rd = hmFileReaderExecJS.get(flJS.getCanonicalPath());
-			if(rd==null){
-				rd=Files.newReader(flJS, StandardCharsets.UTF_8);
-				hmFileReaderExecJS.put(flJS.getCanonicalPath(), rd);
+			if(hmFileReaderExecJS.get(flJS.getCanonicalPath())==null){
+				hmFileReaderExecJS.put(flJS.getCanonicalPath(), flJS);
 			}
+//			File fl = hmFileReaderExecJS.get(flJS.getCanonicalPath());
+//			if(fl==null){
+////				rd=Files.newReader(flJS, StandardCharsets.UTF_8);
+////				rd=new FileReader(flJS);
+//				hmFileReaderExecJS.put(flJS.getCanonicalPath(), rd);
+//			}
 			
-			execFile(rd);
+			execFile(flJS);
 			showRetVal(objRetValFile); //this method will be called by the user, so show the return value
 			
-			return rd;
+			return flJS;
 		} catch (IOException e) {
 			LoggingI.i().logExceptionEntry(e, flJS.getName());
 		}
@@ -284,11 +323,11 @@ public class JavaScriptI {
 	 * @param rd
 	 * @param fDelaySeconds
 	 */
-	public void queueExecFile(final Reader rd, final float fDelaySeconds){
+	public void queueExecFile(final File flJS, final float fDelaySeconds){
 		QueueI.i().enqueue(new CallableX(fDelaySeconds) {
 			@Override
 			public Boolean call() {
-				execFile(rd);
+				execFile(flJS);
 				return true;
 			}
 		});
@@ -296,15 +335,17 @@ public class JavaScriptI {
 	
 	/**
 	 * kept private to prevent infinite self call on the same frame,
-	 * use {@link #queueExecFile(Reader, float)}
+	 * use {@link #queueExecFile(File, float)}
 	 * @param rd
 	 */
-	private void execFile(Reader rd){
+	private void execFile(File flJS){
 		try {
-			bndJSE.put("rdSelfScript", rd);
-			objRetValFile = jse.eval(rd,bndJSE);
-		} catch (ScriptException e) {
-			LoggingI.i().logExceptionEntry(e, hmFileReaderExecJS.inverse().get(rd));
+			bndJSE.put(EJSObjectBind.selfScript.s(), flJS);
+//			rd.reset();
+			objRetValFile = jse.eval(new FileReader(flJS),bndJSE);
+		} catch (ScriptException | IOException e) {
+//			LoggingI.i().logExceptionEntry(e, hmFileReaderExecJS.inverse().get(rd));
+			LoggingI.i().logExceptionEntry(e, flJS.toString());
 			return;
 		}
 	}

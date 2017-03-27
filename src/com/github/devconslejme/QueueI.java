@@ -96,7 +96,7 @@ public class QueueI extends AbstractAppState{
 	}
 	
 	private boolean isReady(long lRunAt){
-		return lRunAt >= app.getTimer().getTime();
+		return lRunAt <= app.getTimer().getTime();
 	}
 	
 	private long calcRunAt(float fDelaySeconds){
@@ -107,9 +107,8 @@ public class QueueI extends AbstractAppState{
 	public void update(float tpf) {
 		super.update(tpf);
 		
-//		setTimeMilis(app.getTimer().getTime());
 		iDoneCount=0;
-		for(CallableX cx:acxList){//.toArray(new CallableX[]{})){
+		for(CallableX cx:acxList.toArray(new CallableX[]{})){
 			if(cx.isDone()){
 				iDoneCount++;
 				continue;
@@ -118,16 +117,16 @@ public class QueueI extends AbstractAppState{
 			if(cx.isReady()){
 				if(cx.call()){
 					cx.done();
-//					acxList.remove(cx);
+					acxList.remove(cx);
 				}
 			}
 		}
 		
-		if(iDoneCount>10){
-			for(CallableX cx:acxList.toArray(new CallableX[]{})){
-				if(cx.isDone())acxList.remove(cx);
-			}
-		}
+//		if(iDoneCount>10){ //TODO what is a good amount to let it be cleaned considering speed/cpu usage?
+//			for(CallableX cx:acxList.toArray(new CallableX[]{})){
+//				if(cx.isDone())acxList.remove(cx);
+//			}
+//		}
 	}
 	
 	public void configure(Application app) {
