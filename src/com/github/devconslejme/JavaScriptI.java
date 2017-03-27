@@ -34,6 +34,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -46,7 +48,9 @@ import com.github.devconslejme.QueueI.CallableX;
 import com.github.devconslejme.misc.AutoCompleteI;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
 import com.github.devconslejme.misc.JavaLangI;
+import com.google.common.base.Enums;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.common.primitives.Primitives;
 import com.jme3.input.KeyInput;
@@ -86,6 +90,7 @@ public class JavaScriptI {
 		
 		exec("[file] runs a script file, mainly at "+ConsolePluginI.i().getStorageFolder()),
 		
+		clear("clears the log"),
 		;
 		
 		EBaseCommand(){}
@@ -96,6 +101,19 @@ public class JavaScriptI {
 		private String strInfo = "";
 		
 		public String s(){return toString();}
+		
+		private static ArrayList<String> astr = new ArrayList<String>(); 
+		static{
+//			if(astr.size()==0){
+				for(EBaseCommand ebc:EBaseCommand.values()){
+					astr.add(ebc.s());
+				}
+//			}
+		}
+		
+		public static Collection<? extends String> valuesAsStringArray() {
+			return astr;
+		}
 	}
 	
 	public boolean isAndExecBaseCommand(String strCmd){
@@ -118,6 +136,9 @@ public class JavaScriptI {
 			case help:
 				showHelp(strParms);
 				return true;
+			case clear:
+				LoggingI.i().clear();
+				return true;
 			case ini:
 				appendUserInitCommand(strParms);
 				return true;
@@ -138,9 +159,11 @@ public class JavaScriptI {
 	public void configure() {
 		jse  = new ScriptEngineManager().getEngineByMimeType("text/javascript");
 		bndJSE = jse.createBindings();
-		for(EBaseCommand ebc:EBaseCommand.values()){
-			astrIdList.add(ebc.s());
-		}
+//		for(EBaseCommand ebc:EBaseCommand.values()){
+//			astrIdList.add(ebc.s());
+//		}
+		
+		setJSBinding(this);
 	}
 	
 	/**
@@ -198,6 +221,9 @@ public class JavaScriptI {
 		LoggingI.i().logMarker("Help for: "+strFilter);
 		
 		ArrayList<String> astr = new ArrayList<String>();
+//		astr.addAll(Arrays.toString(EBaseCommand.values()));
+//		Collections.addAll(astr, Arrays.asList(EBaseCommand.values()).toArray(new String[]{}));
+		astr.addAll(EBaseCommand.valuesAsStringArray());
 		astr.addAll(astrIdList);
 		astr.addAll(astrLastReturnValueMethods);
 		
@@ -223,9 +249,19 @@ public class JavaScriptI {
 //	private ArrayList<PubMembers> apmLastReturnValue = new ArrayList<PubMembers>();
 	
 	public Reader execFile(String strFile){
+		if(strFile.isEmpty()){
+			LoggingI.i().logWarn("missing file param");
+			return null;
+		}
+		
 		File flJS = null;
 		try {
 			flJS = new File(ConsolePluginI.i().getStorageFolder(),strFile);
+			if(!flJS.exists()){
+				flJS.createNewFile();
+				FileI.i().appendLine(flJS, "//tip: "+astrIdList);
+			}
+			
 			Reader rd = hmFileReaderExecJS.get(flJS.getCanonicalPath());
 			if(rd==null){
 				rd=Files.newReader(flJS, StandardCharsets.UTF_8);
@@ -233,6 +269,7 @@ public class JavaScriptI {
 			}
 			
 			execFile(rd);
+			showRetVal(objRetValFile); //this method will be called by the user, so show the return value
 			
 			return rd;
 		} catch (IOException e) {
@@ -260,14 +297,14 @@ public class JavaScriptI {
 	/**
 	 * kept private to prevent infinite self call on the same frame,
 	 * use {@link #queueExecFile(Reader, float)}
-	 * @param rdSelfScript
+	 * @param rd
 	 */
-	private void execFile(Reader rdSelfScript){
+	private void execFile(Reader rd){
 		try {
-			bndJSE.put("rdSelfScript", rdSelfScript);
-			objRetValFile = jse.eval(rdSelfScript,bndJSE);
+			bndJSE.put("rdSelfScript", rd);
+			objRetValFile = jse.eval(rd,bndJSE);
 		} catch (ScriptException e) {
-			LoggingI.i().logExceptionEntry(e, hmFileReaderExecJS.inverse().get(rdSelfScript));
+			LoggingI.i().logExceptionEntry(e, hmFileReaderExecJS.inverse().get(rd));
 			return;
 		}
 	}
@@ -275,58 +312,33 @@ public class JavaScriptI {
 	public void execScript(String strJS){
 		try {
 			objRetValUser=jse.eval(strJS,bndJSE);
+			showRetVal(objRetValUser);
 		} catch (ScriptException e) {
 			LoggingI.i().logExceptionEntry(e, strJS);
 		}
-		
-		if(objRetValUser==null){
+	}
+	
+	public void showRetVal(Object obj){
+		if(obj==null){
 			LoggingI.i().logSubEntry("Return is null");
 		}else{
 //				LoggingI.i().logSubEntry("ReturnType: "+objJSLastEval.toString()+" ("+objJSLastEval.getClass()+")");
-			LoggingI.i().logSubEntry("Return type: "+objRetValUser.getClass());
-			if(isCanUserTypeIt(objRetValUser)){ // simple types result in simple and readable strings
-				LoggingI.i().logSubEntry("Return value = '"+objRetValUser+"'");
+			LoggingI.i().logSubEntry("Return type: "+obj.getClass());
+			if(isCanUserTypeIt(obj)){ // simple types result in simple and readable strings
+				LoggingI.i().logSubEntry("Return value = '"+obj+"'");
 			}else
-			if(!isAndShowArray(objRetValUser)){
-				showMethods(objRetValUser);
+			if(!isAndShowArray(obj)){
+				showMethods(obj);
 			}
 		}
 	}
 	
 	private boolean isAndShowArray(Object objValue){
 		Object[][] aaobjKeyValue = JavaLangI.i().convertToKeyValueArray(objValue);
-		
-//		Object[] aobjVal=null;
-//		Object[] aobjKey=null;
-//		
-//		if(objValue instanceof Map) { //HashMap TreeMap etc
-//			Set<Map.Entry> es = ((Map)objValue).entrySet();
-//			aobjVal=new Object[es.size()];
-//			aobjKey=new Object[es.size()];
-//			int i=0;
-//			for(Entry entry:es){
-//				aobjKey[i]=entry.getKey();
-//				aobjVal[i]=entry.getValue();
-//				i++;
-//			}
-//		}else
-//		if(objValue instanceof ArrayList) {
-//			ArrayList<?> aobjList = (ArrayList<?>) objValue;
-//			aobjVal=aobjList.toArray();
-//		}else
-//		if(objValue.getClass().isArray()){
-//			aobjVal = (Object[])objValue;
-//		}
-		
 		if(aaobjKeyValue==null)return false;
 		
 		LoggingI.i().logSubEntry("Return array values:");
 		for(int i=0;i<aaobjKeyValue.length;i++){
-//			Object objVal=aaobjKeyValue[i][1];
-//			String strLog="";
-////			if(aobjKey!=null)strLog+=""+aobjKey[i];
-//			strLog+=""+aaobjKeyValue[i][0];
-//			strLog+=""+objVal;
 			String strLog = "["+aaobjKeyValue[i][0]+"]='"+aaobjKeyValue[i][1]+"'";
 			LoggingI.i().logSubEntry(strLog);
 		}

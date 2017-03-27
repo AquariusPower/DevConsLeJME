@@ -152,6 +152,27 @@ public class AutoCompleteI {
 		Collections.sort(astrPossibleMatches);
 		
 		// prepend improved partial match (or it can be simply the unmodified part...)
+		String strBeginCasePrevious="";
+		boolean bAllBeginAreEqual=true;
+		for(String str:astrPossibleMatches){
+			if(str.equalsIgnoreCase(strImprovedPart)){
+				strImprovedPart=str;
+				break;
+			}
+			
+			String strBeginCase=str.substring(0, strImprovedPart.length());
+			if(strBeginCasePrevious.isEmpty()){
+				strBeginCasePrevious=strBeginCase;
+			}else{
+				if(!strBeginCase.equals(strBeginCasePrevious)){
+					bAllBeginAreEqual=false;
+					break;
+				}
+			}
+		}
+		if(bAllBeginAreEqual && !strBeginCasePrevious.isEmpty()){
+			strImprovedPart=strBeginCasePrevious;
+		}
 		astrPossibleMatches.add(0, strImprovedPart);
 		
 		return new AutoCompleteResult(strImprovedPart,astrPossibleMatches,bUsingFuzzy);

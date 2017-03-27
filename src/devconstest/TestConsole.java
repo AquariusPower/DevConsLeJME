@@ -25,7 +25,7 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package test;
+package devconstest;
 
 import com.github.devconslejme.ConsolePluginI;
 import com.github.devconslejme.JavaScriptI;

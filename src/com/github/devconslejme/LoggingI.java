@@ -156,5 +156,13 @@ public class LoggingI {
 	public void setWrapAtColumn(int iWrapAtColumn) {
 		this.iWrapAtColumn = iWrapAtColumn;
 	}
+
+	public void logWarn(String string) {
+		logEntry("WARN: "+string);
+	}
+
+	public void clear() {
+		vlstrLogEntries.clear();
+	}
 	
 }

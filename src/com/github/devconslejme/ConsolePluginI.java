@@ -285,15 +285,9 @@ public class ConsolePluginI extends AbstractAppState{
 		@Override
 		public void execute(Button source) {
 			if(source.equals(btnClipboardShow)){
-				showClipboard();
+				ClipboardI.i().showClipboard();
 			}
 		}
-	}
-	
-	private void showClipboard() {
-		LoggingI.i().logMarker("Clipboard Contents: begin");
-		LoggingI.i().logEntry(ClipboardI.i().readFromClipboard(false));
-		LoggingI.i().logMarker("Clipboard Contents: end");
 	}
 	
 	public static enum EAttribute{
