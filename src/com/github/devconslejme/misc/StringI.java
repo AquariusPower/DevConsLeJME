@@ -27,6 +27,8 @@
 
 package com.github.devconslejme.misc;
 
+import java.math.BigInteger;
+
 
 /**
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -34,6 +36,8 @@ package com.github.devconslejme.misc;
 public class StringI {
 	private static StringI instance = new StringI();
 	/*instance*/ public static StringI i(){return instance;}
+	
+	private String	strLastUid;
 	
 	public static enum EStringMatchMode{
 		Exact,
@@ -51,6 +55,7 @@ public class StringI {
 		Fuzzy,
 		;
 	}
+
 	public boolean containsFuzzyMatch(String strToCheck, String strMatch, EStringMatchMode eMode, boolean bIgnoreCase){
 		if(bIgnoreCase){ 
 			strToCheck=strToCheck.toLowerCase();
@@ -89,6 +94,38 @@ public class StringI {
 		}
 		
 		return false;
+	}
+
+	/**
+	 * Practically unlimited UId.
+	 * This allows for unrelated/non-conflicting things to have same UId.
+	 * 
+	 * @param strLastId
+	 * @return
+	 */
+	public String getNextUniqueId(String strLastId){
+		int iRadix=Character.MAX_RADIX;
+		/**
+		 * Do not fix if null like in `if(strLastId==null)strLastId="0";`
+		 * because the last id must be controlled by a manager String field,
+		 * or be a static String field of the class...
+		 * 
+		 * fixing the null would just be prone to developer coding bugs...
+		 * 
+		 * TODO better not fix if empty either!?
+		 */
+		BigInteger bi = new BigInteger(strLastId,iRadix);
+		bi=bi.add(new BigInteger("1"));
+		return bi.toString(iRadix);
+	}
+	
+	/**
+	 * This uses a global uid.
+	 * @return
+	 */
+	public String getNextUniqueId(){
+		strLastUid=getNextUniqueId(strLastUid);
+		return strLastUid;
 	}
 	
 }

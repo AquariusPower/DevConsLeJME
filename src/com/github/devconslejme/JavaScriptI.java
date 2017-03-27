@@ -95,7 +95,9 @@ public class JavaScriptI {
 		
 		clear("clears the console log (not the log file)"),
 		
-		echo("print some text on the console log")
+		echo("print some text on the console log"),
+		
+		kill("kill running queue by UId"),
 		;
 		
 		EBaseCommand(){}
@@ -146,6 +148,9 @@ public class JavaScriptI {
 				return true;
 			case echo:
 				LoggingI.i().logEntry(strParms);
+				return true;
+			case kill:
+				QueueI.i().kill(strParms);
 				return true;
 			case ini:
 				appendUserInitCommand(strParms);
@@ -275,7 +280,11 @@ public class JavaScriptI {
 //	}
 //	private ArrayList<PubMembers> apmLastReturnValue = new ArrayList<PubMembers>();
 	
-	public File execFile(String strFile){
+	public void execFile(String strFile){
+		execFile(asFile(strFile));
+		showRetVal(objRetValFile); //this method will be called by the user, so show the return value
+	}
+	public File asFile(String strFile){
 		if(strFile.isEmpty()){
 			LoggingI.i().logWarn("missing file param");
 			return null;
@@ -307,9 +316,6 @@ public class JavaScriptI {
 //				hmFileReaderExecJS.put(flJS.getCanonicalPath(), rd);
 //			}
 			
-			execFile(flJS);
-			showRetVal(objRetValFile); //this method will be called by the user, so show the return value
-			
 			return flJS;
 		} catch (IOException e) {
 			LoggingI.i().logExceptionEntry(e, flJS.getName());
@@ -318,13 +324,11 @@ public class JavaScriptI {
 		return null;
 	}
 	
-	/**
-	 * the script can call itself to create a loop
-	 * @param rd
-	 * @param fDelaySeconds
-	 */
-	public void queueExecFile(final File flJS, final float fDelaySeconds){
-		QueueI.i().enqueue(new CallableX(fDelaySeconds) {
+	public void queueExecFile(String strFile, float fDelaySeconds, boolean bLoop){
+		queueExecFile(asFile(strFile), fDelaySeconds, bLoop);
+	}
+	public void queueExecFile(File flJS, float fDelaySeconds, boolean bLoop){
+		QueueI.i().enqueue(new CallableX(flJS.getName(),fDelaySeconds,bLoop) {
 			@Override
 			public Boolean call() {
 				execFile(flJS);

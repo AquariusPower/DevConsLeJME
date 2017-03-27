@@ -30,6 +30,7 @@ package com.github.devconslejme;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 
+import com.github.devconslejme.misc.StringI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 
@@ -42,7 +43,7 @@ public class QueueI extends AbstractAppState{
 	
 	ArrayList<CallableX> acxList = new ArrayList<CallableX>();
 	private Application	app;
-	private int	iDoneCount;
+//	private int	iDoneCount;
 	
 //	private long lTimeMilis;
 //	public void setTimeMilis(long lTimeMilis){
@@ -66,15 +67,28 @@ public class QueueI extends AbstractAppState{
 	 * CallableX like in extra, plus 
 	 */
 	public abstract static class CallableX implements CallableWeak<Boolean>{
+		// THE ORDER of these vars will be at the toString()
+		private String strUId;
+		private String	strName;
 		private float	fDelaySeconds;
+		private boolean	bLoop;
 		private long lRunAtTimeMilis;
-		private boolean bDone;
+		private static String strLastUId="0";
+//		private boolean bDone;
 		
-		public CallableX(float fDelaySeconds){
+		public CallableX(String strName, float fDelaySeconds, boolean bLoop){
+			strUId=strLastUId=StringI.i().getNextUniqueId(strLastUId);
+			this.strName=strName;
+			this.bLoop=bLoop;
+			
 			this.fDelaySeconds=(fDelaySeconds);
-			this.lRunAtTimeMilis = QueueI.i().calcRunAt(fDelaySeconds);
+			updateRunAt();
 		}
 
+		public void updateRunAt() {
+			this.lRunAtTimeMilis = QueueI.i().calcRunAt(fDelaySeconds);
+		}
+		
 		public float getDelaySeconds() {
 			return fDelaySeconds;
 		}
@@ -83,13 +97,42 @@ public class QueueI extends AbstractAppState{
 			return QueueI.i().isReady(lRunAtTimeMilis);
 		}
 
-		public boolean isDone() {
-			return bDone;
+		public boolean isLoop() {
+			return bLoop;
+		}
+		
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+			builder.append("CallableX [strUId=");
+			builder.append(strUId);
+			builder.append(", strName=");
+			builder.append(strName);
+			builder.append(", fDelaySeconds=");
+			builder.append(fDelaySeconds);
+			builder.append(", bLoop=");
+			builder.append(bLoop);
+			builder.append(", lRunAtTimeMilis=");
+			builder.append(lRunAtTimeMilis);
+			builder.append("]");
+			return builder.toString();
 		}
 
-		public void done() {
-			bDone=true;
+		public String getUId() {
+			return strUId;
 		}
+
+		public void breakLoop() {
+			bLoop=false;
+		}
+		
+//		public boolean isDone() {
+//			return bDone;
+//		}
+//
+//		public void done() {
+//			bDone=true;
+//		}
 	}
 	public void enqueue(CallableX cx){
 		acxList.add(cx);
@@ -107,17 +150,23 @@ public class QueueI extends AbstractAppState{
 	public void update(float tpf) {
 		super.update(tpf);
 		
-		iDoneCount=0;
+//		iDoneCount=0;
 		for(CallableX cx:acxList.toArray(new CallableX[]{})){
-			if(cx.isDone()){
-				iDoneCount++;
-				continue;
-			}
+//			if(cx.isDone()){
+//				iDoneCount++;
+//				continue;
+//			}
 			
 			if(cx.isReady()){
 				if(cx.call()){
-					cx.done();
-					acxList.remove(cx);
+//					cx.done();
+					if(cx.isLoop()){
+						cx.updateRunAt();
+					}else{
+						acxList.remove(cx);
+					}
+				}else{
+					// if a loop queue fails, it will not wait and will promptly retry!
 				}
 			}
 		}
@@ -139,5 +188,19 @@ public class QueueI extends AbstractAppState{
 		app.getStateManager().attach(this);
 		
 		JavaScriptI.i().setJSBinding(this);
+	}
+	
+	public void showQueue(){
+		for(CallableX cx:acxList){
+			LoggingI.i().logSubEntry(cx.toString());
+		}
+	}
+
+	public void kill(String strParms) {
+		for(CallableX cx:acxList){
+			if(cx.getUId().equalsIgnoreCase(strParms)){
+				cx.breakLoop();
+			}
+		}
 	}
 }
