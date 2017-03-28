@@ -61,7 +61,6 @@ import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.HAlignment;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
-import com.simsilica.lemur.ListBox.ListAction;
 import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
@@ -138,26 +137,18 @@ public class ConsolePluginI extends AbstractAppState{
 			return i;
 		}
 	};
-//	private Command<ListBox>	cmdClickLogRow = new Command<ListBox>() {
-//		@Override
-//		public void execute(ListBox lstbx) {
-//			if(lstbx==lstbxLoggingSection){
-//				String str = getInputText();
-//				str=str.trim();
-//				if(!str.isEmpty())JavaScriptI.i().addCmdToHistory("//"+str); //just to backup anything that is there even if incomplete
-//				
-//				String strText = LoggingI.i().getSelectedEntry();
-//				setInputText(strText);
-//				int iMoveTo = strText.indexOf('(');
-//				if(iMoveTo>-1){
-//					DocumentModel dm = tfInput.getDocumentModel();
-////					int iLeft = strText.length() - iMoveTo;
-//					for(int i=strText.length()-1; i>iMoveTo; i--)dm.left();
-//				}
-//			}
-//		}
-//	};
 	private VersionedReference<Set<Integer>>	vrSelectionModel;
+	private String[]	astrType = new String[]{
+			String.class.getSimpleName(),
+			
+			boolean.class.getSimpleName(),
+			
+			float.class.getSimpleName(),
+			double.class.getSimpleName(),
+			
+			int.class.getSimpleName(),
+			long.class.getSimpleName(),
+	};
 	
 	public static enum EStatPriority{
 		Top,
@@ -613,8 +604,29 @@ public class ConsolePluginI extends AbstractAppState{
 		if(!str.isEmpty())JavaScriptI.i().addCmdToHistory("//"+str); //just to backup anything that is there even if incomplete
 		
 		String strText = LoggingI.i().getSelectedEntry();
-		setInputText(strText);
 		int iMoveTo = strText.indexOf('(');
+		
+		// remove useless type text
+		String strAfter = strText.substring(iMoveTo+1);
+//		if(strAfter.startsWith(String.class.getSimpleName())){
+//			strText=strText.substring(0, iMoveTo+1);
+//			strText+="\"\""+strAfter.substring(String.class.getSimpleName().length());
+//			iMoveTo++;
+//		}else{
+			for(String strType:astrType){
+				if(strAfter.startsWith(strType)){
+					strText=strText.substring(0, iMoveTo+1);
+					if(strType.equals(String.class.getSimpleName())){
+						strText+="\"\"";
+						iMoveTo++;
+					}
+					strText+=strAfter.substring(strType.length());
+					break;
+				}
+			}
+//		}
+		
+		setInputText(strText);
 		if(iMoveTo>-1){
 			DocumentModel dm = tfInput.getDocumentModel();
 //				int iLeft = strText.length() - iMoveTo;

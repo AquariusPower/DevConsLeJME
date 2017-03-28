@@ -104,6 +104,9 @@ public class BindKeyI {
 					case KeyInput.KEY_RIGHT:
 						if(bControl)ConsolePluginI.i().navigateWord(true);
 						break;
+					case KeyInput.KEY_SPACE:
+//						if(bControl)JavaScriptI.i().autoCompleteBoolean();
+						break;
 				}
 			}
 		};

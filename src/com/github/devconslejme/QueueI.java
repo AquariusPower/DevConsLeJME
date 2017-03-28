@@ -46,15 +46,6 @@ public class QueueI extends AbstractAppState{
 	
 	ArrayList<CallableX> acxList = new ArrayList<CallableX>();
 	private Application	app;
-//	private int	iDoneCount;
-	
-//	private long lTimeMilis;
-//	public void setTimeMilis(long lTimeMilis){
-//		this.lTimeMilis=lTimeMilis;
-//	}
-//	public long getTimeMilis() {
-//		return lTimeMilis;
-//	}
 	
 	public static interface CallableWeak<V> extends Callable<V>{
 		/**
@@ -102,18 +93,9 @@ public class QueueI extends AbstractAppState{
 				bAnonymousClass=true;
 			}
 			
-//			if(!bAnonymousClass && strName==null){
-//				throw new NullPointerException("name is null");
-//			}
 			if(strName==null){
-//				strName=this.getClass().getDeclaringClass().getSimpleName();
 				strName=this.getClass().getSimpleName();
-//				strName=Thread.currentThread().getStackTrace()[1].getMethodName();
 			}
-//			
-//			if(strName==null){
-//				throw new NullPointerException("name is null");
-//			}
 			
 			this.strName = strName;
 			
@@ -197,13 +179,6 @@ public class QueueI extends AbstractAppState{
 			return (T)hmKeyValue.get(strKey);
 		}
 		
-//		public boolean isDone() {
-//			return bDone;
-//		}
-//
-//		public void done() {
-//			bDone=true;
-//		}
 	}
 	
 	/**
@@ -212,11 +187,6 @@ public class QueueI extends AbstractAppState{
 	 */
 	public void enqueue(CallableX cx){
 		synchronized(acxList){
-//			// auto update name
-//			if(!cx.bAnonymousClass){
-//				cx.strName="(StaticClass)"+Thread.currentThread().getStackTrace()[2].getMethodName();
-//			}
-			
 			if(!acxList.contains(cx)){
 				acxList.add(cx);
 			}
@@ -235,12 +205,7 @@ public class QueueI extends AbstractAppState{
 	public void update(float tpf) {
 		super.update(tpf);
 		
-//		iDoneCount=0;
 		for(CallableX cx:acxList.toArray(new CallableX[]{})){
-//			if(cx.isDone()){
-//				iDoneCount++;
-//				continue;
-//			}
 			
 			if(cx.isReady()){
 				if(cx.isPaused())continue;
