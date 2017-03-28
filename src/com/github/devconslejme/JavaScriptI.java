@@ -267,6 +267,8 @@ public class JavaScriptI {
 			LoggingI.i().logSubEntry(str);
 		}
 		
+		ConsolePluginI.i().scrollToBottom();
+		
 		return ar;
 	}
 	

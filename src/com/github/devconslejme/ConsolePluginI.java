@@ -29,6 +29,10 @@ package com.github.devconslejme;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Set;
 
 import org.lwjgl.opengl.Display;
 
@@ -44,6 +48,7 @@ import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -56,13 +61,16 @@ import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.HAlignment;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
+import com.simsilica.lemur.ListBox.ListAction;
 import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
+import com.simsilica.lemur.core.VersionedReference;
 import com.simsilica.lemur.event.KeyAction;
 import com.simsilica.lemur.event.KeyActionListener;
 import com.simsilica.lemur.style.Attributes;
 import com.simsilica.lemur.style.Styles;
+import com.simsilica.lemur.text.DocumentModel;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -90,6 +98,95 @@ public class ConsolePluginI extends AbstractAppState{
 	private int	iKeyCodeToggleConsole = KeyInput.KEY_F10;
 	private String	strInputMappingToggleDeveloperConsole = "ToggleDeveloperConsole";
 	private File	flStorageFolder;
+	private HashMap<String,Stat> hmStatusIdValue = new HashMap<String,Stat>();
+	class CallableXScrollTo extends CallableX{
+		public CallableXScrollTo(){
+			super(0,false);
+		}
+		
+		@Override
+		public Boolean call() {
+			double dIndex = getValue(ECallableXKey.dIndexIn.s());
+			
+			double dMax = lstbxLoggingSection.getSlider().getModel().getMaximum();
+			if(dIndex==-1)dIndex=dMax; //-1 is a trick to reach the max
+			if(dIndex>dMax)dIndex=dMax;
+			/**
+			 * the index is actually inverted
+			 */
+			double dIndexFixed = dMax-dIndex;
+//			double dPerc = dIndexFixed/dMax;
+			
+			if(Double.compare(dIndexFixed, lstbxLoggingSection.getSlider().getModel().getValue())==0){
+				return true;
+			}
+			
+//			lstbxLoggingSection.getSlider().getModel().setPercent(dPerc);
+			lstbxLoggingSection.getSlider().getModel().setValue(dIndexFixed); //TODO is this redundant?
+			
+			return false; // so the next call here will let it be verified
+		}
+
+	};
+	private CallableXScrollTo cxScrollTo;
+	
+	private Comparator<Stat>	cmprStat = new Comparator<Stat>() {
+		@Override
+		public int compare(Stat o1, Stat o2) {
+			int i = o1.esp.compareTo(o2.esp);
+			if(i==0) i = o1.strKey.compareTo(o2.strKey);
+			return i;
+		}
+	};
+//	private Command<ListBox>	cmdClickLogRow = new Command<ListBox>() {
+//		@Override
+//		public void execute(ListBox lstbx) {
+//			if(lstbx==lstbxLoggingSection){
+//				String str = getInputText();
+//				str=str.trim();
+//				if(!str.isEmpty())JavaScriptI.i().addCmdToHistory("//"+str); //just to backup anything that is there even if incomplete
+//				
+//				String strText = LoggingI.i().getSelectedEntry();
+//				setInputText(strText);
+//				int iMoveTo = strText.indexOf('(');
+//				if(iMoveTo>-1){
+//					DocumentModel dm = tfInput.getDocumentModel();
+////					int iLeft = strText.length() - iMoveTo;
+//					for(int i=strText.length()-1; i>iMoveTo; i--)dm.left();
+//				}
+//			}
+//		}
+//	};
+	private VersionedReference<Set<Integer>>	vrSelectionModel;
+	
+	public static enum EStatPriority{
+		Top,
+		High,
+		Normal,
+		Low,
+		Bottom,
+		;
+		public String s(){return toString();}
+	}
+	
+	public static class Stat{
+		String strKey;
+		String strValue;
+		EStatPriority esp;
+		String strHelp;
+		
+		public void set(EStatPriority esp, String strKey, String strHelp, String strValue) {
+			this.strKey = strKey;
+			this.strValue = strValue;
+			this.strHelp=strHelp;
+			this.esp = esp;
+		}
+		
+		@Override
+		public String toString() {
+			return strKey+"='"+strValue+"';";
+		}
+	}
 	
 	public ConsolePluginI(){
 		if(instance==null)return;
@@ -118,6 +215,15 @@ public class ConsolePluginI extends AbstractAppState{
 		QueueI.i().configure(app);
 	}
 	
+	public void putStatus(EStatPriority esp, String strKey, String strHelp, String strValue){
+		Stat st=hmStatusIdValue.get(strKey);
+		if(st==null){
+			st=new Stat();
+			hmStatusIdValue.put(strKey, st);
+		}
+		st.set(esp,strKey,strHelp,strValue);
+	}
+	
 	@Override
 	public void initialize(AppStateManager stateManager, Application app) {
 		if(isInitialized()){return;}
@@ -126,6 +232,8 @@ public class ConsolePluginI extends AbstractAppState{
 		
 		// jme
 		this.app=app;
+		
+		cxScrollTo = new CallableXScrollTo();
 		
 		ActionListener al = new ActionListener(){
       @Override
@@ -169,12 +277,35 @@ public class ConsolePluginI extends AbstractAppState{
 		super.update(tpf);
 		
 		if(isEnabled()){
-			GuiGlobals.getInstance().requestFocus(tfInput);
-			
 			JavaScriptI.i().update();
 		}
 	}
 	
+	private void updateStatusValues(){
+		putStatus(EStatPriority.Normal, "Sld", "DevCons Slider Value",
+			String.format("%.0f", lstbxLoggingSection.getSlider().getModel().getValue()) );
+		
+		putStatus(EStatPriority.Normal, "VsR", "DevCons Logging area Visible Rows",
+			String.format("%d", lstbxLoggingSection.getVisibleItems()) );
+		
+		Vector2f v2fCursor = app.getInputManager().getCursorPosition();
+		putStatus(EStatPriority.Bottom, "Cur", "Cursor Position",
+			String.format("%.0f,%.0f", v2fCursor.x, v2fCursor.y) );
+		
+		putStatus(EStatPriority.Bottom, "Tmr", "Application Time",
+				String.format("%d", app.getTimer().getTime()) );
+	}
+	
+	private void updateStatus() {
+		ArrayList<Stat> astList = new ArrayList<Stat>(hmStatusIdValue.values());
+		Collections.sort(astList,cmprStat);
+		String str="";
+		for(Stat st:astList){
+			str+=st;
+		}
+		lblStats.setText(str);
+	}
+
 	@Override
 	public void setEnabled(boolean enabled) {
 		if(!isInitialized())throw new NullPointerException("not initialized");
@@ -193,32 +324,38 @@ public class ConsolePluginI extends AbstractAppState{
 		cntrMain.addChild(tfInput, BorderLayout.Position.South);
 		
 		BindKeyI.i().prepareKeyMappings();
-	}
-	
-	protected void scrollToBottom() {
-		scrollTo(-1);
-	}
-
-	protected void scrollTo(final double dIndexIN) {
-		QueueI.i().enqueue(new CallableX(0,false) {
+		
+		QueueI.i().enqueue(new CallableX("UpdateInputText",0.25f,true) { //TODO has a chance of typing something at other input field? like when holding for long a key?
 			@Override
 			public Boolean call() {
-				double dIndex = dIndexIN;
-				
-				/**
-				 * the index is actually inverted
-				 */
-				double dMax = lstbxLoggingSection.getSlider().getModel().getMaximum();
-				if(dIndex==-1)dIndex=dMax;
-				dIndex = dMax-dIndex;
-				double dPerc = dIndex/dMax;
-				
-				lstbxLoggingSection.getSlider().getModel().setPercent(dPerc);
-				lstbxLoggingSection.getSlider().getModel().setValue(dIndex); //TODO is this redundant?
-				
+				updateInputText();
+				return true;
+			}
+		}.setUserCanPause(true));
+		
+		QueueI.i().enqueue(new CallableX("FocusAtDevConsInput",0.25f,true) { //TODO has a chance of typing something at other input field? like when holding for long a key?
+			@Override
+			public Boolean call() {
+				GuiGlobals.getInstance().requestFocus(tfInput);
 				return true;
 			}
 		});
+		
+	}
+	
+	public void scrollToBottom() {
+		scrollTo(-1);
+	}
+	
+	enum ECallableXKey{
+		dIndexIn,
+		;
+		public String s(){return toString();}
+	}
+	public void scrollTo(final double dIndexIn) {
+		QueueI.i().enqueue(
+			cxScrollTo.putKeyValue(ECallableXKey.dIndexIn.s(), dIndexIn)
+		);
 	}
 
 	protected int getShowRowsAmount() {
@@ -278,6 +415,16 @@ public class ConsolePluginI extends AbstractAppState{
 			btn.addClickCommands(btnclk);
 			cntrStatus.addChild(btn,0,++iButtonIndex);
 		}
+		
+		QueueI.i().enqueue(new CallableX("DevConsUpdateStatus",0.5f,true) {
+			@Override
+			public Boolean call() {
+				updateStatusValues();
+				updateStatus();
+				return true;
+			}
+		}.setUserCanPause(true));
+		
 	}
 	
 	private void setPopupHelp(Spatial spt, String strHelp){
@@ -363,9 +510,12 @@ public class ConsolePluginI extends AbstractAppState{
 	private void initLoggingSection() {
 		lstbxLoggingSection = new ListBox<String>(null, getStyle());
 		LoggingI.i().setModelAt(lstbxLoggingSection);
-		lstbxLoggingSection.setVisibleItems(MiscLemurI.i().getEntryHeightPixels(lstbxLoggingSection));
 		
 		cntrMain.addChild(lstbxLoggingSection, BorderLayout.Position.Center);
+		
+//		lstbxLoggingSection.addCommands(ListAction.Down, cmdClickLogRow);
+		
+		vrSelectionModel = lstbxLoggingSection.getSelectionModel().createReference();
 	}
 
 	private void initSize() {
@@ -404,6 +554,10 @@ public class ConsolePluginI extends AbstractAppState{
 						fLemurPreferredThickness);
 					
 				cntrMain.setPreferredSize(v3fConsoleSize);
+				
+				int iLines = (int) (fHeight/MiscLemurI.i().getEntryHeightPixels(lstbxLoggingSection));
+				iLines--; //to void the text being too close to each other 
+				lstbxLoggingSection.setVisibleItems(iLines);
 				
 				return true;
 			}
@@ -451,4 +605,20 @@ public class ConsolePluginI extends AbstractAppState{
 //		return app;
 //	}
 	
+	public void updateInputText(){
+		if(!vrSelectionModel.update())return;
+		
+		String str = getInputText();
+		str=str.trim();
+		if(!str.isEmpty())JavaScriptI.i().addCmdToHistory("//"+str); //just to backup anything that is there even if incomplete
+		
+		String strText = LoggingI.i().getSelectedEntry();
+		setInputText(strText);
+		int iMoveTo = strText.indexOf('(');
+		if(iMoveTo>-1){
+			DocumentModel dm = tfInput.getDocumentModel();
+//				int iLeft = strText.length() - iMoveTo;
+			for(int i=strText.length()-1; i>iMoveTo; i--)dm.left();
+		}
+	}
 }

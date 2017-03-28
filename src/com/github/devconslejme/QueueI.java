@@ -27,7 +27,9 @@
 
 package com.github.devconslejme;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.Callable;
 
 import com.github.devconslejme.misc.StringI;
@@ -35,6 +37,7 @@ import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 
 /**
+ * TODO work with java.util.concurrent.DelayQueue?
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class QueueI extends AbstractAppState{
@@ -71,23 +74,55 @@ public class QueueI extends AbstractAppState{
 		private String strUId;
 		private String	strName;
 		private float	fDelaySeconds;
+		private boolean	bPaused;
 		private boolean	bLoop;
 		private long lRunAtTimeMilis;
+		private boolean	bUserCanKill;
+		private boolean	bUserCanPause;
+		
+		private HashMap<String,Object> hmKeyValue = new HashMap<String,Object>();
+		private boolean	bAnonymousClass;
+		
 		private static String strLastUId="0";
 //		private boolean bDone;
 		
 		public CallableX(float fDelaySeconds, boolean bLoop){
-			this(null,fDelaySeconds,bLoop);
+			this(1,null,fDelaySeconds,bLoop);
 		}
 		public CallableX(String strName, float fDelaySeconds, boolean bLoop){
+			this(1,strName,fDelaySeconds,bLoop);
+		}
+		public CallableX(int iStackAdd, String strName, float fDelaySeconds, boolean bLoop){
 			strUId=strLastUId=StringI.i().getNextUniqueId(strLastUId);
-			this.strName = strName==null ? this.getClass().getEnclosingMethod().getName() : strName;
+			
+			// auto name
+			if(strName==null){ // for annonimous class
+				Method m = this.getClass().getEnclosingMethod();
+				if(m!=null)strName=m.getName();
+				bAnonymousClass=true;
+			}
+			
+//			if(!bAnonymousClass && strName==null){
+//				throw new NullPointerException("name is null");
+//			}
+			if(strName==null){
+//				strName=this.getClass().getDeclaringClass().getSimpleName();
+				strName=this.getClass().getSimpleName();
+//				strName=Thread.currentThread().getStackTrace()[1].getMethodName();
+			}
+//			
+//			if(strName==null){
+//				throw new NullPointerException("name is null");
+//			}
+			
+			this.strName = strName;
+			
 			this.bLoop=bLoop;
 			
 			this.fDelaySeconds=(fDelaySeconds);
 			updateRunAt();
 		}
-
+		
 		public void updateRunAt() {
 			this.lRunAtTimeMilis = QueueI.i().calcRunAt(fDelaySeconds);
 		}
@@ -113,10 +148,16 @@ public class QueueI extends AbstractAppState{
 			builder.append(strName);
 			builder.append(", fDelaySeconds=");
 			builder.append(fDelaySeconds);
+			builder.append(", bPaused=");
+			builder.append(bPaused);
 			builder.append(", bLoop=");
 			builder.append(bLoop);
 			builder.append(", lRunAtTimeMilis=");
 			builder.append(lRunAtTimeMilis);
+			builder.append(", bUserCanKill=");
+			builder.append(bUserCanKill);
+			builder.append(", bUserCanPause=");
+			builder.append(bUserCanPause);
 			builder.append("]");
 			return builder.toString();
 		}
@@ -127,6 +168,33 @@ public class QueueI extends AbstractAppState{
 
 		public void breakLoop() {
 			bLoop=false;
+		}
+		public boolean isUserCanKill() {
+			return bUserCanKill;
+		}
+		public CallableX setUserCanKill(boolean bUserCanKill) {
+			this.bUserCanKill = bUserCanKill;
+			return this;
+		}
+		public boolean isUserCanPause() {
+			return bUserCanPause;
+		}
+		public CallableX setUserCanPause(boolean bUserCanPause) {
+			this.bUserCanPause = bUserCanPause;
+			return this;
+		}
+		public void togglePause() {
+			bPaused=!bPaused;
+		}
+		public boolean isPaused() {
+			return bPaused;
+		}
+		synchronized public CallableX putKeyValue(String strKey, Object objVal) {
+			hmKeyValue.put(strKey,objVal);
+			return this;
+		}
+		synchronized public <T> T getValue(String strKey) {
+			return (T)hmKeyValue.get(strKey);
 		}
 		
 //		public boolean isDone() {
@@ -143,7 +211,16 @@ public class QueueI extends AbstractAppState{
 	 * @param cx
 	 */
 	public void enqueue(CallableX cx){
-		acxList.add(cx);
+		synchronized(acxList){
+//			// auto update name
+//			if(!cx.bAnonymousClass){
+//				cx.strName="(StaticClass)"+Thread.currentThread().getStackTrace()[2].getMethodName();
+//			}
+			
+			if(!acxList.contains(cx)){
+				acxList.add(cx);
+			}
+		}
 	}
 	
 	private boolean isReady(long lRunAt){
@@ -166,12 +243,16 @@ public class QueueI extends AbstractAppState{
 //			}
 			
 			if(cx.isReady()){
+				if(cx.isPaused())continue;
+				
 				if(cx.call()){
 //					cx.done();
 					if(cx.isLoop()){
 						cx.updateRunAt();
 					}else{
-						acxList.remove(cx);
+						synchronized(acxList){
+							acxList.remove(cx);
+						}
 					}
 				}else{
 					// if a loop queue fails, it will not wait and will promptly retry!
@@ -204,11 +285,24 @@ public class QueueI extends AbstractAppState{
 		}
 	}
 
-	public void kill(String strParms) {
+	private void killOrPauseToggle(String strUId,boolean bKill) {
 		for(CallableX cx:acxList){
-			if(cx.getUId().equalsIgnoreCase(strParms)){
-				cx.breakLoop();
+			if(cx.getUId().equalsIgnoreCase(strUId)){
+				if(bKill){
+					if(cx.isUserCanKill())cx.breakLoop();
+				}else{
+					if(cx.isUserCanPause())cx.togglePause();
+				}
 			}
 		}
 	}
+
+	public void kill(String strUId) {
+		killOrPauseToggle(strUId, true);
+	}
+	
+	public void pauseToggle(String strUId) {
+		killOrPauseToggle(strUId, false);
+	}
+	
 }

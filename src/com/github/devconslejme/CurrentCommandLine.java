@@ -63,7 +63,10 @@ public class CurrentCommandLine {
 		return strCommand;
 	}
 	
-	public <T> T getParam(int iIndex, Class<T> cl){
+//	public <T> T getParam(int iIndex, Class<T> cl){
+//		return (T)aobjList.get(iIndex);
+//	}
+	public <T> T getParam(int iIndex){
 		return (T)aobjList.get(iIndex);
 	}
 	
