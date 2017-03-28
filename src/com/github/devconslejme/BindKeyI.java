@@ -144,26 +144,26 @@ public class BindKeyI {
 			@Override
 			public void keyAction(TextEntryComponent source, KeyAction key) {
 				boolean bControl = key.hasModifier(KeyModifiers.CONTROL_DOWN); //0x1
-				double dCurrent = ConsolePluginI.i().getScrollDumpAreaFlindex();
+				double dCurrent = ConsolePluginI.i().getScrollIndex();
 				double dAdd = 0;
 				switch(key.getKeyCode()){
 					case KeyInput.KEY_PGUP:
-						dAdd = -ConsolePluginI.i().getShowRowsAmount();
-						break;
-					case KeyInput.KEY_PGDN:
 						dAdd = +ConsolePluginI.i().getShowRowsAmount();
 						break;
+					case KeyInput.KEY_PGDN:
+						dAdd = -ConsolePluginI.i().getShowRowsAmount();
+						break;
 					case KeyInput.KEY_HOME:
-						if(bControl)dAdd = -dCurrent;
+						if(bControl)dAdd = ConsolePluginI.i().getScrollMaxIndex();
 						break;
 					case KeyInput.KEY_END:
-						if(bControl)dAdd = LoggingI.i().getLogEntriesSize();
+						if(bControl)dAdd = -dCurrent;
 						break;
 					case KeyInput.KEY_UP:
-						if(bControl)dAdd = -1;
+						if(bControl)dAdd = 1;
 						break;
 					case KeyInput.KEY_DOWN:
-						if(bControl)dAdd = 1;
+						if(bControl)dAdd = -1;
 						break;
 				}
 				double dSet = dCurrent + dAdd;

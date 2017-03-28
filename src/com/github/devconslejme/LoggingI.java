@@ -28,15 +28,13 @@
 package com.github.devconslejme;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Files;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.core.VersionedList;
 
@@ -48,9 +46,11 @@ public class LoggingI {
 	/**instance*/ public static LoggingI i(){return instance;}
 	
 	private VersionedList<String>	vlstrLogEntries;
-	private int iLogEntriesLimit = 10000;
+	private int iLogEntriesLimit = 100000;
 	private int iWrapAtColumn = 80;
 	private File	flLog;
+	DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss"); //yyyy/MM/dd
+	Date date = new Date();
 	
 	public void configure() {
 		JavaScriptI.i().setJSBinding(this);
@@ -111,7 +111,9 @@ public class LoggingI {
 		
 		// limit log size in memory
 		while(vlstrLogEntries.size()>iLogEntriesLimit){
-			vlstrLogEntries.remove(0);
+			while(vlstrLogEntries.size()>(iLogEntriesLimit/2)){
+				vlstrLogEntries.remove(0);
+			}
 		}
 		
 		if(!bSkipSysOut)System.out.println(str);
@@ -124,6 +126,9 @@ public class LoggingI {
 	}
 	
 	public void logMarker(String strInfo){
+		date.setTime(System.currentTimeMillis());
+		strInfo = "["+dateFormat.format(date)+"] "+strInfo;
+		
 		strInfo = Strings.padStart(strInfo, iWrapAtColumn/2 +strInfo.length()/2, '_');
 		strInfo = Strings.padEnd(strInfo, iWrapAtColumn, '_');
 		logEntry(strInfo);
@@ -165,6 +170,15 @@ public class LoggingI {
 
 	public void clear() {
 		vlstrLogEntries.clear();
+	}
+
+	public int getLogEntriesLimit() {
+		return iLogEntriesLimit;
+	}
+
+	public void setLogEntriesLimit(int iLogEntriesLimit) {
+		if(iLogEntriesLimit<1000)iLogEntriesLimit=1000;
+		this.iLogEntriesLimit = iLogEntriesLimit;
 	}
 	
 }

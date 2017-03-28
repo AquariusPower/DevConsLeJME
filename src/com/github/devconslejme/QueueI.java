@@ -178,6 +178,12 @@ public class QueueI extends AbstractAppState{
 		synchronized public <T> T getValue(String strKey) {
 			return (T)hmKeyValue.get(strKey);
 		}
+		public String getName() {
+			return strName;
+		}
+//		public void setName(String strName) {
+//			this.strName = strName;
+//		}
 		
 	}
 	
@@ -252,7 +258,7 @@ public class QueueI extends AbstractAppState{
 
 	private void killOrPauseToggle(String strUId,boolean bKill) {
 		for(CallableX cx:acxList){
-			if(cx.getUId().equalsIgnoreCase(strUId)){
+			if(strUId.equalsIgnoreCase( strUId.endsWith(".js") ? cx.getName() : cx.getUId() )){
 				if(bKill){
 					if(cx.isUserCanKill())cx.breakLoop();
 				}else{

@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import org.lwjgl.opengl.Display;
@@ -100,32 +101,47 @@ public class ConsolePluginI extends AbstractAppState{
 	private HashMap<String,Stat> hmStatusIdValue = new HashMap<String,Stat>();
 	class CallableXScrollTo extends CallableX{
 		public CallableXScrollTo(){
-			super(0.5f,false);
+			super(0.25f,true);
+			setUserCanPause(true);
 		}
 		
 		@Override
 		public Boolean call() {
-			double dIndex = getValue(ECallableXKey.dIndexIn.s());
-			
-//			double dMax = lstbxLoggingSection.getSlider().getModel().getMaximum();
-//			double dMax = lstbxLoggingSection.getSlider().getModel().getMaximum() + lstbxLoggingSection.getVisibleItems();
-			double dMax = LoggingI.i().getLogEntriesSize();
-			if(dIndex==-1)dIndex=dMax; //-1 is a trick to reach the max
-			if(dIndex>dMax)dIndex=dMax;
-			/**
-			 * the index is actually inverted
-			 */
-			double dIndexFixed = dMax-dIndex;
-//			double dPerc = dIndexFixed/dMax;
-			
-			if(Double.compare(dIndexFixed, lstbxLoggingSection.getSlider().getModel().getValue())==0){
-				return true;
+			if(bKeepScrollAtBottom && vrListBoxChangedToAutoScrollToBottom.update()){
+				lstbxLoggingSection.getSlider().getModel().setValue(0);
 			}
 			
-//			lstbxLoggingSection.getSlider().getModel().setPercent(dPerc);
-			lstbxLoggingSection.getSlider().getModel().setValue(dIndexFixed); //TODO is this redundant?
+			if(vrSliderChangedToSuspendAutoScrollBottom.update()){
+				bKeepScrollAtBottom=false;
+			}
 			
-			return false; // so the next call here will let it be verified
+			// if sliter hits the bottom will stick on it
+			if(Double.compare(lstbxLoggingSection.getSlider().getModel().getValue(), 0)==0){
+				bKeepScrollAtBottom=true;
+			}
+			
+			return true;
+//			double dIndex = getValue(ECallableXKey.dIndexIn.s());
+//			
+////			double dMax = lstbxLoggingSection.getSlider().getModel().getMaximum();
+////			double dMax = lstbxLoggingSection.getSlider().getModel().getMaximum() + lstbxLoggingSection.getVisibleItems();
+//			double dMax = LoggingI.i().getLogEntriesSize();
+//			if(dIndex==-1)dIndex=dMax; //-1 is a trick to reach the max
+//			if(dIndex>dMax)dIndex=dMax;
+//			/**
+//			 * the index is actually inverted
+//			 */
+//			double dIndexFixed = dMax-dIndex;
+////			double dPerc = dIndexFixed/dMax;
+//			
+//			if(Double.compare(dIndexFixed, lstbxLoggingSection.getSlider().getModel().getValue())==0){
+//				return true;
+//			}
+//			
+////			lstbxLoggingSection.getSlider().getModel().setPercent(dPerc);
+//			lstbxLoggingSection.getSlider().getModel().setValue(dIndexFixed); //TODO is this redundant?
+//			
+//			return false; // so the next call here will let it be verified
 		}
 
 	};
@@ -139,7 +155,7 @@ public class ConsolePluginI extends AbstractAppState{
 			return i;
 		}
 	};
-	private VersionedReference<Set<Integer>>	vrSelectionModel;
+	private VersionedReference<Set<Integer>>	vrSelectionChangedToUpdateInputText;
 	private String[]	astrType = new String[]{
 			String.class.getSimpleName(),
 			
@@ -151,6 +167,9 @@ public class ConsolePluginI extends AbstractAppState{
 			int.class.getSimpleName(),
 			long.class.getSimpleName(),
 	};
+	private boolean	bKeepScrollAtBottom;
+	private VersionedReference<List<String>>	vrListBoxChangedToAutoScrollToBottom;
+	private VersionedReference<Double>	vrSliderChangedToSuspendAutoScrollBottom;
 	
 	public static enum EStatPriority{
 		Top,
@@ -227,6 +246,7 @@ public class ConsolePluginI extends AbstractAppState{
 		this.app=app;
 		
 		cxScrollTo = new CallableXScrollTo();
+		QueueI.i().enqueue(cxScrollTo);
 		
 		ActionListener al = new ActionListener(){
       @Override
@@ -276,7 +296,12 @@ public class ConsolePluginI extends AbstractAppState{
 	
 	private void updateStatusValues(){
 		putStatus(EStatPriority.Normal, "Sld", "DevCons Slider Value",
-			String.format("%.0f", lstbxLoggingSection.getSlider().getModel().getValue()) );
+			String.format("%.0f/%.0f(%.0f)", 
+				lstbxLoggingSection.getSlider().getModel().getValue(),
+				lstbxLoggingSection.getSlider().getModel().getMaximum(),
+				LoggingI.i().getLogEntriesSize()
+			)
+		);
 		
 		putStatus(EStatPriority.Normal, "VsR", "DevCons Logging area Visible Rows",
 			String.format("%d", lstbxLoggingSection.getVisibleItems()) );
@@ -337,7 +362,8 @@ public class ConsolePluginI extends AbstractAppState{
 	}
 	
 	public void scrollToBottom() {
-		scrollTo(-1);
+		bKeepScrollAtBottom=true;
+//		scrollTo(-1);
 	}
 	
 	enum ECallableXKey{
@@ -345,22 +371,41 @@ public class ConsolePluginI extends AbstractAppState{
 		;
 		public String s(){return toString();}
 	}
-	public void scrollTo(final double dIndexIn) {
-		QueueI.i().enqueue(
-			cxScrollTo.putKeyValue(ECallableXKey.dIndexIn.s(), dIndexIn)
-		);
+	public void scrollTo(final double dIndex) {
+//	QueueI.i().enqueue(
+//	cxScrollTo.putKeyValue(ECallableXKey.dIndexIn.s(), dIndexIn)
+//);
+//		double dIndex = dIndexIn;
+//			
+//		double dMax = LoggingI.i().getLogEntriesSize();
+//		if(dIndex==-1)dIndex=dMax; //-1 is a trick to reach the max
+//		if(dIndex>dMax)dIndex=dMax;
+//		/**
+//		 * the index is actually inverted
+//		 */
+//		double dIndexFixed = dMax-dIndex;
+//		
+//		lstbxLoggingSection.getSlider().getModel().setValue(dIndexFixed);
+		lstbxLoggingSection.getSlider().getModel().setValue(dIndex);
+		
+		bKeepScrollAtBottom=false;
 	}
 
-	protected int getShowRowsAmount() {
+	public int getShowRowsAmount() {
 		return lstbxLoggingSection.getVisibleItems();
 	}
 
-	protected double getScrollDumpAreaFlindex() {
-		return lstbxLoggingSection.getSlider().getModel().getMaximum()
-			-lstbxLoggingSection.getSlider().getModel().getValue();
+	public double getScrollMaxIndex() {
+		return lstbxLoggingSection.getSlider().getModel().getMaximum();
+	}
+	
+	public double getScrollIndex() {
+//		return lstbxLoggingSection.getSlider().getModel().getMaximum()
+//			-lstbxLoggingSection.getSlider().getModel().getValue();
+		return lstbxLoggingSection.getSlider().getModel().getValue();
 	}
 
-	protected void navigateWord(boolean bForward) {
+	public void navigateWord(boolean bForward) {
 		Integer iCurPos = tfInput.getDocumentModel().getCarat();
 		String strText = getInputText(); //strText.length()
 		Integer iNewPos = null;
@@ -548,7 +593,10 @@ public class ConsolePluginI extends AbstractAppState{
 		
 //		lstbxLoggingSection.addCommands(ListAction.Down, cmdClickLogRow);
 		
-		vrSelectionModel = lstbxLoggingSection.getSelectionModel().createReference();
+		
+		vrSelectionChangedToUpdateInputText = lstbxLoggingSection.getSelectionModel().createReference();
+		vrListBoxChangedToAutoScrollToBottom = lstbxLoggingSection.getModel().createReference();
+		vrSliderChangedToSuspendAutoScrollBottom=lstbxLoggingSection.getSlider().getModel().createReference();
 	}
 
 	private void initSize() {
@@ -639,7 +687,7 @@ public class ConsolePluginI extends AbstractAppState{
 //	}
 	
 	public void updateInputText(){
-		if(!vrSelectionModel.update())return;
+		if(!vrSelectionChangedToUpdateInputText.update())return;
 		
 		String str = getInputText();
 		str=str.trim();
@@ -702,4 +750,5 @@ public class ConsolePluginI extends AbstractAppState{
 	public void insertAtInputTextCaratPos(String str) {
 		tfInput.getDocumentModel().insert(str);
 	}
+
 }

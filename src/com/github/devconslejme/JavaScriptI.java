@@ -98,6 +98,8 @@ public class JavaScriptI {
 		echo("print some text on the console log"),
 		
 		kill("kill running queue by UId"),
+		
+		history("[filter] show commands history"),
 		;
 		
 		EBaseCommand(){}
@@ -127,11 +129,11 @@ public class JavaScriptI {
 		strCmd=strCmd.trim();
 		String[] astr = strCmd.split(" ");
 		String strBase = astr[0];
-		String strParms = "";
-		if(!strCmd.equals(strBase))strParms=strCmd.substring(strBase.length()+1);
-		strParms=strParms.trim();
+		String strParams = "";
+		if(!strCmd.equals(strBase))strParams=strCmd.substring(strBase.length()+1);
+		strParams=strParams.trim();
 		
-		if(strParms.startsWith("//"))strParms=""; //remove comments
+		if(strParams.startsWith("//"))strParams=""; //remove comments
 		
 		EBaseCommand ebc = null;
 		try{
@@ -144,22 +146,25 @@ public class JavaScriptI {
 		
 		switch(ebc){
 			case help:
-				showHelp(strParms);
+				showHelp(strParams);
 				return true;
 			case clear:
 				LoggingI.i().clear();
 				return true;
 			case echo:
-				LoggingI.i().logEntry(strParms);
+				LoggingI.i().logEntry(strParams);
+				return true;
+			case history:
+				JavaScriptI.i().showHistory(strParams);
 				return true;
 			case kill:
-				QueueI.i().kill(strParms);
+				QueueI.i().kill(strParams);
 				return true;
 			case ini:
-				appendUserInitCommand(strParms);
+				appendUserInitCommand(strParams);
 				return true;
 			case exec:
-				execFile(strParms);
+				execFile(strParams);
 				return true;
 			case showIni:
 				LoggingI.i().logMarker("Showing User Init");
@@ -172,6 +177,15 @@ public class JavaScriptI {
 		return false;
 	}
 	
+	public void showHistory(String strParams) {
+		for(String str:astrCmdHistory){
+			if(strParams.isEmpty() || str.toLowerCase().contains(strParams)){
+				LoggingI.i().logSubEntry(str);
+			}
+		}
+		ConsolePluginI.i().scrollToBottom();
+	}
+
 	/**
 	 * based on: jse.getContext().getWriter() type
 	 */
@@ -334,12 +348,15 @@ public class JavaScriptI {
 	}
 	public void queueExecFile(File flJS, float fDelaySeconds, boolean bLoop){
 		QueueI.i().enqueue(new CallableX(flJS.getName(),fDelaySeconds,bLoop) {
-			@Override
-			public Boolean call() {
-				execFile(flJS);
-				return true;
+				@Override
+				public Boolean call() {
+					execFile(flJS);
+					return true;
+				}
 			}
-		});
+			.setUserCanKill(true)
+			.setUserCanPause(true)
+		);
 	}
 	
 	/**
