@@ -572,4 +572,21 @@ public class JavaScriptI {
 //		return false;
 			LoggingI.i().logMarker("Appended User Init Cmd");
 	}
+
+	protected void autoComplete() {
+		AutoCompleteResult ar = JavaScriptI.i().showHelp(ConsolePluginI.i().getInputText());
+		ConsolePluginI.i().setInputText(ar.getImprovedPart());
+		ConsolePluginI.i().scrollToBottom();
+	}
+
+	public void autoCompleteWord() {
+		// boolean
+		String str=ConsolePluginI.i().getInputLettersBeforeCarat();
+		if(Boolean.TRUE.toString().startsWith(str)){
+			ConsolePluginI.i().insertAtInputTextCaratPos(Boolean.TRUE.toString().substring(str.length()));
+		}else
+		if(Boolean.FALSE.toString().startsWith(str)){
+			ConsolePluginI.i().insertAtInputTextCaratPos(Boolean.FALSE.toString().substring(str.length()));
+		}
+	}
 }

@@ -93,7 +93,7 @@ public class BindKeyI {
 						JavaScriptI.i().submitUserCommand();
 						break;
 					case KeyInput.KEY_TAB:
-						ConsolePluginI.i().autoComplete();
+						JavaScriptI.i().autoComplete();
 						break;
 					case KeyInput.KEY_DELETE:
 						if(bControl)ConsolePluginI.i().clearInput();
@@ -105,7 +105,7 @@ public class BindKeyI {
 						if(bControl)ConsolePluginI.i().navigateWord(true);
 						break;
 					case KeyInput.KEY_SPACE:
-//						if(bControl)JavaScriptI.i().autoCompleteBoolean();
+						if(bControl)JavaScriptI.i().autoCompleteWord();
 						break;
 				}
 			}
@@ -127,6 +127,7 @@ public class BindKeyI {
 		
 		bindKey("navigate to previous word", KeyInput.KEY_LEFT,KeyModifiers.CONTROL_DOWN);
 		bindKey("navigate to next word", KeyInput.KEY_RIGHT,KeyModifiers.CONTROL_DOWN);
+		bindKey("auto complete word", KeyInput.KEY_SPACE,KeyModifiers.CONTROL_DOWN);
 		
 		// cmd history select action
 		KeyActionListener actCmdHistoryEntrySelectAction = new KeyActionListener() {

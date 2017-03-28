@@ -358,20 +358,60 @@ public class ConsolePluginI extends AbstractAppState{
 			-lstbxLoggingSection.getSlider().getModel().getValue();
 	}
 
-	protected void navigateWord(boolean b) {
-		LoggingI.i().logExceptionEntry(new UnsupportedOperationException("method not implemented yet"), null);
+	protected void navigateWord(boolean bForward) {
+		Integer iCurPos = tfInput.getDocumentModel().getCarat();
+		String strText = getInputText(); //strText.length()
+		Integer iNewPos = null;
+		
+		int i=iCurPos;
+		
+		if(bForward){
+			if(i==strText.length())return;
+		}else{
+			if(i==0)return;
+			i--;
+		}
+		
+		boolean bLetter = Character.isLetter(strText.charAt(i));
+		while(true){
+			i+=bForward?1:-1;
+			if(i==0 || i==strText.length())break;
+			
+			if(bForward){
+				if(!bLetter){
+					if(!Character.isLetter(strText.charAt(i))){
+						continue;
+					}
+					break; //found letter
+				}else{
+					if(!Character.isLetter(strText.charAt(i))){
+						bLetter=false;
+					}
+					continue;
+				}
+			}else{
+				if(!bLetter){
+					if(Character.isLetter(strText.charAt(i))){
+						bLetter=true;
+					}
+					continue;
+				}else{
+					if(Character.isLetter(strText.charAt(i))){
+						continue;
+					}
+					i++; //this will skip the blank to the next char.
+					break;
+				}
+			}
+		}
+		iNewPos=i;
+		
+		setInputTextCaratAt(iNewPos);
 	}
 
 	protected void clearInput() {
 		tfInput.setText("");
 	}
-
-	protected void autoComplete() {
-		AutoCompleteResult ar = JavaScriptI.i().showHelp(tfInput.getText());
-		tfInput.setText(ar.getImprovedPart());
-		scrollToBottom();
-	}
-	
 
 	protected void closeConsole() {
 		LoggingI.i().logExceptionEntry(new UnsupportedOperationException("method not implemented yet"), null);
@@ -627,10 +667,37 @@ public class ConsolePluginI extends AbstractAppState{
 //		}
 		
 		setInputText(strText);
+		setInputTextCaratAt(iMoveTo);
+//		if(iMoveTo>-1){
+//			DocumentModel dm = tfInput.getDocumentModel();
+//			dm.end(true);
+////				int iLeft = strText.length() - iMoveTo;
+//			for(int i=strText.length()-1; i>iMoveTo; i--)dm.left();
+//		}
+	}
+	
+	public void setInputTextCaratAt(int iMoveTo){
 		if(iMoveTo>-1){
 			DocumentModel dm = tfInput.getDocumentModel();
-//				int iLeft = strText.length() - iMoveTo;
-			for(int i=strText.length()-1; i>iMoveTo; i--)dm.left();
+			dm.end(true);
+			for(int i=dm.getCarat(); i>iMoveTo; i--)dm.left();
 		}
+	}
+
+	public String getInputLettersBeforeCarat() {
+		String str=getInputText();
+		str=str.substring(0,tfInput.getDocumentModel().getCarat());
+		Integer iNotAlpha=0;
+		for(int i=str.length()-1;i>=0;i--){
+			if( !(str.charAt(i)+"").matches("[a-zA-Z]") ){
+				iNotAlpha=i+1;
+				break;
+			}
+		}
+		return str.substring(iNotAlpha);
+	}
+
+	public void insertAtInputTextCaratPos(String str) {
+		tfInput.getDocumentModel().insert(str);
 	}
 }
