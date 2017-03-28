@@ -100,14 +100,16 @@ public class ConsolePluginI extends AbstractAppState{
 	private HashMap<String,Stat> hmStatusIdValue = new HashMap<String,Stat>();
 	class CallableXScrollTo extends CallableX{
 		public CallableXScrollTo(){
-			super(0,false);
+			super(0.5f,false);
 		}
 		
 		@Override
 		public Boolean call() {
 			double dIndex = getValue(ECallableXKey.dIndexIn.s());
 			
-			double dMax = lstbxLoggingSection.getSlider().getModel().getMaximum();
+//			double dMax = lstbxLoggingSection.getSlider().getModel().getMaximum();
+//			double dMax = lstbxLoggingSection.getSlider().getModel().getMaximum() + lstbxLoggingSection.getVisibleItems();
+			double dMax = LoggingI.i().getLogEntriesSize();
 			if(dIndex==-1)dIndex=dMax; //-1 is a trick to reach the max
 			if(dIndex>dMax)dIndex=dMax;
 			/**
