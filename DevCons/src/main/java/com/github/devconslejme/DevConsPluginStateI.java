@@ -38,7 +38,6 @@ import java.util.Set;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.QueueStateI.CallableX;
-import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
 import com.github.devconslejme.misc.MiscJmeI;
 import com.github.devconslejme.misc.MiscLemurI;
 import com.jme3.app.Application;

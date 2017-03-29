@@ -1,0 +1,88 @@
+digraph {
+size="9.2,8.0";
+layout=dot;
+rankdir="BT";
+overlap=false;
+splines=true;
+pack=true;
+
+node[shape=box,style=filled,fillcolor="#fff2b6"];
+  "com.github.devconslejme.\nTestDevCons"
+  "com.github.devconslejme.\nDevConsPluginStateI$DialogStyleElementId"
+  "com.github.devconslejme.\nDevConsPluginStateI$ECallableXKey"
+  "com.github.devconslejme.\nJavaScriptI"
+  "com.github.devconslejme.\nDevConsPluginStateI"
+  "com.github.devconslejme.\nBindKeyI"
+  "com.github.devconslejme.\nJavaScriptI$WriterCapture"
+  "com.github.devconslejme.misc.\nAutoCompleteI$AutoCompleteResult"
+  "com.github.devconslejme.\nDevConsPluginStateI$5"
+  "com.github.devconslejme.\nDevConsPluginStateI$EAttribute"
+  "com.github.devconslejme.\nBindKeyI$2"
+  "com.github.devconslejme.\nBindKeyI$3"
+  "com.github.devconslejme.\nDevConsPluginStateI$4"
+  "com.github.devconslejme.\nBindKeyI$1"
+  "com.github.devconslejme.\nDevConsPluginStateI$6"
+  "com.github.devconslejme.\nDevConsPluginStateI$1"
+  "com.github.devconslejme.\nDevConsPluginStateI$3"
+  "com.github.devconslejme.extras.\nSingleMandatoryAppInstanceI$SingleAppInstanceRunnableChecker"
+  "com.github.devconslejme.\nDevConsPluginStateI$2"
+  "com.github.devconslejme.\nTestGenerateClassGraphAnalysis"
+  "com.github.devconslejme.\nQueueStateI$CallableX"
+  "com.github.devconslejme.misc.\nStringI$EStringMatchMode"
+  "com.github.devconslejme.extras.\nSingleMandatoryAppInstanceI"
+  "com.jme3.app.\nSimpleApplication"
+  "com.github.devconslejme.\nJavaScriptI$EJSObjectBind"
+  "com.github.devconslejme.\nDevConsPluginStateI$EStatPriority"
+  "com.github.devconslejme.\nDCGlobal"
+  "com.github.devconslejme.misc.\nMiscLemurI"
+  "com.github.devconslejme.extras.\nCommandLineParser$EType"
+  "com.github.devconslejme.\nLoggingI"
+  "com.github.devconslejme.\nJavaScriptI$1"
+  "com.github.devconslejme.misc.\nJavaLangI"
+  "com.github.devconslejme.\nDevConsPluginStateI$ButtonClick"
+  "com.github.devconslejme.misc.\nMiscJmeI"
+  "com.github.devconslejme.misc.\nStringI"
+  "com.github.devconslejme.\nTestDevCons$1"
+  "com.github.devconslejme.\nBindKeyI$BindKey"
+  "com.github.devconslejme.\nQueueStateI"
+  "com.github.devconslejme.misc.\nTimeConvertI"
+  "com.github.devconslejme.extras.\nOSCmdI"
+  "com.github.devconslejme.\nClipboardI"
+  "com.github.devconslejme.extras.\nSingleMandatoryAppInstanceI$1"
+  "com.github.devconslejme.extras.\nSingleMandatoryAppInstanceI$ERunMode"
+  "com.github.devconslejme.\nDevConsPluginStateI$Stat"
+  "com.github.devconslejme.\nDevConsPluginStateI$EUserDataMiscJme"
+  "com.github.devconslejme.\nJavaScriptI$EBaseCommand"
+  "com.github.devconslejme.extras.\nDynamicFPSLimiterI"
+  "com.github.devconslejme.extras.\nCommandLineParser"
+  "com.github.devconslejme.\nFileI"
+  "com.github.devconslejme.misc.\nAutoCompleteI"
+  "com.github.devconslejme.\nDevConsPluginStateI$CallableXScrollTo"
+  "com.jme3.app.state.\nAbstractAppState"
+
+node[shape=diamond,style=filled,fillcolor="#b6e7ff"];
+  "com.github.devconslejme.\nQueueStateI$CallableWeak"
+  "com.simsilica.lemur.event.\nKeyActionListener"
+  "com.simsilica.lemur.\nCommand"
+  "com.jme3.input.controls.\nActionListener"
+  "com.github.devconslejme.extras.\nSingleMandatoryAppInstanceI$ICheckProblems"
+
+node[shape=oval,style=filled,fillcolor="#f3c9ff"];
+
+  "com.github.devconslejme.\nTestDevCons" -> "com.jme3.app.\nSimpleApplication"
+  "com.github.devconslejme.\nDevConsPluginStateI" -> "com.jme3.app.state.\nAbstractAppState"
+  "com.github.devconslejme.\nDevConsPluginStateI$5" -> "com.github.devconslejme.\nQueueStateI$CallableX"
+  "com.github.devconslejme.\nBindKeyI$2" -> "com.simsilica.lemur.event.\nKeyActionListener" [arrowhead=diamond]
+  "com.github.devconslejme.\nBindKeyI$3" -> "com.simsilica.lemur.event.\nKeyActionListener" [arrowhead=diamond]
+  "com.github.devconslejme.\nDevConsPluginStateI$4" -> "com.github.devconslejme.\nQueueStateI$CallableX"
+  "com.github.devconslejme.\nBindKeyI$1" -> "com.simsilica.lemur.event.\nKeyActionListener" [arrowhead=diamond]
+  "com.github.devconslejme.\nDevConsPluginStateI$6" -> "com.github.devconslejme.\nQueueStateI$CallableX"
+  "com.github.devconslejme.\nDevConsPluginStateI$3" -> "com.github.devconslejme.\nQueueStateI$CallableX"
+  "com.github.devconslejme.\nDevConsPluginStateI$2" -> "com.jme3.input.controls.\nActionListener" [arrowhead=diamond]
+  "com.github.devconslejme.\nQueueStateI$CallableX" -> "com.github.devconslejme.\nQueueStateI$CallableWeak" [arrowhead=diamond]
+  "com.github.devconslejme.\nJavaScriptI$1" -> "com.github.devconslejme.\nQueueStateI$CallableX"
+  "com.github.devconslejme.\nDevConsPluginStateI$ButtonClick" -> "com.simsilica.lemur.\nCommand" [arrowhead=diamond]
+  "com.github.devconslejme.\nTestDevCons$1" -> "com.jme3.app.state.\nAbstractAppState"
+  "com.github.devconslejme.\nQueueStateI" -> "com.jme3.app.state.\nAbstractAppState"
+  "com.github.devconslejme.\nDevConsPluginStateI$CallableXScrollTo" -> "com.github.devconslejme.\nQueueStateI$CallableX"
+}

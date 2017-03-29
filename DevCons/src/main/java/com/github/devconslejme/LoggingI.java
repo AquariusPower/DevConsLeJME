@@ -30,8 +30,6 @@ package com.github.devconslejme;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 import com.github.devconslejme.misc.TimeConvertI;

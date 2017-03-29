@@ -30,7 +30,6 @@ package com.github.devconslejme;
 import java.util.ArrayList;
 
 import com.jme3.input.KeyInput;
-import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.TextEntryComponent;
 import com.simsilica.lemur.event.KeyAction;
 import com.simsilica.lemur.event.KeyActionListener;

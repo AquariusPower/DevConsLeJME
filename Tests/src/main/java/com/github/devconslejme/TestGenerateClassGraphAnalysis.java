@@ -25,68 +25,32 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.extras;
+package com.github.devconslejme;
 
+import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
+import io.github.lukehutch.fastclasspathscanner.scanner.ScanResult;
+
+import java.io.File;
 import java.io.IOException;
-import java.lang.ProcessBuilder.Redirect;
-import java.util.ArrayList;
+import java.nio.charset.StandardCharsets;
+
+import com.github.devconslejme.extras.OSCmdI;
+import com.google.common.io.Files;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class OSCmdI {
-	private static OSCmdI instance = new OSCmdI();
-	/*instance*/ public static OSCmdI i(){return instance;}
-	
-	/**
-	 * Non matching OS cmd will just be ignored/skipped, 
-	 * so several OSs can have their related commands one after another without a problem!
-	 * 
-	 * @param strLine ex.: "linux 'ls 123'"
-	 * @return
-	 */
-	public boolean runOSCommand(String strLine){
-		boolean bOk=true;
+public class TestGenerateClassGraphAnalysis {
+	public static void main(String[] args) throws IOException {
+		ScanResult scanResult = new FastClasspathScanner(
+			DevConsPluginStateI.class.getPackage().getName()).scan();
 		
-		CommandLineParser ccl = new CommandLineParser(strLine);
+		String str = scanResult.generateClassGraphDotFile(9.2f, 8.0f);
 		
-		String strOSName=System.getProperty("os.name");
-		if(!strOSName.equalsIgnoreCase(ccl.getCommand())){
-			/**
-			 * skip message would be just annoying...
-			 */
-			return true; //just skip
-		}
+		Files.write(str, new File("Tests/src/main/analysis/GraphViz.dot"), StandardCharsets.UTF_8);
 		
-		ArrayList<String> astrOSCmd = new ArrayList<String>();
-		if(strOSName.equalsIgnoreCase("linux")){
-			astrOSCmd.add("bash");
-			astrOSCmd.add("-c");
-		}
-//		astrOSCmd.add(ccl.getParam(1,String.class));
-		astrOSCmd.add(ccl.getParam(1));
-		
-		try {
-//			LoggingI.i().logMarker("Running OS command:Begin");
-			System.out.println("OSCommand:"+astrOSCmd);
-			
-//			Process p = Runtime.getRuntime().exec(astrOSCmd.toArray(new String[0]));
-//			InputStream isErr = p.getErrorStream();
-			
-			ProcessBuilder pb = new ProcessBuilder(astrOSCmd);
-			pb.redirectOutput(Redirect.INHERIT);
-			pb.redirectError(Redirect.INHERIT);
-			Process p = pb.start();
-			int iExit = p.waitFor();
-			
-			System.out.println("Running OS command:End:Return="+iExit);
-			bOk = iExit==0;
-		} catch (IOException|InterruptedException e) {
-			e.printStackTrace();
-//			LoggingI.i().logExceptionEntry(e, astrOSCmd.toString());
-		}
-		
-		return bOk;
+		OSCmdI.i().runOSCommand("linux 'dot -Tsvg "
+			+"< Tests/src/main/analysis/GraphViz.dot "
+			+"> Tests/src/main/analysis/GraphViz.svg'");
 	}
-	
 }
