@@ -89,7 +89,6 @@ public class DevConsPluginStateI extends AbstractAppState{
 	private Node	nodeParent;
 	private BitmapFont	font;
 	private ColorRGBA	colorConsoleStyleBackground;
-	private Application	app;
 	private Container	cntrStatus;
 	private Label	lblStats;
 	private Button	btnClipboardShow;
@@ -206,14 +205,16 @@ public class DevConsPluginStateI extends AbstractAppState{
 	}
 	
 	public void configure(Application app, Node nodeParent) {
+		DCGlobal.configure(app);
+		
 		// gui
 		this.nodeParent = nodeParent;
-		app.getStateManager().attach(this);
+		DCGlobal.app().getStateManager().attach(this);
 		
 		flStorageFolder = new File(
 			JmeSystem.getStorageFolder(StorageFolderType.Internal),
-			app.getClass().getPackage().getName().replace(".",File.separator) //package of main class
-				+File.separator+app.getClass().getSimpleName() //class with main()
+			DCGlobal.app().getClass().getPackage().getName().replace(".",File.separator) //package of main class
+				+File.separator+DCGlobal.app().getClass().getSimpleName() //class with main()
 				+File.separator+DevConsPluginStateI.class.getSimpleName() //console plugin
 		);
 		
@@ -224,7 +225,7 @@ public class DevConsPluginStateI extends AbstractAppState{
 		ClipboardI.i().configure();
 		FileI.i().configure();
 		LoggingI.i().configure();
-		QueueStateI.i().configure(app);
+		QueueStateI.i().configure(DCGlobal.app());
 	}
 	
 	public void putStatus(EStatPriority esp, String strKey, String strHelp, String strValue){
@@ -243,8 +244,6 @@ public class DevConsPluginStateI extends AbstractAppState{
 		super.setEnabled(false); //the console starts closed
 		
 		// jme
-		this.app=app;
-		
 		cxScrollTo = new CallableXScrollTo();
 		QueueStateI.i().enqueue(cxScrollTo);
 		
@@ -306,12 +305,12 @@ public class DevConsPluginStateI extends AbstractAppState{
 		putStatus(EStatPriority.Normal, "VsR", "DevCons Logging area Visible Rows",
 			String.format("%d", lstbxLoggingSection.getVisibleItems()) );
 		
-		Vector2f v2fCursor = app.getInputManager().getCursorPosition();
+		Vector2f v2fCursor = DCGlobal.app().getInputManager().getCursorPosition();
 		putStatus(EStatPriority.Bottom, "Cur", "Cursor Position",
 			String.format("%.0f,%.0f", v2fCursor.x, v2fCursor.y) );
 		
 		putStatus(EStatPriority.Bottom, "Tmr", "Application Time",
-				String.format("%d", app.getTimer().getTime()) );
+				String.format("%d", DCGlobal.app().getTimer().getTime()) );
 	}
 	
 	private void updateStatus() {
@@ -361,7 +360,7 @@ public class DevConsPluginStateI extends AbstractAppState{
 		
 	}
 	
-	public void scrollToBottom() {
+	public void scrollKeepAtBottom() {
 		bKeepScrollAtBottom=true;
 //		scrollTo(-1);
 	}
@@ -545,7 +544,7 @@ public class DevConsPluginStateI extends AbstractAppState{
 	private void initStyle() {
 		colorConsoleStyleBackground = MiscJmeI.i().colorChangeCopy(ColorRGBA.Blue, -0.75f);
 		
-		if(GuiGlobals.getInstance()==null)GuiGlobals.initialize(app);
+		if(GuiGlobals.getInstance()==null)GuiGlobals.initialize(DCGlobal.app());
 		
 		Styles styles = GuiGlobals.getInstance().getStyles();
 		Attributes attrs = styles.getSelector(getStyle()); // this also creates the style
@@ -697,11 +696,14 @@ public class DevConsPluginStateI extends AbstractAppState{
 		if(!str.isEmpty())JavaScriptI.i().addCmdToHistory("//"+str); //just to backup anything that is there even if incomplete
 		
 		String strText = LoggingI.i().getSelectedEntry();
+		if(strText==null)return;
+		
 		strText=strText.trim();
 		int iMoveTo = strText.indexOf('(');
 		
 		// remove useless type text
 		String strAfter = strText.substring(iMoveTo+1);
+		boolean bFoundType=false;
 		for(String strType:astrType){
 			if(strAfter.startsWith(strType)){
 				strText=strText.substring(0, iMoveTo+1);
@@ -712,8 +714,13 @@ public class DevConsPluginStateI extends AbstractAppState{
 					iMoveTo++;
 				}
 				strText+=strAfter.substring(strType.length());
+				bFoundType = true;
 				break;
 			}
+		}
+		
+		if(iMoveTo>-1 && !bFoundType){
+			iMoveTo++;
 		}
 		
 		setInputText(strText);

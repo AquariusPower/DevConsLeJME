@@ -27,6 +27,8 @@
 
 package com.github.devconslejme.misc;
 
+import com.jme3.system.Timer;
+
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -35,24 +37,64 @@ public class TimeConvertI {
 	private static TimeConvertI instance = new TimeConvertI();
 	/**instance*/public static TimeConvertI i(){return instance;}
 	
-	private long lNanoOneSecond  = 1000000000L;
+	private long lOneSecondInNanos = 1000000000L;
+	private long lOneSecondInMilis = 1000L;
 	private long lMilisToNano = 1000000L;
-	private double dNanoToSeconds = 1.0/lNanoOneSecond;
+	private double dNanoToSeconds = 1.0/lOneSecondInNanos;
 	
+	/**
+	 * 
+	 * @param dSeconds
+	 * @return arguable precision
+	 */
 	public long secondsToNano(double dSeconds){
-		return (long) (dSeconds*lNanoOneSecond);
+		return (long) (dSeconds*lOneSecondInNanos);
 	}
+	/**
+	 * 
+	 * @param fSeconds
+	 * @return even more arguable precision
+	 */
 	public long secondsToNano(float fSeconds){
-		return (long) (fSeconds*lNanoOneSecond);
+		return (long) (fSeconds*lOneSecondInNanos);
+	}
+	public double nanoToSeconds(long lNano) {
+		return lNano*dNanoToSeconds;
+	}
+	
+	/**
+	 * just for timing compatibility
+	 * @param lTimeMilis
+	 * @return time in nanos with precision loss OF COUSE!
+	 */
+	public long milisToNano(long lTimeMilis){
+		return lTimeMilis*lMilisToNano;
 	}
 	public long nanoToMilis(long lTimeNano){
 		return lTimeNano/lMilisToNano;
 	}
-	public long milisToNano(long lTimeMilis){
-		return lTimeMilis*lMilisToNano;
+	
+	public long getMilisFrom(Timer timer) {
+		if(timer.getResolution()==lOneSecondInNanos){
+			return nanoToMilis(timer.getTime());
+		}
+		
+		if(timer.getResolution()==lOneSecondInMilis){
+			return timer.getTime();
+		}
+		
+		throw new UnsupportedOperationException("unsupported timer resolution "+timer.getResolution());
 	}
-	public double nanoToSeconds(long lNano) {
-		return lNano*dNanoToSeconds;
+	public long getNanosFrom(Timer timer) {
+		if(timer.getResolution()==lOneSecondInNanos){
+			return timer.getTime();
+		}
+		
+		if(timer.getResolution()==lOneSecondInMilis){
+			return milisToNano(timer.getTime());
+		}
+		
+		throw new UnsupportedOperationException("unsupported timer resolution "+timer.getResolution());
 	}
 
 	//public double convertDelayNanoToSeconds(long lDelayNano){

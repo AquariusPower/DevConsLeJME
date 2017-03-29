@@ -37,7 +37,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
@@ -67,11 +69,11 @@ public class JavaScriptI {
 	private Object	objRetValFile;
 	private ScriptEngine	jse;
 	private Bindings	bndJSE;
-	private ArrayList<String> astrJSClassBindList = new ArrayList<String>();
+//	private ArrayList<String> astrJSClassBindList = new ArrayList<String>();
 	private boolean bShowAllPublicMembers = false;
 	private Method[] amLastReturnValue;
-	private ArrayList<String>	astrAllJSClassBindMethods = new ArrayList<String>();
-	private ArrayList<String>	astrLastReturnValueMethods = new ArrayList<String>();
+	private HashMap<Object,Method>	hmAllJSClassBindMethods = new HashMap<Object,Method>();
+//	private ArrayList<Method>	amLastReturnValueMethods = new ArrayList<Method>();
 	private ArrayList<String> astrCmdHistory = new ArrayList<String>();
 	private ArrayList<String> astrUserInit = new ArrayList<String>();
 	private File	flCmdHistory;
@@ -182,7 +184,7 @@ public class JavaScriptI {
 				LoggingI.i().logSubEntry(str);
 			}
 		}
-		DevConsPluginStateI.i().scrollToBottom();
+		DevConsPluginStateI.i().scrollKeepAtBottom();
 	}
 
 	/**
@@ -224,7 +226,7 @@ public class JavaScriptI {
 			throw new NullPointerException("already set: "+strBindId);
 		}
 		
-		astrJSClassBindList.add(strBindId);
+//		astrJSClassBindList.add(strBindId);
 	}
 	/**
 	 * 
@@ -248,26 +250,48 @@ public class JavaScriptI {
 			execScript(strJS,true);
 		}
 		
-		DevConsPluginStateI.i().scrollToBottom();
+		DevConsPluginStateI.i().scrollKeepAtBottom();
 		DevConsPluginStateI.i().clearInput();
 	}
 	
-	public AutoCompleteResult showHelp(String strFilter) {
+	/**
+	 * Initially, a short help will be shown.
+	 * Only if a full JS class bind id is the filter, its methods will be shown. 
+	 * @param strFilter
+	 * @return
+	 */
+	public String showHelp(String strFilter) {
 		LoggingI.i().logMarker("Help for: "+strFilter);
 		
 		ArrayList<String> astr = new ArrayList<String>();
 		astr.addAll(EBaseCommand.valuesAsStringArray());
-		astr.addAll(astrJSClassBindList);
-		astr.addAll(astrLastReturnValueMethods);
+		astr.addAll(bndJSE.keySet());
 		
-		AutoCompleteResult ar = AutoCompleteI.i().autoComplete(strFilter, astr, false, false);
-		for(String str:ar.getResultList()){
+		String strImprovedPart=strFilter; //still unmodified
+		
+		ArrayList<String> astrResult = astr;
+		if(!strFilter.isEmpty()){
+			AutoCompleteResult ar = AutoCompleteI.i().autoComplete(strFilter, astr, false, false);
+			
+			if(!ar.isPartGotImproved()){
+				astr.addAll(getJSClassBindListFilteredHelp());
+				
+				ar = AutoCompleteI.i().autoComplete(strFilter, astr, false, false);
+			}
+			
+			astrResult = ar.getResultList();
+			
+			strImprovedPart = ar.getImprovedPart();
+		}
+		
+//		Collections.sort(astr);
+		for(String str:astrResult){
 			LoggingI.i().logSubEntry(str);
 		}
 		
-		DevConsPluginStateI.i().scrollToBottom();
+		DevConsPluginStateI.i().scrollKeepAtBottom();
 		
-		return ar;
+		return strImprovedPart;
 	}
 	
 	public void execFile(String strFile){
@@ -290,7 +314,7 @@ public class JavaScriptI {
 			
 			if(!flJS.exists()){
 				flJS.createNewFile();
-				FileI.i().appendLine(flJS, "//Classes: "+astrJSClassBindList);
+				FileI.i().appendLine(flJS, "//Classes: "+bndJSE.keySet());
 				FileI.i().appendLine(flJS, "//"+EJSObjectBind.class.getSimpleName()+": "+Arrays.toString(EJSObjectBind.values()));
 				LoggingI.i().logWarn("created file "+flJS.getAbsoluteFile());
 				return null;
@@ -387,56 +411,71 @@ public class JavaScriptI {
 	private void showMethods(Object obj){
 		LoggingI.i().logSubEntry("Accessible Methods:");
 		
-		String strConcreteClassSName = obj.getClass().getSimpleName();
-		amLastReturnValue = obj.getClass().getMethods();
-		astrLastReturnValueMethods.clear();
-		for(Method m:amLastReturnValue){
-			String strM = "";
-			String strDeclClassSName=m.getDeclaringClass().getSimpleName();
-			
-			strM+=strConcreteClassSName+"."+m.getName();
-			
-			strM+="(";
-			String strP="";
-			boolean bHasNonUserTypeableParam = false;
-			for(Class<?> p:m.getParameterTypes()){
-				if(!isCanUserTypeIt(p))bHasNonUserTypeableParam=true;
-				if(!strP.isEmpty())strP+=",";
-				strP+=p.getSimpleName();
-			}
-			strM+=strP+")";
-			
-			/**
-			 * as comment to be compatible with scripting 
-			 */
-			strM+=" //"+m.getReturnType().getSimpleName();
-			
-			boolean bIsStatic=false;
-			if(Modifier.isStatic(m.getModifiers())){
-				strM+=" <STATIC>";
-				bIsStatic=true;
-			}
-			
-//			if(!strDeclClassSName.equals(strConcreteClassSName)){
-				strM+=" <"+strDeclClassSName+">";
-//			}
-			
-			if(
-					isShowAllPublicMembers() ||
-					(
-						!bIsStatic &&
-						!bHasNonUserTypeableParam &&
-						!isCanUserTypeIt(m.getDeclaringClass()) && // to show methods only for non primitive/simple/basic types
-						!m.getDeclaringClass().equals(Object.class)
-					)
-			){
-				astrLastReturnValueMethods.add(strM);
+//		amLastReturnValueMethods.clear();
+//		amLastReturnValueMethods.addAll(getAllMethodsFrom(obj));
+		
+		for(Method m:obj.getClass().getMethods()){
+			LoggingI.i().logSubEntry(getFilteredHelpFromMethod(obj, m));
+		}
+	}
+	
+	public ArrayList<String> getJSClassBindListFilteredHelp(){
+		ArrayList<String> astr = new ArrayList<String>();
+		for(Entry<String, Object> entry:bndJSE.entrySet()){
+			Object obj = entry.getValue();
+			for(Method m:entry.getValue().getClass().getMethods()){
+				String str=getFilteredHelpFromMethod(obj,m);
+				if(!str.isEmpty())astr.add(str);
 			}
 		}
+		Collections.sort(astr);
+		return astr;
+	}
+	
+	public String getFilteredHelpFromMethod(Object obj, Method m){
+		String strConcreteClassSName = obj.getClass().getSimpleName();
 		
-		Collections.sort(astrLastReturnValueMethods);
+		String strM = "";
+		String strDeclClassSName=m.getDeclaringClass().getSimpleName();
 		
-		for(String str:astrLastReturnValueMethods)LoggingI.i().logSubEntry(str);
+		strM+=strConcreteClassSName+"."+m.getName();
+		
+		strM+="(";
+		String strP="";
+		boolean bHasNonUserTypeableParam = false;
+		for(Class<?> p:m.getParameterTypes()){
+			if(!isCanUserTypeIt(p))bHasNonUserTypeableParam=true;
+			if(!strP.isEmpty())strP+=",";
+			strP+=p.getSimpleName();
+		}
+		strM+=strP+")";
+		
+		/**
+		 * as comment to be compatible with scripting 
+		 */
+		strM+=" //"+m.getReturnType().getSimpleName();
+		
+		boolean bIsStatic=false;
+		if(Modifier.isStatic(m.getModifiers())){
+			strM+=" <STATIC>";
+			bIsStatic=true;
+		}
+		
+		strM+=" <"+strDeclClassSName+">";
+		
+		if(
+				isShowAllPublicMembers() ||
+				(
+					!bIsStatic &&
+					!bHasNonUserTypeableParam &&
+					!isCanUserTypeIt(m.getDeclaringClass()) && // to show methods only for non primitive/simple/basic types
+					!m.getDeclaringClass().equals(Object.class)
+				)
+		){
+			return strM;
+		}
+		
+		return "";
 	}
 	
 	public boolean isShowAllPublicMembers() {
@@ -546,14 +585,13 @@ public class JavaScriptI {
 	}
 
 	protected void autoComplete() {
-		AutoCompleteResult ar = JavaScriptI.i().showHelp(DevConsPluginStateI.i().getInputText());
+		String strImprovedPart = JavaScriptI.i().showHelp(DevConsPluginStateI.i().getInputText());
 		
-		String str = ar.getImprovedPart();
-		int i = str.indexOf("//");
-		if(i>-1)str=str.substring(0,i);
+		String str = strImprovedPart;
+		int i = str.indexOf("//");if(i>-1)str=str.substring(0,i).trim()+" ";
 		DevConsPluginStateI.i().setInputText(str);
 		
-		DevConsPluginStateI.i().scrollToBottom();
+		DevConsPluginStateI.i().scrollKeepAtBottom();
 	}
 
 	public void autoCompleteWord() {

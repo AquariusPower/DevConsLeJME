@@ -27,8 +27,8 @@
 
 package com.github.devconslejme.misc;
 
+import com.github.devconslejme.DCGlobal;
 import com.github.devconslejme.JavaScriptI;
-import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 
 /**
@@ -44,8 +44,8 @@ public class DynamicFPSLimiterStateI extends AbstractAppState{
 	private long	lNanoThreadSleep;
 	private int	iMaxFPS;
 	
-	public void configure(Application app){
-		app.getStateManager().attach(this);
+	public void configure(){
+		DCGlobal.app().getStateManager().attach(this);
 		JavaScriptI.i().setJSBinding(this);
 	}
 	

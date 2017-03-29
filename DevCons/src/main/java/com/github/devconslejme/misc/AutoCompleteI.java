@@ -40,18 +40,24 @@ public class AutoCompleteI {
 	public static AutoCompleteI i(){return instance;}
 	
 	public static class AutoCompleteResult{
-		private String strImprovedPart;
-		private ArrayList<String> astr;
-		private boolean bUsingFuzzy;
+		private String strImprovedPart="";
+		private ArrayList<String> astr=new ArrayList<String>();
+		private boolean bUsingFuzzy=false;
+		private String	strPart="";
 		
-		public AutoCompleteResult(String strImprovedPart, ArrayList<String> astr,
+		public AutoCompleteResult(String strPart,String strImprovedPart, ArrayList<String> astr,
 				boolean bUsingFuzzy) {
 			super();
+			this.strPart=strPart;
 			this.strImprovedPart = strImprovedPart;
 			this.astr = astr;
 			this.bUsingFuzzy = bUsingFuzzy;
 		}
-
+		
+		public boolean isPartGotImproved(){
+			return strPart.length()<strImprovedPart.length();
+		}
+		
 		public String getImprovedPart() {
 			return strImprovedPart;
 		}
@@ -87,7 +93,7 @@ public class AutoCompleteI {
 		strPart=strPart.trim();
 		
 		if(strPart.isEmpty()){
-			return new AutoCompleteResult(strPart,astrAllPossibilities,bUsingFuzzy);
+			return new AutoCompleteResult(strPart,strPart,astrAllPossibilities,bUsingFuzzy);
 		}
 		
 //		if(strPart.matches("[^"+strValidCmdCharsRegex+"]"))return astrPossibleMatches;
@@ -123,7 +129,7 @@ public class AutoCompleteI {
 		
 		// found single possibility
 		if(astrPossibleMatches.size()==1){
-			return new AutoCompleteResult(astrPossibleMatches.get(0), astrPossibleMatches, bUsingFuzzy);
+			return new AutoCompleteResult(strPart,astrPossibleMatches.get(0), astrPossibleMatches, bUsingFuzzy);
 		}
 		
 		String strImprovedPart = strPart;
@@ -175,6 +181,6 @@ public class AutoCompleteI {
 		}
 		astrPossibleMatches.add(0, strImprovedPart);
 		
-		return new AutoCompleteResult(strImprovedPart,astrPossibleMatches,bUsingFuzzy);
+		return new AutoCompleteResult(strPart,strImprovedPart,astrPossibleMatches,bUsingFuzzy);
 	}
 }

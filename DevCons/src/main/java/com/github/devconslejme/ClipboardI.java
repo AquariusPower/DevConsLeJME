@@ -92,6 +92,6 @@ public class ClipboardI {
 		LoggingI.i().logMarker("Clipboard Contents: begin");
 		LoggingI.i().logEntry(ClipboardI.i().readFromClipboard(false));
 		LoggingI.i().logMarker("Clipboard Contents: end");
-		DevConsPluginStateI.i().scrollToBottom();
+		DevConsPluginStateI.i().scrollKeepAtBottom();
 	}
 }

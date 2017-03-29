@@ -32,6 +32,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.github.devconslejme.misc.TimeConvertI;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
@@ -50,7 +51,7 @@ public class LoggingI {
 	private int iWrapAtColumn = 80;
 	private File	flLog;
 	DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss"); //yyyy/MM/dd
-	Date date = new Date();
+	Date dateForMarker = new Date();
 	
 	public void configure() {
 		JavaScriptI.i().setJSBinding(this);
@@ -126,8 +127,10 @@ public class LoggingI {
 	}
 	
 	public void logMarker(String strInfo){
-		date.setTime(System.currentTimeMillis());
-		strInfo = "["+dateFormat.format(date)+"] "+strInfo;
+		dateForMarker.setTime(System.currentTimeMillis());
+		strInfo = "[RT:"+dateFormat.format(dateForMarker)+"] "+strInfo;
+		dateForMarker.setTime(TimeConvertI.i().getMilisFrom(DCGlobal.app().getTimer()));
+		strInfo = strInfo+" [AT:"+dateFormat.format(dateForMarker)+"]";
 		
 		strInfo = Strings.padStart(strInfo, iWrapAtColumn/2 +strInfo.length()/2, '_');
 		strInfo = Strings.padEnd(strInfo, iWrapAtColumn, '_');

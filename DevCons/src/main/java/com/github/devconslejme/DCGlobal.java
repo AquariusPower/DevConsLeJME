@@ -27,42 +27,19 @@
 
 package com.github.devconslejme;
 
-import com.github.devconslejme.misc.DynamicFPSLimiterStateI;
-import com.github.devconslejme.misc.OSCmdI;
-import com.jme3.app.SimpleApplication;
-import com.jme3.system.AppSettings;
+import com.jme3.app.Application;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestDevCons extends SimpleApplication{
-
-	public static void main(String[] args) {
-		TestDevCons tst = new TestDevCons();
-		
-		AppSettings as = new AppSettings(true);
-		as.setTitle(TestDevCons.class.getSimpleName());
-		as.setResolution(1230,690);
-		as.setResizable(true);
-		as.setFrameRate(60);
-		tst.setSettings(as);
-		
-		tst.setShowSettings(false);
-		
-		tst.start();
+public class DCGlobal {
+	private static Application	app;
+	
+	public static void configure(Application app){
+		if(DCGlobal.app!=null)throw new NullPointerException("already configured");
+		DCGlobal.app=app;
 	}
 	
-	@Override
-	public void simpleInitApp() {
-		DevConsPluginStateI.i().configure(this,getGuiNode());
-		
-		//optionals
-		DynamicFPSLimiterStateI.i().configure(); 
-		
-		JavaScriptI.i().setJSBinding(this); //interesting
-		
-		// Linux only: easy workaround to make strict focus policy painless
-		OSCmdI.i().runOSCommand("linux 'xdotool windowactivate $(xdotool search --name \"^"+settings.getTitle()+"$\")'");
-	}
+	public static final Application app(){return app;}
 	
 }
