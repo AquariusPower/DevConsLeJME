@@ -346,7 +346,7 @@ public class DevConsPluginStateI extends AbstractAppState{
 		QueueStateI.i().enqueue(new CallableX("UpdateInputText",0.25f,true) { //TODO has a chance of typing something at other input field? like when holding for long a key?
 			@Override
 			public Boolean call() {
-				updateInputText();
+				copyLogSelectionToInputText();
 				return true;
 			}
 		}.setUserCanPause(true));
@@ -678,15 +678,18 @@ public class DevConsPluginStateI extends AbstractAppState{
 		return flStorageFolder;
 	}
 
-	public void insertInputTextAtCaratPosition(String str) {
+	public void insertAtInputTextCaratPos(String str) {
 		tfInput.getDocumentModel().insert(str);
 	}
+//	public void insertInputTextAtCaratPosition(String str) {
+//		tfInput.getDocumentModel().insert(str);
+//	}
 
 //	public Application getApp() {
 //		return app;
 //	}
 	
-	public void updateInputText(){
+	public void copyLogSelectionToInputText(){
 		if(!vrSelectionChangedToUpdateInputText.update())return;
 		
 		String str = getInputText();
@@ -694,36 +697,27 @@ public class DevConsPluginStateI extends AbstractAppState{
 		if(!str.isEmpty())JavaScriptI.i().addCmdToHistory("//"+str); //just to backup anything that is there even if incomplete
 		
 		String strText = LoggingI.i().getSelectedEntry();
+		strText=strText.trim();
 		int iMoveTo = strText.indexOf('(');
 		
 		// remove useless type text
 		String strAfter = strText.substring(iMoveTo+1);
-//		if(strAfter.startsWith(String.class.getSimpleName())){
-//			strText=strText.substring(0, iMoveTo+1);
-//			strText+="\"\""+strAfter.substring(String.class.getSimpleName().length());
-//			iMoveTo++;
-//		}else{
-			for(String strType:astrType){
-				if(strAfter.startsWith(strType)){
-					strText=strText.substring(0, iMoveTo+1);
-					if(strType.equals(String.class.getSimpleName())){
-						strText+="\"\"";
-						iMoveTo++;
-					}
-					strText+=strAfter.substring(strType.length());
-					break;
+		for(String strType:astrType){
+			if(strAfter.startsWith(strType)){
+				strText=strText.substring(0, iMoveTo+1);
+				if(strType.equals(String.class.getSimpleName())){
+					strText+="\"\"";
+					iMoveTo+=2;
+				}else{
+					iMoveTo++;
 				}
+				strText+=strAfter.substring(strType.length());
+				break;
 			}
-//		}
+		}
 		
 		setInputText(strText);
 		setInputTextCaratAt(iMoveTo);
-//		if(iMoveTo>-1){
-//			DocumentModel dm = tfInput.getDocumentModel();
-//			dm.end(true);
-////				int iLeft = strText.length() - iMoveTo;
-//			for(int i=strText.length()-1; i>iMoveTo; i--)dm.left();
-//		}
 	}
 	
 	public void setInputTextCaratAt(int iMoveTo){
@@ -745,10 +739,6 @@ public class DevConsPluginStateI extends AbstractAppState{
 			}
 		}
 		return str.substring(iNotAlpha);
-	}
-
-	public void insertAtInputTextCaratPos(String str) {
-		tfInput.getDocumentModel().insert(str);
 	}
 
 }

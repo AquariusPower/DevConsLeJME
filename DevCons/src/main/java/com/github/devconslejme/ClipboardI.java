@@ -58,7 +58,7 @@ public class ClipboardI {
 	 */
 	public String pasteFromClipboard(boolean bEscapeNL) {
 		String str = readFromClipboard(bEscapeNL);
-		if(str!=null)DevConsPluginStateI.i().insertInputTextAtCaratPosition(str);
+		if(str!=null)DevConsPluginStateI.i().insertAtInputTextCaratPos(str);
 		return str;
 	}
 	

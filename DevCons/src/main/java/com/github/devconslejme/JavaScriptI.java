@@ -70,6 +70,7 @@ public class JavaScriptI {
 	private ArrayList<String> astrJSClassBindList = new ArrayList<String>();
 	private boolean bShowAllPublicMembers = false;
 	private Method[] amLastReturnValue;
+	private ArrayList<String>	astrAllJSClassBindMethods = new ArrayList<String>();
 	private ArrayList<String>	astrLastReturnValueMethods = new ArrayList<String>();
 	private ArrayList<String> astrCmdHistory = new ArrayList<String>();
 	private ArrayList<String> astrUserInit = new ArrayList<String>();
@@ -425,7 +426,7 @@ public class JavaScriptI {
 					(
 						!bIsStatic &&
 						!bHasNonUserTypeableParam &&
-						!isCanUserTypeIt(m.getDeclaringClass()) && // will show methods for non simple types
+						!isCanUserTypeIt(m.getDeclaringClass()) && // to show methods only for non primitive/simple/basic types
 						!m.getDeclaringClass().equals(Object.class)
 					)
 			){
@@ -455,22 +456,6 @@ public class JavaScriptI {
 		if(cl.isPrimitive())return true;
 		if(Primitives.isWrapperType(cl))return true; //last as is probably "slower"
 		
-//		String str = cl.getSimpleName();
-//		
-//		if(str.equals(Object.class.getSimpleName()))return true;
-//		
-//		if(str.equals(Character.class.getSimpleName()))return true;
-//		if(str.equals(CharSequence.class.getSimpleName()))return true;
-//		if(str.equals(String.class.getSimpleName()))return true;
-//		
-//		if(str.equals(Integer.class.getSimpleName()))return true;
-//		if(str.equals(Long.class.getSimpleName()))return true;
-//		if(str.equals(Float.class.getSimpleName()))return true;
-//		if(str.equals(Double.class.getSimpleName()))return true;
-//		
-//		if(str.equals(Boolean.class.getSimpleName()))return true;
-		
-//		System.out.println(cl.getSimpleName());
 		return false;
 	}
 
