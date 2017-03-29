@@ -25,62 +25,66 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.misc;
+package com.github.devconslejme.extras;
 
-import com.github.devconslejme.DCGlobal;
-import com.github.devconslejme.JavaScriptI;
-import com.jme3.app.state.AbstractAppState;
+import java.io.IOException;
+import java.lang.ProcessBuilder.Redirect;
+import java.util.ArrayList;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class DynamicFPSLimiterStateI extends AbstractAppState{
-	private static DynamicFPSLimiterStateI instance = new DynamicFPSLimiterStateI();
-	/**instance*/public static DynamicFPSLimiterStateI i(){return instance;}
+public class OSCmdI {
+	private static OSCmdI instance = new OSCmdI();
+	/*instance*/ public static OSCmdI i(){return instance;}
 	
-	private long	lNanoFrameDelayByCpuUsage;
-	private long	lNanoDelayLimit;
-	private long	lNanoTimePrevious;
-	private long	lNanoThreadSleep;
-	private int	iMaxFPS;
-	
-	public void configure(){
-		DCGlobal.app().getStateManager().attach(this);
-		JavaScriptI.i().setJSBinding(this);
-	}
-	
-	public void setMaxFps(int iMaxFPS){
-		this.iMaxFPS=iMaxFPS;
-		if(this.iMaxFPS<1)this.iMaxFPS=1;
-		lNanoDelayLimit = (long) TimeConvertI.i().secondsToNano(((1.0f/this.iMaxFPS)));
-	}
-	
-	@Override
-	public void update(float tpf) {
-		super.update(tpf);
+	/**
+	 * 
+	 * @param strLine ex.: "linux 'ls 123'"
+	 * @return
+	 */
+	public boolean runOSCommand(String strLine){
+		boolean bOk=true;
 		
-		try {
+		CommandLineParser ccl = new CommandLineParser(strLine);
+		
+		String strOSName=System.getProperty("os.name");
+		if(!strOSName.equalsIgnoreCase(ccl.getCommand())){
 			/**
-			 * //MUST BE BEFORE THE SLEEP!!!!!!
+			 * skip message would be just annoying...
 			 */
-			lNanoFrameDelayByCpuUsage = System.nanoTime() - lNanoTimePrevious; //must be real time as must be independent of the simulation time
-			lNanoThreadSleep = lNanoDelayLimit -lNanoFrameDelayByCpuUsage;
-			if(lNanoThreadSleep<0L)lNanoThreadSleep=0L; //only useful for reports
-			
-			if(lNanoThreadSleep>0L)Thread.sleep(getThreadSleepTimeMilis());
-			
-			/**
-			 * MUST BE AFTER THE SLEEP!!!!!!!
-			 */
-			lNanoTimePrevious = System.nanoTime(); //must be real time as must be independent of the simulation time
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+			return true; //just skip
 		}
 		
-	}
-	
-	public long getThreadSleepTimeMilis(){
-		return lNanoThreadSleep/1000000L;
+		ArrayList<String> astrOSCmd = new ArrayList<String>();
+		if(strOSName.equalsIgnoreCase("linux")){
+			astrOSCmd.add("bash");
+			astrOSCmd.add("-c");
+		}
+//		astrOSCmd.add(ccl.getParam(1,String.class));
+		astrOSCmd.add(ccl.getParam(1));
+		
+		try {
+//			LoggingI.i().logMarker("Running OS command:Begin");
+			System.out.println("OSCommand:"+astrOSCmd);
+			
+//			Process p = Runtime.getRuntime().exec(astrOSCmd.toArray(new String[0]));
+//			InputStream isErr = p.getErrorStream();
+			
+			ProcessBuilder pb = new ProcessBuilder(astrOSCmd);
+			pb.redirectOutput(Redirect.INHERIT);
+			pb.redirectError(Redirect.INHERIT);
+			Process p = pb.start();
+			int iExit = p.waitFor();
+			
+			System.out.println("Running OS command:End:Return="+iExit);
+			bOk = iExit==0;
+		} catch (IOException|InterruptedException e) {
+			e.printStackTrace();
+//			LoggingI.i().logExceptionEntry(e, astrOSCmd.toString());
+		}
+		
+		return bOk;
 	}
 	
 }

@@ -207,25 +207,28 @@ public class DevConsPluginStateI extends AbstractAppState{
 	public void configure(Application app, Node nodeParent) {
 		DCGlobal.configure(app);
 		
-		// gui
 		this.nodeParent = nodeParent;
 		DCGlobal.app().getStateManager().attach(this);
 		
 		flStorageFolder = new File(
 			JmeSystem.getStorageFolder(StorageFolderType.Internal),
-			DCGlobal.app().getClass().getPackage().getName().replace(".",File.separator) //package of main class
-				+File.separator+DCGlobal.app().getClass().getSimpleName() //class with main()
-				+File.separator+DevConsPluginStateI.class.getSimpleName() //console plugin
+			DCGlobal.app().getClass().getPackage().getName().replace(".",File.separator) //package of Application class
+				+File.separator+DCGlobal.app().getClass().getSimpleName() //Application class
+				+File.separator+DevConsPluginStateI.class.getSimpleName() //DevCons plugin
 		);
 		
 		JavaScriptI.i().configure(); //before all others
 		
 		JavaScriptI.i().setJSBinding(this);
-		BindKeyI.i().configure();
-		ClipboardI.i().configure();
-		FileI.i().configure();
+		JavaScriptI.i().setJSBinding(BindKeyI.i());
+		JavaScriptI.i().setJSBinding(ClipboardI.i());
+		JavaScriptI.i().setJSBinding(FileI.i());
+		
 		LoggingI.i().configure();
+		JavaScriptI.i().setJSBinding(LoggingI.i());
+		
 		QueueStateI.i().configure(DCGlobal.app());
+		JavaScriptI.i().setJSBinding(QueueStateI.i());
 	}
 	
 	public void putStatus(EStatPriority esp, String strKey, String strHelp, String strValue){

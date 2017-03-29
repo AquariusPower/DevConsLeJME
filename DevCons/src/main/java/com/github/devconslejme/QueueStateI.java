@@ -246,8 +246,6 @@ public class QueueStateI extends AbstractAppState{
 		}
 		
 		app.getStateManager().attach(this);
-		
-		JavaScriptI.i().setJSBinding(this);
 	}
 	
 	public void showQueue(){

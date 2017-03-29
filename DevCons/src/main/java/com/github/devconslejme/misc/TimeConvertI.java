@@ -32,7 +32,6 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import com.github.devconslejme.DCGlobal;
 import com.jme3.system.Timer;
 
 
@@ -104,7 +103,7 @@ public class TimeConvertI {
 		throw new UnsupportedOperationException("unsupported timer resolution "+timer.getResolution());
 	}
 	public String formatElapsed(Timer timer) {
-		long lElapsedMilis=TimeConvertI.i().getMilisFrom(DCGlobal.app().getTimer());
+		long lElapsedMilis=TimeConvertI.i().getMilisFrom(timer);
 		return sdf.format(new Date(lElapsedMilis - TimeZone.getDefault().getRawOffset()));
 	}
 

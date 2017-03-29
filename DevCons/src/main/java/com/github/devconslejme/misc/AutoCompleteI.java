@@ -181,7 +181,7 @@ public class AutoCompleteI {
 			strImprovedPart=strBeginCasePrevious;
 		}
 		
-		if(!astrPossibleMatches.get(0).equalsIgnoreCase(strImprovedPart)){
+		if(astrPossibleMatches.size()==0 || !astrPossibleMatches.get(0).equalsIgnoreCase(strImprovedPart)){
 			astrPossibleMatches.add(0, strImprovedPart);
 		}
 		

@@ -36,7 +36,7 @@ public class MiscJmeI {
 	private static MiscJmeI instance = new MiscJmeI();
 	/**instance*/ public static MiscJmeI i(){return instance;}
 	
-	public float colorComponentLimit(float f){
+	private float colorComponentLimit(float f){
 		if(f<=0)f=0;
 		if(f>=1)f=1;
 		return f;

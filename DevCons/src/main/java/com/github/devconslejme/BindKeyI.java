@@ -46,10 +46,6 @@ public class BindKeyI {
 	private ArrayList<BindKey> abkList = new ArrayList<BindKey>();
 	private KeyActionListener	kal;
 	
-	public void configure() {
-		JavaScriptI.i().setJSBinding(this);
-	}
-	
 	public static class BindKey{
 		KeyActionListener	kalAction = null;
 		

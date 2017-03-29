@@ -84,10 +84,6 @@ public class ClipboardI {
 		return str;
 	}
 
-	public void configure() {
-		JavaScriptI.i().setJSBinding(this);
-	}
-	
 	public void showClipboard() {
 		LoggingI.i().logMarker("Clipboard Contents: begin");
 		LoggingI.i().logEntry(ClipboardI.i().readFromClipboard(false));

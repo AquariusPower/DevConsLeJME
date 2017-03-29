@@ -56,8 +56,6 @@ public class LoggingI {
 	Date dateForMarker = new Date();
 	
 	public void configure() {
-		JavaScriptI.i().setJSBinding(this);
-		
 		flLog = new File(DevConsPluginStateI.i().getStorageFolder(), LoggingI.class.getSimpleName()+".log");
 		flLog.delete();
 		

@@ -25,44 +25,52 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme;
-
-import com.github.devconslejme.misc.DynamicFPSLimiterStateI;
-import com.github.devconslejme.misc.OSCmdI;
-import com.jme3.app.SimpleApplication;
-import com.jme3.system.AppSettings;
+package com.github.devconslejme.extras;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestDevCons extends SimpleApplication{
-
-	public static void main(String[] args) {
-		TestDevCons tst = new TestDevCons();
-		
-		AppSettings as = new AppSettings(true);
-		as.setTitle(TestDevCons.class.getSimpleName());
-		as.setResolution(1230,690);
-		as.setResizable(true);
-		as.setFrameRate(60);
-		tst.setSettings(as);
-		
-		tst.setShowSettings(false);
-		
-		tst.start();
+public class DynamicFPSLimiterI { //extends AbstractAppState{
+	private static DynamicFPSLimiterI instance = new DynamicFPSLimiterI();
+	/**instance*/public static DynamicFPSLimiterI i(){return instance;}
+	
+	private long	lNanoFrameDelayByCpuUsage;
+	private long	lNanoDelayLimit;
+	private long	lNanoTimePrevious;
+	private long	lNanoThreadSleep;
+	private int	iMaxFPS;
+	private long lOneSecondInNanos = 1000000000L;
+	
+	public void setMaxFps(int iMaxFPS){
+		this.iMaxFPS=iMaxFPS;
+		if(this.iMaxFPS<1)this.iMaxFPS=1;
+		float f=1.0f/this.iMaxFPS;
+		lNanoDelayLimit = (long) (f * lOneSecondInNanos);
 	}
 	
-	@Override
-	public void simpleInitApp() {
-		DevConsPluginStateI.i().configure(this,getGuiNode());
+	public void update(float tpf) {
+		try {
+			/**
+			 * //MUST BE BEFORE THE SLEEP!!!!!!
+			 */
+			lNanoFrameDelayByCpuUsage = System.nanoTime() - lNanoTimePrevious; //must be real time as must be independent of the simulation time
+			lNanoThreadSleep = lNanoDelayLimit -lNanoFrameDelayByCpuUsage;
+			if(lNanoThreadSleep<0L)lNanoThreadSleep=0L; //only useful for reports
+			
+			if(lNanoThreadSleep>0L)Thread.sleep(getThreadSleepTimeMilis());
+			
+			/**
+			 * MUST BE AFTER THE SLEEP!!!!!!!
+			 */
+			lNanoTimePrevious = System.nanoTime(); //must be real time as must be independent of the simulation time
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		
-		//optionals
-		DynamicFPSLimiterStateI.i().configure(); 
-		
-		JavaScriptI.i().setJSBinding(this); //interesting
-		
-		// Linux only: easy workaround to make strict focus policy painless
-		OSCmdI.i().runOSCommand("linux 'xdotool windowactivate $(xdotool search --name \"^"+settings.getTitle()+"$\")'");
+	}
+	
+	private long getThreadSleepTimeMilis(){
+		return lNanoThreadSleep/1000000L;
 	}
 	
 }

@@ -25,17 +25,14 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme;
+package com.github.devconslejme.extras;
 
 import java.util.ArrayList;
-
-import com.github.devconslejme.misc.StringI;
-
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class CurrentCommandLine {
+public class CommandLineParser {
 	private String strLine;
 	private String strCommand;
 	private ArrayList<Object>	aobjList;
@@ -49,7 +46,7 @@ public class CurrentCommandLine {
 		;
 	}
 	
-	public CurrentCommandLine(String strLine){
+	public CommandLineParser(String strLine){
 		this.strLine=strLine;
 		parse();
 		strCommand = (String)aobjList.get(0);
@@ -95,7 +92,7 @@ public class CurrentCommandLine {
 			if(et!=null){ // fill the param by type 
 				switch (et) {
 					case Command:
-						if(StringI.i().isBlank(ch)){ //finalize
+						if(isBlank(ch)){ //finalize
 							aobjList.add(strParam);
 							strParam="";et=null;continue; //reset
 						}
@@ -148,7 +145,7 @@ public class CurrentCommandLine {
 						strParam+=ch;
 						continue;
 					case Boolean:
-						if(StringI.i().isBlank(ch)){ //finalize
+						if(isBlank(ch)){ //finalize
 							if(strParam.equals("true")){
 								aobjList.add(true);
 							}else
@@ -163,7 +160,7 @@ public class CurrentCommandLine {
 						strParam+=ch;
 						continue;
 					case Number:
-						if(StringI.i().isBlank(ch)){ //finalize
+						if(isBlank(ch)){ //finalize
 							Object objConv=null;
 							if(objConv==null)try{objConv=Long  .parseLong  (strParam);}catch(NumberFormatException e){}
 							if(objConv==null)try{objConv=Double.parseDouble(strParam);}catch(NumberFormatException e){}
@@ -191,6 +188,14 @@ public class CurrentCommandLine {
 					et=EType.Number; continue; //will be parsed to confirm later
 			}
 		}
+	}
+	
+	public boolean isBlank(char ch){
+		switch(ch){
+			case ' ':return true;
+			case '\t':return true;
+		}
+		return false;
 	}
 	
 }
