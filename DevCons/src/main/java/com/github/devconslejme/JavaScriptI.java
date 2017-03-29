@@ -252,24 +252,9 @@ public class JavaScriptI {
 	}
 	
 	public AutoCompleteResult showHelp(String strFilter) {
-//		AutoCompleteResult ar = null;
-//		ArrayList<String> astr;
-//		if(strFilter.isEmpty()){
-//			astr = astrIdList;
-//		}else{
-//			ar = AutoCompleteI.i().autoComplete(strFilter, astrIdList, false, false);
-//			astr = ar.getResultList();
-//		}
-//		
-//		for(String str:astr){
-//			LoggingI.i().logSubEntry(str);
-//		}
-		
 		LoggingI.i().logMarker("Help for: "+strFilter);
 		
 		ArrayList<String> astr = new ArrayList<String>();
-//		astr.addAll(Arrays.toString(EBaseCommand.values()));
-//		Collections.addAll(astr, Arrays.asList(EBaseCommand.values()).toArray(new String[]{}));
 		astr.addAll(EBaseCommand.valuesAsStringArray());
 		astr.addAll(astrJSClassBindList);
 		astr.addAll(astrLastReturnValueMethods);
@@ -283,19 +268,6 @@ public class JavaScriptI {
 		
 		return ar;
 	}
-	
-//	public ArrayList<String> getLastReturnValueMethods(){
-//		ArrayList<String> astr = new ArrayList<String>();
-//		for()
-//		amLastReturnValue
-//	}
-	
-//	public static class PubMembers{
-//		String strMethod;
-//		String strDeclClass;
-//		String strConcreteClass;
-//	}
-//	private ArrayList<PubMembers> apmLastReturnValue = new ArrayList<PubMembers>();
 	
 	public void execFile(String strFile){
 		execFile(asFile(strFile));
