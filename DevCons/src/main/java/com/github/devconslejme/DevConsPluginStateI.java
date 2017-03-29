@@ -342,7 +342,7 @@ public class DevConsPluginStateI extends AbstractAppState{
 		
 		BindKeyI.i().prepareKeyMappings();
 		
-		QueueStateI.i().enqueue(new CallableX("UpdateInputText",0.25f,true) { //TODO has a chance of typing something at other input field? like when holding for long a key?
+		QueueStateI.i().enqueue(new CallableX("copyLogSelectionToInputText",0.25f,true) {
 			@Override
 			public Boolean call() {
 				copyLogSelectionToInputText();
@@ -350,7 +350,7 @@ public class DevConsPluginStateI extends AbstractAppState{
 			}
 		}.setUserCanPause(true));
 		
-		QueueStateI.i().enqueue(new CallableX("FocusAtDevConsInput",0.25f,true) { //TODO has a chance of typing something at other input field? like when holding for long a key?
+		QueueStateI.i().enqueue(new CallableX("FocusAtDevConsInput",0.25f,true) { //TODO this delay still has a chance of typing something at other input field? like when holding for long a key?
 			@Override
 			public Boolean call() {
 				GuiGlobals.getInstance().requestFocus(tfInput);

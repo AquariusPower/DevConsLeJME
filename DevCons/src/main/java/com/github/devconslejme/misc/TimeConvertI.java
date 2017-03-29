@@ -27,6 +27,12 @@
 
 package com.github.devconslejme.misc;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
+
+import com.github.devconslejme.DCGlobal;
 import com.jme3.system.Timer;
 
 
@@ -41,6 +47,7 @@ public class TimeConvertI {
 	private long lOneSecondInMilis = 1000L;
 	private long lMilisToNano = 1000000L;
 	private double dNanoToSeconds = 1.0/lOneSecondInNanos;
+	private SimpleDateFormat	sdf  = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()); //TODO use this too? sdf.setTimeZone(TimeZone.getTimeZone("GMT+0"));
 	
 	/**
 	 * 
@@ -95,6 +102,10 @@ public class TimeConvertI {
 		}
 		
 		throw new UnsupportedOperationException("unsupported timer resolution "+timer.getResolution());
+	}
+	public String formatElapsed(Timer timer) {
+		long lElapsedMilis=TimeConvertI.i().getMilisFrom(DCGlobal.app().getTimer());
+		return sdf.format(new Date(lElapsedMilis - TimeZone.getDefault().getRawOffset()));
 	}
 
 	//public double convertDelayNanoToSeconds(long lDelayNano){

@@ -117,17 +117,23 @@ public class JavaScriptI {
 		private static ArrayList<String> astr = new ArrayList<String>(); 
 		static{
 			for(EBaseCommand ebc:EBaseCommand.values()){
-				astr.add(ebc.s()+" // "+ebc.strInfo+" ("+EBaseCommand.class.getSimpleName()+")");
+				astr.add("/"+ebc.s()+" // "+ebc.strInfo+" ("+EBaseCommand.class.getSimpleName()+")");
 			}
 		}
 		
-		public static Collection<? extends String> valuesAsStringArray() {
+		public static Collection<? extends String> valuesAsHelp() {
 			return astr;
 		}
 	}
 	
 	public boolean isAndExecBaseCommand(String strCmd){
 		strCmd=strCmd.trim();
+		if(strCmd.startsWith("/")){
+			strCmd=strCmd.substring(1);
+		}else{
+			return false;
+		}
+		
 		String[] astr = strCmd.split(" ");
 		String strBase = astr[0];
 		String strParams = "";
@@ -255,7 +261,7 @@ public class JavaScriptI {
 	}
 	
 	/**
-	 * Initially, a short help will be shown.
+	 * Initially, a short help will be shown with {@link EBaseCommand} and JS bindings.
 	 * Only if a full JS class bind id is the filter, its methods will be shown. 
 	 * @param strFilter
 	 * @return
@@ -264,7 +270,7 @@ public class JavaScriptI {
 		LoggingI.i().logMarker("Help for: "+strFilter);
 		
 		ArrayList<String> astr = new ArrayList<String>();
-		astr.addAll(EBaseCommand.valuesAsStringArray());
+		astr.addAll(EBaseCommand.valuesAsHelp());
 		astr.addAll(bndJSE.keySet());
 		
 		String strImprovedPart=strFilter; //still unmodified
@@ -273,7 +279,8 @@ public class JavaScriptI {
 		if(!strFilter.isEmpty()){
 			AutoCompleteResult ar = AutoCompleteI.i().autoComplete(strFilter, astr, false, false);
 			
-			if(!ar.isPartGotImproved()){
+//			if(!ar.isPartGotImproved() && ar.getResultList().size()==1){
+			if(ar.getResultList().size()==1){
 				astr.addAll(getJSClassBindListFilteredHelp());
 				
 				ar = AutoCompleteI.i().autoComplete(strFilter, astr, false, false);
@@ -382,7 +389,7 @@ public class JavaScriptI {
 	
 	public void showRetVal(Object obj){
 		if(obj==null){
-			LoggingI.i().logSubEntry("Return is null");
+			LoggingI.i().logSubEntry("Return is null or void.");
 		}else{
 //				LoggingI.i().logSubEntry("ReturnType: "+objJSLastEval.toString()+" ("+objJSLastEval.getClass()+")");
 			LoggingI.i().logSubEntry("Return type: "+obj.getClass());
@@ -415,7 +422,8 @@ public class JavaScriptI {
 //		amLastReturnValueMethods.addAll(getAllMethodsFrom(obj));
 		
 		for(Method m:obj.getClass().getMethods()){
-			LoggingI.i().logSubEntry(getFilteredHelpFromMethod(obj, m));
+			String str = getFilteredHelpFromMethod(obj, m);
+			if(str!=null)LoggingI.i().logSubEntry(str);
 		}
 	}
 	
@@ -425,13 +433,19 @@ public class JavaScriptI {
 			Object obj = entry.getValue();
 			for(Method m:entry.getValue().getClass().getMethods()){
 				String str=getFilteredHelpFromMethod(obj,m);
-				if(!str.isEmpty())astr.add(str);
+				if(str!=null)astr.add(str);
 			}
 		}
 		Collections.sort(astr);
 		return astr;
 	}
 	
+	/**
+	 * 
+	 * @param obj
+	 * @param m
+	 * @return null if did not match filters
+	 */
 	public String getFilteredHelpFromMethod(Object obj, Method m){
 		String strConcreteClassSName = obj.getClass().getSimpleName();
 		
@@ -475,7 +489,7 @@ public class JavaScriptI {
 			return strM;
 		}
 		
-		return "";
+		return null;
 	}
 	
 	public boolean isShowAllPublicMembers() {

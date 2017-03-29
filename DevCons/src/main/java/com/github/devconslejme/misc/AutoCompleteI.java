@@ -176,10 +176,14 @@ public class AutoCompleteI {
 				}
 			}
 		}
+		
 		if(bAllBeginAreEqual && !strBeginCasePrevious.isEmpty()){
 			strImprovedPart=strBeginCasePrevious;
 		}
-		astrPossibleMatches.add(0, strImprovedPart);
+		
+		if(!astrPossibleMatches.get(0).equalsIgnoreCase(strImprovedPart)){
+			astrPossibleMatches.add(0, strImprovedPart);
+		}
 		
 		return new AutoCompleteResult(strPart,strImprovedPart,astrPossibleMatches,bUsingFuzzy);
 	}

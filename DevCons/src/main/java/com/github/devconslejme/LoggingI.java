@@ -30,6 +30,8 @@ package com.github.devconslejme;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 import com.github.devconslejme.misc.TimeConvertI;
@@ -128,9 +130,15 @@ public class LoggingI {
 	
 	public void logMarker(String strInfo){
 		dateForMarker.setTime(System.currentTimeMillis());
-		strInfo = "[RT:"+dateFormat.format(dateForMarker)+"] "+strInfo;
-		dateForMarker.setTime(TimeConvertI.i().getMilisFrom(DCGlobal.app().getTimer()));
-		strInfo = strInfo+" [AT:"+dateFormat.format(dateForMarker)+"]";
+		strInfo = "[R="+dateFormat.format(dateForMarker)+"] "+strInfo;
+		
+		
+//		Duration durAppElapsed = Duration.ZERO.plusNanos(
+//			TimeConvertI.i().getNanosFrom(DCGlobal.app().getTimer()));
+		//TODO start app time at year0 month0 day0 ... 
+//		dateForMarker.setTime(TimeConvertI.i().getMilisFrom(DCGlobal.app().getTimer())); //this is a delay from the start of the app
+//		strInfo = strInfo+" [A="+dateFormat.format(dateForMarker)+"]";
+		strInfo = strInfo+" [A="+TimeConvertI.i().formatElapsed(DCGlobal.app().getTimer())+"]";
 		
 		strInfo = Strings.padStart(strInfo, iWrapAtColumn/2 +strInfo.length()/2, '_');
 		strInfo = Strings.padEnd(strInfo, iWrapAtColumn, '_');
