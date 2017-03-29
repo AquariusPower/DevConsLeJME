@@ -37,7 +37,7 @@ import java.util.Set;
 
 import org.lwjgl.opengl.Display;
 
-import com.github.devconslejme.QueueI.CallableX;
+import com.github.devconslejme.QueueStateI.CallableX;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
 import com.github.devconslejme.misc.MiscJmeI;
 import com.github.devconslejme.misc.MiscLemurI;
@@ -75,9 +75,9 @@ import com.simsilica.lemur.text.DocumentModel;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class ConsolePluginI extends AbstractAppState{
-	private static ConsolePluginI instance = new ConsolePluginI();
-	/**instance*/ public static ConsolePluginI i(){return instance;}
+public class DevConsPluginStateI extends AbstractAppState{
+	private static DevConsPluginStateI instance = new DevConsPluginStateI();
+	/**instance*/ public static DevConsPluginStateI i(){return instance;}
 	
 	private Vector3f	v3fApplicationWindowSize;
 	private float	fLemurPreferredThickness = 1f;
@@ -200,7 +200,7 @@ public class ConsolePluginI extends AbstractAppState{
 		}
 	}
 	
-	public ConsolePluginI(){
+	public DevConsPluginStateI(){
 		if(instance==null)return;
 		if(instance!=this)throw new NullPointerException("use the single instance");
 	}
@@ -214,7 +214,7 @@ public class ConsolePluginI extends AbstractAppState{
 			JmeSystem.getStorageFolder(StorageFolderType.Internal),
 			app.getClass().getPackage().getName().replace(".",File.separator) //package of main class
 				+File.separator+app.getClass().getSimpleName() //class with main()
-				+File.separator+ConsolePluginI.class.getSimpleName() //console plugin
+				+File.separator+DevConsPluginStateI.class.getSimpleName() //console plugin
 		);
 		
 		JavaScriptI.i().configure(); //before all others
@@ -224,7 +224,7 @@ public class ConsolePluginI extends AbstractAppState{
 		ClipboardI.i().configure();
 		FileI.i().configure();
 		LoggingI.i().configure();
-		QueueI.i().configure(app);
+		QueueStateI.i().configure(app);
 	}
 	
 	public void putStatus(EStatPriority esp, String strKey, String strHelp, String strValue){
@@ -246,7 +246,7 @@ public class ConsolePluginI extends AbstractAppState{
 		this.app=app;
 		
 		cxScrollTo = new CallableXScrollTo();
-		QueueI.i().enqueue(cxScrollTo);
+		QueueStateI.i().enqueue(cxScrollTo);
 		
 		ActionListener al = new ActionListener(){
       @Override
@@ -343,7 +343,7 @@ public class ConsolePluginI extends AbstractAppState{
 		
 		BindKeyI.i().prepareKeyMappings();
 		
-		QueueI.i().enqueue(new CallableX("UpdateInputText",0.25f,true) { //TODO has a chance of typing something at other input field? like when holding for long a key?
+		QueueStateI.i().enqueue(new CallableX("UpdateInputText",0.25f,true) { //TODO has a chance of typing something at other input field? like when holding for long a key?
 			@Override
 			public Boolean call() {
 				updateInputText();
@@ -351,7 +351,7 @@ public class ConsolePluginI extends AbstractAppState{
 			}
 		}.setUserCanPause(true));
 		
-		QueueI.i().enqueue(new CallableX("FocusAtDevConsInput",0.25f,true) { //TODO has a chance of typing something at other input field? like when holding for long a key?
+		QueueStateI.i().enqueue(new CallableX("FocusAtDevConsInput",0.25f,true) { //TODO has a chance of typing something at other input field? like when holding for long a key?
 			@Override
 			public Boolean call() {
 				GuiGlobals.getInstance().requestFocus(tfInput);
@@ -494,7 +494,7 @@ public class ConsolePluginI extends AbstractAppState{
 			cntrStatus.addChild(btn,0,++iButtonIndex);
 		}
 		
-		QueueI.i().enqueue(new CallableX("DevConsUpdateStatus",0.5f,true) {
+		QueueStateI.i().enqueue(new CallableX("DevConsUpdateStatus",0.5f,true) {
 			@Override
 			public Boolean call() {
 				updateStatusValues();
@@ -616,7 +616,7 @@ public class ConsolePluginI extends AbstractAppState{
 	}
 
 	private void updateConsoleHeight() {
-		QueueI.i().enqueue(new CallableX(0,false) {
+		QueueStateI.i().enqueue(new CallableX(0,false) {
 			@Override
 			public Boolean call() {
 				if(fConsoleHeightPerc>1.0f)fConsoleHeightPerc=1.0f;

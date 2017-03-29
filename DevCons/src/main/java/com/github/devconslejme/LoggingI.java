@@ -55,7 +55,7 @@ public class LoggingI {
 	public void configure() {
 		JavaScriptI.i().setJSBinding(this);
 		
-		flLog = new File(ConsolePluginI.i().getStorageFolder(), LoggingI.class.getSimpleName()+".log");
+		flLog = new File(DevConsPluginStateI.i().getStorageFolder(), LoggingI.class.getSimpleName()+".log");
 		flLog.delete();
 		
 		vlstrLogEntries = new VersionedList<String>();
@@ -148,7 +148,7 @@ public class LoggingI {
 	}
 	
 	public String getSelectedEntry() {
-		return LoggingI.i().getLogEntry(ConsolePluginI.i().getSelectedIndex());
+		return LoggingI.i().getLogEntry(DevConsPluginStateI.i().getSelectedIndex());
 	}
 
 	public void deleteLogEntry(Integer index) {

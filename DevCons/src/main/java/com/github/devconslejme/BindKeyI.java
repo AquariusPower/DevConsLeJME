@@ -80,7 +80,7 @@ public class BindKeyI {
 						if(bControl)ClipboardI.i().copyToClipboard(LoggingI.i().getSelectedEntry());
 						break;
 					case KeyInput.KEY_ESCAPE: 
-						ConsolePluginI.i().closeConsole();
+						DevConsPluginStateI.i().closeConsole();
 						break;
 					case KeyInput.KEY_V: 
 						if(bControl)ClipboardI.i().pasteFromClipboard(true);
@@ -96,13 +96,13 @@ public class BindKeyI {
 						JavaScriptI.i().autoComplete();
 						break;
 					case KeyInput.KEY_DELETE:
-						if(bControl)ConsolePluginI.i().clearInput();
+						if(bControl)DevConsPluginStateI.i().clearInput();
 						break;
 					case KeyInput.KEY_LEFT:
-						if(bControl)ConsolePluginI.i().navigateWord(false);
+						if(bControl)DevConsPluginStateI.i().navigateWord(false);
 						break;
 					case KeyInput.KEY_RIGHT:
-						if(bControl)ConsolePluginI.i().navigateWord(true);
+						if(bControl)DevConsPluginStateI.i().navigateWord(true);
 						break;
 					case KeyInput.KEY_SPACE:
 						if(bControl)JavaScriptI.i().autoCompleteWord();
@@ -136,25 +136,25 @@ public class BindKeyI {
 				JavaScriptI.i().navigateCmdHist(key.getKeyCode());
 			}
 		};
-		ConsolePluginI.i().putActionMapAtInputField(new KeyAction(KeyInput.KEY_UP), actCmdHistoryEntrySelectAction);
-		ConsolePluginI.i().putActionMapAtInputField(new KeyAction(KeyInput.KEY_DOWN), actCmdHistoryEntrySelectAction);
+		DevConsPluginStateI.i().putActionMapAtInputField(new KeyAction(KeyInput.KEY_UP), actCmdHistoryEntrySelectAction);
+		DevConsPluginStateI.i().putActionMapAtInputField(new KeyAction(KeyInput.KEY_DOWN), actCmdHistoryEntrySelectAction);
 		
 		// scroll actions
 		KeyActionListener actDumpNavigate = new KeyActionListener() {
 			@Override
 			public void keyAction(TextEntryComponent source, KeyAction key) {
 				boolean bControl = key.hasModifier(KeyModifiers.CONTROL_DOWN); //0x1
-				double dCurrent = ConsolePluginI.i().getScrollIndex();
+				double dCurrent = DevConsPluginStateI.i().getScrollIndex();
 				double dAdd = 0;
 				switch(key.getKeyCode()){
 					case KeyInput.KEY_PGUP:
-						dAdd = +ConsolePluginI.i().getShowRowsAmount();
+						dAdd = +DevConsPluginStateI.i().getShowRowsAmount();
 						break;
 					case KeyInput.KEY_PGDN:
-						dAdd = -ConsolePluginI.i().getShowRowsAmount();
+						dAdd = -DevConsPluginStateI.i().getShowRowsAmount();
 						break;
 					case KeyInput.KEY_HOME:
-						if(bControl)dAdd = ConsolePluginI.i().getScrollMaxIndex();
+						if(bControl)dAdd = DevConsPluginStateI.i().getScrollMaxIndex();
 						break;
 					case KeyInput.KEY_END:
 						if(bControl)dAdd = -dCurrent;
@@ -168,7 +168,7 @@ public class BindKeyI {
 				}
 				double dSet = dCurrent + dAdd;
 				if(dSet<0.0)dSet=0.0;
-				ConsolePluginI.i().scrollTo(dSet);
+				DevConsPluginStateI.i().scrollTo(dSet);
 //				ConsolePluginI.i().scrollToBottom();
 			}
 		};
@@ -194,7 +194,7 @@ public class BindKeyI {
 	 */
 	public BindKey bindKey(KeyActionListener kal, String strActionPerformedHelp, int iKeyCode, int... aiKeyModifiers){
 		KeyAction ka = new KeyAction(iKeyCode, aiKeyModifiers);
-		ConsolePluginI.i().putActionMapAtInputField(ka,kal);
+		DevConsPluginStateI.i().putActionMapAtInputField(ka,kal);
 		
 		BindKey bk = new BindKey();
 		

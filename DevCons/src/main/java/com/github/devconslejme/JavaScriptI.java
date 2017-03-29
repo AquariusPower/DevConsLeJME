@@ -44,7 +44,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
-import com.github.devconslejme.QueueI.CallableX;
+import com.github.devconslejme.QueueStateI.CallableX;
 import com.github.devconslejme.misc.AutoCompleteI;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
 import com.github.devconslejme.misc.JavaLangI;
@@ -91,7 +91,7 @@ public class JavaScriptI {
 		
 		showIni,
 		
-		exec("[file] runs a script file, mainly at "+ConsolePluginI.i().getStorageFolder()),
+		exec("[file] runs a script file, mainly at "+DevConsPluginStateI.i().getStorageFolder()),
 		
 		clear("clears the console log (not the log file)"),
 		
@@ -113,11 +113,9 @@ public class JavaScriptI {
 		
 		private static ArrayList<String> astr = new ArrayList<String>(); 
 		static{
-//			if(astr.size()==0){
-				for(EBaseCommand ebc:EBaseCommand.values()){
-					astr.add(ebc.s()+" // "+ebc.strInfo+" ("+EBaseCommand.class.getSimpleName()+")");
-				}
-//			}
+			for(EBaseCommand ebc:EBaseCommand.values()){
+				astr.add(ebc.s()+" // "+ebc.strInfo+" ("+EBaseCommand.class.getSimpleName()+")");
+			}
 		}
 		
 		public static Collection<? extends String> valuesAsStringArray() {
@@ -158,7 +156,7 @@ public class JavaScriptI {
 				JavaScriptI.i().showHistory(strParams);
 				return true;
 			case kill:
-				QueueI.i().kill(strParams);
+				QueueStateI.i().kill(strParams);
 				return true;
 			case ini:
 				appendUserInitCommand(strParams);
@@ -183,7 +181,7 @@ public class JavaScriptI {
 				LoggingI.i().logSubEntry(str);
 			}
 		}
-		ConsolePluginI.i().scrollToBottom();
+		DevConsPluginStateI.i().scrollToBottom();
 	}
 
 	/**
@@ -235,7 +233,7 @@ public class JavaScriptI {
 		setJSBinding(objBindValue.getClass().getSimpleName(), objBindValue);
 	}
 	protected void submitUserCommand() {
-		String strJS = ConsolePluginI.i().getInputText();
+		String strJS = DevConsPluginStateI.i().getInputText();
 		
 		strJS=strJS.trim();
 		if(strJS.isEmpty())return;
@@ -249,8 +247,8 @@ public class JavaScriptI {
 			execScript(strJS,true);
 		}
 		
-		ConsolePluginI.i().scrollToBottom();
-		ConsolePluginI.i().clearInput();
+		DevConsPluginStateI.i().scrollToBottom();
+		DevConsPluginStateI.i().clearInput();
 	}
 	
 	public AutoCompleteResult showHelp(String strFilter) {
@@ -281,7 +279,7 @@ public class JavaScriptI {
 			LoggingI.i().logSubEntry(str);
 		}
 		
-		ConsolePluginI.i().scrollToBottom();
+		DevConsPluginStateI.i().scrollToBottom();
 		
 		return ar;
 	}
@@ -314,7 +312,7 @@ public class JavaScriptI {
 			flJS = new File(strFile); //some absolute location
 			if(!flJS.exists()){ 
 				//relative to storage
-				flJS = new File(ConsolePluginI.i().getStorageFolder(),strFile);
+				flJS = new File(DevConsPluginStateI.i().getStorageFolder(),strFile);
 			}
 			
 			if(!flJS.exists()){
@@ -347,7 +345,7 @@ public class JavaScriptI {
 		queueExecFile(asFile(strFile), fDelaySeconds, bLoop);
 	}
 	public void queueExecFile(File flJS, float fDelaySeconds, boolean bLoop){
-		QueueI.i().enqueue(new CallableX(flJS.getName(),fDelaySeconds,bLoop) {
+		QueueStateI.i().enqueue(new CallableX(flJS.getName(),fDelaySeconds,bLoop) {
 				@Override
 				public Boolean call() {
 					execFile(flJS);
@@ -505,7 +503,7 @@ public class JavaScriptI {
 	}
 
 	public void init() {
-		flCmdHistory = new File(ConsolePluginI.i().getStorageFolder(),"CommandsHistory.log");
+		flCmdHistory = new File(DevConsPluginStateI.i().getStorageFolder(),"CommandsHistory.log");
 		astrCmdHistory.add(""); //just to avoid empty list when adding new cmd to it
 		if(flCmdHistory.exists()){
 			for(String str:FileI.i().readAllLines(flCmdHistory)){
@@ -514,7 +512,7 @@ public class JavaScriptI {
 			iNavigateCmdHistoryIndex=astrCmdHistory.size()-1;
 		}
 		
-		flUserInit = new File(ConsolePluginI.i().getStorageFolder(),"UserInit.cfg");
+		flUserInit = new File(DevConsPluginStateI.i().getStorageFolder(),"UserInit.cfg");
 		if(flUserInit.exists()){
 			for(String str:getUserInit()){
 				astrUserInit.add(str);
@@ -577,7 +575,7 @@ public class JavaScriptI {
 			iNavigateCmdHistoryIndex=astrCmdHistory.size()-1;
 		}
 		
-		ConsolePluginI.i().setInputText(astrCmdHistory.get(iNavigateCmdHistoryIndex));
+		DevConsPluginStateI.i().setInputText(astrCmdHistory.get(iNavigateCmdHistoryIndex));
 	}
 	
 	public void appendUserInitCommand(String strJS){
@@ -591,19 +589,24 @@ public class JavaScriptI {
 	}
 
 	protected void autoComplete() {
-		AutoCompleteResult ar = JavaScriptI.i().showHelp(ConsolePluginI.i().getInputText());
-		ConsolePluginI.i().setInputText(ar.getImprovedPart());
-		ConsolePluginI.i().scrollToBottom();
+		AutoCompleteResult ar = JavaScriptI.i().showHelp(DevConsPluginStateI.i().getInputText());
+		
+		String str = ar.getImprovedPart();
+		int i = str.indexOf("//");
+		if(i>-1)str=str.substring(0,i);
+		DevConsPluginStateI.i().setInputText(str);
+		
+		DevConsPluginStateI.i().scrollToBottom();
 	}
 
 	public void autoCompleteWord() {
 		// boolean
-		String str=ConsolePluginI.i().getInputLettersBeforeCarat();
+		String str=DevConsPluginStateI.i().getInputLettersBeforeCarat();
 		if(Boolean.TRUE.toString().startsWith(str)){
-			ConsolePluginI.i().insertAtInputTextCaratPos(Boolean.TRUE.toString().substring(str.length()));
+			DevConsPluginStateI.i().insertAtInputTextCaratPos(Boolean.TRUE.toString().substring(str.length()));
 		}else
 		if(Boolean.FALSE.toString().startsWith(str)){
-			ConsolePluginI.i().insertAtInputTextCaratPos(Boolean.FALSE.toString().substring(str.length()));
+			DevConsPluginStateI.i().insertAtInputTextCaratPos(Boolean.FALSE.toString().substring(str.length()));
 		}
 	}
 }

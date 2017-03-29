@@ -58,7 +58,7 @@ public class ClipboardI {
 	 */
 	public String pasteFromClipboard(boolean bEscapeNL) {
 		String str = readFromClipboard(bEscapeNL);
-		if(str!=null)ConsolePluginI.i().insertInputTextAtCaratPosition(str);
+		if(str!=null)DevConsPluginStateI.i().insertInputTextAtCaratPosition(str);
 		return str;
 	}
 	
@@ -80,7 +80,7 @@ public class ClipboardI {
 	
 	public String cutSelectedLogEntryToClipboard() {
 		String str = copyToClipboard(LoggingI.i().getSelectedEntry());
-		LoggingI.i().deleteLogEntry(ConsolePluginI.i().getSelectedIndex());
+		LoggingI.i().deleteLogEntry(DevConsPluginStateI.i().getSelectedIndex());
 		return str;
 	}
 
@@ -92,6 +92,6 @@ public class ClipboardI {
 		LoggingI.i().logMarker("Clipboard Contents: begin");
 		LoggingI.i().logEntry(ClipboardI.i().readFromClipboard(false));
 		LoggingI.i().logMarker("Clipboard Contents: end");
-		ConsolePluginI.i().scrollToBottom();
+		DevConsPluginStateI.i().scrollToBottom();
 	}
 }

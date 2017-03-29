@@ -40,9 +40,9 @@ import com.jme3.app.state.AbstractAppState;
  * TODO work with java.util.concurrent.DelayQueue?
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class QueueI extends AbstractAppState{
-	private static QueueI instance = new QueueI();
-	/**instance*/ public static QueueI i(){return instance;}
+public class QueueStateI extends AbstractAppState{
+	private static QueueStateI instance = new QueueStateI();
+	/**instance*/ public static QueueStateI i(){return instance;}
 	
 	ArrayList<CallableX> acxList = new ArrayList<CallableX>();
 	private Application	app;
@@ -106,7 +106,7 @@ public class QueueI extends AbstractAppState{
 		}
 		
 		public void updateRunAt() {
-			this.lRunAtTimeMilis = QueueI.i().calcRunAt(fDelaySeconds);
+			this.lRunAtTimeMilis = QueueStateI.i().calcRunAt(fDelaySeconds);
 		}
 		
 		public float getDelaySeconds() {
@@ -114,7 +114,7 @@ public class QueueI extends AbstractAppState{
 		}
 		
 		public boolean isReady(){
-			return QueueI.i().isReady(lRunAtTimeMilis);
+			return QueueStateI.i().isReady(lRunAtTimeMilis);
 		}
 
 		public boolean isLoop() {

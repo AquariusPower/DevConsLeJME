@@ -25,42 +25,37 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme;
+package com.github.devconslejme.misc;
 
-import com.github.devconslejme.misc.DynamicFPSLimiterStateI;
-import com.github.devconslejme.misc.OSCmdI;
-import com.jme3.app.SimpleApplication;
-import com.jme3.system.AppSettings;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestDevCons extends SimpleApplication{
+public class TimeConvertI {
+	private static TimeConvertI instance = new TimeConvertI();
+	/**instance*/public static TimeConvertI i(){return instance;}
+	
+	private long lNanoOneSecond  = 1000000000L;
+	private long lMilisToNano = 1000000L;
+	private double dNanoToSeconds = 1.0/lNanoOneSecond;
+	
+	public long secondsToNano(double dSeconds){
+		return (long) (dSeconds*lNanoOneSecond);
+	}
+	public long secondsToNano(float fSeconds){
+		return (long) (fSeconds*lNanoOneSecond);
+	}
+	public long nanoToMilis(long lTimeNano){
+		return lTimeNano/lMilisToNano;
+	}
+	public long milisToNano(long lTimeMilis){
+		return lTimeMilis*lMilisToNano;
+	}
+	public double nanoToSeconds(long lNano) {
+		return lNano*dNanoToSeconds;
+	}
 
-	public static void main(String[] args) {
-		TestDevCons tst = new TestDevCons();
-		
-		AppSettings as = new AppSettings(true);
-		as.setTitle(TestDevCons.class.getSimpleName());
-		as.setResolution(1230,690);
-		as.setResizable(true);
-		as.setFrameRate(60);
-		tst.setSettings(as);
-		
-		tst.setShowSettings(false);
-		
-		tst.start();
-	}
-	
-	@Override
-	public void simpleInitApp() {
-		DevConsPluginStateI.i().configure(this,getGuiNode());
-		DynamicFPSLimiterStateI.i().configure(this);
-		
-		JavaScriptI.i().setJSBinding(this);
-		
-		// Linux only: easy workaround to make strict focus policy painless
-		OSCmdI.i().runOSCommand("linux 'xdotool windowactivate $(xdotool search --name \"^"+settings.getTitle()+"$\")'");
-	}
-	
+	//public double convertDelayNanoToSeconds(long lDelayNano){
+	//	return (double)((double)lDelayNano/(double)lNano); //TODO is that?
+	//}
 }
