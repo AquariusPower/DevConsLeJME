@@ -59,54 +59,8 @@ public class ResizablePanel extends Panel implements Draggable {
 	private QuadBackgroundComponent	qbcBorder = new QuadBackgroundComponent();
 	private Vector3f	v3fDragFromPrevious;
 	private Vector3f	v3fMinSize = new Vector3f(20,20,0);
-	private float fCornerHotSpotRange = 10;
+	private float fCornerHotSpotRange = 20;
 	private boolean	bDragEvenIfOutside = false; //TODO still buggy
-	
-//	private ResizerDragAndDropListener	dndlCursorListener = new ResizerDragAndDropListener();
-//	private class ResizerDragAndDropListener implements DragAndDropListener{
-//		@Override
-//		public Draggable onDragDetected(DragEvent event) {
-//			if(event.getTarget() instanceof Draggable){
-//				return (Draggable)event.getTarget();
-//			}
-//			return null;
-//		}
-//
-//		@Override
-//		public void onDragEnter(DragEvent event) {
-//			if(event.getTarget()==ResizablePanel.this){
-//				v3fDragFromPrevious = event.getCollision().getContactPoint();
-//			}
-//		}
-//
-//		@Override
-//		public void onDragExit(DragEvent event) {
-//			if(event.getTarget()==ResizablePanel.this){
-//				event.getClass(); //TODO rm tmp debug breakpoint
-//			}
-//		}
-//		
-//		@Override
-//		public void onDragOver(DragEvent event) {
-//			if(event.getTarget()==ResizablePanel.this){
-//				resizeThruDragging(event.getX(), event.getY());
-//			}
-//		}
-//
-//		@Override
-//		public void onDrop(DragEvent event) {
-//			if(event.getTarget()==ResizablePanel.this){
-//				v3fDragFromPrevious=null;
-//			}
-//		}
-//
-//		@Override
-//		public void onDragDone(DragEvent event) {
-//			if(event.getTarget()==ResizablePanel.this){
-//				event.getClass();//TODO rem
-//			}
-//		}
-//	}
 	
 //	enum EEdge{
 //		Left,
@@ -203,13 +157,6 @@ public class ResizablePanel extends Panel implements Draggable {
 		// resize and move
 		Vector3f v3fNewPos = getLocalTranslation().clone();
 		switch(ee){
-			case Left:
-				fDeltaY=0;
-				break;
-			case Right:
-				fDeltaY=0;
-				break;
-				
 			case Top:
 				fDeltaX=0;
 				v3fNewSize.y+=fDeltaY;
@@ -220,13 +167,21 @@ public class ResizablePanel extends Panel implements Draggable {
 				v3fNewSize.y+=fDeltaY;
 				v3fNewPos.y+=fDeltaY;
 				break;
+			case Right:
+				fDeltaY=0;
+				v3fNewSize.x+=fDeltaX;
+				break;
 			case TopLeft:
 				v3fNewSize.x-=fDeltaX;
 				v3fNewSize.y+=fDeltaY;
 				v3fNewPos.x+=fDeltaX;
 				v3fNewPos.y+=fDeltaY;
 				break;
-				
+			case Left:
+				fDeltaY=0;
+				v3fNewSize.x-=fDeltaX;
+				v3fNewPos.x+=fDeltaX;
+				break;
 			case Bottom:
 				fDeltaX=0;
 				v3fNewSize.y-=fDeltaY;
@@ -246,11 +201,18 @@ public class ResizablePanel extends Panel implements Draggable {
 		v3fDragFromPrevious.y+=fDeltaY;
 		
 		// constraint
-		if(v3fNewSize.x<getMinSize().x)v3fNewSize.x=getMinSize().x;
-		if(v3fNewSize.y<getMinSize().y)v3fNewSize.y=getMinSize().y;
+		boolean bMove = true;
+		if(v3fNewSize.x<getMinSize().x){
+			v3fNewSize.x=getMinSize().x;
+			bMove=false;
+		}
+		if(v3fNewSize.y<getMinSize().y){
+			v3fNewSize.y=getMinSize().y;
+			bMove=false;
+		}
 		
 		setPreferredSize(v3fNewSize);
-		setLocalTranslation(v3fNewPos);
+		if(bMove)setLocalTranslation(v3fNewPos);
 	}
 	
 	public static final String LAYER_RESIZABLE_BORDERS = "resizableBorders";
