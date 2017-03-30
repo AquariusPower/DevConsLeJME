@@ -58,9 +58,9 @@ public class ResizablePanel extends Panel implements Draggable {
 	private int iBorderSize = 3;
 	private QuadBackgroundComponent	qbcBorder = new QuadBackgroundComponent();
 	private Vector3f	v3fDragFromPrevious;
-	private Vector3f	v3fMinSize = new Vector3f(20,20,0);
+	private Vector3f	v3fMinSize = new Vector3f(40,40,0);
 	private float fCornerHotSpotRange = 20;
-	private boolean	bDragEvenIfOutside = false; //TODO still buggy
+	private boolean	bDragEvenIfOutside = true; //TODO still buggy
 	
 //	enum EEdge{
 //		Left,
@@ -201,18 +201,22 @@ public class ResizablePanel extends Panel implements Draggable {
 		v3fDragFromPrevious.y+=fDeltaY;
 		
 		// constraint
-		boolean bMove = true;
+		boolean bConstraintReached = false;
 		if(v3fNewSize.x<getMinSize().x){
 			v3fNewSize.x=getMinSize().x;
-			bMove=false;
+			bConstraintReached=true;
 		}
 		if(v3fNewSize.y<getMinSize().y){
 			v3fNewSize.y=getMinSize().y;
-			bMove=false;
+			bConstraintReached=true;
 		}
 		
-		setPreferredSize(v3fNewSize);
-		if(bMove)setLocalTranslation(v3fNewPos);
+		if(bConstraintReached){
+			resetDrag(); //avoids drag with no button holded
+		}else{
+			setPreferredSize(v3fNewSize);
+			setLocalTranslation(v3fNewPos);
+		}
 	}
 	
 	public static final String LAYER_RESIZABLE_BORDERS = "resizableBorders";
@@ -241,6 +245,11 @@ public class ResizablePanel extends Panel implements Draggable {
     CursorEventControl.addListenersToSpatial(this, dcl);
   }
 	
+  private void resetDrag(){
+		v3fDragFromPrevious=null;
+		eeInitialHook=null;
+  }
+  
   ResizerCursorListener dcl = new ResizerCursorListener();
   private class ResizerCursorListener implements CursorListener{
 		@Override
@@ -254,8 +263,7 @@ public class ResizablePanel extends Panel implements Draggable {
 					event.setConsumed(); //to let dragging happens even if it is outside the Panel!
 				}
 			}else{
-				v3fDragFromPrevious=null;
-				eeInitialHook=null;
+				resetDrag();
 			}
 		}
 		
@@ -268,11 +276,32 @@ public class ResizablePanel extends Panel implements Draggable {
 
 		@Override
 		public void cursorEntered(CursorMotionEvent event, Spatial target,				Spatial capture) {
+			String.class.getName();//TODO rm debug breakpoint
 		}
 
 		@Override
 		public void cursorExited(CursorMotionEvent event, Spatial target,				Spatial capture) {
+			/* TODO
+			 * There is an issue that when the mouse button is released outside the panel
+			 * it will continue dragging when it hits the pannel again (with no button holded)
+			 ****
+  		if(v3fDragFromPrevious!=null){
+				if(eeInitialHook!=null){
+					switch(eeInitialHook){ //this did not fully fix failing on resize 
+						case BottomLeft: 	// this is resize and move (to left)
+						case TopRight: 		// this is resize and move (to top)
+						case Bottom: 			// this is resize only, prone to fail
+						case BottomRight: // this is resize only, prone to fail
+						case Right: 			// this is resize only, prone to fail
+							break;
+						default:
+							resetDrag();
+					}
+				}
+  		}
+  		*/
 		}
+		
   }
   
   @StyleDefaults("resizablePanel")
