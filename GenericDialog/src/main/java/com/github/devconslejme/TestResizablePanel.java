@@ -53,7 +53,7 @@ public class TestResizablePanel {
 		Button btn = new Button("hellow");
 		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
 		rzp.setContents(btn);
-		rzp.setBorderSize(10);
+//		rzp.setBorderSize(10);
 		JavaScriptI.i().setJSBinding(rzp);
 	}
 }

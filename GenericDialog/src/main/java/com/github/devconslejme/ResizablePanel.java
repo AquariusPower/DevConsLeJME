@@ -27,6 +27,8 @@
 
 package com.github.devconslejme;
 
+import org.lwjgl.input.Mouse;
+
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -43,6 +45,8 @@ import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.CursorListener;
 import com.simsilica.lemur.event.CursorMotionEvent;
+import com.simsilica.lemur.event.MouseAppState;
+import com.simsilica.lemur.event.MouseEventControl;
 import com.simsilica.lemur.style.Attributes;
 import com.simsilica.lemur.style.ElementId;
 import com.simsilica.lemur.style.StyleAttribute;
@@ -55,31 +59,17 @@ import com.simsilica.lemur.style.Styles;
 public class ResizablePanel extends Panel implements Draggable {
 	private BorderLayout layout;
 	private Panel contents;
-	private int iBorderSize = 3;
+	private int iBorderSize = 4;
 	private QuadBackgroundComponent	qbcBorder = new QuadBackgroundComponent();
 	private Vector3f	v3fDragFromPrevious;
 	private Vector3f	v3fMinSize = new Vector3f(40,40,0);
 	private float fCornerHotSpotRange = 20;
-	private boolean	bDragEvenIfOutside = true; //TODO still buggy
+	private boolean	bDragEvenIfOutside = true;
+	private ResizerCursorListener dcl = new ResizerCursorListener();
+	private int	iMouseButtonIndex=0;
 	
-//	enum EEdge{
-//		Left,
-//		Right,
-//		
-//		Top, //THIS ORDER MATTERS!
-//		TopRight, //THIS ORDER MATTERS!
-//		TopLeft, //THIS ORDER MATTERS!
-//		
-//		Bottom, //THIS ORDER MATTERS!
-//		BottomRight, //THIS ORDER MATTERS!
-//		BottomLeft, //THIS ORDER MATTERS!
-//		;
-//	}
-	
-	/**
-	 * !!!!!!!!!!!!!!THIS ORDER IS IMPORTANT!!!!!!!!!!!!!!
-	 */
-	enum EEdge{ 
+	enum EEdge{
+		// !!!!!!!!!!!!!!THIS ORDER IS IMPORTANT!!!!!!!!!!!!!!
 		Dummy0,
 		Top,         //1
 		Right,       //2
@@ -93,7 +83,9 @@ public class ResizablePanel extends Panel implements Draggable {
 		BottomLeft,  //10
 		;
 	} // I said THIS ORDER!!! not disorder... :)
+	
 	EEdge eeInitialHook = null;
+	
 	private void resizeThruDragging(float fCursorX, float fCursorY){
 		Vector3f v3fOldSize = new Vector3f(getPreferredSize());
 		Vector3f v3fPanelCenter=v3fOldSize.divide(2f);
@@ -106,10 +98,6 @@ public class ResizablePanel extends Panel implements Draggable {
 		//Cursor Position: NEW          Previous
 		float fDeltaX = fCursorX - v3fDragFromPrevious.x; // positive to the right
 		float fDeltaY = fCursorY - v3fDragFromPrevious.y; // positive downwards
-		
-//		if(fDeltaX!=0 || fDeltaY!=0){
-//			String.class.getName(); //TODO rm tmp debug breakpoint
-//		}
 		
 		EEdge ee=null;
 		if(eeInitialHook==null){
@@ -140,14 +128,6 @@ public class ResizablePanel extends Panel implements Draggable {
 			}else{
 				ee = EEdge.values()[eeX.ordinal()+eeY.ordinal()];
 			}
-			
-//			if(fDistToBorderX < fCornerHotSpotRange){
-//				if(fCursorX>v3fPanelCenterOnAppScreen.x){
-//					ee=EEdge.values()[ee.ordinal()+1]; //Right
-//				}else{
-//					ee=EEdge.values()[ee.ordinal()+2]; //Left
-//				}
-//			}
 			
 			eeInitialHook=ee;
 		}else{
@@ -241,7 +221,6 @@ public class ResizablePanel extends Panel implements Draggable {
     Styles styles = GuiGlobals.getInstance().getStyles();
     styles.applyStyles(this, getElementId(), style);
     
-//    addControl(new DragAndDropControl(dndlCursorListener));
     CursorEventControl.addListenersToSpatial(this, dcl);
   }
 	
@@ -250,17 +229,16 @@ public class ResizablePanel extends Panel implements Draggable {
 		eeInitialHook=null;
   }
   
-  ResizerCursorListener dcl = new ResizerCursorListener();
   private class ResizerCursorListener implements CursorListener{
 		@Override
 		public void cursorButtonEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
 			if(target!=ResizablePanel.this)return;
-			if(event.getButtonIndex()!=0)return;
+			if(event.getButtonIndex()!=iMouseButtonIndex)return;
 			
 			if(event.isPressed()){
 				v3fDragFromPrevious=new Vector3f(event.getX(),event.getY(),0);
 				if(isDragEvenIfOutside()){
-					event.setConsumed(); //to let dragging happens even if it is outside the Panel!
+					event.setConsumed(); 
 				}
 			}else{
 				resetDrag();
@@ -270,38 +248,28 @@ public class ResizablePanel extends Panel implements Draggable {
   	@Override
   	public void cursorMoved(CursorMotionEvent event, Spatial target, Spatial capture) {
   		if(v3fDragFromPrevious!=null){
-  			resizeThruDragging(event.getX(),event.getY());
+  			if(!isBugfixUnrecognizedButtonUpEvent()){
+    			resizeThruDragging(event.getX(),event.getY());
+  			}
   		}
   	}
 
 		@Override
 		public void cursorEntered(CursorMotionEvent event, Spatial target,				Spatial capture) {
-			String.class.getName();//TODO rm debug breakpoint
 		}
 
 		@Override
 		public void cursorExited(CursorMotionEvent event, Spatial target,				Spatial capture) {
-			/* TODO
-			 * There is an issue that when the mouse button is released outside the panel
-			 * it will continue dragging when it hits the pannel again (with no button holded)
-			 ****
-  		if(v3fDragFromPrevious!=null){
-				if(eeInitialHook!=null){
-					switch(eeInitialHook){ //this did not fully fix failing on resize 
-						case BottomLeft: 	// this is resize and move (to left)
-						case TopRight: 		// this is resize and move (to top)
-						case Bottom: 			// this is resize only, prone to fail
-						case BottomRight: // this is resize only, prone to fail
-						case Right: 			// this is resize only, prone to fail
-							break;
-						default:
-							resetDrag();
-					}
-				}
-  		}
-  		*/
 		}
 		
+  }
+  
+  private boolean isBugfixUnrecognizedButtonUpEvent(){
+		if(!Mouse.isButtonDown(iMouseButtonIndex)){ // LWJGL dependent code
+			resetDrag();
+			return true;
+		}
+		return false;
   }
   
   @StyleDefaults("resizablePanel")
@@ -385,8 +353,24 @@ public class ResizablePanel extends Panel implements Draggable {
 		return bDragEvenIfOutside;
 	}
 
+	/**
+	 * to let dragging happens even if it cursor is outside the Panel!
+	 * @param bDragEvenIfOutside
+	 */
 	public void setDragEvenIfOutside(boolean bDragEvenIfOutside) {
 		this.bDragEvenIfOutside = bDragEvenIfOutside;
+	}
+
+	public int getMouseButtonIndex() {
+		return iMouseButtonIndex;
+	}
+	
+	/**
+	 * the drag activator, defaults to left mouse button.
+	 * @param iMouseButtonIndex
+	 */
+	public void setMouseButtonIndex(int iMouseButtonIndex) {
+		this.iMouseButtonIndex = iMouseButtonIndex;
 	}
 
 }
