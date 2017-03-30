@@ -82,6 +82,9 @@ public class TestDevCons extends SimpleApplication{
 		// Linux only: easy workaround to make strict focus policy painless
 		OSCmdI.i().runOSCommand("linux 'xdotool windowactivate $(xdotool search --name \"^"+settings.getTitle()+"$\")'");
 		JavaScriptI.i().setJSBinding(OSCmdI.i());
+		
+		JavaScriptI.i().setJSBinding(new GenericDialog(this.getGuiNode()));
+		JavaScriptI.i().setJSBinding(new TestResizablePanel(this.getGuiNode()));
 	}
 	
 	/**

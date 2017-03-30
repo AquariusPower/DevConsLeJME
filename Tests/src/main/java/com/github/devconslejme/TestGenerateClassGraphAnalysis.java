@@ -43,7 +43,8 @@ import com.google.common.io.Files;
 public class TestGenerateClassGraphAnalysis {
 	public static void main(String[] args) throws IOException {
 		ScanResult scanResult = new FastClasspathScanner(
-			DevConsPluginStateI.class.getPackage().getName()).scan();
+			DevConsPluginStateI.class.getPackage().getName())
+			.scan();
 		
 		String str = scanResult.generateClassGraphDotFile(9.2f, 8.0f);
 		

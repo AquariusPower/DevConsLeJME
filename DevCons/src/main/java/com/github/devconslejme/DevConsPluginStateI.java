@@ -61,6 +61,7 @@ import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.HAlignment;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
+import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
@@ -528,6 +529,8 @@ public class DevConsPluginStateI extends AbstractAppState{
 		/** color */
 		background,
 		
+		resizableBorders,
+		
 		/** name/id */
 		font,
 		;
@@ -568,6 +571,11 @@ public class DevConsPluginStateI extends AbstractAppState{
 		attrs.set(EAttribute.color.s(), ColorRGBA.Blue.clone());
 		clBg = ColorRGBA.Cyan.clone();
 		attrs.set(Button.LAYER_BACKGROUND, new QuadBackgroundComponent(clBg));
+		
+		attrs = styles.getSelector("resizablePanel", getStyle());
+		attrs.set(EAttribute.color.s(), ColorRGBA.Yellow.clone()); //TODO REMOVE IF USELESS
+		clBg = ColorRGBA.Cyan.clone();
+		attrs.set(ResizablePanel.LAYER_RESIZABLE_BORDERS, new QuadBackgroundComponent(clBg));
 		
 		// INPUT
 		attrs = styles.getSelector(TextField.ELEMENT_ID, getStyle());
