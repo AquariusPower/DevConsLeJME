@@ -18,7 +18,7 @@ public class TestResizablePanel {
 		if(rzp!=null)return;
 		
 		rzp = new ResizablePanel(300,200,DevConsPluginStateI.i().getStyle());
-		rzp.setLocalTranslation(100,350,1);
+		rzp.setLocalTranslation(100,350,10); //above DevCons
 		nodeParent.attachChild(rzp);
 		Button btn = new Button("hellow");
 		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));

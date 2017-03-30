@@ -384,6 +384,8 @@ public class JavaScriptI {
 			if(bShowRetVal)showRetVal(objRetValUser);
 		} catch (ScriptException e) {
 			LoggingI.i().logExceptionEntry(e, strJS);
+		} catch (Exception e){
+			LoggingI.i().logExceptionEntry(e, strJS);
 		}
 	}
 	
