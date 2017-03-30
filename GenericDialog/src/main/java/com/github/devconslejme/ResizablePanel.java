@@ -30,17 +30,19 @@ package com.github.devconslejme;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Spatial;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.core.GuiComponent;
 import com.simsilica.lemur.core.GuiControl;
-import com.simsilica.lemur.dnd.DragAndDropControl;
-import com.simsilica.lemur.dnd.DragAndDropListener;
-import com.simsilica.lemur.dnd.DragEvent;
 import com.simsilica.lemur.dnd.DragStatus;
 import com.simsilica.lemur.dnd.Draggable;
+import com.simsilica.lemur.event.CursorButtonEvent;
+import com.simsilica.lemur.event.CursorEventControl;
+import com.simsilica.lemur.event.CursorListener;
+import com.simsilica.lemur.event.CursorMotionEvent;
 import com.simsilica.lemur.style.Attributes;
 import com.simsilica.lemur.style.ElementId;
 import com.simsilica.lemur.style.StyleAttribute;
@@ -55,142 +57,200 @@ public class ResizablePanel extends Panel implements Draggable {
 	private Panel contents;
 	private int iBorderSize = 3;
 	private QuadBackgroundComponent	qbcBorder = new QuadBackgroundComponent();
-//	private ResizerCursorListener	clResizer = new ResizerCursorListener();
-//	class ResizerCursorListener implements CursorListener{}
-	
-	private ResizerDragAndDropListener	dndlCursorListener = new ResizerDragAndDropListener();
-	public Vector3f	v3fDragFromPrevious;
+	private Vector3f	v3fDragFromPrevious;
 	private Vector3f	v3fMinSize = new Vector3f(20,20,0);
-	enum EEdge{
-		Left,
-		Right,
-		
-		Top, //THIS ORDER MATTERS!
-		TopRight, //THIS ORDER MATTERS!
-		TopLeft, //THIS ORDER MATTERS!
-		
-		Bottom, //THIS ORDER MATTERS!
-		BottomRight, //THIS ORDER MATTERS!
-		BottomLeft, //THIS ORDER MATTERS!
+	private float fCornerHotSpotRange = 10;
+	private boolean	bDragEvenIfOutside = false; //TODO still buggy
+	
+//	private ResizerDragAndDropListener	dndlCursorListener = new ResizerDragAndDropListener();
+//	private class ResizerDragAndDropListener implements DragAndDropListener{
+//		@Override
+//		public Draggable onDragDetected(DragEvent event) {
+//			if(event.getTarget() instanceof Draggable){
+//				return (Draggable)event.getTarget();
+//			}
+//			return null;
+//		}
+//
+//		@Override
+//		public void onDragEnter(DragEvent event) {
+//			if(event.getTarget()==ResizablePanel.this){
+//				v3fDragFromPrevious = event.getCollision().getContactPoint();
+//			}
+//		}
+//
+//		@Override
+//		public void onDragExit(DragEvent event) {
+//			if(event.getTarget()==ResizablePanel.this){
+//				event.getClass(); //TODO rm tmp debug breakpoint
+//			}
+//		}
+//		
+//		@Override
+//		public void onDragOver(DragEvent event) {
+//			if(event.getTarget()==ResizablePanel.this){
+//				resizeThruDragging(event.getX(), event.getY());
+//			}
+//		}
+//
+//		@Override
+//		public void onDrop(DragEvent event) {
+//			if(event.getTarget()==ResizablePanel.this){
+//				v3fDragFromPrevious=null;
+//			}
+//		}
+//
+//		@Override
+//		public void onDragDone(DragEvent event) {
+//			if(event.getTarget()==ResizablePanel.this){
+//				event.getClass();//TODO rem
+//			}
+//		}
+//	}
+	
+//	enum EEdge{
+//		Left,
+//		Right,
+//		
+//		Top, //THIS ORDER MATTERS!
+//		TopRight, //THIS ORDER MATTERS!
+//		TopLeft, //THIS ORDER MATTERS!
+//		
+//		Bottom, //THIS ORDER MATTERS!
+//		BottomRight, //THIS ORDER MATTERS!
+//		BottomLeft, //THIS ORDER MATTERS!
+//		;
+//	}
+	
+	/**
+	 * !!!!!!!!!!!!!!THIS ORDER IS IMPORTANT!!!!!!!!!!!!!!
+	 */
+	enum EEdge{ 
+		Dummy0,
+		Top,         //1
+		Right,       //2
+		TopRight,    //3
+		Left,        //4
+		TopLeft,     //5
+		Bottom,      //6
+		Dummy7,
+		BottomRight, //8
+		Dummy9,
+		BottomLeft,  //10
 		;
-	}
-	class ResizerDragAndDropListener implements DragAndDropListener{
-		@Override
-		public Draggable onDragDetected(DragEvent event) {
-			if(event.getTarget() instanceof Draggable){
-				return (Draggable)event.getTarget();
+	} // I said THIS ORDER!!! not disorder... :)
+	EEdge eeInitialHook = null;
+	private void resizeThruDragging(float fCursorX, float fCursorY){
+		Vector3f v3fOldSize = new Vector3f(getPreferredSize());
+		Vector3f v3fPanelCenter=v3fOldSize.divide(2f);
+		
+		Vector3f v3fPanelCenterOnAppScreen=getWorldTranslation().add(
+			v3fPanelCenter.x,-v3fPanelCenter.y,0);
+		
+		Vector3f v3fNewSize = v3fOldSize.clone();
+		
+		//Cursor Position: NEW          Previous
+		float fDeltaX = fCursorX - v3fDragFromPrevious.x; // positive to the right
+		float fDeltaY = fCursorY - v3fDragFromPrevious.y; // positive downwards
+		
+//		if(fDeltaX!=0 || fDeltaY!=0){
+//			String.class.getName(); //TODO rm tmp debug breakpoint
+//		}
+		
+		EEdge ee=null;
+		if(eeInitialHook==null){
+			float fDistPanelCenterToCursorX = Math.abs(fCursorX - v3fPanelCenterOnAppScreen.x);
+			float fDistPanelCenterToCursorY = Math.abs(fCursorY - v3fPanelCenterOnAppScreen.y); 
+			float fMaxDistX = v3fPanelCenter.x;
+			float fMaxDistY = v3fPanelCenter.y;
+			float fDistToBorderX = fMaxDistX - fDistPanelCenterToCursorX;
+			float fDistToBorderY = fMaxDistY - fDistPanelCenterToCursorY;
+				
+			EEdge eeX=null;
+			if(fDistToBorderX < fCornerHotSpotRange){
+				eeX = fCursorX>v3fPanelCenterOnAppScreen.x ? EEdge.Right : EEdge.Left;
 			}
-			return null;
-		}
-
-		@Override
-		public void onDragEnter(DragEvent event) {
-			if(event.getTarget()==ResizablePanel.this){
-				v3fDragFromPrevious = event.getCollision().getContactPoint();
+			
+			EEdge eeY=null;
+			if(fDistToBorderY < fCornerHotSpotRange){
+				eeY = fCursorY>v3fPanelCenterOnAppScreen.y ? EEdge.Top : EEdge.Bottom;
 			}
-		}
-
-		@Override
-		public void onDragExit(DragEvent event) {
-			if(event.getTarget()==ResizablePanel.this){
-				event.getClass(); //TODO rm tmp debug breakpoint
+			
+			if(eeX==null && eeY==null)throw new NullPointerException("impossible condition: cursor at no edge?");
+			
+			if(eeX==null){
+				ee=eeY;
+			}else
+			if(eeY==null){
+				ee=eeX;
+			}else{
+				ee = EEdge.values()[eeX.ordinal()+eeY.ordinal()];
 			}
+			
+//			if(fDistToBorderX < fCornerHotSpotRange){
+//				if(fCursorX>v3fPanelCenterOnAppScreen.x){
+//					ee=EEdge.values()[ee.ordinal()+1]; //Right
+//				}else{
+//					ee=EEdge.values()[ee.ordinal()+2]; //Left
+//				}
+//			}
+			
+			eeInitialHook=ee;
+		}else{
+			ee=eeInitialHook;
 		}
 		
-		@Override
-		public void onDragOver(DragEvent event) {
-			if(event.getTarget()==ResizablePanel.this){
-				Vector3f v3fOldSize = new Vector3f(ResizablePanel.this.getPreferredSize());
-				Vector3f v3fPanelCenter=v3fOldSize.divide(2f);
-				Vector3f v3fPanelCenterOnApp=ResizablePanel.this.getLocalTranslation().add(
-					v3fPanelCenter.x,-v3fPanelCenter.y,0);
+		// resize and move
+		Vector3f v3fNewPos = getLocalTranslation().clone();
+		switch(ee){
+			case Left:
+				fDeltaY=0;
+				break;
+			case Right:
+				fDeltaY=0;
+				break;
 				
-				Vector3f v3fNewSize = v3fOldSize.clone();
+			case Top:
+				fDeltaX=0;
+				v3fNewSize.y+=fDeltaY;
+				v3fNewPos.y+=fDeltaY;
+				break;
+			case TopRight:
+				v3fNewSize.x+=fDeltaX;
+				v3fNewSize.y+=fDeltaY;
+				v3fNewPos.y+=fDeltaY;
+				break;
+			case TopLeft:
+				v3fNewSize.x-=fDeltaX;
+				v3fNewSize.y+=fDeltaY;
+				v3fNewPos.x+=fDeltaX;
+				v3fNewPos.y+=fDeltaY;
+				break;
 				
-				//                  NEW                OLD
-				float fDeltaX = event.getX() - v3fDragFromPrevious.x; // positive to the right
-				float fDeltaY = event.getY() - v3fDragFromPrevious.y; // positive downwards
-				
-				if(fDeltaX!=0 || fDeltaY!=0){
-					event.getClass(); //TODO rm tmp debug breakpoint
-				}
-				
-				EEdge ee=null;
-				if(event.getY()>v3fPanelCenterOnApp.y){ee=EEdge.Top;}else{ee=EEdge.Bottom;}
-				if(event.getX()>v3fPanelCenterOnApp.x){
-					ee=EEdge.values()[ee.ordinal()+1]; //Right
-				}else{
-					ee=EEdge.values()[ee.ordinal()+2]; //Left
-				}
-				
-				Vector3f v3fNewPos = ResizablePanel.this.getLocalTranslation().clone();
-				switch(ee){
-					case Left:
-						fDeltaY=0;
-						break;
-					case Right:
-						fDeltaY=0;
-						break;
-						
-					case Top:
-						fDeltaX=0;
-						v3fNewSize.y+=fDeltaY;
-						v3fNewPos.y+=fDeltaY;
-						break;
-					case TopRight:
-						v3fNewSize.x+=fDeltaX;
-						v3fNewSize.y+=fDeltaY;
-						v3fNewPos.y+=fDeltaY;
-						break;
-					case TopLeft:
-						v3fNewSize.x-=fDeltaX;
-						v3fNewSize.y+=fDeltaY;
-						v3fNewPos.x+=fDeltaX;
-						v3fNewPos.y+=fDeltaY;
-						break;
-						
-					case Bottom:
-						fDeltaX=0;
-						v3fNewSize.y-=fDeltaY;
-						break;
-					case BottomRight:
-						v3fNewSize.x+=fDeltaX;
-						v3fNewSize.y-=fDeltaY;
-						break;
-					case BottomLeft:
-						v3fNewSize.x-=fDeltaX;
-						v3fNewSize.y-=fDeltaY;
-						v3fNewPos.x+=fDeltaX;
-						break;
-				}
-				
-				v3fDragFromPrevious.x+=fDeltaX;
-				v3fDragFromPrevious.y+=fDeltaY;
-				
-				// constraint
-				if(v3fNewSize.x<v3fMinSize.x)v3fNewSize.x=v3fMinSize.x;
-				if(v3fNewSize.y<v3fMinSize.y)v3fNewSize.y=v3fMinSize.y;
-				
-				ResizablePanel.this.setPreferredSize(v3fNewSize);
-				ResizablePanel.this.setLocalTranslation(v3fNewPos);
-				
-				event.getClass();
-			}
+			case Bottom:
+				fDeltaX=0;
+				v3fNewSize.y-=fDeltaY;
+				break;
+			case BottomRight:
+				v3fNewSize.x+=fDeltaX;
+				v3fNewSize.y-=fDeltaY;
+				break;
+			case BottomLeft:
+				v3fNewSize.x-=fDeltaX;
+				v3fNewSize.y-=fDeltaY;
+				v3fNewPos.x+=fDeltaX;
+				break;
 		}
-
-		@Override
-		public void onDrop(DragEvent event) {
-			if(event.getTarget()==ResizablePanel.this){
-				v3fDragFromPrevious=null;
-			}
-		}
-
-		@Override
-		public void onDragDone(DragEvent event) {
-			if(event.getTarget()==ResizablePanel.this){
-				event.getClass();//TODO rem
-			}
-		}
+		
+		v3fDragFromPrevious.x+=fDeltaX;
+		v3fDragFromPrevious.y+=fDeltaY;
+		
+		// constraint
+		if(v3fNewSize.x<getMinSize().x)v3fNewSize.x=getMinSize().x;
+		if(v3fNewSize.y<getMinSize().y)v3fNewSize.y=getMinSize().y;
+		
+		setPreferredSize(v3fNewSize);
+		setLocalTranslation(v3fNewPos);
 	}
 	
 	public static final String LAYER_RESIZABLE_BORDERS = "resizableBorders";
@@ -213,11 +273,46 @@ public class ResizablePanel extends Panel implements Draggable {
     setBorderSize(iBorderSize);
     
     Styles styles = GuiGlobals.getInstance().getStyles();
-    styles.applyStyles(this, getElementId().getId(), style);
+    styles.applyStyles(this, getElementId(), style);
     
-    addControl(new DragAndDropControl(dndlCursorListener));
+//    addControl(new DragAndDropControl(dndlCursorListener));
+    CursorEventControl.addListenersToSpatial(this, dcl);
   }
 	
+  ResizerCursorListener dcl = new ResizerCursorListener();
+  private class ResizerCursorListener implements CursorListener{
+		@Override
+		public void cursorButtonEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
+			if(target!=ResizablePanel.this)return;
+			if(event.getButtonIndex()!=0)return;
+			
+			if(event.isPressed()){
+				v3fDragFromPrevious=new Vector3f(event.getX(),event.getY(),0);
+				if(isDragEvenIfOutside()){
+					event.setConsumed(); //to let dragging happens even if it is outside the Panel!
+				}
+			}else{
+				v3fDragFromPrevious=null;
+				eeInitialHook=null;
+			}
+		}
+		
+  	@Override
+  	public void cursorMoved(CursorMotionEvent event, Spatial target, Spatial capture) {
+  		if(v3fDragFromPrevious!=null){
+  			resizeThruDragging(event.getX(),event.getY());
+  		}
+  	}
+
+		@Override
+		public void cursorEntered(CursorMotionEvent event, Spatial target,				Spatial capture) {
+		}
+
+		@Override
+		public void cursorExited(CursorMotionEvent event, Spatial target,				Spatial capture) {
+		}
+  }
+  
   @StyleDefaults("resizablePanel")
   public static void initializeDefaultStyles( Attributes attrs ) {
       attrs.set( "resizableBorders", new QuadBackgroundComponent(ColorRGBA.Gray), false );
@@ -253,15 +348,6 @@ public class ResizablePanel extends Panel implements Draggable {
 	    }
 	}
 	
-	public void setMinSize(Vector3f v3f){
-		this.v3fMinSize=v3f;
-	}
-	
-	public void setBorderSize(int i){
-		this.iBorderSize=i;
-    qbcBorder.setMargin(iBorderSize, iBorderSize);
-	}
-
 	@Override
 	public void setLocation(float x, float y) {
 	}
@@ -278,5 +364,38 @@ public class ResizablePanel extends Panel implements Draggable {
 	@Override
 	public void release() {
 	}
+
+	public float getCornerHotSpotRange() {
+		return fCornerHotSpotRange;
+	}
+
+	public void setCornerHotSpotRange(float fCornerHotSpotRange) {
+		this.fCornerHotSpotRange = fCornerHotSpotRange;
+	}
+
+	public int getBorderSize() {
+		return iBorderSize;
+	}
+
+	public void setBorderSize(int i){
+		this.iBorderSize=(i);
+    qbcBorder.setMargin(this.iBorderSize, this.iBorderSize);
+	}
+
+	public void setMinSize(Vector3f v3f){
+		this.v3fMinSize=(v3f);
+	}
 	
+	public Vector3f getMinSize() {
+		return v3fMinSize;
+	}
+
+	public boolean isDragEvenIfOutside() {
+		return bDragEvenIfOutside;
+	}
+
+	public void setDragEvenIfOutside(boolean bDragEvenIfOutside) {
+		this.bDragEvenIfOutside = bDragEvenIfOutside;
+	}
+
 }
