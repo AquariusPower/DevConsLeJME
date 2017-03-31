@@ -37,6 +37,7 @@ import java.util.Set;
 
 import org.lwjgl.opengl.Display;
 
+import com.github.devconslejme.PanelResizableEnhancer.IResizableListener;
 import com.github.devconslejme.QueueStateI.CallableX;
 import com.github.devconslejme.misc.MiscJmeI;
 import com.github.devconslejme.misc.MiscLemurI;
@@ -61,14 +62,12 @@ import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.HAlignment;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
-import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.core.VersionedReference;
 import com.simsilica.lemur.event.KeyAction;
 import com.simsilica.lemur.event.KeyActionListener;
-import com.simsilica.lemur.event.KeyModifiers;
 import com.simsilica.lemur.style.Attributes;
 import com.simsilica.lemur.style.Styles;
 import com.simsilica.lemur.text.DocumentModel;
@@ -82,7 +81,7 @@ public class DevConsPluginStateI extends AbstractAppState{
 	
 	private Vector3f	v3fApplicationWindowSize;
 	private float	fLemurPreferredThickness = 1f;
-	private Vector3f	v3fConsoleSize;
+//	private Vector3f	v3fConsoleSize;
 	private float	fConsoleHeightPerc = 0.5f;
 	private String strStyle = "console";
 	private ListBox<String>	lstbxLoggingSection;
@@ -170,6 +169,16 @@ public class DevConsPluginStateI extends AbstractAppState{
 	private boolean	bKeepScrollAtBottom;
 	private VersionedReference<List<String>>	vrListBoxChangedToAutoScrollToBottom;
 	private VersionedReference<Double>	vrSliderChangedToSuspendAutoScrollBottom;
+	private IResizableListener	irl = new IResizableListener(){
+		@Override
+		public void resizedTo(Vector3f v3fNewSize) {
+			updateVisibleLogItems(cntrMain.getPreferredSize().y);
+			System.out.println(v3fNewSize);
+		}
+	};
+	private PanelResizableEnhancer	panelResizableEnhancer;
+	private float	fMinHeight=100;
+	private float	fMinWidth=500;
 	
 	public static enum EStatPriority{
 		Top,
@@ -592,7 +601,10 @@ public class DevConsPluginStateI extends AbstractAppState{
 
 	private void initMainContainer() {
 		cntrMain = new Container(new BorderLayout(), getStyle());
-		updateConsoleHeight();
+		panelResizableEnhancer = new PanelResizableEnhancer(cntrMain,irl );
+		panelResizableEnhancer.setMinSize(new Vector3f(fMinWidth ,fMinHeight,0));
+//		updateConsoleHeight(fHeight);
+		setConsoleHeightPerc(fConsoleHeightPerc); //just to init default value
 	}
 
 	private void initLoggingSection() {
@@ -622,37 +634,44 @@ public class DevConsPluginStateI extends AbstractAppState{
 
 	public void setConsoleHeightPerc(float fConsoleHeightPerc2) {
 		this.fConsoleHeightPerc = fConsoleHeightPerc2;
-		updateConsoleHeight();
+		
+		if(fConsoleHeightPerc>1.0f)fConsoleHeightPerc=1.0f;
+		if(fConsoleHeightPerc<0f)fConsoleHeightPerc=0f; //will be further fixed below
+		
+		float fHeight = (v3fApplicationWindowSize.y * fConsoleHeightPerc);
+		
+		if(fHeight<fMinHeight){
+			fHeight=fMinHeight; //TODO this is guess work... areas: info+list+input with 20 each + safety margin
+			fConsoleHeightPerc=fHeight/v3fApplicationWindowSize.y;
+		}
+		
+		updateConsoleHeight(fHeight);
 	}
 
-	private void updateConsoleHeight() {
+	private void updateConsoleHeight(float fHeight) {
 		QueueStateI.i().enqueue(new CallableX(0,false) {
 			@Override
 			public Boolean call() {
-				if(fConsoleHeightPerc>1.0f)fConsoleHeightPerc=1.0f;
-				if(fConsoleHeightPerc<0f)fConsoleHeightPerc=0f; //will be further fixed below
-				
-				float fHeight = (v3fApplicationWindowSize.y * fConsoleHeightPerc);
-				
-				if(fHeight<100){
-					fHeight=100; //TODO this is guess work... areas: info+list+input with 20 each + safety margin
-					fConsoleHeightPerc=fHeight/v3fApplicationWindowSize.y;
-				}
-				
-				v3fConsoleSize = new Vector3f(
+//				v3fConsoleSize
+				Vector3f v3f = new Vector3f(
 						v3fApplicationWindowSize.x,
 						fHeight,
 						fLemurPreferredThickness);
 					
-				cntrMain.setPreferredSize(v3fConsoleSize);
+				cntrMain.setPreferredSize(v3f);
+//				cntrMain.setPreferredSize(v3fConsoleSize);
 				
-				int iLines = (int) (fHeight/MiscLemurI.i().getEntryHeightPixels(lstbxLoggingSection));
-				iLines--; //to void the text being too close to each other 
-				lstbxLoggingSection.setVisibleItems(iLines);
+				updateVisibleLogItems(fHeight);
 				
 				return true;
 			}
 		});
+	}
+	
+	public void updateVisibleLogItems(float fHeight){
+		int iLines = (int) (fHeight/MiscLemurI.i().getEntryHeightPixels(lstbxLoggingSection));
+		iLines--; //to void the text being too close to each other 
+		lstbxLoggingSection.setVisibleItems(iLines);
 	}
 
 	public String getStyle() {

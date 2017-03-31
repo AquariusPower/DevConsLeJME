@@ -30,29 +30,31 @@ package com.github.devconslejme;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
-import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.core.GuiComponent;
 import com.simsilica.lemur.core.GuiControl;
-import com.simsilica.lemur.dnd.Draggable;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.CursorListener;
 import com.simsilica.lemur.event.CursorMotionEvent;
 import com.simsilica.lemur.style.Attributes;
-import com.simsilica.lemur.style.ElementId;
 import com.simsilica.lemur.style.StyleAttribute;
 import com.simsilica.lemur.style.StyleDefaults;
-import com.simsilica.lemur.style.Styles;
 
 // (tab indent=2 spaces)
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class ResizablePanel extends Panel {
+public class PanelResizableEnhancer {
+	public interface IResizableListener {
+		public void resizedTo(Vector3f v3fNewSize);
+	}
+	
+	private Panel	panel;
+
 	private BorderLayout layout;
 	private Panel contents;
 	private int iBorderSize = 4;
@@ -62,7 +64,31 @@ public class ResizablePanel extends Panel {
 	private float fCornerHotSpotRange = 20;
 	private ResizerCursorListener dcl = new ResizerCursorListener();
 	private int	iMouseButtonIndex=0;
+
+	private IResizableListener	irl;
 	
+	PanelResizableEnhancer(Panel panel, IResizableListener irl){
+		this.panel=panel;
+		this.irl=irl;
+		initPanel();
+	}
+	
+  public void initPanel() {
+    this.layout = new BorderLayout();
+    panel.getControl(GuiControl.class).setLayout(layout);
+    
+    // Set our layers
+    panel.getControl(GuiControl.class).setLayerOrder(Panel.LAYER_INSETS, 
+    	Panel.LAYER_BORDER, 
+    	Panel.LAYER_BACKGROUND,
+  		LAYER_RESIZABLE_BORDERS);
+    
+    panel.setBorder(qbcBorder);
+    setBorderSize(iBorderSize); //to apply default
+    
+    CursorEventControl.addListenersToSpatial(panel, dcl);
+  }
+  
 	public static enum EEdge{
 		// !!!!!!!!!!!!!!THIS ORDER IS IMPORTANT!!!!!!!!!!!!!!
 		Dummy0,
@@ -137,8 +163,8 @@ public class ResizablePanel extends Panel {
 	public boolean isCursorInsidePanel(float fCursorX, float fCursorY){
 		return isCursorInsidePanel(
 			new Vector3f(fCursorX,fCursorY,0),
-			new Vector3f(getWorldTranslation()), 
-			new Vector3f(getPreferredSize())
+			new Vector3f(panel.getWorldTranslation()), 
+			new Vector3f(panel.getPreferredSize())
 		);
 	}
 	private boolean isCursorInsidePanel(Vector3f v3fCursor,Vector3f v3fPos,Vector3f v3fSize){
@@ -153,13 +179,13 @@ public class ResizablePanel extends Panel {
 	private void resizeThruDragging(float fCursorX, float fCursorY){
 		Vector3f v3fCursor = new Vector3f(fCursorX,fCursorY,0);
 		
-		Vector3f v3fOldPos=getWorldTranslation().clone();
-		Vector3f v3fOldSize = new Vector3f(getPreferredSize());
+		Vector3f v3fOldPos=panel.getWorldTranslation().clone();
+		Vector3f v3fOldSize = new Vector3f(panel.getPreferredSize());
 		EEdge.setCurrentEdgesPos(v3fOldPos, v3fOldSize);
 		
 		Vector3f v3fPanelCenter=v3fOldSize.divide(2f);
 		
-		Vector3f v3fPanelCenterOnAppScreen=getWorldTranslation().add(
+		Vector3f v3fPanelCenterOnAppScreen=panel.getWorldTranslation().add(
 			v3fPanelCenter.x,-v3fPanelCenter.y,0);
 		
 		EEdge ee=null;
@@ -198,7 +224,7 @@ public class ResizablePanel extends Panel {
 		}
 		
 		////////////// resize and move
-		Vector3f v3fNewPos = getLocalTranslation().clone();
+		Vector3f v3fNewPos = panel.getLocalTranslation().clone();
 		Vector3f v3fNewSize = v3fOldSize.clone();
 		
 		//Cursor Position: NEW          Previous
@@ -261,39 +287,18 @@ public class ResizablePanel extends Panel {
 			v3fDragFromPrevious.y+=fDeltaY;
 		}
 		
-		setPreferredSize(v3fNewSize);
-		setLocalTranslation(v3fNewPos);
+		panel.setPreferredSize(v3fNewSize);
+		panel.setLocalTranslation(v3fNewPos);
+		
+		if(irl!=null)irl.resizedTo(v3fNewSize);
 	}
 	
 	public static final String LAYER_RESIZABLE_BORDERS = "resizableBorders";
 	
-  public ResizablePanel( float width, float height, String style ) {
-    super(false, new ElementId("resizablePanel"), style);
-    
-    this.layout = new BorderLayout();
-    getControl(GuiControl.class).setLayout(layout);
-    
-    getControl(GuiControl.class).setPreferredSize(new Vector3f(width, height, 0));
-    
-    // Set our layers
-    getControl(GuiControl.class).setLayerOrder(LAYER_INSETS, 
-                                               LAYER_BORDER, 
-                                               LAYER_BACKGROUND,
-                                               LAYER_RESIZABLE_BORDERS);
-    
-    setBorder(qbcBorder);
-    setBorderSize(iBorderSize); //to apply default
-    
-    Styles styles = GuiGlobals.getInstance().getStyles();
-    styles.applyStyles(this, getElementId(), style);
-    
-    CursorEventControl.addListenersToSpatial(this, dcl);
-  }
-	
   private class ResizerCursorListener implements CursorListener{
 		@Override
 		public void cursorButtonEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
-			if(capture!=ResizablePanel.this)return;
+			if(capture!=panel)return;
 			
 			if(event.getButtonIndex()!=iMouseButtonIndex)return;
 			
@@ -333,11 +338,11 @@ public class ResizablePanel extends Panel {
   
 	@StyleAttribute(value="resizableBorders", lookupDefault=false)
 	public void setResizableBorders( GuiComponent bg ) {        
-	    getControl(GuiControl.class).setComponent(LAYER_RESIZABLE_BORDERS, bg);   
+		panel.getControl(GuiControl.class).setComponent(LAYER_RESIZABLE_BORDERS, bg);   
 	}
 	
   public GuiComponent getResizableBorders() {
-    return getControl(GuiControl.class).getComponent(LAYER_RESIZABLE_BORDERS);
+    return panel.getControl(GuiControl.class).getComponent(LAYER_RESIZABLE_BORDERS);
   }
   
 	/**
@@ -397,5 +402,5 @@ public class ResizablePanel extends Panel {
 	public void setMouseButtonIndex(int iMouseButtonIndex) {
 		this.iMouseButtonIndex = iMouseButtonIndex;
 	}
-
+	
 }
