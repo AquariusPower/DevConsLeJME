@@ -30,6 +30,7 @@ package com.github.devconslejme;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
+import com.simsilica.lemur.Container;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.BorderLayout;
@@ -290,7 +291,12 @@ public class ResizablePanel extends Panel {
     CursorEventControl.addListenersToSpatial(this, dcl);
   }
 	
-  private class ResizerCursorListener implements CursorListener{
+  public ResizablePanel(Panel pnl) {
+  	this(pnl.getPreferredSize().x, pnl.getPreferredSize().y, pnl.getStyle());
+  	layout.addChild(pnl,  BorderLayout.Position.Center);
+	}
+
+	private class ResizerCursorListener implements CursorListener{
 		@Override
 		public void cursorButtonEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
 			if(capture!=ResizablePanel.this)return;

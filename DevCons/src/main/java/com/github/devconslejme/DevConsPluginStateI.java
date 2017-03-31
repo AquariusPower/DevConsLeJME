@@ -37,7 +37,6 @@ import java.util.Set;
 
 import org.lwjgl.opengl.Display;
 
-import com.github.devconslejme.PanelResizableEnhancer.IResizableListener;
 import com.github.devconslejme.QueueStateI.CallableX;
 import com.github.devconslejme.misc.MiscJmeI;
 import com.github.devconslejme.misc.MiscLemurI;
@@ -169,16 +168,17 @@ public class DevConsPluginStateI extends AbstractAppState{
 	private boolean	bKeepScrollAtBottom;
 	private VersionedReference<List<String>>	vrListBoxChangedToAutoScrollToBottom;
 	private VersionedReference<Double>	vrSliderChangedToSuspendAutoScrollBottom;
-	private IResizableListener	irl = new IResizableListener(){
-		@Override
-		public void resizedTo(Vector3f v3fNewSize) {
-			updateVisibleLogItems(cntrMain.getPreferredSize().y);
-			System.out.println(v3fNewSize);
-		}
-	};
-	private PanelResizableEnhancer	panelResizableEnhancer;
+//	private IResizableListener	irl = new IResizableListener(){
+//		@Override
+//		public void resizedTo(Vector3f v3fNewSize) {
+//			updateVisibleLogItems(cntrMain.getPreferredSize().y);
+//			System.out.println(v3fNewSize);
+//		}
+//	};
+//	private PanelResizableEnhancer	panelResizableEnhancer;
 	private float	fMinHeight=100;
 	private float	fMinWidth=500;
+	private ResizablePanel	panelMain;
 	
 	public static enum EStatPriority{
 		Top,
@@ -290,7 +290,7 @@ public class DevConsPluginStateI extends AbstractAppState{
 		initLoggingSection();
 		initInputSection();
 		
-		cntrMain.setLocalTranslation(0, Display.getHeight(), 0);
+		panelMain.setLocalTranslation(0, Display.getHeight(), 0);
 		
 //		GuiGlobals.getInstance().requestFocus(tfInput);
 		
@@ -341,9 +341,9 @@ public class DevConsPluginStateI extends AbstractAppState{
 		if(!isInitialized())throw new NullPointerException("not initialized");
 		
 		if(enabled){
-			nodeParent.attachChild(cntrMain);
+			nodeParent.attachChild(panelMain);
 		}else{
-			cntrMain.removeFromParent();
+			panelMain.removeFromParent();
 		}
 		
 		super.setEnabled(enabled);
@@ -601,8 +601,10 @@ public class DevConsPluginStateI extends AbstractAppState{
 
 	private void initMainContainer() {
 		cntrMain = new Container(new BorderLayout(), getStyle());
-		panelResizableEnhancer = new PanelResizableEnhancer(cntrMain,irl );
-		panelResizableEnhancer.setMinSize(new Vector3f(fMinWidth ,fMinHeight,0));
+		panelMain = new ResizablePanel(cntrMain);
+		panelMain.setMinSize(new Vector3f(fMinWidth ,fMinHeight,0));
+//		panelResizableEnhancer = new PanelResizableEnhancer(cntrMain,irl);
+//		panelResizableEnhancer.setMinSize(new Vector3f(fMinWidth ,fMinHeight,0));
 //		updateConsoleHeight(fHeight);
 		setConsoleHeightPerc(fConsoleHeightPerc); //just to init default value
 	}
@@ -658,7 +660,7 @@ public class DevConsPluginStateI extends AbstractAppState{
 						fHeight,
 						fLemurPreferredThickness);
 					
-				cntrMain.setPreferredSize(v3f);
+				panelMain.setPreferredSize(v3f);
 //				cntrMain.setPreferredSize(v3fConsoleSize);
 				
 				updateVisibleLogItems(fHeight);
