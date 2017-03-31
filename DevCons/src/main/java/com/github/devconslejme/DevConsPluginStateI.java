@@ -68,6 +68,7 @@ import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.core.VersionedReference;
 import com.simsilica.lemur.event.KeyAction;
 import com.simsilica.lemur.event.KeyActionListener;
+import com.simsilica.lemur.event.KeyModifiers;
 import com.simsilica.lemur.style.Attributes;
 import com.simsilica.lemur.style.Styles;
 import com.simsilica.lemur.text.DocumentModel;
@@ -345,13 +346,13 @@ public class DevConsPluginStateI extends AbstractAppState{
 		
 		BindKeyI.i().prepareKeyMappings();
 		
-		QueueStateI.i().enqueue(new CallableX("copyLogSelectionToInputText",0.25f,true) {
-			@Override
-			public Boolean call() {
-				copyLogSelectionToInputText();
-				return true;
-			}
-		}.setUserCanPause(true));
+//		QueueStateI.i().enqueue(new CallableX("copyLogSelectionToInputText",0.25f,true) {
+//			@Override
+//			public Boolean call() {
+//				copyLogSelectionToInputText();
+//				return true;
+//			}
+//		}.setUserCanPause(true));
 		
 		QueueStateI.i().enqueue(new CallableX("FocusAtDevConsInput",0.25f,true) { //TODO this delay still has a chance of typing something at other input field? like when holding for long a key?
 			@Override
@@ -699,10 +700,11 @@ public class DevConsPluginStateI extends AbstractAppState{
 //	}
 	
 	public void copyLogSelectionToInputText(){
-		if(!vrSelectionChangedToUpdateInputText.update())return;
+//		if(!vrSelectionChangedToUpdateInputText.update())return;
 		
 		String str = getInputText();
 		str=str.trim();
+		if(str.startsWith("//"))str=str.substring(2);
 		if(!str.isEmpty())JavaScriptI.i().addCmdToHistory("//"+str); //just to backup anything that is there even if incomplete
 		
 		String strText = LoggingI.i().getSelectedEntry();

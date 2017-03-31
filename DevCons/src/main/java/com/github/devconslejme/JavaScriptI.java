@@ -117,7 +117,7 @@ public class JavaScriptI {
 		private static ArrayList<String> astr = new ArrayList<String>(); 
 		static{
 			for(EBaseCommand ebc:EBaseCommand.values()){
-				astr.add("/"+ebc.s()+" // "+ebc.strInfo+" ("+EBaseCommand.class.getSimpleName()+")");
+				astr.add(strCmdChar+ebc.s()+" // "+ebc.strInfo+" ("+EBaseCommand.class.getSimpleName()+")");
 			}
 		}
 		
@@ -128,7 +128,7 @@ public class JavaScriptI {
 	
 	public boolean isAndExecBaseCommand(String strCmd){
 		strCmd=strCmd.trim();
-		if(strCmd.startsWith("/")){
+		if(strCmd.startsWith(strCmdChar)){
 			strCmd=strCmd.substring(1);
 		}else{
 			return false;
@@ -185,9 +185,13 @@ public class JavaScriptI {
 	}
 	
 	public void showHistory(String strParams) {
+		String strPrev = "";
 		for(String str:astrCmdHistory){
 			if(strParams.isEmpty() || str.toLowerCase().contains(strParams)){
-				LoggingI.i().logSubEntry(str);
+				if(!strPrev.equals(str)){
+					LoggingI.i().logSubEntry(str);
+					strPrev=str;
+				}
 			}
 		}
 		DevConsPluginStateI.i().scrollKeepAtBottom();
@@ -208,6 +212,7 @@ public class JavaScriptI {
 		}
 	}
 	WriterCapture wrc = new WriterCapture();
+	private static String	strCmdChar = "/";
 	
 	public void configure() {
 		jse  = new ScriptEngineManager().getEngineByMimeType("text/javascript");
@@ -271,7 +276,9 @@ public class JavaScriptI {
 		
 		ArrayList<String> astr = new ArrayList<String>();
 		astr.addAll(EBaseCommand.valuesAsHelp());
-		astr.addAll(bndJSE.keySet());
+		ArrayList<String> astrBnd = new ArrayList<String>(bndJSE.keySet());
+		Collections.sort(astrBnd);
+		astr.addAll(astrBnd);
 		
 		String strImprovedPart=strFilter; //still unmodified
 		
@@ -291,7 +298,6 @@ public class JavaScriptI {
 			strImprovedPart = ar.getImprovedPart();
 		}
 		
-//		Collections.sort(astr);
 		for(String str:astrResult){
 			LoggingI.i().logSubEntry(str);
 		}
@@ -601,10 +607,15 @@ public class JavaScriptI {
 	}
 
 	protected void autoComplete() {
-		String strImprovedPart = JavaScriptI.i().showHelp(DevConsPluginStateI.i().getInputText());
+		String strInput= DevConsPluginStateI.i().getInputText();
+		strInput=strInput.trim();
+		String strImprovedPart = JavaScriptI.i().showHelp(strInput);
+		if(!strInput.isEmpty() && !strInput.startsWith(strCmdChar) && strImprovedPart.equals(strInput)){ //nothing changed
+			strImprovedPart = JavaScriptI.i().showHelp(strCmdChar+strInput);
+		}
 		
 		String str = strImprovedPart;
-		int i = str.indexOf("//");if(i>-1)str=str.substring(0,i).trim()+" ";
+		int i = str.indexOf("//");if(i>-1)str=str.substring(0,i).trim()+" "; //remove trailing comment
 		DevConsPluginStateI.i().setInputText(str);
 		
 		DevConsPluginStateI.i().scrollKeepAtBottom();

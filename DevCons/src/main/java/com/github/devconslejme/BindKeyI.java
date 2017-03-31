@@ -90,6 +90,9 @@ public class BindKeyI {
 					case KeyInput.KEY_TAB:
 						JavaScriptI.i().autoComplete();
 						break;
+					case KeyInput.KEY_INSERT:
+						if(bControl)DevConsPluginStateI.i().copyLogSelectionToInputText();
+						break;
 					case KeyInput.KEY_DELETE:
 						if(bControl)DevConsPluginStateI.i().clearInput();
 						break;
@@ -117,6 +120,7 @@ public class BindKeyI {
 		bindKey("submit command", KeyInput.KEY_RETURN);
 		bindKey("submit command", KeyInput.KEY_NUMPADENTER);
 		bindKey("", KeyInput.KEY_B,KeyModifiers.CONTROL_DOWN);
+		bindKey("copy selected log entry to input field", KeyInput.KEY_INSERT,KeyModifiers.CONTROL_DOWN);
 		bindKey("clear input field", KeyInput.KEY_DELETE,KeyModifiers.CONTROL_DOWN);
 		bindKey("\"/\" toggle input field comment", KeyInput.KEY_SLASH,KeyModifiers.CONTROL_DOWN);
 		
