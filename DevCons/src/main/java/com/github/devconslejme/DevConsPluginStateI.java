@@ -277,7 +277,13 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	public void initialize(AppStateManager stateManager, Application app) {
 		if(isInitialized()){return;}
 		
-		super.setEnabled(false); //the console starts closed
+		QueueStateI.i().enqueue(new CallableX("the console starts closed",0,false) {
+			@Override
+			public Boolean call() {
+				DevConsPluginStateI.this.setEnabled(false);
+				return true;
+			}
+		});
 		
 		// jme
 		cxScrollTo = new CallableXScrollTo();
