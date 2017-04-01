@@ -30,6 +30,7 @@ package com.github.devconslejme;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Node;
 import com.simsilica.lemur.Button;
+import com.simsilica.lemur.ResizablePanel;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
 
 /**
