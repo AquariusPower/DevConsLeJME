@@ -64,6 +64,8 @@ import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
+import com.simsilica.lemur.core.GuiLayout;
+import com.simsilica.lemur.core.VersionedObject;
 import com.simsilica.lemur.core.VersionedReference;
 import com.simsilica.lemur.event.KeyAction;
 import com.simsilica.lemur.event.KeyActionListener;
@@ -84,6 +86,7 @@ public class DevConsPluginStateI extends AbstractAppState{
 	private float	fConsoleHeightPerc = 0.5f;
 	private String strStyle = "console";
 	private ListBox<String>	lstbxLoggingSection;
+//	private VersionedContainer	cntrMain;
 	private Container	cntrMain;
 	private Node	nodeParent;
 	private BitmapFont	font;
@@ -179,6 +182,25 @@ public class DevConsPluginStateI extends AbstractAppState{
 	private float	fMinHeight=100;
 	private float	fMinWidth=500;
 	private ResizablePanel	panelMain;
+//	private VersionedReference<Container>	vrMainSize;
+	
+//	private VersionedObject<Container>	voMainSize = new VersionedObject<Container>(){
+//		@Override
+//		public long getVersion() {
+//			return 0;
+//		}
+//
+//		@Override
+//		public Container getObject() {
+//			return cntrMain;
+//		}
+//
+//		@Override
+//		public VersionedReference<Container> createReference() {
+//			return null;
+//		}
+//		
+//	};
 	
 	public static enum EStatPriority{
 		Top,
@@ -303,6 +325,10 @@ public class DevConsPluginStateI extends AbstractAppState{
 		
 		if(isEnabled()){
 			JavaScriptI.i().update();
+			
+//			if(vrMainSize.update()){
+//				updateVisibleLogItems();
+//			}
 		}
 	}
 	
@@ -598,10 +624,65 @@ public class DevConsPluginStateI extends AbstractAppState{
 		attrs.set(ListBox.LAYER_BACKGROUND, new QuadBackgroundComponent(clBg));
 		
 	}
-
+	
+//	private static class VersionedContainer extends Container implements VersionedObject<Container>{
+//		private long	lVersion;
+//
+//		public VersionedContainer(GuiLayout layout, String style) {
+//			super(layout, style);
+//		}
+//		
+//		@Override
+//		public void setPreferredSize(Vector3f size) {
+//			super.setPreferredSize(size);
+//			incVersion();
+//		}
+//		
+//		@Override
+//		public void setSize(Vector3f size) {
+//			super.setSize(size);
+//			incVersion();
+//		}
+//		
+//		private void incVersion() {
+//			lVersion++;
+//		}
+//
+//		@Override
+//		public long getVersion() {
+//			return lVersion;
+//		}
+//
+//		@Override
+//		public Container getObject() {
+//			return this;
+//		}
+//
+//		@Override
+//		public VersionedReference<Container> createReference() {
+//      return new VersionedReference<Container>(this);
+//		}
+//
+//	}
+	
 	private void initMainContainer() {
 		cntrMain = new Container(new BorderLayout(), getStyle());
-		panelMain = new ResizablePanel(cntrMain);
+//		cntrMain = new VersionedContainer(new BorderLayout(), getStyle());
+//		vrMainSize = cntrMain.createReference();
+//		cntrMain.setPreferredSize(size);
+//		voMainSize = new VersionedObject<Vector3f>(){
+//			
+//		};
+//		VersionedReference<Vector3f> vrMainPrefSize = 
+//			new VersionedReference<Vector3f>(
+//				;
+		panelMain = new ResizablePanel(cntrMain){
+			@Override
+			protected void sizeChanged() {
+				super.sizeChanged();
+				updateVisibleLogItems();
+			}
+		};
 		panelMain.setMinSize(new Vector3f(fMinWidth ,fMinHeight,0));
 //		panelResizableEnhancer = new PanelResizableEnhancer(cntrMain,irl);
 //		panelResizableEnhancer.setMinSize(new Vector3f(fMinWidth ,fMinHeight,0));
@@ -663,14 +744,16 @@ public class DevConsPluginStateI extends AbstractAppState{
 				panelMain.setPreferredSize(v3f);
 //				cntrMain.setPreferredSize(v3fConsoleSize);
 				
-				updateVisibleLogItems(fHeight);
+				updateVisibleLogItems();
 				
 				return true;
 			}
 		});
 	}
 	
-	public void updateVisibleLogItems(float fHeight){
+	public void updateVisibleLogItems(){
+//		float fHeight = cntrMain.getPreferredSize().y;
+		float fHeight = cntrMain.getSize().y;
 		int iLines = (int) (fHeight/MiscLemurI.i().getEntryHeightPixels(lstbxLoggingSection));
 		iLines--; //to void the text being too close to each other 
 		lstbxLoggingSection.setVisibleItems(iLines);

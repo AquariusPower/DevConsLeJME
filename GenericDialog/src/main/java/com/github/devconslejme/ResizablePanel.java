@@ -30,14 +30,14 @@ package com.github.devconslejme;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
-import com.simsilica.lemur.Container;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.core.GuiComponent;
 import com.simsilica.lemur.core.GuiControl;
-import com.simsilica.lemur.dnd.Draggable;
+import com.simsilica.lemur.core.VersionedObject;
+import com.simsilica.lemur.core.VersionedReference;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.CursorListener;
@@ -56,13 +56,19 @@ import com.simsilica.lemur.style.Styles;
 public class ResizablePanel extends Panel {
 	private BorderLayout layout;
 	private Panel contents;
-	private int iBorderSize = 4;
-	private QuadBackgroundComponent	qbcBorder = new QuadBackgroundComponent();
+	private int iBorderSize = 2;//4;
 	private Vector3f	v3fDragFromPrevious;
 	private Vector3f	v3fMinSize = new Vector3f(40,40,0);
 	private float fCornerHotSpotRange = 20;
 	private ResizerCursorListener dcl = new ResizerCursorListener();
-	private int	iMouseButtonIndex=0;
+	private int	iMouseButtonIndexToDrag=0;
+	private EEdge eeInitialHook = null;
+	private int	iBumpedBorderSize=7;
+	private boolean	bUseBumpBorderMode=true;
+	private boolean	bUsingBumpBorderMode=false;
+	private Integer	iBorderSizeBkp=null;
+//	private Vector3f	v3fNewPos = new Vector3f();
+//	private Vector3f	v3fNewSize = new Vector3f();
 	
 	public static enum EEdge{
 		// !!!!!!!!!!!!!!THIS ORDER IS IMPORTANT!!!!!!!!!!!!!!
@@ -133,8 +139,6 @@ public class ResizablePanel extends Panel {
 		
 	} 
 	
-	EEdge eeInitialHook = null;
-	
 	public boolean isCursorInsidePanel(float fCursorX, float fCursorY){
 		return isCursorInsidePanel(
 			new Vector3f(fCursorX,fCursorY,0),
@@ -199,8 +203,8 @@ public class ResizablePanel extends Panel {
 		}
 		
 		////////////// resize and move
-		Vector3f v3fNewPos = getLocalTranslation().clone();
-		Vector3f v3fNewSize = v3fOldSize.clone();
+		Vector3f v3fNewPos = new Vector3f(getLocalTranslation());
+		Vector3f v3fNewSize= new Vector3f(v3fOldSize);
 		
 		//Cursor Position: NEW          Previous
 		float fDeltaX = v3fCursor.x - v3fDragFromPrevious.x; // positive to the right
@@ -264,8 +268,19 @@ public class ResizablePanel extends Panel {
 		
 		setPreferredSize(v3fNewSize);
 		setLocalTranslation(v3fNewPos);
+		
+		if(!v3fNewSize.equals(v3fOldSize)){
+			sizeChanged();
+		}
 	}
 	
+//	public static class VersionedVector3f extends Vector3f implements VersionedObject{}; //???
+//	VersionedReference<Vector3f> vrSize = new VersionedReference<Vector3f>(v3fMinSize); //???
+	/**
+	 * override to deal with size changes
+	 */
+	protected void sizeChanged() {}
+
 	public static final String LAYER_RESIZABLE_BORDERS = "resizableBorders";
 	
   public ResizablePanel( float width, float height, String style ) {
@@ -282,7 +297,7 @@ public class ResizablePanel extends Panel {
                                                LAYER_BACKGROUND,
                                                LAYER_RESIZABLE_BORDERS);
     
-    setBorder(qbcBorder);
+    setBorder(new QuadBackgroundComponent());
     setBorderSize(iBorderSize); //to apply default
     
     Styles styles = GuiGlobals.getInstance().getStyles();
@@ -301,16 +316,17 @@ public class ResizablePanel extends Panel {
 		public void cursorButtonEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
 			if(capture!=ResizablePanel.this)return;
 			
-			if(event.getButtonIndex()!=iMouseButtonIndex)return;
+			if(event.getButtonIndex()!=iMouseButtonIndexToDrag)return;
 			
 			if(event.isPressed()){
-				v3fDragFromPrevious=new Vector3f(event.getX(),event.getY(),0);
+				v3fDragFromPrevious=(new Vector3f(event.getX(),event.getY(),0));
 				event.setConsumed(); //acknoledges event absorption
 			}else{
 				// button UP ends all
 				v3fDragFromPrevious=null;
-				eeInitialHook=null;
+				eeInitialHook=(null);
 				event.setConsumed(); //this also prevents sending the event to other than this panel
+				resetBumpedBorder();
 			}
 		}
 		
@@ -318,20 +334,37 @@ public class ResizablePanel extends Panel {
   	public void cursorMoved(CursorMotionEvent event, Spatial target, Spatial capture) {
   		if(v3fDragFromPrevious!=null){
   			resizeThruDragging(event.getX(),event.getY());
+  			resetBumpedBorder(); // must be here or the size of panel contents will be slightly different of the final one causing confusion
   			event.setConsumed(); //acknoledges event absorption 
   		}
   	}
 
 		@Override
 		public void cursorEntered(CursorMotionEvent event, Spatial target,				Spatial capture) {
+  		if(v3fDragFromPrevious==null){ //to help on pressing button on border
+				if(isUseBumpBorderMode()){
+					iBorderSizeBkp=iBorderSize;
+					setBorderSize(getBumpedBorderSize());
+					bUsingBumpBorderMode=true;
+				}
+  		}
 		}
 
 		@Override
 		public void cursorExited(CursorMotionEvent event, Spatial target,				Spatial capture) {
+			resetBumpedBorder();
 		}
 		
   }
   
+	private void resetBumpedBorder(){
+		if(bUsingBumpBorderMode){
+			setBorderSize(iBorderSizeBkp);
+			iBorderSizeBkp=null;
+			bUsingBumpBorderMode=false;
+		}
+	}
+	
   @StyleDefaults("resizablePanel")
   public static void initializeDefaultStyles( Attributes attrs ) {
       attrs.set( "resizableBorders", new QuadBackgroundComponent(ColorRGBA.Gray), false );
@@ -381,9 +414,23 @@ public class ResizablePanel extends Panel {
 
 	public void setBorderSize(int i){
 		this.iBorderSize=(i);
-    qbcBorder.setMargin(this.iBorderSize, this.iBorderSize);
+		getBorder().setMargin(this.iBorderSize, this.iBorderSize);
 	}
-
+	
+	@Override
+	public QuadBackgroundComponent getBorder() {
+		return (QuadBackgroundComponent) super.getBorder();
+	}
+	
+	/**
+	 * border must be of type QuadBackgroundComponent
+	 */
+	@Override
+	public void setBorder(GuiComponent bg) {
+		super.setBorder(bg);
+		setBorderSize(iBorderSize);
+	}
+	
 	public void setMinSize(Vector3f v3f){
 		this.v3fMinSize=(v3f);
 	}
@@ -393,7 +440,7 @@ public class ResizablePanel extends Panel {
 	}
 
 	public int getMouseButtonIndex() {
-		return iMouseButtonIndex;
+		return iMouseButtonIndexToDrag;
 	}
 	
 	/**
@@ -401,7 +448,25 @@ public class ResizablePanel extends Panel {
 	 * @param iMouseButtonIndex
 	 */
 	public void setMouseButtonIndex(int iMouseButtonIndex) {
-		this.iMouseButtonIndex = iMouseButtonIndex;
+		this.iMouseButtonIndexToDrag = iMouseButtonIndex;
+	}
+	public Vector3f getCurrentDragFromLocation() {
+		return v3fDragFromPrevious!=null?v3fDragFromPrevious.clone():null;
+	}
+	public EEdge getDraggedEdge() {
+		return eeInitialHook;
+	}
+	public boolean isUseBumpBorderMode() {
+		return bUseBumpBorderMode;
+	}
+	public void setUseBumpBorderMode(boolean bUseBumpBorderMode) {
+		this.bUseBumpBorderMode = bUseBumpBorderMode;
+	}
+	public int getBumpedBorderSize() {
+		return iBumpedBorderSize;
+	}
+	public void setBumpedBorderSize(int iBumpedBorderSize) {
+		this.iBumpedBorderSize = iBumpedBorderSize;
 	}
 
 }
