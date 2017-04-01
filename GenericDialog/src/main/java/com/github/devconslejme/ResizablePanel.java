@@ -25,7 +25,7 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.simsilica.lemur;
+package com.github.devconslejme;
 
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
