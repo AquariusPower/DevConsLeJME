@@ -703,6 +703,8 @@ public class DevConsPluginStateI extends AbstractAppState{
 		vrSelectionChangedToUpdateInputText = lstbxLoggingSection.getSelectionModel().createReference();
 		vrListBoxChangedToAutoScrollToBottom = lstbxLoggingSection.getModel().createReference();
 		vrSliderChangedToSuspendAutoScrollBottom=lstbxLoggingSection.getSlider().getModel().createReference();
+		
+//		updateVisibleLogItems();
 	}
 
 	private void initSize() {
@@ -753,14 +755,23 @@ public class DevConsPluginStateI extends AbstractAppState{
 	}
 	
 	public void updateVisibleLogItems(){
-//		float fHeight = cntrMain.getPreferredSize().y;
-		float fHeight = cntrMain.getSize().y;
-		int iLines = (int) (fHeight/MiscLemurI.i().getEntryHeightPixels(lstbxLoggingSection));
-		iLines--; //to void the text being too close to each other 
-		lstbxLoggingSection.setVisibleItems(iLines);
-//		lstbxLoggingSection.getCellRenderer();
-		
-		recursivelyApplyNoWrap(lstbxLoggingSection);
+		QueueStateI.i().enqueue(new CallableX(0.1f,false){
+			@Override
+			public Boolean call() {
+//			float fHeight = cntrMain.getPreferredSize().y;
+				float fHeight = cntrMain.getSize().y; //inner container needs some time to be setup by lemur?
+				if(Float.compare(fHeight,0f)==0)return false;
+				
+				int iLines = (int) (fHeight/MiscLemurI.i().getEntryHeightPixels(lstbxLoggingSection));
+				iLines--; //to void the text being too close to each other 
+				lstbxLoggingSection.setVisibleItems(iLines);
+//				lstbxLoggingSection.getCellRenderer();
+				
+				recursivelyApplyNoWrap(lstbxLoggingSection);
+				
+				return true;
+			}
+		});
 	}
 
 	private void recursivelyApplyNoWrap(Node nodeParent) {
