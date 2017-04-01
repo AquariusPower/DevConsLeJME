@@ -27,33 +27,33 @@
 
 package com.github.devconslejme;
 
+import com.jme3.app.SimpleApplication;
 import com.jme3.math.ColorRGBA;
-import com.jme3.scene.Node;
 import com.simsilica.lemur.Button;
+import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestResizablePanel {
+public class TestResizablePanel extends SimpleApplication {
 	private ResizablePanel	rzp;
-	private Node	nodeParent;
 	
-	public TestResizablePanel(Node nodeParent){
-		this.nodeParent=nodeParent;
+	public static void main(String[] args) {
+		TestResizablePanel tst = new TestResizablePanel();
+		tst.start();
 	}
 	
-	public void test(){
-//		rzp.setBorderSize(3);
-		if(rzp!=null)return;
+	@Override
+	public void simpleInitApp() {
+		GuiGlobals.initialize(this);
 		
-		rzp = new ResizablePanel(300,200,DevConsPluginStateI.i().getStyle());
+		rzp = new ResizablePanel(300,200,null);
 		rzp.setLocalTranslation(100,350,10); //above DevCons
-		nodeParent.attachChild(rzp);
+		getGuiNode().attachChild(rzp);
+		
 		Button btn = new Button("hellow");
 		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
 		rzp.setContents(btn);
-//		rzp.setBorderSize(10);
-		JavaScriptI.i().setJSBinding(rzp);
 	}
 }

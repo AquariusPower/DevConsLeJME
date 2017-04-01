@@ -38,6 +38,7 @@ import java.util.Set;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.QueueStateI.CallableX;
+import com.github.devconslejme.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.MiscJmeI;
 import com.github.devconslejme.misc.MiscLemurI;
 import com.jme3.app.Application;
@@ -76,7 +77,7 @@ import com.simsilica.lemur.text.DocumentModel;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class DevConsPluginStateI extends AbstractAppState{
+public class DevConsPluginStateI extends AbstractAppState implements IResizableListener{
 	private static DevConsPluginStateI instance = new DevConsPluginStateI();
 	/**instance*/ public static DevConsPluginStateI i(){return instance;}
 	
@@ -667,26 +668,11 @@ public class DevConsPluginStateI extends AbstractAppState{
 	
 	private void initMainContainer() {
 		cntrMain = new Container(new BorderLayout(), getStyle());
-//		cntrMain = new VersionedContainer(new BorderLayout(), getStyle());
-//		vrMainSize = cntrMain.createReference();
-//		cntrMain.setPreferredSize(size);
-//		voMainSize = new VersionedObject<Vector3f>(){
-//			
-//		};
-//		VersionedReference<Vector3f> vrMainPrefSize = 
-//			new VersionedReference<Vector3f>(
-//				;
-		panelMain = new ResizablePanel(cntrMain){
-			@Override
-			protected void sizeChanged() {
-				super.sizeChanged();
-				updateVisibleLogItems();
-			}
-		};
+		
+		panelMain = new ResizablePanel(cntrMain);
+		panelMain.addResizableListener(this);
 		panelMain.setMinSize(new Vector3f(fMinWidth ,fMinHeight,0));
-//		panelResizableEnhancer = new PanelResizableEnhancer(cntrMain,irl);
-//		panelResizableEnhancer.setMinSize(new Vector3f(fMinWidth ,fMinHeight,0));
-//		updateConsoleHeight(fHeight);
+		
 		setConsoleHeightPerc(fConsoleHeightPerc); //just to init default value
 	}
 
@@ -887,6 +873,11 @@ public class DevConsPluginStateI extends AbstractAppState{
 			}
 		}
 		return str.substring(iNotAlpha);
+	}
+
+	@Override
+	public void resizedTo(Vector3f v3fNewSize) {
+		updateVisibleLogItems();
 	}
 
 }

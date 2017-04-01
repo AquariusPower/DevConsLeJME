@@ -27,27 +27,36 @@
 
 package com.github.devconslejme;
 
+import com.github.devconslejme.GenericDialogState.CfgParams;
+import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.Node;
-import com.simsilica.lemur.Button;
-import com.simsilica.lemur.RollupPanel;
-
+import com.simsilica.lemur.GuiGlobals;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class GenericDialog{
-	RollupPanel p;
-	private Node	nodeParent;
-	
-	public GenericDialog(Node nodeParent){
-		this.nodeParent=nodeParent;
+public class TestGenericDialog extends SimpleApplication {
+	public static void main(String[] args) {
+		TestGenericDialog tst = new TestGenericDialog();
+		tst.start();
 	}
-	public void init(){
-		p = new RollupPanel("rolluppanle",DevConsPluginStateI.i().getStyle());
-		p.setPreferredSize(new Vector3f(200,200,1));
-		p.setLocalTranslation(200,300,10);
-		nodeParent.attachChild(p);
-		p.setContents(new Button("hellow"));
+	
+	@Override
+	public void simpleInitApp() {
+		GuiGlobals.initialize(this);
+		
+		GenericDialogState diag = new GenericDialogState(this);
+		
+//		Button btn = new Button("hellow");
+//		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
+		
+		diag.configure(
+			new CfgParams()
+				.setPos(new Vector3f(100,350,10))
+				.setStyle(DevConsPluginStateI.i().getStyle())
+				.setSize(new Vector3f(300,200,0))
+//				.setContents(btn)
+		);
+		
 	}
 }
