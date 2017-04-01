@@ -44,6 +44,8 @@ import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.font.BitmapFont;
+import com.jme3.font.BitmapText;
+import com.jme3.font.LineWrapMode;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
@@ -756,6 +758,20 @@ public class DevConsPluginStateI extends AbstractAppState{
 		int iLines = (int) (fHeight/MiscLemurI.i().getEntryHeightPixels(lstbxLoggingSection));
 		iLines--; //to void the text being too close to each other 
 		lstbxLoggingSection.setVisibleItems(iLines);
+//		lstbxLoggingSection.getCellRenderer();
+		
+		recursivelyApplyNoWrap(lstbxLoggingSection);
+	}
+
+	private void recursivelyApplyNoWrap(Node nodeParent) {
+		for(Spatial spt:nodeParent.getChildren()){
+			if(spt instanceof BitmapText){
+				((BitmapText)spt).setLineWrapMode(LineWrapMode.NoWrap);
+			}
+			if(spt instanceof Node){
+				recursivelyApplyNoWrap((Node)spt);
+			}
+		}
 	}
 
 	public String getStyle() {
