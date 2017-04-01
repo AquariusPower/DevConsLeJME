@@ -29,6 +29,7 @@ package com.github.devconslejme;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
@@ -48,8 +49,15 @@ public class TestResizablePanel extends SimpleApplication {
 	public void simpleInitApp() {
 		GuiGlobals.initialize(this);
 		
+		int i=300;
+		test(new Vector3f(100,i+100,10));
+		test(new Vector3f(200,i+200,20));
+		test(new Vector3f(300,i+300,30));
+	}
+
+	private void test(Vector3f pos) {
 		rzp = new ResizablePanel(300,200,null);
-		rzp.setLocalTranslation(100,350,10); //above DevCons
+		rzp.setLocalTranslation(pos); //above DevCons
 		getGuiNode().attachChild(rzp);
 		
 		Button btn = new Button("hellow");

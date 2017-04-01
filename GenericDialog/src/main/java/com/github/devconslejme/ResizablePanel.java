@@ -28,7 +28,9 @@
 package com.github.devconslejme;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
+import com.github.devconslejme.ResizablePanel.EEdge;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
@@ -93,30 +95,61 @@ public class ResizablePanel extends Panel {
 		BottomLeft,  //10
 		// I said THIS ORDER!!! not disorder... :)
 		;
-		
-		Float x,y;
+	} 
+	public Edge eTop = new Edge(EEdge.Top);
+	public Edge eRight = new Edge(EEdge.Right);
+	public Edge eBottom = new Edge(EEdge.Bottom);
+	public Edge eLeft = new Edge(EEdge.Left);
+	public Edge eTopLeft = new Edge(EEdge.TopLeft);
+	public Edge eTopRight = new Edge(EEdge.TopRight);
+	public Edge eBottomLeft = new Edge(EEdge.BottomLeft);
+	public Edge eBottomRight = new Edge(EEdge.BottomRight);
+	private HashMap<EEdge,Edge> hmEdge = new HashMap<EEdge,Edge>();
+	private void initEdges(){
+		hmEdge.put(EEdge.Top, eTop);
+		hmEdge.put(EEdge.Bottom, eBottom);
+		hmEdge.put(EEdge.Left, eLeft);
+		hmEdge.put(EEdge.Right, eRight);
+		hmEdge.put(EEdge.TopLeft, eTopLeft);
+		hmEdge.put(EEdge.TopRight, eTopRight);
+		hmEdge.put(EEdge.BottomLeft, eBottomLeft);
+		hmEdge.put(EEdge.BottomRight, eBottomRight);
+	}
+	private void setCurrentEdgesPos(Vector3f v3fPos, Vector3f v3fSize){
+		eTop			.set(								null, 					v3fPos.y);
+		eBottom	.set(								null, v3fPos.y-v3fSize.y);
+		eLeft		.set(						v3fPos.x, 							null);
+		eRight		.set(	v3fPos.x+v3fSize.x, 							null);
+		eTopRight		.setFrom(eTop,eRight);
+		eTopLeft			.setFrom(eTop,eLeft);
+		eBottomRight	.setFrom(eBottom,eRight);
+		eBottomLeft	.setFrom(eBottom,eLeft);
+	}
+	public void setAllEdgesEnabled(boolean bEnabled){
+		for(Edge edge:hmEdge.values()){
+			edge.setEnabled(bEnabled);
+		}
+	}
+	public static class Edge{
+		private EEdge edge;
+		private boolean bEnabled=true;
+		private Float x,y;
 		private float fMaxCurDistFromBorder = 10f;
+		
+		public Edge(EEdge edge) {
+			this.edge=edge;
+		}
 		
 		public void set(Float x,Float y){
 			this.x=x;
 			this.y=y;
 		}
-		private void setFrom(EEdge ee1, EEdge ee2) {
+		private void setFrom(Edge ee1, Edge ee2) {
 			x = useNotNull(ee1.x,ee2.x);
 			y = useNotNull(ee1.y,ee2.y);
 		}
 		private Float useNotNull(Float f1, Float f2){
 			return f1==null ? f2 : f1;
-		}
-		private static void setCurrentEdgesPos(Vector3f v3fPos, Vector3f v3fSize){
-			Top			.set(								null, 					v3fPos.y);
-			Bottom	.set(								null, v3fPos.y-v3fSize.y);
-			Left		.set(						v3fPos.x, 							null);
-			Right		.set(	v3fPos.x+v3fSize.x, 							null);
-			TopRight		.setFrom(Top,Right);
-			TopLeft			.setFrom(Top,Left);
-			BottomRight	.setFrom(Bottom,Right);
-			BottomLeft	.setFrom(Bottom,Left);
 		}
 		
 		public Float getX(){return x;}
@@ -128,7 +161,7 @@ public class ResizablePanel extends Panel {
 			this.fMaxCurDistFromBorder = fMaxCurDistFromBorder;
 		}
 		public boolean isNearEnough(Vector3f v3fCursor){
-			switch(this){
+			switch(edge){
 				case Top:
 				case Bottom:
 					return Math.abs(getY() - v3fCursor.y) < getMaxCurDistFromBorder();
@@ -144,8 +177,13 @@ public class ResizablePanel extends Panel {
 			}
 			throw new NullPointerException("bug: "+this);
 		}
-		
-	} 
+		public boolean isEnabled() {
+			return bEnabled;
+		}
+		public void setEnabled(boolean bEnabled) {
+			this.bEnabled = bEnabled;
+		}
+	}
 	
 	public boolean isCursorInsidePanel(float fCursorX, float fCursorY){
 		return isCursorInsidePanel(
@@ -168,7 +206,7 @@ public class ResizablePanel extends Panel {
 		
 		Vector3f v3fOldPos=getWorldTranslation().clone();
 		Vector3f v3fOldSize = new Vector3f(getPreferredSize());
-		EEdge.setCurrentEdgesPos(v3fOldPos, v3fOldSize);
+		setCurrentEdgesPos(v3fOldPos, v3fOldSize);
 		
 		Vector3f v3fPanelCenter=v3fOldSize.divide(2f);
 		
@@ -205,7 +243,11 @@ public class ResizablePanel extends Panel {
 				ee = EEdge.values()[eeX.ordinal()+eeY.ordinal()];
 			}
 			
-			eeInitialHook=ee;
+			if(hmEdge.get(ee).isEnabled()){
+				eeInitialHook=ee;
+			}else{
+				return;
+			}
 		}else{
 			ee=eeInitialHook;
 		}
@@ -291,6 +333,8 @@ public class ResizablePanel extends Panel {
 	}
 	public ResizablePanel( float fWidth, float fHeight, String strStyle ) {
     super(false, new ElementId("resizablePanel"), strStyle);
+    
+    initEdges();
     
     this.layout = new BorderLayout();
     getControl(GuiControl.class).setLayout(layout);
@@ -468,8 +512,8 @@ public class ResizablePanel extends Panel {
 	public Vector3f getCurrentDragFromLocation() {
 		return v3fDragFromPrevious!=null?v3fDragFromPrevious.clone():null;
 	}
-	public EEdge getDraggedEdge() {
-		return eeInitialHook;
+	public Edge getDraggedEdge() {
+		return hmEdge.get(eeInitialHook);
 	}
 	public boolean isUseBumpBorderMode() {
 		return bUseBumpBorderMode;
@@ -495,6 +539,9 @@ public class ResizablePanel extends Panel {
 		}
 		
 		return this;
+	}
+	public Edge getEdge(EEdge edge) {
+		return hmEdge.get(edge);
 	}
 
 }

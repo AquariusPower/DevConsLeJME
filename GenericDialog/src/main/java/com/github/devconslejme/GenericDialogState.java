@@ -27,24 +27,26 @@
 
 package com.github.devconslejme;
 
+import com.github.devconslejme.ResizablePanel.EEdge;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
-import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
-import com.simsilica.lemur.Button;
+import com.simsilica.lemur.Container;
 import com.simsilica.lemur.Panel;
-import com.simsilica.lemur.RollupPanel;
-import com.simsilica.lemur.component.QuadBackgroundComponent;
+import com.simsilica.lemur.component.BorderLayout;
 
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class GenericDialogState extends AbstractAppState{
-	private ResizablePanel	rzp;
+	private ResizablePanel	rzpMain;
 	private Application	app;
+	private Container	cntrMain;
+	private CfgParams cfg;
+	private ResizablePanel	rzpInfo;
 	
 	public static class CfgParams{
 		private Node nodeParent;
@@ -52,6 +54,9 @@ public class GenericDialogState extends AbstractAppState{
 		private Vector3f v3fSize;
 		private String strStyle;
 //		private Panel	pnlContents;
+		private Panel	pnlInput;
+		private Panel	pnlOptions;
+		private Panel	pnlInfo;
 
 		public Vector3f getPos() {
 			return v3fPos;
@@ -89,6 +94,30 @@ public class GenericDialogState extends AbstractAppState{
 			return this;
 		}
 
+		public Panel getInfoSection() {
+			return pnlInfo;
+		}
+
+		public Panel getOptionsSection() {
+			return pnlOptions;
+		}
+
+		public Panel getInputSection() {
+			return pnlInput;
+		}
+
+		public void setInputSection(Panel nodeInput) {
+			this.pnlInput = nodeInput;
+		}
+
+		public void setOptionsSection(Panel nodeOptions) {
+			this.pnlOptions = nodeOptions;
+		}
+
+		public void setInfoSection(Panel nodeInfo) {
+			this.pnlInfo = nodeInfo;
+		}
+
 //		public Panel getContents() {
 //			return pnlContents;
 //		}
@@ -98,7 +127,6 @@ public class GenericDialogState extends AbstractAppState{
 //			return this;
 //		}
 	}
-	CfgParams cfg;
 	
 	public GenericDialogState(Application app) {
 		this.app=app;
@@ -112,49 +140,38 @@ public class GenericDialogState extends AbstractAppState{
 	public void initialize(AppStateManager stateManager, Application app) {
 		super.initialize(stateManager, app);
 
-		rzp = new ResizablePanel(cfg.getSize(), cfg.getStyle());
-		rzp.setLocalTranslation(cfg.getPos());
+		rzpMain = new ResizablePanel(cfg.getSize(), cfg.getStyle());
+		rzpMain.setLocalTranslation(cfg.getPos());
 //		rzp.setContents(cfg.getContents());
-		prepareContents();
+		initContentsContainer();
 		
-		cfg.getNodeParent().attachChild(rzp);
+		cfg.getNodeParent().attachChild(rzpMain);
 	}
 	
-	private void prepareContents() {
+	private void initContentsContainer() {
 		/**
 		 * TODO north info/description
 		 * TODO center list with options to user choose, can be a tree, each entry can have buttons or even text input for more functionalities!
 		 * TODO south with input to be used as options filter or typeable custom choice (like creating the player name)
 		 */
-		initContentsContainer();
+		cntrMain = new Container(new BorderLayout(), cfg.getStyle());
+		rzpMain.setContents(cntrMain);
 		
-		initInfoSection();
-		initOptionsSection();
-		initInputSection();
-	}
-
-	private void initContentsContainer() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented yet");
+		rzpInfo = cfgSection(cfg.getInfoSection(),EEdge.Bottom,BorderLayout.Position.North);
+		rzpInfo = cfgSection(cfg.getOptionsSection(),EEdge.Bottom,BorderLayout.Position.Center);
+		rzpInfo = cfgSection(cfg.getInputSection(),EEdge.Top,BorderLayout.Position.South);
 	}
 	
-	private void initInputSection() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented yet");
-	}
-
-	private void initOptionsSection() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented yet");
-	}
-
-	private void initInfoSection() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented yet");
-	}
-
-	public ResizablePanel getResizablePanel(){
+	private ResizablePanel cfgSection(Panel pnlSection, EEdge edgeResizable, BorderLayout.Position border){
+		ResizablePanel rzp = new ResizablePanel(pnlSection);
+		rzp.setAllEdgesEnabled(false);
+		rzp.getEdge(edgeResizable).setEnabled(true);
+		cntrMain.addChild(rzp, border);
 		return rzp;
+	}
+	
+	public ResizablePanel getResizablePanel(){
+		return rzpMain;
 	}
 	
 }
