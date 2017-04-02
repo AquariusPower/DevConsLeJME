@@ -53,6 +53,11 @@ import com.simsilica.lemur.style.Styles;
 // (tab indent=2 spaces)
 
 /**
+ * As an impossible layout exception preventer workaround, 
+ * this panel will test the parentest layout and if it fails, 
+ * it will grow the parentest Panel size little by little,
+ * until it works again.  
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class ResizablePanel extends Panel {
@@ -343,27 +348,28 @@ public class ResizablePanel extends Panel {
 		
 	}
 	
-	@SuppressWarnings({ "unchecked" })
-	public <T extends Node> T getParentest(Spatial spt, Class<T> clTypeParentest, boolean bIncludeFirst){
-		T parentest = null;
-		if(bIncludeFirst && clTypeParentest.isInstance(spt))parentest=(T)spt;
+	Panel pnlParentest = null;
+	public Panel getParentest(){
+		if(pnlParentest!=null)return pnlParentest;
 		
-		Node nodeParent = spt.getParent();
+		// find it
+		pnlParentest = this;
+		Node nodeParent = getParent();
 		while(nodeParent!=null){
-			if(clTypeParentest.isInstance(nodeParent)){
-				parentest=(T)nodeParent;
+			if(nodeParent instanceof Panel){
+				pnlParentest=(Panel)nodeParent;
 			}
 			nodeParent=nodeParent.getParent();
 		}
 		
-		return parentest;
+		return pnlParentest;
 	}
 	
 	/**
 	 * after resizing, if things change anywhere (even on childs) on the panel, it may break.
 	 */
 	private void growParentestFixAttempt(int i){
-		Panel pnlParentest = getParentest(this, Panel.class, true);
+		Panel pnlParentest = getParentest();
 		Vector3f v3f = pnlParentest.getPreferredSize().add(new Vector3f(1, 1, 0));
 		warnMsg("increasing ("+i+") size of "+pnlParentest.getName()+" to "+v3f);
 		pnlParentest.setPreferredSize(v3f);
@@ -390,7 +396,7 @@ public class ResizablePanel extends Panel {
 		boolean b=false;
 		try{
 			bSkipGrowFix=true;
-			getParentest(this, Panel.class, true).updateLogicalState(0.001f); //TODO use current tpf? 
+			getParentest().updateLogicalState(0.001f); //TODO use current tpf? 
 			b=true;
 		}catch(Exception ex){
 			warnMsg("skipping impossible new size: "+ex.getMessage());
