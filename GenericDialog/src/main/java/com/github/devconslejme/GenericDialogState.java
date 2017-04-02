@@ -30,20 +30,26 @@ package com.github.devconslejme;
 import java.util.HashMap;
 
 import com.github.devconslejme.ResizablePanel.EEdge;
+import com.github.devconslejme.misc.MiscJmeI;
+import com.github.devconslejme.misc.SimpleDragParentestListenerI;
 import com.jme3.app.Application;
-import com.jme3.app.state.AbstractAppState;
-import com.jme3.app.state.AppStateManager;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
+import com.simsilica.lemur.Command;
 import com.simsilica.lemur.Container;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.BorderLayout;
+import com.simsilica.lemur.event.BaseAppState;
+import com.simsilica.lemur.event.CursorEventControl;
+import com.simsilica.lemur.event.PopupState;
+import com.simsilica.lemur.event.PopupState.ClickMode;
 
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class GenericDialogState extends AbstractAppState{
+public class GenericDialogState extends BaseAppState{
 	private ResizablePanel	rzpMain;
 	private Application	app;
 	private Container	cntrMain;
@@ -51,6 +57,8 @@ public class GenericDialogState extends AbstractAppState{
 //	private ResizablePanel	rzpInfo;
 //	private ResizablePanel	rzpOptions;
 //	private ResizablePanel	rzpInput;
+	private Object	objSelected;
+	private Command<? super PopupState>	cmdClose;
 	
 	public static class CfgParams{
 		private Node nodeParent;
@@ -143,24 +151,35 @@ public class GenericDialogState extends AbstractAppState{
 	
 	public GenericDialogState(Application app) {
 		this.app=app;
+		setEnabled(false); //starts closed
 	}
 	
 	public void configure(CfgParams cfg){
 		this.cfg=cfg;
 		app.getStateManager().attach(this);
+//		getState(PopupState.class).showPopup(popup, ClickMode.Consume, closeCommand, ColorRGBA.Blue);
+	}
+	
+	public CfgParams getCfg(){
+		return cfg;
 	}
 	
 	@Override
-	public void initialize(AppStateManager stateManager, Application app) {
-		super.initialize(stateManager, app);
-
+	protected void initialize(Application app) {
 		rzpMain = new ResizablePanel(cfg.getSize(), cfg.getStyle());
 		rzpMain.setLocalTranslation(cfg.getPos());
-		rzpMain.setMinSize(new Vector3f(100,100,0));
+//		rzpMain.setMinSize(new Vector3f(100,100,0));
 //		rzp.setContents(cfg.getContents());
 		initContentsContainer();
 		
-		cfg.getNodeParent().attachChild(rzpMain);
+		cmdClose = new Command<PopupState>(){
+			@Override
+			public void execute(PopupState source) {
+				setEnabled(false);
+			}
+		};
+		
+//		cfg.getNodeParent().attachChild(rzpMain);
 	}
 	
 	private void initContentsContainer() {
@@ -169,6 +188,9 @@ public class GenericDialogState extends AbstractAppState{
 		
 //		cfg.hmSection.put(ESection.Info, 
 		cfgSection(getSection(ESection.Info),BorderLayout.Position.North,EEdge.Bottom);
+		CursorEventControl.addListenersToSpatial(
+				getSection(ESection.Info).getContents(), SimpleDragParentestListenerI.i());
+//		MiscLemurI.i().applySimpleDragParentestListener();
 //		cfg.hmSection.put(ESection.Options,
 		cfgSection(getSection(ESection.Options),BorderLayout.Position.Center,EEdge.Bottom);
 //		cfg.hmSection.put(ESection.Input,
@@ -181,6 +203,7 @@ public class GenericDialogState extends AbstractAppState{
 		rzp.setAllEdgesEnabled(false);
 		rzp.getEdge(edgeResizable).setEnabled(true);
 		cntrMain.addChild(rzp, border);
+//		PopupState ps;
 		return rzp;
 	}
 	
@@ -214,4 +237,36 @@ public class GenericDialogState extends AbstractAppState{
 //		return cfg.hmSection.get(e).getContents();
 //	}
 	
+	/**
+	 * will also reset the selected
+	 * @return
+	 */
+	public Object collectSelectedOption() {
+		Object obj=objSelected;
+		objSelected=null;
+		return obj;
+	}
+	
+	protected void setSelectedOptionValue(Object obj){
+		this.objSelected=obj;
+	}
+
+	@Override
+	protected void cleanup(Application app) {
+	}
+
+	@Override
+	protected void enable() {
+		getState(PopupState.class).showPopup(
+			getMainResizablePanel(), 
+			ClickMode.Consume, 
+			cmdClose, 
+			MiscJmeI.i().colorChangeCopy(ColorRGBA.Blue, -0.75f, 0.25f) );
+	}
+
+	@Override
+	protected void disable() {
+		getState(PopupState.class).closePopup(getMainResizablePanel());
+	}
+
 }

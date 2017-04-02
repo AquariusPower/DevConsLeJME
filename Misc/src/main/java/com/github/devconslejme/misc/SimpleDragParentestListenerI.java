@@ -27,67 +27,57 @@
 
 package com.github.devconslejme.misc;
 
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import com.google.common.collect.Lists;
+import com.jme3.math.Vector3f;
+import com.jme3.scene.Spatial;
+import com.simsilica.lemur.Panel;
+import com.simsilica.lemur.event.AbstractCursorEvent;
+import com.simsilica.lemur.event.CursorButtonEvent;
+import com.simsilica.lemur.event.CursorListener;
+import com.simsilica.lemur.event.CursorMotionEvent;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class JavaLangI {
-	private static JavaLangI instance = new JavaLangI();
-	/**instance*/ public static JavaLangI i(){return instance;}
+public class SimpleDragParentestListenerI implements CursorListener{
+	private static SimpleDragParentestListenerI instance = new SimpleDragParentestListenerI();
+	/**instance*/ public static SimpleDragParentestListenerI i(){return instance;}
 	
-	/**
-	 * 
-	 * @param objValue must be a Map, an Iterable or Object[]
-	 * @return Object[][0]=key,Object[][1]=value, the key will be an index for simple arrays
-	 */
-	public Object[][] convertToKeyValueArray(Object objValue){
-		Object[][] aaobjKeyVal=null;
-		
-		if(objValue instanceof Map) { //HashMap TreeMap etc
-			Set<Map.Entry> es = ((Map)objValue).entrySet();
-			aaobjKeyVal = new Object[es.size()][2];
-			int i=0;
-			for(Entry entry:es){
-				aaobjKeyVal[i][0]=entry.getKey();
-				aaobjKeyVal[i][1]=entry.getValue();
-				i++;
-			}
-		}else{
-			Object[] aobjVal=null;
-			if(objValue.getClass().isArray()){
-				aobjVal = (Object[])objValue;
-			}else
-//			if(objValue instanceof ArrayList) {
-//				ArrayList<?> aobjList = (ArrayList<?>) objValue;
-//				aobjVal = aobjList.toArray();
-//			}
-			if(objValue instanceof Iterable){
-				aobjVal = Lists.newLinkedList((Iterable<?>)objValue).toArray();
-//				Iterator ite = ((Iterable)objValue).iterator();
-//				
-//				int iSize=0;
-//				while(ite.hasNext())iSize++;
-//				aobjVal=new Object[iSize];
-//				
-//				int i=0;
-//				while(ite.hasNext())aobjVal[i++]=ite.next();
-			}
-			
-			if(aobjVal!=null){
-				aaobjKeyVal = new Object[aobjVal.length][2];
-				for(int i=0;i<aobjVal.length;i++){
-					aaobjKeyVal[i][0]=i;
-					aaobjKeyVal[i][1]=aobjVal[i];
-				}
-			}
-		}
-		
-		return aaobjKeyVal;
+	boolean bDragging = false;
+	private Vector3f	v3fDistToCursor;
+	
+	private Vector3f getCursorPos(AbstractCursorEvent event){
+		return new Vector3f(event.getX(),event.getY(),0);
 	}
-
+	
+	@Override
+	public void cursorButtonEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
+		if(event.getButtonIndex()==0){
+			bDragging=event.isPressed();
+			if(bDragging){
+				Panel pnlParentest = MiscJmeI.i().getParentest(capture, Panel.class, true);
+				v3fDistToCursor=pnlParentest.getWorldTranslation().subtract(getCursorPos(event));
+				v3fDistToCursor.z=0; //DO NOT MESS WITH Z!!!!
+			}
+			event.setConsumed();
+		}
+	}
+	
+	@Override
+	public void cursorEntered(CursorMotionEvent event, Spatial target,				Spatial capture) {
+	}
+	
+	@Override
+	public void cursorExited(CursorMotionEvent event, Spatial target,				Spatial capture) {
+	}
+	
+	@Override
+	public void cursorMoved(CursorMotionEvent event, Spatial target,				Spatial capture) {
+		if(bDragging){
+			Panel pnlParentest = MiscJmeI.i().getParentest(capture, Panel.class, true);
+			Vector3f v3f = getCursorPos(event).add(v3fDistToCursor);
+			v3f.z=pnlParentest.getLocalTranslation().z; //DO NOT MESS WITH Z!!!!
+			pnlParentest.setLocalTranslation(v3f);
+			event.setConsumed();
+		}
+	}
 }

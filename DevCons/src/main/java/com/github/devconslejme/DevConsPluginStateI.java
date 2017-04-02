@@ -41,6 +41,7 @@ import com.github.devconslejme.QueueStateI.CallableX;
 import com.github.devconslejme.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.MiscJmeI;
 import com.github.devconslejme.misc.MiscLemurI;
+import com.github.devconslejme.misc.SimpleDragParentestListenerI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
@@ -68,6 +69,7 @@ import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.core.VersionedReference;
+import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.KeyAction;
 import com.simsilica.lemur.event.KeyActionListener;
 import com.simsilica.lemur.style.Attributes;
@@ -180,8 +182,8 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 //		}
 //	};
 //	private PanelResizableEnhancer	panelResizableEnhancer;
-	private float	fMinHeight=100;
-	private float	fMinWidth=500;
+//	private float	fMinHeight=100;
+//	private float	fMinWidth=500;
 	private ResizablePanel	panelMain;
 //	private VersionedReference<Container>	vrMainSize;
 	
@@ -519,9 +521,11 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private void initStatusSection() {
 		cntrStatus = new Container(getStyle());
 		cntrMain.addChild(cntrStatus, BorderLayout.Position.North);
+//		MiscLemurI.i().applySimpleDragParentestListener(cntrStatus);
 		
 		// console stats
 		lblStats = new Label("Initializing Console status.",getStyle());
+		CursorEventControl.addListenersToSpatial(lblStats, SimpleDragParentestListenerI.i());
 		lblStats.setColor(new ColorRGBA(1,1,0.5f,1));
 		cntrStatus.addChild(lblStats,0,0);
 		
@@ -677,7 +681,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 		panelMain = new ResizablePanel(cntrMain);
 		panelMain.addResizableListener(this);
-		panelMain.setMinSize(new Vector3f(fMinWidth ,fMinHeight,0));
+//		panelMain.setMinSize(new Vector3f(fMinWidth ,fMinHeight,0));
 		
 		setConsoleHeightPerc(fConsoleHeightPerc); //just to init default value
 	}
@@ -717,10 +721,10 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 		float fHeight = (v3fApplicationWindowSize.y * fConsoleHeightPerc);
 		
-		if(fHeight<fMinHeight){
-			fHeight=fMinHeight; //TODO this is guess work... areas: info+list+input with 20 each + safety margin
-			fConsoleHeightPerc=fHeight/v3fApplicationWindowSize.y;
-		}
+//		if(fHeight<fMinHeight){
+//			fHeight=fMinHeight; //TODO this is guess work... areas: info+list+input with 20 each + safety margin
+//			fConsoleHeightPerc=fHeight/v3fApplicationWindowSize.y;
+//		}
 		
 		updateConsoleHeight(fHeight);
 	}

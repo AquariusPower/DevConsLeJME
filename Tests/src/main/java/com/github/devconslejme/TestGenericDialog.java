@@ -29,8 +29,13 @@ package com.github.devconslejme;
 
 import com.github.devconslejme.GenericDialogState.CfgParams;
 import com.jme3.app.SimpleApplication;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
+import com.simsilica.lemur.Button;
+import com.simsilica.lemur.Command;
 import com.simsilica.lemur.GuiGlobals;
+import com.simsilica.lemur.event.PopupState;
+import com.simsilica.lemur.event.PopupState.ClickMode;
 import com.simsilica.lemur.style.BaseStyles;
 
 /**
@@ -41,40 +46,75 @@ public class TestGenericDialog extends SimpleApplication {
 		TestGenericDialog tst = new TestGenericDialog();
 		tst.start();
 	}
+
+	private SimpleDialogState	diag;
+	private Button	btnChosenOption;
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public void simpleInitApp() {
 		GuiGlobals.initialize(this);
 		BaseStyles.loadGlassStyle();
+//		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
 		
-		SimpleDialogState diag = new SimpleDialogState(this);
-		
-//		Button btn = new Button("hellow");
-//		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
-		
-//		Button btn = new Button("info");
-//		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
-//		
-//		ListBox lsbtb = new ListBox();
-//		lsbtb.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
-//		
-//		TextField tf = new TextField("input");
-//		tf.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
+//		enqueue(new Runnable() {
+//			@Override
+//			public void run() {
+				prepareDialog();
+				
+				prepareButtonCallsDiag();
+//			}
+//		});
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void prepareButtonCallsDiag() {
+		btnChosenOption = new Button("Click to change option",BaseStyles.GLASS);
+		btnChosenOption.addClickCommands(new Command<Button>(){
+			@Override
+			public void execute(Button source) {
+				diag.setEnabled(true);
+//				getStateManager().getState(PopupState.class).showPopup(
+//						diag.getMainResizablePanel(), ClickMode.Consume, null, ColorRGBA.Blue);
+			}
+		});
+		btnChosenOption.setLocalTranslation(200, 230, 0);
+		getGuiNode().attachChild(btnChosenOption);
+//		getStateManager().getState(PopupState.class).showPopup(btnChosenOption, ClickMode.Consume, null, ColorRGBA.Red);
+	}
+
+	private void prepareDialog() {
+		diag = new SimpleDialogState(this);
 		
 		diag.configure(
 			new CfgParams()
 				.setNodeParent(getGuiNode())
 				.setStyle(BaseStyles.GLASS)
-				.setPos(new Vector3f(100,350,10))
-				.setSize(new Vector3f(300,200,0))
-//				.setSection(ESection.Info,btn)
-//				.setSection(ESection.Options,lsbtb)
-//				.setSection(ESection.Input,tf)
-//				.setInfoSection(btn)
-//				.setOptionsSection(btnOpt)
-//				.setInputSection(tf)
+				.setPos(new Vector3f(100,550,10))
+				.setSize(new Vector3f(600,500,0))
 		);
 		
+		diag.setTextInfo("This is a good info about something (I am sure).");
+		
+		diag.putOption("option A", 10);
+		diag.putOption("option B", "This is option B");
+		
+		String str="option C";
+		diag.putOption(str, true);
+		diag.putOption(str, false); //test overwrite option return value
 	}
-	
+
+	@Override
+	public void update() {
+		super.update();
+		
+//		if(btnChosenOption.getText().isEmpty()){
+			if(!diag.isEnabled()){
+				Object objSelectedOption = diag.collectSelectedOption();
+				if(objSelectedOption!=null){
+					btnChosenOption.setText("Chosen="+objSelectedOption);
+				}
+			}
+//		}
+	}
 }

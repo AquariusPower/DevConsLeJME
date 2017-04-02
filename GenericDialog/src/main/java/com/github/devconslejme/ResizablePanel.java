@@ -30,7 +30,7 @@ package com.github.devconslejme;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.github.devconslejme.ResizablePanel.EEdge;
+import com.github.devconslejme.misc.MiscJmeI;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
@@ -60,15 +60,17 @@ public class ResizablePanel extends Panel {
 	private Panel contents;
 	private int iBorderSize = 2;//4;
 	private Vector3f	v3fDragFromPrevious;
-	private Vector3f	v3fMinSize = new Vector3f(40,40,0);
+	private Vector3f	v3fMinSize = new Vector3f(0,0,0);
 	private float fCornerHotSpotRange = 20;
 	private ResizerCursorListener dcl = new ResizerCursorListener();
 	private int	iMouseButtonIndexToDrag=0;
 	private EEdge eeInitialHook = null;
 	private int	iBumpedBorderSize=7;
-	private boolean	bUseBumpBorderMode=true;
+	private boolean	bUseBumpBorderMode=false;
 	private boolean	bUsingBumpBorderMode=false;
 	private Integer	iBorderSizeBkp=null;
+	private int	iGrowParentestFixAttemptLimit=100;
+	private HashMap<EEdge,Edge> hmEdge = new HashMap<EEdge,Edge>();
 //	private Vector3f	v3fNewPos = new Vector3f();
 //	private Vector3f	v3fNewSize = new Vector3f();
 	
@@ -83,51 +85,69 @@ public class ResizablePanel extends Panel {
 		public void setMargin(int i);
 	}
 	private IBorderMargin irb = null;
+	private boolean	bSkipGrowFix;
 	
 	public static enum EEdge{
 		// !!!!!!!!!!!!!!THIS ORDER IS IMPORTANT!!!!!!!!!!!!!!
-		Dummy0,
+		Dummy0(true),
 		Top,         //1
 		Right,       //2
 		TopRight,    //3
 		Left,        //4
 		TopLeft,     //5
 		Bottom,      //6
-		Dummy7,
+		Dummy7(true),
 		BottomRight, //8
-		Dummy9,
+		Dummy9(true),
 		BottomLeft,  //10
 		// I said THIS ORDER!!! not disorder... :)
 		;
+		
+		boolean bDummy=false;
+		EEdge(){}
+		EEdge(boolean bDummy){
+			this.bDummy=bDummy;
+		}
+		public boolean isDummy(){return bDummy;}
 	} 
-	public Edge eTop = new Edge(EEdge.Top);
-	public Edge eRight = new Edge(EEdge.Right);
-	public Edge eBottom = new Edge(EEdge.Bottom);
-	public Edge eLeft = new Edge(EEdge.Left);
-	public Edge eTopLeft = new Edge(EEdge.TopLeft);
-	public Edge eTopRight = new Edge(EEdge.TopRight);
-	public Edge eBottomLeft = new Edge(EEdge.BottomLeft);
-	public Edge eBottomRight = new Edge(EEdge.BottomRight);
-	private HashMap<EEdge,Edge> hmEdge = new HashMap<EEdge,Edge>();
+//	public Edge eTop = new Edge(EEdge.Top);
+//	public Edge eRight = new Edge(EEdge.Right);
+//	public Edge eBottom = new Edge(EEdge.Bottom);
+//	public Edge eLeft = new Edge(EEdge.Left);
+//	public Edge eTopLeft = new Edge(EEdge.TopLeft);
+//	public Edge eTopRight = new Edge(EEdge.TopRight);
+//	public Edge eBottomLeft = new Edge(EEdge.BottomLeft);
+//	public Edge eBottomRight = new Edge(EEdge.BottomRight);
 	private void initEdges(){
-		hmEdge.put(EEdge.Top, eTop);
-		hmEdge.put(EEdge.Bottom, eBottom);
-		hmEdge.put(EEdge.Left, eLeft);
-		hmEdge.put(EEdge.Right, eRight);
-		hmEdge.put(EEdge.TopLeft, eTopLeft);
-		hmEdge.put(EEdge.TopRight, eTopRight);
-		hmEdge.put(EEdge.BottomLeft, eBottomLeft);
-		hmEdge.put(EEdge.BottomRight, eBottomRight);
+//		hmEdge.put(EEdge.Top, eTop);
+//		hmEdge.put(EEdge.Bottom, eBottom);
+//		hmEdge.put(EEdge.Left, eLeft);
+//		hmEdge.put(EEdge.Right, eRight);
+//		hmEdge.put(EEdge.TopLeft, eTopLeft);
+//		hmEdge.put(EEdge.TopRight, eTopRight);
+//		hmEdge.put(EEdge.BottomLeft, eBottomLeft);
+//		hmEdge.put(EEdge.BottomRight, eBottomRight);
+		for(EEdge e:EEdge.values()){
+			if(!e.isDummy())hmEdge.put(e, new Edge(e));
+		}
+//		hmEdge.put(EEdge.Top, new Edge(EEdge.Top));
+//		hmEdge.put(EEdge.Bottom, new Edge(EEdge.Bottom));
+//		hmEdge.put(EEdge.Left, new Edge(EEdge.Left));
+//		hmEdge.put(EEdge.Right, new Edge(EEdge.Right));
+//		hmEdge.put(EEdge.TopLeft, new Edge(EEdge.TopLeft));
+//		hmEdge.put(EEdge.TopRight, new Edge(EEdge.TopRight));
+//		hmEdge.put(EEdge.BottomLeft, new Edge(EEdge.BottomLeft));
+//		hmEdge.put(EEdge.BottomRight, new Edge(EEdge.BottomRight));
 	}
 	private void setCurrentEdgesPos(Vector3f v3fPos, Vector3f v3fSize){
-		eTop			.set(								null, 					v3fPos.y);
-		eBottom	.set(								null, v3fPos.y-v3fSize.y);
-		eLeft		.set(						v3fPos.x, 							null);
-		eRight		.set(	v3fPos.x+v3fSize.x, 							null);
-		eTopRight		.setFrom(eTop,eRight);
-		eTopLeft			.setFrom(eTop,eLeft);
-		eBottomRight	.setFrom(eBottom,eRight);
-		eBottomLeft	.setFrom(eBottom,eLeft);
+		getEdge(EEdge.Top)				.set(								null, 					v3fPos.y);
+		getEdge(EEdge.Bottom)			.set(								null, v3fPos.y-v3fSize.y);
+		getEdge(EEdge.Left)				.set(						v3fPos.x, 							null);
+		getEdge(EEdge.Right)			.set(	v3fPos.x+v3fSize.x, 							null);
+		getEdge(EEdge.TopRight)		.setFrom(getEdge(EEdge.Top)		,getEdge(EEdge.Right)	);
+		getEdge(EEdge.TopLeft)		.setFrom(getEdge(EEdge.Top)		,getEdge(EEdge.Left)	);
+		getEdge(EEdge.BottomRight).setFrom(getEdge(EEdge.Bottom),getEdge(EEdge.Right)	);
+		getEdge(EEdge.BottomLeft)	.setFrom(getEdge(EEdge.Bottom),getEdge(EEdge.Left)	);
 	}
 	public void setAllEdgesEnabled(boolean bEnabled){
 		for(Edge edge:hmEdge.values()){
@@ -312,30 +332,80 @@ public class ResizablePanel extends Panel {
 		}
 		
 		// constraint
-		if(v3fNewSize.x<getMinSize().x){
+		boolean bUpdateDragFromX=false;
+		boolean bUpdateDragFromY=false;
+		if(v3fNewSize.x<v3fMinSize.x){
 			v3fNewSize.x=v3fOldSize.x;
 			v3fNewPos.x=v3fOldPos.x;
 		}else{
-			v3fDragFromPrevious.x+=fDeltaX;
+			bUpdateDragFromX=true;
 		}
 		
-		if(v3fNewSize.y<getMinSize().y){
+		if(v3fNewSize.y<v3fMinSize.y){
 			v3fNewSize.y=v3fOldSize.y;
 			v3fNewPos.y=v3fOldPos.y;
 		}else{
-			v3fDragFromPrevious.y+=fDeltaY;
+			bUpdateDragFromY=true;
 		}
 		
 		setPreferredSize(v3fNewSize);
-		setLocalTranslation(v3fNewPos);
+		if(validateParentest()){
+			setLocalTranslation(v3fNewPos);
+			
+			if(bUpdateDragFromX)v3fDragFromPrevious.x+=fDeltaX;
+			if(bUpdateDragFromY)v3fDragFromPrevious.y+=fDeltaY;
+			
+			if(!v3fNewSize.equals(v3fOldSize)){
+				for(IResizableListener irl:airlList){
+					irl.resizedTo(v3fNewSize);
+				}
+			}
+		}else{
+			setPreferredSize(v3fOldSize);
+		}
 		
-		if(!v3fNewSize.equals(v3fOldSize)){
-			for(IResizableListener irl:airlList){
-				irl.resizedTo(v3fNewSize);
+	}
+	
+	/**
+	 * after resizing, if things change anywhere (even on childs) on the panel, it may break.
+	 */
+	private void growParentestFixAttempt(int i){
+		Panel pnlParentest = MiscJmeI.i().getParentest(this, Panel.class, true);
+		Vector3f v3f = pnlParentest.getPreferredSize().add(new Vector3f(1, 1, 0));
+		warnMsg("increasing ("+i+") size of "+pnlParentest.getName()+" to "+v3f);
+		pnlParentest.setPreferredSize(v3f);
+	}
+	
+	@Override
+	public void updateLogicalState(float tpf) {
+		int i=0;
+		while(true){
+			try{
+				super.updateLogicalState(tpf);
+				break;
+			}catch(IllegalArgumentException ex){
+				if(bSkipGrowFix)throw ex;
+				if(!ex.getMessage().startsWith("Size cannot be negative:")) throw ex;
+				if(i>=iGrowParentestFixAttemptLimit) throw ex; //prevents endless growth
+				growParentestFixAttempt(i);
+				i++;
 			}
 		}
 	}
 	
+	private boolean validateParentest() {
+		boolean b=false;
+		try{
+			bSkipGrowFix=true;
+			MiscJmeI.i().getParentest(this, Panel.class, true).updateLogicalState(0.001f); //TODO use current tpf? 
+			b=true;
+		}catch(Exception ex){
+			warnMsg("skipping impossible new size: "+ex.getMessage());
+		}
+		bSkipGrowFix=false;
+		return b;
+	}
+
 	public static final String LAYER_RESIZABLE_BORDERS = "resizableBorders";
 	
   public ResizablePanel( Vector3f v3fSize, String strStyle ) {
@@ -368,7 +438,8 @@ public class ResizablePanel extends Panel {
 	
   public ResizablePanel(Panel pnl) {
   	this(pnl.getPreferredSize().x, pnl.getPreferredSize().y, pnl.getStyle());
-  	layout.addChild(pnl,  BorderLayout.Position.Center);
+  	setContents(pnl);
+//  	layout.addChild(pnl,  BorderLayout.Position.Center);
 	}
 
 	private class ResizerCursorListener implements CursorListener{
@@ -523,6 +594,11 @@ public class ResizablePanel extends Panel {
 		}
 	}
 	
+	/**
+	 * Is optional as new size will be validated and even post fixed.
+	 * @param v3f
+	 * @return
+	 */
 	public ResizablePanel setMinSize(Vector3f v3f){
 		this.v3fMinSize=(v3f);
 		return this;

@@ -28,6 +28,8 @@
 package com.github.devconslejme.misc;
 
 import com.jme3.math.ColorRGBA;
+import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -55,4 +57,19 @@ public class MiscJmeI {
 		return color;
 	}
 	
+	@SuppressWarnings({ "unchecked" })
+	public <T extends Node> T getParentest(Spatial spt, Class<T> clTypeParentest, boolean bIncludeFirst){
+		T parentest = null;
+		if(bIncludeFirst && clTypeParentest.isInstance(spt))parentest=(T)spt;
+		
+		Node nodeParent = spt.getParent();
+		while(nodeParent!=null){
+			if(clTypeParentest.isInstance(nodeParent)){
+				parentest=(T)nodeParent;
+			}
+			nodeParent=nodeParent.getParent();
+		}
+		
+		return parentest;
+	}
 }

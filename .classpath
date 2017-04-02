@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="DevCons/src/main/java"/>
+	<classpathentry kind="src" path="Misc/src/main/java"/>
 	<classpathentry kind="src" path="Tests/src/main/java"/>
 	<classpathentry kind="src" path="Extras/src/main/java"/>
 	<classpathentry kind="src" path="GenericDialog/src/main/java"/>
