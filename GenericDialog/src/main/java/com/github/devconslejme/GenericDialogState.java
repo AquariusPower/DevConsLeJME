@@ -247,6 +247,10 @@ public class GenericDialogState extends BaseAppState{
 		return obj;
 	}
 	
+	public boolean isOptionSelected(){
+		return objSelected!=null;
+	}
+	
 	protected void setSelectedOptionValue(Object obj){
 		this.objSelected=obj;
 	}

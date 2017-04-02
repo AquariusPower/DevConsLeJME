@@ -31,26 +31,46 @@ import java.util.HashMap;
 
 import com.github.devconslejme.misc.MiscLemurI;
 import com.jme3.app.Application;
-import com.jme3.app.state.AppStateManager;
-import com.jme3.math.Vector3f;
+import com.jme3.input.KeyInput;
+import com.simsilica.lemur.Button;
+import com.simsilica.lemur.Command;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.TextField;
+import com.simsilica.lemur.component.TextEntryComponent;
 import com.simsilica.lemur.core.VersionedList;
+import com.simsilica.lemur.event.KeyAction;
+import com.simsilica.lemur.event.KeyActionListener;
 
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class SimpleDialogState extends GenericDialogState {
-	private Label	lblInfo;
+	private Label	btnInfo;
 	
 	private ListBox<String>	lstbxOptions;
 	private VersionedList<String>	vlsOptions;
 	HashMap<String,Object> hmOptions = new HashMap<String, Object>();
 	
 	private TextField	tfInput;
+
+	private boolean	bUseInputTextValue;
+
+	private boolean	bUserSubmitInputValue;
+
+	private KeyActionListener	kal = new KeyActionListener() {
+		@Override
+		public void keyAction(TextEntryComponent source, KeyAction key) {
+			switch(key.getKeyCode()){
+				case KeyInput.KEY_RETURN:
+				case KeyInput.KEY_NUMPADENTER:
+					bUserSubmitInputValue=true;
+					break;
+			}
+		}
+	};
 
 	public SimpleDialogState(Application app) {
 		super(app);
@@ -70,19 +90,29 @@ public class SimpleDialogState extends GenericDialogState {
 		configureDefaults();
 	}
 
+	@SuppressWarnings("unchecked")
 	private void configureDefaults() {
 		ESection es;
 		
 		es=ESection.Info;
 		if(getSection(es)==null){
-			lblInfo = new Label("(No Info)", getCfg().getStyle());
-			getCfg().setSection(es,lblInfo);
+			/**
+			 * IMPORTANT: Button works MUCH better than Label when clicking to drag for ex.
+			 */
+			btnInfo = new Button("(No Info)", getCfg().getStyle());
+			getCfg().setSection(es,btnInfo);
 		}
 		
 		es=ESection.Options;
 		if(getSection(es)==null){
 			vlsOptions = new VersionedList<String>();
 			lstbxOptions = new ListBox<String>(vlsOptions, getCfg().getStyle());
+			lstbxOptions.addClickCommands(new Command<ListBox>(){
+				@Override
+				public void execute(ListBox source) {
+					tfInput.setText(getSelectedOptionText());
+				}
+			});
 			getCfg().setSection(es,lstbxOptions);
 //			getSection(es).setMinSize(new Vector3f(100,getEntryHeight(),0));
 		}
@@ -90,6 +120,10 @@ public class SimpleDialogState extends GenericDialogState {
 		es=ESection.Input;
 		if(getSection(es)==null){
 			tfInput = new TextField("", getCfg().getStyle());
+			
+			tfInput.getActionMap().put(new KeyAction(KeyInput.KEY_NUMPADENTER),kal); 
+			tfInput.getActionMap().put(new KeyAction(KeyInput.KEY_RETURN),kal); 
+			
 			getCfg().setSection(es,tfInput);
 		}
 	}
@@ -103,7 +137,7 @@ public class SimpleDialogState extends GenericDialogState {
 	}
 	
 	public void setTextInfo(String strInfo){
-		lblInfo.setText(strInfo);
+		btnInfo.setText(strInfo);
 	}
 	
 	public void putOption(String strTextKey, Object objValue){
@@ -112,20 +146,63 @@ public class SimpleDialogState extends GenericDialogState {
 		vlsOptions.add(strTextKey);
 	}
 	
+	public int getSelectedOptionIndex(){
+		return lstbxOptions.getSelectionModel().getSelection();
+	}
+	
+	public String getSelectedOptionText(){
+		return vlsOptions.get(getSelectedOptionIndex());
+	}
+	
+	public Object getSelectedOptionValue(){
+		return hmOptions.get(getSelectedOptionText());
+	}
+	
 	@Override
 	public void update(float tpf) {
 		super.update(tpf);
 		
-		Integer i=lstbxOptions.getSelectionModel().getSelection();
-		if(i!=null){
-			setSelectedOptionValue(hmOptions.get(vlsOptions.get(i)));
+		if(bUseInputTextValue){
+			GuiGlobals.getInstance().requestFocus(tfInput);
+			if(bUserSubmitInputValue){
+				setSelectedOptionValue(getInputText());
+				bUserSubmitInputValue=false;
+			}
+		}else{ // set as soon an option is selected
+			Integer i=getSelectedOptionIndex();
+			if(i!=null){
+				setSelectedOptionValue(getSelectedOptionValue());
+			}
+		}
+		
+		if(isOptionSelected()){
 			setEnabled(false);
 		}
 	}
 	
+//	private boolean updateUserSubmitInputValue() {
+//		return false;
+//	}
+
 	@Override
 	public Object collectSelectedOption() {
 		lstbxOptions.getSelectionModel().setSelection(-1);
 		return super.collectSelectedOption();
+	}
+	
+	public String getInputText(){
+		return tfInput.getText();
+	}
+	
+	/**
+	 * options text will be used to fill the input text and be returned as the value instead of the custom objects
+	 * @param b
+	 */
+	public void setUseInputTextValue(boolean b){
+		this.bUseInputTextValue=b;
+	}
+	
+	public boolean isUseInputTextValue(){
+		return bUseInputTextValue;
 	}
 }

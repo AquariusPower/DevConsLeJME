@@ -25,14 +25,13 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme;
+package com.github.devconslejme.misc;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
 
-import com.github.devconslejme.misc.StringI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 
@@ -248,11 +247,14 @@ public class QueueStateI extends AbstractAppState{
 		app.getStateManager().attach(this);
 	}
 	
-	public void showQueue(){
-		for(CallableX cx:acxList){
-			LoggingI.i().logSubEntry(cx.toString());
-		}
+	public ArrayList<CallableX> getQueueCopy(){
+		return new ArrayList<CallableX>(acxList);
 	}
+//	public void showQueue(){
+//		for(CallableX cx:acxList){
+//			LoggingI.i().logSubEntry(cx.toString());
+//		}
+//	}
 
 	private void killOrPauseToggle(String strUId,boolean bKill) {
 		for(CallableX cx:acxList){

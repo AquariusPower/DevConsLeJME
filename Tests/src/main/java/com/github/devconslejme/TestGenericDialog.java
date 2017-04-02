@@ -28,14 +28,13 @@
 package com.github.devconslejme;
 
 import com.github.devconslejme.GenericDialogState.CfgParams;
+import com.github.devconslejme.misc.QueueStateI;
+import com.github.devconslejme.misc.QueueStateI.CallableX;
 import com.jme3.app.SimpleApplication;
-import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
 import com.simsilica.lemur.GuiGlobals;
-import com.simsilica.lemur.event.PopupState;
-import com.simsilica.lemur.event.PopupState.ClickMode;
 import com.simsilica.lemur.style.BaseStyles;
 
 /**
@@ -50,21 +49,15 @@ public class TestGenericDialog extends SimpleApplication {
 	private SimpleDialogState	diag;
 	private Button	btnChosenOption;
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public void simpleInitApp() {
 		GuiGlobals.initialize(this);
 		BaseStyles.loadGlassStyle();
-//		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
-		
-//		enqueue(new Runnable() {
-//			@Override
-//			public void run() {
-				prepareDialog();
-				
-				prepareButtonCallsDiag();
-//			}
-//		});
+
+		QueueStateI.i().configure(this);
+
+		prepareDialog();
+		prepareButtonCallsDiag();
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -94,7 +87,16 @@ public class TestGenericDialog extends SimpleApplication {
 				.setSize(new Vector3f(600,500,0))
 		);
 		
-		diag.setTextInfo("This is a good info about something (I am sure).");
+		diag.setTextInfo("This is a good info about something.\nSecond line.");
+		diag.setUseInputTextValue(true);
+		
+		QueueStateI.i().enqueue(new CallableX(0,false) {
+			@Override
+			public Boolean call() {
+				diag.getMainResizablePanel().setUseBumpResizableBorderMode(true);
+				return true;
+			}
+		});
 		
 		diag.putOption("option A", 10);
 		diag.putOption("option B", "This is option B");

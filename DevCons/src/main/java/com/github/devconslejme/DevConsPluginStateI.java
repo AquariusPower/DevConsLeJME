@@ -37,11 +37,12 @@ import java.util.Set;
 
 import org.lwjgl.opengl.Display;
 
-import com.github.devconslejme.QueueStateI.CallableX;
 import com.github.devconslejme.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.MiscJmeI;
 import com.github.devconslejme.misc.MiscLemurI;
+import com.github.devconslejme.misc.QueueStateI;
 import com.github.devconslejme.misc.SimpleDragParentestListenerI;
+import com.github.devconslejme.misc.QueueStateI.CallableX;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
@@ -890,4 +891,9 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		updateVisibleLogItems();
 	}
 
+	public void showQueue(){
+		for(CallableX cx:QueueStateI.i().getQueueCopy()){
+			LoggingI.i().logSubEntry(cx.toString());
+		}
+	}
 }

@@ -46,9 +46,10 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
-import com.github.devconslejme.QueueStateI.CallableX;
 import com.github.devconslejme.misc.AutoCompleteI;
+import com.github.devconslejme.misc.QueueStateI;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
+import com.github.devconslejme.misc.QueueStateI.CallableX;
 import com.github.devconslejme.misc.JavaLangI;
 import com.google.common.collect.HashBiMap;
 import com.google.common.primitives.Primitives;

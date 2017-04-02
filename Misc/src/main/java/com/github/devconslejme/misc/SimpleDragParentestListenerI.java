@@ -72,7 +72,7 @@ public class SimpleDragParentestListenerI implements CursorListener{
 	
 	@Override
 	public void cursorMoved(CursorMotionEvent event, Spatial target,				Spatial capture) {
-		if(bDragging){
+		if(bDragging){ //((Panel)capture).getPreferredSize() ((Panel)capture).getSize()
 			Panel pnlParentest = MiscJmeI.i().getParentest(capture, Panel.class, true);
 			Vector3f v3f = getCursorPos(event).add(v3fDistToCursor);
 			v3f.z=pnlParentest.getLocalTranslation().z; //DO NOT MESS WITH Z!!!!
