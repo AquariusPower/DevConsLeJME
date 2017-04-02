@@ -30,9 +30,9 @@ package com.github.devconslejme;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.github.devconslejme.misc.MiscJmeI;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Panel;
@@ -343,11 +343,27 @@ public class ResizablePanel extends Panel {
 		
 	}
 	
+	@SuppressWarnings({ "unchecked" })
+	public <T extends Node> T getParentest(Spatial spt, Class<T> clTypeParentest, boolean bIncludeFirst){
+		T parentest = null;
+		if(bIncludeFirst && clTypeParentest.isInstance(spt))parentest=(T)spt;
+		
+		Node nodeParent = spt.getParent();
+		while(nodeParent!=null){
+			if(clTypeParentest.isInstance(nodeParent)){
+				parentest=(T)nodeParent;
+			}
+			nodeParent=nodeParent.getParent();
+		}
+		
+		return parentest;
+	}
+	
 	/**
 	 * after resizing, if things change anywhere (even on childs) on the panel, it may break.
 	 */
 	private void growParentestFixAttempt(int i){
-		Panel pnlParentest = MiscJmeI.i().getParentest(this, Panel.class, true);
+		Panel pnlParentest = getParentest(this, Panel.class, true);
 		Vector3f v3f = pnlParentest.getPreferredSize().add(new Vector3f(1, 1, 0));
 		warnMsg("increasing ("+i+") size of "+pnlParentest.getName()+" to "+v3f);
 		pnlParentest.setPreferredSize(v3f);
@@ -374,7 +390,7 @@ public class ResizablePanel extends Panel {
 		boolean b=false;
 		try{
 			bSkipGrowFix=true;
-			MiscJmeI.i().getParentest(this, Panel.class, true).updateLogicalState(0.001f); //TODO use current tpf? 
+			getParentest(this, Panel.class, true).updateLogicalState(0.001f); //TODO use current tpf? 
 			b=true;
 		}catch(Exception ex){
 			warnMsg("skipping impossible new size: "+ex.getMessage());
