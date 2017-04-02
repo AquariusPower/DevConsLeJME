@@ -31,6 +31,7 @@ import com.github.devconslejme.GenericDialogState.CfgParams;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.GuiGlobals;
+import com.simsilica.lemur.style.BaseStyles;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -44,19 +45,36 @@ public class TestGenericDialog extends SimpleApplication {
 	@Override
 	public void simpleInitApp() {
 		GuiGlobals.initialize(this);
+		BaseStyles.loadGlassStyle();
 		
-		GenericDialogState diag = new GenericDialogState(this);
+		SimpleDialogState diag = new SimpleDialogState(this);
 		
 //		Button btn = new Button("hellow");
 //		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
 		
+//		Button btn = new Button("info");
+//		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
+//		
+//		ListBox lsbtb = new ListBox();
+//		lsbtb.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
+//		
+//		TextField tf = new TextField("input");
+//		tf.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
+		
 		diag.configure(
 			new CfgParams()
+				.setNodeParent(getGuiNode())
+				.setStyle(BaseStyles.GLASS)
 				.setPos(new Vector3f(100,350,10))
-				.setStyle(DevConsPluginStateI.i().getStyle())
 				.setSize(new Vector3f(300,200,0))
-//				.setContents(btn)
+//				.setSection(ESection.Info,btn)
+//				.setSection(ESection.Options,lsbtb)
+//				.setSection(ESection.Input,tf)
+//				.setInfoSection(btn)
+//				.setOptionsSection(btnOpt)
+//				.setInputSection(tf)
 		);
 		
 	}
+	
 }

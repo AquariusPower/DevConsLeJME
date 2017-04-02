@@ -27,12 +27,15 @@
 
 package com.github.devconslejme;
 
+import java.util.stream.BaseStream;
+
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
+import com.simsilica.lemur.style.BaseStyles;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -48,6 +51,7 @@ public class TestResizablePanel extends SimpleApplication {
 	@Override
 	public void simpleInitApp() {
 		GuiGlobals.initialize(this);
+		BaseStyles.loadGlassStyle();
 		
 		int i=300;
 		test(new Vector3f(100,i+100,10));
@@ -56,12 +60,12 @@ public class TestResizablePanel extends SimpleApplication {
 	}
 
 	private void test(Vector3f pos) {
-		rzp = new ResizablePanel(300,200,null);
+		rzp = new ResizablePanel(300,200,BaseStyles.GLASS);
 		rzp.setLocalTranslation(pos); //above DevCons
 		getGuiNode().attachChild(rzp);
 		
 		Button btn = new Button("hellow");
-		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
+//		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
 		rzp.setContents(btn);
 	}
 }

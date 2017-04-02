@@ -27,6 +27,8 @@
 
 package com.github.devconslejme;
 
+import java.util.HashMap;
+
 import com.github.devconslejme.ResizablePanel.EEdge;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
@@ -46,7 +48,9 @@ public class GenericDialogState extends AbstractAppState{
 	private Application	app;
 	private Container	cntrMain;
 	private CfgParams cfg;
-	private ResizablePanel	rzpInfo;
+//	private ResizablePanel	rzpInfo;
+//	private ResizablePanel	rzpOptions;
+//	private ResizablePanel	rzpInput;
 	
 	public static class CfgParams{
 		private Node nodeParent;
@@ -54,9 +58,10 @@ public class GenericDialogState extends AbstractAppState{
 		private Vector3f v3fSize;
 		private String strStyle;
 //		private Panel	pnlContents;
-		private Panel	pnlInput;
-		private Panel	pnlOptions;
-		private Panel	pnlInfo;
+//		private Panel	pnlInput;
+//		private Panel	pnlOptions;
+//		private Panel	pnlInfo;
+		HashMap<ESection,ResizablePanel> hmSection = new HashMap<ESection,ResizablePanel>();
 
 		public Vector3f getPos() {
 			return v3fPos;
@@ -94,28 +99,36 @@ public class GenericDialogState extends AbstractAppState{
 			return this;
 		}
 
-		public Panel getInfoSection() {
-			return pnlInfo;
-		}
+//		public Panel getInfoSection() {
+//			return pnlInfo;
+//		}
+//
+//		public Panel getOptionsSection() {
+//			return pnlOptions;
+//		}
+//
+//		public Panel getInputSection() {
+//			return pnlInput;
+//		}
+//
+//		public CfgParams setInputSection(Panel nodeInput) {
+//			this.pnlInput = nodeInput;
+//			return this;
+//		}
+//
+//		public CfgParams setOptionsSection(Panel nodeOptions) {
+//			this.pnlOptions = nodeOptions;
+//			return this;
+//		}
+//
+//		public CfgParams setInfoSection(Panel nodeInfo) {
+//			this.pnlInfo = nodeInfo;
+//			return this;
+//		}
 
-		public Panel getOptionsSection() {
-			return pnlOptions;
-		}
-
-		public Panel getInputSection() {
-			return pnlInput;
-		}
-
-		public void setInputSection(Panel nodeInput) {
-			this.pnlInput = nodeInput;
-		}
-
-		public void setOptionsSection(Panel nodeOptions) {
-			this.pnlOptions = nodeOptions;
-		}
-
-		public void setInfoSection(Panel nodeInfo) {
-			this.pnlInfo = nodeInfo;
+		public CfgParams setSection(ESection e, Panel pnl) {
+			hmSection.put(e,new ResizablePanel(pnl));
+			return this;
 		}
 
 //		public Panel getContents() {
@@ -134,6 +147,7 @@ public class GenericDialogState extends AbstractAppState{
 	
 	public void configure(CfgParams cfg){
 		this.cfg=cfg;
+		app.getStateManager().attach(this);
 	}
 	
 	@Override
@@ -142,6 +156,7 @@ public class GenericDialogState extends AbstractAppState{
 
 		rzpMain = new ResizablePanel(cfg.getSize(), cfg.getStyle());
 		rzpMain.setLocalTranslation(cfg.getPos());
+		rzpMain.setMinSize(new Vector3f(100,100,0));
 //		rzp.setContents(cfg.getContents());
 		initContentsContainer();
 		
@@ -149,29 +164,54 @@ public class GenericDialogState extends AbstractAppState{
 	}
 	
 	private void initContentsContainer() {
-		/**
-		 * TODO north info/description
-		 * TODO center list with options to user choose, can be a tree, each entry can have buttons or even text input for more functionalities!
-		 * TODO south with input to be used as options filter or typeable custom choice (like creating the player name)
-		 */
 		cntrMain = new Container(new BorderLayout(), cfg.getStyle());
 		rzpMain.setContents(cntrMain);
 		
-		rzpInfo = cfgSection(cfg.getInfoSection(),EEdge.Bottom,BorderLayout.Position.North);
-		rzpInfo = cfgSection(cfg.getOptionsSection(),EEdge.Bottom,BorderLayout.Position.Center);
-		rzpInfo = cfgSection(cfg.getInputSection(),EEdge.Top,BorderLayout.Position.South);
+//		cfg.hmSection.put(ESection.Info, 
+		cfgSection(getSection(ESection.Info),BorderLayout.Position.North,EEdge.Bottom);
+//		cfg.hmSection.put(ESection.Options,
+		cfgSection(getSection(ESection.Options),BorderLayout.Position.Center,EEdge.Bottom);
+//		cfg.hmSection.put(ESection.Input,
+		cfgSection(getSection(ESection.Input),BorderLayout.Position.South,EEdge.Top);
+//		cntrMain.addChild(cfg.getOptionsSection(),BorderLayout.Position.Center);
+//		cntrMain.addChild(cfg.getInputSection(),BorderLayout.Position.South);
 	}
 	
-	private ResizablePanel cfgSection(Panel pnlSection, EEdge edgeResizable, BorderLayout.Position border){
-		ResizablePanel rzp = new ResizablePanel(pnlSection);
+	private ResizablePanel cfgSection(ResizablePanel rzp, BorderLayout.Position border, EEdge edgeResizable){
 		rzp.setAllEdgesEnabled(false);
 		rzp.getEdge(edgeResizable).setEnabled(true);
 		cntrMain.addChild(rzp, border);
 		return rzp;
 	}
 	
-	public ResizablePanel getResizablePanel(){
+	public static enum ESection{
+		/**
+		 * north info/description
+		 */
+		Info,
+		
+		/**
+		 * center list with options to user choose, can be a tree, each entry can have buttons or even text input for more functionalities!
+		 */
+		Options,
+		
+		/**
+		 * south with input to be used as options filter or typeable custom choice (like creating the player name)
+		 */
+		Input,
+		;
+	}
+	
+	public ResizablePanel getMainResizablePanel(){
 		return rzpMain;
 	}
+	
+	public ResizablePanel getSection(ESection e){
+		return cfg.hmSection.get(e);
+	}
+	
+//	public Panel getSectionContents(ESection e){
+//		return cfg.hmSection.get(e).getContents();
+//	}
 	
 }
