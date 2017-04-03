@@ -338,6 +338,7 @@ public class ResizablePanel extends Panel {
 			if(bUpdateDragFromY)v3fDragFromPrevious.y+=fDeltaY;
 			
 			if(!v3fNewSize.equals(v3fOldSize)){
+				resizedTo(v3fNewSize);
 				for(IResizableListener irl:airlList){
 					irl.resizedTo(v3fNewSize);
 				}
@@ -348,6 +349,12 @@ public class ResizablePanel extends Panel {
 		
 	}
 	
+	/**
+	 * override for further changes at subclass based on new size 
+	 * @param v3fNewSize
+	 */
+	protected void resizedTo(Vector3f v3fNewSize) {}
+
 	Panel pnlParentest = null;
 	public Panel getParentest(){
 		if(pnlParentest!=null)return pnlParentest;
