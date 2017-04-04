@@ -236,11 +236,6 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		}
 	}
 	
-	public DevConsPluginStateI(){
-//		if(instance==null)return;
-		if(i()!=this)throw new NullPointerException("use the global single instance");
-	}
-	
 	public void configure(Application app, Node nodeParent) {
 		DevConsGlobalsI.i().put(Application.class,app);
 		
