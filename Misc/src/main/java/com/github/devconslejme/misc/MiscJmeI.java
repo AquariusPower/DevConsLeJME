@@ -74,7 +74,7 @@ public class MiscJmeI {
 		return parentest;
 	}
 	
-	public Vector3f getBoundingBoxLimits(Spatial spt){
+	public Vector3f getBoundingBoxSize(Spatial spt){
 		return ((BoundingBox)spt.getWorldBound()).getExtent(null).mult(2f);
 	}
 	

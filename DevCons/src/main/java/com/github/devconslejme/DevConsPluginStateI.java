@@ -259,7 +259,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		LoggingI.i().configure();
 		JavaScriptI.i().setJSBinding(LoggingI.i());
 		
-		QueueStateI.i().configure(DevConsGlobalsI.i().app());
+		QueueStateI.i().configure();
 		JavaScriptI.i().setJSBinding(QueueStateI.i());
 	}
 	

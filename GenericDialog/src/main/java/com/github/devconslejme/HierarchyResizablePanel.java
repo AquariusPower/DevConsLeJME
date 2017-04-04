@@ -29,10 +29,11 @@ package com.github.devconslejme;
 
 import java.util.ArrayList;
 
-import com.github.devconslejme.misc.HierarchySorterI.IDialogOrganizer;
+import com.github.devconslejme.misc.HierarchySorterI.IHierarchySorter;
 import com.github.devconslejme.misc.MiscJmeI;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Node;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
@@ -41,30 +42,51 @@ import com.simsilica.lemur.component.QuadBackgroundComponent;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class HierarchyResizablePanel extends ResizablePanel implements IDialogOrganizer{
+public class HierarchyResizablePanel extends ResizablePanel implements IHierarchySorter{
 	/**
 	 * whatchout that Lemur will not control this blocker position/size/layout relatively to the panel it is blocking!
 	 */
 	private Button	btnBlocker;
+	private Node	nodeBlockerHolder;
 	
 	private Panel	pnlParent;
-	private ArrayList<HierarchyResizablePanel> arzdList = new ArrayList<HierarchyResizablePanel>();
+	private ArrayList<HierarchyResizablePanel> arzdHierarchyChildList = new ArrayList<HierarchyResizablePanel>();
 	private long	lLastFocusTimeNano = -1;
-	private boolean	bTopDialog;
-	private boolean	bModalDialog;
+	private boolean	bTop;
+	private boolean	bModal;
 	
 	public HierarchyResizablePanel(String strStyle) {
 		super(strStyle);
-		btnBlocker = new Button("");
+		btnBlocker = new Button("");//!BLOCKED!");
+//		nodeBlockerHolder=new Node("Workaround to let lemur ignore it's child blocker");
+//		nodeBlockerHolder.attachChild(btnBlocker);
 		btnBlocker.setBackground(
-			new QuadBackgroundComponent(
-				MiscJmeI.i().colorChangeCopy(ColorRGBA.Red, -0.75f, 0.25f)));
+				new QuadBackgroundComponent(//ColorRGBA.Red));
+					MiscJmeI.i().colorChangeCopy(ColorRGBA.Red, -0.75f, 0.25f)));
 	}
 
 	public void setEnabledBlockerLayer(boolean b){
 		if(b){
-			attachChild(btnBlocker);
-			btnBlocker.setLocalTranslation(0, 0, MiscJmeI.i().getBoundingBoxLimits(this).z);
+			getParent().attachChild(btnBlocker);
+//			QueueStateI.i().enqueue(new CallableX(0,false) {
+//				@Override
+//				public Boolean call() {
+//					Vector3f v3f = MiscJmeI.i().getBoundingBoxLimits(HierarchyResizablePanel.this);
+//					if(Float.compare(v3f.length(),0f)==0)return false;
+//					
+////					attachChild(nodeBlockerHolder);
+//					attachChild(btnBlocker);
+//					
+////					nodeBlockerHolder.setLocalTranslation(0, 0, v3f.z);
+//					nodeBlockerHolder.setLocalTranslation(0, 0, v3f.z);
+//					btnBlocker.setPreferredSize(getPreferredSize());
+//					btnBlocker.setBackground(
+//						new QuadBackgroundComponent(//ColorRGBA.Red));
+//							MiscJmeI.i().colorChangeCopy(ColorRGBA.Red, -0.75f, 0.25f)));
+//					
+//					return true;
+//				}
+//			});
 		}else{
 			btnBlocker.removeFromParent();
 		}
@@ -74,7 +96,7 @@ public class HierarchyResizablePanel extends ResizablePanel implements IDialogOr
 	protected void resizedTo(Vector3f v3fNewSize) {
 		super.resizedTo(v3fNewSize);
 		
-		btnBlocker.setPreferredSize(v3fNewSize);
+//		btnBlocker.setPreferredSize(v3fNewSize);
 	}
 	
 	/**
@@ -84,8 +106,9 @@ public class HierarchyResizablePanel extends ResizablePanel implements IDialogOr
 	public void showModal(HierarchyResizablePanel rzdChildDialog){
 		rzdChildDialog.setModal(true);
 		getParent().attachChild(rzdChildDialog);
-		arzdList.add(rzdChildDialog);
+		arzdHierarchyChildList.add(rzdChildDialog);
 		setEnabledBlockerLayer(true);
+		update();
 	}
 	
 	/**
@@ -95,56 +118,73 @@ public class HierarchyResizablePanel extends ResizablePanel implements IDialogOr
 	public void showModeless(HierarchyResizablePanel rzdChildDialog){
 		rzdChildDialog.setModal(false);
 		getParent().attachChild(rzdChildDialog);
-		arzdList.add(rzdChildDialog);
+		arzdHierarchyChildList.add(rzdChildDialog);
 	}
 	
 	protected void setModal(boolean b) {
-		this.bModalDialog=b;
+		this.bModal=b;
 	}
 
 	@Override
 	public void updateLogicalState(float tpf) {
 		super.updateLogicalState(tpf);
-		
-		//beware what you code here!!!
-		updateSelf();
-		updateChildDialogList(); 
+		update();
 	}
-	
-	private void updateSelf() {
+	protected void update(){
+		/********************
+		 * beware what you code here!!! 
+		 ********************/
+		
 		// close self if parent dialog closed
-		if(getParentDialog()!=null){
-			if(getParentDialog().getParent()==null){
+		if(getHierarchyParent()!=null){
+			if(getHierarchyParent().getParent()==null){
 				removeFromParent();
 			}
 		}
-	}
-
-	private void updateChildDialogList() {
-		for(HierarchyResizablePanel rzd:arzdList.toArray(new HierarchyResizablePanel[0])){
-			if(rzd.getParent()==null){
-				arzdList.remove(rzd);
+		
+		// remove closed childs
+		for(HierarchyResizablePanel rzd:arzdHierarchyChildList.toArray(new HierarchyResizablePanel[0])){
+			if(rzd.getParent()==null){ //was closed
+				arzdHierarchyChildList.remove(rzd);
 			}
 		}
 		
-		int iModalCount=0;
-		for(HierarchyResizablePanel rzd:arzdList){
-			if(rzd.isModal())iModalCount++;
-		}
-		
-		if(iModalCount==0){
-			setEnabledBlockerLayer(false);
+		// blocker work
+		if(isBlocked()){
+			// how many childs are modal
+			int iModalCount=0;
+			for(HierarchyResizablePanel rzd:arzdHierarchyChildList){
+				if(rzd.isModal())iModalCount++;
+			}
+			
+			if(iModalCount==0){
+				// remove blocker
+				setEnabledBlockerLayer(false);
+			}else{
+				Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSize(this);
+				if(Float.compare(v3fSize.length(),0f)!=0){ //waiting top panel be updated by lemur
+					Vector3f v3fPos = getLocalTranslation().clone();
+					v3fPos.z += v3fSize.z;
+					btnBlocker.setLocalTranslation(v3fPos);
+					
+					btnBlocker.setPreferredSize(getPreferredSize());
+				}
+			}
 		}
 	}
-
+	
+	public boolean isBlocked(){
+		return btnBlocker.getParent()!=null;
+	}
+	
 	@Override
-	public Panel getParentDialog() {
+	public Panel getHierarchyParent() {
 		return pnlParent;
 	}
 	
 	@Override
-	public Panel[] getChildDialogList() {
-		return arzdList.toArray(new Panel[0]);
+	public Panel[] getHierarchyChildList() {
+		return arzdHierarchyChildList.toArray(new Panel[0]);
 	}
 
 	@Override
@@ -153,13 +193,13 @@ public class HierarchyResizablePanel extends ResizablePanel implements IDialogOr
 	}
 
 	@Override
-	public boolean isTopDialog() {
-		return bTopDialog;
+	public boolean isTopHierarchy() {
+		return bTop;
 	}
 
 	@Override
 	public boolean isModal() {
-		return bModalDialog;
+		return bModal;
 	}
 	
 }

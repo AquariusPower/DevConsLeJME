@@ -28,6 +28,8 @@
 package com.github.devconslejme;
 
 import com.github.devconslejme.misc.HierarchySorterI;
+import com.github.devconslejme.misc.QueueStateI;
+import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
@@ -50,29 +52,44 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		BaseStyles.loadGlassStyle();
 		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
 		
+		DevConsGlobalsI.i().put(Application.class,this);
+		QueueStateI.i().configure();
 		HierarchySorterI.i().configure(this, getGuiNode(), 0f);
 		
-		int i=300;
-		test(new Vector3f(100,i+100,10))
-			.showModal(test(new Vector3f(200,i+200,20)));
+		initTest();
 	}
 
 	@SuppressWarnings("unchecked")
+	private void initTest() {
+		int i=300;
+		HierarchyResizablePanel testChild = test(new Vector3f(200,i+200,20));
+		Button btn = new Button("click to close");
+		btn.addClickCommands(new Command<Button>(){
+			@Override
+			public void execute(Button source) {
+				testChild.removeFromParent();
+			}
+		});
+		testChild.setContents(btn);
+		
+		HierarchyResizablePanel testParent = test(new Vector3f(100,i+100,10));
+		btn = new Button("click to open modal");
+		btn.addClickCommands(new Command<Button>(){
+			@Override
+			public void execute(Button source) {
+				testParent.showModal(testChild);
+			}
+		});
+		testParent.setContents(btn);
+		
+		// show it all
+		getGuiNode().attachChild(testParent);
+	}
+
 	private HierarchyResizablePanel test(Vector3f pos) {
 		HierarchyResizablePanel rzp = new HierarchyResizablePanel(null);
 		rzp.setPreferredSize(new Vector3f(300,200,0)); //TODO z will cause trouble?
 		rzp.setLocalTranslation(pos); //above DevCons
-		getGuiNode().attachChild(rzp);
-		
-		Button btn = new Button("click to close:"+pos);
-		btn.addClickCommands(new Command<Button>(){
-			@Override
-			public void execute(Button source) {
-				rzp.removeFromParent();
-			}
-		});
-//		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
-		rzp.setContents(btn);
 		return rzp;
 	}
 }

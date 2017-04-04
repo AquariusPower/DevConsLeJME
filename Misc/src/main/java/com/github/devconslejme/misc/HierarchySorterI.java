@@ -52,19 +52,19 @@ public class HierarchySorterI extends AbstractAppState{
 	private Application	app;
 	private Node nodeToMonitor;
 	private float	fBeginOrderZ = 0f;
-	private Comparator<IDialogOrganizer> cmpr = new Comparator<IDialogOrganizer>() {
+	private Comparator<IHierarchySorter> cmpr = new Comparator<IHierarchySorter>() {
 		@Override
-		public int compare(IDialogOrganizer o1, IDialogOrganizer o2) {
+		public int compare(IHierarchySorter o1, IHierarchySorter o2) {
 			Panel pnl1 = (Panel)o1;
 			Panel pnl2 = (Panel)o2;
 			
 			// top only against top
-			if(o1.isTopDialog() && !o2.isTopDialog())return  1;
-			if(o2.isTopDialog() && !o1.isTopDialog())return -1;
+			if(o1.isTopHierarchy() && !o2.isTopHierarchy())return  1;
+			if(o2.isTopHierarchy() && !o1.isTopHierarchy())return -1;
 			
 			// parent diag below child diag
-			if(o1.getParentDialog()==o2)return -1;
-			if(o2.getParentDialog()==o1)return  1;
+			if(o1.getHierarchyParent()==o2)return -1;
+			if(o2.getHierarchyParent()==o1)return  1;
 			if(o1==o2)return 0;
 			
 			// last focus
@@ -73,11 +73,11 @@ public class HierarchySorterI extends AbstractAppState{
 	};
 	private float	fSafeZDist=1.0f;
 	
-	public static interface IDialogOrganizer {
-		public Panel getParentDialog();
-		public Panel[] getChildDialogList();
+	public static interface IHierarchySorter {
+		public Panel getHierarchyParent();
+		public Panel[] getHierarchyChildList();
 		public Long getLastFocusTimeNano();
-		public boolean isTopDialog();
+		public boolean isTopHierarchy();
 		public boolean isModal();
 	}
 	
@@ -97,13 +97,13 @@ public class HierarchySorterI extends AbstractAppState{
 	}
 	
 	private void organizeDialogsStack() {
-		ArrayList<IDialogOrganizer> aido = new ArrayList<IDialogOrganizer>();
+		ArrayList<IHierarchySorter> aido = new ArrayList<IHierarchySorter>();
 		
 		for(Spatial spt:nodeToMonitor.getChildren()){
 			if(spt instanceof Panel){
 				Panel pnl=(Panel)spt;
-				if(pnl instanceof IDialogOrganizer){
-					aido.add((IDialogOrganizer)pnl);
+				if(pnl instanceof IHierarchySorter){
+					aido.add((IHierarchySorter)pnl);
 				}
 			}
 		}
@@ -111,11 +111,11 @@ public class HierarchySorterI extends AbstractAppState{
 		Collections.sort(aido,cmpr);
 		
 		float fOrderZ = fBeginOrderZ;
-		for(IDialogOrganizer ido:aido){
+		for(IHierarchySorter ido:aido){
 			Panel pnl=(Panel)ido;
 			pnl.getLocalTranslation().z=fOrderZ;
 //			fOrderZ += (((BoundingBox)pnl.getWorldBound()).getZExtent()*2) +1.0f; //+1 is safety
-			fOrderZ += MiscJmeI.i().getBoundingBoxLimits(pnl).z +fSafeZDist;
+			fOrderZ += MiscJmeI.i().getBoundingBoxSize(pnl).z +fSafeZDist;
 		}
 	}
 }

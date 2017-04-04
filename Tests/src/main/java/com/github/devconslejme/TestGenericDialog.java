@@ -30,6 +30,7 @@ package com.github.devconslejme;
 import com.github.devconslejme.GenericDialogState.CfgParams;
 import com.github.devconslejme.misc.QueueStateI;
 import com.github.devconslejme.misc.QueueStateI.CallableX;
+import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
@@ -53,8 +54,9 @@ public class TestGenericDialog extends SimpleApplication {
 	public void simpleInitApp() {
 		GuiGlobals.initialize(this);
 		BaseStyles.loadGlassStyle();
-
-		QueueStateI.i().configure(this);
+		
+		DevConsGlobalsI.i().put(Application.class,this);
+		QueueStateI.i().configure();
 
 		prepareDialog();
 		prepareButtonCallsDiag();
