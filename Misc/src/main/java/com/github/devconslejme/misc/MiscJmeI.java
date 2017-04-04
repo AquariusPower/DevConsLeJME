@@ -27,7 +27,9 @@
 
 package com.github.devconslejme.misc;
 
+import com.jme3.bounding.BoundingBox;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 
@@ -71,4 +73,9 @@ public class MiscJmeI {
 		
 		return parentest;
 	}
+	
+	public Vector3f getBoundingBoxLimits(Spatial spt){
+		return ((BoundingBox)spt.getWorldBound()).getExtent(null).mult(2f);
+	}
+	
 }

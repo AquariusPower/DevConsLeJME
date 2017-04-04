@@ -45,8 +45,8 @@ import com.simsilica.lemur.Panel;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class DialogStackOrganizerI extends AbstractAppState{
-	public static DialogStackOrganizerI i(){return GlobalInstanceManagerI.i().get(DialogStackOrganizerI.class);}
+public class HierarchySorterI extends AbstractAppState{
+	public static HierarchySorterI i(){return GlobalInstanceManagerI.i().get(HierarchySorterI.class);}
 	
 	private ArrayList<Panel> apnl = new ArrayList<Panel>();
 	private Application	app;
@@ -71,6 +71,7 @@ public class DialogStackOrganizerI extends AbstractAppState{
 			return Long.compare(o1.getLastFocusTimeNano(),o2.getLastFocusTimeNano());
 		}
 	};
+	private float	fSafeZDist=1.0f;
 	
 	public static interface IDialogOrganizer {
 		public Panel getParentDialog();
@@ -83,6 +84,7 @@ public class DialogStackOrganizerI extends AbstractAppState{
 	public void configure(Application app, Node nodeToMonitor, float fBeginOrderZ){
 		this.app=app;
 		this.fBeginOrderZ=fBeginOrderZ;
+		this.nodeToMonitor=nodeToMonitor;
 		app.getStateManager().attach(this);
 	}
 	
@@ -112,7 +114,8 @@ public class DialogStackOrganizerI extends AbstractAppState{
 		for(IDialogOrganizer ido:aido){
 			Panel pnl=(Panel)ido;
 			pnl.getLocalTranslation().z=fOrderZ;
-			fOrderZ += (((BoundingBox)pnl.getWorldBound()).getZExtent()*2) +1.0f; //+1 is safety
+//			fOrderZ += (((BoundingBox)pnl.getWorldBound()).getZExtent()*2) +1.0f; //+1 is safety
+			fOrderZ += MiscJmeI.i().getBoundingBoxLimits(pnl).z +fSafeZDist;
 		}
 	}
 }

@@ -29,7 +29,7 @@ package com.github.devconslejme;
 
 import java.util.ArrayList;
 
-import com.github.devconslejme.misc.DialogStackOrganizerI.IDialogOrganizer;
+import com.github.devconslejme.misc.HierarchySorterI.IDialogOrganizer;
 import com.github.devconslejme.misc.MiscJmeI;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
@@ -41,17 +41,20 @@ import com.simsilica.lemur.component.QuadBackgroundComponent;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class ResizableDialog extends ResizablePanel implements IDialogOrganizer{
+public class HierarchyResizablePanel extends ResizablePanel implements IDialogOrganizer{
+	/**
+	 * whatchout that Lemur will not control this blocker position/size/layout relatively to the panel it is blocking!
+	 */
 	private Button	btnBlocker;
-	private Panel	pnlParent;
-	private ArrayList<ResizableDialog> arzdList = new ArrayList<ResizableDialog>();
-	private Long	lLastFocusTimeNano;
-	private boolean	bTopDialog;
-	private boolean	bModalDialog;;
 	
-	public ResizableDialog(Panel pnl) {
-		super(pnl);
-		
+	private Panel	pnlParent;
+	private ArrayList<HierarchyResizablePanel> arzdList = new ArrayList<HierarchyResizablePanel>();
+	private long	lLastFocusTimeNano = -1;
+	private boolean	bTopDialog;
+	private boolean	bModalDialog;
+	
+	public HierarchyResizablePanel(String strStyle) {
+		super(strStyle);
 		btnBlocker = new Button("");
 		btnBlocker.setBackground(
 			new QuadBackgroundComponent(
@@ -61,6 +64,7 @@ public class ResizableDialog extends ResizablePanel implements IDialogOrganizer{
 	public void setEnabledBlockerLayer(boolean b){
 		if(b){
 			attachChild(btnBlocker);
+			btnBlocker.setLocalTranslation(0, 0, MiscJmeI.i().getBoundingBoxLimits(this).z);
 		}else{
 			btnBlocker.removeFromParent();
 		}
@@ -77,7 +81,7 @@ public class ResizableDialog extends ResizablePanel implements IDialogOrganizer{
 	 * will prevent access to parent
 	 * @param rzdChildDialog
 	 */
-	public void showModal(ResizableDialog rzdChildDialog){
+	public void showModal(HierarchyResizablePanel rzdChildDialog){
 		rzdChildDialog.setModal(true);
 		getParent().attachChild(rzdChildDialog);
 		arzdList.add(rzdChildDialog);
@@ -88,7 +92,7 @@ public class ResizableDialog extends ResizablePanel implements IDialogOrganizer{
 	 * will close if parent closes
 	 * @param rzdChildDialog
 	 */
-	public void showModeless(ResizableDialog rzdChildDialog){
+	public void showModeless(HierarchyResizablePanel rzdChildDialog){
 		rzdChildDialog.setModal(false);
 		getParent().attachChild(rzdChildDialog);
 		arzdList.add(rzdChildDialog);
@@ -117,14 +121,14 @@ public class ResizableDialog extends ResizablePanel implements IDialogOrganizer{
 	}
 
 	private void updateChildDialogList() {
-		for(ResizableDialog rzd:arzdList.toArray(new ResizableDialog[0])){
+		for(HierarchyResizablePanel rzd:arzdList.toArray(new HierarchyResizablePanel[0])){
 			if(rzd.getParent()==null){
 				arzdList.remove(rzd);
 			}
 		}
 		
 		int iModalCount=0;
-		for(ResizableDialog rzd:arzdList){
+		for(HierarchyResizablePanel rzd:arzdList){
 			if(rzd.isModal())iModalCount++;
 		}
 		

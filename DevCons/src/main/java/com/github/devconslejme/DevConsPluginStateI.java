@@ -38,7 +38,7 @@ import java.util.Set;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.ResizablePanel.IResizableListener;
-import com.github.devconslejme.misc.DialogStackOrganizerI;
+import com.github.devconslejme.misc.HierarchySorterI;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.MiscJmeI;
 import com.github.devconslejme.misc.MiscLemurI;

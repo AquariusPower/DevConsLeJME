@@ -41,8 +41,6 @@ import com.simsilica.lemur.style.BaseStyles;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class TestResizablePanel extends SimpleApplication {
-	private ResizablePanel	rzp;
-	
 	public static void main(String[] args) {
 		TestResizablePanel tst = new TestResizablePanel();
 		tst.start();
@@ -52,6 +50,7 @@ public class TestResizablePanel extends SimpleApplication {
 	public void simpleInitApp() {
 		GuiGlobals.initialize(this);
 		BaseStyles.loadGlassStyle();
+		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
 		
 		int i=300;
 		test(new Vector3f(100,i+100,10));
@@ -60,11 +59,11 @@ public class TestResizablePanel extends SimpleApplication {
 	}
 
 	private void test(Vector3f pos) {
-		rzp = new ResizablePanel(300,200,BaseStyles.GLASS);
+		ResizablePanel rzp = new ResizablePanel(300,200,null);
 		rzp.setLocalTranslation(pos); //above DevCons
 		getGuiNode().attachChild(rzp);
 		
-		Button btn = new Button("hellow");
+		Button btn = new Button("drag borders to resize:"+pos);
 //		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
 		rzp.setContents(btn);
 	}

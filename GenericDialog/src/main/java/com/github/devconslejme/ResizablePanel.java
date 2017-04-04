@@ -356,6 +356,7 @@ public class ResizablePanel extends Panel {
 	protected void resizedTo(Vector3f v3fNewSize) {}
 
 	Panel pnlParentest = null;
+	private boolean	bEnabledGrowParentestFixAttemptLimit=false;
 	public Panel getParentest(){
 		if(pnlParentest!=null)return pnlParentest;
 		
@@ -392,11 +393,15 @@ public class ResizablePanel extends Panel {
 			}catch(IllegalArgumentException ex){
 				if(bSkipGrowFix)throw ex;
 				if(!ex.getMessage().startsWith("Size cannot be negative:")) throw ex;
-				if(i>=iGrowParentestFixAttemptLimit) throw ex; //prevents endless growth
+				if(bEnabledGrowParentestFixAttemptLimit && i>=iGrowParentestFixAttemptLimit){throw ex;} //prevents endless growth
 				growParentestFixAttempt(i);
 				i++;
 			}
 		}
+	}
+	
+	public void setEnabledGrowParentestFixAttemptLimit(boolean b){
+		this.bEnabledGrowParentestFixAttemptLimit=b;
 	}
 	
 	private boolean validateParentest() {
@@ -414,6 +419,9 @@ public class ResizablePanel extends Panel {
 
 	public static final String LAYER_RESIZABLE_BORDERS = "resizableBorders";
 	
+	public ResizablePanel(String strStyle) {
+		this(100,100,strStyle);
+	}
   public ResizablePanel( Vector3f v3fSize, String strStyle ) {
 		this(v3fSize.x, v3fSize.y, strStyle);
 	}
@@ -442,9 +450,9 @@ public class ResizablePanel extends Panel {
     CursorEventControl.addListenersToSpatial(this, dcl);
   }
 	
-  public ResizablePanel(Panel pnl) {
-  	this(pnl.getPreferredSize().x, pnl.getPreferredSize().y, pnl.getStyle());
-  	setContents(pnl);
+  public ResizablePanel(Panel pnlContents) {
+  	this(pnlContents.getPreferredSize().x, pnlContents.getPreferredSize().y, pnlContents.getStyle());
+  	setContents(pnlContents);
 //  	layout.addChild(pnl,  BorderLayout.Position.Center);
 	}
 

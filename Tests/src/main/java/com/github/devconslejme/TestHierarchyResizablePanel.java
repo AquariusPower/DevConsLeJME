@@ -27,9 +27,7 @@
 
 package com.github.devconslejme;
 
-import com.github.devconslejme.GenericDialogState.CfgParams;
-import com.github.devconslejme.misc.QueueStateI;
-import com.github.devconslejme.misc.QueueStateI.CallableX;
+import com.github.devconslejme.misc.HierarchySorterI;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
@@ -40,83 +38,41 @@ import com.simsilica.lemur.style.BaseStyles;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestGenericDialog extends SimpleApplication {
+public class TestHierarchyResizablePanel extends SimpleApplication {
 	public static void main(String[] args) {
-		TestGenericDialog tst = new TestGenericDialog();
+		TestHierarchyResizablePanel tst = new TestHierarchyResizablePanel();
 		tst.start();
 	}
-
-	private SimpleGenericDialogState	diag;
-	private Button	btnChosenOption;
 	
 	@Override
 	public void simpleInitApp() {
 		GuiGlobals.initialize(this);
 		BaseStyles.loadGlassStyle();
-
-		QueueStateI.i().configure(this);
-
-		prepareDialog();
-		prepareButtonCallsDiag();
+		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
+		
+		HierarchySorterI.i().configure(this, getGuiNode(), 0f);
+		
+		int i=300;
+		test(new Vector3f(100,i+100,10))
+			.showModal(test(new Vector3f(200,i+200,20)));
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	private void prepareButtonCallsDiag() {
-		btnChosenOption = new Button("Click to change option",BaseStyles.GLASS);
-		btnChosenOption.addClickCommands(new Command<Button>(){
+	private HierarchyResizablePanel test(Vector3f pos) {
+		HierarchyResizablePanel rzp = new HierarchyResizablePanel(null);
+		rzp.setPreferredSize(new Vector3f(300,200,0)); //TODO z will cause trouble?
+		rzp.setLocalTranslation(pos); //above DevCons
+		getGuiNode().attachChild(rzp);
+		
+		Button btn = new Button("click to close:"+pos);
+		btn.addClickCommands(new Command<Button>(){
 			@Override
 			public void execute(Button source) {
-				diag.setEnabled(true);
-//				getStateManager().getState(PopupState.class).showPopup(
-//						diag.getMainResizablePanel(), ClickMode.Consume, null, ColorRGBA.Blue);
+				rzp.removeFromParent();
 			}
 		});
-		btnChosenOption.setLocalTranslation(200, 230, 0);
-		getGuiNode().attachChild(btnChosenOption);
-//		getStateManager().getState(PopupState.class).showPopup(btnChosenOption, ClickMode.Consume, null, ColorRGBA.Red);
-	}
-
-	private void prepareDialog() {
-		diag = new SimpleGenericDialogState(this);
-		
-		diag.configure(
-			new CfgParams()
-				.setNodeParent(getGuiNode())
-				.setStyle(BaseStyles.GLASS)
-				.setPos(new Vector3f(100,550,10))
-				.setSize(new Vector3f(600,500,0))
-		);
-		
-		diag.setTextInfo("This is a good info about something.\nSecond line.");
-		diag.setUseInputTextValue(true);
-		
-		QueueStateI.i().enqueue(new CallableX(0,false) {
-			@Override
-			public Boolean call() {
-				diag.getMainResizablePanel().setUseBumpResizableBorderMode(true);
-				return true;
-			}
-		});
-		
-		diag.putOption("option A", 10);
-		diag.putOption("option B", "This is option B");
-		
-		String str="option C";
-		diag.putOption(str, true);
-		diag.putOption(str, false); //test overwrite option return value
-	}
-
-	@Override
-	public void update() {
-		super.update();
-		
-//		if(btnChosenOption.getText().isEmpty()){
-			if(!diag.isEnabled()){
-				Object objSelectedOption = diag.collectSelectedOption();
-				if(objSelectedOption!=null){
-					btnChosenOption.setText("Chosen="+objSelectedOption);
-				}
-			}
-//		}
+//		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
+		rzp.setContents(btn);
+		return rzp;
 	}
 }

@@ -47,7 +47,7 @@ import com.simsilica.lemur.event.KeyActionListener;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class SimpleDialogState extends GenericDialogState {
+public class SimpleGenericDialogState extends GenericDialogState {
 	private Label	btnInfo;
 	
 	private ListBox<String>	lstbxOptions;
@@ -72,7 +72,7 @@ public class SimpleDialogState extends GenericDialogState {
 		}
 	};
 
-	public SimpleDialogState(Application app) {
+	public SimpleGenericDialogState(Application app) {
 		super(app);
 	}
 	
