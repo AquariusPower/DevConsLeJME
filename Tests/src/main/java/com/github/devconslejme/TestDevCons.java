@@ -27,9 +27,10 @@
 
 package com.github.devconslejme;
 
-import com.github.devconslejme.extras.DynamicFPSLimiterI;
-import com.github.devconslejme.extras.OSCmdI;
-import com.github.devconslejme.extras.SingleMandatoryAppInstanceI;
+import com.github.devconslejme.extras.DynamicFPSLimiter;
+import com.github.devconslejme.extras.OSCmd;
+import com.github.devconslejme.extras.SingleMandatoryAppInstance;
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.system.AppSettings;
@@ -43,7 +44,7 @@ import com.jme3.system.lwjgl.LwjglAbstractDisplay;
 public class TestDevCons extends SimpleApplication{
 
 	public static void main(String[] args) {
-		SingleMandatoryAppInstanceI.i().configureOptionalAtMainMethod(
+		GlobalInstanceManagerI.i().get(SingleMandatoryAppInstance.class).configureOptionalAtMainMethod(
 			JmeSystem.getStorageFolder(StorageFolderType.Internal)); // this is optional
 		
 		TestDevCons tst = new TestDevCons();
@@ -67,21 +68,22 @@ public class TestDevCons extends SimpleApplication{
 		/*** optionals below ***/
 		JavaScriptI.i().setJSBinding(this);
 		
-		SingleMandatoryAppInstanceI.i().configureRequiredAtApplicationInitialization(null);
-		JavaScriptI.i().setJSBinding(SingleMandatoryAppInstanceI.i());
+		GlobalInstanceManagerI.i().get(SingleMandatoryAppInstance.class).configureRequiredAtApplicationInitialization(null);
+		JavaScriptI.i().setJSBinding(GlobalInstanceManagerI.i().get(SingleMandatoryAppInstance.class));
 		
 		getStateManager().attach(new AbstractAppState(){
 			@Override
 			public void update(float tpf) {
 				super.update(tpf);
-				DynamicFPSLimiterI.i().update(tpf);
+				GlobalInstanceManagerI.i().get(DynamicFPSLimiter.class).update(tpf);
 			}
 		});
-		JavaScriptI.i().setJSBinding(DynamicFPSLimiterI.i());
+		JavaScriptI.i().setJSBinding(GlobalInstanceManagerI.i().get(DynamicFPSLimiter.class));
 		
 		// Linux only: easy workaround to make strict focus policy painless
-		OSCmdI.i().runOSCommand("linux 'xdotool windowactivate $(xdotool search --name \"^"+settings.getTitle()+"$\")'");
-		JavaScriptI.i().setJSBinding(OSCmdI.i());
+		GlobalInstanceManagerI.i().get(OSCmd.class).runOSCommand(
+			"linux 'xdotool windowactivate $(xdotool search --name \"^"+settings.getTitle()+"$\")'");
+		JavaScriptI.i().setJSBinding(GlobalInstanceManagerI.i().get(OSCmd.class));
 	}
 	
 	/**
@@ -89,6 +91,6 @@ public class TestDevCons extends SimpleApplication{
 	 */
 	@Override
 	public void handleError(String errMsg, Throwable t) {
-		SingleMandatoryAppInstanceI.i().setExitRequestCause(errMsg,t);
+		GlobalInstanceManagerI.i().get(SingleMandatoryAppInstance.class).setExitRequestCause(errMsg,t);
 	}
 }

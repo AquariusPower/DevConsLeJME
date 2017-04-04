@@ -43,8 +43,7 @@ import com.simsilica.lemur.grid.GridModel;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class MiscLemurI {
-	private static MiscLemurI instance = new MiscLemurI();
-	/*instance*/ public static MiscLemurI i(){return instance;}
+	public static MiscLemurI i(){return GlobalInstanceManagerI.i().get(MiscLemurI.class);}
 	
 	public Integer getEntryHeightPixels(ListBox lstbx){
 		GridModel<Panel> gm = lstbx.getGridPanel().getModel();

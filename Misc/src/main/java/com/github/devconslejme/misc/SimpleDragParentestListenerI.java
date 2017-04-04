@@ -39,8 +39,7 @@ import com.simsilica.lemur.event.CursorMotionEvent;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class SimpleDragParentestListenerI implements CursorListener{
-	private static SimpleDragParentestListenerI instance = new SimpleDragParentestListenerI();
-	/**instance*/ public static SimpleDragParentestListenerI i(){return instance;}
+	public static SimpleDragParentestListenerI i(){return GlobalInstanceManagerI.i().get(SimpleDragParentestListenerI.class);}
 	
 	boolean bDragging = false;
 	private Vector3f	v3fDistToCursor;

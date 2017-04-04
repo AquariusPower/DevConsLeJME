@@ -37,8 +37,7 @@ import com.google.common.collect.Lists;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class JavaLangI {
-	private static JavaLangI instance = new JavaLangI();
-	/**instance*/ public static JavaLangI i(){return instance;}
+	public static JavaLangI i(){return GlobalInstanceManagerI.i().get(JavaLangI.class);}
 	
 	/**
 	 * 

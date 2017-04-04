@@ -32,6 +32,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -43,8 +44,7 @@ import com.simsilica.lemur.core.VersionedList;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class LoggingI {
-	private static LoggingI instance = new LoggingI();
-	/**instance*/ public static LoggingI i(){return instance;}
+	public static LoggingI i(){return GlobalInstanceManagerI.i().get(LoggingI.class);}
 	
 	private VersionedList<String>	vlstrLogEntries;
 	private int iLogEntriesLimit = 100000;
@@ -134,7 +134,7 @@ public class LoggingI {
 		//TODO start app time at year0 month0 day0 ... 
 //		dateForMarker.setTime(TimeConvertI.i().getMilisFrom(DCGlobal.app().getTimer())); //this is a delay from the start of the app
 //		strInfo = strInfo+" [A="+dateFormat.format(dateForMarker)+"]";
-		strInfo = strInfo+" [A="+TimeConvertI.i().formatElapsed(DCGlobal.app().getTimer())+"]";
+		strInfo = strInfo+" [A="+TimeConvertI.i().formatElapsed(DevConsGlobalsI.i().app().getTimer())+"]";
 		
 		strInfo = Strings.padStart(strInfo, iWrapAtColumn/2 +strInfo.length()/2, '_');
 		strInfo = Strings.padEnd(strInfo, iWrapAtColumn, '_');

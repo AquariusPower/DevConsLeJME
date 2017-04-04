@@ -39,8 +39,7 @@ import com.jme3.system.Timer;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class TimeConvertI {
-	private static TimeConvertI instance = new TimeConvertI();
-	/**instance*/public static TimeConvertI i(){return instance;}
+	public static TimeConvertI i(){return GlobalInstanceManagerI.i().get(TimeConvertI.class);}
 	
 	private long lOneSecondInNanos = 1000000000L;
 	private long lOneSecondInMilis = 1000L;

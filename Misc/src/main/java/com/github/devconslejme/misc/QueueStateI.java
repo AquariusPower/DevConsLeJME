@@ -40,8 +40,7 @@ import com.jme3.app.state.AbstractAppState;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class QueueStateI extends AbstractAppState{
-	private static QueueStateI instance = new QueueStateI();
-	/**instance*/ public static QueueStateI i(){return instance;}
+	public static QueueStateI i(){return GlobalInstanceManagerI.i().get(QueueStateI.class);}
 	
 	ArrayList<CallableX> acxList = new ArrayList<CallableX>();
 	private Application	app;

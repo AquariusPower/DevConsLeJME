@@ -47,6 +47,7 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
 import com.github.devconslejme.misc.AutoCompleteI;
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.QueueStateI;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
 import com.github.devconslejme.misc.QueueStateI.CallableX;
@@ -59,12 +60,7 @@ import com.jme3.input.KeyInput;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class JavaScriptI {
-	private static JavaScriptI instance = new JavaScriptI();
-	/**instance*/ public static JavaScriptI i(){return instance;}
-	
-//	static {
-//		instance.setJSBinding(instance);
-//	}
+	public static JavaScriptI i(){return GlobalInstanceManagerI.i().get(JavaScriptI.class);}
 	
 	private Object	objRetValUser;
 	private Object	objRetValFile;

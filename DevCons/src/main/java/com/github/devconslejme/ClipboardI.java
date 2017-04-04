@@ -34,12 +34,13 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
+
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class ClipboardI {
-	private static ClipboardI instance = new ClipboardI();
-	/*instance*/ public static ClipboardI i(){return instance;}
+	public static ClipboardI i(){return GlobalInstanceManagerI.i().get(ClipboardI.class);}	
 	
 	public String copyToClipboard(String str) {
 		if(str==null)return null;

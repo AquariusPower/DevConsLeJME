@@ -34,8 +34,7 @@ import java.math.BigInteger;
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
 public class StringI {
-	private static StringI instance = new StringI();
-	/*instance*/ public static StringI i(){return instance;}
+	public static StringI i(){return GlobalInstanceManagerI.i().get(StringI.class);}
 	
 	private String	strLastUid;
 	

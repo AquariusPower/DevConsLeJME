@@ -25,68 +25,70 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.extras;
+package com.github.devconslejme;
 
-import java.io.IOException;
-import java.lang.ProcessBuilder.Redirect;
-import java.util.ArrayList;
+import java.util.HashMap;
+
 
 /**
+ * DISABLE!!! -> CPU "on demand" frequency, set it to something static/fixed (not necessarily the max)
+ * HashMap seems fast enough on this test case.
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class OSCmdI {
-	private static OSCmdI instance = new OSCmdI();
-	/*instance*/ public static OSCmdI i(){return instance;}
+public class TestGlobalAccessPerf {
+	private static TestGlobalAccessPerf instance = new TestGlobalAccessPerf();
+	public static TestGlobalAccessPerf i(){return instance;}
 	
-	/**
-	 * Non matching OS cmd will just be ignored/skipped, 
-	 * so several OSs can have their related commands one after another without a problem!
-	 * 
-	 * @param strLine ex.: "linux 'ls 123'"
-	 * @return
-	 */
-	public boolean runOSCommand(String strLine){
-		boolean bOk=true;
-		
-		CommandLineParser ccl = new CommandLineParser(strLine);
-		
-		String strOSName=System.getProperty("os.name");
-		if(!strOSName.equalsIgnoreCase(ccl.getCommand())){
-			/**
-			 * skip message would be just annoying...
-			 */
-			return true; //just skip
+	int iSize=1000;
+	HashMap<Integer,Integer> hm = new HashMap<Integer,Integer>();
+	Integer[] al = new Integer[1000];
+	
+	public TestGlobalAccessPerf(){
+		for(int i=0;i<iSize;i++){
+			hm.put(i,i);
+			al[i]=i;
 		}
-		
-		ArrayList<String> astrOSCmd = new ArrayList<String>();
-		if(strOSName.equalsIgnoreCase("linux")){
-			astrOSCmd.add("bash");
-			astrOSCmd.add("-c");
-		}
-//		astrOSCmd.add(ccl.getParam(1,String.class));
-		astrOSCmd.add(ccl.getParam(1));
-		
-		try {
-//			LoggingI.i().logMarker("Running OS command:Begin");
-			System.out.println("OSCommand:"+astrOSCmd);
-			
-//			Process p = Runtime.getRuntime().exec(astrOSCmd.toArray(new String[0]));
-//			InputStream isErr = p.getErrorStream();
-			
-			ProcessBuilder pb = new ProcessBuilder(astrOSCmd);
-			pb.redirectOutput(Redirect.INHERIT);
-			pb.redirectError(Redirect.INHERIT);
-			Process p = pb.start();
-			int iExit = p.waitFor();
-			
-			System.out.println("Running OS command:End:Return="+iExit);
-			bOk = iExit==0;
-		} catch (IOException|InterruptedException e) {
-			e.printStackTrace();
-//			LoggingI.i().logExceptionEntry(e, astrOSCmd.toString());
-		}
-		
-		return bOk;
 	}
 	
+	public int tstSimpleCall(int i){
+		return i+1;
+	}
+	private long tstHashmap(int i) {
+		return hm.get(i)+1;
+	}
+	private long tstArray(int i) {
+		return al[i]+1;
+	}
+	
+	public static void main(String[] args) {
+		i().testFull();
+	}
+	
+//	HashMap<Integer,Long> hmRes = new HashMap<Integer,Long>();
+	private void testFull() {
+		int iTotTests=3;
+		for(int i=0;i<iTotTests*10;i++){
+			long lNanoStart=System.nanoTime();
+			long lTest=0;
+			Integer i3=null;
+			for(int i2=0;i2<1000;i2++){
+				i3=i%iTotTests;
+				switch(i3){
+					case 0:
+						lTest+=TestGlobalAccessPerf.i().tstSimpleCall(i2%iSize);
+						break;
+					case 1:
+						lTest+=TestGlobalAccessPerf.i().tstHashmap(i2%iSize);
+						break;
+					case 2:
+						lTest+=TestGlobalAccessPerf.i().tstArray(i2%iSize);
+						break;
+				}
+			}
+			long lNanoEnd=System.nanoTime();
+			long lNanoDiff=lNanoEnd-lNanoStart;
+			System.out.println(i3+": "+lNanoDiff+"//"+lTest);
+		}
+	}
+
 }

@@ -38,6 +38,8 @@ import java.util.Set;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.ResizablePanel.IResizableListener;
+import com.github.devconslejme.misc.DialogStackOrganizerI;
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.MiscJmeI;
 import com.github.devconslejme.misc.MiscLemurI;
 import com.github.devconslejme.misc.QueueStateI;
@@ -81,8 +83,7 @@ import com.simsilica.lemur.text.DocumentModel;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class DevConsPluginStateI extends AbstractAppState implements IResizableListener{
-	private static DevConsPluginStateI instance = new DevConsPluginStateI();
-	/**instance*/ public static DevConsPluginStateI i(){return instance;}
+	public static DevConsPluginStateI i(){return GlobalInstanceManagerI.i().get(DevConsPluginStateI.class);}
 	
 	private Vector3f	v3fApplicationWindowSize;
 	private float	fLemurPreferredThickness = 1f;
@@ -236,20 +237,20 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	}
 	
 	public DevConsPluginStateI(){
-		if(instance==null)return;
-		if(instance!=this)throw new NullPointerException("use the single instance");
+//		if(instance==null)return;
+		if(i()!=this)throw new NullPointerException("use the global single instance");
 	}
 	
 	public void configure(Application app, Node nodeParent) {
-		DCGlobal.configure(app);
+		DevConsGlobalsI.i().put(Application.class,app);
 		
 		this.nodeParent = nodeParent;
-		DCGlobal.app().getStateManager().attach(this);
+		DevConsGlobalsI.i().app().getStateManager().attach(this);
 		
 		flStorageFolder = new File(
 			JmeSystem.getStorageFolder(StorageFolderType.Internal),
-			DCGlobal.app().getClass().getPackage().getName().replace(".",File.separator) //package of Application class
-				+File.separator+DCGlobal.app().getClass().getSimpleName() //Application class
+			DevConsGlobalsI.i().app().getClass().getPackage().getName().replace(".",File.separator) //package of Application class
+				+File.separator+DevConsGlobalsI.i().app().getClass().getSimpleName() //Application class
 				+File.separator+DevConsPluginStateI.class.getSimpleName() //DevCons plugin
 		);
 		
@@ -263,7 +264,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		LoggingI.i().configure();
 		JavaScriptI.i().setJSBinding(LoggingI.i());
 		
-		QueueStateI.i().configure(DCGlobal.app());
+		QueueStateI.i().configure(DevConsGlobalsI.i().app());
 		JavaScriptI.i().setJSBinding(QueueStateI.i());
 	}
 	
@@ -354,12 +355,12 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		putStatus(EStatPriority.Normal, "VsR", "DevCons Logging area Visible Rows",
 			String.format("%d", lstbxLoggingSection.getVisibleItems()) );
 		
-		Vector2f v2fCursor = DCGlobal.app().getInputManager().getCursorPosition();
+		Vector2f v2fCursor = DevConsGlobalsI.i().app().getInputManager().getCursorPosition();
 		putStatus(EStatPriority.Bottom, "Cur", "Cursor Position",
 			String.format("%.0f,%.0f", v2fCursor.x, v2fCursor.y) );
 		
 		putStatus(EStatPriority.Bottom, "Tmr", "Application Time",
-				String.format("%d", DCGlobal.app().getTimer().getTime()) );
+				String.format("%d", DevConsGlobalsI.i().app().getTimer().getTime()) );
 	}
 	
 	private void updateStatus() {
@@ -597,7 +598,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private void initStyle() {
 		colorConsoleStyleBackground = MiscJmeI.i().colorChangeCopy(ColorRGBA.Blue, -0.75f);
 		
-		if(GuiGlobals.getInstance()==null)GuiGlobals.initialize(DCGlobal.app());
+		if(GuiGlobals.getInstance()==null)GuiGlobals.initialize(DevConsGlobalsI.i().app());
 		
 		Styles styles = GuiGlobals.getInstance().getStyles();
 		Attributes attrs = styles.getSelector(getStyle()); // this also creates the style

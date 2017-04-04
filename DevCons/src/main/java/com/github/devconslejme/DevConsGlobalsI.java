@@ -27,19 +27,25 @@
 
 package com.github.devconslejme;
 
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.jme3.app.Application;
 
 /**
+ * Globally accessible access other single instances easily.
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class DCGlobal {
-	private static Application	app;
-	
-	public static void configure(Application app){
-		if(DCGlobal.app!=null)throw new NullPointerException("already configured");
-		DCGlobal.app=app;
+public class DevConsGlobalsI {
+  private static DevConsGlobalsI instance=new DevConsGlobalsI();
+  public static void setGlobalOverride (DevConsGlobalsI inst){
+  	if(DevConsGlobalsI.instance!=null)throw new NullPointerException("already set "+instance+", "+inst);
+  	DevConsGlobalsI.instance=inst;
+  }
+  public static DevConsGlobalsI i (){return instance;}
+  
+	public <T> void put(Class<T> cl, T obj){
+		GlobalInstanceManagerI.i().put(cl, obj);
 	}
 	
-	public static final Application app(){return app;}
+	public Application app(){return GlobalInstanceManagerI.i().get(Application.class);}
 	
 }

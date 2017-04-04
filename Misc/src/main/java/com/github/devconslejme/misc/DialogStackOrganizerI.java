@@ -46,6 +46,8 @@ import com.simsilica.lemur.Panel;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class DialogStackOrganizerI extends AbstractAppState{
+	public static DialogStackOrganizerI i(){return GlobalInstanceManagerI.i().get(DialogStackOrganizerI.class);}
+	
 	private ArrayList<Panel> apnl = new ArrayList<Panel>();
 	private Application	app;
 	private Node nodeToMonitor;

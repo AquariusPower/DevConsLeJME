@@ -34,7 +34,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import com.github.devconslejme.extras.OSCmdI;
+import com.github.devconslejme.extras.OSCmd;
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.google.common.io.Files;
 
 /**
@@ -50,7 +51,7 @@ public class TestGenerateClassGraphAnalysis {
 		
 		Files.write(str, new File("Tests/src/main/analysis/GraphViz.dot"), StandardCharsets.UTF_8);
 		
-		OSCmdI.i().runOSCommand("linux 'dot -Tsvg "
+		GlobalInstanceManagerI.i().get(OSCmd.class).runOSCommand("linux 'dot -Tsvg "
 			+"< Tests/src/main/analysis/GraphViz.dot "
 			+"> Tests/src/main/analysis/GraphViz.svg'");
 	}

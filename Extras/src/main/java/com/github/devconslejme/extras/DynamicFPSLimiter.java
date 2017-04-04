@@ -25,50 +25,49 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.misc;
-
-import com.jme3.math.ColorRGBA;
-import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
+package com.github.devconslejme.extras;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class MiscJmeI {
-	public static MiscJmeI i(){return GlobalInstanceManagerI.i().get(MiscJmeI.class);}
+public class DynamicFPSLimiter { //extends AbstractAppState{
+	private long	lNanoFrameDelayByCpuUsage;
+	private long	lNanoDelayLimit;
+	private long	lNanoTimePrevious;
+	private long	lNanoThreadSleep;
+	private int	iMaxFPS;
+	private long lOneSecondInNanos = 1000000000L;
 	
-	private float colorComponentLimit(float f){
-		if(f<=0)f=0;
-		if(f>=1)f=1;
-		return f;
-	}
-	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB){
-		return colorChangeCopy(color,fAddRGB,color.a);
-	}
-	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB, float fAlpha){
-		color = color.clone();
-		
-		color.r=colorComponentLimit(color.r+=fAddRGB);
-		color.g=colorComponentLimit(color.g+=fAddRGB);
-		color.b=colorComponentLimit(color.b+=fAddRGB);
-		
-		color.a=fAlpha;
-		return color;
+	public void setMaxFps(int iMaxFPS){
+		this.iMaxFPS=iMaxFPS;
+		if(this.iMaxFPS<1)this.iMaxFPS=1;
+		float f=1.0f/this.iMaxFPS;
+		lNanoDelayLimit = (long) (f * lOneSecondInNanos);
 	}
 	
-	@SuppressWarnings({ "unchecked" })
-	public <T extends Node> T getParentest(Spatial spt, Class<T> clTypeParentest, boolean bIncludeFirst){
-		T parentest = null;
-		if(bIncludeFirst && clTypeParentest.isInstance(spt))parentest=(T)spt;
-		
-		Node nodeParent = spt.getParent();
-		while(nodeParent!=null){
-			if(clTypeParentest.isInstance(nodeParent)){
-				parentest=(T)nodeParent;
-			}
-			nodeParent=nodeParent.getParent();
+	public void update(float tpf) {
+		try {
+			/**
+			 * //MUST BE BEFORE THE SLEEP!!!!!!
+			 */
+			lNanoFrameDelayByCpuUsage = System.nanoTime() - lNanoTimePrevious; //must be real time as must be independent of the simulation time
+			lNanoThreadSleep = lNanoDelayLimit -lNanoFrameDelayByCpuUsage;
+			if(lNanoThreadSleep<0L)lNanoThreadSleep=0L; //only useful for reports
+			
+			if(lNanoThreadSleep>0L)Thread.sleep(getThreadSleepTimeMilis());
+			
+			/**
+			 * MUST BE AFTER THE SLEEP!!!!!!!
+			 */
+			lNanoTimePrevious = System.nanoTime(); //must be real time as must be independent of the simulation time
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 		
-		return parentest;
 	}
+	
+	private long getThreadSleepTimeMilis(){
+		return lNanoThreadSleep/1000000L;
+	}
+	
 }

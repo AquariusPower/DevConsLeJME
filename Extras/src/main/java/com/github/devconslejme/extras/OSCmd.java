@@ -25,50 +25,66 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.misc;
+package com.github.devconslejme.extras;
 
-import com.jme3.math.ColorRGBA;
-import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
+import java.io.IOException;
+import java.lang.ProcessBuilder.Redirect;
+import java.util.ArrayList;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class MiscJmeI {
-	public static MiscJmeI i(){return GlobalInstanceManagerI.i().get(MiscJmeI.class);}
+public class OSCmd {
 	
-	private float colorComponentLimit(float f){
-		if(f<=0)f=0;
-		if(f>=1)f=1;
-		return f;
-	}
-	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB){
-		return colorChangeCopy(color,fAddRGB,color.a);
-	}
-	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB, float fAlpha){
-		color = color.clone();
+	/**
+	 * Non matching OS cmd will just be ignored/skipped, 
+	 * so several OSs can have their related commands one after another without a problem!
+	 * 
+	 * @param strLine ex.: "linux 'ls 123'"
+	 * @return
+	 */
+	public boolean runOSCommand(String strLine){
+		boolean bOk=true;
 		
-		color.r=colorComponentLimit(color.r+=fAddRGB);
-		color.g=colorComponentLimit(color.g+=fAddRGB);
-		color.b=colorComponentLimit(color.b+=fAddRGB);
+		CommandLineParser ccl = new CommandLineParser(strLine);
 		
-		color.a=fAlpha;
-		return color;
-	}
-	
-	@SuppressWarnings({ "unchecked" })
-	public <T extends Node> T getParentest(Spatial spt, Class<T> clTypeParentest, boolean bIncludeFirst){
-		T parentest = null;
-		if(bIncludeFirst && clTypeParentest.isInstance(spt))parentest=(T)spt;
-		
-		Node nodeParent = spt.getParent();
-		while(nodeParent!=null){
-			if(clTypeParentest.isInstance(nodeParent)){
-				parentest=(T)nodeParent;
-			}
-			nodeParent=nodeParent.getParent();
+		String strOSName=System.getProperty("os.name");
+		if(!strOSName.equalsIgnoreCase(ccl.getCommand())){
+			/**
+			 * skip message would be just annoying...
+			 */
+			return true; //just skip
 		}
 		
-		return parentest;
+		ArrayList<String> astrOSCmd = new ArrayList<String>();
+		if(strOSName.equalsIgnoreCase("linux")){
+			astrOSCmd.add("bash");
+			astrOSCmd.add("-c");
+		}
+//		astrOSCmd.add(ccl.getParam(1,String.class));
+		astrOSCmd.add(ccl.getParam(1));
+		
+		try {
+//			LoggingI.i().logMarker("Running OS command:Begin");
+			System.out.println("OSCommand:"+astrOSCmd);
+			
+//			Process p = Runtime.getRuntime().exec(astrOSCmd.toArray(new String[0]));
+//			InputStream isErr = p.getErrorStream();
+			
+			ProcessBuilder pb = new ProcessBuilder(astrOSCmd);
+			pb.redirectOutput(Redirect.INHERIT);
+			pb.redirectError(Redirect.INHERIT);
+			Process p = pb.start();
+			int iExit = p.waitFor();
+			
+			System.out.println("Running OS command:End:Return="+iExit);
+			bOk = iExit==0;
+		} catch (IOException|InterruptedException e) {
+			e.printStackTrace();
+//			LoggingI.i().logExceptionEntry(e, astrOSCmd.toString());
+		}
+		
+		return bOk;
 	}
+	
 }
