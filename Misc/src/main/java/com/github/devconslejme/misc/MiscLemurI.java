@@ -27,20 +27,13 @@
 
 package com.github.devconslejme.misc;
 
-import com.jme3.bounding.BoundingBox;
 import com.jme3.math.FastMath;
-import com.jme3.math.Vector3f;
-import com.jme3.scene.Spatial;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.Panel;
-import com.simsilica.lemur.event.AbstractCursorEvent;
-import com.simsilica.lemur.event.CursorButtonEvent;
-import com.simsilica.lemur.event.CursorEventControl;
-import com.simsilica.lemur.event.CursorListener;
-import com.simsilica.lemur.event.CursorMotionEvent;
 import com.simsilica.lemur.grid.GridModel;
 
 /**
+ * DevSelfNote: Misc lib class should not exist. As soon coehsion is possible, do it!
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class MiscLemurI {
@@ -55,38 +48,4 @@ public class MiscLemurI {
 		return (int)FastMath.ceil(fHeight);
 	}
 	
-//	public static class SimpleDragParentestListener implements CursorListener{
-//		boolean bDragging = false;
-//		private Vector3f	v3fDistToCursor;
-//		private Vector3f getCursorPos(AbstractCursorEvent event){
-//			return new Vector3f(event.getX(),event.getY(),0);
-//		}
-//		@Override
-//		public void cursorButtonEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
-//			if(event.getButtonIndex()==0){
-//				bDragging=event.isPressed();
-//				Panel pnlParentest = MiscJmeI.i().getParentest(capture, Panel.class, true);
-//				v3fDistToCursor=pnlParentest.getWorldTranslation().subtract(getCursorPos(event));
-//				event.setConsumed();
-//			}
-//		}
-//		@Override
-//		public void cursorEntered(CursorMotionEvent event, Spatial target,				Spatial capture) {
-//		}
-//		@Override
-//		public void cursorExited(CursorMotionEvent event, Spatial target,				Spatial capture) {
-//		}
-//		@Override
-//		public void cursorMoved(CursorMotionEvent event, Spatial target,				Spatial capture) {
-//			if(bDragging){
-//				Panel pnlParentest = MiscJmeI.i().getParentest(capture, Panel.class, true);
-//				pnlParentest.setLocalTranslation(getCursorPos(event).add(v3fDistToCursor));
-//				event.setConsumed();
-//			}
-//		}
-//	}
-//	SimpleDragParentestListener sdl = new SimpleDragParentestListener();
-//	public void applySimpleDragParentestListener(Panel pnl){
-//		CursorEventControl.addListenersToSpatial(pnl,sdl);
-//	}
 }

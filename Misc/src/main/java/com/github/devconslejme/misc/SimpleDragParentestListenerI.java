@@ -29,9 +29,11 @@ package com.github.devconslejme.misc;
 
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
+import com.simsilica.lemur.Label;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.event.AbstractCursorEvent;
 import com.simsilica.lemur.event.CursorButtonEvent;
+import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.CursorListener;
 import com.simsilica.lemur.event.CursorMotionEvent;
 
@@ -77,6 +79,16 @@ public class SimpleDragParentestListenerI implements CursorListener{
 			v3f.z=pnlParentest.getLocalTranslation().z; //DO NOT MESS WITH Z!!!!
 			pnlParentest.setLocalTranslation(v3f);
 			event.setConsumed();
+		}
+	}
+
+	public void applyAt(Panel pnl) {
+		applyAt(pnl,null);
+	}
+	public void applyAt(Panel pnl, Panel pnlTarget) {
+		CursorEventControl.addListenersToSpatial(pnl, this);
+		if(pnlTarget!=null){
+			pnl.setUserData(SimpleDragParentestListenerI.class.getName()+"", pnlTarget);
 		}
 	}
 }

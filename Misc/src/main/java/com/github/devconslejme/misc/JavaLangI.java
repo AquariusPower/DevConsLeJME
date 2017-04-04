@@ -41,7 +41,7 @@ public class JavaLangI {
 	
 	/**
 	 * 
-	 * @param objValue must be a Map, an Iterable or Object[]
+	 * @param objValue must be a Map (HashMap, TreeMap etc), an Iterable (AttayList, Collection etc) or Object[] (any simple array)
 	 * @return Object[][0]=key,Object[][1]=value, the key will be an index for simple arrays
 	 */
 	public Object[][] convertToKeyValueArray(Object objValue){

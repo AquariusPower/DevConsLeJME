@@ -25,70 +25,40 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme;
+package com.github.devconslejme.devcons;
 
-import java.awt.Toolkit;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.google.common.io.Files;
+
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class ClipboardI {
-	public static ClipboardI i(){return GlobalInstanceManagerI.i().get(ClipboardI.class);}	
+public class FileI {
+	public static FileI i(){return GlobalInstanceManagerI.i().get(FileI.class);}
 	
-	public String copyToClipboard(String str) {
-		if(str==null)return null;
-		
-		StringSelection ss = new StringSelection(str);
-		Toolkit.getDefaultToolkit().getSystemClipboard()
-			.setContents(ss, ss);
-		
-		return str;
+	public void appendLine(File fl, String str){
+		try {
+			if(!fl.exists())fl.getParentFile().mkdirs();
+			Files.append(str+"\n", fl, StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			LoggingI.i().logExceptionEntry(e, null, true); //also prevents recursiveness
+		}
 	}
 
-	/**
-	 * this is heavy...
-	 * @param bEscapeNL good to have single line result
-	 * @return
-	 */
-	public String pasteFromClipboard(boolean bEscapeNL) {
-		String str = readFromClipboard(bEscapeNL);
-		if(str!=null)DevConsPluginStateI.i().insertAtInputTextCaratPos(str);
-		return str;
-	}
-	
-	public String readFromClipboard(boolean bEscapeNL){
-		try{
-			Transferable tfbl = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
-			String str = (String) tfbl.getTransferData(DataFlavor.stringFlavor);
-			if(bEscapeNL){
-				str=str.replace("\n", "\\n");
-			}
-			
-			return str;
-		} catch (UnsupportedFlavorException | IOException e) {
-			LoggingI.i().logExceptionEntry(e,null);
+	public List<String> readAllLines(File fl) {
+		try {
+			return Files.readLines(fl, StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			LoggingI.i().logExceptionEntry(e, null, true); //also prevents recursiveness
 		}
 		
 		return null;
 	}
-	
-	public String cutSelectedLogEntryToClipboard() {
-		String str = copyToClipboard(LoggingI.i().getSelectedEntry());
-		LoggingI.i().deleteLogEntry(DevConsPluginStateI.i().getSelectedIndex());
-		return str;
-	}
 
-	public void showClipboard() {
-		LoggingI.i().logMarker("Clipboard Contents: begin");
-		LoggingI.i().logEntry(ClipboardI.i().readFromClipboard(false));
-		LoggingI.i().logMarker("Clipboard Contents: end");
-		DevConsPluginStateI.i().scrollKeepAtBottom();
-	}
 }

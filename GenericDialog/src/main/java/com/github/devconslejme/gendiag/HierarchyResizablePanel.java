@@ -25,10 +25,12 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme;
+package com.github.devconslejme.gendiag;
 
 import java.util.ArrayList;
 
+import com.github.devconslejme.misc.ColorI;
+import com.github.devconslejme.misc.SimpleDragParentestListenerI;
 import com.github.devconslejme.misc.HierarchySorterI.IHierarchySorter;
 import com.github.devconslejme.misc.MiscJmeI;
 import com.jme3.math.ColorRGBA;
@@ -47,46 +49,32 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 	 * whatchout that Lemur will not control this blocker position/size/layout relatively to the panel it is blocking!
 	 */
 	private Button	btnBlocker;
-	private Node	nodeBlockerHolder;
 	
-	private Panel	pnlParent;
-	private ArrayList<HierarchyResizablePanel> arzdHierarchyChildList = new ArrayList<HierarchyResizablePanel>();
 	private long	lLastFocusTimeNano = -1;
-	private boolean	bTop;
-	private boolean	bModal;
+	private ArrayList<HierarchyResizablePanel> arzdHierarchyChildList = new ArrayList<HierarchyResizablePanel>();
+	private Panel	hrpHierarchyParent;
+	private boolean	bHierarchyTop;
+	private boolean	bHierarchyModal;
 	
 	public HierarchyResizablePanel(String strStyle) {
 		super(strStyle);
+		
+		initBlocker();
+	}
+	
+	private void initBlocker(){
 		btnBlocker = new Button("");//!BLOCKED!");
-//		nodeBlockerHolder=new Node("Workaround to let lemur ignore it's child blocker");
-//		nodeBlockerHolder.attachChild(btnBlocker);
+		
 		btnBlocker.setBackground(
-				new QuadBackgroundComponent(//ColorRGBA.Red));
-					MiscJmeI.i().colorChangeCopy(ColorRGBA.Red, -0.75f, 0.25f)));
+			new QuadBackgroundComponent(//ColorRGBA.Red));
+				ColorI.i().colorChangeCopy(ColorRGBA.Red, -0.75f, 0.25f)));
+	
+		SimpleDragParentestListenerI.i().applyAt(btnBlocker, this);
 	}
 
 	public void setEnabledBlockerLayer(boolean b){
 		if(b){
 			getParent().attachChild(btnBlocker);
-//			QueueStateI.i().enqueue(new CallableX(0,false) {
-//				@Override
-//				public Boolean call() {
-//					Vector3f v3f = MiscJmeI.i().getBoundingBoxLimits(HierarchyResizablePanel.this);
-//					if(Float.compare(v3f.length(),0f)==0)return false;
-//					
-////					attachChild(nodeBlockerHolder);
-//					attachChild(btnBlocker);
-//					
-////					nodeBlockerHolder.setLocalTranslation(0, 0, v3f.z);
-//					nodeBlockerHolder.setLocalTranslation(0, 0, v3f.z);
-//					btnBlocker.setPreferredSize(getPreferredSize());
-//					btnBlocker.setBackground(
-//						new QuadBackgroundComponent(//ColorRGBA.Red));
-//							MiscJmeI.i().colorChangeCopy(ColorRGBA.Red, -0.75f, 0.25f)));
-//					
-//					return true;
-//				}
-//			});
 		}else{
 			btnBlocker.removeFromParent();
 		}
@@ -104,11 +92,7 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 	 * @param rzdChildDialog
 	 */
 	public void showModal(HierarchyResizablePanel rzdChildDialog){
-		rzdChildDialog.setModal(true);
-		getParent().attachChild(rzdChildDialog);
-		arzdHierarchyChildList.add(rzdChildDialog);
-		setEnabledBlockerLayer(true);
-		update();
+		setChild(rzdChildDialog,true);
 	}
 	
 	/**
@@ -116,13 +100,24 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 	 * @param rzdChildDialog
 	 */
 	public void showModeless(HierarchyResizablePanel rzdChildDialog){
-		rzdChildDialog.setModal(false);
+		setChild(rzdChildDialog,false);
+	}
+	
+	private void setChild(HierarchyResizablePanel rzdChildDialog, boolean bModal){
+		rzdChildDialog.setModal(bModal);
+		rzdChildDialog.setHierarchyParent(this);
 		getParent().attachChild(rzdChildDialog);
 		arzdHierarchyChildList.add(rzdChildDialog);
+		if(bModal)setEnabledBlockerLayer(true);
+		update();
 	}
 	
 	protected void setModal(boolean b) {
-		this.bModal=b;
+		this.bHierarchyModal = b;
+	}
+	
+	protected void setHierarchyParent(HierarchyResizablePanel hrpParent){
+		this.hrpHierarchyParent = hrpParent;
 	}
 
 	@Override
@@ -179,7 +174,7 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 	
 	@Override
 	public Panel getHierarchyParent() {
-		return pnlParent;
+		return hrpHierarchyParent;
 	}
 	
 	@Override
@@ -194,12 +189,12 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 
 	@Override
 	public boolean isTopHierarchy() {
-		return bTop;
+		return bHierarchyTop;
 	}
 
 	@Override
 	public boolean isModal() {
-		return bModal;
+		return bHierarchyModal;
 	}
 	
 }

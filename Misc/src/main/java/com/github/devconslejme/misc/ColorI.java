@@ -34,30 +34,54 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 
 /**
- * DevSelfNote: Misc lib class should not exist. As soon coehsion is possible, do it!
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class MiscJmeI {
-	public static MiscJmeI i(){return GlobalInstanceManagerI.i().get(MiscJmeI.class);}
+public class ColorI {
+	public static ColorI i(){return GlobalInstanceManagerI.i().get(ColorI.class);}
 	
-	@SuppressWarnings({ "unchecked" })
-	public <T extends Node> T getParentest(Spatial spt, Class<T> clTypeParentest, boolean bIncludeFirst){
-		T parentest = null;
-		if(bIncludeFirst && clTypeParentest.isInstance(spt))parentest=(T)spt;
+	private float colorComponentLimit(float f){
+		if(f<=0)f=0;
+		if(f>=1)f=1;
+		return f;
+	}
+	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB){
+		return colorChangeCopy(color,fAddRGB,color.a);
+	}
+	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB, float fAlpha){
+		color = color.clone();
 		
-		Node nodeParent = spt.getParent();
-		while(nodeParent!=null){
-			if(clTypeParentest.isInstance(nodeParent)){
-				parentest=(T)nodeParent;
-			}
-			nodeParent=nodeParent.getParent();
+		color.r=colorComponentLimit(color.r+=fAddRGB);
+		color.g=colorComponentLimit(color.g+=fAddRGB);
+		color.b=colorComponentLimit(color.b+=fAddRGB);
+		
+		color.a=fAlpha;
+		return color;
+	}
+	
+	/**
+	 * highlight color half negating components
+	 * @param color
+	 * @return
+	 */
+	public ColorRGBA neglightColor(ColorRGBA color){
+		color=color.clone();
+		
+		color.r=neglightColorComponent(color.r);
+		color.g=neglightColorComponent(color.g);
+		color.b=neglightColorComponent(color.b);
+		
+		return color;
+	}
+	
+	private float neglightColorComponent(float f){
+		if(f>0.5f){
+			f-=0.5f;
+		}else{
+			f+=0.5f;
 		}
 		
-		return parentest;
+		if(f<0)f=0;if(f>1)f=1; //useless??
+		
+		return f;
 	}
-	
-	public Vector3f getBoundingBoxSize(Spatial spt){
-		return ((BoundingBox)spt.getWorldBound()).getExtent(null).mult(2f);
-	}
-	
 }

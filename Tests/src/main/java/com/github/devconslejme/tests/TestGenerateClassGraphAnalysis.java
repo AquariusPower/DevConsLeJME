@@ -25,70 +25,35 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme;
+package com.github.devconslejme.tests;
 
-import java.util.HashMap;
+import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
+import io.github.lukehutch.fastclasspathscanner.scanner.ScanResult;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+import com.github.devconslejme.devcons.DevConsPluginStateI;
+import com.github.devconslejme.extras.OSCmd;
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.google.common.io.Files;
 
 /**
- * DISABLE!!! -> CPU "on demand" frequency, set it to something static/fixed (not necessarily the max)
- * HashMap seems fast enough on this test case.
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestGlobalAccessPerf {
-	private static TestGlobalAccessPerf instance = new TestGlobalAccessPerf();
-	public static TestGlobalAccessPerf i(){return instance;}
-	
-	int iSize=1000;
-	HashMap<Integer,Integer> hm = new HashMap<Integer,Integer>();
-	Integer[] al = new Integer[1000];
-	
-	public TestGlobalAccessPerf(){
-		for(int i=0;i<iSize;i++){
-			hm.put(i,i);
-			al[i]=i;
-		}
+public class TestGenerateClassGraphAnalysis {
+	public static void main(String[] args) throws IOException {
+		ScanResult scanResult = new FastClasspathScanner(
+			DevConsPluginStateI.class.getPackage().getName())
+			.scan();
+		
+		String str = scanResult.generateClassGraphDotFile(9.2f, 8.0f);
+		
+		Files.write(str, new File("Tests/src/main/analysis/GraphViz.dot"), StandardCharsets.UTF_8);
+		
+		GlobalInstanceManagerI.i().get(OSCmd.class).runOSCommand("linux 'dot -Tsvg "
+			+"< Tests/src/main/analysis/GraphViz.dot "
+			+"> Tests/src/main/analysis/GraphViz.svg'");
 	}
-	
-	public int tstSimpleCall(int i){
-		return i+1;
-	}
-	private long tstHashmap(int i) {
-		return hm.get(i)+1;
-	}
-	private long tstArray(int i) {
-		return al[i]+1;
-	}
-	
-	public static void main(String[] args) {
-		i().testFull();
-	}
-	
-//	HashMap<Integer,Long> hmRes = new HashMap<Integer,Long>();
-	private void testFull() {
-		int iTotTests=3;
-		for(int i=0;i<iTotTests*10;i++){
-			long lNanoStart=System.nanoTime();
-			long lTest=0;
-			Integer i3=null;
-			for(int i2=0;i2<1000;i2++){
-				i3=i%iTotTests;
-				switch(i3){
-					case 0:
-						lTest+=TestGlobalAccessPerf.i().tstSimpleCall(i2%iSize);
-						break;
-					case 1:
-						lTest+=TestGlobalAccessPerf.i().tstHashmap(i2%iSize);
-						break;
-					case 2:
-						lTest+=TestGlobalAccessPerf.i().tstArray(i2%iSize);
-						break;
-				}
-			}
-			long lNanoEnd=System.nanoTime();
-			long lNanoDiff=lNanoEnd-lNanoStart;
-			System.out.println(i3+": "+lNanoDiff+"//"+lTest);
-		}
-	}
-
 }

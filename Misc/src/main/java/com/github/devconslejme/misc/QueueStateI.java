@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
 
-import com.github.devconslejme.DevConsGlobalsI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 
@@ -44,6 +43,7 @@ public class QueueStateI extends AbstractAppState{
 	public static QueueStateI i(){return GlobalInstanceManagerI.i().get(QueueStateI.class);}
 	
 	ArrayList<CallableX> acxList = new ArrayList<CallableX>();
+	private Application	app;
 	
 	public static interface CallableWeak<V> extends Callable<V>{
 		/**
@@ -198,12 +198,12 @@ public class QueueStateI extends AbstractAppState{
 	}
 	
 	private boolean isReady(long lRunAt){
-		return lRunAt <= DevConsGlobalsI.i().app().getTimer().getTime();
+		return lRunAt <= app.getTimer().getTime();
 	}
 	
 	private long calcRunAt(float fDelaySeconds){
-		return DevConsGlobalsI.i().app().getTimer().getTime() 
-			+ (long)(fDelaySeconds * DevConsGlobalsI.i().app().getTimer().getResolution());
+		return app.getTimer().getTime() 
+			+ (long)(fDelaySeconds * app.getTimer().getResolution());
 	}
 	
 	@Override
@@ -237,12 +237,13 @@ public class QueueStateI extends AbstractAppState{
 //		}
 	}
 	
-	public void configure() {
-		if(DevConsGlobalsI.i().app().getTimer().getResolution() < 1000L){
+	public void configure(Application app) {
+		this.app=app;
+		if(app.getTimer().getResolution() < 1000L){
 			throw new NullPointerException("timer resolution is too low");
 		}
 		
-		DevConsGlobalsI.i().app().getStateManager().attach(this);
+		app.getStateManager().attach(this);
 	}
 	
 	public ArrayList<CallableX> getQueueCopy(){

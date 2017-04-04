@@ -25,40 +25,70 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme;
+package com.github.devconslejme.tests;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.google.common.io.Files;
+import java.util.HashMap;
 
 
 /**
+ * DISABLE!!! -> CPU "on demand" frequency, set it to something static/fixed (not necessarily the max)
+ * HashMap seems fast enough on this test case.
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class FileI {
-	public static FileI i(){return GlobalInstanceManagerI.i().get(FileI.class);}
+public class TestGlobalAccessPerf {
+	private static TestGlobalAccessPerf instance = new TestGlobalAccessPerf();
+	public static TestGlobalAccessPerf i(){return instance;}
 	
-	public void appendLine(File fl, String str){
-		try {
-			if(!fl.exists())fl.getParentFile().mkdirs();
-			Files.append(str+"\n", fl, StandardCharsets.UTF_8);
-		} catch (IOException e) {
-			LoggingI.i().logExceptionEntry(e, null, true); //also prevents recursiveness
+	int iSize=1000;
+	HashMap<Integer,Integer> hm = new HashMap<Integer,Integer>();
+	Integer[] al = new Integer[1000];
+	
+	public TestGlobalAccessPerf(){
+		for(int i=0;i<iSize;i++){
+			hm.put(i,i);
+			al[i]=i;
 		}
 	}
-
-	public List<String> readAllLines(File fl) {
-		try {
-			return Files.readLines(fl, StandardCharsets.UTF_8);
-		} catch (IOException e) {
-			LoggingI.i().logExceptionEntry(e, null, true); //also prevents recursiveness
+	
+	public int tstSimpleCall(int i){
+		return i+1;
+	}
+	private long tstHashmap(int i) {
+		return hm.get(i)+1;
+	}
+	private long tstArray(int i) {
+		return al[i]+1;
+	}
+	
+	public static void main(String[] args) {
+		i().testFull();
+	}
+	
+//	HashMap<Integer,Long> hmRes = new HashMap<Integer,Long>();
+	private void testFull() {
+		int iTotTests=3;
+		for(int i=0;i<iTotTests*10;i++){
+			long lNanoStart=System.nanoTime();
+			long lTest=0;
+			Integer i3=null;
+			for(int i2=0;i2<1000;i2++){
+				i3=i%iTotTests;
+				switch(i3){
+					case 0:
+						lTest+=TestGlobalAccessPerf.i().tstSimpleCall(i2%iSize);
+						break;
+					case 1:
+						lTest+=TestGlobalAccessPerf.i().tstHashmap(i2%iSize);
+						break;
+					case 2:
+						lTest+=TestGlobalAccessPerf.i().tstArray(i2%iSize);
+						break;
+				}
+			}
+			long lNanoEnd=System.nanoTime();
+			long lNanoDiff=lNanoEnd-lNanoStart;
+			System.out.println(i3+": "+lNanoDiff+"//"+lTest);
 		}
-		
-		return null;
 	}
 
 }

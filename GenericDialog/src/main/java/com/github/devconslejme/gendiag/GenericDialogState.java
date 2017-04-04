@@ -25,12 +25,12 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme;
+package com.github.devconslejme.gendiag;
 
 import java.util.HashMap;
 
-import com.github.devconslejme.ResizablePanel.EEdge;
-import com.github.devconslejme.misc.MiscJmeI;
+import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
+import com.github.devconslejme.misc.ColorI;
 import com.github.devconslejme.misc.SimpleDragParentestListenerI;
 import com.jme3.app.Application;
 import com.jme3.math.ColorRGBA;
@@ -265,7 +265,7 @@ public class GenericDialogState extends BaseAppState{
 			getMainResizablePanel(), 
 			ClickMode.Consume, 
 			cmdClose, 
-			MiscJmeI.i().colorChangeCopy(ColorRGBA.Blue, -0.75f, 0.25f) );
+			ColorI.i().colorChangeCopy(ColorRGBA.Blue, -0.75f, 0.25f) );
 	}
 
 	@Override

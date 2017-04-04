@@ -25,7 +25,7 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme;
+package com.github.devconslejme.devcons;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -37,14 +37,14 @@ import java.util.Set;
 
 import org.lwjgl.opengl.Display;
 
-import com.github.devconslejme.ResizablePanel.IResizableListener;
-import com.github.devconslejme.misc.HierarchySorterI;
+import com.github.devconslejme.gendiag.ResizablePanel;
+import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
+import com.github.devconslejme.misc.ColorI;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.MiscJmeI;
 import com.github.devconslejme.misc.MiscLemurI;
 import com.github.devconslejme.misc.QueueStateI;
-import com.github.devconslejme.misc.SimpleDragParentestListenerI;
 import com.github.devconslejme.misc.QueueStateI.CallableX;
+import com.github.devconslejme.misc.SimpleDragParentestListenerI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
@@ -72,7 +72,6 @@ import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.core.VersionedReference;
-import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.KeyAction;
 import com.simsilica.lemur.event.KeyActionListener;
 import com.simsilica.lemur.style.Attributes;
@@ -259,7 +258,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		LoggingI.i().configure();
 		JavaScriptI.i().setJSBinding(LoggingI.i());
 		
-		QueueStateI.i().configure();
+		QueueStateI.i().configure(app);
 		JavaScriptI.i().setJSBinding(QueueStateI.i());
 	}
 	
@@ -522,7 +521,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 		// console stats
 		lblStats = new Label("Initializing Console status.",getStyle());
-		CursorEventControl.addListenersToSpatial(lblStats, SimpleDragParentestListenerI.i());
+		SimpleDragParentestListenerI.i().applyAt(lblStats);
 		lblStats.setColor(new ColorRGBA(1,1,0.5f,1));
 		cntrStatus.addChild(lblStats,0,0);
 		
@@ -591,7 +590,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	}
 	
 	private void initStyle() {
-		colorConsoleStyleBackground = MiscJmeI.i().colorChangeCopy(ColorRGBA.Blue, -0.75f);
+		colorConsoleStyleBackground = ColorI.i().colorChangeCopy(ColorRGBA.Blue, -0.75f);
 		
 		if(GuiGlobals.getInstance()==null)GuiGlobals.initialize(DevConsGlobalsI.i().app());
 		
@@ -601,13 +600,13 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		ColorRGBA clBg;
 		
 		attrs.set(EAttribute.fontSize.s(), 14);
-		attrs.set(EAttribute.color.s(), MiscJmeI.i().colorChangeCopy(ColorRGBA.White,-0.25f)); //console default text
+		attrs.set(EAttribute.color.s(), ColorI.i().colorChangeCopy(ColorRGBA.White,-0.25f)); //console default text
 		clBg = colorConsoleStyleBackground;
 		attrs.set(EAttribute.background.s(), new QuadBackgroundComponent(clBg));
 		attrs.set(EAttribute.font.s(), font);
 		
 		attrs = styles.getSelector(Button.ELEMENT_ID, getStyle());
-		attrs.set(EAttribute.color.s(), MiscJmeI.i().colorChangeCopy(ColorRGBA.Cyan,-0.10f)); 
+		attrs.set(EAttribute.color.s(), ColorI.i().colorChangeCopy(ColorRGBA.Cyan,-0.10f)); 
 		clBg = colorConsoleStyleBackground.mult(1.1f); //new ColorRGBA(0,0.25f,0,0.75f);
 		attrs.set(Button.LAYER_BACKGROUND, new QuadBackgroundComponent(clBg));
 		
@@ -628,7 +627,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		attrs.set(TextField.LAYER_BACKGROUND, new QuadBackgroundComponent(clBg));
 		
 		attrs = styles.getSelector(ListBox.ELEMENT_ID, ListBox.SELECTOR_ID, getStyle());
-		clBg = MiscJmeI.i().colorChangeCopy(ColorRGBA.Yellow,0,0.25f);
+		clBg = ColorI.i().colorChangeCopy(ColorRGBA.Yellow,0,0.25f);
 		attrs.set(ListBox.LAYER_BACKGROUND, new QuadBackgroundComponent(clBg));
 		
 	}

@@ -25,27 +25,70 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme;
+package com.github.devconslejme.devcons;
+
+import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.IOException;
 
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.jme3.app.Application;
 
 /**
- * Globally accessible access other single instances easily.
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class DevConsGlobalsI {
-  private static DevConsGlobalsI instance=new DevConsGlobalsI();
-  public static void setGlobalOverride (DevConsGlobalsI inst){
-  	if(DevConsGlobalsI.instance!=null)throw new NullPointerException("already set "+instance+", "+inst);
-  	DevConsGlobalsI.instance=inst;
-  }
-  public static DevConsGlobalsI i (){return instance;}
-  
-	public <T> void put(Class<T> cl, T obj){
-		GlobalInstanceManagerI.i().put(cl, obj);
+public class ClipboardI {
+	public static ClipboardI i(){return GlobalInstanceManagerI.i().get(ClipboardI.class);}	
+	
+	public String copyToClipboard(String str) {
+		if(str==null)return null;
+		
+		StringSelection ss = new StringSelection(str);
+		Toolkit.getDefaultToolkit().getSystemClipboard()
+			.setContents(ss, ss);
+		
+		return str;
+	}
+
+	/**
+	 * this is heavy...
+	 * @param bEscapeNL good to have single line result
+	 * @return
+	 */
+	public String pasteFromClipboard(boolean bEscapeNL) {
+		String str = readFromClipboard(bEscapeNL);
+		if(str!=null)DevConsPluginStateI.i().insertAtInputTextCaratPos(str);
+		return str;
 	}
 	
-	public Application app(){return GlobalInstanceManagerI.i().get(Application.class);}
+	public String readFromClipboard(boolean bEscapeNL){
+		try{
+			Transferable tfbl = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
+			String str = (String) tfbl.getTransferData(DataFlavor.stringFlavor);
+			if(bEscapeNL){
+				str=str.replace("\n", "\\n");
+			}
+			
+			return str;
+		} catch (UnsupportedFlavorException | IOException e) {
+			LoggingI.i().logExceptionEntry(e,null);
+		}
+		
+		return null;
+	}
 	
+	public String cutSelectedLogEntryToClipboard() {
+		String str = copyToClipboard(LoggingI.i().getSelectedEntry());
+		LoggingI.i().deleteLogEntry(DevConsPluginStateI.i().getSelectedIndex());
+		return str;
+	}
+
+	public void showClipboard() {
+		LoggingI.i().logMarker("Clipboard Contents: begin");
+		LoggingI.i().logEntry(ClipboardI.i().readFromClipboard(false));
+		LoggingI.i().logMarker("Clipboard Contents: end");
+		DevConsPluginStateI.i().scrollKeepAtBottom();
+	}
 }

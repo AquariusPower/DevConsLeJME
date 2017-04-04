@@ -25,34 +25,27 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme;
+package com.github.devconslejme.devcons;
 
-import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
-import io.github.lukehutch.fastclasspathscanner.scanner.ScanResult;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-
-import com.github.devconslejme.extras.OSCmd;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.google.common.io.Files;
+import com.jme3.app.Application;
 
 /**
+ * Globally accessible access other single instances easily.
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestGenerateClassGraphAnalysis {
-	public static void main(String[] args) throws IOException {
-		ScanResult scanResult = new FastClasspathScanner(
-			DevConsPluginStateI.class.getPackage().getName())
-			.scan();
-		
-		String str = scanResult.generateClassGraphDotFile(9.2f, 8.0f);
-		
-		Files.write(str, new File("Tests/src/main/analysis/GraphViz.dot"), StandardCharsets.UTF_8);
-		
-		GlobalInstanceManagerI.i().get(OSCmd.class).runOSCommand("linux 'dot -Tsvg "
-			+"< Tests/src/main/analysis/GraphViz.dot "
-			+"> Tests/src/main/analysis/GraphViz.svg'");
+public class DevConsGlobalsI {
+  private static DevConsGlobalsI instance=new DevConsGlobalsI();
+  public static void setGlobalOverride (DevConsGlobalsI inst){
+  	if(DevConsGlobalsI.instance!=null)throw new NullPointerException("already set "+instance+", "+inst);
+  	DevConsGlobalsI.instance=inst;
+  }
+  public static DevConsGlobalsI i (){return instance;}
+  
+	public <T> void put(Class<T> cl, T obj){
+		GlobalInstanceManagerI.i().put(cl, obj);
 	}
+	
+	public Application app(){return GlobalInstanceManagerI.i().get(Application.class);}
+	
 }

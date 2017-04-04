@@ -25,8 +25,10 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme;
+package com.github.devconslejme.tests;
 
+import com.github.devconslejme.devcons.DevConsPluginStateI;
+import com.github.devconslejme.devcons.JavaScriptI;
 import com.github.devconslejme.extras.DynamicFPSLimiter;
 import com.github.devconslejme.extras.OSCmd;
 import com.github.devconslejme.extras.SingleMandatoryAppInstance;

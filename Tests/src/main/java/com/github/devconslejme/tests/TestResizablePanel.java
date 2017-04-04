@@ -25,24 +25,25 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme;
+package com.github.devconslejme.tests;
 
-import com.github.devconslejme.misc.HierarchySorterI;
-import com.github.devconslejme.misc.QueueStateI;
-import com.jme3.app.Application;
+import java.util.stream.BaseStream;
+
+import com.github.devconslejme.gendiag.ResizablePanel;
 import com.jme3.app.SimpleApplication;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
-import com.simsilica.lemur.Command;
 import com.simsilica.lemur.GuiGlobals;
+import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.style.BaseStyles;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestHierarchyResizablePanel extends SimpleApplication {
+public class TestResizablePanel extends SimpleApplication {
 	public static void main(String[] args) {
-		TestHierarchyResizablePanel tst = new TestHierarchyResizablePanel();
+		TestResizablePanel tst = new TestResizablePanel();
 		tst.start();
 	}
 	
@@ -52,44 +53,19 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		BaseStyles.loadGlassStyle();
 		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
 		
-		DevConsGlobalsI.i().put(Application.class,this);
-		QueueStateI.i().configure();
-		HierarchySorterI.i().configure(this, getGuiNode(), 0f);
-		
-		initTest();
-	}
-
-	@SuppressWarnings("unchecked")
-	private void initTest() {
 		int i=300;
-		HierarchyResizablePanel testChild = test(new Vector3f(200,i+200,20));
-		Button btn = new Button("click to close");
-		btn.addClickCommands(new Command<Button>(){
-			@Override
-			public void execute(Button source) {
-				testChild.removeFromParent();
-			}
-		});
-		testChild.setContents(btn);
-		
-		HierarchyResizablePanel testParent = test(new Vector3f(100,i+100,10));
-		btn = new Button("click to open modal");
-		btn.addClickCommands(new Command<Button>(){
-			@Override
-			public void execute(Button source) {
-				testParent.showModal(testChild);
-			}
-		});
-		testParent.setContents(btn);
-		
-		// show it all
-		getGuiNode().attachChild(testParent);
+		test(new Vector3f(100,i+100,10));
+		test(new Vector3f(200,i+200,20));
+		test(new Vector3f(300,i+300,30));
 	}
 
-	private HierarchyResizablePanel test(Vector3f pos) {
-		HierarchyResizablePanel rzp = new HierarchyResizablePanel(null);
-		rzp.setPreferredSize(new Vector3f(300,200,0)); //TODO z will cause trouble?
+	private void test(Vector3f pos) {
+		ResizablePanel rzp = new ResizablePanel(300,200,null);
 		rzp.setLocalTranslation(pos); //above DevCons
-		return rzp;
+		getGuiNode().attachChild(rzp);
+		
+		Button btn = new Button("drag borders to resize:"+pos);
+//		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
+		rzp.setContents(btn);
 	}
 }
