@@ -25,7 +25,7 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.tests;
+package com.github.devconslejme.tests.temp;
 
 import java.util.HashMap;
 

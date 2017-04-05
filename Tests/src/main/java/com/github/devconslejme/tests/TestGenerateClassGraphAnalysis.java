@@ -40,6 +40,7 @@ import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.google.common.io.Files;
 
 /**
+ * TODO find a dependency graph generator..
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class TestGenerateClassGraphAnalysis {

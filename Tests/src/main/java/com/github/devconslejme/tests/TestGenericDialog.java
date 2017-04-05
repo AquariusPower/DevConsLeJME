@@ -27,9 +27,9 @@
 
 package com.github.devconslejme.tests;
 
-import com.github.devconslejme.devcons.DevConsGlobalsI;
-import com.github.devconslejme.gendiag.SimpleGenericDialogState;
 import com.github.devconslejme.gendiag.GenericDialogState.CfgParams;
+import com.github.devconslejme.gendiag.SimpleGenericDialogState;
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.MiscLibI;
 import com.github.devconslejme.misc.QueueStateI;
 import com.github.devconslejme.misc.QueueStateI.CallableX;
@@ -58,7 +58,7 @@ public class TestGenericDialog extends SimpleApplication {
 		GuiGlobals.initialize(this);
 		BaseStyles.loadGlassStyle();
 		
-		DevConsGlobalsI.i().put(Application.class,this);
+		GlobalInstanceManagerI.i().put(Application.class, this);
 		MiscLibI.i().configure();
 
 		prepareDialog();
