@@ -40,10 +40,12 @@ import org.lwjgl.opengl.Display;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.MiscLibI;
+import com.github.devconslejme.misc.MainThreadI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.jme.QueueStateI;
+import com.github.devconslejme.misc.lemur.HierarchySorterI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.SimpleDragParentestListenerI;
 import com.jme3.app.Application;
@@ -239,8 +241,9 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	
 	public void configure(Node nodeParent) {
 		this.app=GlobalInstanceManagerI.i().get(Application.class);
-//		DevConsGlobalsI.i().put(Application.class,app);
-		MiscLibI.i().configure();
+		MainThreadI.i().configure(); //misc
+		QueueStateI.i().configure(); //jme
+		HierarchySorterI.i().configure(nodeParent, 0f);
 		
 		this.nodeParent = nodeParent;
 		app.getStateManager().attach(this);

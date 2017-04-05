@@ -25,23 +25,25 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.misc;
+package com.github.devconslejme.tests;
 
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.MainThreadI;
 import com.github.devconslejme.misc.jme.QueueStateI;
-
+import com.github.devconslejme.misc.lemur.HierarchySorterI;
+import com.jme3.app.Application;
+import com.jme3.scene.Node;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class MiscLibI {
-	public static MiscLibI i(){return GlobalInstanceManagerI.i().get(MiscLibI.class);}
+public class ConfigureTestsI {
+	public static ConfigureTestsI i(){return GlobalInstanceManagerI.i().get(ConfigureTestsI.class);}
 	
-	/**
-	 * call from main thread
-	 * @param app
-	 */
-	public void configure(){
-		MainThreadI.i().configure();
-		QueueStateI.i().configure();
+	public void configure(Application app, Node nodeParent){
+		MainThreadI.i().configure(); //misc
+		GlobalInstanceManagerI.i().put(Application.class,app); //jme
+		QueueStateI.i().configure(); //jme
+		HierarchySorterI.i().configure(nodeParent, 0f);
 	}
 }

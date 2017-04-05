@@ -50,6 +50,6 @@ public class QueueStateI extends AbstractAppState{
 	@Override
 	public void update(float tpf) {
 		super.update(tpf);
-		QueueI.i().update(app.getTimer().getTime(),tpf);
+		QueueI.i().update(app.getTimer().getTime(), tpf);
 	}
 }

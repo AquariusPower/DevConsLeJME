@@ -29,7 +29,8 @@ package com.github.devconslejme.tests;
 
 import com.github.devconslejme.gendiag.HierarchyResizablePanel;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.MiscLibI;
+import com.github.devconslejme.misc.MainThreadI;
+import com.github.devconslejme.misc.jme.QueueStateI;
 import com.github.devconslejme.misc.lemur.HierarchySorterI;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
@@ -54,9 +55,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		BaseStyles.loadGlassStyle();
 		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
 		
-		GlobalInstanceManagerI.i().put(Application.class,this);
-		MiscLibI.i().configure();
-		HierarchySorterI.i().configure(getGuiNode(), 0f);
+		ConfigureTestsI.i().configure(this, getGuiNode());
 		
 		initTest(300);
 		initTest(600);

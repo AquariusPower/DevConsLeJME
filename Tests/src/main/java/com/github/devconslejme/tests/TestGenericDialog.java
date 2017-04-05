@@ -30,9 +30,10 @@ package com.github.devconslejme.tests;
 import com.github.devconslejme.gendiag.GenericDialogState.CfgParams;
 import com.github.devconslejme.gendiag.SimpleGenericDialogState;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.MiscLibI;
+import com.github.devconslejme.misc.MainThreadI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
+import com.github.devconslejme.misc.jme.QueueStateI;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
@@ -58,9 +59,8 @@ public class TestGenericDialog extends SimpleApplication {
 		GuiGlobals.initialize(this);
 		BaseStyles.loadGlassStyle();
 		
-		GlobalInstanceManagerI.i().put(Application.class, this);
-		MiscLibI.i().configure();
-
+		ConfigureTestsI.i().configure(this, getGuiNode());
+		
 		prepareDialog();
 		prepareButtonCallsDiag();
 	}

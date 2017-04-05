@@ -58,7 +58,7 @@ public class GlobalInstanceManagerI {
     return (T)obj;
   }
 
-  public <T> void put(Class<T> cl,Object obj){
+  public <T> void put(Class<T> cl,T obj){
   	Object objAlreadySet=hmInst.get(cl);
     if (objAlreadySet!=null){
       throw new NullPointerException("already set: "+cl+", "+objAlreadySet+", "+obj);
