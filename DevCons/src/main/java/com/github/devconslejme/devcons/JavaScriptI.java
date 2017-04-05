@@ -48,9 +48,9 @@ import javax.script.ScriptException;
 
 import com.github.devconslejme.misc.AutoCompleteI;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.QueueStateI;
+import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
-import com.github.devconslejme.misc.QueueStateI.CallableX;
+import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.JavaLangI;
 import com.google.common.collect.HashBiMap;
 import com.google.common.primitives.Primitives;
@@ -162,7 +162,7 @@ public class JavaScriptI {
 				JavaScriptI.i().showHistory(strParams);
 				return true;
 			case kill:
-				QueueStateI.i().kill(strParams);
+				QueueI.i().kill(strParams);
 				return true;
 			case ini:
 				appendUserInitCommand(strParams);
@@ -352,7 +352,7 @@ public class JavaScriptI {
 		queueExecFile(asFile(strFile), fDelaySeconds, bLoop);
 	}
 	public void queueExecFile(File flJS, float fDelaySeconds, boolean bLoop){
-		QueueStateI.i().enqueue(new CallableX(flJS.getName(),fDelaySeconds,bLoop) {
+		QueueI.i().enqueue(new CallableX(flJS.getName(),fDelaySeconds,bLoop) {
 				@Override
 				public Boolean call() {
 					execFile(flJS);

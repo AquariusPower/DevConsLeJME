@@ -25,55 +25,31 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.tests;
+package com.github.devconslejme.misc.jme;
 
-import com.github.devconslejme.gendiag.HighlightEffectI;
-import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.MainThreadI;
-import com.github.devconslejme.misc.MiscLibI;
 import com.github.devconslejme.misc.QueueI;
 import com.jme3.app.Application;
-import com.jme3.app.SimpleApplication;
-import com.jme3.math.Vector3f;
-import com.simsilica.lemur.Button;
-import com.simsilica.lemur.GuiGlobals;
-import com.simsilica.lemur.component.QuadBackgroundComponent;
-import com.simsilica.lemur.style.BaseStyles;
+import com.jme3.app.state.AbstractAppState;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestResizablePanel extends SimpleApplication {
-	public static void main(String[] args) {
-		TestResizablePanel tst = new TestResizablePanel();
-		tst.start();
+public class QueueStateI extends AbstractAppState{
+	public static QueueStateI i(){return GlobalInstanceManagerI.i().get(QueueStateI.class);}
+	
+	private Application	app;
+
+	public void configure(){
+		this.app=GlobalInstanceManagerI.i().get(Application.class);
+		app.getStateManager().attach(this);
+		
+		QueueI.i().configure(app.getTimer().getResolution());
 	}
 	
 	@Override
-	public void simpleInitApp() {
-		GuiGlobals.initialize(this);
-		BaseStyles.loadGlassStyle();
-		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
-		
-		GlobalInstanceManagerI.i().put(Application.class,this);
-		MiscLibI.i().configure();
-		
-		int i=300;
-		test(new Vector3f(100,i+100,10));
-		test(new Vector3f(200,i+200,20));
-		test(new Vector3f(300,i+300,30));
-	}
-
-	private void test(Vector3f pos) {
-		ResizablePanel rzp = new ResizablePanel(300,200,null);
-		rzp.setLocalTranslation(pos); //above DevCons
-		getGuiNode().attachChild(rzp);
-		
-		HighlightEffectI.i().addMouseCursorHighlightEffects(rzp, (QuadBackgroundComponent)rzp.getResizableBorders());
-		
-		Button btn = new Button("drag borders to resize:"+pos);
-//		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
-		rzp.setContents(btn);
+	public void update(float tpf) {
+		super.update(tpf);
+		QueueI.i().update(app.getTimer().getTime(),tpf);
 	}
 }

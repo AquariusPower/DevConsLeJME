@@ -36,17 +36,24 @@ public class MainThreadI {
 
 	private Thread	threadMain;
 	
+	/**
+	 * call from main thread
+	 */
 	public void configure(){
 		this.threadMain=Thread.currentThread();
 	}
 	
+	/**
+	 * helps on queueing tasks to be called later at main thread
+	 * @return
+	 */
 	public boolean isCurrentMainThread(){ 
 		return threadMain.equals(Thread.currentThread());
 	}
 	
-	public void assertEqualsCurrentThread(){
-		if(!isCurrentMainThread()){
-			throw new DetailedException("should be the main thread!!!", i(), Thread.currentThread());
-		}
-	}
+//	public void assertEqualsCurrentThread(){
+//		if(!isCurrentMainThread()){
+//			throw new DetailedException("should be the main thread!!!", i(), Thread.currentThread());
+//		}
+//	}
 }

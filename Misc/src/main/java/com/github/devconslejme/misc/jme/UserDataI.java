@@ -30,8 +30,8 @@ package com.github.devconslejme.misc.jme;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MainThreadI;
-import com.github.devconslejme.misc.QueueStateI;
-import com.github.devconslejme.misc.QueueStateI.CallableX;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableX;
 import com.jme3.scene.Spatial;
 
 
@@ -73,7 +73,7 @@ public class UserDataI {
 			cx.call();
 			return true;
 		}else{
-			QueueStateI.i().enqueue(cx);
+			QueueI.i().enqueue(cx);
 		}
 		
 		return false;

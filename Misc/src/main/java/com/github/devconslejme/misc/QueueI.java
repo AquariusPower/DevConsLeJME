@@ -32,18 +32,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
 
-import com.jme3.app.Application;
-import com.jme3.app.state.AbstractAppState;
-
 /**
  * TODO work with java.util.concurrent.DelayQueue?
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class QueueStateI extends AbstractAppState{
-	public static QueueStateI i(){return GlobalInstanceManagerI.i().get(QueueStateI.class);}
+public class QueueI {
+	public static QueueI i(){return GlobalInstanceManagerI.i().get(QueueI.class);}
 	
 	ArrayList<CallableX> acxList = new ArrayList<CallableX>();
-	private Application	app;
+//	private Application	app;
+	private long	lTimeResolution;
+	private long	lCurrentTime;
 	
 	public static interface CallableWeak<V> extends Callable<V>{
 		/**
@@ -65,7 +64,7 @@ public class QueueStateI extends AbstractAppState{
 		private float	fDelaySeconds;
 		private boolean	bPaused;
 		private boolean	bLoop;
-		private long lRunAtTimeMilis;
+		private long lRunAtTime;
 		private boolean	bUserCanKill;
 		private boolean	bUserCanPause;
 		
@@ -104,7 +103,7 @@ public class QueueStateI extends AbstractAppState{
 		}
 		
 		public void updateRunAt() {
-			this.lRunAtTimeMilis = QueueStateI.i().calcRunAt(fDelaySeconds);
+			this.lRunAtTime = QueueI.i().calcRunAt(fDelaySeconds);
 		}
 		
 		public float getDelaySeconds() {
@@ -112,7 +111,7 @@ public class QueueStateI extends AbstractAppState{
 		}
 		
 		public boolean isReady(){
-			return QueueStateI.i().isReady(lRunAtTimeMilis);
+			return QueueI.i().isReady(lRunAtTime);
 		}
 
 		public boolean isLoop() {
@@ -133,7 +132,7 @@ public class QueueStateI extends AbstractAppState{
 			builder.append(", bLoop=");
 			builder.append(bLoop);
 			builder.append(", lRunAtTimeMilis=");
-			builder.append(lRunAtTimeMilis);
+			builder.append(lRunAtTime);
 			builder.append(", bUserCanKill=");
 			builder.append(bUserCanKill);
 			builder.append(", bUserCanPause=");
@@ -198,17 +197,15 @@ public class QueueStateI extends AbstractAppState{
 	}
 	
 	private boolean isReady(long lRunAt){
-		return lRunAt <= app.getTimer().getTime();
+		return lRunAt <= lCurrentTime;
 	}
 	
 	private long calcRunAt(float fDelaySeconds){
-		return app.getTimer().getTime() 
-			+ (long)(fDelaySeconds * app.getTimer().getResolution());
+		return lCurrentTime + (long)(fDelaySeconds * lTimeResolution);
 	}
 	
-	@Override
-	public void update(float tpf) {
-		super.update(tpf);
+	public void update(long lCurrentTime, float tpf) {
+		this.lCurrentTime=lCurrentTime;
 		
 		for(CallableX cx:acxList.toArray(new CallableX[]{})){
 			
@@ -237,13 +234,9 @@ public class QueueStateI extends AbstractAppState{
 //		}
 	}
 	
-	public void configure() {
-		this.app=GlobalInstanceManagerI.i().get(Application.class);
-		if(app.getTimer().getResolution() < 1000L){
-			throw new NullPointerException("timer resolution is too low");
-		}
-		
-		app.getStateManager().attach(this);
+	public void configure(long lTimeResolution) {
+		this.lTimeResolution=lTimeResolution;
+		if(lTimeResolution < 1000L)throw new NullPointerException("timer resolution is too low");
 	}
 	
 	public ArrayList<CallableX> getQueueCopy(){

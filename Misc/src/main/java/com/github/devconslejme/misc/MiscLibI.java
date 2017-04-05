@@ -27,6 +27,8 @@
 
 package com.github.devconslejme.misc;
 
+import com.github.devconslejme.misc.jme.QueueStateI;
+
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>

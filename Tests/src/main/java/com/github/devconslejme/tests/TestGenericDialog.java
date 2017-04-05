@@ -31,8 +31,8 @@ import com.github.devconslejme.gendiag.GenericDialogState.CfgParams;
 import com.github.devconslejme.gendiag.SimpleGenericDialogState;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.MiscLibI;
-import com.github.devconslejme.misc.QueueStateI;
-import com.github.devconslejme.misc.QueueStateI.CallableX;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableX;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
@@ -95,7 +95,7 @@ public class TestGenericDialog extends SimpleApplication {
 		diag.setTextInfo("This is a good info about something.\nSecond line.");
 		diag.setUseInputTextValue(true);
 		
-		QueueStateI.i().enqueue(new CallableX(0,false) {
+		QueueI.i().enqueue(new CallableX(0,false) {
 			@Override
 			public Boolean call() {
 				diag.getMainResizablePanel().setUseBumpResizableBorderMode(true);

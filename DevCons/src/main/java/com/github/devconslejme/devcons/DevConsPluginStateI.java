@@ -41,8 +41,8 @@ import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.MiscLibI;
-import com.github.devconslejme.misc.QueueStateI;
-import com.github.devconslejme.misc.QueueStateI.CallableX;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.SimpleDragParentestListenerI;
@@ -258,7 +258,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		JavaScriptI.i().setJSBinding(BindKeyI.i());
 		JavaScriptI.i().setJSBinding(ClipboardI.i());
 		JavaScriptI.i().setJSBinding(FileI.i());
-		JavaScriptI.i().setJSBinding(QueueStateI.i());
+		JavaScriptI.i().setJSBinding(QueueI.i());
 		
 		LoggingI.i().configure();
 		JavaScriptI.i().setJSBinding(LoggingI.i());
@@ -277,7 +277,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	public void initialize(AppStateManager stateManager, Application app) {
 		if(isInitialized()){return;}
 		
-		QueueStateI.i().enqueue(new CallableX("the console starts closed",0,false) {
+		QueueI.i().enqueue(new CallableX("the console starts closed",0,false) {
 			@Override
 			public Boolean call() {
 				DevConsPluginStateI.this.setEnabled(false);
@@ -287,7 +287,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 		// jme
 		cxScrollTo = new CallableXScrollTo();
-		QueueStateI.i().enqueue(cxScrollTo);
+		QueueI.i().enqueue(cxScrollTo);
 		
 		ActionListener al = new ActionListener(){
       @Override
@@ -396,7 +396,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 //			}
 //		}.setUserCanPause(true));
 		
-		QueueStateI.i().enqueue(new CallableX("FocusAtDevConsInput",0.25f,true) { //TODO this delay still has a chance of typing something at other input field? like when holding for long a key?
+		QueueI.i().enqueue(new CallableX("FocusAtDevConsInput",0.25f,true) { //TODO this delay still has a chance of typing something at other input field? like when holding for long a key?
 			@Override
 			public Boolean call() {
 				GuiGlobals.getInstance().requestFocus(tfInput);
@@ -541,7 +541,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 			cntrStatus.addChild(btn,0,++iButtonIndex);
 		}
 		
-		QueueStateI.i().enqueue(new CallableX("DevConsUpdateStatus",0.5f,true) {
+		QueueI.i().enqueue(new CallableX("DevConsUpdateStatus",0.5f,true) {
 			@Override
 			public Boolean call() {
 				updateStatusValues();
@@ -728,7 +728,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	}
 
 	private void updateConsoleHeight(float fHeight) {
-		QueueStateI.i().enqueue(new CallableX(0,false) {
+		QueueI.i().enqueue(new CallableX(0,false) {
 			@Override
 			public Boolean call() {
 //				v3fConsoleSize
@@ -748,7 +748,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	}
 	
 	public void updateVisibleLogItems(){
-		QueueStateI.i().enqueue(new CallableX(0.1f,false){
+		QueueI.i().enqueue(new CallableX(0.1f,false){
 			@Override
 			public Boolean call() {
 //			float fHeight = cntrMain.getPreferredSize().y;
@@ -889,7 +889,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	}
 
 	public void showQueue(){
-		for(CallableX cx:QueueStateI.i().getQueueCopy()){
+		for(CallableX cx:QueueI.i().getQueueCopy()){
 			LoggingI.i().logSubEntry(cx.toString());
 		}
 	}
