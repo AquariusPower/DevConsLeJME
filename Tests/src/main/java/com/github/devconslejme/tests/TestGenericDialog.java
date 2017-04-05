@@ -56,7 +56,8 @@ public class TestGenericDialog extends SimpleApplication {
 	
 	@Override
 	public void simpleInitApp() {
-		ConfigureTestsI.i().configure(this, getGuiNode());
+//		ConfigureTestsI.i().configure(this, getGuiNode());
+		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode());
 		
 		prepareDialog();
 		prepareButtonCallsDiag();

@@ -53,11 +53,12 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 	
 	@Override
 	public void simpleInitApp() {
-		GuiGlobals.initialize(this);
-		BaseStyles.loadGlassStyle();
-		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
+//		GuiGlobals.initialize(this);
+//		BaseStyles.loadGlassStyle();
+//		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
 		
-		ConfigureTestsI.i().configure(this, getGuiNode());
+//		ConfigureTestsI.i().configure(this, getGuiNode());
+		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(this, getGuiNode());
 		
 		initTest(300);
 		initTest(600);

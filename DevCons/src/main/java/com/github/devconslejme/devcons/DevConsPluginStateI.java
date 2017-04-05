@@ -241,7 +241,6 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 //		MainThreadI.i().configure(); //misc
 //		QueueStateI.i().configure(); //jme
 //		HierarchySorterI.i().configure(nodeParent, 0f); //lemur
-		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(nodeParent);
 		
 		this.nodeParent = nodeParent;
 		app.getStateManager().attach(this);
@@ -595,7 +594,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private void initStyle() {
 		colorConsoleStyleBackground = ColorI.i().colorChangeCopy(ColorRGBA.Blue, -0.75f);
 		
-		if(GuiGlobals.getInstance()==null)GuiGlobals.initialize(app);
+//		if(GuiGlobals.getInstance()==null)GuiGlobals.initialize(app);
 		
 		Styles styles = GuiGlobals.getInstance().getStyles();
 		Attributes attrs = styles.getSelector(getStyle()); // this also creates the style

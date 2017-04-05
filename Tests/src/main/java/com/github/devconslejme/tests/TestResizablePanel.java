@@ -51,11 +51,12 @@ public class TestResizablePanel extends SimpleApplication {
 	
 	@Override
 	public void simpleInitApp() {
-		GuiGlobals.initialize(this);
-		BaseStyles.loadGlassStyle();
-		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
-		
-		ConfigureTestsI.i().configure(this, getGuiNode());
+//		GuiGlobals.initialize(this);
+//		BaseStyles.loadGlassStyle();
+//		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
+//		
+//		ConfigureTestsI.i().configure(this, getGuiNode());
+		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(this, getGuiNode());
 		
 		int i=300;
 		test(new Vector3f(100,i+100,10));

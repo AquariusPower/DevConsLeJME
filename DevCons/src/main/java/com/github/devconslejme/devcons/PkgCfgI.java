@@ -28,6 +28,7 @@
 package com.github.devconslejme.devcons;
 
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.jme3.app.Application;
 import com.jme3.scene.Node;
 
 
@@ -37,8 +38,9 @@ import com.jme3.scene.Node;
 public class PkgCfgI {
 	public static PkgCfgI i(){return GlobalInstanceManagerI.i().get(PkgCfgI.class);}
 	
-	public void configure(Node nodeParent){
-		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(nodeParent);
+	public void configure(Application app, Node nodeParent){
+		com.github.devconslejme.gendiag.PkgCfgI.i().configure(app,nodeParent);
 		
+		DevConsPluginStateI.i().configure(nodeParent);
 	}
 }

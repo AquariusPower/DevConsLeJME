@@ -28,6 +28,7 @@
 package com.github.devconslejme.misc.jme;
 
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.jme3.app.Application;
 
 
 /**
@@ -36,9 +37,10 @@ import com.github.devconslejme.misc.GlobalInstanceManagerI;
 public class PkgCfgI {
 	public static PkgCfgI i(){return GlobalInstanceManagerI.i().get(PkgCfgI.class);}
 	
-	public void configure(){
+	public void configure(Application app){
 		com.github.devconslejme.misc.PkgCfgI.i().configure();
 		
+		GlobalInstanceManagerI.i().put(Application.class, app);
 		QueueStateI.i().configure();
 	}
 }

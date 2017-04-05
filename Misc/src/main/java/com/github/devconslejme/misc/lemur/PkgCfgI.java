@@ -27,9 +27,11 @@
 
 package com.github.devconslejme.misc.lemur;
 
-import com.github.devconslejme.gendiag.HierarchySorterI;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.jme3.app.Application;
 import com.jme3.scene.Node;
+import com.simsilica.lemur.GuiGlobals;
+import com.simsilica.lemur.style.BaseStyles;
 
 
 /**
@@ -38,9 +40,11 @@ import com.jme3.scene.Node;
 public class PkgCfgI {
 	public static PkgCfgI i(){return GlobalInstanceManagerI.i().get(PkgCfgI.class);}
 	
-	public void configure(Node nodeParent){
-		com.github.devconslejme.misc.jme.PkgCfgI.i().configure();
+	public void configure(Application app, Node nodeParent){
+		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app);
 		
-		HierarchySorterI.i().configure(nodeParent, 0f);
+		if(GuiGlobals.getInstance()==null)GuiGlobals.initialize(app); //GuiGlobals.initialize(app);
+		BaseStyles.loadGlassStyle();
+		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
 	}
 }
