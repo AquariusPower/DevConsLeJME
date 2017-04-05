@@ -34,10 +34,12 @@ import com.github.devconslejme.misc.jme.QueueStateI;
 import com.github.devconslejme.misc.lemur.HierarchySorterI;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
 import com.simsilica.lemur.GuiGlobals;
+import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.style.BaseStyles;
 
 /**
@@ -64,6 +66,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 	@SuppressWarnings("unchecked")
 	private void initTest(int iBaseY) {
 		HierarchyResizablePanel testChild = test(new Vector3f(200,iBaseY+200,20));
+//		ColorRGBA color = ColorRGBA.Yellow.clone();color.a=0.25f;QuadBackgroundComponent qbc = new QuadBackgroundComponent(color);qbc.setMargin(10,5);testChild.setBorder(qbc);
 		Button btn = new Button("click to close");
 		btn.addClickCommands(new Command<Button>(){
 			@Override
