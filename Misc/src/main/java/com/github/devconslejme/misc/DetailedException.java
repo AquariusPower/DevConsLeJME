@@ -34,10 +34,10 @@ package com.github.devconslejme.misc;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class DatailedException extends NullPointerException{
+public class DetailedException extends NullPointerException{
 	private static final long	serialVersionUID	= -2021594801806561912L;
 	
-	public DatailedException(String strMsg, Object... aobj){
+	public DetailedException(String strMsg, Object... aobj){
 		super(strMsg+aobj); //TODO improve
 	}
 }

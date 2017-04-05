@@ -27,6 +27,7 @@
 
 package com.github.devconslejme.devcons;
 
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.jme3.app.Application;
 
@@ -47,5 +48,12 @@ public class DevConsGlobalsI {
 	}
 	
 	public Application app(){return GlobalInstanceManagerI.i().get(Application.class);}
+	
+	public void assertIsCurrentMainThread(){
+		Thread threadMain = GlobalInstanceManagerI.i().get(Thread.class);
+		if(!threadMain.equals(Thread.currentThread())){
+			throw new DetailedException("should be the main thread!!!", i(), Thread.currentThread());
+		}
+	}
 	
 }

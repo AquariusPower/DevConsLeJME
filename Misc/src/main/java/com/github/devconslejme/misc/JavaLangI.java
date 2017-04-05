@@ -27,6 +27,7 @@
 
 package com.github.devconslejme.misc;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -75,6 +76,90 @@ public class JavaLangI {
 		}
 		
 		return aaobjKeyVal;
+	}
+
+	/**
+	 * TODO add enclosings
+	 * @param obj
+	 * @param bSimpleName
+	 * @return
+	 */
+	public String getClassTreeReportFor(Object obj,boolean bSimpleName){
+		ArrayList<Class<?>> ac = getSuperClassesOf(obj,true);
+		String strClassTree="";
+		for(Class<?> cl:ac){
+			if(!strClassTree.isEmpty())strClassTree+="/";
+			strClassTree+= bSimpleName ? cl.getSimpleName() : cl.getName();
+		}
+		return strClassTree;
+	}
+	/**
+	 * Differs from: obj.getClass().getDeclaredClasses()
+	 * 
+	 * Will include the concrete/instanced one too.
+	 * 
+	 * @param obj
+	 * @return
+	 */
+	public ArrayList<Class<?>> getSuperClassesOf(Object obj,boolean bAddConcreteToo){
+		ArrayList<Class<?>> ac = new ArrayList<Class<?>>();
+		
+		Class<?> cl = obj.getClass();
+		while(cl!=null){
+			boolean bAdd=true;
+			
+			if(!bAddConcreteToo && cl.toString().equals(obj.getClass().toString()))bAdd=false;
+			if(cl.toString().equals(Object.class.toString()))bAdd=false; //avoid unnecessary base class
+			
+			if(bAdd)ac.add(cl);
+			
+			cl=cl.getSuperclass();
+		}
+		
+		return ac;
+	}
+	
+	public ArrayList<Class<?>> getEnclosingClassesOf(Object obj){
+		ArrayList<Class<?>> ac = new ArrayList<Class<?>>();
+		
+		Class cl = obj.getClass().getEnclosingClass();
+		while(cl!=null){
+			ac.add(cl);
+			cl = cl.getEnclosingClass();
+		}
+		
+		return ac;
+	}
+	
+	public String getClassName(Object obj, boolean bSimple){
+		String str =  bSimple ? obj.getClass().getSimpleName() : obj.getClass().getName();
+		if(str.isEmpty()){
+			throw new DetailedException(
+				"empty class name, do not use anonymous inner class if you want to use their name...",
+				obj, getClassTreeReportFor(obj,true), bSimple);
+		}
+		return str;
+	}
+
+	public boolean isInnerClassOfConcrete(Object objInnerToCheck, Object objConcreteOwner){
+		return (objInnerToCheck.getClass().getTypeName().startsWith(
+			objConcreteOwner.getClass().getTypeName()+"$"));
+	}
+	
+	public boolean isAnonymousClass(Object obj){
+		/**
+		 * TODO could something like this be less guessing?
+		obj.getClass().getDeclaredClasses(); //[]
+		obj.getClass().getDeclaringClass(); //null
+		obj.getClass().getEnclosingClass(); //ex.: CommandsDelegator
+		obj.getClass().getGenericSuperclass(); //ex.: CallQueueI$CallableX
+		obj.getClass().getTypeName(); //ex.: CommandsDelegator$1
+		Modifier.isStatic(obj.getClass().getModifiers()); //false
+		Modifier.isTransient(obj.getClass().getModifiers()); //false
+		Modifier.isVolatile(obj.getClass().getModifiers()); //false
+		 */
+		String str = obj.getClass().getTypeName();
+		return (str.matches("^.*[$][0-9]*$"));
 	}
 
 }

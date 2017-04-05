@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+	Copyright (c) 2016, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 	
 	All rights reserved.
 
@@ -25,47 +25,52 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.tests;
+package com.github.devconslejme.misc;
 
-import com.github.devconslejme.gendiag.HighlightEffectI;
-import com.github.devconslejme.gendiag.ResizablePanel;
-import com.jme3.app.SimpleApplication;
-import com.jme3.math.Vector3f;
-import com.simsilica.lemur.Button;
-import com.simsilica.lemur.GuiGlobals;
-import com.simsilica.lemur.component.QuadBackgroundComponent;
-import com.simsilica.lemur.style.BaseStyles;
+import java.io.IOException;
+
+import com.jme3.export.JmeExporter;
+import com.jme3.export.JmeImporter;
+import com.jme3.export.Savable;
+import com.jme3.scene.Spatial;
 
 /**
+ * To use with {@link Spatial#setUserData()}
+ * 
+ * Useful to put objects into Spatials that dont really require being saved,
+ * for easy retrieval.
+ * 
+ * ATTENTION!: drawback is, it will not save neither load anything unless further coded to do it...
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+ *
+ * @param <T>
  */
-public class TestResizablePanel extends SimpleApplication {
-	public static void main(String[] args) {
-		TestResizablePanel tst = new TestResizablePanel();
-		tst.start();
+public class PseudoSavableHolder<T> implements Savable{
+	T objRef;
+	
+	public PseudoSavableHolder(T objRef){
+		this.objRef=objRef;
+	}
+	public T getRef(){
+		return objRef;
 	}
 	
 	@Override
-	public void simpleInitApp() {
-		GuiGlobals.initialize(this);
-		BaseStyles.loadGlassStyle();
-		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
-		
-		int i=300;
-		test(new Vector3f(100,i+100,10));
-		test(new Vector3f(200,i+200,20));
-		test(new Vector3f(300,i+300,30));
+	public void write(JmeExporter ex) throws IOException {
+		if (objRef instanceof Savable) {
+			Savable s = (Savable) objRef;
+			s.write(ex);
+			return;
+		}
 	}
-
-	private void test(Vector3f pos) {
-		ResizablePanel rzp = new ResizablePanel(300,200,null);
-		rzp.setLocalTranslation(pos); //above DevCons
-		getGuiNode().attachChild(rzp);
-		
-		HighlightEffectI.i().addMouseCursorHighlightEffects(rzp, (QuadBackgroundComponent)rzp.getResizableBorders());
-		
-		Button btn = new Button("drag borders to resize:"+pos);
-//		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
-		rzp.setContents(btn);
+	
+	@Override
+	public void read(JmeImporter im) throws IOException {
+		if (objRef instanceof Savable) {
+			Savable s = (Savable) objRef;
+			s.read(im);
+			return;
+		}
 	}
 }

@@ -27,13 +27,13 @@
 
 package com.github.devconslejme.gendiag;
 
-import com.github.commandsconsolegui.spAppOs.misc.PrerequisitesNotMetException;
-import com.github.commandsconsolegui.spLemur.dialog.ManageLemurDialog.DummyEffect;
-import com.github.commandsconsolegui.spLemur.globals.GlobalManageDialogLemurI;
 import com.github.devconslejme.misc.ColorI;
-import com.github.devconslejme.misc.DatailedException;
+import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.MiscLemurI;
+import com.jme3.input.event.MouseMotionEvent;
 import com.jme3.math.ColorRGBA;
-import com.simsilica.lemur.Button;
+import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.anim.Animation;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
@@ -41,38 +41,54 @@ import com.simsilica.lemur.core.GuiComponent;
 import com.simsilica.lemur.effect.AbstractEffect;
 import com.simsilica.lemur.effect.Effect;
 import com.simsilica.lemur.effect.EffectInfo;
+import com.simsilica.lemur.event.DefaultMouseListener;
+import com.simsilica.lemur.event.MouseEventControl;
 
 
 // (tab indent=2 spaces)
 
 /**
- * As an impossible layout exception preventer workaround, 
- * this panel will test the parentest layout and if it fails, 
- * it will grow the parentest Panel size little by little,
- * until it works again.  
- * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class HighlightEffect {
-	private Effect<Button> efHighLightBkg = new AbstractEffect<Button>("ChannelHighLight") {
+public class HighlightEffectI {
+	public static HighlightEffectI i(){return GlobalInstanceManagerI.i().get(HighlightEffectI.class);}
+	
+	private static enum EEffectIds{
+		ChannelHighLight,
+		
+		EffectActivateHighLight,
+		EffectDeactivateHighLight,
+		
+		UserDataHighLightTarget,
+		
+		EffectDummy,
+		;
+		public String s(){ return toString(); }
+	}
+	
+	
+//	private Effect<Panel> efHighLightBkg = new AbstractEffect<Panel>("ChannelHighLight") {
+	private Effect<Panel> efHighLightBkg = new AbstractEffect<Panel>(EEffectIds.ChannelHighLight.s()) {
 		@Override
-		public Animation create(final Button target, final EffectInfo existing) {
-			final GuiComponent gcBgChk = target.getBackground();
-			if(!QuadBackgroundComponent.class.isInstance(gcBgChk)){
-				throw new DatailedException("background type not supported for this effect", gcBgChk, target, existing, this);
-			}
+//		public Animation create(final QuadBackgroundComponent qbcTmp, final EffectInfo existing) {
+		public Animation create(final Panel pnlTarget, final EffectInfo effiExisting) {
+//			final GuiComponent gcBgChk = target.getBackground();
+//			if(!QuadBackgroundComponent.class.isInstance(gcBgChk)){
+//				throw new DatailedException("background type not supported for this effect", gcBgChk, target, existing, this);
+//			}
 			
 			return new Animation() {
-				QuadBackgroundComponent gcBg = (QuadBackgroundComponent)gcBgChk;
-				ColorRGBA colorBkp = gcBg.getColor();
+//				QuadBackgroundComponent gcBg = (QuadBackgroundComponent)gcBgChk;
+				QuadBackgroundComponent qbc = pnlTarget.getUserData(EEffectIds.UserDataHighLightTarget.s());
+				ColorRGBA colorBkp = qbc.getColor().clone();
 				boolean bApplied=false;
 				@Override	public void cancel() {
-					gcBg.setColor(colorBkp);
+					qbc.setColor(colorBkp);
 				}
 				@Override	public boolean animate(double tpf) {
 					if(!bApplied){
 	//					if(existing!=null && existing.getAnimation()==this)return true;
-						gcBg.setColor(ColorI.i().neglightColor(colorBkp));
+						qbc.setColor(ColorI.i().neglightColor(colorBkp));
 						bApplied=true;
 					}
 					return true;
@@ -81,10 +97,27 @@ public class HighlightEffect {
 		}
 	};
 	
+	private static class HighlightMouseListener extends DefaultMouseListener{
+		@Override
+		public void mouseEntered(MouseMotionEvent event, Spatial target,				Spatial capture) {
+			super.mouseEntered(event, target, capture);
+			((Panel)target).runEffect(EEffectIds.EffectActivateHighLight.s());
+		}
+		
+		@Override
+		public void mouseExited(MouseMotionEvent event, Spatial target,				Spatial capture) {
+			super.mouseExited(event, target, capture);
+			((Panel)target).runEffect(EEffectIds.EffectDeactivateHighLight.s());
+		}
+	}
+	private HighlightMouseListener hml = new HighlightMouseListener();
+	
 	private DummyEffect	efDummy;
-	public void addMouseCursorHighlightEffects(Button btn){
-		efDummy = setupSimpleEffect(btn, Button.EFFECT_ACTIVATE, efHighLightBkg, efDummy);
-		btn.addEffect(Button.EFFECT_DEACTIVATE,efDummy);
+	public void addMouseCursorHighlightEffects(Panel pnl, QuadBackgroundComponent qbc){
+		MouseEventControl.addListenersToSpatial(pnl, hml);
+		pnl.setUserData(EEffectIds.UserDataHighLightTarget.s(), qbc);
+		efDummy = setupSimpleEffect(pnl, EEffectIds.EffectActivateHighLight, efHighLightBkg, efDummy);
+		pnl.addEffect(EEffectIds.EffectDeactivateHighLight.s(),efDummy);
 	}
 
 	/**
@@ -95,20 +128,19 @@ public class HighlightEffect {
 	 * @param efDummy can be null initially, use a field variable
 	 * @return dummy effect for re-use
 	 */
-	private DummyEffect setupSimpleEffect(Panel pnl, String strEffectId, Effect ef, DummyEffect efDummy){
-		String strDummyId="DummyEffectUniqueId";
-		if(efDummy==null)efDummy=new DummyEffect(strDummyId,ef.getChannel());
+	private DummyEffect setupSimpleEffect(Panel pnl, EEffectIds e, Effect ef, DummyEffect efDummy){
+		if(efDummy==null)efDummy=new DummyEffect(EEffectIds.EffectDummy.s(),ef.getChannel());
 		
 		if(!efDummy.getChannel().equals(ef.getChannel())){
-			throw new DatailedException("both should be on the same channel", efDummy, strEffectId, ef, pnl, this);
+			throw new DetailedException("both should be on the same channel", efDummy, e.s(), ef, pnl, this);
 		}
 		
-		if(strEffectId.equals(strDummyId)){
-			throw new DatailedException("ids should differ", strDummyId, efDummy, strEffectId, ef, pnl, this);
+		if(e.compareTo(EEffectIds.EffectDummy)==0){
+			throw new DetailedException("ids should differ", EEffectIds.EffectDummy, efDummy, e.s(), ef, pnl, this);
 		}
 		
-		pnl.addEffect(strEffectId, (Effect)ef);
-		pnl.addEffect(strDummyId, efDummy);
+		pnl.addEffect(e.s(), (Effect)ef);
+		pnl.addEffect(EEffectIds.EffectDummy.s(), efDummy);
 		
 		return efDummy;
 	}

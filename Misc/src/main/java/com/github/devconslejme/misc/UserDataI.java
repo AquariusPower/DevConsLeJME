@@ -25,47 +25,40 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.tests;
+package com.github.devconslejme.misc;
 
-import com.github.devconslejme.gendiag.HighlightEffectI;
-import com.github.devconslejme.gendiag.ResizablePanel;
-import com.jme3.app.SimpleApplication;
-import com.jme3.math.Vector3f;
-import com.simsilica.lemur.Button;
-import com.simsilica.lemur.GuiGlobals;
-import com.simsilica.lemur.component.QuadBackgroundComponent;
-import com.simsilica.lemur.style.BaseStyles;
+import com.jme3.scene.Spatial;
+
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestResizablePanel extends SimpleApplication {
-	public static void main(String[] args) {
-		TestResizablePanel tst = new TestResizablePanel();
-		tst.start();
+public class UserDataI {
+	public static UserDataI i(){return GlobalInstanceManagerI.i().get(UserDataI.class);}
+	
+	/**
+	 * 
+	 * @param spt
+	 * @param obj each key will be one super class of it
+	 */
+	public <T extends Spatial> T setUserDataPSH(T spt, Object obj) {
+		for(Class<?> cl:JavaLangI.i().getSuperClassesOf(obj,true)){
+			setUserDataPSH(spt, cl.getName(), obj);
+		}
+		return spt;
+	}
+	public <T extends Spatial> T setUserDataPSH(T spt, String strKey, Object obj) {
+		MainThreadI.i().assertEqualsCurrentThread();
+		spt.setUserData(strKey, new PseudoSavableHolder(obj));
+		return spt;
 	}
 	
-	@Override
-	public void simpleInitApp() {
-		GuiGlobals.initialize(this);
-		BaseStyles.loadGlassStyle();
-		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
-		
-		int i=300;
-		test(new Vector3f(100,i+100,10));
-		test(new Vector3f(200,i+200,20));
-		test(new Vector3f(300,i+300,30));
+	public <R> R getUserDataPSH(Spatial spt, Class<R> cl){
+		return getUserDataPSH(spt, cl.getName());
 	}
-
-	private void test(Vector3f pos) {
-		ResizablePanel rzp = new ResizablePanel(300,200,null);
-		rzp.setLocalTranslation(pos); //above DevCons
-		getGuiNode().attachChild(rzp);
-		
-		HighlightEffectI.i().addMouseCursorHighlightEffects(rzp, (QuadBackgroundComponent)rzp.getResizableBorders());
-		
-		Button btn = new Button("drag borders to resize:"+pos);
-//		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
-		rzp.setContents(btn);
+	public <R> R getUserDataPSH(Spatial spt, String strKey){
+		PseudoSavableHolder<R> sh = (PseudoSavableHolder<R>)spt.getUserData(strKey);
+		if(sh==null)return null;
+		return sh.getRef();
 	}
 }
