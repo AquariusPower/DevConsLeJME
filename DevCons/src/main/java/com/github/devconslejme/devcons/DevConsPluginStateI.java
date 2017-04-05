@@ -43,6 +43,7 @@ import com.github.devconslejme.misc.ColorI;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.MainThreadI;
 import com.github.devconslejme.misc.MiscLemurI;
+import com.github.devconslejme.misc.MiscLibI;
 import com.github.devconslejme.misc.QueueStateI;
 import com.github.devconslejme.misc.QueueStateI.CallableX;
 import com.github.devconslejme.misc.SimpleDragParentestListenerI;
@@ -238,7 +239,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	
 	public void configure(Application app, Node nodeParent) {
 		DevConsGlobalsI.i().put(Application.class,app);
-		MainThreadI.i().configure(Thread.currentThread());
+		MiscLibI.i().configure(app);
 		
 		this.nodeParent = nodeParent;
 		DevConsGlobalsI.i().app().getStateManager().attach(this);
@@ -256,12 +257,10 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		JavaScriptI.i().setJSBinding(BindKeyI.i());
 		JavaScriptI.i().setJSBinding(ClipboardI.i());
 		JavaScriptI.i().setJSBinding(FileI.i());
+		JavaScriptI.i().setJSBinding(QueueStateI.i());
 		
 		LoggingI.i().configure();
 		JavaScriptI.i().setJSBinding(LoggingI.i());
-		
-		QueueStateI.i().configure(app);
-		JavaScriptI.i().setJSBinding(QueueStateI.i());
 	}
 	
 	public void putStatus(EStatPriority esp, String strKey, String strHelp, String strValue){

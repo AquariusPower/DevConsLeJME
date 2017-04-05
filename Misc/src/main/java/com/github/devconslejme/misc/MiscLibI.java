@@ -27,26 +27,20 @@
 
 package com.github.devconslejme.misc;
 
+import com.jme3.app.Application;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class MainThreadI {
-	public static MainThreadI i(){return GlobalInstanceManagerI.i().get(MainThreadI.class);}
-
-	private Thread	threadMain;
+public class MiscLibI {
+	public static MiscLibI i(){return GlobalInstanceManagerI.i().get(MiscLibI.class);}
 	
-	public void configure(){
-		this.threadMain=Thread.currentThread();
-	}
-	
-	public boolean isCurrentMainThread(){ 
-		return threadMain.equals(Thread.currentThread());
-	}
-	
-	public void assertEqualsCurrentThread(){
-		if(!isCurrentMainThread()){
-			throw new DetailedException("should be the main thread!!!", i(), Thread.currentThread());
-		}
+	/**
+	 * call from main thread
+	 * @param app
+	 */
+	public void configure(Application app){
+		MainThreadI.i().configure();
+		QueueStateI.i().configure(app);
 	}
 }
