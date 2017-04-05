@@ -50,7 +50,7 @@ import com.simsilica.lemur.event.PopupState.ClickMode;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class GenericDialogState extends BaseAppState{
-	private ResizablePanel	rzpMain;
+	private HierarchyResizablePanel	rzpMain;
 	private Application	app;
 	private Container	cntrMain;
 	private CfgParams cfg;
@@ -166,7 +166,8 @@ public class GenericDialogState extends BaseAppState{
 	
 	@Override
 	protected void initialize(Application app) {
-		rzpMain = new ResizablePanel(cfg.getSize(), cfg.getStyle());
+		rzpMain = new HierarchyResizablePanel(cfg.getStyle());
+		rzpMain.setPreferredSize(cfg.getSize());
 		rzpMain.setLocalTranslation(cfg.getPos());
 //		rzpMain.setMinSize(new Vector3f(100,100,0));
 //		rzp.setContents(cfg.getContents());
