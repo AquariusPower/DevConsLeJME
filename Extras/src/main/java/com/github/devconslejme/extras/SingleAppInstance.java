@@ -46,10 +46,12 @@ import java.util.Map;
  * 
  * Is not part of the simulation, therefore must use realtime: System.currentTimeMillis()
  * 
+ * Single Mandatory "Application Instance"
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  *
  */
-public class SingleMandatoryAppInstance { //implements IReflexFillCfg{
+public class SingleAppInstance { //implements IReflexFillCfg{
 	public static final boolean bDebugIDE=
 		ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
 	private String strPrefix;
@@ -82,10 +84,10 @@ public class SingleMandatoryAppInstance { //implements IReflexFillCfg{
 	private Object	app;
 	private File	flAppStorageBaseFolder;
 	
-	public SingleMandatoryAppInstance() {
+	public SingleAppInstance() {
 //		if(instance!=null)throw new NullPointerException("already instanced");
 		lLockUpdateTargetDelayMilis=3000;
-		strPrefix=SingleMandatoryAppInstance.class.getSimpleName()+"-";
+		strPrefix=SingleAppInstance.class.getSimpleName()+"-";
 		strSuffix=".lock";
 		strExitReasonOtherInstance = "";
 		setUseFilesystemFileAttributeModifiedTime(false);
@@ -100,7 +102,7 @@ public class SingleMandatoryAppInstance { //implements IReflexFillCfg{
 	 * @param b
 	 * @return 
 	 */
-	public SingleMandatoryAppInstance setUseFilesystemFileAttributeModifiedTime(boolean b) {
+	public SingleAppInstance setUseFilesystemFileAttributeModifiedTime(boolean b) {
 		this.bUseFilesystemFileAttributeModifiedTime = b;
 		this.bRecreateLockEveryLoop = !this.bUseFilesystemFileAttributeModifiedTime;
 		return this;
@@ -475,7 +477,7 @@ public class SingleMandatoryAppInstance { //implements IReflexFillCfg{
 		flFolder = new File(
 			this.flAppStorageBaseFolder,
 			strPkgAndClassWithMainMethod.replace(".",File.separator) //package of main class
-				+File.separator+SingleMandatoryAppInstance.class.getSimpleName() //self
+				+File.separator+SingleAppInstance.class.getSimpleName() //self
 		);
 		
 		flSelfLock = new File(flFolder,strId);
@@ -567,7 +569,7 @@ public class SingleMandatoryAppInstance { //implements IReflexFillCfg{
 	
 	private void outputTD(String str){
 		System.err.println(""
-			+"["+SingleMandatoryAppInstance.class.getSimpleName()+"]"
+			+"["+SingleAppInstance.class.getSimpleName()+"]"
 			+"["+new SimpleDateFormat("HH:mm:ss.SSS").format(Calendar.getInstance().getTime())+"]"
 			+": "
 			+str.replace("\n", "\n\t"));

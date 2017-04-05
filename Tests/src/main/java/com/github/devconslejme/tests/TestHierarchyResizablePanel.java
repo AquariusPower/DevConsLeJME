@@ -28,10 +28,10 @@
 package com.github.devconslejme.tests;
 
 import com.github.devconslejme.gendiag.HierarchyResizablePanel;
+import com.github.devconslejme.gendiag.HierarchySorterI;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.MainThreadI;
 import com.github.devconslejme.misc.jme.QueueStateI;
-import com.github.devconslejme.misc.lemur.HierarchySorterI;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.ColorRGBA;

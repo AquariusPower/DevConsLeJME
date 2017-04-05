@@ -25,7 +25,7 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.misc.lemur;
+package com.github.devconslejme.gendiag;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -29,13 +29,13 @@ package com.github.devconslejme.gendiag;
 
 import java.util.ArrayList;
 
+import com.github.devconslejme.gendiag.HierarchySorterI.IHierarchySorter;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
-import com.github.devconslejme.misc.lemur.HierarchySorterI.IHierarchySorter;
 import com.github.devconslejme.misc.lemur.SimpleDragParentestListenerI;
 import com.jme3.app.Application;
 import com.jme3.math.ColorRGBA;

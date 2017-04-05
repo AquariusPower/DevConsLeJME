@@ -56,9 +56,6 @@ public class TestGenericDialog extends SimpleApplication {
 	
 	@Override
 	public void simpleInitApp() {
-		GuiGlobals.initialize(this);
-		BaseStyles.loadGlassStyle();
-		
 		ConfigureTestsI.i().configure(this, getGuiNode());
 		
 		prepareDialog();

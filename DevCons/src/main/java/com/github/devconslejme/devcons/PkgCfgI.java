@@ -25,30 +25,20 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.tests;
+package com.github.devconslejme.devcons;
 
-import com.github.devconslejme.gendiag.HierarchySorterI;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.MainThreadI;
-import com.github.devconslejme.misc.jme.QueueStateI;
-import com.jme3.app.Application;
 import com.jme3.scene.Node;
-import com.simsilica.lemur.GuiGlobals;
-import com.simsilica.lemur.style.BaseStyles;
+
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class ConfigureTestsI {
-	public static ConfigureTestsI i(){return GlobalInstanceManagerI.i().get(ConfigureTestsI.class);}
+public class PkgCfgI {
+	public static PkgCfgI i(){return GlobalInstanceManagerI.i().get(PkgCfgI.class);}
 	
-	public void configure(Application app, Node nodeParent){
-		GuiGlobals.initialize(app);
-		BaseStyles.loadGlassStyle();
+	public void configure(Node nodeParent){
+		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(nodeParent);
 		
-		MainThreadI.i().configure(); //misc
-		GlobalInstanceManagerI.i().put(Application.class,app); //jme
-		QueueStateI.i().configure(); //jme
-		HierarchySorterI.i().configure(nodeParent, 0f);
 	}
 }
