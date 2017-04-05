@@ -27,6 +27,9 @@
 
 package com.github.devconslejme.misc;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 
 
 // (tab indent=2 spaces)
@@ -37,7 +40,204 @@ package com.github.devconslejme.misc;
 public class DetailedException extends NullPointerException{
 	private static final long	serialVersionUID	= -2021594801806561912L;
 	
-	public DetailedException(String strMsg, Object... aobj){
-		super(strMsg+aobj); //TODO improve
+	private static Throwable	exRequestExit;
+	private static IUserInputDetector	userInputDetector;
+	private static String	strErrorMessage;
+	private static String strHeader = "["+DetailedException.class.getSimpleName()+"]";
+
+	public interface IUserInputDetector {
+		boolean isConsoleCommandRunningFromDirectUserInput();
+	}
+	
+	public static interface ICheckProblems {
+		Object performChecks(String strMessage, Throwable thr);
+	}
+	private static ICheckProblems chkprb = null;
+
+	public static void setProblemsChecker(ICheckProblems chkprb){
+		DetailedException.chkprb=chkprb;
+	}
+
+	private static String joinMessageWithObjects(String strMessage, Object... aobj){
+		if(JavaLangI.i().isRecursiveLoopOnMethod("<init>",DetailedException.class)){
+			System.err.println(strHeader+"Recursive loop exception, stack dump below:");
+			Thread.dumpStack();
+			return strMessage+"\n"+
+				strHeader+" Recursive loop (prevented) at exception ("+DetailedException.class+") call...)";
+		}
+		
+		try{
+			return StringI.i().joinMessageWithObjects(strMessage,aobj);
+		}catch(Exception ex){
+			System.err.println(strHeader+"another exception happened while gathering information to this exception...");
+			ex.printStackTrace();
+			return "(failed to gather further exception information)";
+		}
+	}
+	private String	strMessageKey;
+	public String getMessageKey() {
+		return strMessageKey;
+	}
+
+	public DetailedException(boolean bExitApplication, String strMessage, Object... aobj) {
+		super(joinMessageWithObjects(strMessage, aobj));
+		
+		this.strMessageKey=strMessage;
+		
+		if(bExitApplication && (userInputDetector!=null && !userInputDetector.isConsoleCommandRunningFromDirectUserInput())){
+			DetailedException.exRequestExit = this;
+		}
+	}
+	public DetailedException(String str, Object... aobj) {
+		this(true,str,aobj);
+	}
+	public DetailedException() {
+		this("(no extra info)");
+	}
+	public DetailedException(Exception ex) {
+		this("(just rethrowing the cause)");
+		setCauseAndReturnSelf(ex);
+	}
+
+	public static void setUserInputDetector(IUserInputDetector u){
+		userInputDetector = u;
+	}
+
+	public static boolean isExitRequested(){
+		return exRequestExit!=null;
+	}
+
+	public static Throwable getExitRequestCause(){
+		return exRequestExit;
+	}
+
+	public static void setExitRequestCause(String strErrMsg, Throwable t){
+		DetailedException.strErrorMessage=strErrMsg;
+		DetailedException.exRequestExit=t;
+	}
+
+	public static void assertNotEmpty(String strDescWhat, String str, Object... aobjMoreObjectsForDebugInfo){
+		assertNotNull(str, strDescWhat, aobjMoreObjectsForDebugInfo);
+		
+		if(str.isEmpty()){
+			ArrayList<Object> aobjAll = new ArrayList<Object>();
+			aobjAll.add(str);
+			aobjAll.addAll(Arrays.asList(aobjMoreObjectsForDebugInfo));
+			
+			throw new DetailedException(strDescWhat+": is empty", aobjAll.toArray());
+		}
+	}
+
+	/**
+	 * @param strDescWhat
+	 * @param obj
+	 * @param aobjMoreObjectsForDebugInfo
+	 */
+	public static <T> T assertNotNull(T obj, Object... aobjMoreObjectsForDebugInfo){
+		if(obj==null){
+			ArrayList<Object> aobjAll = new ArrayList<Object>();
+			aobjAll.add(obj);
+			aobjAll.addAll(Arrays.asList(aobjMoreObjectsForDebugInfo));
+			
+			throw new DetailedException("is null", aobjAll.toArray());
+		}
+		
+		return obj;
+	}
+
+	public static <T> void assertNotAlreadyAdded(ArrayList<T> aList, T objNew, Object... aobj){
+		String strMsg=null;
+		if(objNew==null){
+			strMsg="cant be null";
+		}
+		
+		if(aList.contains(objNew)){
+			strMsg="already added";
+		}
+		
+		if(strMsg!=null){
+			ArrayList<Object> aobjAll = new ArrayList<Object>();
+			aobjAll.add(aList);
+			aobjAll.add(objNew);
+			aobjAll.addAll(Arrays.asList(aobj));
+			
+			throw new DetailedException("already added", aobjAll);
+		}
+	}
+
+	public static void assertIsTrue(String strDescWhat, boolean b, Object... aobjMoreObjectsForDebugInfo){
+		if(!b){
+			throw new DetailedException("NOT "+strDescWhat+"!", aobjMoreObjectsForDebugInfo);
+		}
+	}
+
+	/**
+	 * 
+	 * @param objCurrent
+	 * @param objNew this one is just for info
+	 * @param aobjMoreObjectsForDebugInfo
+	 */
+	public static void assertNotAlreadySet(Object objCurrent, Object objNew, Object... aobjMoreObjectsForDebugInfo){
+		if(objCurrent!=null){
+			ArrayList<Object> aobjAll = new ArrayList<Object>();
+			aobjAll.add(objCurrent);
+			aobjAll.add(objNew);
+			aobjAll.addAll(Arrays.asList(aobjMoreObjectsForDebugInfo));
+			
+			throw new DetailedException("already set", aobjAll.toArray());
+		}
+	}
+
+	public DetailedException setCauseAndReturnSelf(String strCauseMessage, StackTraceElement[] asteCauseStack) {
+		return initCauseAndReturnSelf(strCauseMessage, asteCauseStack);
+	}
+	/**
+	 * this one helps as reads like {@link #initCause(Throwable)}
+	 * @param strCauseMessage
+	 * @param asteCauseStack
+	 * @return
+	 */
+	public DetailedException initCauseAndReturnSelf(String strCauseMessage, StackTraceElement[] asteCauseStack) {
+		Throwable tw = new Throwable(strCauseMessage);
+		tw.setStackTrace(asteCauseStack);
+		return initCauseAndReturnSelf(tw);
+	}
+
+	public DetailedException setCauseAndReturnSelf(Throwable cause) {
+		return initCauseAndReturnSelf(cause);
+	}
+	/**
+	 * this one helps as reads like {@link #initCause(Throwable)}
+	 * @param cause
+	 * @return
+	 */
+	public DetailedException initCauseAndReturnSelf(Throwable cause) {
+		super.initCause(cause);
+		return this;
+	}
+
+	@Deprecated
+	@Override
+	public synchronized Throwable initCause(Throwable cause) {
+		throw new NullPointerException("do not use, just to avoid ignoring the more useful ones");
+	}
+	public static String getExitErrorMessage() {
+		return strErrorMessage;
+	}
+
+	public static void performBugTrackChecks() {
+		chkprb.performChecks(getExitErrorMessage(), getExitRequestCause());
 	}
 }
+
+/**
+* "Things that should be been coded in a certain way but were overlooked",
+* but... is basically a buffed generic NullPointerException anyway...
+* 
+* This exception can be captured tho may request the application to exit gracefully.
+* 
+* TODO substitute all NullPointerException by this one.
+* 
+* @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+*
+*/

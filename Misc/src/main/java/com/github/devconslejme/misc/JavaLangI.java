@@ -28,6 +28,7 @@
 package com.github.devconslejme.misc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -162,4 +163,24 @@ public class JavaLangI {
 		return (str.matches("^.*[$][0-9]*$"));
 	}
 
+	public boolean isRecursiveLoopOnMethod(String strMethodName, Class clOwner){
+		StackTraceElement[] aste = Thread.currentThread().getStackTrace();
+		ArrayList<StackTraceElement> asteList = new ArrayList<StackTraceElement>(Arrays.asList(aste));
+		int iCountConstructor=0;
+		int iCountGap=0;
+		for(StackTraceElement ste:asteList){
+			if(ste.getMethodName().equals(strMethodName) && ste.getClassName().equals(clOwner.getName())){
+				iCountConstructor++;
+				if(iCountGap>0){ // a gap between this previous and current exception
+					return true;
+				}
+			}else{
+				if(iCountConstructor>0){
+					iCountGap++;
+				}
+			}
+		}
+		
+		return false;
+	}
 }
