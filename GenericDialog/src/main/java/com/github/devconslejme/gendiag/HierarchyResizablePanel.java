@@ -30,6 +30,8 @@ package com.github.devconslejme.gendiag;
 import java.util.ArrayList;
 
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
@@ -100,8 +102,6 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 	@Override
 	protected void resizedTo(Vector3f v3fNewSize) {
 		super.resizedTo(v3fNewSize);
-		
-//		btnBlocker.setPreferredSize(v3fNewSize);
 	}
 	
 	/**
@@ -109,27 +109,33 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 	 * @param rzdChildDialog
 	 */
 	public void showModal(HierarchyResizablePanel rzdChildDialog){
-		setChild(rzdChildDialog,true);
+		setHierarchyChild(rzdChildDialog,true);
 	}
 	
 	/**
 	 * will close if parent closes
 	 * @param rzdChildDialog
 	 */
-	public void showModeless(HierarchyResizablePanel rzdChildDialog){
-		setChild(rzdChildDialog,false);
+	public void showHierarchyModeless(HierarchyResizablePanel rzdChildDialog){
+		setHierarchyChild(rzdChildDialog,false);
 	}
 	
-	private void setChild(HierarchyResizablePanel rzdChildDialog, boolean bModal){
-		rzdChildDialog.setModal(bModal);
+	private void setHierarchyChild(HierarchyResizablePanel rzdChildDialog, boolean bModal){
+		rzdChildDialog.setHierarchyModal(bModal);
 		rzdChildDialog.setHierarchyParent(this);
 		getParent().attachChild(rzdChildDialog);
 		arzdHierarchyChildList.add(rzdChildDialog);
 		if(bModal)setEnabledBlockerLayer(true);
-		update();
+//		QueueI.i().enqueue(new CallableX(0,false) {
+//			@Override
+//			public Boolean call() {
+//				update(); //useless?
+//				return true;
+//			}
+//		});
 	}
 	
-	protected void setModal(boolean b) {
+	protected void setHierarchyModal(boolean b) {
 		this.bHierarchyModal = b;
 	}
 	
