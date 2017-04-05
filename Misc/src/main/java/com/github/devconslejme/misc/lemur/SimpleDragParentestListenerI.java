@@ -25,8 +25,11 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.misc;
+package com.github.devconslejme.misc.lemur;
 
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;

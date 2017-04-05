@@ -25,12 +25,15 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.misc;
+package com.github.devconslejme.misc.lemur;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.MiscLibI;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.bounding.BoundingBox;
@@ -52,6 +55,11 @@ public class HierarchySorterI extends AbstractAppState{
 	private Application	app;
 	private Node nodeToMonitor;
 	private float	fBeginOrderZ = 0f;
+	
+//	public Application getApp(){
+//		return app;
+//	}
+	
 	private Comparator<IHierarchySorter> cmpr = new Comparator<IHierarchySorter>() {
 		@Override
 		public int compare(IHierarchySorter o1, IHierarchySorter o2) {
@@ -63,12 +71,12 @@ public class HierarchySorterI extends AbstractAppState{
 			if(o2.isTopHierarchy() && !o1.isTopHierarchy())return -1;
 			
 			// parent diag below child diag
-			if(o1.getHierarchyParent()==o2)return -1;
-			if(o2.getHierarchyParent()==o1)return  1;
+			if(o1.getHierarchyParent()==o2)return  1;
+			if(o2.getHierarchyParent()==o1)return -1;
 			if(o1==o2)return 0;
 			
 			// last focus
-			return Long.compare(o1.getLastFocusTimeNano(),o2.getLastFocusTimeNano());
+			return Long.compare(o1.getLastFocusAppTimeNano(),o2.getLastFocusAppTimeNano());
 		}
 	};
 	private float	fSafeZDist=1.0f;
@@ -76,13 +84,13 @@ public class HierarchySorterI extends AbstractAppState{
 	public static interface IHierarchySorter {
 		public Panel getHierarchyParent();
 		public Panel[] getHierarchyChildList();
-		public Long getLastFocusTimeNano();
+		public Long getLastFocusAppTimeNano();
 		public boolean isTopHierarchy();
 		public boolean isModal();
 	}
 	
-	public void configure(Application app, Node nodeToMonitor, float fBeginOrderZ){
-		this.app=app;
+	public void configure(Node nodeToMonitor, float fBeginOrderZ){
+		this.app=GlobalInstanceManagerI.i().get(Application.class);
 		this.fBeginOrderZ=fBeginOrderZ;
 		this.nodeToMonitor=nodeToMonitor;
 		app.getStateManager().attach(this);

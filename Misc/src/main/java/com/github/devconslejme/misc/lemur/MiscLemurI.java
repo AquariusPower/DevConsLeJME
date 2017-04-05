@@ -25,39 +25,28 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.misc;
+package com.github.devconslejme.misc.lemur;
 
-import com.jme3.bounding.BoundingBox;
-import com.jme3.math.ColorRGBA;
-import com.jme3.math.Vector3f;
-import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.jme3.math.FastMath;
+import com.simsilica.lemur.ListBox;
+import com.simsilica.lemur.Panel;
+import com.simsilica.lemur.grid.GridModel;
 
 /**
  * DevSelfNote: Misc lib class should not exist. As soon coehsion is possible, do it!
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class MiscJmeI {
-	public static MiscJmeI i(){return GlobalInstanceManagerI.i().get(MiscJmeI.class);}
+public class MiscLemurI {
+	public static MiscLemurI i(){return GlobalInstanceManagerI.i().get(MiscLemurI.class);}
 	
-	@SuppressWarnings({ "unchecked" })
-	public <T extends Node> T getParentest(Spatial spt, Class<T> clTypeParentest, boolean bIncludeFirst){
-		T parentest = null;
-		if(bIncludeFirst && clTypeParentest.isInstance(spt))parentest=(T)spt;
+	public Integer getEntryHeightPixels(ListBox lstbx){
+		GridModel<Panel> gm = lstbx.getGridPanel().getModel();
+		if(gm.getRowCount()==0)throw new NullPointerException("list must not be empty");
+		Panel pnl = gm.getCell(0, 0, null); // create a new cell
+		float fHeight = pnl.getPreferredSize().getY();
 		
-		Node nodeParent = spt.getParent();
-		while(nodeParent!=null){
-			if(clTypeParentest.isInstance(nodeParent)){
-				parentest=(T)nodeParent;
-			}
-			nodeParent=nodeParent.getParent();
-		}
-		
-		return parentest;
-	}
-	
-	public Vector3f getBoundingBoxSize(Spatial spt){
-		return ((BoundingBox)spt.getWorldBound()).getExtent(null).mult(2f);
+		return (int)FastMath.ceil(fHeight);
 	}
 	
 }

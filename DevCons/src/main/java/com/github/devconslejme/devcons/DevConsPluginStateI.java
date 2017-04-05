@@ -39,14 +39,13 @@ import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
-import com.github.devconslejme.misc.ColorI;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.MainThreadI;
-import com.github.devconslejme.misc.MiscLemurI;
 import com.github.devconslejme.misc.MiscLibI;
 import com.github.devconslejme.misc.QueueStateI;
 import com.github.devconslejme.misc.QueueStateI.CallableX;
-import com.github.devconslejme.misc.SimpleDragParentestListenerI;
+import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.lemur.MiscLemurI;
+import com.github.devconslejme.misc.lemur.SimpleDragParentestListenerI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
@@ -189,6 +188,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 //	private float	fMinWidth=500;
 	private ResizablePanel	panelMain;
 //	private VersionedReference<Container>	vrMainSize;
+	private Application	app;
 	
 //	private VersionedObject<Container>	voMainSize = new VersionedObject<Container>(){
 //		@Override
@@ -237,17 +237,18 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		}
 	}
 	
-	public void configure(Application app, Node nodeParent) {
-		DevConsGlobalsI.i().put(Application.class,app);
-		MiscLibI.i().configure(app);
+	public void configure(Node nodeParent) {
+		this.app=GlobalInstanceManagerI.i().get(Application.class);
+//		DevConsGlobalsI.i().put(Application.class,app);
+		MiscLibI.i().configure();
 		
 		this.nodeParent = nodeParent;
-		DevConsGlobalsI.i().app().getStateManager().attach(this);
+		app.getStateManager().attach(this);
 		
 		flStorageFolder = new File(
 			JmeSystem.getStorageFolder(StorageFolderType.Internal),
-			DevConsGlobalsI.i().app().getClass().getPackage().getName().replace(".",File.separator) //package of Application class
-				+File.separator+DevConsGlobalsI.i().app().getClass().getSimpleName() //Application class
+			app.getClass().getPackage().getName().replace(".",File.separator) //package of Application class
+				+File.separator+app.getClass().getSimpleName() //Application class
 				+File.separator+DevConsPluginStateI.class.getSimpleName() //DevCons plugin
 		);
 		
@@ -350,12 +351,12 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		putStatus(EStatPriority.Normal, "VsR", "DevCons Logging area Visible Rows",
 			String.format("%d", lstbxLoggingSection.getVisibleItems()) );
 		
-		Vector2f v2fCursor = DevConsGlobalsI.i().app().getInputManager().getCursorPosition();
+		Vector2f v2fCursor = app.getInputManager().getCursorPosition();
 		putStatus(EStatPriority.Bottom, "Cur", "Cursor Position",
 			String.format("%.0f,%.0f", v2fCursor.x, v2fCursor.y) );
 		
 		putStatus(EStatPriority.Bottom, "Tmr", "Application Time",
-				String.format("%d", DevConsGlobalsI.i().app().getTimer().getTime()) );
+				String.format("%d", app.getTimer().getTime()) );
 	}
 	
 	private void updateStatus() {
@@ -593,7 +594,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private void initStyle() {
 		colorConsoleStyleBackground = ColorI.i().colorChangeCopy(ColorRGBA.Blue, -0.75f);
 		
-		if(GuiGlobals.getInstance()==null)GuiGlobals.initialize(DevConsGlobalsI.i().app());
+		if(GuiGlobals.getInstance()==null)GuiGlobals.initialize(app);
 		
 		Styles styles = GuiGlobals.getInstance().getStyles();
 		Attributes attrs = styles.getSelector(getStyle()); // this also creates the style

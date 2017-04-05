@@ -28,8 +28,10 @@
 package com.github.devconslejme.tests;
 
 import com.github.devconslejme.gendiag.HierarchyResizablePanel;
-import com.github.devconslejme.misc.HierarchySorterI;
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.MiscLibI;
+import com.github.devconslejme.misc.lemur.HierarchySorterI;
+import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
@@ -52,16 +54,17 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		BaseStyles.loadGlassStyle();
 		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
 		
-		MiscLibI.i().configure(this);
-		HierarchySorterI.i().configure(this, getGuiNode(), 0f);
+		GlobalInstanceManagerI.i().put(Application.class,this);
+		MiscLibI.i().configure();
+		HierarchySorterI.i().configure(getGuiNode(), 0f);
 		
-		initTest();
+		initTest(300);
+		initTest(600);
 	}
 
 	@SuppressWarnings("unchecked")
-	private void initTest() {
-		int i=300;
-		HierarchyResizablePanel testChild = test(new Vector3f(200,i+200,20));
+	private void initTest(int iBaseY) {
+		HierarchyResizablePanel testChild = test(new Vector3f(200,iBaseY+200,20));
 		Button btn = new Button("click to close");
 		btn.addClickCommands(new Command<Button>(){
 			@Override
@@ -70,8 +73,9 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 			}
 		});
 		testChild.setContents(btn);
+		testChild.setName("child"+iBaseY);
 		
-		HierarchyResizablePanel testParent = test(new Vector3f(100,i+100,10));
+		HierarchyResizablePanel testParent = test(new Vector3f(100,iBaseY+100,10));
 		btn = new Button("click to open modal");
 		btn.addClickCommands(new Command<Button>(){
 			@Override
@@ -80,6 +84,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 			}
 		});
 		testParent.setContents(btn);
+		testParent.setName("parent"+iBaseY);
 		
 		// show it all
 		getGuiNode().attachChild(testParent);

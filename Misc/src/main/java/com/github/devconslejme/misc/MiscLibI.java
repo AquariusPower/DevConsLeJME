@@ -27,7 +27,6 @@
 
 package com.github.devconslejme.misc;
 
-import com.jme3.app.Application;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -39,8 +38,8 @@ public class MiscLibI {
 	 * call from main thread
 	 * @param app
 	 */
-	public void configure(Application app){
+	public void configure(){
 		MainThreadI.i().configure();
-		QueueStateI.i().configure(app);
+		QueueStateI.i().configure();
 	}
 }

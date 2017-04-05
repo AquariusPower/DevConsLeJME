@@ -25,63 +25,67 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.misc;
+package com.github.devconslejme.misc.jme;
 
-import com.jme3.bounding.BoundingBox;
-import com.jme3.math.ColorRGBA;
-import com.jme3.math.Vector3f;
-import com.jme3.scene.Node;
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.JavaLangI;
+import com.github.devconslejme.misc.MainThreadI;
+import com.github.devconslejme.misc.QueueStateI;
+import com.github.devconslejme.misc.QueueStateI.CallableX;
 import com.jme3.scene.Spatial;
+
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class ColorI {
-	public static ColorI i(){return GlobalInstanceManagerI.i().get(ColorI.class);}
-	
-	private float colorComponentLimit(float f){
-		if(f<=0)f=0;
-		if(f>=1)f=1;
-		return f;
-	}
-	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB){
-		return colorChangeCopy(color,fAddRGB,color.a);
-	}
-	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB, float fAlpha){
-		color = color.clone();
-		
-		color.r=colorComponentLimit(color.r+=fAddRGB);
-		color.g=colorComponentLimit(color.g+=fAddRGB);
-		color.b=colorComponentLimit(color.b+=fAddRGB);
-		
-		color.a=fAlpha;
-		return color;
-	}
+public class UserDataI {
+	public static UserDataI i(){return GlobalInstanceManagerI.i().get(UserDataI.class);}
 	
 	/**
-	 * highlight color by half negating components
-	 * @param color
-	 * @return
+	 * all super classes of the object will be the keys
+	 * see {@link #setUserDataPSH(Spatial, String, Object)}
 	 */
-	public ColorRGBA neglightColor(ColorRGBA color){
-		color=color.clone();
-		
-		color.r=neglightColorComponent(color.r);
-		color.g=neglightColorComponent(color.g);
-		color.b=neglightColorComponent(color.b);
-		
-		return color;
+	public <T extends Spatial> boolean setUserDataPSH(T spt, Object obj) {
+		boolean b=false;
+		for(Class<?> cl:JavaLangI.i().getSuperClassesOf(obj,true)){
+			b=setUserDataPSH(spt, cl.getName(), obj);
+		}
+		return b;
 	}
-	
-	private float neglightColorComponent(float f){
-		if(f>0.5f){
-			f-=0.5f;
+	/**
+	 * 
+	 * @param spt
+	 * @param strKey
+	 * @param obj each key will be one super class of it
+	 * @return if was set now or will be at the main thread 
+	 */
+	public <T extends Spatial> boolean setUserDataPSH(T spt, String strKey, Object obj) {
+		CallableX cx = new CallableX(0,false) {
+			@SuppressWarnings("unchecked")
+			@Override
+			public Boolean call() {
+				spt.setUserData(strKey, new PseudoSavableHolder(obj));
+				return true;
+			}
+		};
+		
+		if(MainThreadI.i().isCurrentMainThread()){
+			cx.call();
+			return true;
 		}else{
-			f+=0.5f;
+			QueueStateI.i().enqueue(cx);
 		}
 		
-		if(f<0)f=0;if(f>1)f=1; //useless??
-		
-		return f;
+		return false;
+	}
+	
+	public <R> R getUserDataPSH(Spatial spt, Class<R> cl){
+		return getUserDataPSH(spt, cl.getName());
+	}
+	public <R> R getUserDataPSH(Spatial spt, String strKey){
+		@SuppressWarnings("unchecked")
+		PseudoSavableHolder<R> sh = (PseudoSavableHolder<R>)spt.getUserData(strKey);
+		if(sh==null)return null;
+		return sh.getRef();
 	}
 }

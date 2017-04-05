@@ -33,6 +33,7 @@ import com.github.devconslejme.extras.DynamicFPSLimiter;
 import com.github.devconslejme.extras.OSCmd;
 import com.github.devconslejme.extras.SingleMandatoryAppInstance;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.system.AppSettings;
@@ -65,7 +66,8 @@ public class TestDevCons extends SimpleApplication{
 	
 	@Override
 	public void simpleInitApp() {
-		DevConsPluginStateI.i().configure(this,getGuiNode());
+		GlobalInstanceManagerI.i().put(Application.class, this);
+		DevConsPluginStateI.i().configure(getGuiNode());
 		
 		/*** optionals below ***/
 		JavaScriptI.i().setJSBinding(this);

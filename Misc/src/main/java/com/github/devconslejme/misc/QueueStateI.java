@@ -237,8 +237,8 @@ public class QueueStateI extends AbstractAppState{
 //		}
 	}
 	
-	public void configure(Application app) {
-		this.app=app;
+	public void configure() {
+		this.app=GlobalInstanceManagerI.i().get(Application.class);
 		if(app.getTimer().getResolution() < 1000L){
 			throw new NullPointerException("timer resolution is too low");
 		}

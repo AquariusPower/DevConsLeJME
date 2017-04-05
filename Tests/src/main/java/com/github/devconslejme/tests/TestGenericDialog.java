@@ -59,7 +59,7 @@ public class TestGenericDialog extends SimpleApplication {
 		BaseStyles.loadGlassStyle();
 		
 		DevConsGlobalsI.i().put(Application.class,this);
-		MiscLibI.i().configure(this);
+		MiscLibI.i().configure();
 
 		prepareDialog();
 		prepareButtonCallsDiag();

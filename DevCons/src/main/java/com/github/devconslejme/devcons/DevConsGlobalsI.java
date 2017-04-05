@@ -34,6 +34,7 @@ import com.jme3.app.Application;
  * Globally accessible access other single instances easily.
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
+@Deprecated
 public class DevConsGlobalsI {
   private static DevConsGlobalsI instance=new DevConsGlobalsI();
   public static void setGlobalOverride (DevConsGlobalsI inst){
@@ -46,7 +47,7 @@ public class DevConsGlobalsI {
 		GlobalInstanceManagerI.i().put(cl, obj);
 	}
 	
-	public Application app(){return GlobalInstanceManagerI.i().get(Application.class);}
+//	public Application app(){return GlobalInstanceManagerI.i().get(Application.class);}
 	
 //	public void assertIsCurrentMainThread(){
 //		Thread threadMain = GlobalInstanceManagerI.i().get(Thread.class);

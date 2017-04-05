@@ -29,14 +29,17 @@ package com.github.devconslejme.gendiag;
 
 import java.util.ArrayList;
 
-import com.github.devconslejme.misc.ColorI;
-import com.github.devconslejme.misc.SimpleDragParentestListenerI;
-import com.github.devconslejme.misc.HierarchySorterI.IHierarchySorter;
-import com.github.devconslejme.misc.MiscJmeI;
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.TimeConvertI;
+import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.lemur.HierarchySorterI.IHierarchySorter;
+import com.github.devconslejme.misc.lemur.SimpleDragParentestListenerI;
+import com.jme3.app.Application;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.Node;
 import com.simsilica.lemur.Button;
+import com.simsilica.lemur.Command;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
 
@@ -45,33 +48,45 @@ import com.simsilica.lemur.component.QuadBackgroundComponent;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class HierarchyResizablePanel extends ResizablePanel implements IHierarchySorter{
-	/**
-	 * whatchout that Lemur will not control this blocker position/size/layout relatively to the panel it is blocking!
-	 */
 	private Button	btnBlocker;
 	
-	private long	lLastFocusTimeNano = -1;
+	private long	lLastFocusAppTimeNano = -1;
 	private ArrayList<HierarchyResizablePanel> arzdHierarchyChildList = new ArrayList<HierarchyResizablePanel>();
 	private Panel	hrpHierarchyParent;
 	private boolean	bHierarchyTop;
 	private boolean	bHierarchyModal;
+	private Application	app;
 	
 	public HierarchyResizablePanel(String strStyle) {
 		super(strStyle);
 		
 		initBlocker();
 		
+		app = GlobalInstanceManagerI.i().get(Application.class);
+		
 		HighlightEffectI.i().addMouseCursorHighlightEffects(this, (QuadBackgroundComponent)getResizableBorders());
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void initBlocker(){
 		btnBlocker = new Button("");//!BLOCKED!");
 		
 		btnBlocker.setBackground(
 			new QuadBackgroundComponent(//ColorRGBA.Red));
 				ColorI.i().colorChangeCopy(ColorRGBA.Red, -0.75f, 0.25f)));
-	
+		
+		btnBlocker.addClickCommands(new Command<Button>(){
+			@Override
+			public void execute(Button source) {
+				updateLastFocusAppTimeNano();
+			}
+		});
+		
 		SimpleDragParentestListenerI.i().applyAt(btnBlocker, this);
+	}
+
+	protected void updateLastFocusAppTimeNano() {
+		lLastFocusAppTimeNano=TimeConvertI.i().getNanosFrom(app.getTimer());
 	}
 
 	public void setEnabledBlockerLayer(boolean b){
@@ -185,8 +200,8 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 	}
 
 	@Override
-	public Long getLastFocusTimeNano() {
-		return lLastFocusTimeNano;
+	public Long getLastFocusAppTimeNano() {
+		return lLastFocusAppTimeNano;
 	}
 
 	@Override

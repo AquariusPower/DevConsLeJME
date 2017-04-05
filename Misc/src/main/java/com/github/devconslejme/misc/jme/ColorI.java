@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 2016, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+	Copyright (c) 2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 	
 	All rights reserved.
 
@@ -25,52 +25,60 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.misc;
+package com.github.devconslejme.misc.jme;
 
-import java.io.IOException;
-
-import com.jme3.export.JmeExporter;
-import com.jme3.export.JmeImporter;
-import com.jme3.export.Savable;
-import com.jme3.scene.Spatial;
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.jme3.math.ColorRGBA;
 
 /**
- * To use with {@link Spatial#setUserData()}
- * 
- * Useful to put objects into Spatials that dont really require being saved,
- * for easy retrieval.
- * 
- * ATTENTION!: drawback is, it will not save neither load anything unless further coded to do it...
- * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
- *
- * @param <T>
  */
-public class PseudoSavableHolder<T> implements Savable{
-	T objRef;
+public class ColorI {
+	public static ColorI i(){return GlobalInstanceManagerI.i().get(ColorI.class);}
 	
-	public PseudoSavableHolder(T objRef){
-		this.objRef=objRef;
+	private float colorComponentLimit(float f){
+		if(f<=0)f=0;
+		if(f>=1)f=1;
+		return f;
 	}
-	public T getRef(){
-		return objRef;
+	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB){
+		return colorChangeCopy(color,fAddRGB,color.a);
+	}
+	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB, float fAlpha){
+		color = color.clone();
+		
+		color.r=colorComponentLimit(color.r+=fAddRGB);
+		color.g=colorComponentLimit(color.g+=fAddRGB);
+		color.b=colorComponentLimit(color.b+=fAddRGB);
+		
+		color.a=fAlpha;
+		return color;
 	}
 	
-	@Override
-	public void write(JmeExporter ex) throws IOException {
-		if (objRef instanceof Savable) {
-			Savable s = (Savable) objRef;
-			s.write(ex);
-			return;
+	/**
+	 * highlight color by half negating components
+	 * @param color
+	 * @return
+	 */
+	public ColorRGBA neglightColor(ColorRGBA color){
+		color=color.clone();
+		
+		color.r=neglightColorComponent(color.r);
+		color.g=neglightColorComponent(color.g);
+		color.b=neglightColorComponent(color.b);
+		
+		return color;
+	}
+	
+	private float neglightColorComponent(float f){
+		if(f>0.5f){
+			f-=0.5f;
+		}else{
+			f+=0.5f;
 		}
-	}
-	
-	@Override
-	public void read(JmeImporter im) throws IOException {
-		if (objRef instanceof Savable) {
-			Savable s = (Savable) objRef;
-			s.read(im);
-			return;
-		}
+		
+		if(f<0)f=0;if(f>1)f=1; //useless??
+		
+		return f;
 	}
 }

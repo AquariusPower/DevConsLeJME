@@ -30,8 +30,8 @@ package com.github.devconslejme.gendiag;
 import java.util.HashMap;
 
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
-import com.github.devconslejme.misc.ColorI;
-import com.github.devconslejme.misc.SimpleDragParentestListenerI;
+import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.lemur.SimpleDragParentestListenerI;
 import com.jme3.app.Application;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;

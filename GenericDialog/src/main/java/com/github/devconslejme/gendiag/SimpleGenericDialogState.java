@@ -29,7 +29,7 @@ package com.github.devconslejme.gendiag;
 
 import java.util.HashMap;
 
-import com.github.devconslejme.misc.MiscLemurI;
+import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.jme3.app.Application;
 import com.jme3.input.KeyInput;
 import com.simsilica.lemur.Button;

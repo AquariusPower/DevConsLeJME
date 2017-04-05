@@ -37,6 +37,7 @@ import com.github.devconslejme.misc.TimeConvertI;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
+import com.jme3.app.Application;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.core.VersionedList;
 
@@ -134,7 +135,8 @@ public class LoggingI {
 		//TODO start app time at year0 month0 day0 ... 
 //		dateForMarker.setTime(TimeConvertI.i().getMilisFrom(DCGlobal.app().getTimer())); //this is a delay from the start of the app
 //		strInfo = strInfo+" [A="+dateFormat.format(dateForMarker)+"]";
-		strInfo = strInfo+" [A="+TimeConvertI.i().formatElapsed(DevConsGlobalsI.i().app().getTimer())+"]";
+		strInfo = strInfo+" [A="+TimeConvertI.i().formatElapsed(
+			GlobalInstanceManagerI.i().get(Application.class).getTimer())+"]";
 		
 		strInfo = Strings.padStart(strInfo, iWrapAtColumn/2 +strInfo.length()/2, '_');
 		strInfo = Strings.padEnd(strInfo, iWrapAtColumn, '_');

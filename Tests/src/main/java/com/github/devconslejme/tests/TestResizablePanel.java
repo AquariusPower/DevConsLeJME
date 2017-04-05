@@ -29,9 +29,11 @@ package com.github.devconslejme.tests;
 
 import com.github.devconslejme.gendiag.HighlightEffectI;
 import com.github.devconslejme.gendiag.ResizablePanel;
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.MainThreadI;
 import com.github.devconslejme.misc.MiscLibI;
 import com.github.devconslejme.misc.QueueStateI;
+import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
@@ -54,7 +56,8 @@ public class TestResizablePanel extends SimpleApplication {
 		BaseStyles.loadGlassStyle();
 		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
 		
-		MiscLibI.i().configure(this);
+		GlobalInstanceManagerI.i().put(Application.class,this);
+		MiscLibI.i().configure();
 		
 		int i=300;
 		test(new Vector3f(100,i+100,10));

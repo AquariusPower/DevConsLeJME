@@ -27,10 +27,10 @@
 
 package com.github.devconslejme.gendiag;
 
-import com.github.devconslejme.misc.ColorI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.UserDataI;
+import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.jme.UserDataI;
 import com.jme3.input.event.MouseMotionEvent;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Spatial;

@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+	Copyright (c) 2016, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 	
 	All rights reserved.
 
@@ -25,63 +25,52 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.misc;
+package com.github.devconslejme.misc.jme;
 
-import com.github.devconslejme.misc.QueueStateI.CallableX;
+import java.io.IOException;
+
+import com.jme3.export.JmeExporter;
+import com.jme3.export.JmeImporter;
+import com.jme3.export.Savable;
 import com.jme3.scene.Spatial;
 
-
 /**
+ * To use with {@link Spatial#setUserData()}
+ * 
+ * Useful to put objects into Spatials that dont really require being saved,
+ * for easy retrieval.
+ * 
+ * ATTENTION!: drawback is, it will not save neither load anything unless further coded to do it...
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+ *
+ * @param <T>
  */
-public class UserDataI {
-	public static UserDataI i(){return GlobalInstanceManagerI.i().get(UserDataI.class);}
+public class PseudoSavableHolder<T> implements Savable{
+	T objRef;
 	
-	/**
-	 * all super classes of the object will be the keys
-	 * see {@link #setUserDataPSH(Spatial, String, Object)}
-	 */
-	public <T extends Spatial> boolean setUserDataPSH(T spt, Object obj) {
-		boolean b=false;
-		for(Class<?> cl:JavaLangI.i().getSuperClassesOf(obj,true)){
-			b=setUserDataPSH(spt, cl.getName(), obj);
-		}
-		return b;
+	public PseudoSavableHolder(T objRef){
+		this.objRef=objRef;
 	}
-	/**
-	 * 
-	 * @param spt
-	 * @param strKey
-	 * @param obj each key will be one super class of it
-	 * @return if was set now or will be at the main thread 
-	 */
-	public <T extends Spatial> boolean setUserDataPSH(T spt, String strKey, Object obj) {
-		CallableX cx = new CallableX(0,false) {
-			@SuppressWarnings("unchecked")
-			@Override
-			public Boolean call() {
-				spt.setUserData(strKey, new PseudoSavableHolder(obj));
-				return true;
-			}
-		};
-		
-		if(MainThreadI.i().isCurrentMainThread()){
-			cx.call();
-			return true;
-		}else{
-			QueueStateI.i().enqueue(cx);
-		}
-		
-		return false;
+	public T getRef(){
+		return objRef;
 	}
 	
-	public <R> R getUserDataPSH(Spatial spt, Class<R> cl){
-		return getUserDataPSH(spt, cl.getName());
+	@Override
+	public void write(JmeExporter ex) throws IOException {
+		if (objRef instanceof Savable) {
+			Savable s = (Savable) objRef;
+			s.write(ex);
+			return;
+		}
 	}
-	public <R> R getUserDataPSH(Spatial spt, String strKey){
-		@SuppressWarnings("unchecked")
-		PseudoSavableHolder<R> sh = (PseudoSavableHolder<R>)spt.getUserData(strKey);
-		if(sh==null)return null;
-		return sh.getRef();
+	
+	@Override
+	public void read(JmeImporter im) throws IOException {
+		if (objRef instanceof Savable) {
+			Savable s = (Savable) objRef;
+			s.read(im);
+			return;
+		}
 	}
 }
