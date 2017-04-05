@@ -64,7 +64,7 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 		
 		app = GlobalInstanceManagerI.i().get(Application.class);
 		
-		HighlightEffectI.i().addMouseCursorHighlightEffects(this, (QuadBackgroundComponent)getResizableBorders());
+		HighlightEffectI.i().addMouseCursorHighlightEffects(this, (QuadBackgroundComponent)getResizableBorder());
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -73,7 +73,7 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 		
 		btnBlocker.setBackground(
 			new QuadBackgroundComponent(//ColorRGBA.Red));
-				ColorI.i().colorChangeCopy(ColorRGBA.Red, -0.75f, 0.25f)));
+				ColorI.i().colorChangeCopy(ColorRGBA.Red, -0.75f, 0.5f)));
 		
 		btnBlocker.addClickCommands(new Command<Button>(){
 			@Override

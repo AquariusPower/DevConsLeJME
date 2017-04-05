@@ -61,19 +61,21 @@ import com.simsilica.lemur.style.Styles;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class ResizablePanel extends Panel {
+  public static final String ELEMENT_ID = "resizablePanel";
 	private BorderLayout layout;
 	private Panel contents;
-	private int iBorderSize = 2;//4;
+	private static int iBorderSizeDefault = 2;
+	private int iBorderSize = iBorderSizeDefault;
 	private Vector3f	v3fDragFromPrevious;
 	private Vector3f	v3fMinSize = new Vector3f(0,0,0);
 	private float fCornerHotSpotRange = 20;
 	private ResizerCursorListener dcl = new ResizerCursorListener();
 	private int	iMouseButtonIndexToDrag=0;
 	private EEdge eeInitialHook = null;
-	private int	iBumpedBorderSize=7;
-	private boolean	bUseBumpBorderMode=false;
-	private boolean	bUsingBumpBorderMode=false;
-	private Integer	iBorderSizeBkp=null;
+//	private int	iBumpedBorderSize=7;
+//	private boolean	bUseBumpBorderMode=false;
+//	private boolean	bUsingBumpBorderMode=false;
+//	private Integer	iBorderSizeBkp=null;
 	private int	iGrowParentestFixAttemptLimit=100;
 	private HashMap<EEdge,Edge> hmEdge = new HashMap<EEdge,Edge>();
 //	private Vector3f	v3fNewPos = new Vector3f();
@@ -426,7 +428,7 @@ public class ResizablePanel extends Panel {
 		this(v3fSize.x, v3fSize.y, strStyle);
 	}
 	public ResizablePanel( float fWidth, float fHeight, String strStyle ) {
-    super(false, new ElementId("resizablePanel"), strStyle);
+    super(false, new ElementId(ELEMENT_ID), strStyle);
     
     initEdges();
     
@@ -441,8 +443,8 @@ public class ResizablePanel extends Panel {
                                                LAYER_BACKGROUND,
                                                LAYER_RESIZABLE_BORDERS);
     
-    setBorder(new QuadBackgroundComponent());
-    setResizableBorderMargin(iBorderSize); //to apply default
+//    setResizableBorder(new QuadBackgroundComponent());
+//    setResizableBorderMargin(iBorderSize); //to apply default
     
     Styles styles = GuiGlobals.getInstance().getStyles();
     styles.applyStyles(this, getElementId(), strStyle);
@@ -471,7 +473,7 @@ public class ResizablePanel extends Panel {
 				v3fDragFromPrevious=null;
 				eeInitialHook=(null);
 				event.setConsumed(); //this also prevents sending the event to other than this panel
-				resetBumpedResizableBorder();
+//				resetBumpedResizableBorder();
 			}
 		}
 		
@@ -479,7 +481,7 @@ public class ResizablePanel extends Panel {
   	public void cursorMoved(CursorMotionEvent event, Spatial target, Spatial capture) {
   		if(v3fDragFromPrevious!=null){
   			resizeThruDragging(event.getX(),event.getY());
-  			resetBumpedResizableBorder(); // must be here or the size of panel contents will be slightly different of the final one causing confusion
+//  			resetBumpedResizableBorder(); // must be here or the size of panel contents will be slightly different of the final one causing confusion
   			event.setConsumed(); //acknoledges event absorption 
   		}
   	}
@@ -487,36 +489,40 @@ public class ResizablePanel extends Panel {
 		@Override
 		public void cursorEntered(CursorMotionEvent event, Spatial target,				Spatial capture) {
   		if(v3fDragFromPrevious==null){ //to help on pressing button on border
-				if(isUseBumpResizableBorderMode()){
-					iBorderSizeBkp=iBorderSize;
-					setResizableBorderMargin(getBumpedResizableBorderSize());
-					bUsingBumpBorderMode=true;
-				}
+//				if(isUseBumpResizableBorderMode()){
+//					iBorderSizeBkp=iBorderSize;
+//					setResizableBorderMargin(getBumpedResizableBorderSize());
+//					bUsingBumpBorderMode=true;
+//				}
   		}
 		}
 
 		@Override
 		public void cursorExited(CursorMotionEvent event, Spatial target,				Spatial capture) {
-			resetBumpedResizableBorder();
+//			resetBumpedResizableBorder();
 		}
 		
   }
   
-	private void resetBumpedResizableBorder(){
-		if(bUsingBumpBorderMode){
-			setResizableBorderMargin(iBorderSizeBkp);
-			iBorderSizeBkp=null;
-			bUsingBumpBorderMode=false;
-		}
-	}
+//	private void resetBumpedResizableBorder(){
+//		if(bUsingBumpBorderMode){
+//			setResizableBorderMargin(iBorderSizeBkp);
+//			iBorderSizeBkp=null;
+//			bUsingBumpBorderMode=false;
+//		}
+//	}
 	
-  @StyleDefaults("resizablePanel")
+  @StyleDefaults(ELEMENT_ID)
   public static void initializeDefaultStyles( Attributes attrs ) {
-      attrs.set( "resizableBorders", new QuadBackgroundComponent(ColorRGBA.Gray), false );
+  	ColorRGBA color = ColorRGBA.Cyan.clone();
+  	color.a=0.25f;
+  	QuadBackgroundComponent qbc = new QuadBackgroundComponent(color);
+  	qbc.setMargin(iBorderSizeDefault, iBorderSizeDefault);
+  	attrs.set( LAYER_RESIZABLE_BORDERS, qbc, false );
   }
   
-	@StyleAttribute(value="resizableBorders", lookupDefault=false)
-	public ResizablePanel setResizableBorders( GuiComponent bg ) {        
+	@StyleAttribute(value=LAYER_RESIZABLE_BORDERS, lookupDefault=false)
+	public ResizablePanel setResizableBorder( GuiComponent bg ) {        
 //		getControl(GuiControl.class).setComponent(LAYER_RESIZABLE_BORDERS, bg);   
 //		return this;
 //	}
@@ -538,7 +544,7 @@ public class ResizablePanel extends Panel {
 	}
 	private ResizablePanel setResizableBordersWork( GuiComponent bg ) {
 		getControl(GuiControl.class).setComponent(LAYER_RESIZABLE_BORDERS, bg);   
-		setResizableBorderMargin(iBorderSize);
+//		setResizableBorderMargin(iBorderSize);
 		return this;
 	}
 	
@@ -555,26 +561,26 @@ public class ResizablePanel extends Panel {
 		this.bUseSameBorderAtResizable=b;
 	}
 	
-	/**
-	 * TODO create a component that allow setting each edge size independently
-	 * @param i
-	 * @return
-	 */
-	public ResizablePanel setResizableBorderMargin(int i){
-		this.iBorderSize=(i);
-		
-		GuiComponent border = getBorder();
-		if(border instanceof IBorderMargin){
-			irb.setMargin(i);
-		}else
-		if(border instanceof QuadBackgroundComponent){
-			((QuadBackgroundComponent)border).setMargin(this.iBorderSize, this.iBorderSize);
-		}
-		
-		return this;
-	}
+//	/**
+//	 * TODO create a component that allow setting each edge size independently
+//	 * @param i
+//	 * @return
+//	 */
+//	public ResizablePanel setResizableBorderMargin(int i){
+//		this.iBorderSize=(i);
+//		
+//		GuiComponent border = getBorder();
+//		if(border instanceof IBorderMargin){
+//			irb.setMargin(i);
+//		}else
+//		if(border instanceof QuadBackgroundComponent){
+//			((QuadBackgroundComponent)border).setMargin(this.iBorderSize, this.iBorderSize);
+//		}
+//		
+//		return this;
+//	}
 	
-  public GuiComponent getResizableBorders() {
+  public GuiComponent getResizableBorder() {
     return getControl(GuiControl.class).getComponent(LAYER_RESIZABLE_BORDERS);
   }
   
@@ -662,20 +668,20 @@ public class ResizablePanel extends Panel {
 	public Edge getDraggedEdge() {
 		return hmEdge.get(eeInitialHook);
 	}
-	public boolean isUseBumpResizableBorderMode() {
-		return bUseBumpBorderMode;
-	}
-	public ResizablePanel setUseBumpResizableBorderMode(boolean bUseBumpBorderMode) {
-		this.bUseBumpBorderMode = bUseBumpBorderMode;
-		return this;
-	}
-	public int getBumpedResizableBorderSize() {
-		return iBumpedBorderSize;
-	}
-	public ResizablePanel setBumpedResizableBorderSize(int iBumpedBorderSize) {
-		this.iBumpedBorderSize = iBumpedBorderSize;
-		return this;
-	}
+//	public boolean isUseBumpResizableBorderMode() {
+//		return bUseBumpBorderMode;
+//	}
+//	public ResizablePanel setUseBumpResizableBorderMode(boolean bUseBumpBorderMode) {
+//		this.bUseBumpBorderMode = bUseBumpBorderMode;
+//		return this;
+//	}
+//	public int getBumpedResizableBorderSize() {
+//		return iBumpedBorderSize;
+//	}
+//	public ResizablePanel setBumpedResizableBorderSize(int iBumpedBorderSize) {
+//		this.iBumpedBorderSize = iBumpedBorderSize;
+//		return this;
+//	}
 	public ResizablePanel addResizableListener(IResizableListener irl) {
 		if(irl==null)throw new NullPointerException("invalid null listener");
 		

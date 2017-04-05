@@ -68,7 +68,7 @@ public class TestResizablePanel extends SimpleApplication {
 		rzp.setLocalTranslation(pos); //above DevCons
 		getGuiNode().attachChild(rzp);
 		
-		HighlightEffectI.i().addMouseCursorHighlightEffects(rzp, (QuadBackgroundComponent)rzp.getResizableBorders());
+		HighlightEffectI.i().addMouseCursorHighlightEffects(rzp, (QuadBackgroundComponent)rzp.getResizableBorder());
 		
 		Button btn = new Button("drag borders to resize:"+pos);
 //		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));

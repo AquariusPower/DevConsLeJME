@@ -37,6 +37,7 @@ import java.util.Set;
 
 import org.lwjgl.opengl.Display;
 
+import com.github.devconslejme.gendiag.HierarchyResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
@@ -188,7 +189,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 //	private PanelResizableEnhancer	panelResizableEnhancer;
 //	private float	fMinHeight=100;
 //	private float	fMinWidth=500;
-	private ResizablePanel	panelMain;
+	private HierarchyResizablePanel	panelMain;
 //	private VersionedReference<Container>	vrMainSize;
 	private Application	app;
 	
@@ -620,10 +621,10 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		clBg = ColorRGBA.Cyan.clone();
 		attrs.set(Button.LAYER_BACKGROUND, new QuadBackgroundComponent(clBg));
 		
-		attrs = styles.getSelector("resizablePanel", getStyle());
-		attrs.set(EAttribute.color.s(), ColorRGBA.Yellow.clone()); //TODO REMOVE IF USELESS
-		clBg = ColorRGBA.Cyan.clone();
-		attrs.set(ResizablePanel.LAYER_RESIZABLE_BORDERS, new QuadBackgroundComponent(clBg));
+//		attrs = styles.getSelector("resizablePanel", getStyle());
+//		attrs.set(EAttribute.color.s(), ColorRGBA.Yellow.clone()); //TODO REMOVE IF USELESS
+//		clBg = ColorRGBA.Cyan.clone();
+//		attrs.set(ResizablePanel.LAYER_RESIZABLE_BORDERS, new QuadBackgroundComponent(clBg));
 		
 		// INPUT
 		attrs = styles.getSelector(TextField.ELEMENT_ID, getStyle());
@@ -680,7 +681,11 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private void initMainContainer() {
 		cntrMain = new Container(new BorderLayout(), getStyle());
 		
-		panelMain = new ResizablePanel(cntrMain);
+		panelMain = new HierarchyResizablePanel(getStyle());
+//		new QuadBackgroundComponent(ColorRGBA.Red.clone());
+//		panelMain.setBorder();
+//		panelMain.setborder
+		panelMain.setContents(cntrMain);
 		panelMain.addResizableListener(this);
 //		panelMain.setMinSize(new Vector3f(fMinWidth ,fMinHeight,0));
 		

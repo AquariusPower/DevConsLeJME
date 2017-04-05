@@ -95,13 +95,13 @@ public class TestGenericDialog extends SimpleApplication {
 		diag.setTextInfo("This is a good info about something.\nSecond line.");
 		diag.setUseInputTextValue(true);
 		
-		QueueI.i().enqueue(new CallableX(0,false) {
-			@Override
-			public Boolean call() {
-				diag.getMainResizablePanel().setUseBumpResizableBorderMode(true);
-				return true;
-			}
-		});
+//		QueueI.i().enqueue(new CallableX(0,false) {
+//			@Override
+//			public Boolean call() {
+//				diag.getMainResizablePanel().setUseBumpResizableBorderMode(true);
+//				return true;
+//			}
+//		});
 		
 		diag.putOption("option A", 10);
 		diag.putOption("option B", "This is option B");
