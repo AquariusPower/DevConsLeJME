@@ -357,7 +357,7 @@ public class ResizablePanel extends Panel {
 
 	Panel pnlParentest = null;
 	private boolean	bEnabledGrowParentestFixAttemptLimit=false;
-	public Panel getParentest(){
+	private Panel getParentest(){ //TODO could be outside this class
 		if(pnlParentest!=null)return pnlParentest;
 		
 		// find it
@@ -691,7 +691,7 @@ public class ResizablePanel extends Panel {
 		return hmEdge.get(edge);
 	}
 	
-	public void warnMsg(String str){
-		System.err.println("WARN["+ResizablePanel.class.getSimpleName()+"]: "+str); //TODO log?
+	private void warnMsg(String str){ //TODO could be outside this class
+		System.err.println("WARN["+this.getClass().getSimpleName()+"]: "+str); //TODO log?
 	}
 }

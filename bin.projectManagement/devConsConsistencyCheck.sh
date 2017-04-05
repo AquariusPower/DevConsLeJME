@@ -29,7 +29,7 @@ eval `secinit`
 
 SECFUNCuniqueLock --waitbecomedaemon
 
-cd ..
+#cd ..
 
 IFS=$'\n' read -d '' -r -a astrFileList < <(find -iname "*.java")&&:
 
@@ -44,6 +44,7 @@ function FUNCvalidate(){ # <strFile> <strPkg> <strRestrictedTo>
 			egrep "import com[.]github[.]devconslejme[.]" "$lstrFile" |\
 				egrep -v "import com[.]github[.]devconslejme[.](${lstrRestrictedTo})" \
 		;then
+			bHasProblems=true
 			echoc -p "Lacking cohesion: only from $lstrRestrictedTo"
 		fi
 	fi
@@ -51,6 +52,7 @@ function FUNCvalidate(){ # <strFile> <strPkg> <strRestrictedTo>
 
 for strFile in "${astrFileList[@]}";do
 	bMatched=false;
+	bHasProblems=false;
 	
 #	SECFUNCdrawLine --stay --left " $strFile " #file info
 	SECFUNCdrawLine --left " $strFile " #file info
@@ -65,51 +67,11 @@ for strFile in "${astrFileList[@]}";do
 	FUNCvalidate "$strFile" "devcons" "misc|gendiag|devcons"
 	FUNCvalidate "$strFile" "gendiag" "misc|gendiag"
 	
-	#~ strRestrictedTo="misc" # misc  (only from self)
-	#~ if egrep -q "package com[.]github[.]devconslejme[.]misc;" "$strFile";then
-		#~ bMatched=true;
-		#~ if \
-			#~ egrep "import com[.]github[.]devconslejme[.]" "$strFile" |\
-				#~ egrep -v "import com[.]github[.]devconslejme[.](${strRestrictedTo})" \
-		#~ ;then
-			#~ echoc -p "Lacking cohesion: only from $strRestrictedTo"
-		#~ fi
-	#~ fi
-	
-	#~ strRestrictedTo="extras" # extras (only from self)
-	#~ if egrep -q "package com[.]github[.]devconslejme[.]extras;" "$strFile";then
-		#~ bMatched=true;
-		#~ if \
-			#~ egrep "import com[.]github[.]devconslejme[.]" "$strFile" |\
-				#~ egrep -v "import com[.]github[.]devconslejme[.](${strRestrictedTo})" \
-		#~ ;then
-			#~ echoc -p "Lacking cohesion: only from $strRestrictedTo"
-		#~ fi
-	#~ fi
-	
-	#~ strRestrictedTo="misc|gendiag" # (core) 
-	#~ if egrep -q "package com[.]github[.]devconslejme.devcons;" "$strFile";then
-		#~ bMatched=true;
-		#~ if \
-			#~ egrep "import com[.]github[.]devconslejme[.]" "$strFile" |\
-				#~ egrep -v "import com[.]github[.]devconslejme[.](${strRestrictedTo})" \
-		#~ ;then
-			#~ echoc -p "Lacking cohesion: only from $strRestrictedTo"
-		#~ fi
-	#~ fi
-
-	#~ strRestrictedTo="misc" # gendiag
-	#~ if egrep -q "package com[.]github[.]devconslejme.gendiag;" "$strFile";then
-		#~ bMatched=true;
-		#~ if \
-			#~ egrep "import com[.]github[.]devconslejme[.]" "$strFile" |\
-				#~ egrep -v "import com[.]github[.]devconslejme[.](${strRestrictedTo})" \
-		#~ ;then
-			#~ echoc -p "Lacking cohesion: only from $strRestrictedTo"
-		#~ fi
-	#~ fi
-	
 	if ! $bMatched;then
 		echoc -p "out of scope"
+	fi
+	
+	if $bHasProblems;then
+		echoc --info --say "problems found"
 	fi
 done

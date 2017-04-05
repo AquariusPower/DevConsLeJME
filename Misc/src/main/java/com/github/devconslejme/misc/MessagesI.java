@@ -27,61 +27,17 @@
 
 package com.github.devconslejme.misc;
 
-import com.jme3.bounding.BoundingBox;
-import com.jme3.math.ColorRGBA;
-import com.jme3.math.Vector3f;
-import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
+
+
+// (tab indent=2 spaces)
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class ColorI {
-	public static ColorI i(){return GlobalInstanceManagerI.i().get(ColorI.class);}
+public class MessagesI {
+	public static MessagesI i(){return GlobalInstanceManagerI.i().get(MessagesI.class);}
 	
-	private float colorComponentLimit(float f){
-		if(f<=0)f=0;
-		if(f>=1)f=1;
-		return f;
-	}
-	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB){
-		return colorChangeCopy(color,fAddRGB,color.a);
-	}
-	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB, float fAlpha){
-		color = color.clone();
-		
-		color.r=colorComponentLimit(color.r+=fAddRGB);
-		color.g=colorComponentLimit(color.g+=fAddRGB);
-		color.b=colorComponentLimit(color.b+=fAddRGB);
-		
-		color.a=fAlpha;
-		return color;
-	}
-	
-	/**
-	 * highlight color by half negating components
-	 * @param color
-	 * @return
-	 */
-	public ColorRGBA neglightColor(ColorRGBA color){
-		color=color.clone();
-		
-		color.r=neglightColorComponent(color.r);
-		color.g=neglightColorComponent(color.g);
-		color.b=neglightColorComponent(color.b);
-		
-		return color;
-	}
-	
-	private float neglightColorComponent(float f){
-		if(f>0.5f){
-			f-=0.5f;
-		}else{
-			f+=0.5f;
-		}
-		
-		if(f<0)f=0;if(f>1)f=1; //useless??
-		
-		return f;
+	public void warnMsg(Object objSource, String str){
+		System.err.println("WARN["+objSource.getClass().getSimpleName()+"]: "+str); //TODO log?
 	}
 }

@@ -27,10 +27,13 @@
 
 package com.github.devconslejme.misc;
 
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.Panel;
+import com.simsilica.lemur.component.QuadBackgroundComponent;
+import com.simsilica.lemur.core.GuiComponent;
 import com.simsilica.lemur.event.AbstractCursorEvent;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
@@ -55,7 +58,8 @@ public class SimpleDragParentestListenerI implements CursorListener{
 		if(event.getButtonIndex()==0){
 			bDragging=event.isPressed();
 			if(bDragging){
-				Panel pnlParentest = MiscJmeI.i().getParentest(capture, Panel.class, true);
+				Panel pnlParentest = (Panel)capture.getUserData(getUserDataIdFor(EDrag.ApplyDragAt));
+				if(pnlParentest==null)pnlParentest = MiscJmeI.i().getParentest(capture, Panel.class, true);
 				v3fDistToCursor=pnlParentest.getWorldTranslation().subtract(getCursorPos(event));
 				v3fDistToCursor.z=0; //DO NOT MESS WITH Z!!!!
 			}
@@ -63,18 +67,45 @@ public class SimpleDragParentestListenerI implements CursorListener{
 		}
 	}
 	
+	private void highlightBackground(Spatial spt, boolean bHighLight){
+		if(spt instanceof Panel){
+			Panel pnl = (Panel)spt;
+			GuiComponent gc = pnl.getBackground();
+			if (gc instanceof QuadBackgroundComponent) {
+				QuadBackgroundComponent qbc = (QuadBackgroundComponent) gc;
+				ColorRGBA color = qbc.getColor().clone();
+				
+				String strId = getUserDataIdFor(EDrag.ColorHighlight);
+				ColorRGBA colorStored = (ColorRGBA)spt.getUserData(strId);
+				if(colorStored==null){
+					colorStored=color.clone();
+					spt.setUserData(strId, colorStored);
+				}
+				
+				if(bHighLight){
+					qbc.setColor(ColorI.i().neglightColor(color));
+				}else{
+					qbc.setColor(colorStored);
+				}
+			}
+		}
+	}
+	
 	@Override
 	public void cursorEntered(CursorMotionEvent event, Spatial target,				Spatial capture) {
+		highlightBackground(target,true);
 	}
 	
 	@Override
 	public void cursorExited(CursorMotionEvent event, Spatial target,				Spatial capture) {
+		highlightBackground(target,false);
 	}
 	
 	@Override
 	public void cursorMoved(CursorMotionEvent event, Spatial target,				Spatial capture) {
 		if(bDragging){ //((Panel)capture).getPreferredSize() ((Panel)capture).getSize()
-			Panel pnlParentest = MiscJmeI.i().getParentest(capture, Panel.class, true);
+			Panel pnlParentest = (Panel)capture.getUserData(getUserDataIdFor(EDrag.ApplyDragAt));
+			if(pnlParentest==null)pnlParentest = MiscJmeI.i().getParentest(capture, Panel.class, true);
 			Vector3f v3f = getCursorPos(event).add(v3fDistToCursor);
 			v3f.z=pnlParentest.getLocalTranslation().z; //DO NOT MESS WITH Z!!!!
 			pnlParentest.setLocalTranslation(v3f);
@@ -85,10 +116,18 @@ public class SimpleDragParentestListenerI implements CursorListener{
 	public void applyAt(Panel pnl) {
 		applyAt(pnl,null);
 	}
-	public void applyAt(Panel pnl, Panel pnlTarget) {
+	public void applyAt(Panel pnl, Panel pnlApplyDragAt) {
 		CursorEventControl.addListenersToSpatial(pnl, this);
-		if(pnlTarget!=null){
-			pnl.setUserData(SimpleDragParentestListenerI.class.getName()+"", pnlTarget);
+		if(pnlApplyDragAt!=null){
+			pnl.setUserData(getUserDataIdFor(EDrag.ApplyDragAt), pnlApplyDragAt);
 		}
+	}
+	
+	private static enum EDrag{
+		ApplyDragAt, ColorHighlight
+	}
+	
+	private String getUserDataIdFor(EDrag e){
+		return SimpleDragParentestListenerI.class.getName()+"/"+e;
 	}
 }
