@@ -607,7 +607,12 @@ public class JavaScriptI {
 		String strInput= DevConsPluginStateI.i().getInputText();
 		strInput=strInput.trim();
 		String strImprovedPart = JavaScriptI.i().showHelp(strInput);
-		if(!strInput.isEmpty() && !strInput.startsWith(strCmdChar) && strImprovedPart.equals(strInput)){ //nothing changed
+		if(
+				!strInput.isEmpty() && 
+				!strInput.startsWith(strCmdChar) && 
+				strImprovedPart.equals(strInput) &&
+				!strImprovedPart.endsWith(".") //skips an object looking for methods
+		){ //nothing changed
 			strImprovedPart = JavaScriptI.i().showHelp(strCmdChar+strInput);
 		}
 		
