@@ -40,8 +40,12 @@ public class MainThreadI {
 		this.threadMain=thread;
 	}
 	
+	public boolean isCurrentMainThread(){
+		return threadMain.equals(Thread.currentThread());
+	}
+	
 	public void assertEqualsCurrentThread(){
-		if(!threadMain.equals(Thread.currentThread())){
+		if(!isCurrentMainThread()){
 			throw new DetailedException("should be the main thread!!!", i(), Thread.currentThread());
 		}
 	}

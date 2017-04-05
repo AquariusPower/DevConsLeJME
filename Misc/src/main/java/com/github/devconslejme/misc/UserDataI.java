@@ -27,6 +27,7 @@
 
 package com.github.devconslejme.misc;
 
+import com.github.devconslejme.misc.QueueStateI.CallableX;
 import com.jme3.scene.Spatial;
 
 
@@ -37,26 +38,48 @@ public class UserDataI {
 	public static UserDataI i(){return GlobalInstanceManagerI.i().get(UserDataI.class);}
 	
 	/**
+	 * all super classes of the object will be the keys
+	 * see {@link #setUserDataPSH(Spatial, String, Object)}
+	 */
+	public <T extends Spatial> boolean setUserDataPSH(T spt, Object obj) {
+		boolean b=false;
+		for(Class<?> cl:JavaLangI.i().getSuperClassesOf(obj,true)){
+			b=setUserDataPSH(spt, cl.getName(), obj);
+		}
+		return b;
+	}
+	/**
 	 * 
 	 * @param spt
+	 * @param strKey
 	 * @param obj each key will be one super class of it
+	 * @return if was set now or will be at the main thread 
 	 */
-	public <T extends Spatial> T setUserDataPSH(T spt, Object obj) {
-		for(Class<?> cl:JavaLangI.i().getSuperClassesOf(obj,true)){
-			setUserDataPSH(spt, cl.getName(), obj);
+	public <T extends Spatial> boolean setUserDataPSH(T spt, String strKey, Object obj) {
+		CallableX cx = new CallableX(0,false) {
+			@SuppressWarnings("unchecked")
+			@Override
+			public Boolean call() {
+				spt.setUserData(strKey, new PseudoSavableHolder(obj));
+				return true;
+			}
+		};
+		
+		if(MainThreadI.i().isCurrentMainThread()){
+			cx.call();
+			return true;
+		}else{
+			QueueStateI.i().enqueue(cx);
 		}
-		return spt;
-	}
-	public <T extends Spatial> T setUserDataPSH(T spt, String strKey, Object obj) {
-		MainThreadI.i().assertEqualsCurrentThread();
-		spt.setUserData(strKey, new PseudoSavableHolder(obj));
-		return spt;
+		
+		return false;
 	}
 	
 	public <R> R getUserDataPSH(Spatial spt, Class<R> cl){
 		return getUserDataPSH(spt, cl.getName());
 	}
 	public <R> R getUserDataPSH(Spatial spt, String strKey){
+		@SuppressWarnings("unchecked")
 		PseudoSavableHolder<R> sh = (PseudoSavableHolder<R>)spt.getUserData(strKey);
 		if(sh==null)return null;
 		return sh.getRef();

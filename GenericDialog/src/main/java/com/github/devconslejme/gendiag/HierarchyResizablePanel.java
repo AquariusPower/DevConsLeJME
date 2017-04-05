@@ -60,6 +60,8 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 		super(strStyle);
 		
 		initBlocker();
+		
+		HighlightEffectI.i().addMouseCursorHighlightEffects(this, (QuadBackgroundComponent)getResizableBorders());
 	}
 	
 	private void initBlocker(){

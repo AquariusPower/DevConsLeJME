@@ -30,14 +30,13 @@ package com.github.devconslejme.gendiag;
 import com.github.devconslejme.misc.ColorI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.MiscLemurI;
+import com.github.devconslejme.misc.UserDataI;
 import com.jme3.input.event.MouseMotionEvent;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.anim.Animation;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
-import com.simsilica.lemur.core.GuiComponent;
 import com.simsilica.lemur.effect.AbstractEffect;
 import com.simsilica.lemur.effect.Effect;
 import com.simsilica.lemur.effect.EffectInfo;
@@ -79,7 +78,7 @@ public class HighlightEffectI {
 			
 			return new Animation() {
 //				QuadBackgroundComponent gcBg = (QuadBackgroundComponent)gcBgChk;
-				QuadBackgroundComponent qbc = pnlTarget.getUserData(EEffectIds.UserDataHighLightTarget.s());
+				QuadBackgroundComponent qbc = UserDataI.i().getUserDataPSH(pnlTarget, EEffectIds.UserDataHighLightTarget.s());
 				ColorRGBA colorBkp = qbc.getColor().clone();
 				boolean bApplied=false;
 				@Override	public void cancel() {
@@ -115,7 +114,8 @@ public class HighlightEffectI {
 	private DummyEffect	efDummy;
 	public void addMouseCursorHighlightEffects(Panel pnl, QuadBackgroundComponent qbc){
 		MouseEventControl.addListenersToSpatial(pnl, hml);
-		pnl.setUserData(EEffectIds.UserDataHighLightTarget.s(), qbc);
+		UserDataI.i().setUserDataPSH(pnl, EEffectIds.UserDataHighLightTarget.s(), qbc);
+//		pnl.setUserData(EEffectIds.UserDataHighLightTarget.s(), qbc);
 		efDummy = setupSimpleEffect(pnl, EEffectIds.EffectActivateHighLight, efHighLightBkg, efDummy);
 		pnl.addEffect(EEffectIds.EffectDeactivateHighLight.s(),efDummy);
 	}

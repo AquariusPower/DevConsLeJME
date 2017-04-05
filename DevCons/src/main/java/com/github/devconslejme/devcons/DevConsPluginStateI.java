@@ -41,6 +41,7 @@ import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.ColorI;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.MainThreadI;
 import com.github.devconslejme.misc.MiscLemurI;
 import com.github.devconslejme.misc.QueueStateI;
 import com.github.devconslejme.misc.QueueStateI.CallableX;
@@ -237,6 +238,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	
 	public void configure(Application app, Node nodeParent) {
 		DevConsGlobalsI.i().put(Application.class,app);
+		MainThreadI.i().configure(Thread.currentThread());
 		
 		this.nodeParent = nodeParent;
 		DevConsGlobalsI.i().app().getStateManager().attach(this);
