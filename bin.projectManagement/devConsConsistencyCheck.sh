@@ -80,7 +80,7 @@ strAllDeps="`secJavaDependencyList.sh |sort -u |grep ":com/github/devconslejme"`
 
 #~ echoc --info "anything that shows below will be a problem..."
 
-function FUNCchk(){ # <package> <what packages beyond self can it access>
+function FUNCchk(){ # <package to validate> <<what package beyond self can it access> ...>
 	local lstrPkg="$1";shift
 	
 	local lastrOtherPkgs=()

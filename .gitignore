@@ -20,6 +20,8 @@ Console-*
 /bin/
 /.tmp/
 /.jme3
+output.graphml
+
 !lib/**/*.jar
 !.gitignore
 
