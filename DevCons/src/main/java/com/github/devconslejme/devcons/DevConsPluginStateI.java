@@ -38,6 +38,7 @@ import java.util.Set;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.gendiag.HierarchyResizablePanel;
+import com.github.devconslejme.gendiag.HierarchySorterI;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.QueueI;
@@ -259,6 +260,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		JavaScriptI.i().setJSBinding(ClipboardI.i());
 		JavaScriptI.i().setJSBinding(FileI.i());
 		JavaScriptI.i().setJSBinding(QueueI.i());
+		JavaScriptI.i().setJSBinding(HierarchySorterI.i());
 		
 		LoggingI.i().configure();
 		JavaScriptI.i().setJSBinding(LoggingI.i());
@@ -678,6 +680,8 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		cntrMain = new Container(new BorderLayout(), getStyle());
 		
 		panelMain = new HierarchyResizablePanel(getStyle());
+		panelMain.setName(DevConsPluginStateI.class.getSimpleName());//debug name
+		panelMain.setTopHierarchy(true);
 //		new QuadBackgroundComponent(ColorRGBA.Red.clone());
 //		panelMain.setBorder();
 //		panelMain.setborder

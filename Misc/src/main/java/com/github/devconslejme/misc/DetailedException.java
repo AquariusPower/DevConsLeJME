@@ -35,6 +35,10 @@ import java.util.Arrays;
 // (tab indent=2 spaces)
 
 /**
+ * This will provide more and better readable information about exceptions.
+ * 
+ * TODO substitute all NullPointerException by this one.
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class DetailedException extends NullPointerException{
@@ -67,7 +71,7 @@ public class DetailedException extends NullPointerException{
 		}
 		
 		try{
-			return StringI.i().joinMessageWithObjects(strMessage,aobj);
+			return ReportI.i().joinMessageWithObjects(strMessage,aobj);
 		}catch(Exception ex){
 			System.err.println(strHeader+"another exception happened while gathering information to this exception...");
 			ex.printStackTrace();
@@ -230,14 +234,3 @@ public class DetailedException extends NullPointerException{
 	}
 }
 
-/**
-* "Things that should be been coded in a certain way but were overlooked",
-* but... is basically a buffed generic NullPointerException anyway...
-* 
-* This exception can be captured tho may request the application to exit gracefully.
-* 
-* TODO substitute all NullPointerException by this one.
-* 
-* @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
-*
-*/

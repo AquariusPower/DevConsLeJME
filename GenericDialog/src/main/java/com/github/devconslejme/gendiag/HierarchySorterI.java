@@ -32,12 +32,15 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.ReportI.IReport;
+import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Panel;
+import com.simsilica.lemur.focus.FocusManagerState;
 
 
 /**
@@ -78,13 +81,16 @@ public class HierarchySorterI extends AbstractAppState{
 		}
 	};
 	private float	fSafeZDist=1.0f;
+	private ArrayList<IHierarchySorter>	ahsList  = new ArrayList<IHierarchySorter>();
+	private FocusManagerState	focusState;
 	
-	public static interface IHierarchySorter {
-		public Panel getHierarchyParent();
-		public Panel[] getHierarchyChildList();
-		public Long getLastFocusAppTimeNano();
-		public boolean isTopHierarchy();
-		public boolean isModal();
+	public static interface IHierarchySorter extends IReport {
+		Panel getHierarchyParent();
+		Panel[] getHierarchyChildList();
+		Long getLastFocusAppTimeNano();
+		boolean isTopHierarchy();
+		boolean isModal();
+		void updateLastFocusAppTimeNano();
 	}
 	
 	public void configure(Node nodeToMonitor, float fBeginOrderZ){
@@ -92,36 +98,68 @@ public class HierarchySorterI extends AbstractAppState{
 		this.fBeginOrderZ=fBeginOrderZ;
 		this.nodeToMonitor=nodeToMonitor;
 		app.getStateManager().attach(this);
+		focusState=app.getStateManager().getState(FocusManagerState.class);
 	}
 	
 	@Override
 	public void update(float tpf) {
 		super.update(tpf);
 		
+		
+		
 //		nodeToMonitor.getChildren()
 		organizeDialogsStack();
 	}
 	
 	private void organizeDialogsStack() {
-		ArrayList<IHierarchySorter> aido = new ArrayList<IHierarchySorter>();
+		ahsList.clear();
 		
 		for(Spatial spt:nodeToMonitor.getChildren()){
 			if(spt instanceof Panel){
 				Panel pnl=(Panel)spt;
 				if(pnl instanceof IHierarchySorter){
-					aido.add((IHierarchySorter)pnl);
+					ahsList.add((IHierarchySorter)pnl);
 				}
 			}
 		}
 		
-		Collections.sort(aido,cmpr);
+		Collections.sort(ahsList,cmpr);
 		
 		float fOrderZ = fBeginOrderZ;
-		for(IHierarchySorter ido:aido){
+		for(IHierarchySorter ido:ahsList){
 			Panel pnl=(Panel)ido;
 			pnl.getLocalTranslation().z=fOrderZ;
 //			fOrderZ += (((BoundingBox)pnl.getWorldBound()).getZExtent()*2) +1.0f; //+1 is safety
 			fOrderZ += MiscJmeI.i().getBoundingBoxSize(pnl).z +fSafeZDist;
+			
+			if(isFocused(pnl)){
+				ido.updateLastFocusAppTimeNano();
+			}
 		}
+	}
+	
+	public boolean isFocused(Spatial spt){
+		if(spt.equals(getFocused()))return true; //quick test 1st
+		if(getFocused()==null)return false;
+		
+		Spatial sptParentest = MiscJmeI.i().getParentest(spt, Panel.class, true);
+		Spatial sptFocusedParentest = MiscJmeI.i().getParentest(getFocused(), Panel.class, true);
+		return sptParentest.equals(sptFocusedParentest);
+	}
+	
+	public Spatial getFocused(){
+		return focusState.getFocus();
+	}
+	
+	public ArrayList<IHierarchySorter> getList(){
+		return new ArrayList<IHierarchySorter>(ahsList);
+	}
+	
+	public ArrayList<String> getListAsReport(){
+		ArrayList<String> astr = new ArrayList<String>();
+		for(IHierarchySorter hs:ahsList){
+			astr.add(hs.getReport(false));
+		}
+		return astr;
 	}
 }

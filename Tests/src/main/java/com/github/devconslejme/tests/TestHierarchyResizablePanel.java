@@ -83,7 +83,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		btn.addClickCommands(new Command<Button>(){
 			@Override
 			public void execute(Button source) {
-				testParent.showModal(testChild);
+				testParent.showHierarchyModal(testChild);
 			}
 		});
 		testParent.setContents(btn);

@@ -31,8 +31,6 @@ import java.util.ArrayList;
 
 import com.github.devconslejme.gendiag.HierarchySorterI.IHierarchySorter;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
@@ -40,10 +38,14 @@ import com.github.devconslejme.misc.lemur.SimpleDragParentestListenerI;
 import com.jme3.app.Application;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Button;
-import com.simsilica.lemur.Command;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
+import com.simsilica.lemur.event.CursorButtonEvent;
+import com.simsilica.lemur.event.CursorEventControl;
+import com.simsilica.lemur.event.CursorListener;
+import com.simsilica.lemur.event.CursorMotionEvent;
 
 
 /**
@@ -59,6 +61,20 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 	private boolean	bHierarchyModal;
 	private Application	app;
 	
+//	private LastFocusCursorListener lastFocusListener = new LastFocusCursorListener();
+//	private class LastFocusCursorListener implements CursorListener{
+//
+//		@Override
+//		public void cursorButtonEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
+//			if(event.isPressed())updateLastFocusAppTimeNano();
+//		}
+//
+//		@Override		public void cursorEntered(CursorMotionEvent event, Spatial target,				Spatial capture) {}
+//		@Override		public void cursorExited(CursorMotionEvent event, Spatial target,				Spatial capture) {}
+//		@Override		public void cursorMoved(CursorMotionEvent event, Spatial target,				Spatial capture) {}
+//		
+//	}
+	
 	public HierarchyResizablePanel(String strStyle) {
 		super(strStyle);
 		
@@ -67,6 +83,8 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 		app = GlobalInstanceManagerI.i().get(Application.class);
 		
 		HighlightEffectI.i().addMouseCursorHighlightEffects(this, (QuadBackgroundComponent)getResizableBorder());
+		
+//    CursorEventControl.addListenersToSpatial(this, lastFocusListener);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -77,17 +95,18 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 			new QuadBackgroundComponent(//ColorRGBA.Red));
 				ColorI.i().colorChangeCopy(ColorRGBA.Red, -0.75f, 0.5f)));
 		
-		btnBlocker.addClickCommands(new Command<Button>(){
-			@Override
-			public void execute(Button source) {
-				updateLastFocusAppTimeNano();
-			}
-		});
+//		btnBlocker.addClickCommands(new Command<Button>(){
+//			@Override
+//			public void execute(Button source) {
+//				updateLastFocusAppTimeNano();
+//			}
+//		});
 		
 		SimpleDragParentestListenerI.i().applyAt(btnBlocker, this);
 	}
 
-	protected void updateLastFocusAppTimeNano() {
+	@Override
+	public void updateLastFocusAppTimeNano() {
 		lLastFocusAppTimeNano=TimeConvertI.i().getNanosFrom(app.getTimer());
 	}
 
@@ -108,7 +127,7 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 	 * will prevent access to parent
 	 * @param rzdChildDialog
 	 */
-	public void showModal(HierarchyResizablePanel rzdChildDialog){
+	public void showHierarchyModal(HierarchyResizablePanel rzdChildDialog){
 		setHierarchyChild(rzdChildDialog,true);
 	}
 	
@@ -126,6 +145,7 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 		getParent().attachChild(rzdChildDialog);
 		arzdHierarchyChildList.add(rzdChildDialog);
 		if(bModal)setEnabledBlockerLayer(true);
+		rzdChildDialog.updateLastFocusAppTimeNano();
 //		QueueI.i().enqueue(new CallableX(0,false) {
 //			@Override
 //			public Boolean call() {
@@ -210,6 +230,11 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 		return lLastFocusAppTimeNano;
 	}
 
+	public HierarchyResizablePanel setTopHierarchy(boolean b) {
+		this.bHierarchyTop = b;
+		return this;
+	}
+	
 	@Override
 	public boolean isTopHierarchy() {
 		return bHierarchyTop;
@@ -218,6 +243,48 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 	@Override
 	public boolean isModal() {
 		return bHierarchyModal;
+	}
+
+	@Override
+	public String getReport(boolean b) {
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("top="+bHierarchyTop);
+		sb.append("/");
+		
+		sb.append("z="+getSize().z);
+		sb.append(",");
+		sb.append("Pz="+getPreferredSize().z);
+		sb.append("/");
+		
+		sb.append("tm="+lLastFocusAppTimeNano);
+		sb.append("/");
+		
+		sb.append("dbgnm="+getName());
+		sb.append("/");
+		
+		return sb.toString();
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("HierarchyResizablePanel [btnBlocker=");
+		builder.append(btnBlocker);
+		builder.append(", lLastFocusAppTimeNano=");
+		builder.append(lLastFocusAppTimeNano);
+		builder.append(", arzdHierarchyChildList=");
+		builder.append(arzdHierarchyChildList);
+		builder.append(", hrpHierarchyParent=");
+		builder.append(hrpHierarchyParent);
+		builder.append(", bHierarchyTop=");
+		builder.append(bHierarchyTop);
+		builder.append(", bHierarchyModal=");
+		builder.append(bHierarchyModal);
+		builder.append(", app=");
+		builder.append(app);
+		builder.append("]");
+		return builder.toString();
 	}
 	
 }
