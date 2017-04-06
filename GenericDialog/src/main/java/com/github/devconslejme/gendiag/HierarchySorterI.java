@@ -32,11 +32,11 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.ReportI.IReport;
-import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.app.Application;
-import com.jme3.app.state.AbstractAppState;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Panel;
@@ -49,7 +49,7 @@ import com.simsilica.lemur.focus.FocusManagerState;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class HierarchySorterI extends AbstractAppState{
+public class HierarchySorterI {
 	public static HierarchySorterI i(){return GlobalInstanceManagerI.i().get(HierarchySorterI.class);}
 	
 	private ArrayList<Panel> apnl = new ArrayList<Panel>();
@@ -97,19 +97,24 @@ public class HierarchySorterI extends AbstractAppState{
 		this.app=GlobalInstanceManagerI.i().get(Application.class);
 		this.fBeginOrderZ=fBeginOrderZ;
 		this.nodeToMonitor=nodeToMonitor;
-		app.getStateManager().attach(this);
+//		app.getStateManager().attach(this);
 		focusState=app.getStateManager().getState(FocusManagerState.class);
+		
+		QueueI.i().enqueue(new CallableX(HierarchySorterI.class.getSimpleName(), 0.25f, true) {
+			@Override
+			public Boolean call() {
+				organizeDialogsStack();
+				return true;
+			}
+		}.setUserCanPause(true));
 	}
 	
-	@Override
-	public void update(float tpf) {
-		super.update(tpf);
-		
-		
-		
-//		nodeToMonitor.getChildren()
-		organizeDialogsStack();
-	}
+//	@Override
+//	public void update(float tpf) {
+//		super.update(tpf);
+////		nodeToMonitor.getChildren()
+//		organizeDialogsStack();
+//	}
 	
 	private void organizeDialogsStack() {
 		ahsList.clear();

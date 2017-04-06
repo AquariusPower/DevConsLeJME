@@ -65,8 +65,8 @@ public class QueueI {
 		private boolean	bPaused;
 		private boolean	bLoop;
 		private long lRunAtTime;
-		private boolean	bUserCanKill;
-		private boolean	bUserCanPause;
+		private boolean	bUserCanKill = false;
+		private boolean	bUserCanPause = false;
 		
 		private HashMap<String,Object> hmKeyValue = new HashMap<String,Object>();
 		private boolean	bAnonymousClass;
