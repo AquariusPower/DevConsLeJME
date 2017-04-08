@@ -28,7 +28,10 @@
 package com.github.devconslejme.misc.lemur;
 
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.math.FastMath;
+import com.simsilica.lemur.GuiGlobals;
+import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.grid.GridModel;
@@ -49,4 +52,21 @@ public class MiscLemurI {
 		return (int)FastMath.ceil(fHeight);
 	}
 	
+	public float getFontWidth(){
+		return getFontWidth("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+			GuiGlobals.getInstance().getStyles().getDefaultStyle(), true, null);
+	}
+	public float getFontWidth(String strChars, String strStyle, boolean bAveraged, Label lbl){
+		if(lbl==null)lbl = new Label(strChars,strStyle);
+		
+		/**
+		 * This is the unquestionable width value.
+		 * 
+		 * TODO find a better, more direct, way to get the width?
+		 */
+		float f = MiscJmeI.i().retrieveDirectBitmapTextChildFor(lbl).getLineWidth();
+		if(bAveraged)f/=strChars.length();
+		return f;
+	}
+
 }

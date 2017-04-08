@@ -34,6 +34,7 @@ import com.jme3.font.LineWrapMode;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.simsilica.lemur.Label;
 
 /**
  * DevSelfNote: Misc lib class should not exist. As soon coehsion is possible, do it!
@@ -71,5 +72,14 @@ public class MiscJmeI {
 				recursivelyApplyTextNoWrap((Node)spt);
 			}
 		}
+	}
+
+	public BitmapText retrieveDirectBitmapTextChildFor(Node node){
+		for(Spatial c : node.getChildren()){
+			if(c instanceof BitmapText){
+				return (BitmapText)c;
+			}
+		}
+		return null;
 	}
 }

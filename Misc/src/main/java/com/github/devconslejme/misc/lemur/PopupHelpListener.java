@@ -27,28 +27,19 @@
 
 package com.github.devconslejme.misc.lemur;
 
-import com.github.devconslejme.devcons.DevConsPluginStateI.DialogStyleElementId;
-import com.github.devconslejme.devcons.DevConsPluginStateI.EAttribute;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.UserDataI;
-import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.simsilica.lemur.Button;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Label;
-import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.CursorListener;
 import com.simsilica.lemur.event.CursorMotionEvent;
-import com.simsilica.lemur.style.Attributes;
-import com.simsilica.lemur.style.BaseStyles;
 import com.simsilica.lemur.style.ElementId;
-import com.simsilica.lemur.style.Styles;
 
 /**
  * DevSelfNote: Misc lib class should not exist. As soon coehsion is possible, do it!
@@ -57,8 +48,9 @@ import com.simsilica.lemur.style.Styles;
 public class PopupHelpListener implements CursorListener{
 	public static PopupHelpListener i(){return GlobalInstanceManagerI.i().get(PopupHelpListener.class);}
 	
-	private static enum EUserData{
-		strPopupHelp,
+	public static enum EPopup{
+		strPopupHelpUserData,
+		DialogStyleElementIdPopupHelp,
 		;
 		
 		public String s(){return this.toString();}
@@ -108,10 +100,10 @@ public class PopupHelpListener implements CursorListener{
 	}
 	
 	public String getPopupHelp(Spatial spt){
-		return UserDataI.i().getUserDataPSH(spt, EUserData.strPopupHelp.s());
+		return UserDataI.i().getUserDataPSH(spt, EPopup.strPopupHelpUserData.s());
 	}
 	public void setPopupHelp(Spatial spt, String strHelp){
-		UserDataI.i().setUserDataPSH(spt, EUserData.strPopupHelp.s(), strHelp);
+		UserDataI.i().setUserDataPSH(spt, EPopup.strPopupHelpUserData.s(), strHelp);
 		CursorEventControl.addListenersToSpatial(spt, this);
 //		spt.setUserData(EUserDataMiscJme.strPopupHelp.s(), strHelp);
 	}
@@ -122,7 +114,7 @@ public class PopupHelpListener implements CursorListener{
 //		if(lblPopupHelp==null){
 			lblPopupHelp = new Label(
 				"nothing yet...", 
-				new ElementId(DialogStyleElementId.PopupHelp.s()),
+				new ElementId(EPopup.strPopupHelpUserData.s()),
 				GuiGlobals.getInstance().getStyles().getDefaultStyle() //BaseStyles.GLASS
 			); 
 			lblPopupHelp.setName("Popup Help/Hint Label");

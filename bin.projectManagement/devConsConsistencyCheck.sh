@@ -29,57 +29,6 @@ eval `secinit`
 
 SECFUNCuniqueLock --waitbecomedaemon
 
-#cd ..
-
-#~ IFS=$'\n' read -d '' -r -a astrFileList < <(find -iname "*.java")&&:
-#~ 
-#~ function FUNCvalidate(){ # <strFile> <strPkg> <strRestrictedTo>
-	#~ local lstrFile="$1";shift
-	#~ local lstrPkg="$1";shift
-	#~ local lstrRestrictedTo="$1";shift
-	#~ 
-	#~ if egrep -q "package com[.]github[.]devconslejme[.]${lstrPkg};" "$lstrFile";then
-		#~ bMatched=true;
-		#~ if \
-			#~ egrep "import com[.]github[.]devconslejme[.]" "$lstrFile" |\
-				#~ egrep -v "import com[.]github[.]devconslejme[.](${lstrRestrictedTo})" \
-		#~ ;then
-			#~ bHasProblems=true
-			#~ echoc -p "Lacking cohesion: only from $lstrRestrictedTo"
-		#~ fi
-	#~ fi
-#~ }
-#~ 
-#~ for strFile in "${astrFileList[@]}";do
-	#~ bMatched=false;
-	#~ bHasProblems=false;
-	#~ 
-#~ #	SECFUNCdrawLine --stay --left " $strFile " #file info
-	#~ SECFUNCdrawLine --left " $strFile " #file info
-	#~ 
-	#~ # tests import all
-	#~ if [[ "$strFile" =~ [.]/Tests/.* ]];then
-		#~ continue
-	#~ fi
-	#~ 
-	#~ FUNCvalidate "$strFile" "misc" "misc"
-	#~ FUNCvalidate "$strFile" "extras" "extras"
-	#~ FUNCvalidate "$strFile" "devcons" "misc|gendiag|devcons"
-	#~ FUNCvalidate "$strFile" "gendiag" "misc|gendiag"
-	#~ 
-	#~ if ! $bMatched;then
-		#~ echoc -p "out of scope"
-	#~ fi
-	#~ 
-	#~ if $bHasProblems;then
-		#~ echoc --info --say "problems found"
-	#~ fi
-#~ done
-
-strAllDeps="`secJavaDependencyList.sh |sort -u |grep ":com/github/devconslejme"`"
-
-#~ echoc --info "anything that shows below will be a problem..."
-
 function FUNCchk(){ # <package to validate> <<what package beyond self can it access> ...>
 	local lstrPkg="$1";shift
 	
@@ -104,6 +53,8 @@ function FUNCchk(){ # <package to validate> <<what package beyond self can it ac
 
 while true;do 
 	bProblemFound=false
+
+	strAllDeps="`secJavaDependencyList.sh |sort -u |grep ":com/github/devconslejme"`"
 
 	# misc can only access misc
 	#echo "$strAllDeps" |grep "/misc/[^/]*:" |egrep -v ":(.*/misc/)"&&:

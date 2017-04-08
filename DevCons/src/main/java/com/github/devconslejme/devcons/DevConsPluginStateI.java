@@ -50,6 +50,7 @@ import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.PopupHelpListener;
+import com.github.devconslejme.misc.lemur.PopupHelpListener.EPopup;
 import com.github.devconslejme.misc.lemur.SimpleDragParentestListenerI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
@@ -674,7 +675,6 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	}
 	
 	public static enum DialogStyleElementId{
-		PopupHelp, 
 		SystemAlert,
 		;
 		
@@ -703,7 +703,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		clBg = colorConsoleStyleBackground.mult(1.1f); //new ColorRGBA(0,0.25f,0,0.75f);
 		attrs.set(Button.LAYER_BACKGROUND, new QuadBackgroundComponent(clBg));
 		
-		attrs = styles.getSelector(DialogStyleElementId.PopupHelp.s(), getStyle());
+		attrs = styles.getSelector(EPopup.DialogStyleElementIdPopupHelp.s(), getStyle());
 		attrs.set(EAttribute.color.s(), ColorRGBA.Blue.clone());
 		clBg = ColorRGBA.Cyan.clone();
 		attrs.set(Button.LAYER_BACKGROUND, new QuadBackgroundComponent(clBg));
