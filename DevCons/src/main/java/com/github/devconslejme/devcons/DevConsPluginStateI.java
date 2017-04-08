@@ -255,15 +255,15 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 		JavaScriptI.i().configure(); //before all others
 		
-		JavaScriptI.i().setJSBinding(this);
-		JavaScriptI.i().setJSBinding(BindKeyI.i());
-		JavaScriptI.i().setJSBinding(ClipboardI.i());
-		JavaScriptI.i().setJSBinding(FileI.i());
-		JavaScriptI.i().setJSBinding(QueueI.i());
-		JavaScriptI.i().setJSBinding(HierarchySorterI.i());
+//		JavaScriptI.i().setJSBinding(this);
+//		JavaScriptI.i().setJSBinding(BindKeyI.i());
+//		JavaScriptI.i().setJSBinding(ClipboardI.i());
+//		JavaScriptI.i().setJSBinding(FileI.i());
+//		JavaScriptI.i().setJSBinding(QueueI.i());
+//		JavaScriptI.i().setJSBinding(HierarchySorterI.i());
 		
 		LoggingI.i().configure();
-		JavaScriptI.i().setJSBinding(LoggingI.i());
+//		JavaScriptI.i().setJSBinding(LoggingI.i());
 	}
 	
 	public void putStatus(EStatPriority esp, String strKey, String strHelp, String strValue){

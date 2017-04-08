@@ -62,7 +62,7 @@ public class DetailedException extends NullPointerException{
 		DetailedException.chkprb=chkprb;
 	}
 
-	private static String joinMessageWithObjects(String strMessage, Object... aobj){
+	private static String prepareExceptionReport(String strMessage, Object... aobj){
 		if(JavaLangI.i().isRecursiveLoopOnMethod("<init>",DetailedException.class)){
 			System.err.println(strHeader+"Recursive loop exception, stack dump below:");
 			Thread.dumpStack();
@@ -71,7 +71,7 @@ public class DetailedException extends NullPointerException{
 		}
 		
 		try{
-			return ReportI.i().joinMessageWithObjects(strMessage,aobj);
+			return ReportI.i().prepareReport(strMessage,aobj);
 		}catch(Exception ex){
 			System.err.println(strHeader+"another exception happened while gathering information to this exception...");
 			ex.printStackTrace();
@@ -84,7 +84,7 @@ public class DetailedException extends NullPointerException{
 	}
 
 	public DetailedException(boolean bExitApplication, String strMessage, Object... aobj) {
-		super(joinMessageWithObjects(strMessage, aobj));
+		super(prepareExceptionReport(strMessage, aobj));
 		
 		this.strMessageKey=strMessage;
 		

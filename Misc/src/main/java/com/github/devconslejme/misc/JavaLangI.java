@@ -41,6 +41,36 @@ import com.google.common.collect.Lists;
 public class JavaLangI {
 	public static JavaLangI i(){return GlobalInstanceManagerI.i().get(JavaLangI.class);}
 	
+	public static enum EArrayType{
+		/** HashMap TreeMap etc */
+		Map,
+		
+		/** Object[] */
+		Simple,
+		
+		/** Collection, ArrayList, List etc */
+		Iterable,
+		;
+	}
+	
+	public boolean isSomeArrayType(Object objValue){
+		return getArrayTypeFor(objValue)!=null;
+	}
+	
+	public EArrayType getArrayTypeFor(Object objValue){
+		if(objValue instanceof Map) { //HashMap TreeMap etc
+			return EArrayType.Map;
+		}else{
+			if(objValue.getClass().isArray()){
+				return EArrayType.Simple;
+			}else
+			if(objValue instanceof Iterable){
+				return EArrayType.Iterable;
+			}
+		}
+		return null;
+	}
+	
 	/**
 	 * 
 	 * @param objValue must be a Map (HashMap, TreeMap etc), an Iterable (AttayList, Collection etc) or Object[] (any simple array)
@@ -49,31 +79,34 @@ public class JavaLangI {
 	public Object[][] convertToKeyValueArray(Object objValue){
 		Object[][] aaobjKeyVal=null;
 		
-		if(objValue instanceof Map) { //HashMap TreeMap etc
-			Set<Map.Entry> es = ((Map)objValue).entrySet();
-			aaobjKeyVal = new Object[es.size()][2];
-			int i=0;
-			for(Entry entry:es){
-				aaobjKeyVal[i][0]=entry.getKey();
-				aaobjKeyVal[i][1]=entry.getValue();
-				i++;
-			}
-		}else{
-			Object[] aobjVal=null;
-			if(objValue.getClass().isArray()){
-				aobjVal = (Object[])objValue;
-			}else
-			if(objValue instanceof Iterable){
-				aobjVal = Lists.newLinkedList((Iterable<?>)objValue).toArray();
-			}
-			
-			if(aobjVal!=null){
-				aaobjKeyVal = new Object[aobjVal.length][2];
-				for(int i=0;i<aobjVal.length;i++){
-					aaobjKeyVal[i][0]=i;
-					aaobjKeyVal[i][1]=aobjVal[i];
+		EArrayType e = getArrayTypeFor(objValue);
+		Object[] aobjVal=null;
+		switch(e){
+			case Map:{
+				Set<Map.Entry> es = ((Map)objValue).entrySet();
+				aaobjKeyVal = new Object[es.size()][2];
+				int i=0;
+				for(Entry entry:es){
+					aaobjKeyVal[i][0]=entry.getKey();
+					aaobjKeyVal[i][1]=entry.getValue();
+					i++;
 				}
-			}
+				}break;
+			case Simple:
+				aobjVal = (Object[])objValue;
+			case Iterable:{
+				if(aobjVal==null){
+					aobjVal = Lists.newLinkedList((Iterable<?>)objValue).toArray();
+				}
+				
+				if(aobjVal!=null){
+					aaobjKeyVal = new Object[aobjVal.length][2];
+					for(int i=0;i<aobjVal.length;i++){
+						aaobjKeyVal[i][0]=i;
+						aaobjKeyVal[i][1]=aobjVal[i];
+					}
+				}
+				}break;
 		}
 		
 		return aaobjKeyVal;

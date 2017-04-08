@@ -36,6 +36,11 @@ import com.jme3.math.ColorRGBA;
 public class ColorI {
 	public static ColorI i(){return GlobalInstanceManagerI.i().get(ColorI.class);}
 	
+	/**
+	 * no overlapping
+	 * @param f
+	 * @return
+	 */
 	private float colorComponentLimit(float f){
 		if(f<=0)f=0;
 		if(f>=1)f=1;
@@ -47,6 +52,7 @@ public class ColorI {
 	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB, float fAlpha){
 		color = color.clone();
 		
+		color.r=Math.min(color.r+fAddRGB, 0f);
 		color.r=colorComponentLimit(color.r+=fAddRGB);
 		color.g=colorComponentLimit(color.g+=fAddRGB);
 		color.b=colorComponentLimit(color.b+=fAddRGB);
@@ -56,29 +62,32 @@ public class ColorI {
 	}
 	
 	/**
-	 * highlight color by half negating components
+	 * neglight color by half negating or highlight RGB components
 	 * @param color
 	 * @return
 	 */
 	public ColorRGBA neglightColor(ColorRGBA color){
 		color=color.clone();
 		
-		color.r=neglightColorComponent(color.r);
-		color.g=neglightColorComponent(color.g);
-		color.b=neglightColorComponent(color.b);
+		color.r=Math.abs((color.r+0.5f)%1.0f);
+		color.g=Math.abs((color.g+0.5f)%1.0f);
+		color.b=Math.abs((color.b+0.5f)%1.0f);
+//		color.r=neglightColorComponent(color.r);
+//		color.g=neglightColorComponent(color.g);
+//		color.b=neglightColorComponent(color.b);
 		
 		return color;
 	}
 	
-	private float neglightColorComponent(float f){
-		if(f>0.5f){
-			f-=0.5f;
-		}else{
-			f+=0.5f;
-		}
-		
-		if(f<0)f=0;if(f>1)f=1; //useless??
-		
-		return f;
-	}
+//	private float neglightColorComponent(float f){
+//		if(f>0.5f){
+//			f-=0.5f;
+//		}else{
+//			f+=0.5f;
+//		}
+//		
+//		if(f<0)f=0;if(f>1)f=1; //useless??
+//		
+//		return f;
+//	}
 }

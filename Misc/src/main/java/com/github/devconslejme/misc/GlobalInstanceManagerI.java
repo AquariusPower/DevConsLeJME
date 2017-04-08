@@ -27,6 +27,7 @@
 
 package com.github.devconslejme.misc;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 
@@ -41,7 +42,19 @@ public class GlobalInstanceManagerI {
     GlobalInstanceManagerI.instance=inst;
   }
   public static GlobalInstanceManagerI i (){return instance;}
-
+  
+  public static interface IGlobalAddListener{
+  	void globalAdded(Object objInst);
+  }
+  private ArrayList<IGlobalAddListener> aigalList = new ArrayList<IGlobalAddListener>();
+  public void addGlobalAddListener(IGlobalAddListener igal){
+  	if(!aigalList.contains(igal)){
+  		aigalList.add(igal);
+  	}else{
+  		MessagesI.i().warnMsg(this, "already added "+igal);
+  	}
+  }
+  
   protected HashMap<Class,Object> hmInst = new HashMap<Class,Object>();
   
   public <T> T get (Class<T> cl){
@@ -64,5 +77,10 @@ public class GlobalInstanceManagerI {
       throw new NullPointerException("already set: "+cl+", "+objAlreadySet+", "+obj);
     }
     hmInst.put(cl,obj);
+		MessagesI.i().debugInfo(this,"created global instance",cl,obj);
+  }
+  
+  public ArrayList<Object> getListCopy(){
+  	return new ArrayList<Object>(hmInst.values());
   }
 }

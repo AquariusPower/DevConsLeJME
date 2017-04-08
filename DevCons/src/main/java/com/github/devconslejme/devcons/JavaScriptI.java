@@ -48,6 +48,9 @@ import javax.script.ScriptException;
 
 import com.github.devconslejme.misc.AutoCompleteI;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.ReportI;
+import com.github.devconslejme.misc.GlobalInstanceManagerI.IGlobalAddListener;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
 import com.github.devconslejme.misc.QueueI.CallableX;
@@ -59,7 +62,7 @@ import com.jme3.input.KeyInput;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class JavaScriptI {
+public class JavaScriptI implements IGlobalAddListener {
 	public static JavaScriptI i(){return GlobalInstanceManagerI.i().get(JavaScriptI.class);}
 	
 	private Object	objRetValUser;
@@ -220,7 +223,16 @@ public class JavaScriptI {
 //			astrIdList.add(ebc.s());
 //		}
 		
-		setJSBinding(this);
+//		setJSBinding(this);
+		for(Object obj:GlobalInstanceManagerI.i().getListCopy()){
+			if(bndJSE.get(genKeyFor(obj))==null)setJSBinding(obj);
+		}
+		
+		GlobalInstanceManagerI.i().addGlobalAddListener(this);
+	}
+	
+	private String genKeyFor(Object obj){
+		return obj.getClass().getSimpleName();
 	}
 	
 	/**
@@ -234,6 +246,8 @@ public class JavaScriptI {
 			throw new NullPointerException("already set: "+strBindId);
 		}
 		
+		MessagesI.i().debugInfo(this,"created JS bind",strBindId,objBindValue);
+		
 //		astrJSClassBindList.add(strBindId);
 	}
 	/**
@@ -241,8 +255,9 @@ public class JavaScriptI {
 	 * @param objBindValue automatic id based on object class simple name
 	 */
 	public void setJSBinding(Object objBindValue){
-		setJSBinding(objBindValue.getClass().getSimpleName(), objBindValue);
+		setJSBinding(genKeyFor(objBindValue), objBindValue);
 	}
+	
 	protected void submitUserCommand() {
 		String strJS = DevConsPluginStateI.i().getInputText();
 		
@@ -371,7 +386,9 @@ public class JavaScriptI {
 	 */
 	private void execFile(File flJS){
 		try {
-			bndJSE.put(EJSObjectBind.selfScript.s(), flJS);
+			bndJSE.remove(EJSObjectBind.selfScript.s());
+			setJSBinding(EJSObjectBind.selfScript.s(), flJS);
+//			bndJSE.put(EJSObjectBind.selfScript.s(), flJS);
 //			rd.reset();
 			objRetValFile = jse.eval(new FileReader(flJS),bndJSE);
 		} catch (ScriptException | IOException e) {
@@ -408,17 +425,25 @@ public class JavaScriptI {
 	}
 	
 	private boolean isAndShowArray(Object objValue){
-		Object[][] aaobjKeyValue = JavaLangI.i().convertToKeyValueArray(objValue);
-		if(aaobjKeyValue==null)return false;
+		if(JavaLangI.i().getArrayTypeFor(objValue)==null)return false;
 		
-		LoggingI.i().logSubEntry("Return array values:");
-		for(int i=0;i<aaobjKeyValue.length;i++){
-			String strLog = "["+aaobjKeyValue[i][0]+"]='"+aaobjKeyValue[i][1]+"'";
-			LoggingI.i().logSubEntry(strLog);
-		}
+		ArrayList<String> astr = ReportI.i().prepareReportLines("Return array values:", objValue);
+		for(String str:astr)LoggingI.i().logSubEntry(str);
 		
 		return true;
 	}
+//	private boolean isAndShowArray(Object objValue){
+//		Object[][] aaobjKeyValue = JavaLangI.i().convertToKeyValueArray(objValue);
+//		if(aaobjKeyValue==null)return false;
+//		
+//		LoggingI.i().logSubEntry("Return array values:");
+//		for(int i=0;i<aaobjKeyValue.length;i++){
+//			String strLog = "["+aaobjKeyValue[i][0]+"]='"+aaobjKeyValue[i][1]+"'";
+//			LoggingI.i().logSubEntry(strLog);
+//		}
+//		
+//		return true;
+//	}
 	
 	private void showMethods(Object obj){
 		LoggingI.i().logSubEntry("Accessible Methods:");
@@ -632,5 +657,10 @@ public class JavaScriptI {
 		if(Boolean.FALSE.toString().startsWith(str)){
 			DevConsPluginStateI.i().insertAtInputTextCaratPos(Boolean.FALSE.toString().substring(str.length()));
 		}
+	}
+
+	@Override
+	public void globalAdded(Object objInst) {
+		setJSBinding(objInst);
 	}
 }
