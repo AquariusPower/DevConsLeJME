@@ -358,12 +358,6 @@ public class JavaScriptI implements IGlobalAddListener {
 			if(hmFileReaderExecJS.get(flJS.getCanonicalPath())==null){
 				hmFileReaderExecJS.put(flJS.getCanonicalPath(), flJS);
 			}
-//			File fl = hmFileReaderExecJS.get(flJS.getCanonicalPath());
-//			if(fl==null){
-////				rd=Files.newReader(flJS, StandardCharsets.UTF_8);
-////				rd=new FileReader(flJS);
-//				hmFileReaderExecJS.put(flJS.getCanonicalPath(), rd);
-//			}
 			
 			return flJS;
 		} catch (IOException e) {
@@ -448,18 +442,6 @@ public class JavaScriptI implements IGlobalAddListener {
 		
 		return true;
 	}
-//	private boolean isAndShowArray(Object objValue){
-//		Object[][] aaobjKeyValue = JavaLangI.i().convertToKeyValueArray(objValue);
-//		if(aaobjKeyValue==null)return false;
-//		
-//		LoggingI.i().logSubEntry("Return array values:");
-//		for(int i=0;i<aaobjKeyValue.length;i++){
-//			String strLog = "["+aaobjKeyValue[i][0]+"]='"+aaobjKeyValue[i][1]+"'";
-//			LoggingI.i().logSubEntry(strLog);
-//		}
-//		
-//		return true;
-//	}
 	
 	private void showMethods(Object obj){
 		LoggingI.i().logSubEntry("Accessible Methods:");

@@ -127,27 +127,6 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 			}
 			
 			return true;
-//			double dIndex = getValue(ECallableXKey.dIndexIn.s());
-//			
-////			double dMax = lstbxLoggingSection.getSlider().getModel().getMaximum();
-////			double dMax = lstbxLoggingSection.getSlider().getModel().getMaximum() + lstbxLoggingSection.getVisibleItems();
-//			double dMax = LoggingI.i().getLogEntriesSize();
-//			if(dIndex==-1)dIndex=dMax; //-1 is a trick to reach the max
-//			if(dIndex>dMax)dIndex=dMax;
-//			/**
-//			 * the index is actually inverted
-//			 */
-//			double dIndexFixed = dMax-dIndex;
-////			double dPerc = dIndexFixed/dMax;
-//			
-//			if(Double.compare(dIndexFixed, lstbxLoggingSection.getSlider().getModel().getValue())==0){
-//				return true;
-//			}
-//			
-////			lstbxLoggingSection.getSlider().getModel().setPercent(dPerc);
-//			lstbxLoggingSection.getSlider().getModel().setValue(dIndexFixed); //TODO is this redundant?
-//			
-//			return false; // so the next call here will let it be verified
 		}
 
 	};
@@ -176,37 +155,8 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private boolean	bKeepScrollAtBottom;
 	private VersionedReference<List<String>>	vrListBoxChangedToAutoScrollToBottom;
 	private VersionedReference<Double>	vrSliderChangedToSuspendAutoScrollBottom;
-//	private IResizableListener	irl = new IResizableListener(){
-//		@Override
-//		public void resizedTo(Vector3f v3fNewSize) {
-//			updateVisibleLogItems(cntrMain.getPreferredSize().y);
-//			System.out.println(v3fNewSize);
-//		}
-//	};
-//	private PanelResizableEnhancer	panelResizableEnhancer;
-//	private float	fMinHeight=100;
-//	private float	fMinWidth=500;
 	private HierarchyResizablePanel	panelMain;
-//	private VersionedReference<Container>	vrMainSize;
 	private Application	app;
-	
-//	private VersionedObject<Container>	voMainSize = new VersionedObject<Container>(){
-//		@Override
-//		public long getVersion() {
-//			return 0;
-//		}
-//
-//		@Override
-//		public Container getObject() {
-//			return cntrMain;
-//		}
-//
-//		@Override
-//		public VersionedReference<Container> createReference() {
-//			return null;
-//		}
-//		
-//	};
 	
 	public static enum EStatPriority{
 		Top,
@@ -239,9 +189,6 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	
 	public void configure(Node nodeParent) {
 		this.app=GlobalInstanceManagerI.i().get(Application.class);
-//		MainThreadI.i().configure(); //misc
-//		QueueStateI.i().configure(); //jme
-//		HierarchySorterI.i().configure(nodeParent, 0f); //lemur
 		
 		this.nodeParent = nodeParent;
 		app.getStateManager().attach(this);
@@ -254,16 +201,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		);
 		
 		JavaScriptI.i().configure(); //before all others
-		
-//		JavaScriptI.i().setJSBinding(this);
-//		JavaScriptI.i().setJSBinding(BindKeyI.i());
-//		JavaScriptI.i().setJSBinding(ClipboardI.i());
-//		JavaScriptI.i().setJSBinding(FileI.i());
-//		JavaScriptI.i().setJSBinding(QueueI.i());
-//		JavaScriptI.i().setJSBinding(HierarchySorterI.i());
-		
 		LoggingI.i().configure();
-//		JavaScriptI.i().setJSBinding(LoggingI.i());
 	}
 	
 	public void putStatus(EStatPriority esp, String strKey, String strHelp, String strValue){
@@ -331,14 +269,6 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	@Override
 	public void update(float tpf) {
 		super.update(tpf);
-		
-//		if(isEnabled()){
-//			JavaScriptI.i().update();
-//			
-////			if(vrMainSize.update()){
-////				updateVisibleLogItems();
-////			}
-//		}
 	}
 	
 	private void updateStatusValues(){
@@ -390,14 +320,6 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 		BindKeyI.i().prepareKeyMappings();
 		
-//		QueueStateI.i().enqueue(new CallableX("copyLogSelectionToInputText",0.25f,true) {
-//			@Override
-//			public Boolean call() {
-//				copyLogSelectionToInputText();
-//				return true;
-//			}
-//		}.setUserCanPause(true));
-		
 		QueueI.i().enqueue(new CallableX("FocusAtDevConsInput",0.25f,true) { //TODO this delay still has a chance of typing something at other input field? like when holding for long a key?
 			@Override
 			public Boolean call() {
@@ -419,20 +341,6 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		public String s(){return toString();}
 	}
 	public void scrollTo(final double dIndex) {
-//	QueueI.i().enqueue(
-//	cxScrollTo.putKeyValue(ECallableXKey.dIndexIn.s(), dIndexIn)
-//);
-//		double dIndex = dIndexIn;
-//			
-//		double dMax = LoggingI.i().getLogEntriesSize();
-//		if(dIndex==-1)dIndex=dMax; //-1 is a trick to reach the max
-//		if(dIndex>dMax)dIndex=dMax;
-//		/**
-//		 * the index is actually inverted
-//		 */
-//		double dIndexFixed = dMax-dIndex;
-//		
-//		lstbxLoggingSection.getSlider().getModel().setValue(dIndexFixed);
 		lstbxLoggingSection.getSlider().getModel().setValue(dIndex);
 		
 		bKeepScrollAtBottom=false;
@@ -447,8 +355,6 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	}
 	
 	public double getScrollIndex() {
-//		return lstbxLoggingSection.getSlider().getModel().getMaximum()
-//			-lstbxLoggingSection.getSlider().getModel().getValue();
 		return lstbxLoggingSection.getSlider().getModel().getValue();
 	}
 
@@ -636,58 +542,14 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 	}
 	
-//	private static class VersionedContainer extends Container implements VersionedObject<Container>{
-//		private long	lVersion;
-//
-//		public VersionedContainer(GuiLayout layout, String style) {
-//			super(layout, style);
-//		}
-//		
-//		@Override
-//		public void setPreferredSize(Vector3f size) {
-//			super.setPreferredSize(size);
-//			incVersion();
-//		}
-//		
-//		@Override
-//		public void setSize(Vector3f size) {
-//			super.setSize(size);
-//			incVersion();
-//		}
-//		
-//		private void incVersion() {
-//			lVersion++;
-//		}
-//
-//		@Override
-//		public long getVersion() {
-//			return lVersion;
-//		}
-//
-//		@Override
-//		public Container getObject() {
-//			return this;
-//		}
-//
-//		@Override
-//		public VersionedReference<Container> createReference() {
-//      return new VersionedReference<Container>(this);
-//		}
-//
-//	}
-	
 	private void initMainContainer() {
 		cntrMain = new Container(new BorderLayout(), getStyle());
 		
 		panelMain = new HierarchyResizablePanel(getStyle());
 		panelMain.setName(DevConsPluginStateI.class.getSimpleName());//debug name
 		panelMain.setTopHierarchy(true);
-//		new QuadBackgroundComponent(ColorRGBA.Red.clone());
-//		panelMain.setBorder();
-//		panelMain.setborder
 		panelMain.setContents(cntrMain);
 		panelMain.addResizableListener(this);
-//		panelMain.setMinSize(new Vector3f(fMinWidth ,fMinHeight,0));
 		
 		setConsoleHeightPerc(fConsoleHeightPerc); //just to init default value
 	}
@@ -698,14 +560,9 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 		cntrMain.addChild(lstbxLoggingSection, BorderLayout.Position.Center);
 		
-//		lstbxLoggingSection.addCommands(ListAction.Down, cmdClickLogRow);
-		
-		
 		vrSelectionChangedToUpdateInputText = lstbxLoggingSection.getSelectionModel().createReference();
 		vrListBoxChangedToAutoScrollToBottom = lstbxLoggingSection.getModel().createReference();
 		vrSliderChangedToSuspendAutoScrollBottom=lstbxLoggingSection.getSlider().getModel().createReference();
-		
-//		updateVisibleLogItems();
 	}
 
 	private void initSize() {
@@ -726,11 +583,6 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		if(fConsoleHeightPerc<0f)fConsoleHeightPerc=0f; //will be further fixed below
 		
 		float fHeight = (v3fApplicationWindowSize.y * fConsoleHeightPerc);
-		
-//		if(fHeight<fMinHeight){
-//			fHeight=fMinHeight; //TODO this is guess work... areas: info+list+input with 20 each + safety margin
-//			fConsoleHeightPerc=fHeight/v3fApplicationWindowSize.y;
-//		}
 		
 		updateConsoleHeight(fHeight);
 	}
@@ -822,13 +674,6 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	public void insertAtInputTextCaratPos(String str) {
 		tfInput.getDocumentModel().insert(str);
 	}
-//	public void insertInputTextAtCaratPosition(String str) {
-//		tfInput.getDocumentModel().insert(str);
-//	}
-
-//	public Application getApp() {
-//		return app;
-//	}
 	
 	public void copyLogSelectionToInputText(){
 //		if(!vrSelectionChangedToUpdateInputText.update())return;

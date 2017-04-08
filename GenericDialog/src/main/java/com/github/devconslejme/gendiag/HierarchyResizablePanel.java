@@ -61,20 +61,6 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 	private boolean	bHierarchyModal;
 	private Application	app;
 	
-//	private LastFocusCursorListener lastFocusListener = new LastFocusCursorListener();
-//	private class LastFocusCursorListener implements CursorListener{
-//
-//		@Override
-//		public void cursorButtonEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
-//			if(event.isPressed())updateLastFocusAppTimeNano();
-//		}
-//
-//		@Override		public void cursorEntered(CursorMotionEvent event, Spatial target,				Spatial capture) {}
-//		@Override		public void cursorExited(CursorMotionEvent event, Spatial target,				Spatial capture) {}
-//		@Override		public void cursorMoved(CursorMotionEvent event, Spatial target,				Spatial capture) {}
-//		
-//	}
-	
 	public HierarchyResizablePanel(String strStyle) {
 		super(strStyle);
 		
@@ -94,13 +80,6 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 		btnBlocker.setBackground(
 			new QuadBackgroundComponent(//ColorRGBA.Red));
 				ColorI.i().colorChangeCopy(ColorRGBA.Red, -0.75f, 0.5f)));
-		
-//		btnBlocker.addClickCommands(new Command<Button>(){
-//			@Override
-//			public void execute(Button source) {
-//				updateLastFocusAppTimeNano();
-//			}
-//		});
 		
 		SimpleDragParentestListenerI.i().applyAt(btnBlocker, this);
 	}
@@ -146,13 +125,6 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 		arzdHierarchyChildList.add(rzdChildDialog);
 		if(bModal)setEnabledBlockerLayer(true);
 		rzdChildDialog.updateLastFocusAppTimeNano();
-//		QueueI.i().enqueue(new CallableX(0,false) {
-//			@Override
-//			public Boolean call() {
-//				update(); //useless?
-//				return true;
-//			}
-//		});
 	}
 	
 	protected void setHierarchyModal(boolean b) {

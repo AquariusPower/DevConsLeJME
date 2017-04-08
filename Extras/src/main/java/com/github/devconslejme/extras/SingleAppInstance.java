@@ -112,22 +112,6 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 		return flFolder.listFiles(fnf);
 	}
 	
-//	/**
-//	 * This will happen if newer instances are to exit promptly
-//	 * allowing only the older instance to remain running.
-//	 * 
-//	 * So, broken locks will be cleaned.
-//	 */
-//	private void clearBrokenLocks(){
-//		if(bDevModeExitIfThereIsANewerInstance)return;
-//			
-//		for(File fl:getAllLocks()){
-//			if(cmpSelfWith(fl))continue;
-//			output("Cleaning lock: "+fl.getName());
-//			fl.delete();
-//		}
-//	}
-	
 	/**
 	 * Clear locks that have not been updated lately.
 	 */
@@ -338,16 +322,6 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 
 	}
 	
-//	private Long getCreationTimeOfTD(File fl){
-//		ArrayList<String> astr = fileLoad(fl);
-//		Long l = null;
-//		if(astr.size()>0){
-//			// line 1
-//			try{l = Long.parseLong(astr.get(0));}catch(NumberFormatException ex){};
-//		}
-//		return l;
-//	}
-	
 	private Long getCreationTimeOfTD(File fl){ //LINE 1
 		ArrayList<String> astr = fileLoad(fl);
 		Long l = null;if(astr.size()>0){try{l = Long.parseLong(astr.get(0));}catch(NumberFormatException|IndexOutOfBoundsException ex){};}
@@ -364,18 +338,6 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 		Long l = null;if(astr.size()>0){try{l = Long.parseLong(astr.get(2));}catch(NumberFormatException|IndexOutOfBoundsException ex){};}
 		return l;
 	}
-	
-//	/**
-//	 * 
-//	 * @param fl
-//	 * @return if not found, returns a missing value indicator string.
-//	 */
-//	@Deprecated
-//	private String getLockModeOfTD(File fl){
-//		ArrayList<String> astr = Misc.i().fileLoad(fl);
-//		if(astr.size()>0)return astr.get(1); // line 2
-//		return strErrorMissingValue;
-//	}
 	
 	private String getSelfMode(boolean bReportMode){
 		return getMode((bDebugIDE?ERunMode.Debug:ERunMode.Release), bReportMode);

@@ -54,9 +54,6 @@ public class GenericDialogState extends BaseAppState{
 	private Application	app;
 	private Container	cntrMain;
 	private CfgParams cfg;
-//	private ResizablePanel	rzpInfo;
-//	private ResizablePanel	rzpOptions;
-//	private ResizablePanel	rzpInput;
 	private Object	objSelected;
 	private Command<? super PopupState>	cmdClose;
 	
@@ -65,10 +62,6 @@ public class GenericDialogState extends BaseAppState{
 		private Vector3f v3fPos;
 		private Vector3f v3fSize;
 		private String strStyle;
-//		private Panel	pnlContents;
-//		private Panel	pnlInput;
-//		private Panel	pnlOptions;
-//		private Panel	pnlInfo;
 		HashMap<ESection,ResizablePanel> hmSection = new HashMap<ESection,ResizablePanel>();
 
 		public Vector3f getPos() {
@@ -107,46 +100,11 @@ public class GenericDialogState extends BaseAppState{
 			return this;
 		}
 
-//		public Panel getInfoSection() {
-//			return pnlInfo;
-//		}
-//
-//		public Panel getOptionsSection() {
-//			return pnlOptions;
-//		}
-//
-//		public Panel getInputSection() {
-//			return pnlInput;
-//		}
-//
-//		public CfgParams setInputSection(Panel nodeInput) {
-//			this.pnlInput = nodeInput;
-//			return this;
-//		}
-//
-//		public CfgParams setOptionsSection(Panel nodeOptions) {
-//			this.pnlOptions = nodeOptions;
-//			return this;
-//		}
-//
-//		public CfgParams setInfoSection(Panel nodeInfo) {
-//			this.pnlInfo = nodeInfo;
-//			return this;
-//		}
-
 		public CfgParams setSection(ESection e, Panel pnl) {
 			hmSection.put(e,new ResizablePanel(pnl));
 			return this;
 		}
 
-//		public Panel getContents() {
-//			return pnlContents;
-//		}
-//
-//		public CfgParams setContents(Panel pnlContents) {
-//			this.pnlContents = pnlContents;
-//			return this;
-//		}
 	}
 	
 	public GenericDialogState(Application app) {
