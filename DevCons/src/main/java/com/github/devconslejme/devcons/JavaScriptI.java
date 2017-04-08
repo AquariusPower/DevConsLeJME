@@ -171,7 +171,7 @@ public class JavaScriptI implements IGlobalAddListener {
 				appendUserInitCommand(strParams);
 				return true;
 			case exec:
-				execFile(strParams);
+				execFileAndShowRetVal(strParams);
 				return true;
 			case showIni:
 				LoggingI.i().logMarker("Showing User Init");
@@ -328,9 +328,10 @@ public class JavaScriptI implements IGlobalAddListener {
 		return strImprovedPart;
 	}
 	
-	public void execFile(String strFile){
-		execFile(asFile(strFile));
+	public boolean execFileAndShowRetVal(String strFile){
+		boolean b=execFile(asFile(strFile));
 		showRetVal(objRetValFile); //this method will be called by the user, so show the return value
+		return b;
 	}
 	public File asFile(String strFile){
 		if(strFile.isEmpty()){
@@ -392,30 +393,36 @@ public class JavaScriptI implements IGlobalAddListener {
 	 * kept private to prevent infinite self call on the same frame,
 	 * use {@link #queueExecFile(File, float)}
 	 * @param rd
+	 * @return 
 	 */
-	private void execFile(File flJS){
+	private boolean execFile(File flJS){
 		try {
 			bndJSE.remove(EJSObjectBind.selfScript.s());
 			setJSBinding(EJSObjectBind.selfScript.s(), flJS);
 //			bndJSE.put(EJSObjectBind.selfScript.s(), flJS);
 //			rd.reset();
 			objRetValFile = jse.eval(new FileReader(flJS),bndJSE);
+			return true;
 		} catch (ScriptException | IOException e) {
 //			LoggingI.i().logExceptionEntry(e, hmFileReaderExecJS.inverse().get(rd));
 			LoggingI.i().logExceptionEntry(e, flJS.toString());
-			return;
 		}
+		
+		return false;
 	}
 	
-	public void execScript(String strJS,boolean bShowRetVal){
+	public boolean execScript(String strJS,boolean bShowRetVal){
 		try {
 			objRetValUser=jse.eval(strJS,bndJSE);
 			if(bShowRetVal)showRetVal(objRetValUser);
+			return true;
 		} catch (ScriptException e) {
 			LoggingI.i().logExceptionEntry(e, strJS);
 		} catch (Exception e){
 			LoggingI.i().logExceptionEntry(e, strJS);
 		}
+		
+		return false;
 	}
 	
 	public void showRetVal(Object obj){
@@ -568,25 +575,38 @@ public class JavaScriptI implements IGlobalAddListener {
 			for(String str:getUserInit()){
 				astrUserInit.add(str);
 			}
+			
+			QueueI.i().enqueue(new CallableX(0,false) {
+				@Override
+				public Boolean call() {
+					processUserInit();
+					return true;
+				}
+			});
 		}else{
 			FileI.i().appendLine(flUserInit, "// put initialization commands on this file, one per line");
 		}
 	}
 	
-	public List<String> getUserInit(){
-		return FileI.i().readAllLines(flUserInit);
-	}
-	
-	public void update() {
+	public void processUserInit() {
 		if(astrUserInit.size()>0){
 			LoggingI.i().logMarker("UserInit:Begin");
+			boolean bFail=false;
 			for(String strJS:astrUserInit){
 				LoggingI.i().logSubEntry(strJS);
-				execScript(strJS,false);
+				if(!execScript(strJS,false)){
+					bFail=true;
+					LoggingI.i().logMarker("UserInit:FAIL");
+					break;
+				}
 			}
 			astrUserInit.clear();
-			LoggingI.i().logMarker("UserInit:End");
+			if(!bFail)LoggingI.i().logMarker("UserInit:End");
 		}
+	}
+	
+	public List<String> getUserInit(){
+		return FileI.i().readAllLines(flUserInit);
 	}
 	
 	public void addCmdToHistory(String strJS) {

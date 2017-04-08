@@ -332,13 +332,13 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	public void update(float tpf) {
 		super.update(tpf);
 		
-		if(isEnabled()){
-			JavaScriptI.i().update();
-			
-//			if(vrMainSize.update()){
-//				updateVisibleLogItems();
-//			}
-		}
+//		if(isEnabled()){
+//			JavaScriptI.i().update();
+//			
+////			if(vrMainSize.update()){
+////				updateVisibleLogItems();
+////			}
+//		}
 	}
 	
 	private void updateStatusValues(){
