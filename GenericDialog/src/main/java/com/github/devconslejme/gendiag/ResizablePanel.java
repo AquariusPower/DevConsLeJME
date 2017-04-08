@@ -73,8 +73,11 @@ public class ResizablePanel extends Panel {
 	private ResizerCursorListener dcl = new ResizerCursorListener();
 	private int	iMouseButtonIndexToDrag=0;
 	private EEdge eeInitialHook = null;
-	private int	iGrowParentestFixAttemptLimit=100;
+	private static int iGrowParentestFixAttemptLimitGlobal=100;
+//	private Integer	iGrowParentestFixAttemptLimit=null;
+//	private boolean	bEnabledGrowParentestFixAttemptLimit=false;
 	private HashMap<EEdge,Edge> hmEdge = new HashMap<EEdge,Edge>();
+	private Panel pnlParentest = null;
 	
 	public static interface IResizableListener {
 		//public static class VersionedVector3f extends Vector3f implements VersionedObject{}; //???
@@ -352,8 +355,6 @@ public class ResizablePanel extends Panel {
 	 */
 	protected void resizedTo(Vector3f v3fNewSize) {}
 
-	Panel pnlParentest = null;
-	private boolean	bEnabledGrowParentestFixAttemptLimit=false;
 	private Panel getParentest(){ //TODO could be outside this class
 		if(pnlParentest!=null)return pnlParentest;
 		
@@ -390,16 +391,17 @@ public class ResizablePanel extends Panel {
 			}catch(IllegalArgumentException ex){
 				if(bSkipGrowFix)throw ex;
 				if(!ex.getMessage().startsWith("Size cannot be negative:")) throw ex;
-				if(bEnabledGrowParentestFixAttemptLimit && i>=iGrowParentestFixAttemptLimit){throw ex;} //prevents endless growth
+//				if(iGrowParentestFixAttemptLimit!=null && i>=iGrowParentestFixAttemptLimit){throw ex;} //prevents endless growth
+				if(i>=getGrowParentestFixAttemptLimitGlobal()){throw ex;} //prevents endless growth
 				growParentestFixAttempt(i);
 				i++;
 			}
 		}
 	}
 	
-	public void setEnabledGrowParentestFixAttemptLimit(boolean b){
-		this.bEnabledGrowParentestFixAttemptLimit=b;
-	}
+//	public void setEnabledGrowParentestFixAttemptLimit(boolean b){
+//		this.bEnabledGrowParentestFixAttemptLimit=b;
+//	}
 	
 	private boolean validateParentest() {
 		boolean b=false;
@@ -617,5 +619,11 @@ public class ResizablePanel extends Panel {
 	
 	private void warnMsg(String str){ //TODO could be outside this class
 		System.err.println("WARN["+this.getClass().getSimpleName()+"]: "+str); //TODO log?
+	}
+	public static int getGrowParentestFixAttemptLimitGlobal() {
+		return iGrowParentestFixAttemptLimitGlobal;
+	}
+	public static void setGrowParentestFixAttemptLimitGlobal(int iGrowParentestFixAttemptLimitGlobal) {
+		ResizablePanel.iGrowParentestFixAttemptLimitGlobal = iGrowParentestFixAttemptLimitGlobal;
 	}
 }

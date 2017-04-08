@@ -112,12 +112,12 @@ public class HighlightEffectI {
 	private HighlightMouseListener hml = new HighlightMouseListener();
 	
 	private DummyEffect	efDummy;
-	public void addMouseCursorHighlightEffects(Panel pnl, QuadBackgroundComponent qbc){
-		MouseEventControl.addListenersToSpatial(pnl, hml);
-		UserDataI.i().setUserDataPSH(pnl, EEffectIds.UserDataHighLightTarget.s(), qbc);
+	public void addMouseCursorHighlightEffects(Panel pnlToThisElement, QuadBackgroundComponent qbcTargetToBeHighlighted){
+		MouseEventControl.addListenersToSpatial(pnlToThisElement, hml);
+		UserDataI.i().setUserDataPSH(pnlToThisElement, EEffectIds.UserDataHighLightTarget.s(), qbcTargetToBeHighlighted);
 //		pnl.setUserData(EEffectIds.UserDataHighLightTarget.s(), qbc);
-		efDummy = setupSimpleEffect(pnl, EEffectIds.EffectActivateHighLight, efHighLightBkg, efDummy);
-		pnl.addEffect(EEffectIds.EffectDeactivateHighLight.s(),efDummy);
+		efDummy = setupSimpleEffect(pnlToThisElement, EEffectIds.EffectActivateHighLight, efHighLightBkg, efDummy);
+		pnlToThisElement.addEffect(EEffectIds.EffectDeactivateHighLight.s(),efDummy);
 	}
 
 	/**

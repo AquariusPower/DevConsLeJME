@@ -39,11 +39,15 @@ import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.gendiag.HierarchyResizablePanel;
 import com.github.devconslejme.gendiag.HierarchySorterI;
+import com.github.devconslejme.gendiag.HighlightEffectI;
+import com.github.devconslejme.gendiag.ResizablePanel;
+import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.SimpleDragParentestListenerI;
 import com.jme3.app.Application;
@@ -72,6 +76,8 @@ import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
+import com.simsilica.lemur.core.GuiComponent;
+import com.simsilica.lemur.core.VersionedList;
 import com.simsilica.lemur.core.VersionedReference;
 import com.simsilica.lemur.event.KeyAction;
 import com.simsilica.lemur.event.KeyActionListener;
@@ -105,6 +111,39 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private String	strInputMappingToggleDeveloperConsole = "ToggleDeveloperConsole";
 	private File	flStorageFolder;
 	private HashMap<String,Stat> hmStatusIdValue = new HashMap<String,Stat>();
+	private ListBox<String> lstbxVarMonitorBar = new ListBox<String>();
+	
+	private static class VersionedStatus extends VersionedList<String>{
+		private HashMap<String,Integer> hmKV = new HashMap<String,Integer>();
+		public void put(String strKey, String strValue){
+			Integer i = hmKV.get(strKey);
+			strValue="="+strValue;
+			if(i==null){
+				add(strKey);
+				add(strValue);
+				hmKV.put(strKey, size()-2); //the index of the key
+			}else{
+				set(i+1,strValue);
+			}
+		}
+	}
+	private VersionedStatus vlstrVarMonitorEntries = new VersionedStatus();
+	
+//	private VersionedList<String>	vlstrVarMonitorEntries = new VersionedList<String>(){
+//		private HashMap<String,Integer> hmKV = new HashMap<String,Integer>();
+//		public void put(String strKey, String strValue){
+//			Integer i = hmKV.get(strKey);
+//			strValue="="+strValue;
+//			if(i==null){
+//				add(strKey);
+//				add(strValue);
+//				hmKV.put(strKey, size()-2); //the index of the key
+//			}else{
+//				set(i+1,strValue);
+//			}
+//		}
+//	};
+	
 	class CallableXScrollTo extends CallableX{
 		public CallableXScrollTo(){
 			super(0.25f,true);
@@ -157,6 +196,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private VersionedReference<Double>	vrSliderChangedToSuspendAutoScrollBottom;
 	private HierarchyResizablePanel	panelMain;
 	private Application	app;
+	private ResizablePanel	rzpVarBar;
 	
 	public static enum EStatPriority{
 		Top,
@@ -255,6 +295,8 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 		initMainContainer();
 		
+		initVarMonitorWestBar();
+		
 		initStatusSection();
 		initLoggingSection();
 		initInputSection();
@@ -266,6 +308,27 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		super.initialize(stateManager, app);
 	}
 	
+	private void initVarMonitorWestBar() {
+		lstbxVarMonitorBar = new ListBox<String>(null, getStyle());
+		lstbxVarMonitorBar.setModel(vlstrVarMonitorEntries);
+		
+		rzpVarBar = new ResizablePanel(lstbxVarMonitorBar);
+		
+		rzpVarBar.setMinSize(new Vector3f(50,100,0));
+		
+		rzpVarBar.setPreferredSize(new Vector3f(100,100,0));
+		
+		rzpVarBar.setAllEdgesEnabled(false);
+		rzpVarBar.getEdge(EEdge.Right).setEnabled(true);
+		
+		GuiComponent gc = rzpVarBar.getResizableBorder();
+		if (gc instanceof QuadBackgroundComponent) {
+			HighlightEffectI.i().addMouseCursorHighlightEffects(rzpVarBar, (QuadBackgroundComponent) gc);
+		}
+		
+		cntrMain.addChild(rzpVarBar, BorderLayout.Position.West);
+	}
+
 	@Override
 	public void update(float tpf) {
 		super.update(tpf);
@@ -294,11 +357,18 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private void updateStatus() {
 		ArrayList<Stat> astList = new ArrayList<Stat>(hmStatusIdValue.values());
 		Collections.sort(astList,cmprStat);
-		String str="";
+//		String str="";
+		vlstrVarMonitorEntries.clear();
 		for(Stat st:astList){
-			str+=st;
+//			str+=st;
+			vlstrVarMonitorEntries.add(st.strKey);
+			vlstrVarMonitorEntries.add("="+st.strValue);
+//			vlstrVarMonitorEntries.put();
 		}
-		lblStats.setText(str);
+//		lblStats.setText(str);
+		lstbxVarMonitorBar.setVisibleItems(lstbxLoggingSection.getVisibleItems());
+		
+		recursivelyApplyNoWrap(lstbxVarMonitorBar);
 	}
 
 	@Override
@@ -430,7 +500,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 //		MiscLemurI.i().applySimpleDragParentestListener(cntrStatus);
 		
 		// console stats
-		lblStats = new Label("Initializing Console status.",getStyle());
+		lblStats = new Label("(status)",getStyle());
 		SimpleDragParentestListenerI.i().applyAt(lblStats);
 		lblStats.setColor(new ColorRGBA(1,1,0.5f,1));
 		cntrStatus.addChild(lblStats,0,0);
@@ -460,8 +530,12 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 	}
 	
-	private void setPopupHelp(Spatial spt, String strHelp){
-		spt.setUserData(EUserDataMiscJme.strPopupHelp.s(), strHelp);
+	public String getPopupHelp(Spatial spt){
+		return UserDataI.i().getUserDataPSH(spt, EUserDataMiscJme.strPopupHelp.s());
+	}
+	public void setPopupHelp(Spatial spt, String strHelp){
+		UserDataI.i().setUserDataPSH(spt, EUserDataMiscJme.strPopupHelp.s(), strHelp);
+//		spt.setUserData(EUserDataMiscJme.strPopupHelp.s(), strHelp);
 	}
 	
 	private class ButtonClick implements Command<Button>{

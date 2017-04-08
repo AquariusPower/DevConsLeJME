@@ -29,6 +29,7 @@ package com.github.devconslejme.misc.jme;
 
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -78,6 +79,18 @@ public class ColorI {
 		
 		return color;
 	}
+	
+//	private float neglightColorComponent(float f){
+//		return Math.abs(
+//			(f+
+//				(
+//					((FastMath.nextRandomFloat()*2f)-1f) //from >= -1f to < 1f
+//					*
+//					0.5f
+//				)
+//			)%1.0f
+//		);
+//	}
 	
 //	private float neglightColorComponent(float f){
 //		if(f>0.5f){

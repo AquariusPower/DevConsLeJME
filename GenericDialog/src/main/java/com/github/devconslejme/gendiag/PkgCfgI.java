@@ -27,6 +27,8 @@
 
 package com.github.devconslejme.gendiag;
 
+import org.lwjgl.opengl.Display;
+
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.jme3.app.Application;
 import com.jme3.scene.Node;
@@ -41,6 +43,7 @@ public class PkgCfgI {
 	public void configure(Application app, Node nodeParent){
 		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(app, nodeParent);
 		
+		ResizablePanel.setGrowParentestFixAttemptLimitGlobal(Math.max(Display.getWidth(),Display.getHeight()));
 		HierarchySorterI.i().configure(nodeParent, 0f);
 	}
 }
