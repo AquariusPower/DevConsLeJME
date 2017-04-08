@@ -29,6 +29,8 @@ package com.github.devconslejme.misc.jme;
 
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.jme3.bounding.BoundingBox;
+import com.jme3.font.BitmapText;
+import com.jme3.font.LineWrapMode;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -60,4 +62,14 @@ public class MiscJmeI {
 		return ((BoundingBox)spt.getWorldBound()).getExtent(null).mult(2f);
 	}
 	
+	public void recursivelyApplyTextNoWrap(Node nodeParent) {
+		for(Spatial spt:nodeParent.getChildren()){
+			if(spt instanceof BitmapText){
+				((BitmapText)spt).setLineWrapMode(LineWrapMode.NoWrap);
+			}
+			if(spt instanceof Node){
+				recursivelyApplyTextNoWrap((Node)spt);
+			}
+		}
+	}
 }

@@ -38,7 +38,6 @@ import java.util.Set;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.gendiag.HierarchyResizablePanel;
-import com.github.devconslejme.gendiag.HierarchySorterI;
 import com.github.devconslejme.gendiag.HighlightEffectI;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
@@ -47,6 +46,7 @@ import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.SimpleDragParentestListenerI;
@@ -54,8 +54,6 @@ import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.font.BitmapFont;
-import com.jme3.font.BitmapText;
-import com.jme3.font.LineWrapMode;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
@@ -73,6 +71,7 @@ import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.HAlignment;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
+import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
@@ -91,10 +90,11 @@ import com.simsilica.lemur.text.DocumentModel;
 public class DevConsPluginStateI extends AbstractAppState implements IResizableListener{
 	public static DevConsPluginStateI i(){return GlobalInstanceManagerI.i().get(DevConsPluginStateI.class);}
 	
-	private Vector3f	v3fApplicationWindowSize;
+//	private Vector3f	v3fApplicationWindowSize;
 	private float	fLemurPreferredThickness = 1f;
 //	private Vector3f	v3fConsoleSize;
-	private float	fConsoleHeightPerc = 0.5f;
+	private float	fConsoleHeightPercDefault = 0.5f;
+	private float	fConsoleHeightPerc = fConsoleHeightPercDefault;
 	private String strStyle = "console";
 	private ListBox<String>	lstbxLoggingSection;
 //	private VersionedContainer	cntrMain;
@@ -197,6 +197,9 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private HierarchyResizablePanel	panelMain;
 	private Application	app;
 	private ResizablePanel	rzpVarBar;
+	private Button	btnShowVarMon;
+	private boolean	bUpdateNoWrap;
+	private Button	btnRestoreSize;
 	
 	public static enum EStatPriority{
 		Top,
@@ -291,32 +294,41 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 		initStyle();
 		
-		initSize();
+//		initSize();
 		
 		initMainContainer();
-		
-		initVarMonitorWestBar();
 		
 		initStatusSection();
 		initLoggingSection();
 		initInputSection();
 		
-		panelMain.setLocalTranslation(0, Display.getHeight(), 0);
+		initVarMonitorWestBar();
+		
+		applyDefaultPosSize();
 		
 //		GuiGlobals.getInstance().requestFocus(tfInput);
+		
+		bUpdateNoWrap=true;
+		
+//		SimpleDragParentestListenerI.i().applyAt(panelMain);
 		
 		super.initialize(stateManager, app);
 	}
 	
+	public void applyDefaultPosSize() {
+		panelMain.setLocalTranslation(0, getWindowSize().y, 0);
+		rzpVarBar.setPreferredSize(new Vector3f(100,100,0));
+		setConsoleHeightPerc(fConsoleHeightPercDefault);
+//		updateConsoleHeight(fConsoleHeightPercDefault);
+	}
+
 	private void initVarMonitorWestBar() {
 		lstbxVarMonitorBar = new ListBox<String>(null, getStyle());
 		lstbxVarMonitorBar.setModel(vlstrVarMonitorEntries);
 		
 		rzpVarBar = new ResizablePanel(lstbxVarMonitorBar);
 		
-		rzpVarBar.setMinSize(new Vector3f(50,100,0));
-		
-		rzpVarBar.setPreferredSize(new Vector3f(100,100,0));
+		rzpVarBar.setMinSize(new Vector3f(50,50,0));
 		
 		rzpVarBar.setAllEdgesEnabled(false);
 		rzpVarBar.getEdge(EEdge.Right).setEnabled(true);
@@ -326,12 +338,33 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 			HighlightEffectI.i().addMouseCursorHighlightEffects(rzpVarBar, (QuadBackgroundComponent) gc);
 		}
 		
-		cntrMain.addChild(rzpVarBar, BorderLayout.Position.West);
+		toggleVarMonitorBar(true);
+	}
+	
+	/**
+	 * 
+	 * @param b null to toggle, or set if true or remove if false
+	 */
+	private void toggleVarMonitorBar(Boolean b) {
+		boolean bVisible = b!=null ? bVisible=b : !cntrMain.hasChild(rzpVarBar);
+		if(bVisible){
+			cntrMain.addChild(rzpVarBar, BorderLayout.Position.West);
+		}else{
+			cntrMain.removeChild(rzpVarBar);
+		}
+		bUpdateNoWrap=true;
+//		MiscJmeI.i().recursivelyApplyTextNoWrap(lstbxLoggingSection);
+//		MiscJmeI.i().recursivelyApplyTextNoWrap(lstbxVarMonitorBar);
 	}
 
 	@Override
 	public void update(float tpf) {
 		super.update(tpf);
+		
+		if(bUpdateNoWrap){
+			MiscJmeI.i().recursivelyApplyTextNoWrap(panelMain);
+			bUpdateNoWrap=false;
+		}
 	}
 	
 	private void updateStatusValues(){
@@ -368,7 +401,8 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 //		lblStats.setText(str);
 		lstbxVarMonitorBar.setVisibleItems(lstbxLoggingSection.getVisibleItems());
 		
-		recursivelyApplyNoWrap(lstbxVarMonitorBar);
+		bUpdateNoWrap=true;
+//		MiscJmeI.i().recursivelyApplyTextNoWrap(lstbxVarMonitorBar);
 	}
 
 	@Override
@@ -387,6 +421,8 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private void initInputSection() {
 		tfInput = new TextField("",getStyle());
 		cntrMain.addChild(tfInput, BorderLayout.Position.South);
+		
+		SimpleDragParentestListenerI.i().applyAt(tfInput);
 		
 		BindKeyI.i().prepareKeyMappings();
 		
@@ -499,24 +535,45 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		cntrMain.addChild(cntrStatus, BorderLayout.Position.North);
 //		MiscLemurI.i().applySimpleDragParentestListener(cntrStatus);
 		
-		// console stats
-		lblStats = new Label("(status)",getStyle());
-		SimpleDragParentestListenerI.i().applyAt(lblStats);
-		lblStats.setColor(new ColorRGBA(1,1,0.5f,1));
-		cntrStatus.addChild(lblStats,0,0);
-		
 		// buttons
-		ArrayList<Button> abtn = new ArrayList<Button>();
+		ArrayList<Panel> apnl = new ArrayList<Panel>();
 		int iButtonIndex=0;
-		btnClipboardShow = new Button("S",getStyle());
+		
+		btnRestoreSize = new Button("DefaultPosSize",getStyle());
+		setPopupHelp(btnRestoreSize, "Restore DevCons defaults Size and Position");
+		apnl.add(btnRestoreSize);
+		
+		btnShowVarMon = new Button("VarMonBar:Toggle",getStyle());
+		setPopupHelp(btnShowVarMon, "Show Variables Monitor Bar");
+		apnl.add(btnShowVarMon);
+		
+		btnClipboardShow = new Button("Clipboard:Show",getStyle());
 		setPopupHelp(btnClipboardShow, "Show Clipboard Contents");
-		abtn.add(btnClipboardShow);
+		apnl.add(btnClipboardShow);
+		
+		lblStats = new Label("DevCons",getStyle());
+//		SimpleDragParentestListenerI.i().applyAt(lblStats);
+		lblStats.setColor(new ColorRGBA(1,1,0.5f,1));
+		lblStats.setTextHAlignment(HAlignment.Right);
+		apnl.add(lblStats);
+//		cntrStatus.addChild(lblStats,0,0);
 		
 		btnclk = new ButtonClick();
-		for(Button btn:abtn){
-			btn.setTextHAlignment(HAlignment.Center);
-			btn.addClickCommands(btnclk);
-			cntrStatus.addChild(btn,0,++iButtonIndex);
+		for(Panel pnl:apnl){
+			if (pnl instanceof Button) {
+				Button btn = (Button) pnl;
+				btn.setTextHAlignment(HAlignment.Center);
+				btn.addClickCommands(btnclk);
+			}
+			SimpleDragParentestListenerI.i().applyAt(pnl);
+//			else
+//			if (pnl instanceof Label) {
+//				Label lbl = (Label)pnl;
+//				lbl.setTextHAlignment(HAlignment.Left);
+//			}
+//			MiscJmeI.i().recursivelyApplyTextNoWrap(pnl);
+//			pnl.setPreferredSize(new Vector3f(10,10,0));
+			cntrStatus.addChild(pnl,0,iButtonIndex++);
 		}
 		
 		QueueI.i().enqueue(new CallableX("DevConsUpdateStatus",0.5f,true) {
@@ -543,6 +600,12 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		public void execute(Button source) {
 			if(source.equals(btnClipboardShow)){
 				ClipboardI.i().showClipboard();
+			}else
+			if(source.equals(btnShowVarMon)){
+				toggleVarMonitorBar(null);
+			}else
+			if(source.equals(btnRestoreSize)){
+				applyDefaultPosSize();
 			}
 		}
 	}
@@ -634,17 +697,19 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 		cntrMain.addChild(lstbxLoggingSection, BorderLayout.Position.Center);
 		
+//		SimpleDragParentestListenerI.i().applyAt(lstbxLoggingSection);
+		
 		vrSelectionChangedToUpdateInputText = lstbxLoggingSection.getSelectionModel().createReference();
 		vrListBoxChangedToAutoScrollToBottom = lstbxLoggingSection.getModel().createReference();
 		vrSliderChangedToSuspendAutoScrollBottom=lstbxLoggingSection.getSlider().getModel().createReference();
 	}
 
-	private void initSize() {
-		v3fApplicationWindowSize = new Vector3f(
-			Display.getWidth(),
-			Display.getHeight(),
-			fLemurPreferredThickness );
-	}
+//	private void initSize() {
+//		v3fApplicationWindowSize = new Vector3f(
+//			Display.getWidth(),
+//			Display.getHeight(),
+//			fLemurPreferredThickness );
+//	}
 
 	public float getConsoleHeightPerc() {
 		return fConsoleHeightPerc;
@@ -656,19 +721,19 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		if(fConsoleHeightPerc>1.0f)fConsoleHeightPerc=1.0f;
 		if(fConsoleHeightPerc<0f)fConsoleHeightPerc=0f; //will be further fixed below
 		
-		float fHeight = (v3fApplicationWindowSize.y * fConsoleHeightPerc);
+		int iHeight = (int) (getWindowSize().y * fConsoleHeightPerc);
 		
-		updateConsoleHeight(fHeight);
+		updateConsoleHeight(iHeight);
 	}
 
-	private void updateConsoleHeight(float fHeight) {
+	private void updateConsoleHeight(int iHeightPixels) {
 		QueueI.i().enqueue(new CallableX(0,false) {
 			@Override
 			public Boolean call() {
 //				v3fConsoleSize
 				Vector3f v3f = new Vector3f(
-						v3fApplicationWindowSize.x,
-						fHeight,
+						getWindowSize().x,
+						iHeightPixels,
 						fLemurPreferredThickness);
 					
 				panelMain.setPreferredSize(v3f);
@@ -679,6 +744,10 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 				return true;
 			}
 		});
+	}
+	
+	public Vector3f getWindowSize(){
+		return new Vector3f(Display.getWidth(),Display.getHeight(),0);
 	}
 	
 	public void updateVisibleLogItems(){
@@ -694,22 +763,12 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 				lstbxLoggingSection.setVisibleItems(iLines);
 //				lstbxLoggingSection.getCellRenderer();
 				
-				recursivelyApplyNoWrap(lstbxLoggingSection);
+				bUpdateNoWrap=true;
+//				MiscJmeI.i().recursivelyApplyTextNoWrap(lstbxLoggingSection);
 				
 				return true;
 			}
 		});
-	}
-
-	private void recursivelyApplyNoWrap(Node nodeParent) {
-		for(Spatial spt:nodeParent.getChildren()){
-			if(spt instanceof BitmapText){
-				((BitmapText)spt).setLineWrapMode(LineWrapMode.NoWrap);
-			}
-			if(spt instanceof Node){
-				recursivelyApplyNoWrap((Node)spt);
-			}
-		}
 	}
 
 	public String getStyle() {
