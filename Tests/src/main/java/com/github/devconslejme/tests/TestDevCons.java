@@ -69,10 +69,10 @@ public class TestDevCons extends SimpleApplication{
 //		DevConsPluginStateI.i().configure(getGuiNode());
 		
 		/*** optionals below ***/
-		JavaScriptI.i().setJSBinding(this);
+//		JavaScriptI.i().setJSBinding(this);
 		
 		GlobalInstanceManagerI.i().get(SingleAppInstance.class).configureRequiredAtApplicationInitialization(null);
-		JavaScriptI.i().setJSBinding(GlobalInstanceManagerI.i().get(SingleAppInstance.class));
+//		JavaScriptI.i().setJSBinding(GlobalInstanceManagerI.i().get(SingleAppInstance.class));
 		
 		getStateManager().attach(new AbstractAppState(){
 			@Override
@@ -81,12 +81,12 @@ public class TestDevCons extends SimpleApplication{
 				GlobalInstanceManagerI.i().get(DynamicFPSLimiter.class).update(tpf);
 			}
 		});
-		JavaScriptI.i().setJSBinding(GlobalInstanceManagerI.i().get(DynamicFPSLimiter.class));
+//		JavaScriptI.i().setJSBinding(GlobalInstanceManagerI.i().get(DynamicFPSLimiter.class));
 		
 		// Linux only: easy workaround to make strict focus policy painless
 		GlobalInstanceManagerI.i().get(OSCmd.class).runOSCommand(
 			"linux 'xdotool windowactivate $(xdotool search --name \"^"+settings.getTitle()+"$\")'");
-		JavaScriptI.i().setJSBinding(GlobalInstanceManagerI.i().get(OSCmd.class));
+//		JavaScriptI.i().setJSBinding(GlobalInstanceManagerI.i().get(OSCmd.class));
 	}
 	
 	/**

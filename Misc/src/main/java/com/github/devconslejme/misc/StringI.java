@@ -28,12 +28,6 @@
 package com.github.devconslejme.misc;
 
 import java.math.BigInteger;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 
 /**
@@ -140,5 +134,26 @@ public class StringI {
 		}
 		return false;
 	}
-
+	
+	/**
+	 * escape new lines
+	 * @param str
+	 * @param iMaxLength
+	 * @param strAppendOnTrunc if not null
+	 * @return
+	 */
+	public String truncAndGrantOneLine(String str, int iMaxLength, String strAppendOnTrunc){
+		str=str.replace("\n","\\n");
+		
+		if(strAppendOnTrunc!=null){
+			iMaxLength-=strAppendOnTrunc.length();
+		}
+		
+		if(str.length()>iMaxLength){
+			str=str.substring(0,iMaxLength);
+			
+			if(strAppendOnTrunc!=null)str+=strAppendOnTrunc;
+		}
+		return str;
+	}
 }

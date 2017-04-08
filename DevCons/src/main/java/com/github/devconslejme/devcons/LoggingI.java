@@ -28,11 +28,10 @@
 package com.github.devconslejme.devcons;
 
 import java.io.File;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.io.PrintStream;
 
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -51,8 +50,8 @@ public class LoggingI {
 	private int iLogEntriesLimit = 100000;
 	private int iWrapAtColumn = 80;
 	private File	flLog;
-	DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss"); //yyyy/MM/dd
-	Date dateForMarker = new Date();
+//	DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss"); //yyyy/MM/dd
+//	Date dateRealTimeForMarker = new Date();
 	
 	public void configure() {
 		flLog = new File(DevConsPluginStateI.i().getStorageFolder(), LoggingI.class.getSimpleName()+".log");
@@ -71,28 +70,28 @@ public class LoggingI {
 	}
 	public void logExceptionEntry(Exception ex, String strJS, boolean bSkipLogFile) {
 		String str="!!!";
-		if(strJS!=null)logEntry(str+"Cmd:"+strJS,bSkipLogFile,false);
-		logEntry(str+ex.getClass().getSimpleName()+":"+ex.getMessage(),bSkipLogFile,false);
+		if(strJS!=null)logEntry(str+"Cmd:"+strJS,bSkipLogFile,System.err);
+		logEntry(str+ex.getClass().getSimpleName()+":"+ex.getMessage(),bSkipLogFile,System.err);
 		
 		Throwable cause = ex;
 		while(true){
 			for(StackTraceElement ste:cause.getStackTrace()){
-				logEntry(" "+ste,bSkipLogFile,false);
+				logEntry(" "+ste,bSkipLogFile,System.err);
 			}
 			
 			cause=cause.getCause();
-			if(cause!=null){
-				logEntry("Caused by:",bSkipLogFile,false);
-			}else{
-				break;
-			}
+			if(cause==null)break;
+			
+			logEntry("Caused by:",bSkipLogFile,System.err);
 		}
+		
+		MessagesI.i().output(true,null,"DevConsLog",this,strJS,ex);
 	}
 	
 	public void logEntry(String str){
-		logEntry(str,false,false);
+		logEntry(str,false,System.out);
 	}
-	public void logEntry(String str, boolean bSkipLogFile, boolean bSkipSysOut){
+	public void logEntry(String str, boolean bSkipLogFile, PrintStream ps){
 		// log at application console
 		for(String strLine : str.split("\n")){
 			Iterable<String> itstr = Splitter.fixedLength(iWrapAtColumn).split(strLine);
@@ -116,7 +115,8 @@ public class LoggingI {
 			}
 		}
 		
-		if(!bSkipSysOut)System.out.println(str);
+//		if(ps!=null)ps.println(str);
+		MessagesI.i().output(false,ps,"DevConsLog",this,str);
 		
 		//dont! ConsolePluginI.i().scrollToBottom();
 	}
@@ -126,8 +126,9 @@ public class LoggingI {
 	}
 	
 	public void logMarker(String strInfo){
-		dateForMarker.setTime(System.currentTimeMillis());
-		strInfo = "[R="+dateFormat.format(dateForMarker)+"] "+strInfo;
+//		dateRealTimeForMarker.setTime(System.currentTimeMillis());
+//		strInfo = "[R="+dateFormat.format(dateRealTimeForMarker)+"] "+strInfo;
+		strInfo = "[R="+TimeConvertI.i().getRealTimeFormatted(null,"HH:mm:ss")+"] "+strInfo;
 		
 		
 //		Duration durAppElapsed = Duration.ZERO.plusNanos(
@@ -171,6 +172,7 @@ public class LoggingI {
 
 	public void setWrapAtColumn(int iWrapAtColumn) {
 		this.iWrapAtColumn = iWrapAtColumn;
+		MessagesI.i().setSummaryReportLineLength(iWrapAtColumn);
 	}
 
 	public void logWarn(String string) {

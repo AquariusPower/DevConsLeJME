@@ -27,14 +27,7 @@
 
 package com.github.devconslejme.misc;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Map;
-import java.util.Set;
-import java.util.Map.Entry;
 
 /**
  * Differently from toString(), this is intended to provide to  
@@ -50,6 +43,8 @@ public class ReportI {
 	public static interface IReport{
 		public String getReport(boolean bFull);
 	}
+
+	private boolean	bShowType=false;
 	
 //	/**
 //	 * TODO needs review rework
@@ -271,7 +266,9 @@ public class ReportI {
 		ArrayList<String> astrReport=new ArrayList<String>();
 		astrReport.add(strMsg);
 		
-		recursivelyAddLinesIfHasAnyArray(astrReport,"\t",aobjCustom);
+		for(Object obj:aobjCustom){
+			recursivelyAddLinesIfHasAnyArray(astrReport," ",obj);
+		}
 		
 		return astrReport;
 	}
@@ -280,8 +277,21 @@ public class ReportI {
 		return String.join("\n", prepareReportLines(strMsg, aobjCustom));
 	}
 	
-	private String formatObject(Object obj){
-		return obj==null ? null : "<"+obj.getClass()+">'"+obj.toString()+"'";
+	private String formatObject(Object obj,boolean bShowType){
+		if(obj==null)return ""+null;
+			
+		String strType="";
+		if(bShowType)strType="<"+obj.getClass().getSimpleName()+">";
+		
+		String strValue=obj.toString();
+		if(obj.getClass()==String.class)strValue="'"+strValue+"'";
+		
+		return strType+strValue;
+	}
+	
+	private String prepareKey(Object objKey){
+		//key can be an index or anyhthing else that must be finally shown in a simple way...
+		return StringI.i().truncAndGrantOneLine(objKey.toString(), 20, "...");
 	}
 	
 	private void recursivelyAddLinesIfHasAnyArray(ArrayList<String> astrReport, String strPrepend, Object... aobj) {
@@ -293,20 +303,20 @@ public class ReportI {
 			
 			// obj
 			if(!JavaLangI.i().isSomeArrayType(obj)){
-				astrReport.add(strPrepend+formatObject(obj));
+				astrReport.add(strPrepend+formatObject(obj,bShowType));
 			}else{ //array
 				astrReport.add(strPrepend+"Array of: "+obj.getClass().getTypeName());
 				Object[][] akvobj = JavaLangI.i().convertToKeyValueArray(obj);
 				for(int j=0;j<akvobj.length;j++){
-					//key can be an index or anyhthing else shown in a simple way
-					String strKey = akvobj[j][0].toString();
-					
+					String strKey = prepareKey(akvobj[j][0]);
 					Object objValue = akvobj[j][1];
+					
+					String strPrependWithKey=strPrepend+"["+strKey+"] ";
 					if(!JavaLangI.i().isSomeArrayType(objValue)){
-						astrReport.add(strPrepend+"["+strKey+"]="+formatObject(objValue));
+						astrReport.add(strPrependWithKey+formatObject(objValue,bShowType));
 					}else{
-						astrReport.add(strPrepend+"["+strKey+"]="+"Array of: "+obj.getClass().getTypeName());
-						recursivelyAddLinesIfHasAnyArray(astrReport, strPrepend, objValue);
+						astrReport.add(strPrependWithKey+"Array of: "+obj.getClass().getTypeName());
+						recursivelyAddLinesIfHasAnyArray(astrReport, strPrepend, bShowType, objValue);
 					}
 				}
 			}
@@ -424,6 +434,14 @@ public class ReportI {
 //		
 //		return strOut;
 		
+	}
+
+	public boolean isShowType() {
+		return bShowType;
+	}
+
+	public void setShowType(boolean bShowType) {
+		this.bShowType = bShowType;
 	}
 	
 }

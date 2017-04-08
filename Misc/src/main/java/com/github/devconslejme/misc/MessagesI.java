@@ -27,6 +27,7 @@
 
 package com.github.devconslejme.misc;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -42,46 +43,110 @@ import com.github.devconslejme.misc.ReportI.IReport;
 public class MessagesI {
 	public static MessagesI i(){return GlobalInstanceManagerI.i().get(MessagesI.class);}
 	
-	private HashMap<String,MsgData> hmMsgs = new HashMap<String,MsgData>();
+	private HashMap<String,ReviewableMsg> hmMsgs = new HashMap<String,ReviewableMsg>();
 	private StringBuilder	sbStack;
+	private int	iSummaryReportLineLength = 100;
 	
 	public void warnMsg(Object objSource, String strMsg, Object... aobj){
-		output(true,"WARN",objSource,strMsg,aobj);
+		output(true,System.err,"WARN",objSource,strMsg,aobj);
 //		output(true,"WARN",objSource,Object... aobj); 
 	}
 
 	public void debugInfo(Object objSource, String strMsg, Object... aobj) {
 //		output(false,ReportI.i().joinMessageWithObjects("DevInfo["+objSource.getClass().getSimpleName()+"]: "+strMsg, aobj));
-		output(false,"DebugInfo",objSource,strMsg,aobj,Thread.currentThread().getStackTrace());
+		output(false,System.out,"DebugInfo",objSource,strMsg,aobj,Thread.currentThread().getStackTrace());
 	}
 	
-	private void output(boolean bStderr,String strMsgType, Object objSource, String strMsg, Object... aobj){
+//	public void output(PrintStream ps, Object objSource, String strMsg){
+//		output(ps==System.err,"",objSource,strMsg);
+//	}
+//	
+	/**
+	 * 
+	 * @param bReviewable will create an object for easy reviewing avoiding repetitions
+	 * @param ps can be null
+	 * @param strMsgType
+	 * @param objSource
+	 * @param strMsg
+	 * @param aobj
+	 */
+	public void output(boolean bReviewable, PrintStream ps,String strMsgType, Object objSource, String strMsg, Object... aobj){
 		//TODO log4j?
 		String strOutput = ReportI.i().prepareReport(
 				strMsgType+"["+objSource.getClass().getSimpleName()+"]: "+strMsg, 
 				aobj);
 
-		(bStderr ? (System.err) : (System.out)).println(strOutput);
+//		(bStderr ? (System.err) : (System.out)).println(strOutput);
+		if(ps!=null)ps.println(strOutput);
 //			strMsgType+"["+objSource.getClass().getSimpleName()+"]: "+str		); 
 		
-		hmMsgs.put(getStackAsKey(), new MsgData(strOutput));
+//		if(bStderr){
+//		if(ps==System.err){
+		if(bReviewable){
+			ReviewableMsg mdNew = new ReviewableMsg(getStackAsKey(),strOutput);
+			
+			ReviewableMsg mdExisting = hmMsgs.get(mdNew.strKey);
+			if(mdExisting!=null){
+				mdExisting.updateMsg(mdNew);
+			}else{
+				hmMsgs.put(mdNew.strKey, mdNew);
+			}
+		}
 	}
 	
-	private static class MsgData implements IReport{
-		private static String strUIdLast = StringI.i().getNextUniqueId("0");
-		long lNano = System.nanoTime();
-		String str;
-		private String	strUId;
+	private static class ReviewableMsg implements IReport{
+		private static String strUIdLast = "0";
 		
-		public MsgData(String strOutput) {
+		/** this key is to avoid repeated messages */
+		private  String	strKey;
+		
+		/** messages are important at real time (not app time) because user may compare with its table clock */
+		private long lRealTimeMilis = System.currentTimeMillis();
+		
+		private  int	iHitCount=1;
+		private  int	iMsgChangedCount=0;
+		private String strFullMessage;
+		private String	strUId;
+
+		public ReviewableMsg(String strKey,String strFullMessage) {
 			this.strUId=strUIdLast=StringI.i().getNextUniqueId(strUIdLast);
-			this.str=strOutput;
+			this.strKey=strKey;
+			this.strFullMessage=strFullMessage;
 		}
 		
+		public void updateMsg(ReviewableMsg other) {
+			if(!this.strFullMessage.equals(strFullMessage))iMsgChangedCount++;
+			
+			this.lRealTimeMilis=other.lRealTimeMilis;
+			this.strFullMessage=other.strFullMessage;
+			
+			this.iHitCount++;
+		}
+
 		@Override
 		public String getReport(boolean bFull) {
+			StringBuilder sb = new StringBuilder();
 			
-			return null;
+			sb.append("UId="+strUId);
+			sb.append(bFull?"\n":";");
+			
+			sb.append("time="+TimeConvertI.i().getRealTimeFormatted(lRealTimeMilis,null));
+			sb.append(bFull?"\n":";");
+			
+			sb.append("hc="+iHitCount);
+			sb.append(bFull?"\n":";");
+			
+			sb.append("mc="+iMsgChangedCount);
+			sb.append(bFull?"\n":";");
+			
+			sb.append("msg="+strFullMessage+"");
+			sb.append(bFull?"\n":";");
+			
+			if(bFull){
+				return sb.toString();
+			}else{
+				return StringI.i().truncAndGrantOneLine(sb.toString(),MessagesI.i().getSummaryReportLineLength(),"...");
+			}
 		}
 		
 	}
@@ -101,11 +166,19 @@ public class MessagesI {
 	 */
 	public ArrayList<String> getMessagesReport(String strUId){
 		ArrayList<String> astr = new ArrayList<String>();
-		for(MsgData md:hmMsgs.values()){
+		for(ReviewableMsg md:hmMsgs.values()){
 			if(strUId==null || strUId.equalsIgnoreCase(md.strUId)){
 				astr.add(md.getReport(strUId!=null));
 			}
 		}
 		return astr;
+	}
+
+	public int getSummaryReportLineLength() {
+		return iSummaryReportLineLength;
+	}
+
+	public void setSummaryReportLineLength(int iSummaryReportLineLength) {
+		this.iSummaryReportLineLength = iSummaryReportLineLength;
 	}
 }

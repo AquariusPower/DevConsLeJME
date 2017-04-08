@@ -43,8 +43,9 @@ public class PkgCfgI {
 	public void configure(Application app, Node nodeParent){
 		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app);
 		
+		// lermur inits
 		if(GuiGlobals.getInstance()==null)GuiGlobals.initialize(app); //GuiGlobals.initialize(app);
 		BaseStyles.loadGlassStyle();
-		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
+		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS); //this can be set again later
 	}
 }

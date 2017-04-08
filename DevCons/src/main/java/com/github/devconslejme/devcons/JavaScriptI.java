@@ -175,6 +175,7 @@ public class JavaScriptI implements IGlobalAddListener {
 				return true;
 			case showIni:
 				LoggingI.i().logMarker("Showing User Init");
+				LoggingI.i().logEntry(flUserInit.getAbsolutePath());
 				for(String str:JavaScriptI.i().getUserInit()){
 					LoggingI.i().logEntry(str);
 				}
@@ -208,7 +209,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		@Override
 		public void write(String s, int off, int len) {
 			super.write(s, off, len);
-			if(!s.equals("\n"))LoggingI.i().logEntry("SysO: "+s,false,true);
+			if(!s.equals("\n"))LoggingI.i().logEntry("SysO: "+s,false,null);
 		}
 	}
 	WriterCapture wrc = new WriterCapture();
@@ -224,10 +225,16 @@ public class JavaScriptI implements IGlobalAddListener {
 //		}
 		
 //		setJSBinding(this);
+		/**
+		 * add all existing
+		 */
 		for(Object obj:GlobalInstanceManagerI.i().getListCopy()){
 			if(bndJSE.get(genKeyFor(obj))==null)setJSBinding(obj);
 		}
 		
+		/**
+		 * listen for new ones
+		 */
 		GlobalInstanceManagerI.i().addGlobalAddListener(this);
 	}
 	
@@ -242,11 +249,13 @@ public class JavaScriptI implements IGlobalAddListener {
 	 * @return previous value for id
 	 */
 	public void setJSBinding(String strBindId, Object objBindValue){
-		if(bndJSE.put(strBindId,objBindValue) != null){
+		if(bndJSE.get(strBindId)!=null){
 			throw new NullPointerException("already set: "+strBindId);
 		}
 		
-		MessagesI.i().debugInfo(this,"created JS bind",strBindId,objBindValue);
+		bndJSE.put(strBindId,objBindValue);
+		
+		MessagesI.i().debugInfo(this,"created JS bind: "+strBindId,objBindValue);
 		
 //		astrJSClassBindList.add(strBindId);
 	}
@@ -543,6 +552,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	}
 
 	public void init() {
+		// restore cmd history
 		flCmdHistory = new File(DevConsPluginStateI.i().getStorageFolder(),"CommandsHistory.log");
 		astrCmdHistory.add(""); //just to avoid empty list when adding new cmd to it
 		if(flCmdHistory.exists()){
@@ -552,6 +562,7 @@ public class JavaScriptI implements IGlobalAddListener {
 			iNavigateCmdHistoryIndex=astrCmdHistory.size()-1;
 		}
 		
+		// load user init cmds
 		flUserInit = new File(DevConsPluginStateI.i().getStorageFolder(),"UserInit.cfg");
 		if(flUserInit.exists()){
 			for(String str:getUserInit()){
@@ -660,7 +671,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	}
 
 	@Override
-	public void globalAdded(Object objInst) {
+	public void attendToGlobalAdded(Object objInst) {
 		setJSBinding(objInst);
 	}
 }

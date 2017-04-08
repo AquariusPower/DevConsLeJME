@@ -40,7 +40,7 @@ public class PkgCfgI {
 	public void configure(Application app){
 		com.github.devconslejme.misc.PkgCfgI.i().configure();
 		
-		GlobalInstanceManagerI.i().put(Application.class, app);
+		GlobalInstanceManagerI.i().put(Application.class, app);  //required by queuer below
 		QueueStateI.i().configure();
 	}
 }

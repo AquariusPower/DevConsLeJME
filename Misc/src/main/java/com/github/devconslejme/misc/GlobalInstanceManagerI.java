@@ -44,7 +44,7 @@ public class GlobalInstanceManagerI {
   public static GlobalInstanceManagerI i (){return instance;}
   
   public static interface IGlobalAddListener{
-  	void globalAdded(Object objInst);
+  	void attendToGlobalAdded(Object objInst);
   }
   private ArrayList<IGlobalAddListener> aigalList = new ArrayList<IGlobalAddListener>();
   public void addGlobalAddListener(IGlobalAddListener igal){
@@ -57,11 +57,13 @@ public class GlobalInstanceManagerI {
   
   protected HashMap<Class,Object> hmInst = new HashMap<Class,Object>();
   
-  public <T> T get (Class<T> cl){
+  @SuppressWarnings("unchecked")
+	public <T> T get (Class<T> cl){
     Object obj = hmInst.get (cl);
     if (obj==null){
       try {
-				hmInst.put(cl,obj=cl.newInstance ());
+      	put(cl, ((T)(obj=cl.newInstance())) );
+//				hmInst.put(cl,obj=cl.newInstance ());
 			} catch (InstantiationException | IllegalAccessException e) {
 				NullPointerException npe = new NullPointerException("unable to create new instance");
 				npe.initCause(e);
@@ -76,8 +78,13 @@ public class GlobalInstanceManagerI {
     if (objAlreadySet!=null){
       throw new NullPointerException("already set: "+cl+", "+objAlreadySet+", "+obj);
     }
+    
     hmInst.put(cl,obj);
-		MessagesI.i().debugInfo(this,"created global instance",cl,obj);
+    for(IGlobalAddListener igal:aigalList){
+    	igal.attendToGlobalAdded(obj);
+    }
+    
+		MessagesI.i().debugInfo(this,"created global instance: "+cl.getName(),obj);
   }
   
   public ArrayList<Object> getListCopy(){

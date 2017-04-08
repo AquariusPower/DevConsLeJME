@@ -27,6 +27,7 @@
 
 package com.github.devconslejme.misc;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -40,6 +41,9 @@ import com.jme3.system.Timer;
  */
 public class TimeConvertI {
 	public static TimeConvertI i(){return GlobalInstanceManagerI.i().get(TimeConvertI.class);}
+	
+	SimpleDateFormat dateFormat = new SimpleDateFormat();
+	Date dateRealTime = new Date();
 	
 	private long lOneSecondInNanos = 1000000000L;
 	private long lOneSecondInMilis = 1000L;
@@ -104,6 +108,24 @@ public class TimeConvertI {
 	public String formatElapsed(Timer timer) {
 		long lElapsedMilis=TimeConvertI.i().getMilisFrom(timer);
 		return sdf.format(new Date(lElapsedMilis - TimeZone.getDefault().getRawOffset()));
+	}
+	
+	public String getRealTimeFormatted() {
+		return getRealTimeFormatted(null,null);
+	}
+	/**
+	 * 
+	 * @param lMilis current time if null
+	 * @param strDateFormatPattern if null will be default full time pattern
+	 * @return
+	 */
+	public String getRealTimeFormatted(Long lMilis,String strDateFormatPattern) {
+		if(lMilis==null)lMilis=System.currentTimeMillis();
+		if(strDateFormatPattern==null)strDateFormatPattern="yyyy/MM/dd+HH:mm:ss.SSS";
+		
+		dateFormat.applyPattern(strDateFormatPattern);
+		dateRealTime.setTime(lMilis);
+		return dateFormat.format(dateRealTime);
 	}
 
 	//public double convertDelayNanoToSeconds(long lDelayNano){

@@ -58,6 +58,8 @@ public class JavaLangI {
 	}
 	
 	public EArrayType getArrayTypeFor(Object objValue){
+		if(objValue==null)return null;
+		
 		if(objValue instanceof Map) { //HashMap TreeMap etc
 			return EArrayType.Map;
 		}else{
@@ -68,6 +70,7 @@ public class JavaLangI {
 				return EArrayType.Iterable;
 			}
 		}
+		
 		return null;
 	}
 	
