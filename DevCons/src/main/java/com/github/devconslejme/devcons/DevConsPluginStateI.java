@@ -43,12 +43,13 @@ import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
-import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
+import com.github.devconslejme.misc.lemur.PopupHelpListener;
 import com.github.devconslejme.misc.lemur.SimpleDragParentestListenerI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
@@ -65,7 +66,6 @@ import com.jme3.scene.Spatial;
 import com.jme3.system.JmeSystem;
 import com.jme3.system.JmeSystem.StorageFolderType;
 import com.simsilica.lemur.Button;
-import com.simsilica.lemur.Command;
 import com.simsilica.lemur.Container;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.HAlignment;
@@ -78,6 +78,9 @@ import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.core.GuiComponent;
 import com.simsilica.lemur.core.VersionedList;
 import com.simsilica.lemur.core.VersionedReference;
+import com.simsilica.lemur.event.CursorButtonEvent;
+import com.simsilica.lemur.event.CursorEventControl;
+import com.simsilica.lemur.event.DefaultCursorListener;
 import com.simsilica.lemur.event.KeyAction;
 import com.simsilica.lemur.event.KeyActionListener;
 import com.simsilica.lemur.style.Attributes;
@@ -105,7 +108,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private Container	cntrStatus;
 	private Label	lblStats;
 	private Button	btnClipboardShow;
-	private ButtonClick	btnclk;
+	private ButtonClickListener	btnclk;
 	private TextField	tfInput;
 	private int	iKeyCodeToggleConsole = KeyInput.KEY_F10;
 	private String	strInputMappingToggleDeveloperConsole = "ToggleDeveloperConsole";
@@ -200,6 +203,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private Button	btnShowVarMon;
 	private boolean	bUpdateNoWrap;
 	private Button	btnRestoreSize;
+	private VersionedReference<Set<Integer>>	vrSelectionChangedToShowVarHelp;
 	
 	public static enum EStatPriority{
 		Top,
@@ -316,7 +320,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	}
 	
 	public void applyDefaultPosSize() {
-		panelMain.setLocalTranslation(0, getWindowSize().y, 0);
+		panelMain.setLocalTranslation(0, getWindowSize().y-30, 0);
 		rzpVarBar.setPreferredSize(new Vector3f(100,100,0));
 		setConsoleHeightPerc(fConsoleHeightPercDefault);
 //		updateConsoleHeight(fConsoleHeightPercDefault);
@@ -368,7 +372,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	}
 	
 	private void updateStatusValues(){
-		putStatus(EStatPriority.Normal, "Sld", "DevCons Slider Value",
+		putStatus(EStatPriority.Normal, "Slider", "DevCons Logging area Slider Value",
 			String.format("%.0f/%.0f(%.0f)", 
 				lstbxLoggingSection.getSlider().getModel().getValue(),
 				lstbxLoggingSection.getSlider().getModel().getMaximum(),
@@ -376,15 +380,24 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 			)
 		);
 		
-		putStatus(EStatPriority.Normal, "VsR", "DevCons Logging area Visible Rows",
+		putStatus(EStatPriority.Normal, "VisibleRows", "DevCons Logging area Visible Rows",
 			String.format("%d", lstbxLoggingSection.getVisibleItems()) );
 		
 		Vector2f v2fCursor = app.getInputManager().getCursorPosition();
-		putStatus(EStatPriority.Bottom, "Cur", "Cursor Position",
+		putStatus(EStatPriority.Bottom, "CursorPos", "Mouse Cursor Position on the application",
 			String.format("%.0f,%.0f", v2fCursor.x, v2fCursor.y) );
 		
-		putStatus(EStatPriority.Bottom, "Tmr", "Application Time",
+		putStatus(EStatPriority.Bottom, "AppTime", "Application Elapsed Time from its start time",
 				String.format("%d", app.getTimer().getTime()) );
+		
+		if(vrSelectionChangedToShowVarHelp!=null){
+			if(vrSelectionChangedToShowVarHelp.update()){
+				Stat st = hmStatusIdValue.get(vlstrVarMonitorEntries.get(lstbxVarMonitorBar.getSelectionModel().getSelection()));
+				if(st!=null){
+					LoggingI.i().logEntry("VarHelp:"+st.strHelp);
+				}
+			}
+		}
 	}
 	
 	private void updateStatus() {
@@ -400,6 +413,10 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		}
 //		lblStats.setText(str);
 		lstbxVarMonitorBar.setVisibleItems(lstbxLoggingSection.getVisibleItems());
+		
+		vrSelectionChangedToShowVarHelp = lstbxVarMonitorBar.getSelectionModel().createReference();
+
+//		lstbxVarMonitorBar.getGridPanel().getCell(0, 0);
 		
 		bUpdateNoWrap=true;
 //		MiscJmeI.i().recursivelyApplyTextNoWrap(lstbxVarMonitorBar);
@@ -523,13 +540,6 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		LoggingI.i().logExceptionEntry(new UnsupportedOperationException("method not implemented yet"), null);
 	}
 
-	public static enum EUserDataMiscJme{
-		strPopupHelp,
-		;
-		
-		public String s(){return this.toString();}
-	}
-	
 	private void initStatusSection() {
 		cntrStatus = new Container(getStyle());
 		cntrMain.addChild(cntrStatus, BorderLayout.Position.North);
@@ -540,15 +550,15 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		int iButtonIndex=0;
 		
 		btnRestoreSize = new Button("DefaultPosSize",getStyle());
-		setPopupHelp(btnRestoreSize, "Restore DevCons defaults Size and Position");
+		PopupHelpListener.i().setPopupHelp(btnRestoreSize, "Restore DevCons defaults Size and Position");
 		apnl.add(btnRestoreSize);
 		
 		btnShowVarMon = new Button("VarMonBar:Toggle",getStyle());
-		setPopupHelp(btnShowVarMon, "Show Variables Monitor Bar");
+		PopupHelpListener.i().setPopupHelp(btnShowVarMon, "Show Variables Monitor Bar");
 		apnl.add(btnShowVarMon);
 		
 		btnClipboardShow = new Button("Clipboard:Show",getStyle());
-		setPopupHelp(btnClipboardShow, "Show Clipboard Contents");
+		PopupHelpListener.i().setPopupHelp(btnClipboardShow, "Show Clipboard Contents");
 		apnl.add(btnClipboardShow);
 		
 		lblStats = new Label("DevCons",getStyle());
@@ -558,12 +568,13 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		apnl.add(lblStats);
 //		cntrStatus.addChild(lblStats,0,0);
 		
-		btnclk = new ButtonClick();
+		btnclk = new ButtonClickListener();
 		for(Panel pnl:apnl){
 			if (pnl instanceof Button) {
 				Button btn = (Button) pnl;
 				btn.setTextHAlignment(HAlignment.Center);
-				btn.addClickCommands(btnclk);
+				CursorEventControl.addListenersToSpatial(btn, btnclk);
+//				btn.addClickCommands(btnclk);
 			}
 			SimpleDragParentestListenerI.i().applyAt(pnl);
 //			else
@@ -587,28 +598,63 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 	}
 	
-	public String getPopupHelp(Spatial spt){
-		return UserDataI.i().getUserDataPSH(spt, EUserDataMiscJme.strPopupHelp.s());
-	}
-	public void setPopupHelp(Spatial spt, String strHelp){
-		UserDataI.i().setUserDataPSH(spt, EUserDataMiscJme.strPopupHelp.s(), strHelp);
-//		spt.setUserData(EUserDataMiscJme.strPopupHelp.s(), strHelp);
-	}
-	
-	private class ButtonClick implements Command<Button>{
+	private class ButtonClickListener extends DefaultCursorListener{
 		@Override
-		public void execute(Button source) {
-			if(source.equals(btnClipboardShow)){
+		protected void click(CursorButtonEvent event, Spatial target,				Spatial capture) {
+			super.click(event, target, capture);
+			
+			if(capture.equals(btnClipboardShow)){
 				ClipboardI.i().showClipboard();
 			}else
-			if(source.equals(btnShowVarMon)){
+			if(capture.equals(btnShowVarMon)){
 				toggleVarMonitorBar(null);
 			}else
-			if(source.equals(btnRestoreSize)){
+			if(capture.equals(btnRestoreSize)){
 				applyDefaultPosSize();
+			}else{
+				MessagesI.i().warnMsg(this, "missing event mapping for "+capture, target);
 			}
 		}
+		
+//		@Override
+//		public void cursorButtonEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
+////			if(event.isConsumed())return;
+//			
+//			if(event.getButtonIndex()==0){
+//				if(!event.isPressed()){
+//					if(capture.equals(btnClipboardShow)){
+//						ClipboardI.i().showClipboard();
+//					}else
+//					if(capture.equals(btnShowVarMon)){
+//						toggleVarMonitorBar(null);
+//					}else
+//					if(capture.equals(btnRestoreSize)){
+//						applyDefaultPosSize();
+//					}else{
+//						MessagesI.i().warnMsg(this, "missing event mapping for "+capture, target);
+//					}
+//				}
+//				
+//				event.setConsumed();
+//			}
+//		}
+
 	}
+	
+//	private class ButtonClick implements Command<Button>{
+//		@Override
+//		public void execute(Button source) {
+//			if(source.equals(btnClipboardShow)){
+//				ClipboardI.i().showClipboard();
+//			}else
+//			if(source.equals(btnShowVarMon)){
+//				toggleVarMonitorBar(null);
+//			}else
+//			if(source.equals(btnRestoreSize)){
+//				applyDefaultPosSize();
+//			}
+//		}
+//	}
 	
 	public static enum EAttribute{
 		/** elemet text color */

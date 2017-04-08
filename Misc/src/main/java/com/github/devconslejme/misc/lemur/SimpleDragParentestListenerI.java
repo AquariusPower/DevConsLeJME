@@ -58,6 +58,8 @@ public class SimpleDragParentestListenerI implements CursorListener{
 	
 	@Override
 	public void cursorButtonEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
+//		if(event.isConsumed())return;
+		
 		if(event.getButtonIndex()==0){
 			bDragging=event.isPressed();
 			if(bDragging){

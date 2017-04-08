@@ -47,5 +47,8 @@ public class PkgCfgI {
 		if(GuiGlobals.getInstance()==null)GuiGlobals.initialize(app); //GuiGlobals.initialize(app);
 		BaseStyles.loadGlassStyle();
 		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS); //this can be set again later
-	}
+		
+		// after lemur inits
+		PopupHelpListener.i().configure(nodeParent);
+}
 }
