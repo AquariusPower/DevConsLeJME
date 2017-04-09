@@ -102,8 +102,10 @@ public class ClickToPositionCaratListenerI implements CursorListener{
 		int iMonoFontWidth
 	){
 		// relative to the BitmapText
-		float fRelativeCursorPosX = v2fCursorPos.x - v3fBitmapTextWorldTranslation.x;
-		float fRelativeCaratPosX = v3fGeometryCursorWorldTranslation.x - v3fBitmapTextWorldTranslation.x;
+		float fRelativeCursorPosX = v2fCursorPos.x 
+			-v3fBitmapTextWorldTranslation.x;
+		float fRelativeCaratPosX = v3fGeometryCursorWorldTranslation.x 
+			-v3fBitmapTextWorldTranslation.x;
 		
 		// relative to the first character visibly shown on the TextField, just trunc (the whole letter will provide carate in front of it)
 		int iRelativeVisibleRequestedNewCaratIndex = (int)(fRelativeCursorPosX/iMonoFontWidth);

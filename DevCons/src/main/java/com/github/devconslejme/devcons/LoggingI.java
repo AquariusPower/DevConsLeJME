@@ -30,8 +30,12 @@ package com.github.devconslejme.devcons;
 import java.io.File;
 import java.io.PrintStream;
 
+import com.github.devconslejme.devcons.DevConsPluginStateI.EStatPriority;
+import com.github.devconslejme.devcons.DevConsPluginStateI.Stat;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -52,6 +56,7 @@ public class LoggingI {
 	private File	flLog;
 //	DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss"); //yyyy/MM/dd
 //	Date dateRealTimeForMarker = new Date();
+	private Stat	stWrapAt;
 	
 	public void configure() {
 		flLog = new File(DevConsPluginStateI.i().getStorageFolder(), LoggingI.class.getSimpleName()+".log");
@@ -63,6 +68,16 @@ public class LoggingI {
 		 * Actually is useful to determine the listbox entry height too.
 		 */
 		logEntry("Initializing console.");
+		
+		stWrapAt = DevConsPluginStateI.i().createStatus(EStatPriority.Normal, "WrapAt", LoggingI.class.getSimpleName()+": Wrap at column");
+		
+		QueueI.i().enqueue(new CallableX(1f,true) {
+			@Override
+			public Boolean call() {
+				stWrapAt.set(""+getWrapAtColumn());
+				return true;
+			}
+		});
 	}
 	
 	public void logExceptionEntry(Exception ex, String strJS) {

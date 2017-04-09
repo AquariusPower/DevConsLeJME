@@ -109,7 +109,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private BitmapFont	font;
 	private ColorRGBA	colorConsoleStyleBackground;
 	private Container	cntrStatus;
-	private Label	lblStats;
+	private Label	lblTitle;
 	private Button	btnClipboardShow;
 	private ButtonClickListener	btnclk;
 	private TextField	tfInput;
@@ -207,28 +207,46 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private boolean	bUpdateNoWrap;
 	private Button	btnRestoreSize;
 	private VersionedReference<Set<Integer>>	vrSelectionChangedToShowVarHelp;
+	private Stat	stAppTime;
+	private Stat	stCursorPos;
+	private Stat	stVisibleRows;
+	private Stat	stSlider;
+	private String	strBaseTitle = "DevCons";
 	
-	public static enum EStatPriority{
+	public static enum EStatPriority{ //this order matters!
+		Title, //will show at title too!
 		Top,
 		High,
 		Normal,
 		Low,
 		Bottom,
+		Hidden,
 		;
 		public String s(){return toString();}
 	}
 	
 	public static class Stat{
-		String strKey;
-		String strValue;
-		EStatPriority esp;
-		String strHelp;
+		private EStatPriority esp;
+		private String strKey;
+		private String strValue;
+		private String strHelp;
+		private boolean bShow=true;
 		
+		public void set(String strValue) {
+			this.strValue = strValue;
+		}
+		public void set(EStatPriority esp) {
+			this.esp = esp;
+		}
 		public void set(EStatPriority esp, String strKey, String strHelp, String strValue) {
 			this.strKey = strKey;
-			this.strValue = strValue;
 			this.strHelp=strHelp;
-			this.esp = esp;
+			set(esp);
+			set(strValue);
+		}
+		
+		public boolean toggleShow(){
+			return bShow=!bShow;
 		}
 		
 		@Override
@@ -254,13 +272,14 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		LoggingI.i().configure();
 	}
 	
-	public void putStatus(EStatPriority esp, String strKey, String strHelp, String strValue){
+	public Stat createStatus(EStatPriority esp, String strKey, String strHelp){
 		Stat st=hmStatusIdValue.get(strKey);
 		if(st==null){
 			st=new Stat();
 			hmStatusIdValue.put(strKey, st);
 		}
-		st.set(esp,strKey,strHelp,strValue);
+		st.set(esp,strKey,strHelp,"");
+		return st;
 	}
 	
 	@Override
@@ -377,7 +396,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	}
 	
 	private void updateStatusValues(){
-		putStatus(EStatPriority.Normal, "Slider", "DevCons Logging area Slider Value",
+		stSlider.set(
 			String.format("%.0f/%.0f(%.0f)", 
 				lstbxLoggingSection.getSlider().getModel().getValue(),
 				lstbxLoggingSection.getSlider().getModel().getMaximum(),
@@ -385,16 +404,17 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 			)
 		);
 		
-		putStatus(EStatPriority.Normal, "VisibleRows", "DevCons Logging area Visible Rows",
+		stVisibleRows.set(
 			String.format("%d", lstbxLoggingSection.getVisibleItems()) );
 		
 		Vector2f v2fCursor = app.getInputManager().getCursorPosition();
-		putStatus(EStatPriority.Bottom, "CursorPos", "Mouse Cursor Position on the application",
+		stCursorPos.set(
 			String.format("%.0f,%.0f", v2fCursor.x, v2fCursor.y) );
 		
-		putStatus(EStatPriority.Bottom, "AppTime", "Application Elapsed Time from its start time",
-				String.format("%d", app.getTimer().getTime()) );
+		stAppTime.set(
+				String.format("%.3f", app.getTimer().getTimeInSeconds()) );
 		
+		// show specific status help
 		if(vrSelectionChangedToShowVarHelp!=null){
 			if(vrSelectionChangedToShowVarHelp.update()){
 				Stat st = hmStatusIdValue.get(vlstrVarMonitorEntries.get(lstbxVarMonitorBar.getSelectionModel().getSelection()));
@@ -405,17 +425,44 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		}
 	}
 	
-	private void updateStatus() {
+	private void initStatusValues(){
+		stSlider = createStatus(EStatPriority.Bottom, "Slider", "DevCons Logging area Slider Value");
+		stVisibleRows = createStatus(EStatPriority.Bottom, "VisibleRows", "DevCons Logging area Visible Rows");
+		stCursorPos = createStatus(EStatPriority.Normal, "CursorPos", "Mouse Cursor Position on the application");
+		stAppTime = createStatus(EStatPriority.Normal, "AppTime", "Application Elapsed Time from its start time");
+		
+		QueueI.i().enqueue(new CallableX("DevConsUpdateStatus",0.5f,true) {
+			@Override
+			public Boolean call() {
+				updateStatusValues();
+				updateStatusValuesList();
+				return true;
+			}
+		}.setUserCanPause(true));
+		
+	}
+	
+	private void updateStatusValuesList() {
 		ArrayList<Stat> astList = new ArrayList<Stat>(hmStatusIdValue.values());
 		Collections.sort(astList,cmprStat);
 //		String str="";
 		vlstrVarMonitorEntries.clear();
+		String strAddToTitle="";
 		for(Stat st:astList){
+			switch(st.esp){
+				case Hidden: continue;
+				case Title:
+					strAddToTitle+=st.strKey+"="+st.strValue+";";
+					break;
+			}
 //			str+=st;
 			vlstrVarMonitorEntries.add(st.strKey);
 			vlstrVarMonitorEntries.add("="+st.strValue);
 //			vlstrVarMonitorEntries.put();
 		}
+		
+		if(!strAddToTitle.isEmpty())lblTitle.setText(strBaseTitle+":"+strAddToTitle);
+		
 //		lblStats.setText(str);
 		lstbxVarMonitorBar.setVisibleItems(lstbxLoggingSection.getVisibleItems());
 		
@@ -566,11 +613,11 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		PopupHelpListenerI.i().setPopupHelp(btnClipboardShow, "Show Clipboard Contents");
 		apnl.add(btnClipboardShow);
 		
-		lblStats = new Label("DevCons",getStyle());
+		lblTitle = new Label(strBaseTitle ,getStyle());
 //		SimpleDragParentestListenerI.i().applyAt(lblStats);
-		lblStats.setColor(new ColorRGBA(1,1,0.5f,1));
-		lblStats.setTextHAlignment(HAlignment.Right);
-		apnl.add(lblStats);
+		lblTitle.setColor(new ColorRGBA(1,1,0.5f,1));
+		lblTitle.setTextHAlignment(HAlignment.Right);
+		apnl.add(lblTitle);
 //		cntrStatus.addChild(lblStats,0,0);
 		
 		btnclk = new ButtonClickListener();
@@ -592,14 +639,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 			cntrStatus.addChild(pnl,0,iButtonIndex++);
 		}
 		
-		QueueI.i().enqueue(new CallableX("DevConsUpdateStatus",0.5f,true) {
-			@Override
-			public Boolean call() {
-				updateStatusValues();
-				updateStatus();
-				return true;
-			}
-		}.setUserCanPause(true));
+		initStatusValues();
 		
 	}
 	
