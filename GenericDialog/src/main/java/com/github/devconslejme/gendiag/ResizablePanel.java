@@ -30,6 +30,8 @@ package com.github.devconslejme.gendiag;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.lwjgl.opengl.Display;
+
 import com.github.devconslejme.misc.DetailedException;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
@@ -74,7 +76,7 @@ public class ResizablePanel extends Panel {
 	private ResizerCursorListener dcl = new ResizerCursorListener();
 	private int	iMouseButtonIndexToDrag=0;
 	private EEdge eeInitialHook = null;
-	private static int iGrowParentestFixAttemptLimitGlobal=100;
+//	private static int iGrowParentestFixAttemptLimitGlobal=100;
 //	private Integer	iGrowParentestFixAttemptLimit=null;
 //	private boolean	bEnabledGrowParentestFixAttemptLimit=false;
 	private HashMap<EEdge,Edge> hmEdge = new HashMap<EEdge,Edge>();
@@ -93,6 +95,7 @@ public class ResizablePanel extends Panel {
 	private IBorderMargin irb = null;
 	private boolean	bSkipGrowFix;
 	private boolean	bUseSameBorderAtResizable = false;
+	private boolean	bUpdateLogicalStateSuccess;
 	
 	public static enum EEdge{
 		// !!!!!!!!!!!!!!THIS ORDER IS IMPORTANT!!!!!!!!!!!!!!
@@ -377,8 +380,13 @@ public class ResizablePanel extends Panel {
 	 */
 	private void growParentestFixAttempt(int i){
 		Panel pnlParentest = getParentest();
+		
 		Vector3f v3f = pnlParentest.getPreferredSize().add(new Vector3f(1, 1, 0));
-		warnMsg("increasing ("+i+") size of "+pnlParentest.getName()+" to "+v3f);
+		if(v3f.x > Display.getWidth())v3f.x=Display.getWidth();
+		if(v3f.y > Display.getWidth())v3f.y=Display.getWidth();
+		
+		warnMsg("("+i+") increasing size of "+pnlParentest.getName()+" to "+v3f);
+		
 		pnlParentest.setPreferredSize(v3f);
 	}
 	
@@ -388,14 +396,34 @@ public class ResizablePanel extends Panel {
 		while(true){
 			try{
 				super.updateLogicalState(tpf);
+				bUpdateLogicalStateSuccess=true;
 				break;
 			}catch(IllegalArgumentException ex){
+				bUpdateLogicalStateSuccess=false;
 				if(bSkipGrowFix)throw ex;
 				if(!ex.getMessage().startsWith("Size cannot be negative:")) throw ex;
 //				if(iGrowParentestFixAttemptLimit!=null && i>=iGrowParentestFixAttemptLimit){throw ex;} //prevents endless growth
-				if(i>=getGrowParentestFixAttemptLimitGlobal()){throw ex;} //prevents endless growth
+//				if(i>=getGrowParentestFixAttemptLimitGlobal()){
+				Panel pnlParentest = getParentest();
+				Vector3f v3fSize = pnlParentest.getSize();
+				if(v3fSize.x==Display.getWidth() && v3fSize.y==Display.getHeight()){
+					debugRecursiveChildPanelSizes("",getParentest());
+					warnMsg("maximum size reached during grow fix");
+					throw ex;
+				} //prevents endless growth
 				growParentestFixAttempt(i);
 				i++;
+			}
+		}
+	}
+	
+	private void debugRecursiveChildPanelSizes(String strIndent,Panel pnl){
+		strIndent+="|";
+		for(Spatial sptChild:pnl.getChildren()){
+			if (sptChild instanceof Panel) {
+				Panel pnlChild = (Panel) sptChild;
+				warnMsg(strIndent+pnlChild.getName()+",p"+pnlChild.getPreferredSize()+",s"+pnlChild.getSize());
+				debugRecursiveChildPanelSizes(strIndent,pnlChild);
 			}
 		}
 	}
@@ -427,6 +455,8 @@ public class ResizablePanel extends Panel {
 	}
 	public ResizablePanel( float fWidth, float fHeight, String strStyle ) {
     super(false, new ElementId(ELEMENT_ID), strStyle);
+    
+   	setName(this.getClass().getSimpleName());
     
     initEdges();
     
@@ -584,6 +614,18 @@ public class ResizablePanel extends Panel {
 		return v3fMinSize;
 	}
 
+	@Override
+	public void setSize(Vector3f size) {
+		super.setSize(size);
+		bUpdateLogicalStateSuccess=false;
+	}
+	
+	@Override
+	public void setPreferredSize(Vector3f size) {
+		super.setPreferredSize(size);
+		bUpdateLogicalStateSuccess=false;
+	}
+	
 	public int getMouseButtonIndex() {
 		return iMouseButtonIndexToDrag;
 	}
@@ -621,10 +663,13 @@ public class ResizablePanel extends Panel {
 	private void warnMsg(String str){ //TODO could be outside this class
 		System.err.println("WARN["+this.getClass().getSimpleName()+"]: "+str); //TODO log?
 	}
-	public static int getGrowParentestFixAttemptLimitGlobal() {
-		return iGrowParentestFixAttemptLimitGlobal;
-	}
-	public static void setGrowParentestFixAttemptLimitGlobal(int iGrowParentestFixAttemptLimitGlobal) {
-		ResizablePanel.iGrowParentestFixAttemptLimitGlobal = iGrowParentestFixAttemptLimitGlobal;
+//	public static int getGrowParentestFixAttemptLimitGlobal() {
+//		return iGrowParentestFixAttemptLimitGlobal;
+//	}
+//	public static void setGrowParentestFixAttemptLimitGlobal(int iGrowParentestFixAttemptLimitGlobal) {
+//		ResizablePanel.iGrowParentestFixAttemptLimitGlobal = iGrowParentestFixAttemptLimitGlobal;
+//	}
+	public boolean isUpdateLogicalStateSucces() {
+		return bUpdateLogicalStateSuccess;
 	}
 }

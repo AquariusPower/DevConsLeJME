@@ -66,6 +66,8 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 	public HierarchyResizablePanel(String strStyle) {
 		super(strStyle);
 		
+   	setName(this.getClass().getSimpleName());
+		
 		initBlocker();
 		
 		app = GlobalInstanceManagerI.i().get(Application.class);
@@ -75,7 +77,6 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 //    CursorEventControl.addListenersToSpatial(this, lastFocusListener);
 	}
 	
-	@SuppressWarnings("unchecked")
 	private void initBlocker(){
 		btnBlocker = new Button("");//!BLOCKED!");
 		

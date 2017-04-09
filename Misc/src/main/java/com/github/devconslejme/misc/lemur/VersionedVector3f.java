@@ -25,67 +25,38 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.misc.jme;
+package com.github.devconslejme.misc.lemur;
 
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.JavaLangI;
-import com.github.devconslejme.misc.MainThreadI;
-import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.QueueI.CallableX;
-import com.jme3.scene.Spatial;
-
+import com.jme3.math.Vector3f;
+import com.simsilica.lemur.core.VersionedObject;
+import com.simsilica.lemur.core.VersionedReference;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class UserDataI {
-	public static UserDataI i(){return GlobalInstanceManagerI.i().get(UserDataI.class);}
-	
-	/**
-	 * all super classes of the object will be the keys
-	 * see {@link #setUserDataPSH(Spatial, String, Object)}
-	 */
-	public <T extends Spatial> boolean setUserDataPSH(T spt, Object obj) {
-		boolean b=false;
-		for(Class<?> cl:JavaLangI.i().getSuperClassesOf(obj,true)){
-			b=setUserDataPSH(spt, cl.getName(), obj);
-		}
-		return b;
+public class VersionedVector3f implements VersionedObject<Vector3f>{
+	private Vector3f	v3fPrevious;
+	private Vector3f	v3f;
+	private long	lVersion;
+
+	public VersionedVector3f(Vector3f v3f) {
+		this.v3f=v3f;
+		this.v3fPrevious=v3f.clone();
 	}
-	/**
-	 * 
-	 * @param spt
-	 * @param strKey
-	 * @param obj each key will be one super class of it
-	 * @return if was set now or will be at the main thread 
-	 */
-	public <T extends Spatial> boolean setUserDataPSH(T spt, String strKey, Object obj) {
-		CallableX cx = new CallableX() {
-			@SuppressWarnings("unchecked")
-			@Override
-			public Boolean call() {
-				spt.setUserData(strKey, new PseudoSavableHolder(obj));
-				return true;
-			}
-		};
-		
-		if(MainThreadI.i().isCurrentMainThread()){
-			cx.call();
-			return true;
-		}else{
-			QueueI.i().enqueue(cx);
-		}
-		
-		return false;
+
+	@Override
+	public long getVersion() {
+		if(!v3f.equals(v3fPrevious))lVersion++;
+		return lVersion;
 	}
-	
-	public <R> R getUserDataPSH(Spatial spt, Class<R> cl){
-		return getUserDataPSH(spt, cl.getName());
+
+	@Override
+	public Vector3f getObject() {
+		return v3f;
 	}
-	public <R> R getUserDataPSH(Spatial spt, String strKey){
-		@SuppressWarnings("unchecked")
-		PseudoSavableHolder<R> sh = (PseudoSavableHolder<R>)spt.getUserData(strKey);
-		if(sh==null)return null;
-		return sh.getRef();
+
+	@Override
+	public VersionedReference<Vector3f> createReference() {
+		return new VersionedReference<Vector3f>(this);
 	}
 }

@@ -54,6 +54,7 @@ import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.PopupHelpListenerI;
 import com.github.devconslejme.misc.lemur.PopupHelpListenerI.EPopup;
+import com.github.devconslejme.misc.lemur.VersionedVector3f;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
@@ -118,63 +119,6 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private File	flStorageFolder;
 	private HashMap<String,Stat> hmStatusIdValue = new HashMap<String,Stat>();
 	private ListBox<String> lstbxVarMonitorBar = new ListBox<String>();
-	
-	private static class VersionedStatus extends VersionedList<String>{
-		private HashMap<String,Integer> hmKV = new HashMap<String,Integer>();
-		public void put(String strKey, String strValue){
-			Integer i = hmKV.get(strKey);
-			strValue="="+strValue;
-			if(i==null){
-				add(strKey);
-				add(strValue);
-				hmKV.put(strKey, size()-2); //the index of the key
-			}else{
-				set(i+1,strValue);
-			}
-		}
-	}
-	private VersionedStatus vlstrVarMonitorEntries = new VersionedStatus();
-	
-//	private VersionedList<String>	vlstrVarMonitorEntries = new VersionedList<String>(){
-//		private HashMap<String,Integer> hmKV = new HashMap<String,Integer>();
-//		public void put(String strKey, String strValue){
-//			Integer i = hmKV.get(strKey);
-//			strValue="="+strValue;
-//			if(i==null){
-//				add(strKey);
-//				add(strValue);
-//				hmKV.put(strKey, size()-2); //the index of the key
-//			}else{
-//				set(i+1,strValue);
-//			}
-//		}
-//	};
-	
-	class CallableXScrollTo extends CallableX{
-		public CallableXScrollTo(){
-			super(0.25f,true);
-			setUserCanPause(true);
-		}
-		
-		@Override
-		public Boolean call() {
-			if(bKeepScrollAtBottom && vrListBoxChangedToAutoScrollToBottom.update()){
-				lstbxLoggingSection.getSlider().getModel().setValue(0);
-			}
-			
-			if(vrSliderChangedToSuspendAutoScrollBottom.update()){
-				bKeepScrollAtBottom=false;
-			}
-			
-			// if sliter hits the bottom will stick on it
-			if(Double.compare(lstbxLoggingSection.getSlider().getModel().getValue(), 0)==0){
-				bKeepScrollAtBottom=true;
-			}
-			
-			return true;
-		}
-
-	};
 	private CallableXScrollTo cxScrollTo;
 	
 	private Comparator<Stat>	cmprStat = new Comparator<Stat>() {
@@ -200,7 +144,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private boolean	bKeepScrollAtBottom;
 	private VersionedReference<List<String>>	vrListBoxChangedToAutoScrollToBottom;
 	private VersionedReference<Double>	vrSliderChangedToSuspendAutoScrollBottom;
-	private HierarchyResizablePanel	panelMain;
+	private HierarchyResizablePanel	hrpMain;
 	private Application	app;
 	private ResizablePanel	rzpVarBar;
 	private Button	btnShowVarMon;
@@ -212,6 +156,73 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private Stat	stVisibleRows;
 	private Stat	stSlider;
 	private String	strBaseTitle = "DevCons";
+	private Vector3f	v3fDefaultPos = new Vector3f(0, getWindowSize().y-20, 0);
+	private Vector3f	v3fBkpLastNonDefaultPos;
+	private Vector3f	v3fDefaultBarSize = new Vector3f(100,100,0);
+	private float	fDistToToggleRestorePosSize = 5f;
+	
+	private static class VersionedStatus extends VersionedList<String>{
+		private HashMap<String,Integer> hmKV = new HashMap<String,Integer>();
+		public void put(String strKey, String strValue){
+			Integer i = hmKV.get(strKey);
+			strValue="="+strValue;
+			if(i==null){
+				add(strKey);
+				add(strValue);
+				hmKV.put(strKey, size()-2); //the index of the key
+			}else{
+				set(i+1,strValue);
+			}
+		}
+	}
+	private VersionedStatus vlstrVarMonitorEntries = new VersionedStatus();
+//	private Vector3f	v3fBkpLastNonDefaultBarSize;
+	private Float	fBkpLastNonDefaultBarWidthX;
+	protected Vector3f	v3fDefaultSize;
+	private Vector3f	v3fBkpLastNonDefaultSize;
+	
+//	private VersionedList<String>	vlstrVarMonitorEntries = new VersionedList<String>(){
+//		private HashMap<String,Integer> hmKV = new HashMap<String,Integer>();
+//		public void put(String strKey, String strValue){
+//			Integer i = hmKV.get(strKey);
+//			strValue="="+strValue;
+//			if(i==null){
+//				add(strKey);
+//				add(strValue);
+//				hmKV.put(strKey, size()-2); //the index of the key
+//			}else{
+//				set(i+1,strValue);
+//			}
+//		}
+//	};
+	
+	class CallableXScrollTo extends CallableX{
+		public CallableXScrollTo(){
+			super();
+			setDelaySeconds(0.25f);
+			setLoop(true);
+			setUserCanPause(true);
+		}
+		
+		@Override
+		public Boolean call() {
+			if(bKeepScrollAtBottom && vrListBoxChangedToAutoScrollToBottom.update()){
+				lstbxLoggingSection.getSlider().getModel().setValue(0);
+			}
+			
+			if(vrSliderChangedToSuspendAutoScrollBottom.update()){
+				bKeepScrollAtBottom=false;
+			}
+			
+			// if sliter hits the bottom will stick on it
+			if(Double.compare(lstbxLoggingSection.getSlider().getModel().getValue(), 0)==0){
+				bKeepScrollAtBottom=true;
+			}
+			
+			return true;
+		}
+
+	};
 	
 	public static enum EStatPriority{ //this order matters!
 		Title, //will show at title too!
@@ -286,13 +297,13 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	public void initialize(AppStateManager stateManager, Application app) {
 		if(isInitialized()){return;}
 		
-		QueueI.i().enqueue(new CallableX("the console starts closed",0,false) {
+		QueueI.i().enqueue(new CallableX() {
 			@Override
 			public Boolean call() {
 				DevConsPluginStateI.this.setEnabled(false);
 				return true;
 			}
-		});
+		}.setName("the console starts closed"));
 		
 		// jme
 		cxScrollTo = new CallableXScrollTo();
@@ -330,11 +341,33 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 		initVarMonitorWestBar();
 		
-		applyDefaultPosSize();
+		toggleDefaultPosSize(true);
 		
 		ClickToPositionCaratListenerI.i().applyRecursivelyAtAllTextFieldsOf(cntrMain);
 
 //		GuiGlobals.getInstance().requestFocus(tfInput);
+		
+		QueueI.i().enqueue(new CallableX(){
+				@Override
+				public Boolean call() {
+					if(!vrLoggingSectionSize.update())return true;
+					
+					float fHeight = lstbxLoggingSection.getSize().y; //TODO inner container needs some time to be setup by lemur?
+					
+					int iLines = (int) (fHeight/MiscLemurI.i().getEntryHeightPixels(lstbxLoggingSection));
+					iLines--; //to void the text being too close to each other
+					
+					lstbxLoggingSection.setVisibleItems(iLines);
+					
+					bUpdateNoWrap=true;
+					
+					return true;
+				}
+			}
+			.setName("UpdateVisibleLogRows")
+			.setDelaySeconds(0.25f)
+			.setLoop(true)
+		);
 		
 		bUpdateNoWrap=true;
 		
@@ -343,10 +376,51 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		super.initialize(stateManager, app);
 	}
 	
-	public void applyDefaultPosSize() {
-		panelMain.setLocalTranslation(0, getWindowSize().y-30, 0);
-		rzpVarBar.setPreferredSize(new Vector3f(100,100,0));
-		setConsoleHeightPerc(fConsoleHeightPercDefault);
+	public void toggleDefaultPosSize(boolean bForceDefault) {
+		boolean bRestoreDefault = false;
+		
+		Vector3f v3fCurrentPos = hrpMain.getLocalTranslation().clone();
+		if(bForceDefault || v3fCurrentPos.distance(v3fDefaultPos)>fDistToToggleRestorePosSize){
+			bRestoreDefault=true;
+		}
+		
+		Vector3f v3fCurrentSize = hrpMain.getSize().clone();
+		if(bForceDefault || v3fCurrentSize.distance(v3fDefaultSize)>fDistToToggleRestorePosSize){
+			bRestoreDefault=true;
+		}
+		
+		Float fCurrentBarWidthX = rzpVarBar.getSize().x; //inner pannel reads not from preferred size
+		if(bForceDefault || Math.abs(fCurrentBarWidthX - v3fDefaultBarSize.x) > fDistToToggleRestorePosSize){
+			bRestoreDefault=true;
+		}
+		
+		
+		
+		if(bRestoreDefault){
+			hrpMain.setLocalTranslation(v3fDefaultPos);
+			setConsoleSizeByHeightPerc(fConsoleHeightPerc);
+			rzpVarBar.getPreferredSize().x=v3fDefaultBarSize.x;
+			if(hrpMain.isUpdateLogicalStateSucces()){
+				v3fBkpLastNonDefaultPos = v3fCurrentPos.clone();
+				fBkpLastNonDefaultBarWidthX = fCurrentBarWidthX;
+				v3fBkpLastNonDefaultSize = hrpMain.getSize().clone();
+			}
+			LoggingI.i().logEntry("DevCons: restoring default pos size");
+		}else{
+			if(v3fBkpLastNonDefaultPos!=null){
+				hrpMain.setLocalTranslation(v3fBkpLastNonDefaultPos);
+			}
+			if(v3fBkpLastNonDefaultSize!=null){
+				hrpMain.setPreferredSize(v3fBkpLastNonDefaultSize);
+			}
+			if(fBkpLastNonDefaultBarWidthX!=null){
+				rzpVarBar.getPreferredSize().x=fBkpLastNonDefaultBarWidthX;
+			}
+			LoggingI.i().logEntry("DevCons: applying last non-default pos size");
+		}
+		
+//		updateVisibleLogItems();
+//		setConsoleSizeByHeightPerc(fConsoleHeightPercDefault);
 //		updateConsoleHeight(fConsoleHeightPercDefault);
 	}
 
@@ -355,6 +429,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		lstbxVarMonitorBar.setModel(vlstrVarMonitorEntries);
 		
 		rzpVarBar = new ResizablePanel(lstbxVarMonitorBar);
+		rzpVarBar.setName(rzpVarBar.getName()+"/VarMonitorBar");
 		
 		rzpVarBar.setMinSize(new Vector3f(50,50,0));
 		
@@ -390,7 +465,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		super.update(tpf);
 		
 		if(bUpdateNoWrap){
-			MiscJmeI.i().recursivelyApplyTextNoWrap(panelMain);
+			MiscJmeI.i().recursivelyApplyTextNoWrap(hrpMain);
 			bUpdateNoWrap=false;
 		}
 	}
@@ -431,14 +506,18 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		stCursorPos = createStatus(EStatPriority.Normal, "CursorPos", "Mouse Cursor Position on the application");
 		stAppTime = createStatus(EStatPriority.Normal, "AppTime", "Application Elapsed Time from its start time");
 		
-		QueueI.i().enqueue(new CallableX("DevConsUpdateStatus",0.5f,true) {
+		QueueI.i().enqueue(new CallableX() {
 			@Override
 			public Boolean call() {
 				updateStatusValues();
 				updateStatusValuesList();
 				return true;
 			}
-		}.setUserCanPause(true));
+		}
+		.setName("DevConsUpdateStatus")
+		.setDelaySeconds(0.5f)
+		.setLoop(true)
+		.setUserCanPause(true));
 		
 	}
 	
@@ -479,9 +558,9 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		if(!isInitialized())throw new DetailedException("not initialized");
 		
 		if(enabled){
-			nodeParent.attachChild(panelMain);
+			nodeParent.attachChild(hrpMain);
 		}else{
-			panelMain.removeFromParent();
+			hrpMain.removeFromParent();
 		}
 		
 		super.setEnabled(enabled);
@@ -495,13 +574,13 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 		BindKeyI.i().prepareKeyMappings();
 		
-		QueueI.i().enqueue(new CallableX("FocusAtDevConsInput",0.25f,true) { //TODO this delay still has a chance of typing something at other input field? like when holding for long a key?
+		QueueI.i().enqueue(new CallableX() { //TODO this delay still has a chance of typing something at other input field? like when holding for long a key?
 			@Override
 			public Boolean call() {
 				GuiGlobals.getInstance().requestFocus(tfInput);
 				return true;
 			}
-		});
+		}.setName("FocusAtDevConsInput").setDelaySeconds(0.25f).setLoop(true));
 		
 	}
 	
@@ -655,7 +734,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 				toggleVarMonitorBar(null);
 			}else
 			if(capture.equals(btnRestoreSize)){
-				applyDefaultPosSize();
+				toggleDefaultPosSize(false);
 			}else{
 				MessagesI.i().warnMsg(this, "missing event mapping for "+capture, target);
 			}
@@ -772,17 +851,18 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private void initMainContainer() {
 		cntrMain = new Container(new BorderLayout(), getStyle());
 		
-		panelMain = new HierarchyResizablePanel(getStyle());
-		panelMain.setName(DevConsPluginStateI.class.getSimpleName());//debug name
-		panelMain.setTopHierarchy(true);
-		panelMain.setContents(cntrMain);
-		panelMain.addResizableListener(this);
+		hrpMain = new HierarchyResizablePanel(getStyle());
+		hrpMain.setName(DevConsPluginStateI.class.getSimpleName());//debug name
+		hrpMain.setTopHierarchy(true);
+		hrpMain.setContents(cntrMain);
+		hrpMain.addResizableListener(this);
 		
-		setConsoleHeightPerc(fConsoleHeightPerc); //just to init default value
+		setConsoleSizeByHeightPerc(fConsoleHeightPerc); //just to init default value
 	}
 
 	private void initLoggingSection() {
 		lstbxLoggingSection = new ListBox<String>(null, getStyle());
+		lstbxLoggingSection.setName(lstbxLoggingSection.getName()+"/Logging");
 		LoggingI.i().setModelAt(lstbxLoggingSection);
 		
 		cntrMain.addChild(lstbxLoggingSection, BorderLayout.Position.Center);
@@ -792,7 +872,37 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		vrSelectionChangedToUpdateInputText = lstbxLoggingSection.getSelectionModel().createReference();
 		vrListBoxChangedToAutoScrollToBottom = lstbxLoggingSection.getModel().createReference();
 		vrSliderChangedToSuspendAutoScrollBottom=lstbxLoggingSection.getSlider().getModel().createReference();
+		
+		VersionedVector3f voLoggingSize = new VersionedVector3f(lstbxLoggingSection.getSize());
+		vrLoggingSectionSize = new VersionedReference<Vector3f>(voLoggingSize);
 	}
+	VersionedReference<Vector3f> vrLoggingSectionSize;
+//	public static class VersionedVector3f implements VersionedObject<Vector3f>{
+//		private Vector3f	v3fPrevious;
+//		private Vector3f	v3f;
+//		private long	lVersion;
+//
+//		public VersionedVector3f(Vector3f v3f) {
+//			this.v3f=v3f;
+//			this.v3fPrevious=v3f.clone();
+//		}
+//
+//		@Override
+//		public long getVersion() {
+//			if(!v3f.equals(v3fPrevious))lVersion++;
+//			return lVersion;
+//		}
+//
+//		@Override
+//		public Vector3f getObject() {
+//			return v3f;
+//		}
+//
+//		@Override
+//		public VersionedReference<Vector3f> createReference() {
+//			return new VersionedReference<Vector3f>(this);
+//		}
+//	}
 
 //	private void initSize() {
 //		v3fApplicationWindowSize = new Vector3f(
@@ -805,7 +915,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		return fConsoleHeightPerc;
 	}
 
-	public void setConsoleHeightPerc(float fConsoleHeightPerc2) {
+	public void setConsoleSizeByHeightPerc(float fConsoleHeightPerc2) {
 		this.fConsoleHeightPerc = fConsoleHeightPerc2;
 		
 		if(fConsoleHeightPerc>1.0f)fConsoleHeightPerc=1.0f;
@@ -813,53 +923,68 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 		int iHeight = (int) (getWindowSize().y * fConsoleHeightPerc);
 		
-		updateConsoleHeight(iHeight);
+		updateConsoleSize(iHeight);
 	}
 
-	private void updateConsoleHeight(int iHeightPixels) {
-		QueueI.i().enqueue(new CallableX(0,false) {
+	private void updateConsoleSize(int iHeightPixels) {
+		QueueI.i().enqueue(new CallableX() {
 			@Override
 			public Boolean call() {
-//				v3fConsoleSize
 				Vector3f v3f = new Vector3f(
 						getWindowSize().x,
 						iHeightPixels,
 						fLemurPreferredThickness);
-					
-				panelMain.setPreferredSize(v3f);
-//				cntrMain.setPreferredSize(v3fConsoleSize);
 				
-				updateVisibleLogItems();
+				/**
+				 * PUTS A NEW SIZE REQUEST
+				 */
+				hrpMain.setPreferredSize(v3f);
+//				updateVisibleLogItems();
+				
+				QueueI.i().enqueue(new CallableX() {
+					@Override
+					public Boolean call() {
+						if(!hrpMain.isUpdateLogicalStateSucces())return false;
+						/**
+						 * WAITS FOR THE NEW SIZE REQUEST SUCCEED
+						 */
+						v3fDefaultSize=hrpMain.getSize().clone();
+						return true;
+					}
+				}.setName("DevCons: updates default size"));
 				
 				return true;
 			}
-		});
+		}.setName("DevCons: request new size"));
+		
 	}
 	
 	public Vector3f getWindowSize(){
 		return new Vector3f(Display.getWidth(),Display.getHeight(),0);
 	}
 	
-	public void updateVisibleLogItems(){
-		QueueI.i().enqueue(new CallableX(0.1f,false){
-			@Override
-			public Boolean call() {
-//			float fHeight = cntrMain.getPreferredSize().y;
-				float fHeight = cntrMain.getSize().y; //inner container needs some time to be setup by lemur?
-				if(Float.compare(fHeight,0f)==0)return false;
-				
-				int iLines = (int) (fHeight/MiscLemurI.i().getEntryHeightPixels(lstbxLoggingSection));
-				iLines--; //to void the text being too close to each other 
-				lstbxLoggingSection.setVisibleItems(iLines);
-//				lstbxLoggingSection.getCellRenderer();
-				
-				bUpdateNoWrap=true;
-//				MiscJmeI.i().recursivelyApplyTextNoWrap(lstbxLoggingSection);
-				
-				return true;
-			}
-		});
-	}
+//	public void updateVisibleLogItems(){
+//		QueueI.i().enqueue(new CallableX(){
+//			@Override
+//			public Boolean call() {
+////			float fHeight = cntrMain.getPreferredSize().y;
+//				float fHeight = cntrMain.getSize().y; //inner container needs some time to be setup by lemur?
+//				DevConsPluginStateI.this.lstbxLoggingSection.getPreferredSize();
+//				DevConsPluginStateI.this.lstbxLoggingSection.getSize();
+//				if(Float.compare(fHeight,0f)==0)return false;
+//				
+//				int iLines = (int) (fHeight/MiscLemurI.i().getEntryHeightPixels(lstbxLoggingSection));
+//				iLines--; //to void the text being too close to each other 
+//				lstbxLoggingSection.setVisibleItems(iLines);
+////				lstbxLoggingSection.getCellRenderer();
+//				
+//				bUpdateNoWrap=true;
+////				MiscJmeI.i().recursivelyApplyTextNoWrap(lstbxLoggingSection);
+//				
+//				return true;
+//			}
+//		}.setDelaySeconds(0.1f));
+//	}
 
 	public String getStyle() {
 		return strStyle;
@@ -961,7 +1086,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 
 	@Override
 	public void attendToResizing(Vector3f v3fNewSize) {
-		updateVisibleLogItems();
+//		updateVisibleLogItems();
 	}
 
 	public void showQueue(){

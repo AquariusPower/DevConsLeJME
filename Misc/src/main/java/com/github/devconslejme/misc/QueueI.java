@@ -58,12 +58,17 @@ public class QueueI {
 	 * CallableX like in extra, plus 
 	 */
 	public abstract static class CallableX implements CallableWeak<Boolean>{
-		// THE ORDER of these vars will be at the toString()
+		/****************
+		 *  THE ORDER of these vars will be automatically (thru IDE) at the toString()
+		 ************/
 		private String strUId;
-		private String	strName;
-		private float	fDelaySeconds;
+		
 		private boolean	bPaused;
-		private boolean	bLoop;
+		
+		private String	strName;
+		private float	fDelaySeconds=0f;
+		private boolean	bLoop=false;
+		
 		private long lRunAtTime;
 		private boolean	bUserCanKill = false;
 		private boolean	bUserCanPause = false;
@@ -74,16 +79,29 @@ public class QueueI {
 		private static String strLastUId="0";
 //		private boolean bDone;
 		
+		public CallableX setName(String strName) {
+			this.strName = strName;
+			return this;
+		}
+		public CallableX setLoop(boolean bLoop) {
+			this.bLoop=bLoop;
+			return this;
+		}
+		public CallableX setDelaySeconds(float fDelaySeconds) {
+			this.fDelaySeconds=(fDelaySeconds);
+			return this;
+		}
+		
 		public CallableX(){
-			this(1,null,0,false);
-		}
-		public CallableX(float fDelaySeconds, boolean bLoop){
-			this(1,null,fDelaySeconds,bLoop);
-		}
-		public CallableX(String strName, float fDelaySeconds, boolean bLoop){
-			this(1,strName,fDelaySeconds,bLoop);
-		}
-		public CallableX(int iStackAdd, String strName, float fDelaySeconds, boolean bLoop){
+//			this(1,null,0,false);
+//		}
+//		public CallableX(float fDelaySeconds, boolean bLoop){
+//			this(1,null,fDelaySeconds,bLoop);
+//		}
+//		public CallableX(String strName, float fDelaySeconds, boolean bLoop){
+//			this(1,strName,fDelaySeconds,bLoop);
+//		}
+//		public CallableX(int iStackAdd, String strName, float fDelaySeconds, boolean bLoop){
 			strUId=strLastUId=StringI.i().getNextUniqueId(strLastUId);
 			
 			// auto name
@@ -97,11 +115,10 @@ public class QueueI {
 				strName=this.getClass().getSimpleName();
 			}
 			
-			this.strName = strName;
+//			this.strName = strName;
+//			this.bLoop=bLoop;
+//			this.fDelaySeconds=(fDelaySeconds);
 			
-			this.bLoop=bLoop;
-			
-			this.fDelaySeconds=(fDelaySeconds);
 			updateRunAt();
 		}
 		

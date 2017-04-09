@@ -372,13 +372,16 @@ public class JavaScriptI implements IGlobalAddListener {
 		queueExecFile(asFile(strFile), fDelaySeconds, bLoop);
 	}
 	public void queueExecFile(File flJS, float fDelaySeconds, boolean bLoop){
-		QueueI.i().enqueue(new CallableX(flJS.getName(),fDelaySeconds,bLoop) {
+		QueueI.i().enqueue(new CallableX() {
 				@Override
 				public Boolean call() {
 					execFile(flJS);
 					return true;
 				}
 			}
+			.setName(flJS.getName())
+			.setDelaySeconds(fDelaySeconds)
+			.setLoop(bLoop)
 			.setUserCanKill(true)
 			.setUserCanPause(true)
 		);
@@ -559,7 +562,7 @@ public class JavaScriptI implements IGlobalAddListener {
 				astrUserInit.add(str);
 			}
 			
-			QueueI.i().enqueue(new CallableX(0,false) {
+			QueueI.i().enqueue(new CallableX() {
 				@Override
 				public Boolean call() {
 					processUserInit();

@@ -71,13 +71,13 @@ public class LoggingI {
 		
 		stWrapAt = DevConsPluginStateI.i().createStatus(EStatPriority.Normal, "WrapAt", LoggingI.class.getSimpleName()+": Wrap at column");
 		
-		QueueI.i().enqueue(new CallableX(1f,true) {
+		QueueI.i().enqueue(new CallableX() {
 			@Override
 			public Boolean call() {
 				stWrapAt.set(""+getWrapAtColumn());
 				return true;
 			}
-		});
+		}.setDelaySeconds(1f).setLoop(true));
 	}
 	
 	public void logExceptionEntry(Exception ex, String strJS) {

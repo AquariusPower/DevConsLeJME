@@ -100,13 +100,17 @@ public class HierarchySorterI {
 //		app.getStateManager().attach(this);
 		focusState=app.getStateManager().getState(FocusManagerState.class);
 		
-		QueueI.i().enqueue(new CallableX(HierarchySorterI.class.getSimpleName(), 0.25f, true) {
+		QueueI.i().enqueue(new CallableX() {
 			@Override
 			public Boolean call() {
 				organizeDialogsStack();
 				return true;
 			}
-		}.setUserCanPause(true));
+		}
+		.setName(HierarchySorterI.class.getSimpleName())
+		.setDelaySeconds(0.25f)
+		.setLoop(true)
+		.setUserCanPause(true));
 	}
 	
 //	@Override
