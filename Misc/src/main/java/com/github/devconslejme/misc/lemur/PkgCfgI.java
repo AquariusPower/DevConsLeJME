@@ -27,6 +27,7 @@
 
 package com.github.devconslejme.misc.lemur;
 
+import com.github.devconslejme.gendiag.ContextMenuI;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.jme3.app.Application;
 import com.jme3.scene.Node;
