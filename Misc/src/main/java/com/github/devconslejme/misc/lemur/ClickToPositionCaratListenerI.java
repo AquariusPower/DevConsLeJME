@@ -31,6 +31,8 @@ import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.font.BitmapText;
+import com.jme3.math.Vector2f;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.TextField;
@@ -61,7 +63,7 @@ public class ClickToPositionCaratListenerI implements CursorListener{
 	public void cursorButtonEvent(CursorButtonEvent event, Spatial target,			Spatial capture) {
 		if(!event.isPressed())return;
 		
-		moveCarat((TextField)capture, event.getX());
+		prepareToMoveCarat((TextField)capture, event.getLocation());
 	}
 	
 	/**
@@ -69,9 +71,7 @@ public class ClickToPositionCaratListenerI implements CursorListener{
 	 * @param tf
 	 * @param fCursorPosX
 	 */
-	private void moveCarat(TextField tf, float fCursorPosX){
-		String str=tf.getText();
-		
+	private void prepareToMoveCarat(TextField tf, Vector2f v2fCursorPos){
 		/**
 		 * Requirements that may break in the future:
 		 * 1) retrieve a single BitmapText recursive child from the TextField (TextField.text<TextEntryComponent>.bitmapText<BitmapText>)
@@ -87,19 +87,35 @@ public class ClickToPositionCaratListenerI implements CursorListener{
 			}
 		});
 		
-		int iMonoFontWidth = MiscLemurI.i().getFontCharWidthForStyle(tf.getStyle()); //TODO check as it should be mono spaced font...
-		
+		moveCarat(tf, 
+			v2fCursorPos, 
+			bt.getWorldTranslation(), 
+			geomCaratCursor.getWorldTranslation(),
+			MiscLemurI.i().getFontCharWidthForStyle(tf.getStyle())
+		);
+	}
+	
+	private void moveCarat(TextField tf, 
+		Vector2f v2fCursorPos, 
+		Vector3f v3fBitmapTextWorldTranslation, 
+		Vector3f v3fGeometryCursorWorldTranslation, 
+		int iMonoFontWidth
+	){
 		// relative to the BitmapText
-		float fRelativeCursorPosX = fCursorPosX - bt.getWorldTranslation().x;
-		float fRelativeCaratPosX = geomCaratCursor.getWorldTranslation().x - bt.getWorldTranslation().x;
+		float fRelativeCursorPosX = v2fCursorPos.x - v3fBitmapTextWorldTranslation.x;
+		float fRelativeCaratPosX = v3fGeometryCursorWorldTranslation.x - v3fBitmapTextWorldTranslation.x;
 		
-		// relative to the first character visibly shown on the TextField, just trunc
+		// relative to the first character visibly shown on the TextField, just trunc (the whole letter will provide carate in front of it)
 		int iRelativeVisibleRequestedNewCaratIndex = (int)(fRelativeCursorPosX/iMonoFontWidth);
 		int iRelativeVisibleCurrentCaratIndex = (int)(fRelativeCaratPosX/iMonoFontWidth);
-		
-//		float fFinalRelativePosX = fRelativeCursorPosX - fRelativeCaratPosX;
-//		int iMoveCaratAmount = (int)(fFinalRelativePosX/iMonoFontWidth);
 		int iMoveCaratAmount = iRelativeVisibleRequestedNewCaratIndex - iRelativeVisibleCurrentCaratIndex;
+		
+		/**
+		 * converting to carat index before, works better than this: 
+		float fFinalRelativePosX = fRelativeCursorPosX - fRelativeCaratPosX;
+		int iMoveCaratAmount = (int)(fFinalRelativePosX/iMonoFontWidth);
+		 */
+		
 		if(iMoveCaratAmount!=0){
 			if(iMoveCaratAmount>0){
 				for(int i2=0;i2<iMoveCaratAmount;i2++)tf.getDocumentModel().right();
@@ -109,50 +125,6 @@ public class ClickToPositionCaratListenerI implements CursorListener{
 		}
 	}
 	
-//	private void _moveCarat(TextField tf, float fCursorPosX){
-//		String str=tf.getText();
-//		
-//		BitmapText bt = MiscJmeI.i().getChildRecursiveExactMatch(tf,BitmapText.class);
-//		
-//		Geometry geomCarat = MiscJmeI.i().getChildRecursiveExactMatch(bt,new CallableX() {
-//			@Override
-//			public Boolean call() {
-//				Spatial spt = getValue(Spatial.class.getName()); 
-//				if(Geometry.class.isInstance(spt) && spt.getName().equals("cursor"))return true;
-//				return false;
-//			}
-//		});
-//		
-//		int iCaratCurrentIndex = tf.getDocumentModel().getCarat();
-//		
-//		// relative to the BitmapText
-//		float fRelativeCursorPosX = fCursorPosX - bt.getWorldTranslation().x;
-//		float fRelativeCaratPosX = geomCarat.getWorldTranslation().x - bt.getWorldTranslation().x;
-//		
-//		int iMonoFontWidth = MiscLemurI.i().getFontCharWidthForStyle(tf.getStyle()); //TODO check as it should be mono spaced font...
-//		
-//		int iRelativeCharIndex = 0;
-//		
-//		// relative to the first character visibly shown on the TextField, just trunc
-//		int iRelativeVisibleRequestedNewCaratIndex = (int)(fRelativeCursorPosX/iMonoFontWidth);
-//		int iRelativeVisibleCurrentCaratIndex = Math.round(fRelativeCaratPosX/iMonoFontWidth);
-//		
-//		// TextEntryComponent.textOffset is inaccessible :( 
-//		TextEntryComponent tec = MiscLemurI.i().getTextEntryComponentFrom(tf);
-//		int iTecOffset = iCaratCurrentIndex - iRelativeVisibleCurrentCaratIndex;
-//		
-//		float fFinalRelativePosX = fRelativeCursorPosX - fRelativeCaratPosX;
-//		iRelativeCharIndex = (int)(fFinalRelativePosX/iMonoFontWidth);
-//		
-//		if(iRelativeCharIndex==0)return;
-//		
-//		if(iRelativeCharIndex>0){
-//			for(int i2=0;i2<iRelativeCharIndex;i2++)tf.getDocumentModel().right();
-//		}else{
-//			for(int i2=0;i2>iRelativeCharIndex;i2--)tf.getDocumentModel().left();
-//		}
-//	}
-
 	@Override
 	public void cursorEntered(CursorMotionEvent event, Spatial target,			Spatial capture) {
 	}

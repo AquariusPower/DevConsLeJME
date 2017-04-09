@@ -57,7 +57,7 @@ public class MiscLemurI {
 		return (int)FastMath.ceil(fHeight);
 	}
 	
-	public int getFontCharWidthForStyle(String strStyle){
+	public int getFontCharWidthForStyle(String strStyle){ //TODO check as it should be mono spaced font...
 		// this detached label has no preferred size etc, so the line width will be as shrinked as possible
 		String str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 		Label lbl = new Label(str,strStyle);
