@@ -48,7 +48,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
-import com.github.devconslejme.misc.lemur.ClickToCaratPositionListenerI;
+import com.github.devconslejme.misc.lemur.ClickToPositionCaratListenerI;
 import com.github.devconslejme.misc.lemur.DragParentestListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
@@ -313,7 +313,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 		applyDefaultPosSize();
 		
-		ClickToCaratPositionListenerI.i().applyRecursivelyAtAllTextFieldsOf(cntrMain);
+		ClickToPositionCaratListenerI.i().applyRecursivelyAtAllTextFieldsOf(cntrMain);
 
 //		GuiGlobals.getInstance().requestFocus(tfInput);
 		

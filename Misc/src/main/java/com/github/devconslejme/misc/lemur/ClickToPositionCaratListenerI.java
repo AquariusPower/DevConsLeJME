@@ -34,7 +34,6 @@ import com.jme3.font.BitmapText;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.TextField;
-import com.simsilica.lemur.component.TextEntryComponent;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.CursorListener;
@@ -45,8 +44,8 @@ import com.simsilica.lemur.event.CursorMotionEvent;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class ClickToCaratPositionListenerI implements CursorListener{
-	public static ClickToCaratPositionListenerI i(){return GlobalInstanceManagerI.i().get(ClickToCaratPositionListenerI.class);}
+public class ClickToPositionCaratListenerI implements CursorListener{
+	public static ClickToPositionCaratListenerI i(){return GlobalInstanceManagerI.i().get(ClickToPositionCaratListenerI.class);}
 	
 	public void applyAt(Spatial spt){
 		CursorEventControl.addListenersToSpatial(spt, this);
@@ -75,8 +74,8 @@ public class ClickToCaratPositionListenerI implements CursorListener{
 		
 		/**
 		 * Requirements that may break in the future:
-		 * 1) a single BitmapText recursive child of TextField
-		 * 2) a single Geometry debug named "cursor"
+		 * 1) retrieve a single BitmapText recursive child from the TextField (TextField.text<TextEntryComponent>.bitmapText<BitmapText>)
+		 * 2) retrieve a single Geometry recursive child with debug name == "cursor" from the TextField
 		 */
 		BitmapText bt = MiscJmeI.i().getChildRecursiveExactMatch(tf,BitmapText.class);
 		Geometry geomCaratCursor = MiscJmeI.i().getChildRecursiveExactMatch(bt,new CallableX() {
