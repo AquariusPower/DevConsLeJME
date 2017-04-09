@@ -74,6 +74,9 @@ public class QueueI {
 		private static String strLastUId="0";
 //		private boolean bDone;
 		
+		public CallableX(){
+			this(1,null,0,false);
+		}
 		public CallableX(float fDelaySeconds, boolean bLoop){
 			this(1,null,fDelaySeconds,bLoop);
 		}
@@ -236,7 +239,7 @@ public class QueueI {
 	
 	public void configure(long lTimeResolution) {
 		this.lTimeResolution=lTimeResolution;
-		if(lTimeResolution < 1000L)throw new NullPointerException("timer resolution is too low");
+		if(lTimeResolution < 1000L)throw new DetailedException("timer resolution is too low");
 	}
 	
 	public ArrayList<CallableX> getQueueCopy(){

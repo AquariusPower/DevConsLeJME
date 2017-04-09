@@ -41,6 +41,7 @@ import com.github.devconslejme.gendiag.HierarchyResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
@@ -48,11 +49,11 @@ import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.lemur.ClickToCaratPositionListenerI;
+import com.github.devconslejme.misc.lemur.DragParentestListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.PopupHelpListenerI;
 import com.github.devconslejme.misc.lemur.PopupHelpListenerI.EPopup;
-import com.github.devconslejme.misc.lemur.DragParentestListenerI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
@@ -428,7 +429,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 
 	@Override
 	public void setEnabled(boolean enabled) {
-		if(!isInitialized())throw new NullPointerException("not initialized");
+		if(!isInitialized())throw new DetailedException("not initialized");
 		
 		if(enabled){
 			nodeParent.attachChild(panelMain);

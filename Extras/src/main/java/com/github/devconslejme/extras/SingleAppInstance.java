@@ -41,6 +41,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 
+import com.github.devconslejme.misc.DetailedException;
+
 /**
  * Locks have a short timeout.
  * 
@@ -85,7 +87,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 	private File	flAppStorageBaseFolder;
 	
 	public SingleAppInstance() {
-//		if(instance!=null)throw new NullPointerException("already instanced");
+//		if(instance!=null)throw new DetailedException("already instanced");
 		lLockUpdateTargetDelayMilis=3000;
 		strPrefix=SingleAppInstance.class.getSimpleName()+"-";
 		strSuffix=".lock";
@@ -370,7 +372,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 				
 				flSelfLock.deleteOnExit();
 			}else{
-				throw new NullPointerException("unable to create lock file "+flSelfLock.getAbsolutePath());
+				throw new DetailedException("unable to create lock file "+flSelfLock.getAbsolutePath());
 			}
 	}
 	
@@ -411,15 +413,15 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 				}
 			}
 		}
-		if(strMainClass==null)throw new NullPointerException("unable to determine class with main method?");
+		if(strMainClass==null)throw new DetailedException("unable to determine class with main method?");
 		return strMainClass;
 	}
 	
 	private void configureAndInitialize(boolean bAllowCfgOutOfMainMethod,File flAppStorageBaseFolder){
-		if(bConfigured)throw new NullPointerException("already configured."); // KEEP ON TOP
+		if(bConfigured)throw new DetailedException("already configured."); // KEEP ON TOP
 		
 //		if(flAppStorageBaseFolder!=null && flAppStorageBaseFolder!=this.flAppStorageBaseFolder){
-//			throw new NullPointerException("app storage folder already configured");
+//			throw new DetailedException("app storage folder already configured");
 //		}
 		this.flAppStorageBaseFolder=flAppStorageBaseFolder;
 	

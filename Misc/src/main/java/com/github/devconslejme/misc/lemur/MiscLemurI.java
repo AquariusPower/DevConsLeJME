@@ -27,6 +27,7 @@
 
 package com.github.devconslejme.misc.lemur;
 
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.font.BitmapText;
@@ -49,7 +50,7 @@ public class MiscLemurI {
 	
 	public Integer getEntryHeightPixels(ListBox lstbx){
 		GridModel<Panel> gm = lstbx.getGridPanel().getModel();
-		if(gm.getRowCount()==0)throw new NullPointerException("list must not be empty");
+		if(gm.getRowCount()==0)throw new DetailedException("list must not be empty");
 		Panel pnl = gm.getCell(0, 0, null); // create a new cell
 		float fHeight = pnl.getPreferredSize().getY();
 		
@@ -61,7 +62,7 @@ public class MiscLemurI {
 		String str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 		Label lbl = new Label(str,strStyle);
 //		float fLineWidth = MiscJmeI.i().getBitmapTextFrom(lbl).getLineWidth();
-		float fLineWidth = MiscJmeI.i().getAllChildrenRecursiveFrom(lbl,BitmapText.class).get(0).getLineWidth();
+		float fLineWidth = MiscJmeI.i().getChildRecursiveExactMatch(lbl,BitmapText.class).getLineWidth();
 		int iCharWidthPixels = Math.round(fLineWidth/=str.length());
 		
 		return iCharWidthPixels;

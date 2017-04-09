@@ -38,7 +38,7 @@ import java.util.HashMap;
 public class GlobalInstanceManagerI {
   private static GlobalInstanceManagerI instance=new GlobalInstanceManagerI();
   public static void setGlobalOverride (GlobalInstanceManagerI inst){
-  	if(GlobalInstanceManagerI.instance!=null)throw new NullPointerException("already set "+instance+", "+inst);
+  	if(GlobalInstanceManagerI.instance!=null)throw new DetailedException("already set "+instance+", "+inst);
     GlobalInstanceManagerI.instance=inst;
   }
   public static GlobalInstanceManagerI i (){return instance;}
@@ -65,7 +65,7 @@ public class GlobalInstanceManagerI {
       	put(cl, ((T)(obj=cl.newInstance())) );
 //				hmInst.put(cl,obj=cl.newInstance ());
 			} catch (InstantiationException | IllegalAccessException e) {
-				NullPointerException npe = new NullPointerException("unable to create new instance");
+				NullPointerException npe = new DetailedException("unable to create new instance");
 				npe.initCause(e);
 				throw npe;
 			}
@@ -76,7 +76,7 @@ public class GlobalInstanceManagerI {
   public <T> void put(Class<T> cl,T obj){
   	Object objAlreadySet=hmInst.get(cl);
     if (objAlreadySet!=null){
-      throw new NullPointerException("already set: "+cl+", "+objAlreadySet+", "+obj);
+      throw new DetailedException("already set: "+cl+", "+objAlreadySet+", "+obj);
     }
     
     hmInst.put(cl,obj);

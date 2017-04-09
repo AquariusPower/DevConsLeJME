@@ -31,7 +31,8 @@ import java.util.ArrayList;
 
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.StringI.EStringMatchMode;
+import com.github.devconslejme.misc.QueueI.CallableWeak;
+import com.github.devconslejme.misc.QueueI.CallableX;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.font.BitmapText;
 import com.jme3.font.LineWrapMode;
@@ -86,9 +87,23 @@ public class MiscJmeI {
 //		return null;
 //	}
 	
-	public <T extends Spatial> T getChildRecursiveExactMatch(Spatial sptParentestToChk, Class<T> clTypeFilter){
-		ArrayList<T> asptList = getAllChildrenRecursiveFrom(sptParentestToChk, clTypeFilter);
-		if(asptList.size()>0)return null;
+	public static class SimpleClassMatcherCallableX extends CallableX{
+		@Override
+		public Boolean call() {
+			Class clFilter = getValue(Class.class.getName());
+			Spatial spt = getValue(Spatial.class.getName());
+			return (clFilter.isInstance(spt));
+		}
+	}
+	
+	public <T extends Spatial> T getChildRecursiveExactMatch(Spatial sptParentestToChk, Class<T> clFilter){
+		return getChildRecursiveExactMatch(sptParentestToChk, 
+			new SimpleClassMatcherCallableX().putKeyValue(Class.class.getName(), clFilter));
+	}
+	
+	public <T extends Spatial> T getChildRecursiveExactMatch(Spatial sptParentestToChk, CallableX callMatcher){
+		ArrayList<T> asptList = getAllChildrenRecursiveFrom(sptParentestToChk, null, callMatcher);
+		if(asptList.isEmpty() || asptList.size()>1)throw new DetailedException("not exact match",sptParentestToChk,callMatcher,asptList);
 		return asptList.get(0);
 	}
 	
@@ -98,11 +113,27 @@ public class MiscJmeI {
 	 * @param clTypeFilter if Spatial, will bring all
 	 * @return
 	 */
+	/**
+	 * 
+	 * @param sptParentestToChk
+	 * @param callMatcher can be null, or can retrieve key: Spatial.class.getName()
+	 * @param iMaxDepth max recursion depth, can be null (unlimited) 
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
-	public <T extends Spatial> ArrayList<T> getAllChildrenRecursiveFrom(Spatial sptParentestToChk, Class<T> clTypeFilter) {
+	public <T extends Spatial> ArrayList<T> getAllChildrenRecursiveFrom(Spatial sptParentestToChk, Class<T> clFilter, Integer iMaxDepth) {
+		return getAllChildrenRecursiveFrom(sptParentestToChk, iMaxDepth, 
+			new SimpleClassMatcherCallableX().putKeyValue(Class.class.getName(), clFilter));
+	}
+	public <T extends Spatial> ArrayList<T> getAllChildrenRecursiveFrom(Spatial sptParentestToChk, Integer iMaxDepth, CallableX callMatcher) {
 		if(sptParentestToChk==null)throw new DetailedException("null spatial");
 		
 		ArrayList<T> asptList = new ArrayList<T>();
+		
+		if(iMaxDepth!=null){
+			if(iMaxDepth==0)return asptList; 
+			iMaxDepth-=1;
+		}
 		
 		Node nodeParent = null;
 		if (sptParentestToChk instanceof Node) {
@@ -113,7 +144,8 @@ public class MiscJmeI {
 		
 		// add direct children
 		for(Spatial sptChild:nodeParent.getChildren()){
-			if(clTypeFilter.isInstance(sptChild)){
+			if(callMatcher!=null)callMatcher.putKeyValue(Spatial.class.getName(),sptChild);
+			if(callMatcher==null || callMatcher.call()){
 				asptList.add((T)sptChild);
 			}
 		}
@@ -121,7 +153,7 @@ public class MiscJmeI {
 		// deep search
 		for(Spatial sptChild:nodeParent.getChildren()){
 			if(sptChild instanceof Node){
-				asptList.addAll(getAllChildrenRecursiveFrom(sptChild, clTypeFilter));
+				asptList.addAll(getAllChildrenRecursiveFrom(sptChild, iMaxDepth, callMatcher));
 			}
 		}
 		

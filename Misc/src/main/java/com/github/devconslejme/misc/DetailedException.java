@@ -223,7 +223,7 @@ public class DetailedException extends NullPointerException{
 	@Deprecated
 	@Override
 	public synchronized Throwable initCause(Throwable cause) {
-		throw new NullPointerException("do not use, just to avoid ignoring the more useful ones");
+		throw new DetailedException("do not use, just to avoid ignoring the more useful ones");
 	}
 	public static String getExitErrorMessage() {
 		return strErrorMessage;

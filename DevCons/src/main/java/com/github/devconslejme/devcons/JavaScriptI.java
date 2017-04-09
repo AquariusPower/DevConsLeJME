@@ -47,14 +47,15 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
 import com.github.devconslejme.misc.AutoCompleteI;
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.MessagesI;
-import com.github.devconslejme.misc.ReportI;
-import com.github.devconslejme.misc.GlobalInstanceManagerI.IGlobalAddListener;
-import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
-import com.github.devconslejme.misc.QueueI.CallableX;
+import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalInstanceManagerI.IGlobalAddListener;
 import com.github.devconslejme.misc.JavaLangI;
+import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableX;
+import com.github.devconslejme.misc.ReportI;
 import com.google.common.collect.HashBiMap;
 import com.google.common.primitives.Primitives;
 import com.jme3.input.KeyInput;
@@ -250,7 +251,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	 */
 	public void setJSBinding(String strBindId, Object objBindValue){
 		if(bndJSE.get(strBindId)!=null){
-			throw new NullPointerException("already set: "+strBindId);
+			throw new DetailedException("already set: "+strBindId);
 		}
 		
 		bndJSE.put(strBindId,objBindValue);

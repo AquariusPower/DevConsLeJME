@@ -30,6 +30,7 @@ package com.github.devconslejme.gendiag;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import com.github.devconslejme.misc.DetailedException;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
@@ -181,7 +182,7 @@ public class ResizablePanel extends Panel {
 					return 	Math.abs(getY() - v3fCursor.y) < getMaxCurDistFromResizableBorder() &&
 									Math.abs(getX() - v3fCursor.x) < getMaxCurDistFromResizableBorder();
 			}
-			throw new NullPointerException("bug: "+this);
+			throw new DetailedException("bug: "+this);
 		}
 		public boolean isEnabled() {
 			return bEnabled;
@@ -603,7 +604,7 @@ public class ResizablePanel extends Panel {
 		return hmEdge.get(eeInitialHook);
 	}
 	public ResizablePanel addResizableListener(IResizableListener irl) {
-		if(irl==null)throw new NullPointerException("invalid null listener");
+		if(irl==null)throw new DetailedException("invalid null listener");
 		
 		if(!airlList.contains(irl)){
 			airlList.add(irl);

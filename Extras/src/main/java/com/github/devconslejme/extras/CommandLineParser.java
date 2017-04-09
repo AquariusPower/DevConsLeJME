@@ -29,6 +29,8 @@ package com.github.devconslejme.extras;
 
 import java.util.ArrayList;
 
+import com.github.devconslejme.misc.DetailedException;
+
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
@@ -152,7 +154,7 @@ public class CommandLineParser {
 							if(strParam.equals("false")){
 								aobjList.add(false);
 							}else{
-								throw new NullPointerException("invalid boolean parsing: "+strParam);
+								throw new DetailedException("invalid boolean parsing: "+strParam);
 							}
 							strParam="";et=null;continue; //reset
 						}
@@ -164,7 +166,7 @@ public class CommandLineParser {
 							Object objConv=null;
 							if(objConv==null)try{objConv=Long  .parseLong  (strParam);}catch(NumberFormatException e){}
 							if(objConv==null)try{objConv=Double.parseDouble(strParam);}catch(NumberFormatException e){}
-							if(objConv==null)throw new NullPointerException("invalid number parsing: "+strParam);
+							if(objConv==null)throw new DetailedException("invalid number parsing: "+strParam);
 							aobjList.add(objConv);
 							strParam="";et=null;continue; //reset
 						}

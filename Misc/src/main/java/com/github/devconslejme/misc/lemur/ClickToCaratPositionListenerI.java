@@ -28,6 +28,7 @@
 package com.github.devconslejme.misc.lemur;
 
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.font.BitmapText;
 import com.jme3.scene.Geometry;
@@ -52,7 +53,7 @@ public class ClickToCaratPositionListenerI implements CursorListener{
 	}
 	
 	public void applyRecursivelyAtAllTextFieldsOf(Spatial spt){
-		for(TextField tf:MiscJmeI.i().getAllChildrenRecursiveFrom(spt, TextField.class)){
+		for(TextField tf:MiscJmeI.i().getAllChildrenRecursiveFrom(spt, TextField.class, null)){
 			applyAt(tf);
 		}
 	}
@@ -63,25 +64,50 @@ public class ClickToCaratPositionListenerI implements CursorListener{
 		
 		String str=tf.getText();
 		
-		BitmapText bt = MiscJmeI.i().getChildRecursiveExactMatch(tf,BitmapText.class); //TODO this is just guesswork...
+		BitmapText bt = MiscJmeI.i().getChildRecursiveExactMatch(tf,BitmapText.class);
 		
-		Geometry cursor = MiscJmeI.i().getChildRecursiveExactMatch(bt,Geometry.class); //TODO this is just guesswork...
+		Geometry geomCarat = MiscJmeI.i().getChildRecursiveExactMatch(bt,new CallableX() {
+			@Override
+			public Boolean call() {
+				Spatial spt = getValue(Spatial.class.getName()); 
+				if(Geometry.class.isInstance(spt) && spt.getName().equals("cursor"))return true;
+				return false;
+			}
+		});
 		
-		// tec.textOffset is inaccessible :( 
+		// TextEntryComponent.textOffset is inaccessible :( 
 		TextEntryComponent tec = MiscLemurI.i().getTextEntryComponentFrom(tf);
+		
+		int iCaratCurrentIndex = tf.getDocumentModel().getCarat();
 		
 		// relative to the BitmapText
 		float fRelativeCursorPosX = event.getX() - bt.getWorldTranslation().x;
+		float fRelativeCaratPosX = geomCarat.getWorldTranslation().x - bt.getWorldTranslation().x;
 		
-		// relative to the first character shown on the TextField, just trunc
-		int iRelativeCharPos = (int)(fRelativeCursorPosX/MiscLemurI.i().getFontCharWidthForStyle(tf.getStyle()));
+//		int iFinalCharIndex = iCaratCurrentIndex;
+		int iRelativeCharIndex = 0;
+		boolean bGuessOffset=false;
+		if(bGuessOffset){
+			// relative to the first character visibly shown on the TextField, just trunc
+			int iRelativeVisibleCharIndex = (int)(fRelativeCursorPosX/MiscLemurI.i().getFontCharWidthForStyle(tf.getStyle()));
+			
+		}else{
+			float fFinalRelativePosX = fRelativeCursorPosX - fRelativeCaratPosX;
+			
+			iRelativeCharIndex = (int)(fFinalRelativePosX/MiscLemurI.i().getFontCharWidthForStyle(tf.getStyle()));
+			
+//			iFinalCharIndex = iCaratCurrentIndex + iRelativeCharIndex;
+		}
 		
-		// do position carat
-		int iCaratAt = tf.getDocumentModel().getCarat();
-		float fCursorAtX = cursor.getWorldTranslation().x;
+//		tf.getDocumentModel().home(true);
+//		for(int i2=0;i2<iFinalCharIndex;i2++)tf.getDocumentModel().right();
+		if(iRelativeCharIndex==0)return;
 		
-		tf.getDocumentModel().home(true);
-		for(int i2=0;i2<iRelativeCharPos;i2++)tf.getDocumentModel().right();
+		if(iRelativeCharIndex>0){
+			for(int i2=0;i2<iRelativeCharIndex;i2++)tf.getDocumentModel().right();
+		}else{
+			for(int i2=0;i2>iRelativeCharIndex;i2--)tf.getDocumentModel().left();
+		}
 		
 	}
 
