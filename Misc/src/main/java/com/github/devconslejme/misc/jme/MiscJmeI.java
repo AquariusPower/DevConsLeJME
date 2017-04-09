@@ -27,14 +27,17 @@
 
 package com.github.devconslejme.misc.jme;
 
+import java.util.ArrayList;
+
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.StringI.EStringMatchMode;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.font.BitmapText;
 import com.jme3.font.LineWrapMode;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.simsilica.lemur.Label;
 
 /**
  * DevSelfNote: Misc lib class should not exist. As soon coehsion is possible, do it!
@@ -74,12 +77,55 @@ public class MiscJmeI {
 		}
 	}
 
-	public BitmapText retrieveDirectBitmapTextChildFor(Node node){
-		for(Spatial c : node.getChildren()){
-			if(c instanceof BitmapText){
-				return (BitmapText)c;
+//	public BitmapText getBitmapTextFrom(Node node){
+//		for(Spatial c : node.getChildren()){
+//			if(c instanceof BitmapText){
+//				return (BitmapText)c;
+//			}
+//		}
+//		return null;
+//	}
+	
+	public <T extends Spatial> T getChildRecursiveExactMatch(Spatial sptParentestToChk, Class<T> clTypeFilter){
+		ArrayList<T> asptList = getAllChildrenRecursiveFrom(sptParentestToChk, clTypeFilter);
+		if(asptList.size()>0)return null;
+		return asptList.get(0);
+	}
+	
+	/**
+	 * 
+	 * @param sptParentestToChk
+	 * @param clTypeFilter if Spatial, will bring all
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public <T extends Spatial> ArrayList<T> getAllChildrenRecursiveFrom(Spatial sptParentestToChk, Class<T> clTypeFilter) {
+		if(sptParentestToChk==null)throw new DetailedException("null spatial");
+		
+		ArrayList<T> asptList = new ArrayList<T>();
+		
+		Node nodeParent = null;
+		if (sptParentestToChk instanceof Node) {
+			nodeParent = (Node) sptParentestToChk;
+		}else{
+			return asptList;
+		}
+		
+		// add direct children
+		for(Spatial sptChild:nodeParent.getChildren()){
+			if(clTypeFilter.isInstance(sptChild)){
+				asptList.add((T)sptChild);
 			}
 		}
-		return null;
+		
+		// deep search
+		for(Spatial sptChild:nodeParent.getChildren()){
+			if(sptChild instanceof Node){
+				asptList.addAll(getAllChildrenRecursiveFrom(sptChild, clTypeFilter));
+			}
+		}
+		
+		return asptList;
 	}
+
 }

@@ -67,12 +67,15 @@ public class ColorI {
 	 * @param color
 	 * @return
 	 */
-	public ColorRGBA neglightColor(ColorRGBA color){
+	public ColorRGBA neglightColor(ColorRGBA color, float fIntensity){
 		color=color.clone();
 		
-		color.r=Math.abs((color.r+0.5f)%1.0f);
-		color.g=Math.abs((color.g+0.5f)%1.0f);
-		color.b=Math.abs((color.b+0.5f)%1.0f);
+		if(fIntensity<0.1f)fIntensity=0.1f;
+		if(fIntensity>1.0f)fIntensity=1.0f;
+		
+		color.r=Math.abs( (color.r + (0.5f*fIntensity)) % 1.0f);
+		color.g=Math.abs( (color.g + (0.5f*fIntensity)) % 1.0f);
+		color.b=Math.abs( (color.b + (0.5f*fIntensity)) % 1.0f);
 //		color.r=neglightColorComponent(color.r);
 //		color.g=neglightColorComponent(color.g);
 //		color.b=neglightColorComponent(color.b);

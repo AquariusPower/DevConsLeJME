@@ -31,7 +31,7 @@ import java.util.HashMap;
 
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
 import com.github.devconslejme.misc.jme.ColorI;
-import com.github.devconslejme.misc.lemur.SimpleDragParentestListenerI;
+import com.github.devconslejme.misc.lemur.DragParentestListenerI;
 import com.jme3.app.Application;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
@@ -148,7 +148,7 @@ public class GenericDialogState extends BaseAppState{
 //		cfg.hmSection.put(ESection.Info, 
 		cfgSection(getSection(ESection.Info),BorderLayout.Position.North,EEdge.Bottom);
 		CursorEventControl.addListenersToSpatial(
-				getSection(ESection.Info).getContents(), SimpleDragParentestListenerI.i());
+				getSection(ESection.Info).getContents(), DragParentestListenerI.i());
 //		MiscLemurI.i().applySimpleDragParentestListener();
 //		cfg.hmSection.put(ESection.Options,
 		cfgSection(getSection(ESection.Options),BorderLayout.Position.Center,EEdge.Bottom);

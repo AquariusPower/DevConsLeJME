@@ -47,11 +47,23 @@ public class MessagesI {
 	private StringBuilder	sbStack;
 	private int	iSummaryReportLineLength = 100;
 	
+	/**
+	 * for things that will break non crucial functionalities
+	 * @param objSource
+	 * @param strMsg
+	 * @param aobj
+	 */
 	public void warnMsg(Object objSource, String strMsg, Object... aobj){
 		output(true,System.err,"WARN",objSource,strMsg,aobj);
 //		output(true,"WARN",objSource,Object... aobj); 
 	}
-
+	
+	/**
+	 * for any useful info that is not critical, neither will break anything expected to not break
+	 * @param objSource
+	 * @param strMsg
+	 * @param aobj
+	 */
 	public void debugInfo(Object objSource, String strMsg, Object... aobj) {
 //		output(false,ReportI.i().joinMessageWithObjects("DevInfo["+objSource.getClass().getSimpleName()+"]: "+strMsg, aobj));
 		output(false,System.out,"DebugInfo",objSource,strMsg,aobj,Thread.currentThread().getStackTrace());

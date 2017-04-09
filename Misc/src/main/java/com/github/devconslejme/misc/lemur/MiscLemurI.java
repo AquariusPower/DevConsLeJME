@@ -29,11 +29,15 @@ package com.github.devconslejme.misc.lemur;
 
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.jme3.font.BitmapText;
 import com.jme3.math.FastMath;
-import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.Panel;
+import com.simsilica.lemur.TextField;
+import com.simsilica.lemur.component.TextComponent;
+import com.simsilica.lemur.component.TextEntryComponent;
+import com.simsilica.lemur.core.GuiControl;
 import com.simsilica.lemur.grid.GridModel;
 
 /**
@@ -52,21 +56,22 @@ public class MiscLemurI {
 		return (int)FastMath.ceil(fHeight);
 	}
 	
-	public float getFontWidth(){
-		return getFontWidth("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
-			GuiGlobals.getInstance().getStyles().getDefaultStyle(), true, null);
-	}
-	public float getFontWidth(String strChars, String strStyle, boolean bAveraged, Label lbl){
-		if(lbl==null)lbl = new Label(strChars,strStyle);
+	public int getFontCharWidthForStyle(String strStyle){
+		// this detached label has no preferred size etc, so the line width will be as shrinked as possible
+		String str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+		Label lbl = new Label(str,strStyle);
+//		float fLineWidth = MiscJmeI.i().getBitmapTextFrom(lbl).getLineWidth();
+		float fLineWidth = MiscJmeI.i().getAllChildrenRecursiveFrom(lbl,BitmapText.class).get(0).getLineWidth();
+		int iCharWidthPixels = Math.round(fLineWidth/=str.length());
 		
-		/**
-		 * This is the unquestionable width value.
-		 * 
-		 * TODO find a better, more direct, way to get the width?
-		 */
-		float f = MiscJmeI.i().retrieveDirectBitmapTextChildFor(lbl).getLineWidth();
-		if(bAveraged)f/=strChars.length();
-		return f;
+		return iCharWidthPixels;
 	}
-
+	
+	public TextEntryComponent getTextEntryComponentFrom(TextField tf){
+		return (TextEntryComponent)tf.getControl(GuiControl.class).getComponent(TextField.LAYER_TEXT);
+	}
+	
+	public TextComponent getTextComponentFrom(Label lbl){
+		return lbl.getControl(GuiControl.class).getComponent(Label.LAYER_TEXT);
+	}
 }

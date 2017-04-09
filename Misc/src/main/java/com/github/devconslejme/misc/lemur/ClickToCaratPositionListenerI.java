@@ -28,97 +28,73 @@
 package com.github.devconslejme.misc.lemur;
 
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.jme.UserDataI;
-import com.jme3.math.Vector2f;
-import com.jme3.math.Vector3f;
-import com.jme3.scene.Node;
+import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.jme3.font.BitmapText;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
-import com.simsilica.lemur.GuiGlobals;
-import com.simsilica.lemur.Label;
+import com.simsilica.lemur.TextField;
+import com.simsilica.lemur.component.TextEntryComponent;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.CursorListener;
 import com.simsilica.lemur.event.CursorMotionEvent;
-import com.simsilica.lemur.style.ElementId;
 
 /**
- * DevSelfNote: Misc lib class should not exist. As soon coehsion is possible, do it!
+ * TODO position the carat where it is clicked
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PopupHelpListener implements CursorListener{
-	public static PopupHelpListener i(){return GlobalInstanceManagerI.i().get(PopupHelpListener.class);}
+public class ClickToCaratPositionListenerI implements CursorListener{
+	public static ClickToCaratPositionListenerI i(){return GlobalInstanceManagerI.i().get(ClickToCaratPositionListenerI.class);}
 	
-	public static enum EPopup{
-		strPopupHelpUserData,
-		DialogStyleElementIdPopupHelp,
-		;
-		
-		public String s(){return this.toString();}
+	public void applyAt(Spatial spt){
+		CursorEventControl.addListenersToSpatial(spt, this);
 	}
-	private Label	lblPopupHelp;
-	private String	strPopupHelp;
-	private Node	nodeGui;
-
+	
+	public void applyRecursivelyAtAllTextFieldsOf(Spatial spt){
+		for(TextField tf:MiscJmeI.i().getAllChildrenRecursiveFrom(spt, TextField.class)){
+			applyAt(tf);
+		}
+	}
+	
 	@Override
 	public void cursorButtonEvent(CursorButtonEvent event, Spatial target,			Spatial capture) {
+		TextField tf = (TextField)capture;
+		
+		String str=tf.getText();
+		
+		BitmapText bt = MiscJmeI.i().getChildRecursiveExactMatch(tf,BitmapText.class); //TODO this is just guesswork...
+		
+		Geometry cursor = MiscJmeI.i().getChildRecursiveExactMatch(bt,Geometry.class); //TODO this is just guesswork...
+		
+		// tec.textOffset is inaccessible :( 
+		TextEntryComponent tec = MiscLemurI.i().getTextEntryComponentFrom(tf);
+		
+		// relative to the BitmapText
+		float fRelativeCursorPosX = event.getX() - bt.getWorldTranslation().x;
+		
+		// relative to the first character shown on the TextField, just trunc
+		int iRelativeCharPos = (int)(fRelativeCursorPosX/MiscLemurI.i().getFontCharWidthForStyle(tf.getStyle()));
+		
+		// do position carat
+		int iCaratAt = tf.getDocumentModel().getCarat();
+		float fCursorAtX = cursor.getWorldTranslation().x;
+		
+		tf.getDocumentModel().home(true);
+		for(int i2=0;i2<iRelativeCharPos;i2++)tf.getDocumentModel().right();
+		
 	}
 
 	@Override
 	public void cursorEntered(CursorMotionEvent event, Spatial target,			Spatial capture) {
-		strPopupHelp = getPopupHelp(target);
 	}
 
 	@Override
 	public void cursorExited(CursorMotionEvent event, Spatial target,			Spatial capture) {
-		strPopupHelp=null;
-		updatePopupHelp(event.getLocation());
 	}
 
 	@Override
 	public void cursorMoved(CursorMotionEvent event, Spatial target,			Spatial capture) {
-		updatePopupHelp(event.getLocation());
-	}
-	
-	private void updatePopupHelp(Vector2f v2fMousePos){
-		if(strPopupHelp!=null){
-			lblPopupHelp.setText("["+strPopupHelp+"]");
-			
-			Vector3f v3fSize = lblPopupHelp.getSize();
-			
-			float fDistFromCursor=10f;
-			float fZAboveAll=1000;
-			lblPopupHelp.setLocalTranslation(v2fMousePos.x-v3fSize.x/2, v2fMousePos.y+v3fSize.y+fDistFromCursor, fZAboveAll);
-			
-			if(lblPopupHelp.getParent()==null)nodeGui.attachChild(lblPopupHelp);
-		}else{
-//			if(lblPopupHelp!=null){
-				if(lblPopupHelp.getParent()!=null){
-					lblPopupHelp.removeFromParent();
-				}
-//			}
-		}
-	}
-	
-	public String getPopupHelp(Spatial spt){
-		return UserDataI.i().getUserDataPSH(spt, EPopup.strPopupHelpUserData.s());
-	}
-	public void setPopupHelp(Spatial spt, String strHelp){
-		UserDataI.i().setUserDataPSH(spt, EPopup.strPopupHelpUserData.s(), strHelp);
-		CursorEventControl.addListenersToSpatial(spt, this);
-//		spt.setUserData(EUserDataMiscJme.strPopupHelp.s(), strHelp);
-	}
-
-	public void configure(Node nodeParent) {
-		this.nodeGui = nodeParent;
-		
-//		if(lblPopupHelp==null){
-			lblPopupHelp = new Label(
-				"nothing yet...", 
-				new ElementId(EPopup.strPopupHelpUserData.s()),
-				GuiGlobals.getInstance().getStyles().getDefaultStyle() //BaseStyles.GLASS
-			); 
-			lblPopupHelp.setName("Popup Help/Hint Label");
-//		}
 	}
 	
 }

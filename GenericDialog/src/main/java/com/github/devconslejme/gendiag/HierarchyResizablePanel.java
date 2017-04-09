@@ -34,7 +34,9 @@ import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
-import com.github.devconslejme.misc.lemur.SimpleDragParentestListenerI;
+import com.github.devconslejme.misc.lemur.ClickToCaratPositionListenerI;
+import com.github.devconslejme.misc.lemur.DragParentestListenerI;
+import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.jme3.app.Application;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
@@ -68,7 +70,7 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 		
 		app = GlobalInstanceManagerI.i().get(Application.class);
 		
-		HighlightEffectI.i().addMouseCursorHighlightEffects(this, (QuadBackgroundComponent)getResizableBorder());
+		HoverHighlightEffectI.i().applyAt(this, (QuadBackgroundComponent)getResizableBorder());
 		
 //    CursorEventControl.addListenersToSpatial(this, lastFocusListener);
 	}
@@ -81,7 +83,7 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 			new QuadBackgroundComponent(//ColorRGBA.Red));
 				ColorI.i().colorChangeCopy(ColorRGBA.Red, -0.75f, 0.5f)));
 		
-		SimpleDragParentestListenerI.i().applyAt(btnBlocker, this);
+		DragParentestListenerI.i().applyAt(btnBlocker, this);
 	}
 
 	@Override

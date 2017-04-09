@@ -27,11 +27,11 @@
 
 package com.github.devconslejme.tests;
 
-import com.github.devconslejme.gendiag.HighlightEffectI;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.MainThreadI;
 import com.github.devconslejme.misc.jme.QueueStateI;
+import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
@@ -69,7 +69,7 @@ public class TestResizablePanel extends SimpleApplication {
 		rzp.setLocalTranslation(pos); //above DevCons
 		getGuiNode().attachChild(rzp);
 		
-		HighlightEffectI.i().addMouseCursorHighlightEffects(rzp, (QuadBackgroundComponent)rzp.getResizableBorder());
+		HoverHighlightEffectI.i().applyAt(rzp, (QuadBackgroundComponent)rzp.getResizableBorder());
 		
 		Button btn = new Button("drag borders to resize:"+pos);
 //		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));

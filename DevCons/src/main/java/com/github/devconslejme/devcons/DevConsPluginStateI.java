@@ -38,7 +38,6 @@ import java.util.Set;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.gendiag.HierarchyResizablePanel;
-import com.github.devconslejme.gendiag.HighlightEffectI;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
@@ -48,10 +47,12 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.lemur.ClickToCaratPositionListenerI;
+import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
-import com.github.devconslejme.misc.lemur.PopupHelpListener;
-import com.github.devconslejme.misc.lemur.PopupHelpListener.EPopup;
-import com.github.devconslejme.misc.lemur.SimpleDragParentestListenerI;
+import com.github.devconslejme.misc.lemur.PopupHelpListenerI;
+import com.github.devconslejme.misc.lemur.PopupHelpListenerI.EPopup;
+import com.github.devconslejme.misc.lemur.DragParentestListenerI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
@@ -311,6 +312,8 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 		applyDefaultPosSize();
 		
+		ClickToCaratPositionListenerI.i().applyRecursivelyAtAllTextFieldsOf(cntrMain);
+
 //		GuiGlobals.getInstance().requestFocus(tfInput);
 		
 		bUpdateNoWrap=true;
@@ -340,7 +343,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 		GuiComponent gc = rzpVarBar.getResizableBorder();
 		if (gc instanceof QuadBackgroundComponent) {
-			HighlightEffectI.i().addMouseCursorHighlightEffects(rzpVarBar, (QuadBackgroundComponent) gc);
+			HoverHighlightEffectI.i().applyAt(rzpVarBar, (QuadBackgroundComponent) gc);
 		}
 		
 		toggleVarMonitorBar(true);
@@ -440,7 +443,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		tfInput = new TextField("",getStyle());
 		cntrMain.addChild(tfInput, BorderLayout.Position.South);
 		
-		SimpleDragParentestListenerI.i().applyAt(tfInput);
+		DragParentestListenerI.i().applyAt(tfInput);
 		
 		BindKeyI.i().prepareKeyMappings();
 		
@@ -551,15 +554,15 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		int iButtonIndex=0;
 		
 		btnRestoreSize = new Button("DefaultPosSize",getStyle());
-		PopupHelpListener.i().setPopupHelp(btnRestoreSize, "Restore DevCons defaults Size and Position");
+		PopupHelpListenerI.i().setPopupHelp(btnRestoreSize, "Restore DevCons defaults Size and Position");
 		apnl.add(btnRestoreSize);
 		
 		btnShowVarMon = new Button("VarMonBar:Toggle",getStyle());
-		PopupHelpListener.i().setPopupHelp(btnShowVarMon, "Show Variables Monitor Bar");
+		PopupHelpListenerI.i().setPopupHelp(btnShowVarMon, "Show Variables Monitor Bar");
 		apnl.add(btnShowVarMon);
 		
 		btnClipboardShow = new Button("Clipboard:Show",getStyle());
-		PopupHelpListener.i().setPopupHelp(btnClipboardShow, "Show Clipboard Contents");
+		PopupHelpListenerI.i().setPopupHelp(btnClipboardShow, "Show Clipboard Contents");
 		apnl.add(btnClipboardShow);
 		
 		lblStats = new Label("DevCons",getStyle());
@@ -577,7 +580,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 				CursorEventControl.addListenersToSpatial(btn, btnclk);
 //				btn.addClickCommands(btnclk);
 			}
-			SimpleDragParentestListenerI.i().applyAt(pnl);
+			DragParentestListenerI.i().applyAt(pnl);
 //			else
 //			if (pnl instanceof Label) {
 //				Label lbl = (Label)pnl;

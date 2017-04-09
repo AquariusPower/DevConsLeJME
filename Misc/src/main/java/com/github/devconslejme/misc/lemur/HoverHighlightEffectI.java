@@ -25,7 +25,7 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.gendiag;
+package com.github.devconslejme.misc.lemur;
 
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
@@ -35,6 +35,7 @@ import com.jme3.input.event.MouseMotionEvent;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Panel;
+import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.anim.Animation;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.effect.AbstractEffect;
@@ -49,8 +50,8 @@ import com.simsilica.lemur.event.MouseEventControl;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class HighlightEffectI {
-	public static HighlightEffectI i(){return GlobalInstanceManagerI.i().get(HighlightEffectI.class);}
+public class HoverHighlightEffectI {
+	public static HoverHighlightEffectI i(){return GlobalInstanceManagerI.i().get(HoverHighlightEffectI.class);}
 	
 	private static enum EEffectIds{
 		ChannelHighLight,
@@ -87,7 +88,7 @@ public class HighlightEffectI {
 				@Override	public boolean animate(double tpf) {
 					if(!bApplied){
 	//					if(existing!=null && existing.getAnimation()==this)return true;
-						qbc.setColor(ColorI.i().neglightColor(colorBkp));
+						qbc.setColor(ColorI.i().neglightColor(colorBkp,(pnlTarget instanceof TextField)?0.1f:1f));
 						bApplied=true;
 					}
 					return true;
@@ -112,7 +113,7 @@ public class HighlightEffectI {
 	private HighlightMouseListener hml = new HighlightMouseListener();
 	
 	private DummyEffect	efDummy;
-	public void addMouseCursorHighlightEffects(Panel pnlToThisElement, QuadBackgroundComponent qbcTargetToBeHighlighted){
+	public void applyAt(Panel pnlToThisElement, QuadBackgroundComponent qbcTargetToBeHighlighted){
 		MouseEventControl.addListenersToSpatial(pnlToThisElement, hml);
 		UserDataI.i().setUserDataPSH(pnlToThisElement, EEffectIds.UserDataHighLightTarget.s(), qbcTargetToBeHighlighted);
 //		pnl.setUserData(EEffectIds.UserDataHighLightTarget.s(), qbc);
