@@ -72,10 +72,6 @@ public class SimpleGenericDialogState extends GenericDialogState {
 		}
 	};
 
-	public SimpleGenericDialogState(Application app) {
-		super(app);
-	}
-	
 //	@Override
 //	public void initialize(AppStateManager stateManager, Application app) {
 //		super.initialize(stateManager, app);

@@ -80,7 +80,7 @@ public class TestGenericDialog extends SimpleApplication {
 	}
 
 	private void prepareDialog() {
-		diag = new SimpleGenericDialogState(this);
+		diag = new SimpleGenericDialogState();
 		
 		diag.configure(
 			new CfgParams()

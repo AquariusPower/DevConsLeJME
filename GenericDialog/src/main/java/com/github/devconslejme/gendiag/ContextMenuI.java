@@ -62,6 +62,7 @@ public class ContextMenuI {
 	private HierarchyResizablePanel	hrp;
 	private String	strStyle;
 	private Container	cntr;
+	private Vector3f	v3fHierarchyParentDisplacement;
 	
 	public static class ContextMenu{
 		LinkedHashMap<String,Button> hmContextOptions = new LinkedHashMap<String,Button>();
@@ -144,11 +145,13 @@ public class ContextMenuI {
 			@Override
 			public Boolean call() {
 				if(hrp.getParent()!=null){
-					
+					hrp.setLocalTranslation(
+						hrp.getHierarchyParent().getLocalTranslation().subtract(
+							v3fHierarchyParentDisplacement));
 				}
 				return true;
 			}
-		}.setName("ContextMenuUpdate").setLoop(true).setDelaySeconds(0.25f));
+		}.setName("ContextMenuUpdate").setLoop(true).setDelaySeconds(0.1f));
 	}
 	
 	
@@ -177,11 +180,13 @@ public class ContextMenuI {
 		}
 		
 		cm.getHierarchyParent().showHierarchyModal(hrp);
-		
 //		nodeParent.attachChild(hrp);
 		
 		hrp.setPreferredSize(new Vector3f(200,30*cm.hmContextOptions.size(),hrp.getPreferredSize().z));
 		hrp.setLocalTranslation(event.getX(),event.getY(),0);//btnOwner.getWorldTranslation());
+		
+		v3fHierarchyParentDisplacement = cm.getHierarchyParent().getLocalTranslation().subtract(
+			hrp.getLocalTranslation());
 	}
 	
 	public void hideContextMenu() {

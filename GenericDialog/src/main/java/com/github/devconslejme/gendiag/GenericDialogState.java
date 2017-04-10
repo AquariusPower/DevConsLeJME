@@ -30,6 +30,7 @@ package com.github.devconslejme.gendiag;
 import java.util.HashMap;
 
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.lemur.DragParentestListenerI;
 import com.jme3.app.Application;
@@ -107,8 +108,8 @@ public class GenericDialogState extends BaseAppState{
 
 	}
 	
-	public GenericDialogState(Application app) {
-		this.app=app;
+	public GenericDialogState() {
+		this.app=GlobalInstanceManagerI.i().get(Application.class);
 		setEnabled(false); //starts closed
 	}
 	
