@@ -67,6 +67,7 @@ import com.simsilica.lemur.style.Styles;
  */
 public class ResizablePanel extends Panel {
   public static final String ELEMENT_ID = "resizablePanel";
+  private HashMap<Class,IComposite> hmComposite = new HashMap<Class,IComposite>();
 	private BorderLayout layout;
 	private Panel contents;
 	private static int iBorderSizeDefault = 2;
@@ -81,6 +82,17 @@ public class ResizablePanel extends Panel {
 //	private boolean	bEnabledGrowParentestFixAttemptLimit=false;
 	private HashMap<EEdge,Edge> hmEdge = new HashMap<EEdge,Edge>();
 	private Panel pnlParentest = null;
+	
+	public static interface IComposite {
+		void updateLogicalState(float tpf);
+		ResizablePanel getOwner();
+		
+		/**
+		 * implement as final!
+		 * @return
+		 */
+		<T extends IComposite> Class<T> getCompositeType();
+	}
 	
 	public static interface IResizableListener {
 		//public static class VersionedVector3f extends Vector3f implements VersionedObject{}; //???
@@ -342,7 +354,7 @@ public class ResizablePanel extends Panel {
 			if(bUpdateDragFromY)v3fDragFromPrevious.y+=fDeltaY;
 			
 			if(!v3fNewSize.equals(v3fOldSize)){
-				resizedTo(v3fNewSize);
+//				resizedTo(v3fNewSize);
 				for(IResizableListener irl:airlList){
 					irl.attendToResizing(this,v3fNewSize);
 				}
@@ -357,7 +369,7 @@ public class ResizablePanel extends Panel {
 	 * override for further changes at subclass based on new size 
 	 * @param v3fNewSize
 	 */
-	protected void resizedTo(Vector3f v3fNewSize) {}
+//	protected void resizedTo(Vector3f v3fNewSize) {}
 
 	private Panel getParentest(){ //TODO @ThisMethodCouldBeAtMiscClass
 		if(pnlParentest!=null)return pnlParentest;
@@ -413,6 +425,12 @@ public class ResizablePanel extends Panel {
 				} //prevents endless growth
 				growParentestFixAttempt(i);
 				i++;
+			}
+		}
+		
+		if(bUpdateLogicalStateSuccess){
+			for(IComposite ic:hmComposite.values()){
+				ic.updateLogicalState(tpf);
 			}
 		}
 	}
@@ -675,5 +693,18 @@ public class ResizablePanel extends Panel {
 //	}
 	public boolean isUpdateLogicalStateSucces() {
 		return bUpdateLogicalStateSuccess;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <T extends IComposite> T getComposite(Class<T> cl){
+		return (T)hmComposite.get(cl);
+	}
+//	public <T extends IComposite> void putComposite(Class<T> cl, T obj){
+//		if(hmComposite.get(cl)!=null)throw new NullPointerException("already set "+cl);
+//		hmComposite.put(cl,obj);
+//	}
+	public <T extends IComposite> void putComposite(T obj){
+		if(hmComposite.get(obj.getCompositeType())!=null)throw new NullPointerException("already set "+obj.getCompositeType());
+		hmComposite.put(obj.getCompositeType(),obj);
 	}
 }

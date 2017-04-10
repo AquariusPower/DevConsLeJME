@@ -59,7 +59,7 @@ public class ContextMenuI {
 	public static ContextMenuI i(){return GlobalInstanceManagerI.i().get(ContextMenuI.class);}
 	
 //	private Node	nodeParent;
-	private HierarchyResizablePanel	hrp;
+	private ResizablePanel	hrp;
 	private String	strStyle;
 	private Container	cntr;
 	private Vector3f	v3fHierarchyParentDisplacement;
@@ -67,7 +67,7 @@ public class ContextMenuI {
 	public static class ContextMenu{
 		LinkedHashMap<String,Button> hmContextOptions = new LinkedHashMap<String,Button>();
 		private Panel owner;
-		private HierarchyResizablePanel	hrpParent;
+		private ResizablePanel	hrpParent;
 		
 		/**
 		 * to be set only when clicking from the listener here
@@ -88,11 +88,11 @@ public class ContextMenuI {
 			hmContextOptions.put(strTextKey, btn);
 		}
 
-		public HierarchyResizablePanel getHierarchyParent() {
+		public ResizablePanel getOwner() {
 			return hrpParent;
 		}
 		
-		public void setHierarchyParent(HierarchyResizablePanel hrpParent) {
+		public void setHierarchyParent(ResizablePanel hrpParent) {
 			this.hrpParent=hrpParent;
 		}
 	}
@@ -130,8 +130,9 @@ public class ContextMenuI {
 	public void configure(){//Node nodeParent) {
 		strStyle = GuiGlobals.getInstance().getStyles().getDefaultStyle();
 		
-		hrp = new HierarchyResizablePanel(strStyle);
-		hrp.setTopHierarchy(true);
+		hrp = new ResizablePanel(strStyle);
+		hrp.putComposite(new HierarchyComposite(hrp));
+		hrp.getComposite(HierarchyComposite.class).setTopHierarchy(true);
 		hrp.setAllEdgesEnabled(false); //it is here for the hierarchy (not the resizing)
 		
 		cntr = new Container(strStyle);
@@ -146,7 +147,7 @@ public class ContextMenuI {
 			public Boolean call() {
 				if(hrp.getParent()!=null){
 					hrp.setLocalTranslation(
-						hrp.getHierarchyParent().getLocalTranslation().subtract(
+						hrp.getComposite(HierarchyComposite.class).getHierarchyParent().getOwner().getLocalTranslation().subtract(
 							v3fHierarchyParentDisplacement));
 				}
 				return true;
@@ -179,13 +180,13 @@ public class ContextMenuI {
 			cntr.addChild(entry.getValue(), i++, 0);
 		}
 		
-		cm.getHierarchyParent().showHierarchyModal(hrp);
+		cm.getOwner().getComposite(HierarchyComposite.class).showHierarchyModal(hrp.getComposite(HierarchyComposite.class));
 //		nodeParent.attachChild(hrp);
 		
 		hrp.setPreferredSize(new Vector3f(200,30*cm.hmContextOptions.size(),hrp.getPreferredSize().z));
 		hrp.setLocalTranslation(event.getX(),event.getY(),0);//btnOwner.getWorldTranslation());
 		
-		v3fHierarchyParentDisplacement = cm.getHierarchyParent().getLocalTranslation().subtract(
+		v3fHierarchyParentDisplacement = cm.getOwner().getLocalTranslation().subtract(
 			hrp.getLocalTranslation());
 	}
 	
@@ -194,7 +195,7 @@ public class ContextMenuI {
 	}
 
 
-	public boolean isTheContextMenu(IHierarchySorter hs) {
+	public boolean isTheContextMenu(ResizablePanel hs) {
 		return (hs==hrp);
 	}	
 	

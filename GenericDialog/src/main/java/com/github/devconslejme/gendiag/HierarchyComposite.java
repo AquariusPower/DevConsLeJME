@@ -1,28 +1,28 @@
 /* 
-	Copyright (c) 2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
-	
-	All rights reserved.
+Copyright (c) 2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 
-	Redistribution and use in source and binary forms, with or without modification, are permitted 
-	provided that the following conditions are met:
+All rights reserved.
 
-	1.	Redistributions of source code must retain the above copyright notice, this list of conditions 
-		and the following disclaimer.
+Redistribution and use in source and binary forms, with or without modification, are permitted 
+provided that the following conditions are met:
 
-	2.	Redistributions in binary form must reproduce the above copyright notice, this list of conditions 
-		and the following disclaimer in the documentation and/or other materials provided with the distribution.
-	
-	3.	Neither the name of the copyright holder nor the names of its contributors may be used to endorse 
-		or promote products derived from this software without specific prior written permission.
+1.	Redistributions of source code must retain the above copyright notice, this list of conditions 
+	and the following disclaimer.
 
-	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED 
-	WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
-	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR 
-	ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
-	LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
-	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
-	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
-	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+2.	Redistributions in binary form must reproduce the above copyright notice, this list of conditions 
+	and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+3.	Neither the name of the copyright holder nor the names of its contributors may be used to endorse 
+	or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED 
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR 
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
+IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 package com.github.devconslejme.gendiag;
@@ -30,51 +30,51 @@ package com.github.devconslejme.gendiag;
 import java.util.ArrayList;
 
 import com.github.devconslejme.gendiag.HierarchySorterI.IHierarchySorter;
+import com.github.devconslejme.gendiag.ResizablePanel.IComposite;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
-import com.github.devconslejme.misc.lemur.ClickToPositionCaratListenerI;
 import com.github.devconslejme.misc.lemur.DragParentestListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.jme3.app.Application;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Button;
-import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
-import com.simsilica.lemur.event.CursorButtonEvent;
-import com.simsilica.lemur.event.CursorEventControl;
-import com.simsilica.lemur.event.CursorListener;
-import com.simsilica.lemur.event.CursorMotionEvent;
 
 
 /**
- * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
- */
-public class HierarchyResizablePanel extends ResizablePanel implements IHierarchySorter{
+* @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+*/
+public final class HierarchyComposite implements IComposite,IHierarchySorter{
 	private Button	btnBlocker;
 	
 	private long	lLastFocusAppTimeNano = -1;
-	private ArrayList<HierarchyResizablePanel> arzdHierarchyChildList = new ArrayList<HierarchyResizablePanel>();
-	private Panel	hrpHierarchyParent;
+	private ArrayList<HierarchyComposite> arzdHierarchyChildList = new ArrayList<HierarchyComposite>();
+	private HierarchyComposite	hrpHierarchyParent;
 	private boolean	bHierarchyTop;
 	private boolean	bHierarchyModal;
 	private Application	app;
+
+	private ResizablePanel	rzpOwner;
 	
-	public HierarchyResizablePanel(String strStyle) {
-		super(strStyle);
-		
-   	setName(getName()+"/"+HierarchyResizablePanel.class.getSimpleName());
+	public HierarchyComposite(ResizablePanel rzp){
+		this.rzpOwner=rzp;
+//	}
+//	
+//	public HierarchyComposite(String strStyle) {
+//		super(strStyle);
+//		
+//	 	setName(getName()+"/"+HierarchyComposite.class.getSimpleName());
 		
 		initBlocker();
 		
 		app = GlobalInstanceManagerI.i().get(Application.class);
 		
-		HoverHighlightEffectI.i().applyAt(this, (QuadBackgroundComponent)getResizableBorder());
+		HoverHighlightEffectI.i().applyAt(rzp, (QuadBackgroundComponent)rzp.getResizableBorder());
 		
-//    CursorEventControl.addListenersToSpatial(this, lastFocusListener);
+	//  CursorEventControl.addListenersToSpatial(this, lastFocusListener);
 	}
 	
 	private void initBlocker(){
@@ -84,32 +84,32 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 			new QuadBackgroundComponent(//ColorRGBA.Red));
 				ColorI.i().colorChangeCopy(ColorRGBA.Red, -0.75f, 0.5f)));
 		
-		DragParentestListenerI.i().applyAt(btnBlocker, this);
+		DragParentestListenerI.i().applyAt(btnBlocker, rzpOwner);
 	}
-
+	
 	@Override
 	public void updateLastFocusAppTimeNano() {
 		lLastFocusAppTimeNano=TimeConvertI.i().getNanosFrom(app.getTimer());
 	}
-
+	
 	public void setEnabledBlockerLayer(boolean b){
 		if(b){
-			getParent().attachChild(btnBlocker);
+			rzpOwner.getParent().attachChild(btnBlocker);
 		}else{
 			btnBlocker.removeFromParent();
 		}
 	}
 	
-	@Override
-	protected void resizedTo(Vector3f v3fNewSize) {
-		super.resizedTo(v3fNewSize);
-	}
+//	@Override
+//	protected void resizedTo(Vector3f v3fNewSize) {
+//		super.resizedTo(v3fNewSize);
+//	}
 	
 	/**
 	 * will prevent access to parent
 	 * @param rzdChildDialog
 	 */
-	public void showHierarchyModal(HierarchyResizablePanel rzdChildDialog){
+	public void showHierarchyModal(HierarchyComposite rzdChildDialog){
 		setHierarchyChild(rzdChildDialog,true);
 	}
 	
@@ -117,14 +117,14 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 	 * will close if parent closes
 	 * @param rzdChildDialog
 	 */
-	public void showHierarchyModeless(HierarchyResizablePanel rzdChildDialog){
+	public void showHierarchyModeless(HierarchyComposite rzdChildDialog){
 		setHierarchyChild(rzdChildDialog,false);
 	}
 	
-	private void setHierarchyChild(HierarchyResizablePanel rzdChildDialog, boolean bModal){
+	private void setHierarchyChild(HierarchyComposite rzdChildDialog, boolean bModal){
 		rzdChildDialog.setHierarchyModal(bModal);
 		rzdChildDialog.setHierarchyParent(this);
-		getParent().attachChild(rzdChildDialog);
+		rzpOwner.getParent().attachChild(rzdChildDialog.rzpOwner);
 		arzdHierarchyChildList.add(rzdChildDialog);
 		if(bModal)setEnabledBlockerLayer(true);
 		rzdChildDialog.updateLastFocusAppTimeNano();
@@ -134,13 +134,12 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 		this.bHierarchyModal = b;
 	}
 	
-	protected void setHierarchyParent(HierarchyResizablePanel hrpParent){
+	protected void setHierarchyParent(HierarchyComposite hrpParent){
 		this.hrpHierarchyParent = hrpParent;
 	}
-
+	
 	@Override
 	public void updateLogicalState(float tpf) {
-		super.updateLogicalState(tpf);
 		update(tpf);
 	}
 	protected void update(float tpf){
@@ -150,14 +149,14 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 		
 		// close self if parent dialog closed
 		if(getHierarchyParent()!=null){
-			if(getHierarchyParent().getParent()==null){
-				removeFromParent();
+			if(getHierarchyParent().rzpOwner.getParent()==null){
+				rzpOwner.removeFromParent();
 			}
 		}
 		
 		// remove closed childs
-		for(HierarchyResizablePanel rzd:arzdHierarchyChildList.toArray(new HierarchyResizablePanel[0])){
-			if(rzd.getParent()==null){ //was closed
+		for(HierarchyComposite rzd:arzdHierarchyChildList.toArray(new HierarchyComposite[0])){
+			if(rzd.rzpOwner.getParent()==null){ //was closed
 				arzdHierarchyChildList.remove(rzd);
 			}
 		}
@@ -166,7 +165,7 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 		if(isBlocked()){
 			// how many childs are modal
 			int iModalCount=0;
-			for(HierarchyResizablePanel rzd:arzdHierarchyChildList){
+			for(HierarchyComposite rzd:arzdHierarchyChildList){
 				if(rzd.isModal())iModalCount++;
 			}
 			
@@ -174,13 +173,13 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 				// remove blocker
 				setEnabledBlockerLayer(false);
 			}else{
-				Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSize(this);
+				Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSize(rzpOwner);
 				if(Float.compare(v3fSize.length(),0f)!=0){ //waiting top panel be updated by lemur
-					Vector3f v3fPos = getLocalTranslation().clone();
+					Vector3f v3fPos = rzpOwner.getLocalTranslation().clone();
 					v3fPos.z += v3fSize.z;
 					btnBlocker.setLocalTranslation(v3fPos);
 					
-					btnBlocker.setPreferredSize(getPreferredSize());
+					btnBlocker.setPreferredSize(rzpOwner.getPreferredSize());
 				}
 			}
 		}
@@ -191,21 +190,21 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 	}
 	
 	@Override
-	public Panel getHierarchyParent() {
+	public HierarchyComposite getHierarchyParent() {
 		return hrpHierarchyParent;
 	}
 	
 	@Override
-	public Panel[] getHierarchyChildList() {
-		return arzdHierarchyChildList.toArray(new Panel[0]);
+	public HierarchyComposite[] getHierarchyChildList() {
+		return arzdHierarchyChildList.toArray(new HierarchyComposite[0]);
 	}
-
+	
 	@Override
 	public Long getLastFocusAppTimeNano() {
 		return lLastFocusAppTimeNano;
 	}
-
-	public HierarchyResizablePanel setTopHierarchy(boolean b) {
+	
+	public HierarchyComposite setTopHierarchy(boolean b) {
 		this.bHierarchyTop = b;
 		return this;
 	}
@@ -214,12 +213,12 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 	public boolean isTopHierarchy() {
 		return bHierarchyTop;
 	}
-
+	
 	@Override
 	public boolean isModal() {
 		return bHierarchyModal;
 	}
-
+	
 	@Override
 	public String getReport(boolean b) {
 		StringBuilder sb = new StringBuilder();
@@ -227,24 +226,24 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 		sb.append("top="+bHierarchyTop);
 		sb.append("/");
 		
-		sb.append("z="+getSize().z);
+		sb.append("z="+rzpOwner.getSize().z);
 		sb.append(",");
-		sb.append("Pz="+getPreferredSize().z);
+		sb.append("Pz="+rzpOwner.getPreferredSize().z);
 		sb.append("/");
 		
 		sb.append("tm="+lLastFocusAppTimeNano);
 		sb.append("/");
 		
-		sb.append("dbgnm="+getName());
+		sb.append("dbgnm="+rzpOwner.getName());
 		sb.append("/");
 		
 		return sb.toString();
 	}
-
+	
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("HierarchyResizablePanel [btnBlocker=");
+		builder.append("HierarchyComposite [btnBlocker=");
 		builder.append(btnBlocker);
 		builder.append(", lLastFocusAppTimeNano=");
 		builder.append(lLastFocusAppTimeNano);
@@ -261,5 +260,16 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 		builder.append("]");
 		return builder.toString();
 	}
-	
+
+	@Override
+	public ResizablePanel getOwner() {
+		return rzpOwner;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Class<HierarchyComposite> getCompositeType() {
+		return HierarchyComposite.class;
+	}
+
 }

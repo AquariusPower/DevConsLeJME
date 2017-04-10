@@ -27,20 +27,12 @@
 
 package com.github.devconslejme.tests;
 
-import com.github.devconslejme.gendiag.HierarchyResizablePanel;
-import com.github.devconslejme.gendiag.HierarchySorterI;
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.MainThreadI;
-import com.github.devconslejme.misc.jme.QueueStateI;
-import com.jme3.app.Application;
+import com.github.devconslejme.gendiag.HierarchyComposite;
+import com.github.devconslejme.gendiag.ResizablePanel;
 import com.jme3.app.SimpleApplication;
-import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
-import com.simsilica.lemur.GuiGlobals;
-import com.simsilica.lemur.component.QuadBackgroundComponent;
-import com.simsilica.lemur.style.BaseStyles;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -66,7 +58,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 
 	@SuppressWarnings("unchecked")
 	private void initTest(int iBaseY) {
-		HierarchyResizablePanel testChild = test(new Vector3f(200,iBaseY+200,20));
+		ResizablePanel testChild = test(new Vector3f(200,iBaseY+200,20));
 //		ColorRGBA color = ColorRGBA.Yellow.clone();color.a=0.25f;QuadBackgroundComponent qbc = new QuadBackgroundComponent(color);qbc.setMargin(10,5);testChild.setBorder(qbc);
 		Button btn = new Button("click to close");
 		btn.addClickCommands(new Command<Button>(){
@@ -78,12 +70,13 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		testChild.setContents(btn);
 		testChild.setName("child"+iBaseY);
 		
-		HierarchyResizablePanel testParent = test(new Vector3f(100,iBaseY+100,10));
+		ResizablePanel testParent = test(new Vector3f(100,iBaseY+100,10));
 		btn = new Button("click to open modal");
 		btn.addClickCommands(new Command<Button>(){
 			@Override
 			public void execute(Button source) {
-				testParent.showHierarchyModal(testChild);
+				testParent.getComposite(HierarchyComposite.class).showHierarchyModal(
+					testChild.getComposite(HierarchyComposite.class));
 			}
 		});
 		testParent.setContents(btn);
@@ -93,8 +86,9 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		getGuiNode().attachChild(testParent);
 	}
 
-	private HierarchyResizablePanel test(Vector3f pos) {
-		HierarchyResizablePanel rzp = new HierarchyResizablePanel(null);
+	private ResizablePanel test(Vector3f pos) {
+		ResizablePanel rzp = new ResizablePanel(null);
+		rzp.putComposite(new HierarchyComposite(rzp));
 		rzp.setPreferredSize(new Vector3f(300,200,0)); //TODO z will cause trouble?
 		rzp.setLocalTranslation(pos); //above DevCons
 		return rzp;

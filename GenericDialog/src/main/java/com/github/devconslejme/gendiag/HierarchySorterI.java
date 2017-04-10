@@ -64,8 +64,8 @@ public class HierarchySorterI {
 	private Comparator<IHierarchySorter> cmpr = new Comparator<IHierarchySorter>() {
 		@Override
 		public int compare(IHierarchySorter o1, IHierarchySorter o2) {
-			Panel pnl1 = (Panel)o1;
-			Panel pnl2 = (Panel)o2;
+			HierarchyComposite pnl1 = (HierarchyComposite)o1;
+			HierarchyComposite pnl2 = (HierarchyComposite)o2;
 			
 			// top only against top
 			if( o1.isTopHierarchy() && !o2.isTopHierarchy())return  1;
@@ -85,12 +85,13 @@ public class HierarchySorterI {
 	private FocusManagerState	focusState;
 	
 	public static interface IHierarchySorter extends IReport {
-		Panel getHierarchyParent();
-		Panel[] getHierarchyChildList();
+		HierarchyComposite getHierarchyParent();
+		HierarchyComposite[] getHierarchyChildList();
 		Long getLastFocusAppTimeNano();
 		boolean isTopHierarchy();
 		boolean isModal();
 		void updateLastFocusAppTimeNano();
+		ResizablePanel getOwner();
 	}
 	
 	public void configure(Node nodeToMonitor, float fBeginOrderZ){
@@ -107,7 +108,7 @@ public class HierarchySorterI {
 				
 				if(ahsList.size()>0){
 					IHierarchySorter hs = ahsList.get(ahsList.size()-1);
-					if(!ContextMenuI.i().isTheContextMenu(hs)){
+					if(!ContextMenuI.i().isTheContextMenu(hs.getOwner())){
 						ContextMenuI.i().hideContextMenu();
 					}
 				}
@@ -132,10 +133,12 @@ public class HierarchySorterI {
 		ahsList.clear();
 		
 		for(Spatial spt:nodeToMonitor.getChildren()){
-			if(spt instanceof Panel){
-				Panel pnl=(Panel)spt;
-				if(pnl instanceof IHierarchySorter){
-					ahsList.add((IHierarchySorter)pnl);
+			if(spt instanceof ResizablePanel){
+				ResizablePanel pnl=(ResizablePanel)spt;
+				HierarchyComposite hc = pnl.getComposite(HierarchyComposite.class);
+				if(hc!=null){
+//				if(pnl instanceof IHierarchySorter){
+					ahsList.add(hc);
 				}
 			}
 		}
@@ -144,7 +147,7 @@ public class HierarchySorterI {
 		
 		float fOrderZ = fBeginOrderZ;
 		for(IHierarchySorter ido:ahsList){
-			Panel pnl=(Panel)ido;
+			ResizablePanel pnl=ido.getOwner();
 			pnl.getLocalTranslation().z=fOrderZ;
 //			fOrderZ += (((BoundingBox)pnl.getWorldBound()).getZExtent()*2) +1.0f; //+1 is safety
 			fOrderZ += MiscJmeI.i().getBoundingBoxSize(pnl).z +fSafeZDist;

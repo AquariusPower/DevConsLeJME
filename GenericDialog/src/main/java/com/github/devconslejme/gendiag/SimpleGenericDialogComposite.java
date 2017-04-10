@@ -47,9 +47,9 @@ import com.simsilica.lemur.event.KeyActionListener;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class SimpleGenericDialogState extends GenericDialogState {
-	public SimpleGenericDialogState(String strStyle) {
-		super(strStyle);
+public final class SimpleGenericDialogComposite extends AbstractGenericDialogComposite {
+	public SimpleGenericDialogComposite(ResizablePanel rzpOwner) {
+		super(rzpOwner);
 //		configureDefaults();
 	}
 
@@ -93,7 +93,7 @@ public class SimpleGenericDialogState extends GenericDialogState {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	protected void initContentsContainer() {
+	protected void preInitContentsContainer() {
 		ESection es;
 		
 		es=ESection.Info;
@@ -101,14 +101,14 @@ public class SimpleGenericDialogState extends GenericDialogState {
 			/**
 			 * IMPORTANT: Button works MUCH better than Label when clicking to drag for ex.
 			 */
-			btnInfo = new Button("(No Info)", getStyle());
+			btnInfo = new Button("(No Info)", getOwner().getStyle());
 			setSection(es,btnInfo);
 		}
 		
 		es=ESection.Options;
 		if(getSection(es)==null){
 			vlsOptions = new VersionedList<String>();
-			lstbxOptions = new ListBox<String>(vlsOptions, getStyle());
+			lstbxOptions = new ListBox<String>(vlsOptions, getOwner().getStyle());
 			lstbxOptions.addClickCommands(new Command<ListBox>(){
 				@Override
 				public void execute(ListBox source) {
@@ -121,7 +121,7 @@ public class SimpleGenericDialogState extends GenericDialogState {
 		
 		es=ESection.Input;
 		if(getSection(es)==null){
-			tfInput = new TextField("", getStyle());
+			tfInput = new TextField("", getOwner().getStyle());
 			
 			tfInput.getActionMap().put(new KeyAction(KeyInput.KEY_NUMPADENTER),kal); 
 			tfInput.getActionMap().put(new KeyAction(KeyInput.KEY_RETURN),kal); 
@@ -129,7 +129,6 @@ public class SimpleGenericDialogState extends GenericDialogState {
 			setSection(es,tfInput);
 		}
 		
-		super.initContentsContainer();
 	}
 	
 	public int getEntryHeight(){
@@ -163,9 +162,11 @@ public class SimpleGenericDialogState extends GenericDialogState {
 	}
 	
 	@Override
+	public void updateLogicalState(float tpf) {
+		update(tpf);
+	}
+
 	public void update(float tpf) {
-		super.update(tpf);
-		
 		if(bUseInputTextValue){
 			GuiGlobals.getInstance().requestFocus(tfInput);
 			if(bUserSubmitInputValue){
@@ -181,7 +182,7 @@ public class SimpleGenericDialogState extends GenericDialogState {
 		
 		if(isOptionSelected()){
 //			setEnabled(false);
-			removeFromParent();
+			getOwner().removeFromParent();
 		}
 	}
 	
@@ -209,5 +210,11 @@ public class SimpleGenericDialogState extends GenericDialogState {
 	
 	public boolean isUseInputTextValue(){
 		return bUseInputTextValue;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Class<SimpleGenericDialogComposite> getCompositeType() {
+		return SimpleGenericDialogComposite.class;
 	}
 }

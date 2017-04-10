@@ -27,7 +27,9 @@
 
 package com.github.devconslejme.tests;
 
-import com.github.devconslejme.gendiag.SimpleGenericDialogState;
+import com.github.devconslejme.gendiag.AbstractGenericDialogComposite;
+import com.github.devconslejme.gendiag.ResizablePanel;
+import com.github.devconslejme.gendiag.SimpleGenericDialogComposite;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
@@ -43,7 +45,7 @@ public class TestGenericDialog extends SimpleApplication {
 		tst.start();
 	}
 
-	private SimpleGenericDialogState	diag;
+	private ResizablePanel	diag;
 	private Button	btnChosenOption;
 	
 	@Override
@@ -73,7 +75,9 @@ public class TestGenericDialog extends SimpleApplication {
 	}
 
 	private void prepareDialog() {
-		diag = new SimpleGenericDialogState(null);
+		diag = new ResizablePanel(null);
+		SimpleGenericDialogComposite gdc = new SimpleGenericDialogComposite(diag);
+		diag.putComposite(gdc);
 		
 //		diag.configure(
 //			new CfgParams()
@@ -83,8 +87,8 @@ public class TestGenericDialog extends SimpleApplication {
 		diag.setPreferredSize(new Vector3f(600,500,0));
 //		);
 		
-		diag.setTextInfo("This is a good info about something.\nSecond line.");
-		diag.setUseInputTextValue(true);
+		gdc.setTextInfo("This is a good info about something.\nSecond line.");
+		gdc.setUseInputTextValue(true);
 		
 //		QueueI.i().enqueue(new CallableX(0,false) {
 //			@Override
@@ -94,12 +98,12 @@ public class TestGenericDialog extends SimpleApplication {
 //			}
 //		});
 		
-		diag.putOption("option A", 10);
-		diag.putOption("option B", "This is option B");
+		gdc.putOption("option A", 10);
+		gdc.putOption("option B", "This is option B");
 		
 		String str="option C";
-		diag.putOption(str, true);
-		diag.putOption(str, false); //test overwrite option return value
+		gdc.putOption(str, true);
+		gdc.putOption(str, false); //test overwrite option return value
 	}
 
 	@Override
@@ -108,7 +112,7 @@ public class TestGenericDialog extends SimpleApplication {
 		
 //		if(btnChosenOption.getText().isEmpty()){
 			if(diag.getParent()==null){//isEnabled()){
-				Object objSelectedOption = diag.collectSelectedOption();
+				Object objSelectedOption = diag.getComposite(SimpleGenericDialogComposite.class).collectSelectedOption();
 				if(objSelectedOption!=null){
 					btnChosenOption.setText("Chosen="+objSelectedOption);
 				}

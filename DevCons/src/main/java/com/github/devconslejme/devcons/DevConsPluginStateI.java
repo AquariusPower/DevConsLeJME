@@ -39,7 +39,7 @@ import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.gendiag.ContextMenuI;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
-import com.github.devconslejme.gendiag.HierarchyResizablePanel;
+import com.github.devconslejme.gendiag.HierarchyComposite;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
@@ -50,7 +50,6 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
-import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.ClickToPositionCaratListenerI;
 import com.github.devconslejme.misc.lemur.DragParentestListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
@@ -70,7 +69,6 @@ import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.UserData;
 import com.jme3.system.JmeSystem;
 import com.jme3.system.JmeSystem.StorageFolderType;
 import com.simsilica.lemur.Button;
@@ -149,7 +147,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private boolean	bKeepScrollAtBottom;
 	private VersionedReference<List<String>>	vrListBoxChangedToAutoScrollToBottom;
 	private VersionedReference<Double>	vrSliderChangedToSuspendAutoScrollBottom;
-	private HierarchyResizablePanel	hrpMain;
+	private ResizablePanel	hrpMain;
 	private Application	app;
 	private ResizablePanel	rzpVarBar;
 	private Button	btnShowVarMon;
@@ -906,9 +904,10 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private void initMainContainer() {
 		cntrMain = new Container(new BorderLayout(), getStyle());
 		
-		hrpMain = new HierarchyResizablePanel(getStyle());
+		hrpMain = new ResizablePanel(getStyle());
 		hrpMain.setName(DevConsPluginStateI.class.getSimpleName());//debug name
-		hrpMain.setTopHierarchy(true);
+		hrpMain.putComposite(new HierarchyComposite(hrpMain));
+		hrpMain.getComposite(HierarchyComposite.class).setTopHierarchy(true);
 		hrpMain.setContents(cntrMain);
 		hrpMain.addResizableListener(this);
 		
