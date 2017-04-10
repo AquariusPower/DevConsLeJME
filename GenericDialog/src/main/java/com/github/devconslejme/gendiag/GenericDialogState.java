@@ -133,7 +133,7 @@ public class GenericDialogState extends HierarchyResizablePanel{
 ////		this.getNodeParent().attachChild(rzpMain);
 //	}
 	
-	private void initContentsContainer() {
+	protected void initContentsContainer() {
 		cntrMain = new Container(new BorderLayout(), this.getStyle());
 		this.setContents(cntrMain);
 		
@@ -148,6 +148,7 @@ public class GenericDialogState extends HierarchyResizablePanel{
 		cfgSection(getSection(ESection.Input),BorderLayout.Position.South,EEdge.Top);
 //		cntrMain.addChild(this.getOptionsSection(),BorderLayout.Position.Center);
 //		cntrMain.addChild(this.getInputSection(),BorderLayout.Position.South);
+		
 	}
 	
 	private ResizablePanel cfgSection(ResizablePanel rzp, BorderLayout.Position border, EEdge edgeResizable){

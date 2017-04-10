@@ -50,7 +50,7 @@ import com.simsilica.lemur.event.KeyActionListener;
 public class SimpleGenericDialogState extends GenericDialogState {
 	public SimpleGenericDialogState(String strStyle) {
 		super(strStyle);
-		configureDefaults();
+//		configureDefaults();
 	}
 
 	private Label	btnInfo;
@@ -92,7 +92,8 @@ public class SimpleGenericDialogState extends GenericDialogState {
 //	}
 
 	@SuppressWarnings("unchecked")
-	private void configureDefaults() {
+	@Override
+	protected void initContentsContainer() {
 		ESection es;
 		
 		es=ESection.Info;
@@ -127,6 +128,8 @@ public class SimpleGenericDialogState extends GenericDialogState {
 			
 			setSection(es,tfInput);
 		}
+		
+		super.initContentsContainer();
 	}
 	
 	public int getEntryHeight(){
