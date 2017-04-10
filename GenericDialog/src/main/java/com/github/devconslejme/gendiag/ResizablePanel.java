@@ -85,7 +85,7 @@ public class ResizablePanel extends Panel {
 	public static interface IResizableListener {
 		//public static class VersionedVector3f extends Vector3f implements VersionedObject{}; //???
 		//VersionedReference<Vector3f> vrSize = new VersionedReference<Vector3f>(v3fMinSize); //???
-		public void attendToResizing(Vector3f v3fNewSize);
+		public void attendToResizing(ResizablePanel source,Vector3f v3fNewSize);
 	}
 	private ArrayList<IResizableListener> airlList = new ArrayList<IResizableListener>();
 	
@@ -344,7 +344,7 @@ public class ResizablePanel extends Panel {
 			if(!v3fNewSize.equals(v3fOldSize)){
 				resizedTo(v3fNewSize);
 				for(IResizableListener irl:airlList){
-					irl.attendToResizing(v3fNewSize);
+					irl.attendToResizing(this,v3fNewSize);
 				}
 			}
 		}else{

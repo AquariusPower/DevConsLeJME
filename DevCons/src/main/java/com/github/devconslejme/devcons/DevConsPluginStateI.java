@@ -1140,7 +1140,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	}
 
 	@Override
-	public void attendToResizing(Vector3f v3fNewSize) {
+	public void attendToResizing(ResizablePanel source,Vector3f v3fNewSize) {
 //		updateVisibleLogItems();
 	}
 
