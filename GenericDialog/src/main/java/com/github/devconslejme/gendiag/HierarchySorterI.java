@@ -104,6 +104,14 @@ public class HierarchySorterI {
 			@Override
 			public Boolean call() {
 				organizeDialogsStack();
+				
+				if(ahsList.size()>0){
+					IHierarchySorter hs = ahsList.get(ahsList.size()-1);
+					if(ContextMenuI.i().isTheContextMenu(hs)){
+						ContextMenuI.i().hideContextMenu();
+					}
+				}
+				
 				return true;
 			}
 		}

@@ -359,7 +359,7 @@ public class ResizablePanel extends Panel {
 	 */
 	protected void resizedTo(Vector3f v3fNewSize) {}
 
-	private Panel getParentest(){ //TODO could be outside this class
+	private Panel getParentest(){ //TODO @ThisMethodCouldBeAtMiscClass
 		if(pnlParentest!=null)return pnlParentest;
 		
 		// find it
@@ -456,7 +456,7 @@ public class ResizablePanel extends Panel {
 	public ResizablePanel( float fWidth, float fHeight, String strStyle ) {
     super(false, new ElementId(ELEMENT_ID), strStyle);
     
-   	setName(this.getClass().getSimpleName());
+   	setName(getName()+"/"+ResizablePanel.class.getSimpleName());
     
     initEdges();
     
@@ -660,7 +660,7 @@ public class ResizablePanel extends Panel {
 		return hmEdge.get(edge);
 	}
 	
-	private void warnMsg(String str){ //TODO could be outside this class
+	private void warnMsg(String str){ //TODO @ThisMethodCouldBeAtMiscClass
 		System.err.println("WARN["+this.getClass().getSimpleName()+"]: "+str); //TODO log?
 	}
 //	public static int getGrowParentestFixAttemptLimitGlobal() {

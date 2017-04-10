@@ -37,6 +37,8 @@ import java.util.Set;
 
 import org.lwjgl.opengl.Display;
 
+import com.github.devconslejme.gendiag.ContextMenuI;
+import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.HierarchyResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
@@ -48,6 +50,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.ClickToPositionCaratListenerI;
 import com.github.devconslejme.misc.lemur.DragParentestListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
@@ -67,9 +70,11 @@ import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.UserData;
 import com.jme3.system.JmeSystem;
 import com.jme3.system.JmeSystem.StorageFolderType;
 import com.simsilica.lemur.Button;
+import com.simsilica.lemur.Command;
 import com.simsilica.lemur.Container;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.HAlignment;
@@ -117,13 +122,13 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private int	iKeyCodeToggleConsole = KeyInput.KEY_F10;
 	private String	strInputMappingToggleDeveloperConsole = "ToggleDeveloperConsole";
 	private File	flStorageFolder;
-	private HashMap<String,Stat> hmStatusIdValue = new HashMap<String,Stat>();
+	private HashMap<String,VarMon> hmVarMon = new HashMap<String,VarMon>();
 	private ListBox<String> lstbxVarMonitorBar = new ListBox<String>();
 	private CallableXScrollTo cxScrollTo;
 	
-	private Comparator<Stat>	cmprStat = new Comparator<Stat>() {
+	private Comparator<VarMon>	cmprStat = new Comparator<VarMon>() {
 		@Override
-		public int compare(Stat o1, Stat o2) {
+		public int compare(VarMon o1, VarMon o2) {
 			int i = o1.esp.compareTo(o2.esp);
 			if(i==0) i = o1.strKey.compareTo(o2.strKey);
 			return i;
@@ -151,10 +156,10 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private boolean	bUpdateNoWrap;
 	private Button	btnRestoreSize;
 	private VersionedReference<Set<Integer>>	vrSelectionChangedToShowVarHelp;
-	private Stat	stAppTime;
-	private Stat	stCursorPos;
-	private Stat	stVisibleRows;
-	private Stat	stSlider;
+	private VarMon	vmAppTime;
+	private VarMon	vmCursorPos;
+	private VarMon	vmVisibleRows;
+	private VarMon	vmSlider;
 	private String	strBaseTitle = "DevCons";
 	private Vector3f	v3fDefaultPos = new Vector3f(0, getWindowSize().y-20, 0);
 	private Vector3f	v3fBkpLastNonDefaultPos;
@@ -180,6 +185,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	private Float	fBkpLastNonDefaultBarWidthX;
 	protected Vector3f	v3fDefaultSize;
 	private Vector3f	v3fBkpLastNonDefaultSize;
+	private ContextMenu	cmVarMon;
 	
 //	private VersionedList<String>	vlstrVarMonitorEntries = new VersionedList<String>(){
 //		private HashMap<String,Integer> hmKV = new HashMap<String,Integer>();
@@ -236,7 +242,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		public String s(){return toString();}
 	}
 	
-	public static class Stat{
+	public static class VarMon{
 		private EStatPriority esp;
 		private String strKey;
 		private String strValue;
@@ -283,11 +289,11 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		LoggingI.i().configure();
 	}
 	
-	public Stat createStatus(EStatPriority esp, String strKey, String strHelp){
-		Stat st=hmStatusIdValue.get(strKey);
+	public VarMon createVarMon(EStatPriority esp, String strKey, String strHelp){
+		VarMon st=hmVarMon.get(strKey);
 		if(st==null){
-			st=new Stat();
-			hmStatusIdValue.put(strKey, st);
+			st=new VarMon();
+			hmVarMon.put(strKey, st);
 		}
 		st.set(esp,strKey,strHelp,"");
 		return st;
@@ -442,8 +448,68 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		}
 		
 		toggleVarMonitorBar(true);
+		
+		initVarMonValues();
+		
+		QueueI.i().enqueue(new CallableX() {
+			@Override
+			public Boolean call() {
+				updateVarMonValues();
+				updateVarMonList();
+				return true;
+			}
+		}
+		.setName("DevConsUpdateStatus")
+		.setDelaySeconds(0.5f)
+		.setLoop(true)
+		.setUserCanPause(true));
+		
+		initVarMonitorContextMenu();
 	}
 	
+	private void initVarMonitorContextMenu() {
+		cmVarMon = new ContextMenu();
+		
+		Command<Button> cmd = new Command<Button>(){
+			@Override
+			public void execute(Button source) {
+				EStatPriority e = null;
+				
+				String str = source.getText();
+				if(str.startsWith(EStatPriority.class.getSimpleName())){
+					str=str.substring(EStatPriority.class.getSimpleName().length()+1);
+					try{e=EStatPriority.valueOf(str);}catch(IllegalArgumentException ex){}
+				}
+				
+				if(e!=null){
+					Panel pnl = cmVarMon.getContextOwner();
+					Button btn = (Button)pnl;
+					VarMon vm = hmVarMon.get(btn.getText());
+					vm.set(e);
+				}else{
+					//other possible commands
+				}
+			}
+		};
+		
+		// prepare the context menu entries
+//		for(EStatPriority e:EStatPriority.values()){
+		for(int i=0;i<EStatPriority.values().length;i++){
+			EStatPriority e = EStatPriority.values()[i];
+			cmVarMon.putNewEntry(EStatPriority.class.getSimpleName()+":"+e.s(), cmd);
+		}
+		
+	}
+	
+	
+
+	private void initVarMonValues() {
+		vmSlider = createVarMon(EStatPriority.Bottom, "Slider", "DevCons Logging area Slider Value");
+		vmVisibleRows = createVarMon(EStatPriority.Bottom, "VisibleRows", "DevCons Logging area Visible Rows");
+		vmCursorPos = createVarMon(EStatPriority.Normal, "CursorPos", "Mouse Cursor Position on the application");
+		vmAppTime = createVarMon(EStatPriority.Normal, "AppTime", "Application Elapsed Time from its start time");
+	}
+
 	/**
 	 * 
 	 * @param b null to toggle, or set if true or remove if false
@@ -470,8 +536,8 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		}
 	}
 	
-	private void updateStatusValues(){
-		stSlider.set(
+	private void updateVarMonValues(){
+		vmSlider.set(
 			String.format("%.0f/%.0f(%.0f)", 
 				lstbxLoggingSection.getSlider().getModel().getValue(),
 				lstbxLoggingSection.getSlider().getModel().getMaximum(),
@@ -479,55 +545,34 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 			)
 		);
 		
-		stVisibleRows.set(
+		vmVisibleRows.set(
 			String.format("%d", lstbxLoggingSection.getVisibleItems()) );
 		
 		Vector2f v2fCursor = app.getInputManager().getCursorPosition();
-		stCursorPos.set(
+		vmCursorPos.set(
 			String.format("%.0f,%.0f", v2fCursor.x, v2fCursor.y) );
 		
-		stAppTime.set(
+		vmAppTime.set(
 				String.format("%.3f", app.getTimer().getTimeInSeconds()) );
 		
 		// show specific status help
 		if(vrSelectionChangedToShowVarHelp!=null){
 			if(vrSelectionChangedToShowVarHelp.update()){
-				Stat st = hmStatusIdValue.get(vlstrVarMonitorEntries.get(lstbxVarMonitorBar.getSelectionModel().getSelection()));
-				if(st!=null){
-					LoggingI.i().logEntry("VarHelp:"+st.strHelp);
+				VarMon vm = hmVarMon.get(vlstrVarMonitorEntries.get(lstbxVarMonitorBar.getSelectionModel().getSelection()));
+				if(vm!=null){
+					LoggingI.i().logEntry("VarHelp:"+vm.strHelp);
 				}
 			}
 		}
 	}
 	
-	private void initStatusValues(){
-		stSlider = createStatus(EStatPriority.Bottom, "Slider", "DevCons Logging area Slider Value");
-		stVisibleRows = createStatus(EStatPriority.Bottom, "VisibleRows", "DevCons Logging area Visible Rows");
-		stCursorPos = createStatus(EStatPriority.Normal, "CursorPos", "Mouse Cursor Position on the application");
-		stAppTime = createStatus(EStatPriority.Normal, "AppTime", "Application Elapsed Time from its start time");
-		
-		QueueI.i().enqueue(new CallableX() {
-			@Override
-			public Boolean call() {
-				updateStatusValues();
-				updateStatusValuesList();
-				return true;
-			}
-		}
-		.setName("DevConsUpdateStatus")
-		.setDelaySeconds(0.5f)
-		.setLoop(true)
-		.setUserCanPause(true));
-		
-	}
-	
-	private void updateStatusValuesList() {
-		ArrayList<Stat> astList = new ArrayList<Stat>(hmStatusIdValue.values());
+	private void updateVarMonList() {
+		ArrayList<VarMon> astList = new ArrayList<VarMon>(hmVarMon.values());
 		Collections.sort(astList,cmprStat);
 //		String str="";
 		vlstrVarMonitorEntries.clear();
 		String strAddToTitle="";
-		for(Stat st:astList){
+		for(VarMon st:astList){
 			switch(st.esp){
 				case Hidden: continue;
 				case Title:
@@ -548,6 +593,14 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		vrSelectionChangedToShowVarHelp = lstbxVarMonitorBar.getSelectionModel().createReference();
 
 //		lstbxVarMonitorBar.getGridPanel().getCell(0, 0);
+		
+		QueueI.i().enqueue(new CallableX() {
+			@Override
+			public Boolean call() {
+				ContextMenuI.i().attachContextMenuAtListBoxItems(lstbxVarMonitorBar,cmVarMon);
+				return true;
+			}
+		}.setName("ContextMenuAtListBoxAfterPopulated"));
 		
 		bUpdateNoWrap=true;
 //		MiscJmeI.i().recursivelyApplyTextNoWrap(lstbxVarMonitorBar);
@@ -718,7 +771,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 			cntrStatus.addChild(pnl,0,iButtonIndex++);
 		}
 		
-		initStatusValues();
+//		initStatusValues();
 		
 	}
 	

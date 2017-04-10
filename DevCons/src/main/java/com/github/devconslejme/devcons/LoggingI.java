@@ -31,7 +31,7 @@ import java.io.File;
 import java.io.PrintStream;
 
 import com.github.devconslejme.devcons.DevConsPluginStateI.EStatPriority;
-import com.github.devconslejme.devcons.DevConsPluginStateI.Stat;
+import com.github.devconslejme.devcons.DevConsPluginStateI.VarMon;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
@@ -56,7 +56,7 @@ public class LoggingI {
 	private File	flLog;
 //	DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss"); //yyyy/MM/dd
 //	Date dateRealTimeForMarker = new Date();
-	private Stat	stWrapAt;
+	private VarMon	stWrapAt;
 	
 	public void configure() {
 		flLog = new File(DevConsPluginStateI.i().getStorageFolder(), LoggingI.class.getSimpleName()+".log");
@@ -69,7 +69,7 @@ public class LoggingI {
 		 */
 		logEntry("Initializing console.");
 		
-		stWrapAt = DevConsPluginStateI.i().createStatus(EStatPriority.Normal, "WrapAt", LoggingI.class.getSimpleName()+": Wrap at column");
+		stWrapAt = DevConsPluginStateI.i().createVarMon(EStatPriority.Normal, "WrapAt", LoggingI.class.getSimpleName()+": Wrap at column");
 		
 		QueueI.i().enqueue(new CallableX() {
 			@Override

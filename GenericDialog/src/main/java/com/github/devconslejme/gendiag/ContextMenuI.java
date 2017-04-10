@@ -27,22 +27,29 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.github.devconslejme.gendiag;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import javax.xml.crypto.dsig.spec.HMACParameterSpec;
+
+import com.github.devconslejme.gendiag.HierarchySorterI.IHierarchySorter;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
-import com.jme3.app.Application;
+import com.github.devconslejme.misc.lemur.MiscLemurI;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.UserData;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
 import com.simsilica.lemur.Container;
 import com.simsilica.lemur.GuiGlobals;
+import com.simsilica.lemur.ListBox;
+import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
-import com.simsilica.lemur.event.CursorListener;
+import com.simsilica.lemur.event.CursorMotionEvent;
 import com.simsilica.lemur.event.DefaultCursorListener;
 
 /**
@@ -58,6 +65,15 @@ public class ContextMenuI {
 	
 	public static class ContextMenu{
 		HashMap<String,Button> hmEntry = new HashMap<String,Button>();
+		private Panel owner;
+		
+		public void setContextOwner(Panel owner){
+			this.owner=owner;
+		}
+		
+		public Panel getContextOwner(){
+			return owner;
+		}
 		
 		@SuppressWarnings("unchecked")
 		public void putNewEntry(String strTextKey, Command<Button> cmd){
@@ -67,19 +83,31 @@ public class ContextMenuI {
 		}
 	}
 	
-	public static class ContextMenuListenerI extends DefaultCursorListener{
-		public static ContextMenuListenerI i(){return GlobalInstanceManagerI.i().get(ContextMenuListenerI.class);}
+	private class ContextMenuListenerI extends DefaultCursorListener{
+		@Override
+		public void cursorExited(CursorMotionEvent event, Spatial target,				Spatial capture) {
+			super.cursorExited(event, target, capture);
+			//TODO not working well: hideContextMenu(); 
+		}
+	}
+	
+	public static class ContextMenuOwnerListenerI extends DefaultCursorListener{
+		public static ContextMenuOwnerListenerI i(){return GlobalInstanceManagerI.i().get(ContextMenuOwnerListenerI.class);}
 		
 		@Override
 		protected void click(CursorButtonEvent event, Spatial target,				Spatial capture) {
 			super.click(event, target, capture);
 			
-			if(event.getButtonIndex()!=2)return;
+			if(event.getButtonIndex()!=1)return; //right mouse button
+			if(!Panel.class.isInstance(capture))return;
 			
-			ContextMenu cm = UserDataI.i().getUserDataPSH(capture, ContextMenu.class);
+			Panel pnlOwner = (Panel)capture;
+			
+			ContextMenu cm = UserDataI.i().getUserDataPSH(pnlOwner, ContextMenu.class);
 			
 			if(cm!=null){
-				ContextMenuI.i().showContextMenu(event,capture,cm);
+				cm.setContextOwner(pnlOwner);
+				ContextMenuI.i().showContextMenu(event,pnlOwner,cm);
 				event.setConsumed();
 			}
 		}
@@ -87,34 +115,52 @@ public class ContextMenuI {
 
 	public void configure(Node nodeParent) {
 		strStyle = GuiGlobals.getInstance().getStyles().getDefaultStyle();
+		
 		hrp = new HierarchyResizablePanel(strStyle);
+		
 		cntr = new Container(strStyle);
+		hrp.setContents(cntr);
+		
+		CursorEventControl.addListenersToSpatial(hrp, new ContextMenuListenerI());
+		
 		this.nodeParent=nodeParent;
 	}
 	
 	
-	public void attachContextMenuAt(Spatial spt, ContextMenu cm){
-		UserDataI.i().setUserDataPSH(spt, cm);
-		CursorEventControl.addListenersToSpatial(spt,ContextMenuListenerI.i());
+	public void attachContextMenuAtListBoxItems(ListBox lstbx, ContextMenu cm){
+		ArrayList<Panel> apnl = MiscJmeI.i().getAllChildrenRecursiveFrom(lstbx.getGridPanel(), Panel.class, null);
+		for(Panel pnl:apnl){
+			attachContextMenuAt(pnl, cm);
+		}
 	}
 	
-	private void showContextMenu(CursorButtonEvent event, Spatial capture, ContextMenu cm) {
+	public void attachContextMenuAt(Spatial spt, ContextMenu cm){
+		UserDataI.i().setUserDataPSH(spt, cm);
+		CursorEventControl.addListenersToSpatial(spt,ContextMenuOwnerListenerI.i());
+	}
+	
+	private void showContextMenu(CursorButtonEvent event, Spatial sptOwner, ContextMenu cm) {
 		//TODO populate context menu
 		cntr.clearChildren();
 		
 		int i=0;
-		for(Entry<String, Button> entry:cm.hmEntry.entrySet()){
+		for(Entry<String, Button> entry : (cm.hmEntry).entrySet()){
 			cntr.addChild(entry.getValue(), i++, 0);
 		}
 		
 		nodeParent.attachChild(hrp);
+		
+		hrp.setPreferredSize(new Vector3f(200,30*cm.hmEntry.size(),hrp.getPreferredSize().z));
+		hrp.setLocalTranslation(sptOwner.getWorldTranslation());
 	}
 	
-	/**
-	 * TODO call by the hierarchy sorter on focusing anything else
-	 */
 	public void hideContextMenu() {
 		hrp.removeFromParent();
+	}
+
+
+	public boolean isTheContextMenu(IHierarchySorter hs) {
+		return (hs==hrp);
 	}	
 	
 }

@@ -66,7 +66,7 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 	public HierarchyResizablePanel(String strStyle) {
 		super(strStyle);
 		
-   	setName(this.getClass().getSimpleName());
+   	setName(getName()+"/"+HierarchyResizablePanel.class.getSimpleName());
 		
 		initBlocker();
 		
