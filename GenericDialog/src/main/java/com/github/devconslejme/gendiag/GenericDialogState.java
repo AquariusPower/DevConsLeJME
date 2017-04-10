@@ -29,134 +29,125 @@ package com.github.devconslejme.gendiag;
 
 import java.util.HashMap;
 
-import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.lemur.DragParentestListenerI;
-import com.jme3.app.Application;
-import com.jme3.math.ColorRGBA;
-import com.jme3.math.Vector3f;
-import com.jme3.scene.Node;
-import com.simsilica.lemur.Command;
 import com.simsilica.lemur.Container;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.BorderLayout;
-import com.simsilica.lemur.event.BaseAppState;
 import com.simsilica.lemur.event.CursorEventControl;
-import com.simsilica.lemur.event.PopupState;
-import com.simsilica.lemur.event.PopupState.ClickMode;
 
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class GenericDialogState extends BaseAppState{
-	private HierarchyResizablePanel	rzpMain;
-	private Application	app;
+public class GenericDialogState extends HierarchyResizablePanel{
+//	private HierarchyResizablePanel	rzpMain;
+//	private Application	app;
 	private Container	cntrMain;
-	private CfgParams cfg;
+//	private CfgParams cfg;
 	private Object	objSelected;
-	private Command<? super PopupState>	cmdClose;
+//	private Command<? super PopupState>	cmdClose;
 	
-	public static class CfgParams{
-		private Node nodeParent;
-		private Vector3f v3fPos;
-		private Vector3f v3fSize;
-		private String strStyle;
+//	public static class CfgParams{
+//		private Node nodeParent;
+//		private Vector3f v3fPos;
+//		private Vector3f v3fSize;
+//		private String strStyle;
 		HashMap<ESection,ResizablePanel> hmSection = new HashMap<ESection,ResizablePanel>();
 
-		public Vector3f getPos() {
-			return v3fPos;
-		}
+//		public Vector3f getPos() {
+//			return v3fPos;
+//		}
+//
+//		public GenericDialogState setPos(Vector3f v3fPos) {
+//			this.v3fPos = v3fPos;
+//			return this;
+//		}
 
-		public CfgParams setPos(Vector3f v3fPos) {
-			this.v3fPos = v3fPos;
+//		public Vector3f getSize() {
+//			return v3fSize;
+//		}
+//
+//		public GenericDialogState setSize(Vector3f v3fSize) {
+//			this.v3fSize = v3fSize;
+//			return this;
+//		}
+
+//		public Node getNodeParent() {
+//			return nodeParent;
+//		}
+//
+//		public GenericDialogState setNodeParent(Node nodeParent) {
+//			this.nodeParent = nodeParent;
+//			return this;
+//		}
+
+//		public String getStyle() {
+//			return strStyle;
+//		}
+//
+//		public GenericDialogState setStyle(String strStyle) {
+//			this.strStyle = strStyle;
+//			return this;
+//		}
+
+		public GenericDialogState setSection(ESection e, Panel pnl) {
+			hmSection.put(e,new ResizablePanel(getStyle()).setContents(pnl));
 			return this;
 		}
 
-		public Vector3f getSize() {
-			return v3fSize;
-		}
-
-		public CfgParams setSize(Vector3f v3fSize) {
-			this.v3fSize = v3fSize;
-			return this;
-		}
-
-		public Node getNodeParent() {
-			return nodeParent;
-		}
-
-		public CfgParams setNodeParent(Node nodeParent) {
-			this.nodeParent = nodeParent;
-			return this;
-		}
-
-		public String getStyle() {
-			return strStyle;
-		}
-
-		public CfgParams setStyle(String strStyle) {
-			this.strStyle = strStyle;
-			return this;
-		}
-
-		public CfgParams setSection(ESection e, Panel pnl) {
-			hmSection.put(e,new ResizablePanel(pnl));
-			return this;
-		}
-
-	}
+//	}
 	
-	public GenericDialogState() {
-		this.app=GlobalInstanceManagerI.i().get(Application.class);
-		setEnabled(false); //starts closed
-	}
-	
-	public void configure(CfgParams cfg){
-		this.cfg=cfg;
-		app.getStateManager().attach(this);
-//		getState(PopupState.class).showPopup(popup, ClickMode.Consume, closeCommand, ColorRGBA.Blue);
-	}
-	
-	public CfgParams getCfg(){
-		return cfg;
-	}
-	
-	@Override
-	protected void initialize(Application app) {
-		rzpMain = new HierarchyResizablePanel(cfg.getStyle());
-		rzpMain.setPreferredSize(cfg.getSize());
-		rzpMain.setLocalTranslation(cfg.getPos());
-//		rzpMain.setMinSize(new Vector3f(100,100,0));
-//		rzp.setContents(cfg.getContents());
+	public GenericDialogState(String strStyle) {
+		super(strStyle);
 		initContentsContainer();
-		
-		cmdClose = new Command<PopupState>(){
-			@Override
-			public void execute(PopupState source) {
-				setEnabled(false);
-			}
-		};
-		
-//		cfg.getNodeParent().attachChild(rzpMain);
+//		this.app=GlobalInstanceManagerI.i().get(Application.class);
+//		setEnabled(false); //starts closed
 	}
+	
+//	public void configure(CfgParams cfg){
+//		this.cfg=cfg;
+////		app.getStateManager().attach(this);
+////		getState(PopupState.class).showPopup(popup, ClickMode.Consume, closeCommand, ColorRGBA.Blue);
+//	}
+//	
+//	public CfgParams getCfg(){
+//		return cfg;
+//	}
+	
+//	@Override
+//	protected void initialize(Application app) {
+////		rzpMain = new HierarchyResizablePanel(this.getStyle());
+////		this.setPreferredSize(this.getSize());
+////		this.setLocalTranslation(this.getPos());
+////		this.setMinSize(new Vector3f(100,100,0));
+////		rzp.setContents(this.getContents());
+//		initContentsContainer();
+//		
+////		cmdClose = new Command<PopupState>(){
+////			@Override
+////			public void execute(PopupState source) {
+////				setEnabled(false);
+////			}
+////		};
+//		
+////		this.getNodeParent().attachChild(rzpMain);
+//	}
 	
 	private void initContentsContainer() {
-		cntrMain = new Container(new BorderLayout(), cfg.getStyle());
-		rzpMain.setContents(cntrMain);
+		cntrMain = new Container(new BorderLayout(), this.getStyle());
+		this.setContents(cntrMain);
 		
-//		cfg.hmSection.put(ESection.Info, 
+//		this.hmSection.put(ESection.Info, 
 		cfgSection(getSection(ESection.Info),BorderLayout.Position.North,EEdge.Bottom);
 		CursorEventControl.addListenersToSpatial(
 				getSection(ESection.Info).getContents(), DragParentestListenerI.i());
 //		MiscLemurI.i().applySimpleDragParentestListener();
-//		cfg.hmSection.put(ESection.Options,
+//		this.hmSection.put(ESection.Options,
 		cfgSection(getSection(ESection.Options),BorderLayout.Position.Center,EEdge.Bottom);
-//		cfg.hmSection.put(ESection.Input,
+//		this.hmSection.put(ESection.Input,
 		cfgSection(getSection(ESection.Input),BorderLayout.Position.South,EEdge.Top);
-//		cntrMain.addChild(cfg.getOptionsSection(),BorderLayout.Position.Center);
-//		cntrMain.addChild(cfg.getInputSection(),BorderLayout.Position.South);
+//		cntrMain.addChild(this.getOptionsSection(),BorderLayout.Position.Center);
+//		cntrMain.addChild(this.getInputSection(),BorderLayout.Position.South);
 	}
 	
 	private ResizablePanel cfgSection(ResizablePanel rzp, BorderLayout.Position border, EEdge edgeResizable){
@@ -185,16 +176,16 @@ public class GenericDialogState extends BaseAppState{
 		;
 	}
 	
-	public ResizablePanel getMainResizablePanel(){
-		return rzpMain;
-	}
+//	public ResizablePanel getMainResizablePanel(){
+//		return rzpMain;
+//	}
 	
 	public ResizablePanel getSection(ESection e){
-		return cfg.hmSection.get(e);
+		return this.hmSection.get(e);
 	}
 	
 //	public Panel getSectionContents(ESection e){
-//		return cfg.hmSection.get(e).getContents();
+//		return this.hmSection.get(e).getContents();
 //	}
 	
 	/**
@@ -215,22 +206,22 @@ public class GenericDialogState extends BaseAppState{
 		this.objSelected=obj;
 	}
 
-	@Override
-	protected void cleanup(Application app) {
-	}
-
-	@Override
-	protected void enable() {
-		getState(PopupState.class).showPopup(
-			getMainResizablePanel(), 
-			ClickMode.Consume, 
-			cmdClose, 
-			ColorI.i().colorChangeCopy(ColorRGBA.Blue, -0.75f, 0.25f) );
-	}
-
-	@Override
-	protected void disable() {
-		getState(PopupState.class).closePopup(getMainResizablePanel());
-	}
+//	@Override
+//	protected void cleanup(Application app) {
+//	}
+//
+//	@Override
+//	protected void enable() {
+//		getState(PopupState.class).showPopup(
+//			getMainResizablePanel(), 
+//			ClickMode.Consume, 
+//			cmdClose, 
+//			ColorI.i().colorChangeCopy(ColorRGBA.Blue, -0.75f, 0.25f) );
+//	}
+//
+//	@Override
+//	protected void disable() {
+//		getState(PopupState.class).closePopup(getMainResizablePanel());
+//	}
 
 }

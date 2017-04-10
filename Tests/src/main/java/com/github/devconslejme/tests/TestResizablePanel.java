@@ -65,7 +65,8 @@ public class TestResizablePanel extends SimpleApplication {
 	}
 
 	private void test(Vector3f pos) {
-		ResizablePanel rzp = new ResizablePanel(300,200,null);
+		ResizablePanel rzp = new ResizablePanel(null);
+		rzp.setPreferredSize(new Vector3f(300,200,0));
 		rzp.setLocalTranslation(pos); //above DevCons
 		getGuiNode().attachChild(rzp);
 		

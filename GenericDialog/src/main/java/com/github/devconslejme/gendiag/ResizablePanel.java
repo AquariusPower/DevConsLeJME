@@ -448,13 +448,16 @@ public class ResizablePanel extends Panel {
 	public static final String LAYER_RESIZABLE_BORDERS = "resizableBorders";
 	
 	public ResizablePanel(String strStyle) {
-		this(100,100,strStyle);
-	}
-  public ResizablePanel( Vector3f v3fSize, String strStyle ) {
-		this(v3fSize.x, v3fSize.y, strStyle);
-	}
-	public ResizablePanel( float fWidth, float fHeight, String strStyle ) {
+//		this(100,100,strStyle);
+//	}
+//  public ResizablePanel( Vector3f v3fSize, String strStyle ) {
+//		this(v3fSize.x, v3fSize.y, strStyle);
+//	}
+//	public ResizablePanel( float fWidth, float fHeight, String strStyle ) {
     super(false, new ElementId(ELEMENT_ID), strStyle);
+    
+    float fWidth=100;
+    float fHeight=100;
     
    	setName(getName()+"/"+ResizablePanel.class.getSimpleName());
     
@@ -472,15 +475,16 @@ public class ResizablePanel extends Panel {
                                                LAYER_RESIZABLE_BORDERS);
     
     Styles styles = GuiGlobals.getInstance().getStyles();
+//    if(strStyle==null)strStyle=styles.getDefaultStyle();
     styles.applyStyles(this, getElementId(), strStyle);
     
     CursorEventControl.addListenersToSpatial(this, dcl);
   }
 	
-  public ResizablePanel(Panel pnlContents) {
-  	this(pnlContents.getPreferredSize().x, pnlContents.getPreferredSize().y, pnlContents.getStyle());
-  	setContents(pnlContents);
-	}
+//  public ResizablePanel(Panel pnlContents) {
+//  	this(pnlContents.getPreferredSize().x, pnlContents.getPreferredSize().y, pnlContents.getStyle());
+//  	setContents(pnlContents);
+//	}
 
 	private class ResizerCursorListener implements CursorListener{
 		@Override

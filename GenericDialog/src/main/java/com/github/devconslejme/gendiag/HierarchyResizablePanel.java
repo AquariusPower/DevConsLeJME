@@ -141,9 +141,9 @@ public class HierarchyResizablePanel extends ResizablePanel implements IHierarch
 	@Override
 	public void updateLogicalState(float tpf) {
 		super.updateLogicalState(tpf);
-		update();
+		update(tpf);
 	}
-	protected void update(){
+	protected void update(float tpf){
 		/********************
 		 * beware what you code here!!! 
 		 ********************/

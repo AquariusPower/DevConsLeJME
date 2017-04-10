@@ -27,19 +27,11 @@
 
 package com.github.devconslejme.tests;
 
-import com.github.devconslejme.gendiag.GenericDialogState.CfgParams;
 import com.github.devconslejme.gendiag.SimpleGenericDialogState;
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.MainThreadI;
-import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.QueueI.CallableX;
-import com.github.devconslejme.misc.jme.QueueStateI;
-import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
-import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.style.BaseStyles;
 
 /**
@@ -69,7 +61,8 @@ public class TestGenericDialog extends SimpleApplication {
 		btnChosenOption.addClickCommands(new Command<Button>(){
 			@Override
 			public void execute(Button source) {
-				diag.setEnabled(true);
+				getGuiNode().attachChild(diag);
+//				diag.setEnabled(true);
 //				getStateManager().getState(PopupState.class).showPopup(
 //						diag.getMainResizablePanel(), ClickMode.Consume, null, ColorRGBA.Blue);
 			}
@@ -80,15 +73,15 @@ public class TestGenericDialog extends SimpleApplication {
 	}
 
 	private void prepareDialog() {
-		diag = new SimpleGenericDialogState();
+		diag = new SimpleGenericDialogState(null);
 		
-		diag.configure(
-			new CfgParams()
-				.setNodeParent(getGuiNode())
-				.setStyle(BaseStyles.GLASS)
-				.setPos(new Vector3f(100,550,10))
-				.setSize(new Vector3f(600,500,0))
-		);
+//		diag.configure(
+//			new CfgParams()
+//		diag.setNodeParent(getGuiNode());
+//		diag.setStyle(BaseStyles.GLASS);
+		diag.setLocalTranslation(new Vector3f(100,550,10));
+		diag.setPreferredSize(new Vector3f(600,500,0));
+//		);
 		
 		diag.setTextInfo("This is a good info about something.\nSecond line.");
 		diag.setUseInputTextValue(true);
@@ -114,7 +107,7 @@ public class TestGenericDialog extends SimpleApplication {
 		super.update();
 		
 //		if(btnChosenOption.getText().isEmpty()){
-			if(!diag.isEnabled()){
+			if(diag.getParent()==null){//isEnabled()){
 				Object objSelectedOption = diag.collectSelectedOption();
 				if(objSelectedOption!=null){
 					btnChosenOption.setText("Chosen="+objSelectedOption);

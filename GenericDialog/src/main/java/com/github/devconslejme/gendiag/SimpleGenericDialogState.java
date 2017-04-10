@@ -48,6 +48,11 @@ import com.simsilica.lemur.event.KeyActionListener;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class SimpleGenericDialogState extends GenericDialogState {
+	public SimpleGenericDialogState(String strStyle) {
+		super(strStyle);
+		configureDefaults();
+	}
+
 	private Label	btnInfo;
 	
 	private ListBox<String>	lstbxOptions;
@@ -79,12 +84,12 @@ public class SimpleGenericDialogState extends GenericDialogState {
 //		GuiGlobals.getInstance().requestFocus(tfInput);
 //	}
 	
-	@Override
-	public void configure(CfgParams cfg) {
-		super.configure(cfg);
-		
-		configureDefaults();
-	}
+//	@Override
+//	public void configure(CfgParams cfg) {
+//		super.configure(cfg);
+//		
+//		configureDefaults();
+//	}
 
 	@SuppressWarnings("unchecked")
 	private void configureDefaults() {
@@ -95,32 +100,32 @@ public class SimpleGenericDialogState extends GenericDialogState {
 			/**
 			 * IMPORTANT: Button works MUCH better than Label when clicking to drag for ex.
 			 */
-			btnInfo = new Button("(No Info)", getCfg().getStyle());
-			getCfg().setSection(es,btnInfo);
+			btnInfo = new Button("(No Info)", getStyle());
+			setSection(es,btnInfo);
 		}
 		
 		es=ESection.Options;
 		if(getSection(es)==null){
 			vlsOptions = new VersionedList<String>();
-			lstbxOptions = new ListBox<String>(vlsOptions, getCfg().getStyle());
+			lstbxOptions = new ListBox<String>(vlsOptions, getStyle());
 			lstbxOptions.addClickCommands(new Command<ListBox>(){
 				@Override
 				public void execute(ListBox source) {
 					tfInput.setText(getSelectedOptionText());
 				}
 			});
-			getCfg().setSection(es,lstbxOptions);
+			setSection(es,lstbxOptions);
 //			getSection(es).setMinSize(new Vector3f(100,getEntryHeight(),0));
 		}
 		
 		es=ESection.Input;
 		if(getSection(es)==null){
-			tfInput = new TextField("", getCfg().getStyle());
+			tfInput = new TextField("", getStyle());
 			
 			tfInput.getActionMap().put(new KeyAction(KeyInput.KEY_NUMPADENTER),kal); 
 			tfInput.getActionMap().put(new KeyAction(KeyInput.KEY_RETURN),kal); 
 			
-			getCfg().setSection(es,tfInput);
+			setSection(es,tfInput);
 		}
 	}
 	
@@ -172,7 +177,8 @@ public class SimpleGenericDialogState extends GenericDialogState {
 		}
 		
 		if(isOptionSelected()){
-			setEnabled(false);
+//			setEnabled(false);
+			removeFromParent();
 		}
 	}
 	

@@ -434,7 +434,8 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		lstbxVarMonitorBar = new ListBox<String>(null, getStyle());
 		lstbxVarMonitorBar.setModel(vlstrVarMonitorEntries);
 		
-		rzpVarBar = new ResizablePanel(lstbxVarMonitorBar);
+		rzpVarBar = new ResizablePanel(null);
+		rzpVarBar.setContents(lstbxVarMonitorBar);
 		rzpVarBar.setName(rzpVarBar.getName()+"/VarMonitorBar");
 		
 		rzpVarBar.setMinSize(new Vector3f(50,50,0));
