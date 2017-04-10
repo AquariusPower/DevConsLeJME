@@ -68,8 +68,8 @@ public class HierarchySorterI {
 			Panel pnl2 = (Panel)o2;
 			
 			// top only against top
-			if(o1.isTopHierarchy() && !o2.isTopHierarchy())return  1;
-			if(o2.isTopHierarchy() && !o1.isTopHierarchy())return -1;
+			if( o1.isTopHierarchy() && !o2.isTopHierarchy())return  1;
+			if(!o1.isTopHierarchy() &&  o2.isTopHierarchy())return -1;
 			
 			// parent diag below child diag
 			if(o1.getHierarchyParent()==o2)return  1;
@@ -107,7 +107,7 @@ public class HierarchySorterI {
 				
 				if(ahsList.size()>0){
 					IHierarchySorter hs = ahsList.get(ahsList.size()-1);
-					if(ContextMenuI.i().isTheContextMenu(hs)){
+					if(!ContextMenuI.i().isTheContextMenu(hs)){
 						ContextMenuI.i().hideContextMenu();
 					}
 				}

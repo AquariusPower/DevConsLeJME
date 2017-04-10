@@ -469,6 +469,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 	
 	private void initVarMonitorContextMenu() {
 		cmVarMon = new ContextMenu();
+		cmVarMon.setHierarchyParent(hrpMain);
 		
 		Command<Button> cmd = new Command<Button>(){
 			@Override
@@ -496,7 +497,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 //		for(EStatPriority e:EStatPriority.values()){
 		for(int i=0;i<EStatPriority.values().length;i++){
 			EStatPriority e = EStatPriority.values()[i];
-			cmVarMon.putNewEntry(EStatPriority.class.getSimpleName()+":"+e.s(), cmd);
+			cmVarMon.addNewEntry(EStatPriority.class.getSimpleName()+":"+e.s(), cmd);
 		}
 		
 	}

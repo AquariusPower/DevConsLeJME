@@ -43,6 +43,6 @@ public class PkgCfgI {
 		
 //		ResizablePanel.setGrowParentestFixAttemptLimitGlobal(Math.max(Display.getWidth(),Display.getHeight()));
 		HierarchySorterI.i().configure(nodeParent, 0f);
-		ContextMenuI.i().configure(nodeParent);
+		ContextMenuI.i().configure();//nodeParent);
 	}
 }

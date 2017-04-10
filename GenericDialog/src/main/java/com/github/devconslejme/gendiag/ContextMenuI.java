@@ -28,23 +28,23 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.github.devconslejme.gendiag;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map.Entry;
-
-import javax.xml.crypto.dsig.spec.HMACParameterSpec;
 
 import com.github.devconslejme.gendiag.HierarchySorterI.IHierarchySorter;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
-import com.github.devconslejme.misc.lemur.MiscLemurI;
+import com.github.devconslejme.misc.lemur.DragParentestListenerI;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
 import com.simsilica.lemur.Container;
 import com.simsilica.lemur.GuiGlobals;
+import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.event.CursorButtonEvent;
@@ -58,16 +58,21 @@ import com.simsilica.lemur.event.DefaultCursorListener;
 public class ContextMenuI {
 	public static ContextMenuI i(){return GlobalInstanceManagerI.i().get(ContextMenuI.class);}
 	
-	private Node	nodeParent;
+//	private Node	nodeParent;
 	private HierarchyResizablePanel	hrp;
 	private String	strStyle;
 	private Container	cntr;
 	
 	public static class ContextMenu{
-		HashMap<String,Button> hmEntry = new HashMap<String,Button>();
+		LinkedHashMap<String,Button> hmContextOptions = new LinkedHashMap<String,Button>();
 		private Panel owner;
+		private HierarchyResizablePanel	hrpParent;
 		
-		public void setContextOwner(Panel owner){
+		/**
+		 * to be set only when clicking from the listener here
+		 * @param owner
+		 */
+		private void setContextOwner(Panel owner){
 			this.owner=owner;
 		}
 		
@@ -76,10 +81,18 @@ public class ContextMenuI {
 		}
 		
 		@SuppressWarnings("unchecked")
-		public void putNewEntry(String strTextKey, Command<Button> cmd){
+		public void addNewEntry(String strTextKey, Command<Button> cmd){
 			Button btn = new Button(strTextKey);
 			btn.addClickCommands(cmd);
-			hmEntry.put(strTextKey, btn);
+			hmContextOptions.put(strTextKey, btn);
+		}
+
+		public HierarchyResizablePanel getHierarchyParent() {
+			return hrpParent;
+		}
+		
+		public void setHierarchyParent(HierarchyResizablePanel hrpParent) {
+			this.hrpParent=hrpParent;
 		}
 	}
 	
@@ -99,31 +112,43 @@ public class ContextMenuI {
 			super.click(event, target, capture);
 			
 			if(event.getButtonIndex()!=1)return; //right mouse button
-			if(!Panel.class.isInstance(capture))return;
+			if(!Button.class.isInstance(capture))return;
 			
-			Panel pnlOwner = (Panel)capture;
+			Button btnOwner = (Button)capture;
 			
-			ContextMenu cm = UserDataI.i().getUserDataPSH(pnlOwner, ContextMenu.class);
+			ContextMenu cm = UserDataI.i().getUserDataPSH(btnOwner, ContextMenu.class);
 			
 			if(cm!=null){
-				cm.setContextOwner(pnlOwner);
-				ContextMenuI.i().showContextMenu(event,pnlOwner,cm);
+				cm.setContextOwner(btnOwner);
+				ContextMenuI.i().showContextMenu(event,btnOwner,cm);
 				event.setConsumed();
 			}
 		}
 	}
 
-	public void configure(Node nodeParent) {
+	public void configure(){//Node nodeParent) {
 		strStyle = GuiGlobals.getInstance().getStyles().getDefaultStyle();
 		
 		hrp = new HierarchyResizablePanel(strStyle);
+		hrp.setTopHierarchy(true);
+		hrp.setAllEdgesEnabled(false); //it is here for the hierarchy (not the resizing)
 		
 		cntr = new Container(strStyle);
 		hrp.setContents(cntr);
 		
 		CursorEventControl.addListenersToSpatial(hrp, new ContextMenuListenerI());
 		
-		this.nodeParent=nodeParent;
+//		this.nodeParent=nodeParent;
+		
+		QueueI.i().enqueue(new CallableX() {
+			@Override
+			public Boolean call() {
+				if(hrp.getParent()!=null){
+					
+				}
+				return true;
+			}
+		}.setName("ContextMenuUpdate").setLoop(true).setDelaySeconds(0.25f));
 	}
 	
 	
@@ -139,19 +164,24 @@ public class ContextMenuI {
 		CursorEventControl.addListenersToSpatial(spt,ContextMenuOwnerListenerI.i());
 	}
 	
-	private void showContextMenu(CursorButtonEvent event, Spatial sptOwner, ContextMenu cm) {
+	private void showContextMenu(CursorButtonEvent event, Button btnOwner, ContextMenu cm) {
 		//TODO populate context menu
 		cntr.clearChildren();
 		
 		int i=0;
-		for(Entry<String, Button> entry : (cm.hmEntry).entrySet()){
+		Label lbl = new Label("Context:"+btnOwner.getText());
+		DragParentestListenerI.i().applyAt(lbl);
+		cntr.addChild(lbl, i++, 0);
+		for(Entry<String, Button> entry : (cm.hmContextOptions).entrySet()){
 			cntr.addChild(entry.getValue(), i++, 0);
 		}
 		
-		nodeParent.attachChild(hrp);
+		cm.getHierarchyParent().showHierarchyModal(hrp);
 		
-		hrp.setPreferredSize(new Vector3f(200,30*cm.hmEntry.size(),hrp.getPreferredSize().z));
-		hrp.setLocalTranslation(sptOwner.getWorldTranslation());
+//		nodeParent.attachChild(hrp);
+		
+		hrp.setPreferredSize(new Vector3f(200,30*cm.hmContextOptions.size(),hrp.getPreferredSize().z));
+		hrp.setLocalTranslation(event.getX(),event.getY(),0);//btnOwner.getWorldTranslation());
 	}
 	
 	public void hideContextMenu() {
