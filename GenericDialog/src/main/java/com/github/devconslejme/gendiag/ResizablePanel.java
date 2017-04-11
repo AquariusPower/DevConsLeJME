@@ -421,7 +421,7 @@ public class ResizablePanel extends Panel implements IEntity {
 		
 		if(bUpdateLogicalStateSuccess){
 			for(IComponent ic:hmComponents.values()){
-				ic.getSystem().update(ic,tpf);
+				ic.getSystem().updateComponent(ic,tpf);
 //				ic.updateLogicalState(tpf);
 			}
 		}

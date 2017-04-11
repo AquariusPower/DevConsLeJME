@@ -185,7 +185,7 @@ public class ContextMenuI {
 		}
 		
 		HierarchyComponent comp = cm.getOwner().getComponent(HierarchyComponent.class);
-		HierarchySystemI.i().workOn(comp).showAsHierarchyModal(hrp.getComponent(HierarchyComponent.class));
+		comp=HierarchySystemI.i().workOn(comp).showAsHierarchyModal(hrp.getComponent(HierarchyComponent.class));
 //		nodeParent.attachChild(hrp);
 		
 		hrp.setPreferredSize(new Vector3f(200,30*cm.hmContextOptions.size(),hrp.getPreferredSize().z));

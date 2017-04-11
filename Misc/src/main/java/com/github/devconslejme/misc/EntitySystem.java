@@ -34,8 +34,13 @@ package com.github.devconslejme.misc;
 public class EntitySystem{
 	public static EntitySystem i(){return GlobalInstanceManagerI.i().get(EntitySystem.class);}
 	
+	/**
+	 * just a compact class name
+	 */
+	public static class ES extends EntitySystem{}
+	
 	public interface ISystem {
-		<T extends IComponent> void update(T comp, float tpf);
+		<T extends IComponent> void updateComponent(T comp, float tpf);
 	}
 	
 	public static interface IComponent {

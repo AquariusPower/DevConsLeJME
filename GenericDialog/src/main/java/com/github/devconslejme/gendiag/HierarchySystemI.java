@@ -31,10 +31,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.EntitySystem.IComponent;
 import com.github.devconslejme.misc.EntitySystem.ISystem;
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.ReportI.IReport;
 import com.github.devconslejme.misc.TimeConvertI;
@@ -175,8 +175,8 @@ public class HierarchySystemI implements ISystem {
 		}
 	}
 	
-	private void updateLastFocusAppTimeNano(HierarchyComponent comp) {
-		comp.getEntityOwner().updateComponent(
+	private HierarchyComponent updateLastFocusAppTimeNano(HierarchyComponent comp) {
+		return comp.getEntityOwner().updateComponent(
 			new HierarchyComponent(
 				comp,
 				TimeConvertI.i().getNanosFrom(app.getTimer())
@@ -256,33 +256,37 @@ public class HierarchySystemI implements ISystem {
 		
 		/**
 		 * will prevent access to parent
-		 * @param rzdChildDialog
+		 * @param compChild
+		 * @return 
 		 */
-		public void showAsHierarchyModal(HierarchyComponent rzdChildDialog){
-			applyHierarchyChild(rzdChildDialog,true);
+		public HierarchyComponent showAsHierarchyModal(HierarchyComponent compChild){
+			return applyHierarchyChild(compChild,true);
 		}
 		
 		/**
 		 * will close if parent closes
-		 * @param rzdChildDialog
+		 * @param compChild
+		 * @return 
 		 */
-		public void showAsHierarchyModeless(HierarchyComponent rzdChildDialog){
-			applyHierarchyChild(rzdChildDialog,false);
+		public HierarchyComponent showAsHierarchyModeless(HierarchyComponent compChild){
+			return applyHierarchyChild(compChild,false);
 		}
 		
-		private void applyHierarchyChild(HierarchyComponent compChild, boolean bModal){
+		private HierarchyComponent applyHierarchyChild(HierarchyComponent compChild, boolean bModal){
 			ResizablePanel rzpChild = compChild.getEntityOwner();
 			
-			rzpChild.updateComponent(new HierarchyComponent(compChild,null,bModal));
-			setMeAsHierarchyParentAt(compChild);
+			compChild=rzpChild.updateComponent(new HierarchyComponent(compChild,null,bModal));
+			compChild=setMeAsHierarchyParentAt(compChild);
 			if(bModal)setEnabledBlockerLayer(true);
 			
 			showDialog(rzpChild); //show it
-			updateLastFocusAppTimeNano(compChild);
+			compChild=updateLastFocusAppTimeNano(compChild);
+			
+			return compChild;
 		}
 		
-		private void setMeAsHierarchyParentAt(HierarchyComponent compChild) {
-			compChild.getEntityOwner().updateComponent(new HierarchyComponent(compChild, c()));
+		private HierarchyComponent setMeAsHierarchyParentAt(HierarchyComponent compChild) {
+			return compChild.getEntityOwner().updateComponent(new HierarchyComponent(compChild, c()));
 		}
 
 		private void showDialog(ResizablePanel rzp) {
@@ -358,8 +362,9 @@ public class HierarchySystemI implements ISystem {
 			return sb.toString();
 		}
 
-		public void setAsHierarchyTop() {
-			c().getEntityOwner().updateComponent(new HierarchyComponent(comp,true,null));
+		public HierarchyComponent setAsHierarchyTop() {
+			comp=c().getEntityOwner().updateComponent(new HierarchyComponent(comp,true,null));
+			return comp;
 		}
 		
 //		@Override
@@ -374,12 +379,12 @@ public class HierarchySystemI implements ISystem {
 	}
 	
 	@Override
-	public void update(IComponent comp, float tpf) {
+	public <T extends IComponent> void updateComponent(T comp, float tpf) {
 		workOn((HierarchyComponent)comp).update(tpf);
 	}
 
 	public HierarchyComponent createComponentAt(ResizablePanel hrp) {
 		return hrp.createComponent(HierarchyComponent.class);
 	}
-	
+
 }

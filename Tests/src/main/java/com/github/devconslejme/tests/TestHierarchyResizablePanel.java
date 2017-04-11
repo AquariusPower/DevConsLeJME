@@ -30,6 +30,7 @@ package com.github.devconslejme.tests;
 import com.github.devconslejme.gendiag.HierarchySystemI;
 import com.github.devconslejme.gendiag.HierarchyComponent;
 import com.github.devconslejme.gendiag.ResizablePanel;
+import com.github.devconslejme.misc.EntitySystem.ES;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
