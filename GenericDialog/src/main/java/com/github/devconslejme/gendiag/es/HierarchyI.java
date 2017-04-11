@@ -33,6 +33,7 @@ import java.util.Comparator;
 
 import com.github.devconslejme.gendiag.ContextMenuI;
 import com.github.devconslejme.gendiag.ResizablePanel;
+import com.github.devconslejme.gendiag.ResizablePanel.IUpdateLogicalStateListener;
 import com.github.devconslejme.gendiag.es.GenericDialogZayES.GuiLink;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.QueueI;
@@ -52,7 +53,6 @@ import com.simsilica.es.Entity;
 import com.simsilica.es.EntityComponent;
 import com.simsilica.es.EntityId;
 import com.simsilica.es.EntitySet;
-import com.simsilica.es.Name;
 import com.simsilica.es.PersistentComponent;
 import com.simsilica.es.base.DefaultEntityData;
 import com.simsilica.lemur.Button;
@@ -68,7 +68,7 @@ import com.simsilica.lemur.focus.FocusManagerState;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class HierarchyI {
+public class HierarchyI implements IUpdateLogicalStateListener{
 	public static HierarchyI i(){return GlobalInstanceManagerI.i().get(HierarchyI.class);}
 	
 	private Node nodeToMonitor;
@@ -323,8 +323,8 @@ public class HierarchyI {
 		return aent;
 	}
 	
-	public void update(float tpf,Entity ent){
-		ent = ed.getEntity(ent.getId(), getAllComponentTypesArray());
+	public void update(float tpf,EntityId entid){
+		Entity ent = ed.getEntity(entid, getAllComponentTypesArray());
 		
 		/********************
 		 * beware what you code here!!! 
@@ -485,5 +485,10 @@ public class HierarchyI {
 		EntityId entidParent = ent.get(ShownState.class).getHierarchyParent();
 		Entity entParent = HierarchyI.i().getEntityFor(entidParent,GuiLink.class);
 		return entParent.get(GuiLink.class);
+	}
+
+	@Override
+	public void updateLogicalState(float tpf, ResizablePanel rzp) {
+		update(tpf, getEntityIdFor(rzp));
 	}
 }

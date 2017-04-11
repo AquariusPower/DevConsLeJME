@@ -39,10 +39,11 @@ import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.gendiag.ContextMenuI;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
-import com.github.devconslejme.gendiag.HierarchyComposite;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
+import com.github.devconslejme.gendiag.es.GenericDialogZayES;
+import com.github.devconslejme.gendiag.es.HierarchyI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.MessagesI;
@@ -906,8 +907,8 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		
 		hrpMain = new ResizablePanel(getStyle());
 		hrpMain.setName(DevConsPluginStateI.class.getSimpleName());//debug name
-		hrpMain.putComposite(new HierarchyComposite(hrpMain));
-		hrpMain.getComposite(HierarchyComposite.class).setTopHierarchy(true);
+		HierarchyI.i().setAsHierarchyTop(
+			GenericDialogZayES.i().createEntity(hrpMain,"DevCons"));
 		hrpMain.setContents(cntrMain);
 		hrpMain.addResizableListener(this);
 		

@@ -124,7 +124,7 @@ public class GenericDialogZayES extends AbstractAppState {
 	}
 	
 	private void update(float tpf,Entity ent) {
-		HierarchyI.i().update(tpf,ent);
+		HierarchyI.i().update(tpf,ent.getId());
 	}
 	private void updateChangedEntities(float tpf,Set<Entity> entset) {
 		for(Entity ent:entset){

@@ -162,7 +162,7 @@ public final class SimpleGenericDialogComposite extends AbstractGenericDialogCom
 	}
 	
 	@Override
-	public void updateLogicalState(float tpf) {
+	public void updateLogicalState(float tpf,ResizablePanel rzp) {
 		update(tpf);
 	}
 
@@ -212,9 +212,9 @@ public final class SimpleGenericDialogComposite extends AbstractGenericDialogCom
 		return bUseInputTextValue;
 	}
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public Class<SimpleGenericDialogComposite> getCompositeType() {
-		return SimpleGenericDialogComposite.class;
-	}
+//	@SuppressWarnings("unchecked")
+//	@Override
+//	public Class<SimpleGenericDialogComposite> getCompositeType() {
+//		return SimpleGenericDialogComposite.class;
+//	}
 }

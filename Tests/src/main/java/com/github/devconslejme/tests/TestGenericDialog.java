@@ -47,6 +47,7 @@ public class TestGenericDialog extends SimpleApplication {
 
 	private ResizablePanel	diag;
 	private Button	btnChosenOption;
+	private SimpleGenericDialogComposite	gdc;
 	
 	@Override
 	public void simpleInitApp() {
@@ -76,8 +77,8 @@ public class TestGenericDialog extends SimpleApplication {
 
 	private void prepareDialog() {
 		diag = new ResizablePanel(null);
-		SimpleGenericDialogComposite gdc = new SimpleGenericDialogComposite(diag);
-		diag.putComposite(gdc);
+		gdc = new SimpleGenericDialogComposite(diag);
+//		diag.putComposite(gdc);
 		
 //		diag.configure(
 //			new CfgParams()
@@ -112,7 +113,8 @@ public class TestGenericDialog extends SimpleApplication {
 		
 //		if(btnChosenOption.getText().isEmpty()){
 			if(diag.getParent()==null){//isEnabled()){
-				Object objSelectedOption = diag.getComposite(SimpleGenericDialogComposite.class).collectSelectedOption();
+				Object objSelectedOption = gdc.collectSelectedOption();
+//				Object objSelectedOption = diag.getComposite(SimpleGenericDialogComposite.class).collectSelectedOption();
 				if(objSelectedOption!=null){
 					btnChosenOption.setText("Chosen="+objSelectedOption);
 				}

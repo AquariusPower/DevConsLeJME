@@ -30,7 +30,7 @@ package com.github.devconslejme.gendiag;
 import java.util.HashMap;
 
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
-import com.github.devconslejme.gendiag.ResizablePanel.IComponent;
+import com.github.devconslejme.gendiag.ResizablePanel.IUpdateLogicalStateListener;
 import com.github.devconslejme.misc.lemur.DragParentestListenerI;
 import com.simsilica.lemur.Container;
 import com.simsilica.lemur.Panel;
@@ -41,7 +41,7 @@ import com.simsilica.lemur.event.CursorEventControl;
 /**
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
-public abstract class AbstractGenericDialogComposite implements IComponent{
+public abstract class AbstractGenericDialogComposite implements IUpdateLogicalStateListener{
 	//private HierarchyResizablePanel	rzpMain;
 	//private Application	app;
 	private Container	cntrMain;
@@ -103,6 +103,7 @@ public abstract class AbstractGenericDialogComposite implements IComponent{
 	
 	public AbstractGenericDialogComposite(ResizablePanel rzpOwner) {
 		this.rzpOwner=rzpOwner;
+		rzpOwner.addUpdateLogicalStateListener(this);
 		preInitContentsContainer();
 		initContentsContainer();
 	//	this.app=GlobalInstanceManagerI.i().get(Application.class);
@@ -214,10 +215,7 @@ public abstract class AbstractGenericDialogComposite implements IComponent{
 		this.objSelected=obj;
 	}
 
-	@Override
-	public void updateLogicalState(float tpf) {}
-
-	@Override
+//	@Override
 	public ResizablePanel getEntityOwner() {
 		return rzpOwner;
 	}

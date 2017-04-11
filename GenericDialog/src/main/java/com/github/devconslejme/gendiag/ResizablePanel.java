@@ -90,7 +90,7 @@ public class ResizablePanel extends Panel {
 	private ArrayList<IResizableListener> airlList = new ArrayList<IResizableListener>();
 	
 	public static interface IUpdateLogicalStateListener {
-		public void updateLogicalState(float tpf);
+		public void updateLogicalState(float tpf, ResizablePanel rzp);
 	}
 	private ArrayList<IUpdateLogicalStateListener> aiulslList = new ArrayList<IUpdateLogicalStateListener>();
 	
@@ -423,7 +423,7 @@ public class ResizablePanel extends Panel {
 		
 		if(bUpdateLogicalStateSuccess){
 			for(IUpdateLogicalStateListener iuls:aiulslList){
-				iuls.updateLogicalState(tpf);
+				iuls.updateLogicalState(tpf,this);
 			}
 		}
 	}
