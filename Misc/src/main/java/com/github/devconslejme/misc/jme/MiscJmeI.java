@@ -34,6 +34,7 @@ import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.QueueI.CallableWeak;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.jme3.bounding.BoundingBox;
+import com.jme3.bounding.BoundingVolume;
 import com.jme3.font.BitmapText;
 import com.jme3.font.LineWrapMode;
 import com.jme3.math.Vector3f;
@@ -64,7 +65,9 @@ public class MiscJmeI {
 	}
 	
 	public Vector3f getBoundingBoxSize(Spatial spt){
-		return ((BoundingBox)spt.getWorldBound()).getExtent(null).mult(2f);
+		BoundingVolume bv = spt.getWorldBound();
+		if(bv==null)return null; //it is not ready yet
+		return ((BoundingBox)bv).getExtent(null).mult(2f);
 	}
 	
 	public void recursivelyApplyTextNoWrap(Node nodeParent) {

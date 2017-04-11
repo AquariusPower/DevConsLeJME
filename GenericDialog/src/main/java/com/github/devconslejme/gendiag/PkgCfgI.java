@@ -44,7 +44,6 @@ public class PkgCfgI {
 		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(app, nodeParent);
 		
 		GenericDialogZayES.i().configure();
-		_HierarchySystemI.i().configure(nodeParent, 0f);
 		HierarchyI.i().configure(nodeParent,0f);
 		ContextMenuI.i().configure();
 	}

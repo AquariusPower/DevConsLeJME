@@ -33,6 +33,7 @@ import java.util.Comparator;
 
 import com.github.devconslejme.gendiag.ContextMenuI;
 import com.github.devconslejme.gendiag.ResizablePanel;
+import com.github.devconslejme.gendiag.es.GenericDialogZayES.GuiLink;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
@@ -51,6 +52,7 @@ import com.simsilica.es.Entity;
 import com.simsilica.es.EntityComponent;
 import com.simsilica.es.EntityId;
 import com.simsilica.es.EntitySet;
+import com.simsilica.es.Name;
 import com.simsilica.es.PersistentComponent;
 import com.simsilica.es.base.DefaultEntityData;
 import com.simsilica.lemur.Button;
@@ -75,6 +77,7 @@ public class HierarchyI {
 	private float	fBeginOrderZ = 0f;
 	private float	fSafeZDist=1.0f;
 	private DefaultEntityData	ed;
+	private ArrayList<Class>	aclAllComponentTypes;
 	
 	public void configure(Node nodeToMonitor, float fBeginOrderZ){
 		this.ed = GlobalInstanceManagerI.i().get(GenericDialogZayES.class).getEntityData();
@@ -124,12 +127,6 @@ public class HierarchyI {
 //		return entTopMost;
 	}
 
-	public static class GuiLink implements EntityComponent, PersistentComponent{
-		ResizablePanel val;
-		public GuiLink(ResizablePanel val) { this.val=val; }
-		public ResizablePanel getResizablePanel(){ return val; }
-	}
-	
 	public static class Blocker implements EntityComponent, PersistentComponent{
 		Button val;
 		public Blocker(Button val) { this.val=val; }
@@ -138,6 +135,7 @@ public class HierarchyI {
 
 	public static class LastFocusTime implements EntityComponent, PersistentComponent{
 		long val=-1;
+		public LastFocusTime() {}
 		public LastFocusTime(long val) { this.val=val; }
 		public long getLastFocusTime(){ return val; }
 	}
@@ -147,10 +145,12 @@ public class HierarchyI {
 		private boolean	bHierarchyTop=false;
 		private boolean	bHierarchyModal=false;
 		
-		public ShownState(EntityId hierarchyParent, boolean bHierarchyTop,	boolean bHierarchyModal) {
+		public ShownState() {}
+		
+		public ShownState(EntityId hierarchyParent, Boolean bHierarchyTop,	Boolean bHierarchyModal) {
 			this.hierarchyParent = hierarchyParent;
-			this.bHierarchyTop = bHierarchyTop;
-			this.bHierarchyModal = bHierarchyModal;
+			if(bHierarchyTop!=null)this.bHierarchyTop = bHierarchyTop;
+			if(bHierarchyModal!=null)this.bHierarchyModal = bHierarchyModal;
 		}
 
 		public EntityId getHierarchyParent() {
@@ -165,32 +165,51 @@ public class HierarchyI {
 			return bHierarchyModal;
 		}
 	}
-
-	public static Class[] allCompTypes() {
-		return new Class[]{
-			GuiLink.class,
-			Blocker.class,
-			LastFocusTime.class,
-			ShownState.class,
-		};
+	
+	public Class[] getAllComponentTypesArray() {
+		return getAllComponentTypesList().toArray(new Class[0]);
+	}
+	public ArrayList<Class> getAllComponentTypesList() {
+		if(aclAllComponentTypes==null){
+			aclAllComponentTypes = new ArrayList<Class>();
+			aclAllComponentTypes.addAll(GenericDialogZayES.i().getAllComponentTypesList());
+			aclAllComponentTypes.add(Blocker.class);
+			aclAllComponentTypes.add(LastFocusTime.class);
+			aclAllComponentTypes.add(ShownState.class);
+		}
+		return aclAllComponentTypes;
 	}
 	
 	public void initialize(float tpf,Entity ent) {
+		if(ed.getComponent(ent.getId(), ShownState.class)==null){
+			ed.setComponent(ent.getId(), new ShownState());
+		}
+		
+		if(ed.getComponent(ent.getId(), LastFocusTime.class)==null){
+			ed.setComponent(ent.getId(), new LastFocusTime());
+		}
+		
 		/////////////// blocker
-		Button btn = new Button("");
-		ent.set(new Blocker(btn));
+		if(ed.getComponent(ent.getId(), Blocker.class)==null){
+			Button btn = new Button("");
+			ed.setComponent(ent.getId(),new Blocker(btn)); //ent.set(
+			
+			btn.setBackground(
+				new QuadBackgroundComponent(//ColorRGBA.Red));
+					ColorI.i().colorChangeCopy(ColorRGBA.Red, -0.75f, 0.5f)));
+			
+			DragParentestListenerI.i().applyAt(btn, null);
+		}
 		
-		btn.setBackground(
-			new QuadBackgroundComponent(//ColorRGBA.Red));
-				ColorI.i().colorChangeCopy(ColorRGBA.Red, -0.75f, 0.5f)));
-		
+		// panel
 		ResizablePanel rzp = ent.get(GuiLink.class).getResizablePanel();
-		DragParentestListenerI.i().applyAt(btn, rzp);
 		HoverHighlightEffectI.i().applyAt(rzp, (QuadBackgroundComponent)rzp.getResizableBorder());
 	}
 
 	public boolean isBlocked(Entity ent){
-		return ent.get(Blocker.class).getButton().getParent()!=null;
+		Blocker blocker=ent.get(Blocker.class);
+		if(blocker==null)return false;
+		return blocker.getButton().getParent()!=null;
 	}
 
 	public void setEnabledBlockerLayer(Entity ent, boolean b){
@@ -207,8 +226,11 @@ public class HierarchyI {
 	 * @param compChild
 	 * @return 
 	 */
-	public void showAsHierarchyModal(Entity entParent, Entity entChild){
-		applyHierarchyChild(entParent,entChild,true);
+	public void showAsHierarchyModal(EntityId entidParent, EntityId entidChild){
+		applyHierarchyChild(
+				ed.getEntity(entidParent, getAllComponentTypesArray()),
+				ed.getEntity(entidChild, getAllComponentTypesArray()),
+				true);
 	}
 	
 	/**
@@ -224,7 +246,11 @@ public class HierarchyI {
 		ResizablePanel rzpChild = entChild.get(GuiLink.class).getResizablePanel();
 		
 		ShownState ss = entChild.get(ShownState.class);
-		entChild.set(new ShownState(entParent.getId(), ss.isHierarchyTop(), bModal));
+//		entChild.set(new ShownState(
+		ed.setComponent(entChild.getId(),new ShownState(
+			entParent.getId(), 
+			ss==null?null:ss.isHierarchyTop(), 
+			bModal));
 //		setHierarchyParentAtChild(entParent,entChild);
 		if(bModal)setEnabledBlockerLayer(entParent,true);
 		
@@ -242,7 +268,9 @@ public class HierarchyI {
 	}
 	
 	private void updateLastFocusAppTimeNano(Entity ent) {
-		ent.set(new LastFocusTime(TimeConvertI.i().getNanosFrom(app.getTimer())));
+//		ent.set(
+		ed.setComponent(ent.getId(),
+			new LastFocusTime(TimeConvertI.i().getNanosFrom(app.getTimer())));
 	}
 	
 	public Spatial getFocused(){
@@ -282,7 +310,7 @@ public class HierarchyI {
 		 * TODO how to make this work?
 		EntitySet entset = ed.getEntities(new FilterByHierarchyParent(ent), ShownState.class);
 		 */
-		EntitySet entset = ed.getEntities(ShownState.class);
+		EntitySet entset = ed.getEntities(GuiLink.class,ShownState.class,LastFocusTime.class);
 		
 		for(Entity entChild:entset){
 			if(ent==null || entChild.get(ShownState.class).getHierarchyParent().equals(ent.getId())){
@@ -296,18 +324,22 @@ public class HierarchyI {
 	}
 	
 	public void update(float tpf,Entity ent){
+		ent = ed.getEntity(ent.getId(), getAllComponentTypesArray());
+		
 		/********************
 		 * beware what you code here!!! 
 		 ********************/
 		
 		// close self if parent dialog closed
-		ShownState ss = ent.get(ShownState.class);
 		ResizablePanel rzp = ent.get(GuiLink.class).getResizablePanel();
-		if(ss.getHierarchyParent()!=null){
-			Entity entHierarchyParent = ed.getEntity(
-				ss.getHierarchyParent(), GuiLink.class);
-			if(entHierarchyParent.get(GuiLink.class).getResizablePanel().isClosed()){
-				rzp.close();
+		if(!rzp.isClosed()){
+			ShownState ss = ent.get(ShownState.class);
+			if(ss.getHierarchyParent()!=null){
+				Entity entHierarchyParent = ed.getEntity(
+					ss.getHierarchyParent(), GuiLink.class);
+				if(entHierarchyParent.get(GuiLink.class).getResizablePanel().isClosed()){
+					rzp.close();
+				}
 			}
 		}
 		
@@ -349,7 +381,10 @@ public class HierarchyI {
 		for(Entity ent:getHierarchyChildrenFor(null)){
 			ResizablePanel pnl=ent.get(GuiLink.class).getResizablePanel();
 			pnl.getLocalTranslation().z=fOrderZ;
-			fOrderZ += MiscJmeI.i().getBoundingBoxSize(pnl).z +fSafeZDist;
+			Vector3f v3f = MiscJmeI.i().getBoundingBoxSize(pnl);
+			if(v3f!=null){ //only if it is ready
+				fOrderZ += v3f.z +fSafeZDist;
+			}
 			
 			if(isFocused(pnl)){
 				updateLastFocusAppTimeNano(ent);
@@ -420,8 +455,35 @@ public class HierarchyI {
 		return sb.toString();
 	}
 
-	public void setAsHierarchyTop(Entity ent) {
+	public void setAsHierarchyTop(EntityId entid) {
+		Entity ent = ed.getEntity(entid, ShownState.class);
 		ShownState ss = ent.get(ShownState.class);
-		ent.set(new ShownState(ss.getHierarchyParent(), true, ss.isHierarchyModal()));
+//	ent.set(
+		ed.setComponent(entid, 
+			new ShownState(
+				ss==null?null:ss.getHierarchyParent(), 
+				true, 
+				ss==null?null:ss.isHierarchyModal()));
+	}
+	
+	public EntityId getEntityIdFor(ResizablePanel rzp){
+		EntitySet entset = ed.getEntities(GuiLink.class);
+		for(Entity ent:entset){
+			if(rzp==ent.get(GuiLink.class).getResizablePanel()){
+				return ent.getId();
+			}
+		}
+		return null;
+	}
+
+	public Entity getEntityFor(EntityId entid, Class... acl) {
+		return ed.getEntity(entid, acl);
+	}
+
+	public GuiLink getHierarchyParentGuiLinkFor(EntityId entid) {
+		Entity ent = HierarchyI.i().getEntityFor(entid,ShownState.class);
+		EntityId entidParent = ent.get(ShownState.class).getHierarchyParent();
+		Entity entParent = HierarchyI.i().getEntityFor(entidParent,GuiLink.class);
+		return entParent.get(GuiLink.class);
 	}
 }

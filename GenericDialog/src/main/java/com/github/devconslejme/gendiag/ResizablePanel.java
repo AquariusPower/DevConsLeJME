@@ -32,8 +32,6 @@ import java.util.HashMap;
 
 import org.lwjgl.opengl.Display;
 
-import com.github.devconslejme.gendiag._EntitySystem.IComponent;
-import com.github.devconslejme.gendiag._EntitySystem.IEntity;
 import com.github.devconslejme.misc.DetailedException;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
@@ -67,9 +65,8 @@ import com.simsilica.lemur.style.Styles;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class ResizablePanel extends Panel implements IEntity {
+public class ResizablePanel extends Panel {
   public static final String ELEMENT_ID = "resizablePanel";
-  private HashMap<Class,IComponent> hmComponents = new HashMap<Class,IComponent>();
 	private BorderLayout layout;
 	private Panel contents;
 	private static int iBorderSizeDefault = 2;
@@ -91,6 +88,11 @@ public class ResizablePanel extends Panel implements IEntity {
 		public void attendToResizing(ResizablePanel source,Vector3f v3fNewSize);
 	}
 	private ArrayList<IResizableListener> airlList = new ArrayList<IResizableListener>();
+	
+	public static interface IUpdateLogicalStateListener {
+		public void updateLogicalState(float tpf);
+	}
+	private ArrayList<IUpdateLogicalStateListener> aiulslList = new ArrayList<IUpdateLogicalStateListener>();
 	
 	public static interface IBorderMargin {
 		public void setMargin(int i);
@@ -420,9 +422,8 @@ public class ResizablePanel extends Panel implements IEntity {
 		}
 		
 		if(bUpdateLogicalStateSuccess){
-			for(IComponent ic:hmComponents.values()){
-				ic.getSystem().updateComponent(ic,tpf);
-//				ic.updateLogicalState(tpf);
+			for(IUpdateLogicalStateListener iuls:aiulslList){
+				iuls.updateLogicalState(tpf);
 			}
 		}
 	}
@@ -659,13 +660,24 @@ public class ResizablePanel extends Panel implements IEntity {
 	public Edge getDraggedEdge() {
 		return hmEdge.get(eeInitialHook);
 	}
-	public ResizablePanel addResizableListener(IResizableListener irl) {
-		if(irl==null)throw new DetailedException("invalid null listener");
+	public ResizablePanel addUpdateLogicalStateListener(IUpdateLogicalStateListener listener) {
+		if(listener==null)throw new DetailedException("invalid null listener");
 		
-		if(!airlList.contains(irl)){
-			airlList.add(irl);
+		if(!airlList.contains(listener)){
+			aiulslList.add(listener);
 		}else{
-			warnMsg("listener already added "+irl);
+			warnMsg("listener already added "+listener);
+		}
+		
+		return this;
+	}
+	public ResizablePanel addResizableListener(IResizableListener listener) {
+		if(listener==null)throw new DetailedException("invalid null listener");
+		
+		if(!airlList.contains(listener)){
+			airlList.add(listener);
+		}else{
+			warnMsg("listener already added "+listener);
 		}
 		
 		return this;
@@ -694,35 +706,5 @@ public class ResizablePanel extends Panel implements IEntity {
 	public void close(){
 		removeFromParent();
 	}
-	
-	@Override
-	public <T extends IComponent> T createComponent(Class<T> cl){
-		if(hmComponents.get(cl)!=null)throw new NullPointerException("already created "+cl.getName());
 		
-		T comp; try { comp = cl.newInstance();} catch (InstantiationException | IllegalAccessException e) {
-			e.printStackTrace(); throw new NullPointerException("");
-		}
-		
-		comp = comp.createCloneWithNewOwner(this);
-		
-		hmComponents.put(cl,comp);
-		
-		return comp;
-	}
-	
-	@Override
-	public <T extends IComponent> T updateComponent(T comp){
-		if(comp.getEntityOwner()!=this)throw new NullPointerException("this must be the owner");
-		
-		hmComponents.put(comp.getClass(), comp);
-		
-		return comp;
-	}
-	
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T extends IComponent> T getComponent(Class<T> cl){
-		return (T)hmComponents.get(cl);
-	}
-	
 }

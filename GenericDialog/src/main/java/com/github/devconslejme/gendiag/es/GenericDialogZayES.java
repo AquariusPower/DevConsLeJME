@@ -27,27 +27,33 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.github.devconslejme.gendiag.es;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Set;
 
 import com.github.devconslejme.gendiag.ResizablePanel;
+import com.github.devconslejme.gendiag.es.HierarchyI.Blocker;
+import com.github.devconslejme.gendiag.es.HierarchyI.LastFocusTime;
+import com.github.devconslejme.gendiag.es.HierarchyI.ShownState;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.jme.ColorI;
-import com.github.devconslejme.misc.lemur.DragParentestListenerI;
-import com.jme3.math.ColorRGBA;
+import com.jme3.app.Application;
+import com.jme3.app.state.AbstractAppState;
 import com.simsilica.es.Entity;
+import com.simsilica.es.EntityComponent;
 import com.simsilica.es.EntityId;
 import com.simsilica.es.EntitySet;
+import com.simsilica.es.Name;
+import com.simsilica.es.PersistentComponent;
 import com.simsilica.es.base.DefaultEntityData;
-import com.simsilica.lemur.Button;
-import com.simsilica.lemur.component.QuadBackgroundComponent;
 
 /**
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
-public class GenericDialogZayES {
+public class GenericDialogZayES extends AbstractAppState {
 	public static GenericDialogZayES i(){return GlobalInstanceManagerI.i().get(GenericDialogZayES.class);}
 	
 	private DefaultEntityData	ed;
+	private ArrayList<Class>	aclAllComponentTypes;
 	
 	public DefaultEntityData getEntityData(){
 		return ed;
@@ -55,45 +61,97 @@ public class GenericDialogZayES {
 
 	public void configure() {
     ed = new DefaultEntityData(); //holds all components
+    GlobalInstanceManagerI.i().get(Application.class).getStateManager().attach(this);
+    ed.getEntities(getAllComponentTypesArray()); //just to let the entset.getAddedEntities() work the 1st time
 	}	
 	
-	public EntityId createEntity(ResizablePanel rzp){
-	  EntityId ent = ed.createEntity(); //to attach components to
-	  ed.setComponent(ent, new HierarchyI.GuiLink(rzp));
-	  return ent;
+	public static class GuiLink implements EntityComponent, PersistentComponent{
+		ResizablePanel val;
+		public GuiLink(ResizablePanel val) { this.val=val; }
+		public ResizablePanel getResizablePanel(){ return val; }
 	}
 	
+	public static class Initialized implements EntityComponent, PersistentComponent{
+		private boolean	bInitialized;
+		public Initialized(boolean bInitialized) {
+			this.bInitialized=bInitialized;
+		}
+		public boolean isInitialized() {
+			return bInitialized;
+		}
+	}
+	
+	public EntityId createEntity(ResizablePanel rzp,String strName){
+	  EntityId entid = ed.createEntity(); //to attach components to
+	  ed.setComponent(entid, new GuiLink(rzp));
+	  ed.setComponent(entid, new Initialized(false));
+	  ed.setComponent(entid, new Name(strName));
+	  return entid;
+	}
+	
+	
+	
+	@Override
 	public void update(float tpf) {
-    EntitySet entset = ed.getEntities(HierarchyI.GuiLink.class);
-    while( true ) {
-        if( entset.applyChanges() ) {
-            // newly matching entities
-            initializeNewEntities(tpf,entset.getAddedEntities());
+    EntitySet entset = ed.getEntities(getAllComponentTypesArray());
+    
+    for(Entity ent:entset){
+    	if(!ent.get(Initialized.class).isInitialized()){
+    		initialize(tpf, ent);
+    		ed.setComponent(ent.getId(), new Initialized(true));
+    	}
+    }
+    
+    if( entset.applyChanges() ) {
+        // newly matching entities
+        initializeNewEntities(tpf,entset.getAddedEntities()); //TODO not working?
 
-            // entities that have merely changed TODO have any component changed? 
-            updateChangedEntities(tpf,entset.getChangedEntities());
-            
-            // entities that are no longer matching TODO have any missing of the required components of the query above?
-            cleanupRemovedEntities(tpf,entset.getRemovedEntities());
-        }
+        // entities that have merely changed TODO have any component changed? 
+        updateChangedEntities(tpf,entset.getChangedEntities());
+        
+        // entities that are no longer matching TODO have any missing of the required components of the query above?
+        cleanupRemovedEntities(tpf,entset.getRemovedEntities());
     }
 	}
 
+	private void initialize(float tpf,Entity ent) {
+		HierarchyI.i().initialize(tpf,ent);
+	}
 	private void initializeNewEntities(float tpf,Set<Entity> entset) {
 		for(Entity ent:entset){
-			HierarchyI.i().initialize(tpf,ent);
+			initialize(tpf,ent);
 		}
 	}
 	
+	private void update(float tpf,Entity ent) {
+		HierarchyI.i().update(tpf,ent);
+	}
 	private void updateChangedEntities(float tpf,Set<Entity> entset) {
 		for(Entity ent:entset){
-			HierarchyI.i().update(tpf,ent);
+			update(tpf,ent);
 		}
 	}
 
+	private void cleanup(float tpf,Entity ent) {
+		HierarchyI.i().cleanup(tpf,ent);
+	}
 	private void cleanupRemovedEntities(float tpf,Set<Entity> entset) {
 		for(Entity ent:entset){
-			HierarchyI.i().cleanup(tpf,ent);
+			cleanup(tpf,ent);
 		}
 	}
+
+	public Class[] getAllComponentTypesArray() {
+		return getAllComponentTypesList().toArray(new Class[0]);
+	}
+	public ArrayList<Class> getAllComponentTypesList() {
+		if(aclAllComponentTypes==null){
+			aclAllComponentTypes = new ArrayList<Class>();
+			aclAllComponentTypes.add(Initialized.class);
+			aclAllComponentTypes.add(GuiLink.class);
+			aclAllComponentTypes.add(Name.class);
+		}
+		return aclAllComponentTypes;
+	}
+	
 }

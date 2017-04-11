@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
+import com.github.devconslejme.gendiag.es.GenericDialogZayES;
+import com.github.devconslejme.gendiag.es.HierarchyI;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
@@ -39,6 +41,7 @@ import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestListenerI;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
+import com.simsilica.es.EntityId;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
 import com.simsilica.lemur.Container;
@@ -62,6 +65,7 @@ public class ContextMenuI {
 	private String	strStyle;
 	private Container	cntr;
 	private Vector3f	v3fHierarchyParentDisplacement;
+	private EntityId	entid;
 	
 	public static class ContextMenu{
 		LinkedHashMap<String,Button> hmContextOptions = new LinkedHashMap<String,Button>();
@@ -132,10 +136,12 @@ public class ContextMenuI {
 		hrp = new ResizablePanel(strStyle);
 		
 //		HierarchyComponent comp = hrp.createComponent(HierarchyComponent.class);
-		_HierarchyComponent comp = _HierarchySystemI.i().createComponentAt(hrp);
+//		_HierarchyComponent comp = _HierarchySystemI.i().createComponentAt(hrp);
+		entid = GenericDialogZayES.i().createEntity(hrp,ContextMenuI.class.getSimpleName());
 		
 //		hrp.updateComponent(new HierarchyComponent(comp,true,null));
-		_HierarchySystemI.i().workOn(comp).setAsHierarchyTop();
+//		_HierarchySystemI.i().workOn(comp).setAsHierarchyTop();
+		HierarchyI.i().setAsHierarchyTop(entid);
 		
 		hrp.setAllEdgesEnabled(false); //it is here for the hierarchy (not the resizing)
 		
@@ -150,8 +156,10 @@ public class ContextMenuI {
 			@Override
 			public Boolean call() {
 				if(hrp.getParent()!=null){
+					ResizablePanel rzpParent = HierarchyI.i().getHierarchyParentGuiLinkFor(entid).getResizablePanel();
+					
 					hrp.setLocalTranslation(
-						hrp.getComponent(_HierarchyComponent.class).getHierarchyParent().getEntityOwner().getLocalTranslation().subtract(
+						rzpParent.getLocalTranslation().subtract(
 							v3fHierarchyParentDisplacement));
 				}
 				return true;
@@ -184,8 +192,9 @@ public class ContextMenuI {
 			cntr.addChild(entry.getValue(), i++, 0);
 		}
 		
-		_HierarchyComponent comp = cm.getOwner().getComponent(_HierarchyComponent.class);
-		comp=_HierarchySystemI.i().workOn(comp).showAsHierarchyModal(hrp.getComponent(_HierarchyComponent.class));
+//		_HierarchyComponent comp = cm.getOwner().getComponent(_HierarchyComponent.class);
+		HierarchyI.i().showAsHierarchyModal(HierarchyI.i().getEntityIdFor(cm.getOwner()), entid);
+//		comp=_HierarchySystemI.i().workOn(comp).showAsHierarchyModal(hrp.getComponent(_HierarchyComponent.class));
 //		nodeParent.attachChild(hrp);
 		
 		hrp.setPreferredSize(new Vector3f(200,30*cm.hmContextOptions.size(),hrp.getPreferredSize().z));

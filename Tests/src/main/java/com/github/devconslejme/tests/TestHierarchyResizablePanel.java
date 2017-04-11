@@ -27,12 +27,13 @@
 
 package com.github.devconslejme.tests;
 
-import com.github.devconslejme.gendiag._HierarchySystemI;
-import com.github.devconslejme.gendiag._HierarchyComponent;
 import com.github.devconslejme.gendiag.ResizablePanel;
-import com.github.devconslejme.gendiag._EntitySystem.ES;
+import com.github.devconslejme.gendiag.es.GenericDialogZayES;
+import com.github.devconslejme.gendiag.es.HierarchyI;
+import com.github.devconslejme.misc.jme.UserDataI;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
+import com.simsilica.es.EntityId;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
 
@@ -60,7 +61,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 
 	@SuppressWarnings("unchecked")
 	private void initTest(int iBaseY) {
-		ResizablePanel rzpChild = test(new Vector3f(200,iBaseY+200,20));
+		ResizablePanel rzpChild = test(new Vector3f(200,iBaseY+200,20), "child"+iBaseY);
 //		ColorRGBA color = ColorRGBA.Yellow.clone();color.a=0.25f;QuadBackgroundComponent qbc = new QuadBackgroundComponent(color);qbc.setMargin(10,5);testChild.setBorder(qbc);
 		Button btn = new Button("click to close");
 		btn.addClickCommands(new Command<Button>(){
@@ -70,28 +71,32 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 			}
 		});
 		rzpChild.setContents(btn);
-		rzpChild.setName("child"+iBaseY);
 		
-		ResizablePanel rzpParent = test(new Vector3f(100,iBaseY+100,10));
+		ResizablePanel rzpParent = test(new Vector3f(100,iBaseY+100,10), "parent"+iBaseY);
 		btn = new Button("click to open modal");
 		btn.addClickCommands(new Command<Button>(){
 			@Override
 			public void execute(Button source) {
-				_HierarchyComponent comp = rzpParent.getComponent(_HierarchyComponent.class);
-				_HierarchyComponent compChild = rzpChild.getComponent(_HierarchyComponent.class);
-				_HierarchySystemI.i().workOn(comp).showAsHierarchyModal(compChild);
+//				ResizablePanel rzpParentest = MiscJmeI.i().getParentest(source, ResizablePanel.class, true);
+				HierarchyI.i().showAsHierarchyModal(
+					UserDataI.i().getUserDataPSH(rzpParent,EntityId.class),
+					UserDataI.i().getUserDataPSH(rzpChild,EntityId.class)
+				);
+//				_HierarchyComponent comp = rzpParent.getComponent(_HierarchyComponent.class);
+//				_HierarchyComponent compChild = rzpChild.getComponent(_HierarchyComponent.class);
+//				_HierarchySystemI.i().workOn(comp).showAsHierarchyModal(compChild);
 			}
 		});
 		rzpParent.setContents(btn);
-		rzpParent.setName("parent"+iBaseY);
 		
 		// show it all
 		getGuiNode().attachChild(rzpParent);
 	}
 
-	private ResizablePanel test(Vector3f pos) {
+	private ResizablePanel test(Vector3f pos,String strName) {
 		ResizablePanel rzp = new ResizablePanel(null);
-		rzp.createComponent(_HierarchyComponent.class);
+		EntityId entid = GenericDialogZayES.i().createEntity(rzp,strName);
+		UserDataI.i().setUserDataPSH(rzp, entid);
 		rzp.setPreferredSize(new Vector3f(300,200,0)); //TODO z will cause trouble?
 		rzp.setLocalTranslation(pos); //above DevCons
 		return rzp;
