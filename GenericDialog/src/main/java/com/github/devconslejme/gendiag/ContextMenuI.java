@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
-import com.github.devconslejme.gendiag.HierarchySorterI.IHierarchySorter;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
@@ -131,8 +130,13 @@ public class ContextMenuI {
 		strStyle = GuiGlobals.getInstance().getStyles().getDefaultStyle();
 		
 		hrp = new ResizablePanel(strStyle);
-		hrp.putComposite(new HierarchyComposite(hrp));
-		hrp.getComposite(HierarchyComposite.class).setTopHierarchy(true);
+		
+//		HierarchyComponent comp = hrp.createComponent(HierarchyComponent.class);
+		HierarchyComponent comp = HierarchySystemI.i().createComponentAt(hrp);
+		
+//		hrp.updateComponent(new HierarchyComponent(comp,true,null));
+		HierarchySystemI.i().workOn(comp).setAsHierarchyTop();
+		
 		hrp.setAllEdgesEnabled(false); //it is here for the hierarchy (not the resizing)
 		
 		cntr = new Container(strStyle);
@@ -147,7 +151,7 @@ public class ContextMenuI {
 			public Boolean call() {
 				if(hrp.getParent()!=null){
 					hrp.setLocalTranslation(
-						hrp.getComposite(HierarchyComposite.class).getHierarchyParent().getOwner().getLocalTranslation().subtract(
+						hrp.getComponent(HierarchyComponent.class).getHierarchyParent().getEntityOwner().getLocalTranslation().subtract(
 							v3fHierarchyParentDisplacement));
 				}
 				return true;
@@ -180,7 +184,8 @@ public class ContextMenuI {
 			cntr.addChild(entry.getValue(), i++, 0);
 		}
 		
-		cm.getOwner().getComposite(HierarchyComposite.class).showHierarchyModal(hrp.getComposite(HierarchyComposite.class));
+		HierarchyComponent comp = cm.getOwner().getComponent(HierarchyComponent.class);
+		HierarchySystemI.i().workOn(comp).showAsHierarchyModal(hrp.getComponent(HierarchyComponent.class));
 //		nodeParent.attachChild(hrp);
 		
 		hrp.setPreferredSize(new Vector3f(200,30*cm.hmContextOptions.size(),hrp.getPreferredSize().z));

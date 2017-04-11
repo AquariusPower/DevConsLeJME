@@ -101,14 +101,14 @@ public final class SimpleGenericDialogComposite extends AbstractGenericDialogCom
 			/**
 			 * IMPORTANT: Button works MUCH better than Label when clicking to drag for ex.
 			 */
-			btnInfo = new Button("(No Info)", getOwner().getStyle());
+			btnInfo = new Button("(No Info)", getEntityOwner().getStyle());
 			setSection(es,btnInfo);
 		}
 		
 		es=ESection.Options;
 		if(getSection(es)==null){
 			vlsOptions = new VersionedList<String>();
-			lstbxOptions = new ListBox<String>(vlsOptions, getOwner().getStyle());
+			lstbxOptions = new ListBox<String>(vlsOptions, getEntityOwner().getStyle());
 			lstbxOptions.addClickCommands(new Command<ListBox>(){
 				@Override
 				public void execute(ListBox source) {
@@ -121,7 +121,7 @@ public final class SimpleGenericDialogComposite extends AbstractGenericDialogCom
 		
 		es=ESection.Input;
 		if(getSection(es)==null){
-			tfInput = new TextField("", getOwner().getStyle());
+			tfInput = new TextField("", getEntityOwner().getStyle());
 			
 			tfInput.getActionMap().put(new KeyAction(KeyInput.KEY_NUMPADENTER),kal); 
 			tfInput.getActionMap().put(new KeyAction(KeyInput.KEY_RETURN),kal); 
@@ -182,7 +182,7 @@ public final class SimpleGenericDialogComposite extends AbstractGenericDialogCom
 		
 		if(isOptionSelected()){
 //			setEnabled(false);
-			getOwner().removeFromParent();
+			getEntityOwner().removeFromParent();
 		}
 	}
 	

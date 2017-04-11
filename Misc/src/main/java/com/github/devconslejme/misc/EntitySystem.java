@@ -25,23 +25,28 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.gendiag;
-
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.jme3.app.Application;
-import com.jme3.scene.Node;
+package com.github.devconslejme.misc;
 
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PkgCfgI {
-	public static PkgCfgI i(){return GlobalInstanceManagerI.i().get(PkgCfgI.class);}
+public class EntitySystem{
+	public static EntitySystem i(){return GlobalInstanceManagerI.i().get(EntitySystem.class);}
 	
-	public void configure(Application app, Node nodeParent){
-		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(app, nodeParent);
-		
-		HierarchySystemI.i().configure(nodeParent, 0f);
-		ContextMenuI.i().configure();
+	public interface ISystem {
+		<T extends IComponent> void update(T comp, float tpf);
+	}
+	
+	public static interface IComponent {
+		IEntity getEntityOwner();
+		ISystem getSystem();
+		<T extends IComponent,E extends IEntity> T createCloneWithNewOwner(E newOwner);
+	}
+	
+	public static interface IEntity {
+		<T extends IComponent> T createComponent(Class<T> cl);
+		<T extends IComponent> T updateComponent(T comp);
+		<T extends IComponent> T getComponent(Class<T> cl);
 	}
 }

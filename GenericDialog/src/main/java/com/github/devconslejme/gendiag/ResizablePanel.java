@@ -33,6 +33,8 @@ import java.util.HashMap;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.EntitySystem.IComponent;
+import com.github.devconslejme.misc.EntitySystem.IEntity;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
@@ -65,9 +67,9 @@ import com.simsilica.lemur.style.Styles;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class ResizablePanel extends Panel {
+public class ResizablePanel extends Panel implements IEntity {
   public static final String ELEMENT_ID = "resizablePanel";
-  private HashMap<Class,IComposite> hmComposite = new HashMap<Class,IComposite>();
+  private HashMap<Class,IComponent> hmComponents = new HashMap<Class,IComponent>();
 	private BorderLayout layout;
 	private Panel contents;
 	private static int iBorderSizeDefault = 2;
@@ -82,17 +84,6 @@ public class ResizablePanel extends Panel {
 //	private boolean	bEnabledGrowParentestFixAttemptLimit=false;
 	private HashMap<EEdge,Edge> hmEdge = new HashMap<EEdge,Edge>();
 	private Panel pnlParentest = null;
-	
-	public static interface IComposite {
-		void updateLogicalState(float tpf);
-		ResizablePanel getOwner();
-		
-		/**
-		 * implement as final!
-		 * @return
-		 */
-		<T extends IComposite> Class<T> getCompositeType();
-	}
 	
 	public static interface IResizableListener {
 		//public static class VersionedVector3f extends Vector3f implements VersionedObject{}; //???
@@ -429,8 +420,9 @@ public class ResizablePanel extends Panel {
 		}
 		
 		if(bUpdateLogicalStateSuccess){
-			for(IComposite ic:hmComposite.values()){
-				ic.updateLogicalState(tpf);
+			for(IComponent ic:hmComponents.values()){
+				ic.getSystem().update(ic,tpf);
+//				ic.updateLogicalState(tpf);
 			}
 		}
 	}
@@ -695,16 +687,38 @@ public class ResizablePanel extends Panel {
 		return bUpdateLogicalStateSuccess;
 	}
 	
+	public boolean isClosed(){
+		return getParent()==null;
+	}
+	
+	@Override
+	public <T extends IComponent> T createComponent(Class<T> cl){
+		if(hmComponents.get(cl)!=null)throw new NullPointerException("already created "+cl.getName());
+		
+		T comp; try { comp = cl.newInstance();} catch (InstantiationException | IllegalAccessException e) {
+			e.printStackTrace(); throw new NullPointerException("");
+		}
+		
+		comp = comp.createCloneWithNewOwner(this);
+		
+		hmComponents.put(cl,comp);
+		
+		return comp;
+	}
+	
+	@Override
+	public <T extends IComponent> T updateComponent(T comp){
+		if(comp.getEntityOwner()!=this)throw new NullPointerException("this must be the owner");
+		
+		hmComponents.put(comp.getClass(), comp);
+		
+		return comp;
+	}
+	
 	@SuppressWarnings("unchecked")
-	public <T extends IComposite> T getComposite(Class<T> cl){
-		return (T)hmComposite.get(cl);
+	@Override
+	public <T extends IComponent> T getComponent(Class<T> cl){
+		return (T)hmComponents.get(cl);
 	}
-//	public <T extends IComposite> void putComposite(Class<T> cl, T obj){
-//		if(hmComposite.get(cl)!=null)throw new NullPointerException("already set "+cl);
-//		hmComposite.put(cl,obj);
-//	}
-	public <T extends IComposite> void putComposite(T obj){
-		if(hmComposite.get(obj.getCompositeType())!=null)throw new NullPointerException("already set "+obj.getCompositeType());
-		hmComposite.put(obj.getCompositeType(),obj);
-	}
+	
 }
