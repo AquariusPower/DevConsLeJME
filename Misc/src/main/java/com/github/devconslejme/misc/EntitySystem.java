@@ -27,6 +27,8 @@
 
 package com.github.devconslejme.misc;
 
+import java.util.HashMap;
+
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -39,6 +41,9 @@ public class EntitySystem{
 	 */
 	public static class ES extends EntitySystem{}
 	
+	private long lGlobalEntityId=0;
+	private HashMap<Long,Entity> hmEntities = new HashMap<>();
+	
 	public interface ISystem {
 		<T extends IComponent> void updateComponent(T comp, float tpf);
 	}
@@ -49,9 +54,43 @@ public class EntitySystem{
 		<T extends IComponent,E extends IEntity> T createCloneWithNewOwner(E newOwner);
 	}
 	
-	public static interface IEntity {
+	public static interface IEntity{
 		<T extends IComponent> T createComponent(Class<T> cl);
 		<T extends IComponent> T updateComponent(T comp);
 		<T extends IComponent> T getComponent(Class<T> cl);
+	}
+	
+	public static class Entity {
+		private Object objToIncrementBehavior;
+		private long	lEntityId;
+		private HashMap<Class<IComponent>,IComponent> hmComponents = new HashMap<>();
+		
+		public Entity(Object objToIncreaseBehavior) {
+			this.lEntityId=EntitySystem.i().getNextEntityId();
+			this.objToIncrementBehavior=objToIncreaseBehavior;
+		}
+		
+		@SuppressWarnings("unchecked")
+		public <T> T getObj(){
+			return (T)objToIncrementBehavior;
+		}
+		
+		public long getId() {
+			return lEntityId;
+		}
+	}
+	
+	public Entity getEntity(long lId){
+		return hmEntities.get(lId);
+	}
+	
+	public Entity createEntity(Object objToIncreaseBehavior){
+		Entity ent =  new Entity(objToIncreaseBehavior);
+		hmEntities.put(ent.getId(),ent);
+		return ent;
+	}
+
+	private long getNextEntityId() {
+		return ++lGlobalEntityId;
 	}
 }

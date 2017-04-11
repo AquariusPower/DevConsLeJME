@@ -10,5 +10,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/jme310stable"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/lemur-1.10.1"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/fast-classpath-scanner"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/ZayES-1.2.1"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
