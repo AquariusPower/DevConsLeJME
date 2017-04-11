@@ -27,10 +27,10 @@
 
 package com.github.devconslejme.tests;
 
-import com.github.devconslejme.gendiag.HierarchySystemI;
-import com.github.devconslejme.gendiag.HierarchyComponent;
+import com.github.devconslejme.gendiag._HierarchySystemI;
+import com.github.devconslejme.gendiag._HierarchyComponent;
 import com.github.devconslejme.gendiag.ResizablePanel;
-import com.github.devconslejme.misc.EntitySystem.ES;
+import com.github.devconslejme.gendiag._EntitySystem.ES;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
@@ -77,9 +77,9 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		btn.addClickCommands(new Command<Button>(){
 			@Override
 			public void execute(Button source) {
-				HierarchyComponent comp = rzpParent.getComponent(HierarchyComponent.class);
-				HierarchyComponent compChild = rzpChild.getComponent(HierarchyComponent.class);
-				HierarchySystemI.i().workOn(comp).showAsHierarchyModal(compChild);
+				_HierarchyComponent comp = rzpParent.getComponent(_HierarchyComponent.class);
+				_HierarchyComponent compChild = rzpChild.getComponent(_HierarchyComponent.class);
+				_HierarchySystemI.i().workOn(comp).showAsHierarchyModal(compChild);
 			}
 		});
 		rzpParent.setContents(btn);
@@ -91,7 +91,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 
 	private ResizablePanel test(Vector3f pos) {
 		ResizablePanel rzp = new ResizablePanel(null);
-		rzp.createComponent(HierarchyComponent.class);
+		rzp.createComponent(_HierarchyComponent.class);
 		rzp.setPreferredSize(new Vector3f(300,200,0)); //TODO z will cause trouble?
 		rzp.setLocalTranslation(pos); //above DevCons
 		return rzp;

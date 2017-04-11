@@ -27,9 +27,9 @@
 
 package com.github.devconslejme.gendiag;
 
-import com.github.devconslejme.misc.EntitySystem.IComponent;
-import com.github.devconslejme.misc.EntitySystem.IEntity;
-import com.github.devconslejme.misc.EntitySystem.ISystem;
+import com.github.devconslejme.gendiag._EntitySystem.IComponent;
+import com.github.devconslejme.gendiag._EntitySystem.IEntity;
+import com.github.devconslejme.gendiag._EntitySystem.ISystem;
 import com.simsilica.lemur.Button;
 
 
@@ -40,16 +40,16 @@ import com.simsilica.lemur.Button;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public final class HierarchyComponent implements IComponent{
+public final class _HierarchyComponent implements IComponent{
 	private Button	btnBlocker = new Button("");
 	private long	lLastFocusAppTimeNano = -1;
-	private HierarchyComponent	hierarchyParent=null;
+	private _HierarchyComponent	hierarchyParent=null;
 	private boolean	bHierarchyTop=false;
 	private boolean	bHierarchyModal=false;
 	private ResizablePanel	rzpOwner=null;
 	private boolean	bInitialized=false;
 	
-	private void copyAllFrom(HierarchyComponent copyFrom){
+	private void copyAllFrom(_HierarchyComponent copyFrom){
 		this.btnBlocker=(copyFrom.btnBlocker);
 		this.lLastFocusAppTimeNano=(copyFrom.lLastFocusAppTimeNano);
 		this.hierarchyParent=(copyFrom.hierarchyParent);
@@ -65,7 +65,7 @@ public final class HierarchyComponent implements IComponent{
 	public long getLastFocusAppTimeNano() {
 		return lLastFocusAppTimeNano;
 	}
-	public HierarchyComponent getHierarchyParent() {
+	public _HierarchyComponent getHierarchyParent() {
 		return hierarchyParent;
 	}
 	public boolean isHierarchyTop() {
@@ -86,14 +86,14 @@ public final class HierarchyComponent implements IComponent{
 //		return HierarchyComponent.class;
 //	}
 
-	public HierarchyComponent() {} //keep this for class.newInstance()
+	public _HierarchyComponent() {} //keep this for class.newInstance()
 	
-	public HierarchyComponent(HierarchyComponent copyFrom, long lLastFocusAppTimeNano) {
+	public _HierarchyComponent(_HierarchyComponent copyFrom, long lLastFocusAppTimeNano) {
 		copyAllFrom(copyFrom);
 		this.lLastFocusAppTimeNano = lLastFocusAppTimeNano;
 	}
 	
-	public HierarchyComponent(HierarchyComponent copyFrom, HierarchyComponent	hierarchyParent) {
+	public _HierarchyComponent(_HierarchyComponent copyFrom, _HierarchyComponent	hierarchyParent) {
 		copyAllFrom(copyFrom);
 		this.hierarchyParent = hierarchyParent;
 	}
@@ -104,26 +104,26 @@ public final class HierarchyComponent implements IComponent{
 	 * @param bHierarchyTop wont set if null
 	 * @param bHierarchyModal wont set if null
 	 */
-	public HierarchyComponent(HierarchyComponent copyFrom, Boolean bHierarchyTop, Boolean bHierarchyModal) {
+	public _HierarchyComponent(_HierarchyComponent copyFrom, Boolean bHierarchyTop, Boolean bHierarchyModal) {
 		copyAllFrom(copyFrom);
 		if(bHierarchyTop!=null)this.bHierarchyTop=bHierarchyTop;
 		if(bHierarchyModal!=null)this.bHierarchyModal=bHierarchyModal;
 	}
 	
-	public HierarchyComponent(HierarchyComponent copyFrom, ResizablePanel rzpOwner) {
+	public _HierarchyComponent(_HierarchyComponent copyFrom, ResizablePanel rzpOwner) {
 		copyAllFrom(copyFrom);
 		this.rzpOwner = rzpOwner;
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public HierarchyComponent createCloneWithNewOwner(IEntity newOwner) {
-		return new HierarchyComponent(this,(ResizablePanel)newOwner);
+	public _HierarchyComponent createCloneWithNewOwner(IEntity newOwner) {
+		return new _HierarchyComponent(this,(ResizablePanel)newOwner);
 	}
 	
 	@Override
 	public ISystem getSystem() {
-		return HierarchySystemI.i();
+		return _HierarchySystemI.i();
 	}
 	
 	public boolean isInitialized() {

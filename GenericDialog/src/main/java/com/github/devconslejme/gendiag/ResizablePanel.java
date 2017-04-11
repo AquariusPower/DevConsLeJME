@@ -32,9 +32,9 @@ import java.util.HashMap;
 
 import org.lwjgl.opengl.Display;
 
+import com.github.devconslejme.gendiag._EntitySystem.IComponent;
+import com.github.devconslejme.gendiag._EntitySystem.IEntity;
 import com.github.devconslejme.misc.DetailedException;
-import com.github.devconslejme.misc.EntitySystem.IComponent;
-import com.github.devconslejme.misc.EntitySystem.IEntity;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
@@ -689,6 +689,10 @@ public class ResizablePanel extends Panel implements IEntity {
 	
 	public boolean isClosed(){
 		return getParent()==null;
+	}
+	
+	public void close(){
+		removeFromParent();
 	}
 	
 	@Override

@@ -27,6 +27,8 @@
 
 package com.github.devconslejme.gendiag;
 
+import com.github.devconslejme.gendiag.es.GenericDialogZayES;
+import com.github.devconslejme.gendiag.es.HierarchyI;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.jme3.app.Application;
 import com.jme3.scene.Node;
@@ -41,7 +43,9 @@ public class PkgCfgI {
 	public void configure(Application app, Node nodeParent){
 		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(app, nodeParent);
 		
-		HierarchySystemI.i().configure(nodeParent, 0f);
+		GenericDialogZayES.i().configure();
+		_HierarchySystemI.i().configure(nodeParent, 0f);
+		HierarchyI.i().configure(nodeParent,0f);
 		ContextMenuI.i().configure();
 	}
 }

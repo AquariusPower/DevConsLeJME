@@ -132,10 +132,10 @@ public class ContextMenuI {
 		hrp = new ResizablePanel(strStyle);
 		
 //		HierarchyComponent comp = hrp.createComponent(HierarchyComponent.class);
-		HierarchyComponent comp = HierarchySystemI.i().createComponentAt(hrp);
+		_HierarchyComponent comp = _HierarchySystemI.i().createComponentAt(hrp);
 		
 //		hrp.updateComponent(new HierarchyComponent(comp,true,null));
-		HierarchySystemI.i().workOn(comp).setAsHierarchyTop();
+		_HierarchySystemI.i().workOn(comp).setAsHierarchyTop();
 		
 		hrp.setAllEdgesEnabled(false); //it is here for the hierarchy (not the resizing)
 		
@@ -151,7 +151,7 @@ public class ContextMenuI {
 			public Boolean call() {
 				if(hrp.getParent()!=null){
 					hrp.setLocalTranslation(
-						hrp.getComponent(HierarchyComponent.class).getHierarchyParent().getEntityOwner().getLocalTranslation().subtract(
+						hrp.getComponent(_HierarchyComponent.class).getHierarchyParent().getEntityOwner().getLocalTranslation().subtract(
 							v3fHierarchyParentDisplacement));
 				}
 				return true;
@@ -184,8 +184,8 @@ public class ContextMenuI {
 			cntr.addChild(entry.getValue(), i++, 0);
 		}
 		
-		HierarchyComponent comp = cm.getOwner().getComponent(HierarchyComponent.class);
-		comp=HierarchySystemI.i().workOn(comp).showAsHierarchyModal(hrp.getComponent(HierarchyComponent.class));
+		_HierarchyComponent comp = cm.getOwner().getComponent(_HierarchyComponent.class);
+		comp=_HierarchySystemI.i().workOn(comp).showAsHierarchyModal(hrp.getComponent(_HierarchyComponent.class));
 //		nodeParent.attachChild(hrp);
 		
 		hrp.setPreferredSize(new Vector3f(200,30*cm.hmContextOptions.size(),hrp.getPreferredSize().z));

@@ -25,21 +25,23 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.misc;
+package com.github.devconslejme.gendiag;
 
 import java.util.HashMap;
+
+import com.github.devconslejme.misc.GlobalInstanceManagerI;
 
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class EntitySystem{
-	public static EntitySystem i(){return GlobalInstanceManagerI.i().get(EntitySystem.class);}
+public class _EntitySystem{
+	public static _EntitySystem i(){return GlobalInstanceManagerI.i().get(_EntitySystem.class);}
 	
 	/**
 	 * just a compact class name
 	 */
-	public static class ES extends EntitySystem{}
+	public static class ES extends _EntitySystem{}
 	
 	private long lGlobalEntityId=0;
 	private HashMap<Long,Entity> hmEntities = new HashMap<>();
@@ -66,7 +68,7 @@ public class EntitySystem{
 		private HashMap<Class<IComponent>,IComponent> hmComponents = new HashMap<>();
 		
 		public Entity(Object objToIncreaseBehavior) {
-			this.lEntityId=EntitySystem.i().getNextEntityId();
+			this.lEntityId=_EntitySystem.i().getNextEntityId();
 			this.objToIncrementBehavior=objToIncreaseBehavior;
 		}
 		

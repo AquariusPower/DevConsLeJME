@@ -31,8 +31,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import com.github.devconslejme.misc.EntitySystem.IComponent;
-import com.github.devconslejme.misc.EntitySystem.ISystem;
+import com.github.devconslejme.gendiag._EntitySystem.IComponent;
+import com.github.devconslejme.gendiag._EntitySystem.ISystem;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
@@ -58,8 +58,8 @@ import com.simsilica.lemur.focus.FocusManagerState;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class HierarchySystemI implements ISystem {
-	public static HierarchySystemI i(){return GlobalInstanceManagerI.i().get(HierarchySystemI.class);}
+public class _HierarchySystemI implements ISystem {
+	public static _HierarchySystemI i(){return GlobalInstanceManagerI.i().get(_HierarchySystemI.class);}
 	
 	private ArrayList<Panel> apnl = new ArrayList<Panel>();
 	private Application	app;
@@ -71,9 +71,9 @@ public class HierarchySystemI implements ISystem {
 //		return app;
 //	}
 	
-	private Comparator<HierarchyComponent> cmpr = new Comparator<HierarchyComponent>() {
+	private Comparator<_HierarchyComponent> cmpr = new Comparator<_HierarchyComponent>() {
 		@Override
-		public int compare(HierarchyComponent o1, HierarchyComponent o2) {
+		public int compare(_HierarchyComponent o1, _HierarchyComponent o2) {
 			// top only against top
 			if( o1.isHierarchyTop() && !o2.isHierarchyTop())return  1;
 			if(!o1.isHierarchyTop() &&  o2.isHierarchyTop())return -1;
@@ -115,7 +115,7 @@ public class HierarchySystemI implements ISystem {
 				
 				if(isHasAnyDialogOpened()){
 //				if(getHierarchyComponentList(null).size()>0){
-					HierarchyComponent hs = getEntityListOfHierarchyComponents(null).get(getEntityListOfHierarchyComponents(null).size()-1);
+					_HierarchyComponent hs = getEntityListOfHierarchyComponents(null).get(getEntityListOfHierarchyComponents(null).size()-1);
 					if(!ContextMenuI.i().isTheContextMenu(hs.getEntityOwner())){
 						ContextMenuI.i().hideContextMenu();
 					}
@@ -125,7 +125,7 @@ public class HierarchySystemI implements ISystem {
 			}
 
 		}
-		.setName(HierarchySystemI.class.getSimpleName())
+		.setName(_HierarchySystemI.class.getSimpleName())
 		.setDelaySeconds(0.25f)
 		.setLoop(true)
 		.setUserCanPause(true));
@@ -142,13 +142,13 @@ public class HierarchySystemI implements ISystem {
 //		organizeDialogsStack();
 //	}
 	
-	public ArrayList<HierarchyComponent> getEntityListOfHierarchyComponents(HierarchyComponent parentFilter){
-		ArrayList<HierarchyComponent> list = new ArrayList<HierarchyComponent>();
+	public ArrayList<_HierarchyComponent> getEntityListOfHierarchyComponents(_HierarchyComponent parentFilter){
+		ArrayList<_HierarchyComponent> list = new ArrayList<_HierarchyComponent>();
 		
 		for(Spatial spt:nodeToMonitor.getChildren()){
 			if(spt instanceof ResizablePanel){
 				ResizablePanel rzp=(ResizablePanel)spt;
-				HierarchyComponent comp = rzp.getComponent(HierarchyComponent.class);
+				_HierarchyComponent comp = rzp.getComponent(_HierarchyComponent.class);
 				if(comp!=null){
 					if(parentFilter==null || comp.getHierarchyParent()==parentFilter){
 						list.add(comp);
@@ -164,7 +164,7 @@ public class HierarchySystemI implements ISystem {
 	
 	private void organizeDialogsStack() {
 		float fOrderZ = fBeginOrderZ;
-		for(HierarchyComponent comp:getEntityListOfHierarchyComponents(null)){
+		for(_HierarchyComponent comp:getEntityListOfHierarchyComponents(null)){
 			ResizablePanel pnl=comp.getEntityOwner();
 			pnl.getLocalTranslation().z=fOrderZ;
 			fOrderZ += MiscJmeI.i().getBoundingBoxSize(pnl).z +fSafeZDist;
@@ -175,9 +175,9 @@ public class HierarchySystemI implements ISystem {
 		}
 	}
 	
-	private HierarchyComponent updateLastFocusAppTimeNano(HierarchyComponent comp) {
+	private _HierarchyComponent updateLastFocusAppTimeNano(_HierarchyComponent comp) {
 		return comp.getEntityOwner().updateComponent(
-			new HierarchyComponent(
+			new _HierarchyComponent(
 				comp,
 				TimeConvertI.i().getNanosFrom(app.getTimer())
 			)
@@ -204,18 +204,18 @@ public class HierarchySystemI implements ISystem {
 	public ArrayList<String> getListAsReport(){
 		ArrayList<String> astr = new ArrayList<String>();
 		DialogHierarchyWorker incarn = new DialogHierarchyWorker();
-		for(HierarchyComponent comp:getEntityListOfHierarchyComponents(null)){
+		for(_HierarchyComponent comp:getEntityListOfHierarchyComponents(null)){
 			astr.add(workOn(comp).getReport(false));
 		}
 		return astr;
 	}
 	
 	public class DialogHierarchyWorker implements IReport {//implements IComponent,IHierarchySorter{
-		private HierarchyComponent comp;
+		private _HierarchyComponent comp;
 		
 		public DialogHierarchyWorker(){}
 		
-		public DialogHierarchyWorker set(HierarchyComponent comp){
+		public DialogHierarchyWorker set(_HierarchyComponent comp){
 			this.comp=comp;
 			
 			if(!comp.isInitialized()){
@@ -227,7 +227,7 @@ public class HierarchySystemI implements ISystem {
 			return this;
 		}
 		
-		public HierarchyComponent c(){
+		public _HierarchyComponent c(){
 			return comp;
 		}
 		
@@ -259,7 +259,7 @@ public class HierarchySystemI implements ISystem {
 		 * @param compChild
 		 * @return 
 		 */
-		public HierarchyComponent showAsHierarchyModal(HierarchyComponent compChild){
+		public _HierarchyComponent showAsHierarchyModal(_HierarchyComponent compChild){
 			return applyHierarchyChild(compChild,true);
 		}
 		
@@ -268,14 +268,14 @@ public class HierarchySystemI implements ISystem {
 		 * @param compChild
 		 * @return 
 		 */
-		public HierarchyComponent showAsHierarchyModeless(HierarchyComponent compChild){
+		public _HierarchyComponent showAsHierarchyModeless(_HierarchyComponent compChild){
 			return applyHierarchyChild(compChild,false);
 		}
 		
-		private HierarchyComponent applyHierarchyChild(HierarchyComponent compChild, boolean bModal){
+		private _HierarchyComponent applyHierarchyChild(_HierarchyComponent compChild, boolean bModal){
 			ResizablePanel rzpChild = compChild.getEntityOwner();
 			
-			compChild=rzpChild.updateComponent(new HierarchyComponent(compChild,null,bModal));
+			compChild=rzpChild.updateComponent(new _HierarchyComponent(compChild,null,bModal));
 			compChild=setMeAsHierarchyParentAt(compChild);
 			if(bModal)setEnabledBlockerLayer(true);
 			
@@ -285,8 +285,8 @@ public class HierarchySystemI implements ISystem {
 			return compChild;
 		}
 		
-		private HierarchyComponent setMeAsHierarchyParentAt(HierarchyComponent compChild) {
-			return compChild.getEntityOwner().updateComponent(new HierarchyComponent(compChild, c()));
+		private _HierarchyComponent setMeAsHierarchyParentAt(_HierarchyComponent compChild) {
+			return compChild.getEntityOwner().updateComponent(new _HierarchyComponent(compChild, c()));
 		}
 
 		private void showDialog(ResizablePanel rzp) {
@@ -306,9 +306,9 @@ public class HierarchySystemI implements ISystem {
 			}
 			
 			// remove closed childs
-			for(HierarchyComponent child:getEntityListOfHierarchyComponents(c())){
+			for(_HierarchyComponent child:getEntityListOfHierarchyComponents(c())){
 				if(child.getEntityOwner().isClosed()){
-					child.getEntityOwner().updateComponent(new HierarchyComponent(child, (HierarchyComponent)null));
+					child.getEntityOwner().updateComponent(new _HierarchyComponent(child, (_HierarchyComponent)null));
 //					arzdHierarchyChildList.remove(compChild);
 				}
 			}
@@ -317,7 +317,7 @@ public class HierarchySystemI implements ISystem {
 			if(isBlocked()){
 				// how many childs are modal
 				int iModalCount=0;
-				for(HierarchyComponent child:getEntityListOfHierarchyComponents(c())){
+				for(_HierarchyComponent child:getEntityListOfHierarchyComponents(c())){
 					if(child.isHierarchyModal())iModalCount++;
 				}
 				
@@ -362,8 +362,8 @@ public class HierarchySystemI implements ISystem {
 			return sb.toString();
 		}
 
-		public HierarchyComponent setAsHierarchyTop() {
-			comp=c().getEntityOwner().updateComponent(new HierarchyComponent(comp,true,null));
+		public _HierarchyComponent setAsHierarchyTop() {
+			comp=c().getEntityOwner().updateComponent(new _HierarchyComponent(comp,true,null));
 			return comp;
 		}
 		
@@ -374,17 +374,17 @@ public class HierarchySystemI implements ISystem {
 
 	}
 	
-	public DialogHierarchyWorker workOn(HierarchyComponent comp){
+	public DialogHierarchyWorker workOn(_HierarchyComponent comp){
 		return worker.set(comp);
 	}
 	
 	@Override
 	public <T extends IComponent> void updateComponent(T comp, float tpf) {
-		workOn((HierarchyComponent)comp).update(tpf);
+		workOn((_HierarchyComponent)comp).update(tpf);
 	}
 
-	public HierarchyComponent createComponentAt(ResizablePanel hrp) {
-		return hrp.createComponent(HierarchyComponent.class);
+	public _HierarchyComponent createComponentAt(ResizablePanel hrp) {
+		return hrp.createComponent(_HierarchyComponent.class);
 	}
 
 }
