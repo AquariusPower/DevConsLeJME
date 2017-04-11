@@ -128,9 +128,9 @@ public class HierarchyI implements IUpdateLogicalStateListener{
 	}
 
 	public static class Blocker implements EntityComponent, PersistentComponent{
-		Button val;
-		public Blocker(Button val) { this.val=val; }
-		public Button getButton(){ return val; }
+		Panel val;
+		public Blocker(Panel val) { this.val=val; }
+		public Panel getLayer(){ return val; }
 	}
 
 	public static class LastFocusTime implements EntityComponent, PersistentComponent{
@@ -191,14 +191,14 @@ public class HierarchyI implements IUpdateLogicalStateListener{
 		
 		/////////////// blocker
 		if(ed.getComponent(ent.getId(), Blocker.class)==null){
-			Button btn = new Button("");
-			ed.setComponent(ent.getId(),new Blocker(btn)); //ent.set(
+			Panel pnl = new Panel("");
+			ed.setComponent(ent.getId(),new Blocker(pnl)); //ent.set(
 			
-			btn.setBackground(
+			pnl.setBackground(
 				new QuadBackgroundComponent(//ColorRGBA.Red));
 					ColorI.i().colorChangeCopy(ColorRGBA.Red, -0.75f, 0.5f)));
 			
-			DragParentestListenerI.i().applyAt(btn, null);
+			DragParentestListenerI.i().applyAt(pnl, null);
 		}
 		
 		// panel
@@ -209,11 +209,11 @@ public class HierarchyI implements IUpdateLogicalStateListener{
 	public boolean isBlocked(Entity ent){
 		Blocker blocker=ent.get(Blocker.class);
 		if(blocker==null)return false;
-		return blocker.getButton().getParent()!=null;
+		return blocker.getLayer().getParent()!=null;
 	}
 
 	public void setEnabledBlockerLayer(Entity ent, boolean b){
-		Button blocker = ent.get(Blocker.class).getButton();
+		Panel blocker = ent.get(Blocker.class).getLayer();
 		if(b){
 			nodeToMonitor.attachChild(blocker);
 		}else{
@@ -368,9 +368,9 @@ public class HierarchyI implements IUpdateLogicalStateListener{
 				if(Float.compare(v3fSize.length(),0f)!=0){ //waiting top panel be updated by lemur
 					Vector3f v3fPos = rzp.getLocalTranslation().clone();
 					v3fPos.z += v3fSize.z;
-					ent.get(Blocker.class).getButton().setLocalTranslation(v3fPos);
+					ent.get(Blocker.class).getLayer().setLocalTranslation(v3fPos);
 					
-					ent.get(Blocker.class).getButton().setPreferredSize(rzp.getPreferredSize());
+					ent.get(Blocker.class).getLayer().setPreferredSize(rzp.getPreferredSize());
 				}
 			}
 		}
