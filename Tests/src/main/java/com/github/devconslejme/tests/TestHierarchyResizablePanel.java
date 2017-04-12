@@ -31,6 +31,7 @@ import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.es.GenericDialogZayES;
 import com.github.devconslejme.gendiag.es.HierarchyI;
 import com.github.devconslejme.misc.jme.UserDataI;
+import com.github.devconslejme.misc.lemur.DragParentestListenerI;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.jme3.system.AppSettings;
@@ -75,6 +76,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 			}
 		});
 		rzpChild.setContents(btn);
+		DragParentestListenerI.i().applyAt(btn);
 		
 		ResizablePanel rzpParent = test(new Vector3f(100,iBaseY+100,10), "parent"+iBaseY);
 		btn = new Button("click to open modal");
@@ -92,6 +94,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 			}
 		});
 		rzpParent.setContents(btn);
+		DragParentestListenerI.i().applyAt(btn);
 		
 		// show it all
 		getGuiNode().attachChild(rzpParent);
@@ -99,10 +102,15 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 
 	private ResizablePanel test(Vector3f pos,String strName) {
 		ResizablePanel rzp = new ResizablePanel(null);
+		
 		EntityId entid = GenericDialogZayES.i().createEntity(rzp,strName);
 		UserDataI.i().setUserDataPSH(rzp, entid);
+		
+//		DragParentestListenerI.i().applyAt(rzp);
+		
 		rzp.setPreferredSize(new Vector3f(300,200,0)); //TODO z will cause trouble?
 		rzp.setLocalTranslation(pos); //above DevCons
+		
 		return rzp;
 	}
 }

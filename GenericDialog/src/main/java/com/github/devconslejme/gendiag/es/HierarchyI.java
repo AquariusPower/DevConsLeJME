@@ -307,7 +307,7 @@ public class HierarchyI implements IResizableListener{
 		EntityId entidParent = entid;
 		EntityId entidParentest = entidParent;
 //		System.err.println("cheking");
-		while(true){
+		while(true){ //TODO updating parentest should suffice as all recursive childs should be based on it...
 //			System.err.println(entidParent.getId());
 			entidParent = ed.getComponent(entidParent, ShownState.class).getHierarchyParent();
 			if(entidParent==null)break;
@@ -373,11 +373,37 @@ public class HierarchyI implements IResizableListener{
 			if(bAdd)aent.add(entChild);
 		}		
 		
+//		sortDialogs(aent);
 		Collections.sort(aent,cmpr); // uses LastFocusTime
 		
 		return aent;
 	}
 	
+	private Comparator<Entity> cmpr = new Comparator<Entity>() {
+		@Override
+		public int compare(Entity o1, Entity o2) {
+			ShownState ss1 = o1.get(ShownState.class); 
+			ShownState ss2 = o2.get(ShownState.class); 
+			// top only against top
+			if( ss1.isHierarchyTop() && !ss2.isHierarchyTop())return  1;
+			if(!ss1.isHierarchyTop() &&  ss2.isHierarchyTop())return -1;
+			
+			// parent diag below child diag
+			if(ss1.getHierarchyParent()==o2.getId())return  1;
+			if(ss2.getHierarchyParent()==o1.getId())return -1;
+			if(ss1==ss2)return 0;
+			
+			// last focus
+			return Long.compare(
+				o1.get(LastFocusTime.class).getLastFocusTime(),
+				o2.get(LastFocusTime.class).getLastFocusTime()
+			);
+		}
+	};
+//	private void sortDialogs(ArrayList<Entity> aent) {
+//		ArrayList<Entity> aentSorted = new ArrayList<Entity>();
+//	}
+
 	public void updateChangedEntity(float tpf,EntityId entid){
 		Entity ent = ed.getEntity(entid, GuiLink.class,ShownState.class);
 		
@@ -515,27 +541,6 @@ public class HierarchyI implements IResizableListener{
 		}
 	}
 
-	private Comparator<Entity> cmpr = new Comparator<Entity>() {
-		@Override
-		public int compare(Entity o1, Entity o2) {
-			ShownState ss1 = o1.get(ShownState.class); 
-			ShownState ss2 = o2.get(ShownState.class); 
-			// top only against top
-			if( ss1.isHierarchyTop() && !ss2.isHierarchyTop())return  1;
-			if(!ss1.isHierarchyTop() &&  ss2.isHierarchyTop())return -1;
-			
-			// parent diag below child diag
-			if(ss1.getHierarchyParent()==o2.getId())return  1;
-			if(ss2.getHierarchyParent()==o1.getId())return -1;
-			if(ss1==ss2)return 0;
-			
-			// last focus
-			return Long.compare(
-				o1.get(LastFocusTime.class).getLastFocusTime(),
-				o2.get(LastFocusTime.class).getLastFocusTime()
-			);
-		}
-	};
 	private ResizablePanel	rzpCurrentlyBeingResized;
 
 	public boolean isHasAnyDialogOpened() {
