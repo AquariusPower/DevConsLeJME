@@ -97,7 +97,8 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		DragParentestListenerI.i().applyAt(btn);
 		
 		// show it all
-		getGuiNode().attachChild(rzpParent);
+		HierarchyI.i().showDialog(rzpParent);
+//		getGuiNode().attachChild(rzpParent);
 	}
 
 	private ResizablePanel test(Vector3f pos,String strName) {

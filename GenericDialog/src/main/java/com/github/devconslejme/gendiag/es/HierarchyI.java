@@ -298,10 +298,46 @@ public class HierarchyI implements IResizableListener{
 //		ShownState ss = entChild.get(ShownState.class);
 //		entChild.set(new ShownState(entParent.getId(), ss.isHierarchyTop(), ss.isHierarchyModal()));
 //	}
-
-	private void showDialog(ResizablePanel rzp) {
+	
+//	ArrayList<ResizablePanel> arzpZOrderList = new ArrayList<ResizablePanel>();
+	public void showDialog(ResizablePanel rzp) {
+//		if(arzpZOrderList.contains(rzp)){
+//			arzpZOrderList.remove(rzp);
+//		}
+//		
+//		arzpZOrderList.add(rzp);
+//		
+//		recursiveWorkOnChildDiagsOf(rzp,true);
+		
 		nodeToMonitor.attachChild(rzp);
 	}
+	
+//	private static class DialogHierarchy{
+//		
+//	}
+	
+//	/**
+//	 * 
+//	 * @param rzp
+//	 * @param bReAdd if false, will close all childs
+//	 */
+//	private void recursiveWorkOnChildDiagsOf(ResizablePanel rzp,boolean bReAdd) {
+//		EntityId entityIdFor = getEntityIdFor(rzp);
+//		for(Entity ent:getHierarchyDialogs(entityIdFor)){
+//			ResizablePanel rzpChild = ent.get(GuiLink.class).getResizablePanel();
+//			arzpZOrderList.remove(rzpChild);
+//			if(bReAdd){
+//				arzpZOrderList.add(rzpChild);
+//			}else{
+//				rzp.close();
+//			}
+//		}
+//	}
+//	
+//	public void closeDialog(ResizablePanel rzp){
+//		recursiveWorkOnChildDiagsOf(rzp,false);
+//		rzp.close();
+//	}
 	
 	private void updateLastFocusAppTimeNano(EntityId entid) {
 		EntityId entidParent = entid;
@@ -348,7 +384,7 @@ public class HierarchyI implements IResizableListener{
 	 * @param entParentFilter if null will bring all possible
 	 * @return
 	 */
-	public ArrayList<Entity> getHierarchyDialogs(Entity entParentFilter){
+	public ArrayList<Entity> getHierarchyDialogs(EntityId entidParentFilter){
 		ArrayList<Entity> aent = new ArrayList<Entity>();
 		
 		/**
@@ -361,11 +397,11 @@ public class HierarchyI implements IResizableListener{
 			if(!entChild.get(GuiLink.class).getResizablePanel().isOpened())continue;
 			
 			boolean bAdd=false;
-			if(entParentFilter==null){
+			if(entidParentFilter==null){
 				bAdd=true;
 			}else{
 				EntityId entidParent = entChild.get(ShownState.class).getHierarchyParent();
-				if(entParentFilter.getId().equals(entidParent)){
+				if(entidParentFilter.equals(entidParent)){
 					bAdd=true;
 				}
 			}
@@ -373,36 +409,122 @@ public class HierarchyI implements IResizableListener{
 			if(bAdd)aent.add(entChild);
 		}		
 		
-//		sortDialogs(aent);
-		Collections.sort(aent,cmpr); // uses LastFocusTime
+		if(entidParentFilter==null)sortDialogs(aent);
+//		Collections.sort(aent,cmpr); // uses LastFocusTime
 		
 		return aent;
 	}
 	
-	private Comparator<Entity> cmpr = new Comparator<Entity>() {
+//	private Comparator<Entity> cmpr = new Comparator<Entity>() {
+//		@Override
+//		public int compare(Entity o1, Entity o2) {
+//			ShownState ss1 = o1.get(ShownState.class); 
+//			ShownState ss2 = o2.get(ShownState.class); 
+//			// top only against top
+//			if( ss1.isHierarchyTop() && !ss2.isHierarchyTop())return  1;
+//			if(!ss1.isHierarchyTop() &&  ss2.isHierarchyTop())return -1;
+//			
+//			// parent diag below child diag
+//			if(ss1.getHierarchyParent()==o2.getId())return  1;
+//			if(ss2.getHierarchyParent()==o1.getId())return -1;
+//			if(ss1==ss2)return 0;
+//			
+//			// last focus
+//			return Long.compare(
+//				o1.get(LastFocusTime.class).getLastFocusTime(),
+//				o2.get(LastFocusTime.class).getLastFocusTime()
+//			);
+//		}
+//	};
+	private Comparator<Entity> cmprByLastFocusTime = new Comparator<Entity>() {
 		@Override
 		public int compare(Entity o1, Entity o2) {
-			ShownState ss1 = o1.get(ShownState.class); 
-			ShownState ss2 = o2.get(ShownState.class); 
-			// top only against top
-			if( ss1.isHierarchyTop() && !ss2.isHierarchyTop())return  1;
-			if(!ss1.isHierarchyTop() &&  ss2.isHierarchyTop())return -1;
-			
-			// parent diag below child diag
-			if(ss1.getHierarchyParent()==o2.getId())return  1;
-			if(ss2.getHierarchyParent()==o1.getId())return -1;
-			if(ss1==ss2)return 0;
-			
-			// last focus
 			return Long.compare(
 				o1.get(LastFocusTime.class).getLastFocusTime(),
 				o2.get(LastFocusTime.class).getLastFocusTime()
 			);
 		}
 	};
-//	private void sortDialogs(ArrayList<Entity> aent) {
-//		ArrayList<Entity> aentSorted = new ArrayList<Entity>();
-//	}
+	
+	/**
+	 * the last items will be the ones shown above all others
+	 * @param aentMainList
+	 */
+	private void sortDialogs(ArrayList<Entity> aentMainList) {
+		if(aentMainList.size()==0)return;
+		
+		/**
+		 * root dialogs, that have no parent
+		 */
+		ArrayList<Entity> aentRootDialogs = new ArrayList<Entity>(); 
+		ArrayList<Entity> aentRootTopDialogs = new ArrayList<Entity>();
+		for(Entity ent:aentMainList.toArray(new Entity[0])){
+			ShownState ss = ent.get(ShownState.class);
+			if(ss.getHierarchyParent()==null){
+				if(ss.isHierarchyTop()){
+					aentRootTopDialogs.add(ent);
+				}else{
+					aentRootDialogs.add(ent);
+				}
+				
+				aentMainList.remove(ent);
+			}
+		}
+		
+		// all remaining are childs and recursive childs
+		ArrayList<Entity> aentChilds = new ArrayList<Entity>(); //that have no parent
+		aentChilds.addAll(aentMainList);
+		aentMainList.clear();
+		
+		Collections.sort(aentRootDialogs,cmprByLastFocusTime);
+		Collections.sort(aentRootTopDialogs,cmprByLastFocusTime);
+		Collections.sort(aentChilds,cmprByLastFocusTime);
+		
+		//////////////////////////// populate main
+		// add roots 
+		aentMainList.addAll(aentRootDialogs);
+		aentMainList.addAll(aentRootTopDialogs);
+		
+		/**
+		 * add childs just after their parents,
+		 * 
+		 * reversed because: 
+		 * the latest focused topmost child will become the 1st after its parent,
+		 * and just after, the previously focused child of the same parent will be the 1st after its parent
+		 * pushing the topmost to the 2nd place after its parent... and so on...
+		 * 
+		 * 1)
+		 * parent
+		 * |_topmost child
+		 * 
+		 * 2)
+		 * parent
+		 * |_previously focused child
+		 * |_topmost child
+		 */
+		Collections.reverse(aentChilds);
+		labelCheckChildListEmpty:while(aentChilds.size()>0){
+			for(Entity entChild:aentChilds.toArray(new Entity[0])){
+				EntityId entidParent = entChild.get(ShownState.class).getHierarchyParent();
+				
+				// find the current index of the parent on the main list
+				int iIndexOfParentAtMain=-1;
+				for (int i = 0; i < aentMainList.size(); i++) {
+					Entity entChk = aentMainList.get(i);
+					if(entChk.getId().equals(entidParent)){
+						iIndexOfParentAtMain = i;
+						break;
+					}
+				}
+				
+				if(iIndexOfParentAtMain>-1){
+					aentChilds.remove(entChild);
+					aentMainList.add(iIndexOfParentAtMain+1, entChild);
+					continue labelCheckChildListEmpty;
+				}
+			}
+		}
+	}
 
 	public void updateChangedEntity(float tpf,EntityId entid){
 		Entity ent = ed.getEntity(entid, GuiLink.class,ShownState.class);
@@ -449,7 +571,7 @@ public class HierarchyI implements IResizableListener{
 			
 			// how many childs are modal
 			int iModalCount=0;
-			for(Entity entChild:getHierarchyDialogs(ent)){
+			for(Entity entChild:getHierarchyDialogs(ent.getId())){
 				if(entChild.get(ShownState.class).isHierarchyModal())iModalCount++;
 			}
 			
