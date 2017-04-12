@@ -32,6 +32,7 @@ import java.util.HashMap;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.jme3.app.Application;
 import com.jme3.input.KeyInput;
+import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
 import com.simsilica.lemur.GuiGlobals;
@@ -213,7 +214,19 @@ public final class SimpleGenericDialogComposite extends AbstractGenericDialogCom
 	}
 
 	@Override
-	public void removeFromParent(ResizablePanel rzpSource) {
+	public void removedFromParent(ResizablePanel rzpSource) {
+	}
+
+	@Override
+	public void resizedTo(ResizablePanel rzpSource, Vector3f v3fNewSize) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("method not implemented yet");
+	}
+
+	@Override
+	public void endedResizingFor(ResizablePanel rzpSource) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("method not implemented yet");
 	}
 
 //	@SuppressWarnings("unchecked")

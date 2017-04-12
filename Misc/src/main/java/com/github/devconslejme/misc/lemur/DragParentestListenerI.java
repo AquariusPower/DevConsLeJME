@@ -27,7 +27,6 @@
 
 package com.github.devconslejme.misc.lemur;
 
-import com.github.devconslejme.gendiag.es.HierarchyI;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
@@ -51,6 +50,7 @@ public class DragParentestListenerI implements CursorListener{
 	private boolean bDragging = false;
 	private boolean bHightlightToo = true;
 	private Vector3f	v3fDistToCursor;
+	private Panel	pnlParentestBeingDragged;
 	
 	
 	private Vector3f getCursorPos(AbstractCursorEvent event){
@@ -71,9 +71,15 @@ public class DragParentestListenerI implements CursorListener{
 				// base dist calc
 				v3fDistToCursor=pnlParentest.getWorldTranslation().subtract(getCursorPos(event));
 				v3fDistToCursor.z=0; //DO NOT MESS WITH Z!!!!
+			}else{
+				pnlParentestBeingDragged=null;
 			}
 			event.setConsumed();
 		}
+	}
+	
+	public Panel getParentestBeingDragged(){
+		return pnlParentestBeingDragged;
 	}
 	
 //	private void highlightBackground(Spatial spt, boolean bHighLight){
@@ -122,7 +128,7 @@ public class DragParentestListenerI implements CursorListener{
 			v3f.z=pnlParentest.getLocalTranslation().z; //DO NOT MESS WITH Z!!!!
 			pnlParentest.setLocalTranslation(v3f);
 			
-//			HierarchyI.i().get
+			pnlParentestBeingDragged = pnlParentest;
 			
 			event.setConsumed();
 		}

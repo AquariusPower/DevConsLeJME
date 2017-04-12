@@ -89,14 +89,16 @@ public class ResizablePanel extends Panel {
 //	}
 //	private ArrayList<IResizableListener> airlList = new ArrayList<IResizableListener>();
 	
-	public static interface ISpatialChangedListener {
+	public static interface IResizableListener {
 		/**
 		 * it is meant to provide insta updates whenever changes happen to this panel.
 		 */
 		public void updateLogicalState(float tpf, ResizablePanel rzpSource);
-		public void removeFromParent(ResizablePanel rzpSource);
+		public void removedFromParent(ResizablePanel rzpSource);
+		public void resizedTo(ResizablePanel rzpSource,Vector3f v3fNewSize);
+		public void endedResizingFor(ResizablePanel rzpSource);
 	}
-	private ArrayList<ISpatialChangedListener> aiulslList = new ArrayList<ISpatialChangedListener>();
+	private ArrayList<IResizableListener> aiulslList = new ArrayList<IResizableListener>();
 	
 	public static interface IBorderMargin {
 		public void setMargin(int i);
@@ -350,11 +352,11 @@ public class ResizablePanel extends Panel {
 			if(bUpdateDragFromX)v3fDragFromPrevious.x+=fDeltaX;
 			if(bUpdateDragFromY)v3fDragFromPrevious.y+=fDeltaY;
 			
-			if(!v3fNewSize.equals(v3fOldSize)){ //TODO delegate whenever changes happen from here too? no point on it right?
+			if(!v3fNewSize.equals(v3fOldSize)){ 
 //				resizedTo(v3fNewSize);
-//				for(IResizableListener irl:airlList){
-//					irl.attendToResizing(this,v3fNewSize);
-//				}
+				for(IResizableListener iuls:aiulslList){
+					iuls.resizedTo(this,v3fNewSize);
+				}
 			}
 		}else{
 			setPreferredSize(v3fOldSize);
@@ -426,7 +428,7 @@ public class ResizablePanel extends Panel {
 		}
 		
 		if(bUpdateLogicalStateSuccess){
-			for(ISpatialChangedListener iuls:aiulslList){
+			for(IResizableListener iuls:aiulslList){
 				iuls.updateLogicalState(tpf,this);
 			}
 		}
@@ -515,6 +517,9 @@ public class ResizablePanel extends Panel {
 				// button UP ends all
 				v3fDragFromPrevious=null;
 				eeInitialHook=(null);
+				for(IResizableListener iuls:aiulslList){
+					iuls.endedResizingFor(ResizablePanel.this);
+				}
 				event.setConsumed(); //this also prevents sending the event to other than this panel
 			}
 		}
@@ -664,7 +669,7 @@ public class ResizablePanel extends Panel {
 	public Edge getDraggedEdge() {
 		return hmEdge.get(eeInitialHook);
 	}
-	public ResizablePanel addUpdateLogicalStateListener(ISpatialChangedListener listener) {
+	public ResizablePanel addUpdateLogicalStateListener(IResizableListener listener) {
 		if(listener==null)throw new DetailedException("invalid null listener");
 		
 		if(!aiulslList.contains(listener)){
@@ -715,8 +720,8 @@ public class ResizablePanel extends Panel {
 	public boolean removeFromParent() {
 		boolean b = super.removeFromParent();
 		if(b){
-			for(ISpatialChangedListener iuls:aiulslList){
-				iuls.removeFromParent(this);
+			for(IResizableListener iuls:aiulslList){
+				iuls.removedFromParent(this);
 			}
 		}
 		return b;

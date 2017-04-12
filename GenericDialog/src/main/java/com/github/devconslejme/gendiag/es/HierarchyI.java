@@ -33,7 +33,7 @@ import java.util.Comparator;
 
 import com.github.devconslejme.gendiag.ContextMenuI;
 import com.github.devconslejme.gendiag.ResizablePanel;
-import com.github.devconslejme.gendiag.ResizablePanel.ISpatialChangedListener;
+import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
 import com.github.devconslejme.gendiag.es.GenericDialogZayES.GuiLink;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.QueueI;
@@ -49,7 +49,6 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.UserData;
 import com.simsilica.es.ComponentFilter;
 import com.simsilica.es.Entity;
 import com.simsilica.es.EntityComponent;
@@ -61,7 +60,6 @@ import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
-import com.simsilica.lemur.event.CursorMotionEvent;
 import com.simsilica.lemur.event.DefaultCursorListener;
 import com.simsilica.lemur.focus.FocusManagerState;
 
@@ -73,7 +71,7 @@ import com.simsilica.lemur.focus.FocusManagerState;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class HierarchyI implements ISpatialChangedListener{
+public class HierarchyI implements IResizableListener{
 	public static HierarchyI i(){return GlobalInstanceManagerI.i().get(HierarchyI.class);}
 	
 	private Node nodeToMonitor;
@@ -90,6 +88,7 @@ public class HierarchyI implements ISpatialChangedListener{
 	private ArrayList<Class>	aclAllComponentTypes;
 	private BlockerListener blockerListener = new BlockerListener();
 	private float	fMinLemurPanelSizeZ = 0.01f;
+	private float	fCurrentOrderPosZ;
 	
 	public void configure(Node nodeToMonitor, float fBeginOrderZ){
 		this.ed = GlobalInstanceManagerI.i().get(GenericDialogZayES.class).getEntityData();
@@ -102,7 +101,7 @@ public class HierarchyI implements ISpatialChangedListener{
 		QueueI.i().enqueue(new CallableX() {
 			@Override
 			public Boolean call() {
-				organizeDialogsStack();
+				updateLoop();
 				
 				if(isHasAnyDialogOpened()){
 	//			if(getHierarchyComponentList(null).size()>0){
@@ -157,24 +156,14 @@ public class HierarchyI implements ISpatialChangedListener{
 		protected void click(CursorButtonEvent event, Spatial target, 	Spatial capture) {
 			super.click(event, target, capture);
 			
-			if(toBlocker(capture).isBlocking())event.setConsumed();
+			EntityId entid = UserDataI.i().getUserDataPSH(capture,EntityId.class);
+			Blocker blk = HierarchyI.i().ed.getComponent(entid,Blocker.class);
+			if(blk.isBlocking()){
+				HierarchyI.i().updateLastFocusAppTimeNano(entid);
+				event.setConsumed();
+			}
 		}
 		
-		private Blocker toBlocker(Spatial spt){
-			return HierarchyI.i().ed.getComponent(
-					UserDataI.i().getUserDataPSH(spt,EntityId.class),
-					Blocker.class);
-		}
-		
-//		@Override
-//		public void cursorEntered(CursorMotionEvent event, Spatial target,				Spatial capture) {
-//			super.cursorEntered(event, target, capture);
-//			
-//			Blocker blk = toBlocker(target);
-//			if(!blk.isBlocking()){
-//				
-//			}
-//		}
 	}
 	
 	public static class LastFocusTime implements EntityComponent, PersistentComponent{
@@ -302,7 +291,7 @@ public class HierarchyI implements ISpatialChangedListener{
 		if(bModal)enableBlockingLayer(entParent,true);
 		
 		showDialog(rzpChild); //show it
-		updateLastFocusAppTimeNano(entChild);
+		updateLastFocusAppTimeNano(entChild.getId());
 	}
 	
 //	private void setHierarchyParentAtChild(Entity entParent, Entity entChild) {
@@ -314,9 +303,18 @@ public class HierarchyI implements ISpatialChangedListener{
 		nodeToMonitor.attachChild(rzp);
 	}
 	
-	private void updateLastFocusAppTimeNano(Entity ent) {
-//		ent.set(
-		ed.setComponent(ent.getId(),
+	private void updateLastFocusAppTimeNano(EntityId entid) {
+		EntityId entidParent = entid;
+		EntityId entidParentest = entidParent;
+//		System.err.println("cheking");
+		while(true){
+//			System.err.println(entidParent.getId());
+			entidParent = ed.getComponent(entidParent, ShownState.class).getHierarchyParent();
+			if(entidParent==null)break;
+			entidParentest = entidParent;
+		}
+				
+		ed.setComponent(entidParentest, 
 			new LastFocusTime(TimeConvertI.i().getNanosFrom(app.getTimer())));
 	}
 	
@@ -380,7 +378,7 @@ public class HierarchyI implements ISpatialChangedListener{
 		return aent;
 	}
 	
-	public void update(float tpf,EntityId entid){
+	public void updateChangedEntity(float tpf,EntityId entid){
 		Entity ent = ed.getEntity(entid, GuiLink.class,ShownState.class);
 		
 		// close self if parent dialog closed
@@ -470,20 +468,50 @@ public class HierarchyI implements ISpatialChangedListener{
 		
 	}
 
-	private void organizeDialogsStack() {
-		float fOrderPosZ = fBeginOrderPosZ;
+	private void updateLoop() {
+		fCurrentOrderPosZ = fBeginOrderPosZ;
 		for(Entity ent:getHierarchyDialogs(null)){
 			ResizablePanel rzp=ent.get(GuiLink.class).getResizablePanel();
-			Vector3f v3fPos = rzp.getLocalTranslation();
-			rzp.setLocalTranslation(v3fPos.x,v3fPos.y,fOrderPosZ);
-			Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSize(rzp);
-			if(v3fSize!=null){ //only if it is ready
-				fOrderPosZ += v3fSize.z +fInBetweenGapDistZ;
-			}
 			
-			if(isFocused(rzp)){
-				updateLastFocusAppTimeNano(ent);
+			updateZOrder(rzp);
+			
+			updateFocusTime(ent,rzp);
+		}
+	}
+	
+	private void updateZOrder(ResizablePanel rzp){
+		// main position
+		Vector3f v3fPos = rzp.getLocalTranslation();
+		rzp.setLocalTranslation(v3fPos.x,v3fPos.y,fCurrentOrderPosZ);
+		Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSize(rzp);
+		if(v3fSize!=null){ //only if it is ready
+			fCurrentOrderPosZ += v3fSize.z +fInBetweenGapDistZ;
+		}
+	}
+
+	private void updateFocusTime(Entity ent, ResizablePanel rzp) {
+		EntityId entidUpdLFTime=null;
+		
+		// has real input focus
+		if(entidUpdLFTime==null && isFocused(rzp)){
+			entidUpdLFTime=ent.getId();
+		}
+		
+		// being dragged
+		if(entidUpdLFTime==null){
+			Panel pnlParentestDragged = DragParentestListenerI.i().getParentestBeingDragged();
+			if(pnlParentestDragged!=null && ResizablePanel.class.isInstance(pnlParentestDragged)){
+				entidUpdLFTime=getEntityIdFor((ResizablePanel)pnlParentestDragged);
 			}
+		}
+		
+		// being resized
+		if(entidUpdLFTime==null && rzpCurrentlyBeingResized!=null){
+			entidUpdLFTime=getEntityIdFor(rzpCurrentlyBeingResized);
+		}
+		
+		if(entidUpdLFTime!=null){
+			updateLastFocusAppTimeNano(entidUpdLFTime);
 		}
 	}
 
@@ -508,6 +536,7 @@ public class HierarchyI implements ISpatialChangedListener{
 			);
 		}
 	};
+	private ResizablePanel	rzpCurrentlyBeingResized;
 
 	public boolean isHasAnyDialogOpened() {
 		return (getHierarchyDialogs(null).size()>0);
@@ -588,7 +617,17 @@ public class HierarchyI implements ISpatialChangedListener{
 	}
 
 	@Override
-	public void removeFromParent(ResizablePanel rzpSource) {
+	public void removedFromParent(ResizablePanel rzpSource) {
 		updateBlocker(null, getEntityIdFor(rzpSource), rzpSource);
+	}
+
+	@Override
+	public void resizedTo(ResizablePanel rzpSource, Vector3f v3fNewSize) {
+		rzpCurrentlyBeingResized=rzpSource;
+	}
+
+	@Override
+	public void endedResizingFor(ResizablePanel rzpSource) {
+		rzpCurrentlyBeingResized=null; //user can resize only one at a time 
 	}
 }

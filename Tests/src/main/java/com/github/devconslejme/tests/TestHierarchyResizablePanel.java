@@ -33,6 +33,7 @@ import com.github.devconslejme.gendiag.es.HierarchyI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
+import com.jme3.system.AppSettings;
 import com.simsilica.es.EntityId;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
@@ -43,6 +44,9 @@ import com.simsilica.lemur.Command;
 public class TestHierarchyResizablePanel extends SimpleApplication {
 	public static void main(String[] args) {
 		TestHierarchyResizablePanel tst = new TestHierarchyResizablePanel();
+//		AppSettings as = new AppSettings(true);
+		tst.setPauseOnLostFocus(false); //good for outside monitoring
+//		tst.setSettings(as);
 		tst.start();
 	}
 	
