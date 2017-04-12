@@ -33,7 +33,7 @@ import java.util.Comparator;
 
 import com.github.devconslejme.gendiag.ContextMenuI;
 import com.github.devconslejme.gendiag.ResizablePanel;
-import com.github.devconslejme.gendiag.ResizablePanel.IUpdateLogicalStateListener;
+import com.github.devconslejme.gendiag.ResizablePanel.ISpatialChangedListener;
 import com.github.devconslejme.gendiag.es.GenericDialogZayES.GuiLink;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.QueueI;
@@ -41,6 +41,7 @@ import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.jme3.app.Application;
@@ -48,6 +49,7 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.UserData;
 import com.simsilica.es.ComponentFilter;
 import com.simsilica.es.Entity;
 import com.simsilica.es.EntityComponent;
@@ -55,9 +57,12 @@ import com.simsilica.es.EntityId;
 import com.simsilica.es.EntitySet;
 import com.simsilica.es.PersistentComponent;
 import com.simsilica.es.base.DefaultEntityData;
-import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
+import com.simsilica.lemur.event.CursorButtonEvent;
+import com.simsilica.lemur.event.CursorEventControl;
+import com.simsilica.lemur.event.CursorMotionEvent;
+import com.simsilica.lemur.event.DefaultCursorListener;
 import com.simsilica.lemur.focus.FocusManagerState;
 
 
@@ -68,21 +73,28 @@ import com.simsilica.lemur.focus.FocusManagerState;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class HierarchyI implements IUpdateLogicalStateListener{
+public class HierarchyI implements ISpatialChangedListener{
 	public static HierarchyI i(){return GlobalInstanceManagerI.i().get(HierarchyI.class);}
 	
 	private Node nodeToMonitor;
 	private Application	app;
 	private FocusManagerState	focusState;
-	private float	fBeginOrderZ = 0f;
-	private float	fSafeZDist=1.0f;
+	private float	fBeginOrderPosZ = 0f;
+	
+	/**
+	 * so the blocker can stay in that gap
+	 */
+	private float	fInBetweenGapDistZ=1.0f;
+	
 	private DefaultEntityData	ed;
 	private ArrayList<Class>	aclAllComponentTypes;
+	private BlockerListener blockerListener = new BlockerListener();
+	private float	fMinLemurPanelSizeZ = 0.01f;
 	
 	public void configure(Node nodeToMonitor, float fBeginOrderZ){
 		this.ed = GlobalInstanceManagerI.i().get(GenericDialogZayES.class).getEntityData();
 		this.app=GlobalInstanceManagerI.i().get(Application.class);
-		this.fBeginOrderZ=fBeginOrderZ;
+		this.fBeginOrderPosZ=fBeginOrderZ;
 		this.nodeToMonitor=nodeToMonitor;
 	//	app.getStateManager().attach(this);
 		focusState=app.getStateManager().getState(FocusManagerState.class);
@@ -111,7 +123,7 @@ public class HierarchyI implements IUpdateLogicalStateListener{
 	}
 	
 	protected Entity getTopMostDialog() {
-		ArrayList<Entity> aent = getHierarchyChildrenFor(null);
+		ArrayList<Entity> aent = getHierarchyDialogs(null);
 		return aent.get(aent.size()-1);
 		
 //		Entity entTopMost = aent.get(0);
@@ -129,10 +141,42 @@ public class HierarchyI implements IUpdateLogicalStateListener{
 
 	public static class Blocker implements EntityComponent, PersistentComponent{
 		Panel val;
-		public Blocker(Panel val) { this.val=val; }
+		private boolean bBlocking=false;
+		
+		public Blocker(Panel val, Boolean bBlocking) {
+			this.val = val;
+			if(bBlocking!=null)this.bBlocking = bBlocking;
+		}
+		
 		public Panel getLayer(){ return val; }
+		public boolean isBlocking() {return bBlocking;}
 	}
-
+	
+	public static class BlockerListener extends DefaultCursorListener{
+		@Override
+		protected void click(CursorButtonEvent event, Spatial target, 	Spatial capture) {
+			super.click(event, target, capture);
+			
+			if(toBlocker(capture).isBlocking())event.setConsumed();
+		}
+		
+		private Blocker toBlocker(Spatial spt){
+			return HierarchyI.i().ed.getComponent(
+					UserDataI.i().getUserDataPSH(spt,EntityId.class),
+					Blocker.class);
+		}
+		
+//		@Override
+//		public void cursorEntered(CursorMotionEvent event, Spatial target,				Spatial capture) {
+//			super.cursorEntered(event, target, capture);
+//			
+//			Blocker blk = toBlocker(target);
+//			if(!blk.isBlocking()){
+//				
+//			}
+//		}
+	}
+	
 	public static class LastFocusTime implements EntityComponent, PersistentComponent{
 		long val=-1;
 		public LastFocusTime() {}
@@ -190,35 +234,38 @@ public class HierarchyI implements IUpdateLogicalStateListener{
 		}
 		
 		/////////////// blocker
+		ResizablePanel rzp = ent.get(GuiLink.class).getResizablePanel();
+		
 		if(ed.getComponent(ent.getId(), Blocker.class)==null){
-			Panel pnl = new Panel("");
-			ed.setComponent(ent.getId(),new Blocker(pnl)); //ent.set(
+			Panel pnlBlocker = new Panel("");
+			ed.setComponent(ent.getId(),new Blocker(pnlBlocker,null)); //ent.set(
 			
-			pnl.setBackground(
+			pnlBlocker.setBackground(
 				new QuadBackgroundComponent(//ColorRGBA.Red));
 					ColorI.i().colorChangeCopy(ColorRGBA.Red, -0.75f, 0.5f)));
 			
-			DragParentestListenerI.i().applyAt(pnl, null);
+			//the blocker has not a parent panel! so it will let the dialog be dragged directly!
+			DragParentestListenerI.i().applyAt(pnlBlocker, rzp);  
+			
+			CursorEventControl.addListenersToSpatial(pnlBlocker,blockerListener);
+			
+			UserDataI.i().setUserDataPSH(pnlBlocker,ent.getId());
 		}
 		
 		// panel
-		ResizablePanel rzp = ent.get(GuiLink.class).getResizablePanel();
+		rzp.addUpdateLogicalStateListener(this);
 		HoverHighlightEffectI.i().applyAt(rzp, (QuadBackgroundComponent)rzp.getResizableBorder());
 	}
 
-	public boolean isBlocked(Entity ent){
+	public boolean isBlocking(Entity ent){
 		Blocker blocker=ent.get(Blocker.class);
 		if(blocker==null)return false;
-		return blocker.getLayer().getParent()!=null;
+		return blocker.isBlocking();
 	}
 
-	public void setEnabledBlockerLayer(Entity ent, boolean b){
-		Panel blocker = ent.get(Blocker.class).getLayer();
-		if(b){
-			nodeToMonitor.attachChild(blocker);
-		}else{
-			blocker.removeFromParent();
-		}
+	public void enableBlockingLayer(Entity ent, boolean b){
+		Blocker blocker = ent.get(Blocker.class);
+		ent.set(new Blocker(blocker.getLayer(),b));
 	}
 	
 	/**
@@ -252,7 +299,7 @@ public class HierarchyI implements IUpdateLogicalStateListener{
 			ss==null?null:ss.isHierarchyTop(), 
 			bModal));
 //		setHierarchyParentAtChild(entParent,entChild);
-		if(bModal)setEnabledBlockerLayer(entParent,true);
+		if(bModal)enableBlockingLayer(entParent,true);
 		
 		showDialog(rzpChild); //show it
 		updateLastFocusAppTimeNano(entChild);
@@ -300,10 +347,10 @@ public class HierarchyI implements IUpdateLogicalStateListener{
 	
 	/**
 	 * 
-	 * @param ent if null will bring all possible
+	 * @param entParentFilter if null will bring all possible
 	 * @return
 	 */
-	public ArrayList<Entity> getHierarchyChildrenFor(Entity ent){
+	public ArrayList<Entity> getHierarchyDialogs(Entity entParentFilter){
 		ArrayList<Entity> aent = new ArrayList<Entity>();
 		
 		/**
@@ -313,32 +360,39 @@ public class HierarchyI implements IUpdateLogicalStateListener{
 		EntitySet entset = ed.getEntities(GuiLink.class,ShownState.class,LastFocusTime.class);
 		
 		for(Entity entChild:entset){
-			if(ent==null || entChild.get(ShownState.class).getHierarchyParent().equals(ent.getId())){
-				aent.add(entChild);
+			if(!entChild.get(GuiLink.class).getResizablePanel().isOpened())continue;
+			
+			boolean bAdd=false;
+			if(entParentFilter==null){
+				bAdd=true;
+			}else{
+				EntityId entidParent = entChild.get(ShownState.class).getHierarchyParent();
+				if(entParentFilter.getId().equals(entidParent)){
+					bAdd=true;
+				}
 			}
+			
+			if(bAdd)aent.add(entChild);
 		}		
 		
-		Collections.sort(aent,cmpr);
+		Collections.sort(aent,cmpr); // uses LastFocusTime
 		
 		return aent;
 	}
 	
 	public void update(float tpf,EntityId entid){
-		Entity ent = ed.getEntity(entid, getAllComponentTypesArray());
-		
-		/********************
-		 * beware what you code here!!! 
-		 ********************/
+		Entity ent = ed.getEntity(entid, GuiLink.class,ShownState.class);
 		
 		// close self if parent dialog closed
 		ResizablePanel rzp = ent.get(GuiLink.class).getResizablePanel();
-		if(!rzp.isClosed()){
+		if(rzp.isOpened()){
 			ShownState ss = ent.get(ShownState.class);
 			if(ss.getHierarchyParent()!=null){
 				Entity entHierarchyParent = ed.getEntity(
 					ss.getHierarchyParent(), GuiLink.class);
-				if(entHierarchyParent.get(GuiLink.class).getResizablePanel().isClosed()){
+				if(!entHierarchyParent.get(GuiLink.class).getResizablePanel().isOpened()){
 					rzp.close();
+					ent.get(Blocker.class).getLayer().removeFromParent();
 				}
 			}
 		}
@@ -351,42 +405,83 @@ public class HierarchyI implements IUpdateLogicalStateListener{
 ////				arzdHierarchyChildList.remove(compChild);
 //			}
 //		}
+	}
+	
+	/**
+	 * 
+	 * @param tpf ignored if null
+	 * @param entid
+	 * @param rzp
+	 */
+	private void updateBlocker(Float tpf,EntityId entid, ResizablePanel rzp){
+		Entity ent = ed.getEntity(entid, GuiLink.class,ShownState.class,Blocker.class);
 		
 		// blocker work
-		if(isBlocked(ent)){
+		Panel pnlBlocker = ent.get(Blocker.class).getLayer();
+		if(rzp.isOpened()){
+			if(pnlBlocker.getParent()==null){
+				nodeToMonitor.attachChild(pnlBlocker);
+			}
+			
 			// how many childs are modal
 			int iModalCount=0;
-			for(Entity entChild:getHierarchyChildrenFor(ent)){
+			for(Entity entChild:getHierarchyDialogs(ent)){
 				if(entChild.get(ShownState.class).isHierarchyModal())iModalCount++;
 			}
 			
 			if(iModalCount==0){
-				// remove blocker
-				setEnabledBlockerLayer(ent,false);
-			}else{
-				Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSize(rzp);
+				enableBlockingLayer(ent,false);
+			}
+			
+//			if(isBlocked(ent)){
+//				pnlBlocker.setBackground(
+//					new QuadBackgroundComponent(
+//						ColorI.i().colorChangeCopy(ColorRGBA.Red, -0.5f, 0.5f)));
+//			}else{
+//				//transparent
+//				pnlBlocker.setBackground(new QuadBackgroundComponent(new ColorRGBA(0,0,0,0)));
+//			}
+			
+			// z order
+			Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSize(rzp);
+			if(v3fSize!=null){
 				if(Float.compare(v3fSize.length(),0f)!=0){ //waiting top panel be updated by lemur
 					Vector3f v3fPos = rzp.getLocalTranslation().clone();
-					v3fPos.z += v3fSize.z;
-					ent.get(Blocker.class).getLayer().setLocalTranslation(v3fPos);
 					
-					ent.get(Blocker.class).getLayer().setPreferredSize(rzp.getPreferredSize());
+					if(isBlocking(ent)){
+						v3fPos.z += v3fSize.z + fInBetweenGapDistZ/2f; //above
+					}else{
+						v3fPos.z -= fInBetweenGapDistZ/2f; //below
+					}
+					
+					pnlBlocker.setLocalTranslation(v3fPos);
+					
+					Vector3f v3fBlockerSize = v3fSize.clone();
+					v3fBlockerSize.z=fMinLemurPanelSizeZ;
+					pnlBlocker.setPreferredSize(v3fBlockerSize);//rzp.getPreferredSize());
 				}
 			}
+			
+		}else{
+			if(pnlBlocker.getParent()!=null){
+				pnlBlocker.removeFromParent();
+			}
 		}
+		
 	}
 
 	private void organizeDialogsStack() {
-		float fOrderZ = fBeginOrderZ;
-		for(Entity ent:getHierarchyChildrenFor(null)){
-			ResizablePanel pnl=ent.get(GuiLink.class).getResizablePanel();
-			pnl.getLocalTranslation().z=fOrderZ;
-			Vector3f v3f = MiscJmeI.i().getBoundingBoxSize(pnl);
-			if(v3f!=null){ //only if it is ready
-				fOrderZ += v3f.z +fSafeZDist;
+		float fOrderPosZ = fBeginOrderPosZ;
+		for(Entity ent:getHierarchyDialogs(null)){
+			ResizablePanel rzp=ent.get(GuiLink.class).getResizablePanel();
+			Vector3f v3fPos = rzp.getLocalTranslation();
+			rzp.setLocalTranslation(v3fPos.x,v3fPos.y,fOrderPosZ);
+			Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSize(rzp);
+			if(v3fSize!=null){ //only if it is ready
+				fOrderPosZ += v3fSize.z +fInBetweenGapDistZ;
 			}
 			
-			if(isFocused(pnl)){
+			if(isFocused(rzp)){
 				updateLastFocusAppTimeNano(ent);
 			}
 		}
@@ -415,7 +510,7 @@ public class HierarchyI implements IUpdateLogicalStateListener{
 	};
 
 	public boolean isHasAnyDialogOpened() {
-		return (getHierarchyChildrenFor(null).size()>0);
+		return (getHierarchyDialogs(null).size()>0);
 	}
 
 	public void cleanup(float tpf, Entity ent) {
@@ -425,7 +520,7 @@ public class HierarchyI implements IUpdateLogicalStateListener{
 
 	public ArrayList<String> getListAsReport(){
 		ArrayList<String> astr = new ArrayList<String>();
-		for(Entity ent:getHierarchyChildrenFor(null)){
+		for(Entity ent:getHierarchyDialogs(null)){
 			astr.add(getReport(ent,false));
 		}
 		return astr;
@@ -488,7 +583,12 @@ public class HierarchyI implements IUpdateLogicalStateListener{
 	}
 
 	@Override
-	public void updateLogicalState(float tpf, ResizablePanel rzp) {
-		update(tpf, getEntityIdFor(rzp));
+	public void updateLogicalState(float tpf, ResizablePanel rzpSource) {
+		updateBlocker(tpf, getEntityIdFor(rzpSource), rzpSource);
+	}
+
+	@Override
+	public void removeFromParent(ResizablePanel rzpSource) {
+		updateBlocker(null, getEntityIdFor(rzpSource), rzpSource);
 	}
 }

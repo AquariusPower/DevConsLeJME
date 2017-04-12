@@ -55,8 +55,8 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 //		ConfigureTestsI.i().configure(this, getGuiNode());
 		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode());
 		
-		initTest(300);
-		initTest(600);
+		initTest(100);
+		initTest(400);
 	}
 
 	@SuppressWarnings("unchecked")

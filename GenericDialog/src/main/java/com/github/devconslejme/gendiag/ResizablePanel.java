@@ -82,17 +82,21 @@ public class ResizablePanel extends Panel {
 	private HashMap<EEdge,Edge> hmEdge = new HashMap<EEdge,Edge>();
 	private Panel pnlParentest = null;
 	
-	public static interface IResizableListener {
-		//public static class VersionedVector3f extends Vector3f implements VersionedObject{}; //???
-		//VersionedReference<Vector3f> vrSize = new VersionedReference<Vector3f>(v3fMinSize); //???
-		public void attendToResizing(ResizablePanel source,Vector3f v3fNewSize);
-	}
-	private ArrayList<IResizableListener> airlList = new ArrayList<IResizableListener>();
+//	public static interface IResizableListener {
+//		//public static class VersionedVector3f extends Vector3f implements VersionedObject{}; //???
+//		//VersionedReference<Vector3f> vrSize = new VersionedReference<Vector3f>(v3fMinSize); //???
+//		public void attendToResizing(ResizablePanel source,Vector3f v3fNewSize);
+//	}
+//	private ArrayList<IResizableListener> airlList = new ArrayList<IResizableListener>();
 	
-	public static interface IUpdateLogicalStateListener {
-		public void updateLogicalState(float tpf, ResizablePanel rzp);
+	public static interface ISpatialChangedListener {
+		/**
+		 * it is meant to provide insta updates whenever changes happen to this panel.
+		 */
+		public void updateLogicalState(float tpf, ResizablePanel rzpSource);
+		public void removeFromParent(ResizablePanel rzpSource);
 	}
-	private ArrayList<IUpdateLogicalStateListener> aiulslList = new ArrayList<IUpdateLogicalStateListener>();
+	private ArrayList<ISpatialChangedListener> aiulslList = new ArrayList<ISpatialChangedListener>();
 	
 	public static interface IBorderMargin {
 		public void setMargin(int i);
@@ -346,11 +350,11 @@ public class ResizablePanel extends Panel {
 			if(bUpdateDragFromX)v3fDragFromPrevious.x+=fDeltaX;
 			if(bUpdateDragFromY)v3fDragFromPrevious.y+=fDeltaY;
 			
-			if(!v3fNewSize.equals(v3fOldSize)){
+			if(!v3fNewSize.equals(v3fOldSize)){ //TODO delegate whenever changes happen from here too? no point on it right?
 //				resizedTo(v3fNewSize);
-				for(IResizableListener irl:airlList){
-					irl.attendToResizing(this,v3fNewSize);
-				}
+//				for(IResizableListener irl:airlList){
+//					irl.attendToResizing(this,v3fNewSize);
+//				}
 			}
 		}else{
 			setPreferredSize(v3fOldSize);
@@ -422,7 +426,7 @@ public class ResizablePanel extends Panel {
 		}
 		
 		if(bUpdateLogicalStateSuccess){
-			for(IUpdateLogicalStateListener iuls:aiulslList){
+			for(ISpatialChangedListener iuls:aiulslList){
 				iuls.updateLogicalState(tpf,this);
 			}
 		}
@@ -660,10 +664,10 @@ public class ResizablePanel extends Panel {
 	public Edge getDraggedEdge() {
 		return hmEdge.get(eeInitialHook);
 	}
-	public ResizablePanel addUpdateLogicalStateListener(IUpdateLogicalStateListener listener) {
+	public ResizablePanel addUpdateLogicalStateListener(ISpatialChangedListener listener) {
 		if(listener==null)throw new DetailedException("invalid null listener");
 		
-		if(!airlList.contains(listener)){
+		if(!aiulslList.contains(listener)){
 			aiulslList.add(listener);
 		}else{
 			warnMsg("listener already added "+listener);
@@ -671,17 +675,17 @@ public class ResizablePanel extends Panel {
 		
 		return this;
 	}
-	public ResizablePanel addResizableListener(IResizableListener listener) {
-		if(listener==null)throw new DetailedException("invalid null listener");
-		
-		if(!airlList.contains(listener)){
-			airlList.add(listener);
-		}else{
-			warnMsg("listener already added "+listener);
-		}
-		
-		return this;
-	}
+//	public ResizablePanel addResizableListener(IResizableListener listener) {
+//		if(listener==null)throw new DetailedException("invalid null listener");
+//		
+//		if(!airlList.contains(listener)){
+//			airlList.add(listener);
+//		}else{
+//			warnMsg("listener already added "+listener);
+//		}
+//		
+//		return this;
+//	}
 	public Edge getEdge(EEdge edge) {
 		return hmEdge.get(edge);
 	}
@@ -699,12 +703,22 @@ public class ResizablePanel extends Panel {
 		return bUpdateLogicalStateSuccess;
 	}
 	
-	public boolean isClosed(){
-		return getParent()==null;
+	public boolean isOpened(){
+		return getParent()!=null;
 	}
 	
 	public void close(){
 		removeFromParent();
 	}
-		
+	
+	@Override
+	public boolean removeFromParent() {
+		boolean b = super.removeFromParent();
+		if(b){
+			for(ISpatialChangedListener iuls:aiulslList){
+				iuls.removeFromParent(this);
+			}
+		}
+		return b;
+	}
 }

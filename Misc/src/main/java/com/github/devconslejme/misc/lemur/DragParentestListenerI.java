@@ -27,6 +27,7 @@
 
 package com.github.devconslejme.misc.lemur;
 
+import com.github.devconslejme.gendiag.es.HierarchyI;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
@@ -121,6 +122,8 @@ public class DragParentestListenerI implements CursorListener{
 			v3f.z=pnlParentest.getLocalTranslation().z; //DO NOT MESS WITH Z!!!!
 			pnlParentest.setLocalTranslation(v3f);
 			
+//			HierarchyI.i().get
+			
 			event.setConsumed();
 		}
 	}
@@ -137,15 +140,23 @@ public class DragParentestListenerI implements CursorListener{
 			}
 		}
 	}
+	
+	/**
+	 * 
+	 * @param pnl
+	 * @param pnlApplyDragAt can be used to move a non attached/linked/parent panel
+	 */
 	public void applyAt(Panel pnl, Panel pnlApplyDragAt) {
 		CursorEventControl.addListenersToSpatial(pnl, this);
 		if(pnlApplyDragAt!=null){
 			pnl.setUserData(getUserDataIdFor(EDrag.ApplyDragAt), pnlApplyDragAt);
+			pnlApplyDragAt.setUserData(getUserDataIdFor(EDrag.ApplyingDragFrom), pnl);
 		}
 	}
 	
 	private static enum EDrag{
 		ApplyDragAt, 
+		ApplyingDragFrom, 
 //		ColorHighlight,
 		;
 	}

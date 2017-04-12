@@ -41,7 +41,6 @@ import com.github.devconslejme.gendiag.ContextMenuI;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
-import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
 import com.github.devconslejme.gendiag.es.GenericDialogZayES;
 import com.github.devconslejme.gendiag.es.HierarchyI;
 import com.github.devconslejme.misc.DetailedException;
@@ -98,7 +97,7 @@ import com.simsilica.lemur.text.DocumentModel;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class DevConsPluginStateI extends AbstractAppState implements IResizableListener{
+public class DevConsPluginStateI extends AbstractAppState {
 	public static DevConsPluginStateI i(){return GlobalInstanceManagerI.i().get(DevConsPluginStateI.class);}
 	
 //	private Vector3f	v3fApplicationWindowSize;
@@ -910,7 +909,7 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 		HierarchyI.i().setAsHierarchyTop(
 			GenericDialogZayES.i().createEntity(hrpMain,"DevCons"));
 		hrpMain.setContents(cntrMain);
-		hrpMain.addResizableListener(this);
+//		hrpMain.addResizableListener(this);
 		
 		setConsoleSizeByHeightPerc(fConsoleHeightPerc); //just to init default value
 	}
@@ -1137,11 +1136,6 @@ public class DevConsPluginStateI extends AbstractAppState implements IResizableL
 			}
 		}
 		return str.substring(iNotAlpha);
-	}
-
-	@Override
-	public void attendToResizing(ResizablePanel source,Vector3f v3fNewSize) {
-//		updateVisibleLogItems();
 	}
 
 	public void showQueue(){

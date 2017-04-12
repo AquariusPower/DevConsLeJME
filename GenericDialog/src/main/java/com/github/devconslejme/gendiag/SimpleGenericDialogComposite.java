@@ -212,6 +212,10 @@ public final class SimpleGenericDialogComposite extends AbstractGenericDialogCom
 		return bUseInputTextValue;
 	}
 
+	@Override
+	public void removeFromParent(ResizablePanel rzpSource) {
+	}
+
 //	@SuppressWarnings("unchecked")
 //	@Override
 //	public Class<SimpleGenericDialogComposite> getCompositeType() {
