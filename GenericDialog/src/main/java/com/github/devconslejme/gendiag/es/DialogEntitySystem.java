@@ -35,9 +35,11 @@ import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.es.HierarchyI.Blocker;
 import com.github.devconslejme.gendiag.es.HierarchyI.LastFocusTime;
 import com.github.devconslejme.gendiag.es.HierarchyI.ShownState;
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
+import com.jme3.app.state.AppStateManager;
 import com.simsilica.es.Entity;
 import com.simsilica.es.EntityComponent;
 import com.simsilica.es.EntityId;
@@ -49,11 +51,12 @@ import com.simsilica.es.base.DefaultEntityData;
 /**
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
-public class GenericDialogZayES extends AbstractAppState {
-	public static GenericDialogZayES i(){return GlobalInstanceManagerI.i().get(GenericDialogZayES.class);}
+public class DialogEntitySystem extends AbstractAppState {
+	public static DialogEntitySystem i(){return GlobalInstanceManagerI.i().get(DialogEntitySystem.class);}
 	
 	private DefaultEntityData	ed;
 	private ArrayList<Class>	aclAllComponentTypes;
+	private EntitySet	entset;
 	
 	public DefaultEntityData getEntityData(){
 		return ed;
@@ -82,65 +85,75 @@ public class GenericDialogZayES extends AbstractAppState {
 	}
 	
 	public EntityId createEntity(ResizablePanel rzp,String strName){
+		if(entset==null){
+			entset = ed.getEntities(getAllComponentTypesArray());
+			if(entset.size()>0)throw new DetailedException("must begin empty so news and changes can be properly applied",entset,ed);
+		}
+		
 	  EntityId entid = ed.createEntity(); //to attach components to
 	  ed.setComponent(entid, new GuiLink(rzp));
 	  ed.setComponent(entid, new Initialized(false));
 	  ed.setComponent(entid, new Name(strName));
+	  
 	  return entid;
 	}
 	
 	@Override
 	public void update(float tpf) {
-		EntitySet entset = ed.getEntities(getAllComponentTypesArray());
-		
-		boolean bWorkaroundInitializationFailure=true;
-		if(bWorkaroundInitializationFailure){
-			for(Entity ent:entset){
-				if(!ent.get(Initialized.class).isInitialized()){
-					initializeNewEntity(tpf, ent);
-					ed.setComponent(ent.getId(), new Initialized(true));
-				}
-			}
-		}
+//		boolean bWorkaroundInitializationFailure=false;
+//		if(bWorkaroundInitializationFailure){
+//			for(Entity ent:entset){
+//				if(!ent.get(Initialized.class).isInitialized()){
+//					initializeNewEntity(tpf, ent);
+//					ed.setComponent(ent.getId(), new Initialized(true));
+//				}
+//			}
+//		}
 		
 		if( entset.applyChanges() ) {
 			// newly matching entities
-			initializeNewEntities(tpf,entset.getAddedEntities()); //TODO not working?
+			initializeNewEntities(tpf,entset.getAddedEntities());
 			
-			// entities that have merely changed TODO have any component changed? 
+			// entities that have merely changed TODO like in have any component changed? 
 			updateChangedEntities(tpf,entset.getChangedEntities());
 			
-			// entities that are no longer matching TODO have any missing of the required components of the query above?
+			// entities that are no longer matching TODO like in one or more of the required query components went missing
 			cleanupRemovedEntities(tpf,entset.getRemovedEntities());
 		}
 	}
 	
-	private void initializeNewEntity(float tpf,Entity ent) {
-		HierarchyI.i().initializeNewEntity(tpf,ent);
-	}
 	private void initializeNewEntities(float tpf,Set<Entity> entset) {
 		for(Entity ent:entset){
-			initializeNewEntity(tpf,ent);
+			if(!ent.get(Initialized.class).isInitialized()){
+				HierarchyI.i().initializeNewEntity(tpf,ent);
+				ed.setComponent(ent.getId(), new Initialized(true));
+			}
+//			initializeNewEntity(tpf,ent);
 		}
 	}
+//	private void initializeNewEntity(float tpf,Entity ent) {
+//		HierarchyI.i().initializeNewEntity(tpf,ent);
+//	}
 	
-	private void updateChangedEntity(float tpf,Entity ent) {
-		HierarchyI.i().updateChangedEntity(tpf,ent.getId());
-	}
 	private void updateChangedEntities(float tpf,Set<Entity> entset) {
 		for(Entity ent:entset){
-			updateChangedEntity(tpf,ent);
+//			updateChangedEntity(tpf,ent);
+			HierarchyI.i().updateChangedEntity(tpf,ent.getId());
 		}
 	}
+//	private void updateChangedEntity(float tpf,Entity ent) {
+//		HierarchyI.i().updateChangedEntity(tpf,ent.getId());
+//	}
 
-	private void cleanupRemovedEntity(float tpf,Entity ent) {
-		HierarchyI.i().cleanupRemovedEntity(tpf,ent);
-	}
 	private void cleanupRemovedEntities(float tpf,Set<Entity> entset) {
 		for(Entity ent:entset){
-			cleanupRemovedEntity(tpf,ent);
+//			cleanupRemovedEntity(tpf,ent);
+			HierarchyI.i().cleanupRemovedEntity(tpf,ent);
 		}
 	}
+//	private void cleanupRemovedEntity(float tpf,Entity ent) {
+//		HierarchyI.i().cleanupRemovedEntity(tpf,ent);
+//	}
 
 	public Class[] getAllComponentTypesArray() {
 		return getAllComponentTypesList().toArray(new Class[0]);

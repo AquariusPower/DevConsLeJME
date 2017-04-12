@@ -57,27 +57,19 @@ while true;do
 	strAllDeps="`secJavaDependencyList.sh |sort -u |grep ":com/github/devconslejme"`"
 
 	# misc can only access misc
-	#echo "$strAllDeps" |grep "/misc/[^/]*:" |egrep -v ":(.*/misc/)"&&:
 	FUNCchk misc
 
-	# misc/jme can only access misc or misc/jme
-	#echo "$strAllDeps" |grep "/misc/jme/[^/]*:" |egrep -v ":(.*/misc/|.*/misc/jme/)"&&:
 	FUNCchk misc/jme misc
 
 	# misc/lemur can only access misc or misc/jme or misc/lemur
-	#echo "$strAllDeps" |grep "/misc/lemur/[^/]*:" |egrep -v ":(.*/misc/|.*/misc/jme/|.*/misc/lemur/)"&&:
 	FUNCchk misc/lemur misc/jme misc
 
-	# gendiag can only access misc or misc/jme or misc/lemur or gendiag
-	#echo "$strAllDeps" |grep "/gendiag/[^/]*:" |egrep -v ":(.*/misc/|.*/misc/jme/|.*/misc/lemur/|.*/gendiag/)"&&:
 	FUNCchk gendiag misc/lemur misc/jme misc
+	
+	FUNCchk gendiag/es gendiag misc/lemur misc/jme misc
 
-	# devcons can only access misc or misc/jme or misc/lemur or gendiag or devcons
-	#echo "$strAllDeps" |grep "/devcons/[^/]*:" |egrep -v ":(.*/misc/|.*/misc/jme/|.*/misc/lemur/|.*/gendiag/|.*/devcons/)"&&:
 	FUNCchk devcons gendiag misc/lemur misc/jme misc
 
-	# extras can only access extras
-	#echo "$strAllDeps" |grep "/extras/[^/]*:" |egrep -v ":(.*/extras/)"&&:
 	FUNCchk extras
 
 	if $bProblemFound;then

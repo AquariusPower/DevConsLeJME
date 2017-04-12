@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
-import com.github.devconslejme.gendiag.es.GenericDialogZayES;
+import com.github.devconslejme.gendiag.es.DialogEntitySystem;
 import com.github.devconslejme.gendiag.es.HierarchyI;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.QueueI;
@@ -137,7 +137,7 @@ public class ContextMenuI {
 		
 //		HierarchyComponent comp = hrp.createComponent(HierarchyComponent.class);
 //		_HierarchyComponent comp = _HierarchySystemI.i().createComponentAt(hrp);
-		entid = GenericDialogZayES.i().createEntity(hrp,ContextMenuI.class.getSimpleName());
+		entid = DialogEntitySystem.i().createEntity(hrp,ContextMenuI.class.getSimpleName());
 		
 //		hrp.updateComponent(new HierarchyComponent(comp,true,null));
 //		_HierarchySystemI.i().workOn(comp).setAsHierarchyTop();

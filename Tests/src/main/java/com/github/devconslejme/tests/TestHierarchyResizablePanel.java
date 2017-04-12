@@ -28,7 +28,7 @@
 package com.github.devconslejme.tests;
 
 import com.github.devconslejme.gendiag.ResizablePanel;
-import com.github.devconslejme.gendiag.es.GenericDialogZayES;
+import com.github.devconslejme.gendiag.es.DialogEntitySystem;
 import com.github.devconslejme.gendiag.es.HierarchyI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
@@ -69,7 +69,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 				initTest(400);
 				return true;
 			}
-		}.setDelaySeconds(1.0f)); //just to test if ES new entity initialization will be called at a later time
+		}.setDelaySeconds(10.0f)); //just to test if ES new entity initialization will be called at a later time
 	}
 
 	@SuppressWarnings("unchecked")
@@ -112,7 +112,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 	private ResizablePanel test(Vector3f pos,String strName) {
 		ResizablePanel rzp = new ResizablePanel(null);
 		
-		EntityId entid = GenericDialogZayES.i().createEntity(rzp,strName);
+		EntityId entid = DialogEntitySystem.i().createEntity(rzp,strName);
 		UserDataI.i().setUserDataPSH(rzp, entid);
 		
 //		DragParentestListenerI.i().applyAt(rzp);

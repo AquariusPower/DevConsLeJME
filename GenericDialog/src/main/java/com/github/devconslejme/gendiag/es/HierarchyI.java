@@ -34,7 +34,7 @@ import java.util.Comparator;
 import com.github.devconslejme.gendiag.ContextMenuI;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
-import com.github.devconslejme.gendiag.es.GenericDialogZayES.GuiLink;
+import com.github.devconslejme.gendiag.es.DialogEntitySystem.GuiLink;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
@@ -56,6 +56,7 @@ import com.simsilica.es.EntityId;
 import com.simsilica.es.EntitySet;
 import com.simsilica.es.PersistentComponent;
 import com.simsilica.es.base.DefaultEntityData;
+import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.event.CursorButtonEvent;
@@ -91,7 +92,7 @@ public class HierarchyI implements IResizableListener{
 	private float	fCurrentOrderPosZ;
 	
 	public void configure(Node nodeToMonitor, float fBeginOrderZ){
-		this.ed = GlobalInstanceManagerI.i().get(GenericDialogZayES.class).getEntityData();
+		this.ed = GlobalInstanceManagerI.i().get(DialogEntitySystem.class).getEntityData();
 		this.app=GlobalInstanceManagerI.i().get(Application.class);
 		this.fBeginOrderPosZ=fBeginOrderZ;
 		this.nodeToMonitor=nodeToMonitor;
@@ -159,7 +160,8 @@ public class HierarchyI implements IResizableListener{
 			EntityId entid = UserDataI.i().getUserDataPSH(capture,EntityId.class);
 			Blocker blk = HierarchyI.i().ed.getComponent(entid,Blocker.class);
 			if(blk.isBlocking()){
-				HierarchyI.i().updateLastFocusAppTimeNano(entid);
+//				HierarchyI.i().updateLastFocusAppTimeNano(entid);
+				HierarchyI.i().setFocusRecursively(entid);
 				event.setConsumed();
 			}
 		}
@@ -205,7 +207,7 @@ public class HierarchyI implements IResizableListener{
 	public ArrayList<Class> getAllComponentTypesList() {
 		if(aclAllComponentTypes==null){
 			aclAllComponentTypes = new ArrayList<Class>();
-			aclAllComponentTypes.addAll(GenericDialogZayES.i().getAllComponentTypesList());
+			aclAllComponentTypes.addAll(DialogEntitySystem.i().getAllComponentTypesList());
 			aclAllComponentTypes.add(Blocker.class);
 			aclAllComponentTypes.add(LastFocusTime.class);
 			aclAllComponentTypes.add(ShownState.class);
@@ -263,7 +265,7 @@ public class HierarchyI implements IResizableListener{
 	 * @return 
 	 */
 	public void showAsHierarchyModal(EntityId entidParent, EntityId entidChild){
-		applyHierarchyChild(
+		showAndApplyHierarchyChild(
 				ed.getEntity(entidParent, getAllComponentTypesArray()),
 				ed.getEntity(entidChild, getAllComponentTypesArray()),
 				true);
@@ -275,10 +277,10 @@ public class HierarchyI implements IResizableListener{
 	 * @return 
 	 */
 	public void showAsHierarchyModeless(Entity entParent, Entity entChild){
-		applyHierarchyChild(entParent,entChild,false);
+		showAndApplyHierarchyChild(entParent,entChild,false);
 	}
 	
-	private void applyHierarchyChild(Entity entParent, Entity entChild, boolean bModal){
+	private void showAndApplyHierarchyChild(Entity entParent, Entity entChild, boolean bModal){
 		ResizablePanel rzpChild = entChild.get(GuiLink.class).getResizablePanel();
 		
 		ShownState ss = entChild.get(ShownState.class);
@@ -291,7 +293,8 @@ public class HierarchyI implements IResizableListener{
 		if(bModal)enableBlockingLayer(entParent,true);
 		
 		showDialog(rzpChild); //show it
-		updateLastFocusAppTimeNano(entChild.getId());
+		setFocusRecursively(entChild.getId());
+//		updateLastFocusAppTimeNano(entChild.getId());
 	}
 	
 //	private void setHierarchyParentAtChild(Entity entParent, Entity entChild) {
@@ -338,6 +341,20 @@ public class HierarchyI implements IResizableListener{
 //		recursiveWorkOnChildDiagsOf(rzp,false);
 //		rzp.close();
 //	}
+	
+	public void setFocusRecursively(EntityId entid){
+		ArrayList<Entity> aentChild = getHierarchyDialogs(entid);
+//		if(ed.getComponent(entid, Blocker.class).isBlocking()){
+		if(aentChild.size()==0){
+			ResizablePanel rzp = ed.getComponent(entid, GuiLink.class).getResizablePanel();
+			GuiGlobals.getInstance().requestFocus(rzp);
+			updateLastFocusAppTimeNano(entid);
+		}else{
+			for(Entity ent:aentChild){
+				setFocusRecursively(ent.getId());
+			}
+		}
+	}
 	
 	private void updateLastFocusAppTimeNano(EntityId entid) {
 		EntityId entidParent = entid;
@@ -659,7 +676,8 @@ public class HierarchyI implements IResizableListener{
 		}
 		
 		if(entidUpdLFTime!=null){
-			updateLastFocusAppTimeNano(entidUpdLFTime);
+			setFocusRecursively(entidUpdLFTime);
+//			updateLastFocusAppTimeNano(entidUpdLFTime);
 		}
 	}
 
