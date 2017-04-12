@@ -100,16 +100,6 @@ public class DialogEntitySystem extends AbstractAppState {
 	
 	@Override
 	public void update(float tpf) {
-//		boolean bWorkaroundInitializationFailure=false;
-//		if(bWorkaroundInitializationFailure){
-//			for(Entity ent:entset){
-//				if(!ent.get(Initialized.class).isInitialized()){
-//					initializeNewEntity(tpf, ent);
-//					ed.setComponent(ent.getId(), new Initialized(true));
-//				}
-//			}
-//		}
-		
 		if( entset.applyChanges() ) {
 			// newly matching entities
 			initializeNewEntities(tpf,entset.getAddedEntities());
@@ -128,33 +118,21 @@ public class DialogEntitySystem extends AbstractAppState {
 				HierarchyI.i().initializeNewEntity(tpf,ent);
 				ed.setComponent(ent.getId(), new Initialized(true));
 			}
-//			initializeNewEntity(tpf,ent);
 		}
 	}
-//	private void initializeNewEntity(float tpf,Entity ent) {
-//		HierarchyI.i().initializeNewEntity(tpf,ent);
-//	}
 	
 	private void updateChangedEntities(float tpf,Set<Entity> entset) {
 		for(Entity ent:entset){
-//			updateChangedEntity(tpf,ent);
 			HierarchyI.i().updateChangedEntity(tpf,ent.getId());
 		}
 	}
-//	private void updateChangedEntity(float tpf,Entity ent) {
-//		HierarchyI.i().updateChangedEntity(tpf,ent.getId());
-//	}
 
 	private void cleanupRemovedEntities(float tpf,Set<Entity> entset) {
 		for(Entity ent:entset){
-//			cleanupRemovedEntity(tpf,ent);
 			HierarchyI.i().cleanupRemovedEntity(tpf,ent);
 		}
 	}
-//	private void cleanupRemovedEntity(float tpf,Entity ent) {
-//		HierarchyI.i().cleanupRemovedEntity(tpf,ent);
-//	}
-
+	
 	public Class[] getAllComponentTypesArray() {
 		return getAllComponentTypesList().toArray(new Class[0]);
 	}
