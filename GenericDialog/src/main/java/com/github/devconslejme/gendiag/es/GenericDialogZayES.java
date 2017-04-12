@@ -89,37 +89,38 @@ public class GenericDialogZayES extends AbstractAppState {
 	  return entid;
 	}
 	
-	
-	
 	@Override
 	public void update(float tpf) {
-    EntitySet entset = ed.getEntities(getAllComponentTypesArray());
-    
-    for(Entity ent:entset){
-    	if(!ent.get(Initialized.class).isInitialized()){
-    		initialize(tpf, ent);
-    		ed.setComponent(ent.getId(), new Initialized(true));
-    	}
-    }
-    
-    if( entset.applyChanges() ) {
-        // newly matching entities
-        initializeNewEntities(tpf,entset.getAddedEntities()); //TODO not working?
-
-        // entities that have merely changed TODO have any component changed? 
-        updateChangedEntities(tpf,entset.getChangedEntities());
-        
-        // entities that are no longer matching TODO have any missing of the required components of the query above?
-        cleanupRemovedEntities(tpf,entset.getRemovedEntities());
-    }
+		EntitySet entset = ed.getEntities(getAllComponentTypesArray());
+		
+		boolean bWorkaroundInitializationFailure=true;
+		if(bWorkaroundInitializationFailure){
+			for(Entity ent:entset){
+				if(!ent.get(Initialized.class).isInitialized()){
+					initializeNewEntity(tpf, ent);
+					ed.setComponent(ent.getId(), new Initialized(true));
+				}
+			}
+		}
+		
+		if( entset.applyChanges() ) {
+			// newly matching entities
+			initializeNewEntities(tpf,entset.getAddedEntities()); //TODO not working?
+			
+			// entities that have merely changed TODO have any component changed? 
+			updateChangedEntities(tpf,entset.getChangedEntities());
+			
+			// entities that are no longer matching TODO have any missing of the required components of the query above?
+			cleanupRemovedEntities(tpf,entset.getRemovedEntities());
+		}
 	}
-
-	private void initialize(float tpf,Entity ent) {
-		HierarchyI.i().initialize(tpf,ent);
+	
+	private void initializeNewEntity(float tpf,Entity ent) {
+		HierarchyI.i().initializeNewEntity(tpf,ent);
 	}
 	private void initializeNewEntities(float tpf,Set<Entity> entset) {
 		for(Entity ent:entset){
-			initialize(tpf,ent);
+			initializeNewEntity(tpf,ent);
 		}
 	}
 	
@@ -132,12 +133,12 @@ public class GenericDialogZayES extends AbstractAppState {
 		}
 	}
 
-	private void cleanup(float tpf,Entity ent) {
-		HierarchyI.i().cleanup(tpf,ent);
+	private void cleanupRemovedEntity(float tpf,Entity ent) {
+		HierarchyI.i().cleanupRemovedEntity(tpf,ent);
 	}
 	private void cleanupRemovedEntities(float tpf,Set<Entity> entset) {
 		for(Entity ent:entset){
-			cleanup(tpf,ent);
+			cleanupRemovedEntity(tpf,ent);
 		}
 	}
 

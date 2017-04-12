@@ -213,7 +213,7 @@ public class HierarchyI implements IResizableListener{
 		return aclAllComponentTypes;
 	}
 	
-	public void initialize(float tpf,Entity ent) {
+	public void initializeNewEntity(float tpf,Entity ent) {
 		if(ed.getComponent(ent.getId(), ShownState.class)==null){
 			ed.setComponent(ent.getId(), new ShownState());
 		}
@@ -669,7 +669,7 @@ public class HierarchyI implements IResizableListener{
 		return (getHierarchyDialogs(null).size()>0);
 	}
 
-	public void cleanup(float tpf, Entity ent) {
+	public void cleanupRemovedEntity(float tpf, Entity ent) {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException("method not implemented yet");
 	}

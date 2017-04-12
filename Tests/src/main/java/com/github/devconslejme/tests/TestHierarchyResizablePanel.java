@@ -30,11 +30,12 @@ package com.github.devconslejme.tests;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.es.GenericDialogZayES;
 import com.github.devconslejme.gendiag.es.HierarchyI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestListenerI;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
-import com.jme3.system.AppSettings;
 import com.simsilica.es.EntityId;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
@@ -61,7 +62,14 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode());
 		
 		initTest(100);
-		initTest(400);
+		
+		QueueI.i().enqueue(new CallableX() {
+			@Override
+			public Boolean call() {
+				initTest(400);
+				return true;
+			}
+		}.setDelaySeconds(1.0f)); //just to test if ES new entity initialization will be called at a later time
 	}
 
 	@SuppressWarnings("unchecked")

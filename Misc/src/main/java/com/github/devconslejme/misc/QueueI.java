@@ -89,6 +89,7 @@ public class QueueI {
 		}
 		public CallableX setDelaySeconds(float fDelaySeconds) {
 			this.fDelaySeconds=(fDelaySeconds);
+			updateRunAt();
 			return this;
 		}
 		
