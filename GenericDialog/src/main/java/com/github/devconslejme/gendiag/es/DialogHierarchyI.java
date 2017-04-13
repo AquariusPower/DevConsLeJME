@@ -28,7 +28,6 @@
 package com.github.devconslejme.gendiag.es;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Set;
 
@@ -46,11 +45,12 @@ import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.EffectArrow;
+import com.github.devconslejme.misc.jme.EffectElectricity;
 import com.github.devconslejme.misc.jme.EffectManagerStateI;
 import com.github.devconslejme.misc.jme.IEffect;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
-import com.github.devconslejme.misc.lemur.DragParentestListenerI;
+import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
@@ -107,6 +107,7 @@ public class DialogHierarchyI extends AbstractAppState implements IResizableList
 	private ColorRGBA	colorBlocker = ColorI.i().colorChangeCopy(ColorRGBA.Red, 0f, 0.15f);
 	private ColorRGBA	colorInvisible = new ColorRGBA(0,0,0,0);
 	private IEffect	ieffParentToChildLink = new EffectArrow();
+	private IEffect	ieffLinkedDragEffect = new EffectElectricity().setColor(ColorRGBA.Yellow);
 	
 	public void configure(Node nodeToMonitor, float fBeginOrderZ){
 		this.fBeginOrderPosZ=fBeginOrderZ;
@@ -144,6 +145,8 @@ public class DialogHierarchyI extends AbstractAppState implements IResizableList
 			.setLoop(true)
 			.setUserCanPause(true)
 		);
+		
+		EffectManagerStateI.i().add(ieffLinkedDragEffect);
 	}
 	
 	protected Entity getTopMostDialog() {
@@ -269,7 +272,7 @@ public class DialogHierarchyI extends AbstractAppState implements IResizableList
 			pnlBlocker.setBackground(new QuadBackgroundComponent(colorBlocker));
 			
 			//the blocker has not a parent panel! so it will let the dialog be dragged directly!
-			DragParentestListenerI.i().applyAt(pnlBlocker, rzp);  
+			DragParentestPanelListenerI.i().applyAt(pnlBlocker, rzp);  
 			
 			CursorEventControl.addListenersToSpatial(pnlBlocker,blockerListener);
 			
@@ -371,12 +374,19 @@ public class DialogHierarchyI extends AbstractAppState implements IResizableList
 		this.ieffParentToChildLink=i;
 	}
 	
+	/**
+	 * when there is a parent and child link
+	 * @param i
+	 */
+	public void setDragEffect(IEffect i){
+		this.ieffLinkedDragEffect =i;
+	}
+	
 	protected void applyParentToChildLinkEffect(ResizablePanel rzpParent, ResizablePanel rzpChild) {
 		IEffect effLink = ieffParentToChildLink.clone();
 		
-		effLink.setOwner(rzpParent);
-
 		effLink
+			.setOwner(rzpParent)
 			.setFollowFromTarget(rzpParent, null)
 			.setFollowToTarget(rzpChild, null)
 			.setPlay(true)
@@ -796,6 +806,29 @@ public class DialogHierarchyI extends AbstractAppState implements IResizableList
 			
 			updateFocusTime(ent,rzp);
 		}
+		
+		updateDragEffect();
+	}
+	
+	private void updateDragEffect(){
+		Panel pnl = DragParentestPanelListenerI.i().getParentestBeingDragged();
+		if(pnl!=null && ResizablePanel.class.isInstance(pnl)){
+			EntityId entid = getEntityIdFor((ResizablePanel)pnl);
+			EntityId entidParent = ed.getComponent(entid, ShownState.class).getHierarchyParent();
+			if(entidParent!=null){
+				ResizablePanel rzpParent = ed.getComponent(entidParent, GuiLink.class).getResizablePanel();
+				if(!ieffLinkedDragEffect.isPlaying()){
+					ieffLinkedDragEffect
+						.setOwner(pnl)
+						.setFollowFromTarget(rzpParent, null)
+						.setFollowToTarget(pnl, null)
+						.setPlay(true)
+						;
+				}
+			}
+		}else{
+			ieffLinkedDragEffect.setPlay(false);
+		}
 	}
 	
 	private void updateZOrder(ResizablePanel rzp){
@@ -818,7 +851,7 @@ public class DialogHierarchyI extends AbstractAppState implements IResizableList
 		
 		// being dragged
 		if(entidUpdLFTime==null){
-			Panel pnlParentestDragged = DragParentestListenerI.i().getParentestBeingDragged();
+			Panel pnlParentestDragged = DragParentestPanelListenerI.i().getParentestBeingDragged();
 			if(pnlParentestDragged!=null && ResizablePanel.class.isInstance(pnlParentestDragged)){
 				entidUpdLFTime=getEntityIdFor((ResizablePanel)pnlParentestDragged);
 			}
@@ -930,17 +963,37 @@ public class DialogHierarchyI extends AbstractAppState implements IResizableList
 			if(rp!=null){
 				ResizablePanel rzpParent = ed.getComponent(entidParent, GuiLink.class).getResizablePanel();
 				
+//				Panel panelUserAction = DragParentestPanelListenerI.i().getParentestBeingDragged();
+//				if(panelUserAction==null){
+//					panelUserAction=getCurrentlyBeingResized();
+//				}
+				
 				if(
-						DragParentestListenerI.i().getParentestBeingDragged()==rzpSource
+						DragParentestPanelListenerI.i().getParentestBeingDragged()==rzpSource
 						||
 						getCurrentlyBeingResized()==rzpSource
 				){
+//				if(panelUserAction!=null){
 					/**
 					 * update displacement
 					 */
 					ed.setComponent(entid, new RelativePos(
 							rzpSource.getLocalTranslation().subtract(rzpParent.getLocalTranslation()) ) );
+					
+//					if(!ieffLinkedDragEffect.isPlaying()){
+//						ieffLinkedDragEffect
+//							.setOwner(rzpSource)
+//							.setFollowFromTarget(rzpParent, null)
+//							.setFollowToTarget(rzpSource, null)
+//							.setPlay(true)
+//							;
+//					}
 				}else{
+//					if(ieffLinkedDragEffect.isPlaying()){
+//						ieffLinkedDragEffect.setPlay(false);
+//						ieffLinkedDragEffect.setOwner(null);
+//					}
+					
 					/**
 					 * set position relatively to parent
 					 */

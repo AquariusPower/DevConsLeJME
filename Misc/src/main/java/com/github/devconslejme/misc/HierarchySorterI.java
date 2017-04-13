@@ -1,28 +1,28 @@
 /* 
-Copyright (c) 2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
-
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification, are permitted 
-provided that the following conditions are met:
-
-1.	Redistributions of source code must retain the above copyright notice, this list of conditions 
-	and the following disclaimer.
-
-2.	Redistributions in binary form must reproduce the above copyright notice, this list of conditions 
-	and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-3.	Neither the name of the copyright holder nor the names of its contributors may be used to endorse 
-	or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED 
-WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
-PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR 
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
-IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+	Copyright (c) 2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+	
+	All rights reserved.
+	
+	Redistribution and use in source and binary forms, with or without modification, are permitted 
+	provided that the following conditions are met:
+	
+	1.	Redistributions of source code must retain the above copyright notice, this list of conditions 
+		and the following disclaimer.
+	
+	2.	Redistributions in binary form must reproduce the above copyright notice, this list of conditions 
+		and the following disclaimer in the documentation and/or other materials provided with the distribution.
+	
+	3.	Neither the name of the copyright holder nor the names of its contributors may be used to endorse 
+		or promote products derived from this software without specific prior written permission.
+	
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED 
+	WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR 
+	ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+	LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
+	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 package com.github.devconslejme.misc;
@@ -32,15 +32,21 @@ import java.util.Collections;
 import java.util.Comparator;
 
 /**
-* TODO work with java.util.concurrent.DelayQueue?
-* @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
-*/
+ * turn a hierarchical tree into a list
+ * based on priority and activation time
+ * mainly for dialogs
+ * 
+ * FIXME an activated child of the same parent wont gain priority over the others (of the same parent)
+ * 
+ * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+ */
 public class HierarchySorterI {
 	public static HierarchySorterI i(){return GlobalManagerI.i().get(HierarchySorterI.class);}
 	
 	public static enum EHierarchy{
-		Top,
+		Top, //DevCons, alerts and thin panels
 		Normal, //default
+		Bottom, //background anything
 		;
 		public String s(){return toString();}
 	}
@@ -74,6 +80,7 @@ public class HierarchySorterI {
 		 */
 		ArrayList<T> ahNormal = new ArrayList<T>(); 
 		ArrayList<T> ahTop = new ArrayList<T>();
+		ArrayList<T> ahBottom = new ArrayList<T>();
 		for(IHierarchy ih:ahMainList.toArray(new IHierarchy[0])){
 			if(ih.getHierarchyParent()==null){
 				switch (ih.getHierarchyPriority()) {
@@ -82,6 +89,9 @@ public class HierarchySorterI {
 						break;
 					case Normal:
 						ahNormal.add((T)ih);
+						break;
+					case Bottom:
+						ahBottom.add((T)ih);
 						break;
 				}
 				
@@ -94,12 +104,15 @@ public class HierarchySorterI {
 		ahChilds.addAll(ahMainList);
 		ahMainList.clear();
 		
-		Collections.sort(ahNormal,cmprByLastActivationTime);
 		Collections.sort(ahTop,cmprByLastActivationTime);
+		Collections.sort(ahNormal,cmprByLastActivationTime);
+		Collections.sort(ahBottom,cmprByLastActivationTime);
+		
 		Collections.sort(ahChilds,cmprByLastActivationTime);
 		
 		//////////////////////////// populate main
-		// add roots 
+		// add roots, THIS ORDER MATTERS!
+		ahMainList.addAll(ahBottom);
 		ahMainList.addAll(ahNormal);
 		ahMainList.addAll(ahTop);
 		

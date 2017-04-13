@@ -44,8 +44,8 @@ import com.simsilica.lemur.event.CursorMotionEvent;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class DragParentestListenerI implements CursorListener{
-	public static DragParentestListenerI i(){return GlobalManagerI.i().get(DragParentestListenerI.class);}
+public class DragParentestPanelListenerI implements CursorListener{
+	public static DragParentestPanelListenerI i(){return GlobalManagerI.i().get(DragParentestPanelListenerI.class);}
 	
 	private boolean bDragging = false;
 	private boolean bHightlightToo = true;
@@ -168,7 +168,7 @@ public class DragParentestListenerI implements CursorListener{
 	}
 	
 	private String getUserDataIdFor(EDrag e){
-		return DragParentestListenerI.class.getName()+"/"+e;
+		return DragParentestPanelListenerI.class.getName()+"/"+e;
 	}
 
 	public boolean isHightlightToo() {

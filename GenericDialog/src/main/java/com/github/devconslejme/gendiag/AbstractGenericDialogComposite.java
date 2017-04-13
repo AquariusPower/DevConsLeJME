@@ -31,7 +31,7 @@ import java.util.HashMap;
 
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
-import com.github.devconslejme.misc.lemur.DragParentestListenerI;
+import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.simsilica.lemur.Container;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.BorderLayout;
@@ -148,7 +148,7 @@ public abstract class AbstractGenericDialogComposite implements IResizableListen
 	//	this.hmSection.put(ESection.Info, 
 		cfgSection(getSection(ESection.Info),BorderLayout.Position.North,EEdge.Bottom);
 		CursorEventControl.addListenersToSpatial(
-				getSection(ESection.Info).getContents(), DragParentestListenerI.i());
+				getSection(ESection.Info).getContents(), DragParentestPanelListenerI.i());
 	//	MiscLemurI.i().applySimpleDragParentestListener();
 	//	this.hmSection.put(ESection.Options,
 		cfgSection(getSection(ESection.Options),BorderLayout.Position.Center,EEdge.Bottom);

@@ -32,7 +32,7 @@ import com.github.devconslejme.gendiag.es.DialogHierarchyI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.UserDataI;
-import com.github.devconslejme.misc.lemur.DragParentestListenerI;
+import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.es.EntityId;
@@ -133,7 +133,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		
 		Button btn = new Button(strInfo);
 		rzp.setContents(btn);
-		DragParentestListenerI.i().applyAt(btn);
+		DragParentestPanelListenerI.i().applyAt(btn);
 		
 		return rzp;
 	}

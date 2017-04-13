@@ -44,13 +44,14 @@ import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
 import com.github.devconslejme.gendiag.es.DialogHierarchyI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.HierarchySorterI.EHierarchy;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.lemur.ClickToPositionCaratListenerI;
-import com.github.devconslejme.misc.lemur.DragParentestListenerI;
+import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.PopupHelpListenerI;
@@ -622,7 +623,7 @@ public class DevConsPluginStateI extends AbstractAppState {
 		tfInput = new TextField("",getStyle());
 		cntrMain.addChild(tfInput, BorderLayout.Position.South);
 		
-		DragParentestListenerI.i().applyAt(tfInput);
+		DragParentestPanelListenerI.i().applyAt(tfInput);
 		
 		BindKeyI.i().prepareKeyMappings();
 		
@@ -759,7 +760,7 @@ public class DevConsPluginStateI extends AbstractAppState {
 				CursorEventControl.addListenersToSpatial(btn, btnclk);
 //				btn.addClickCommands(btnclk);
 			}
-			DragParentestListenerI.i().applyAt(pnl);
+			DragParentestPanelListenerI.i().applyAt(pnl);
 //			else
 //			if (pnl instanceof Label) {
 //				Label lbl = (Label)pnl;
@@ -905,8 +906,9 @@ public class DevConsPluginStateI extends AbstractAppState {
 		
 		hrpMain = new ResizablePanel(getStyle());
 		hrpMain.setName(DevConsPluginStateI.class.getSimpleName());//debug name
-		DialogHierarchyI.i().setAsHierarchyTop(
-				DialogHierarchyI.i().createEntity(hrpMain,"DevCons"));
+		DialogHierarchyI.i().setHierarchyPriority(
+				DialogHierarchyI.i().createEntity(hrpMain,"DevCons"),
+				EHierarchy.Top);
 		hrpMain.setContents(cntrMain);
 //		hrpMain.addResizableListener(this);
 		

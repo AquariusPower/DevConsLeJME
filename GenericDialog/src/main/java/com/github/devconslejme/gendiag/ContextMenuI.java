@@ -38,7 +38,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
-import com.github.devconslejme.misc.lemur.DragParentestListenerI;
+import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 import com.simsilica.es.EntityId;
@@ -186,7 +186,7 @@ public class ContextMenuI {
 		
 		int i=0;
 		Label lbl = new Label("Context:"+btnOwner.getText());
-		DragParentestListenerI.i().applyAt(lbl);
+		DragParentestPanelListenerI.i().applyAt(lbl);
 		cntr.addChild(lbl, i++, 0);
 		for(Entry<String, Button> entry : (cm.hmContextOptions).entrySet()){
 			cntr.addChild(entry.getValue(), i++, 0);
