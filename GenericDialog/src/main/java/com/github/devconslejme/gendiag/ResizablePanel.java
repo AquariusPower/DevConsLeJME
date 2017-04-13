@@ -93,7 +93,7 @@ public class ResizablePanel extends Panel {
 		/**
 		 * it is meant to provide insta updates whenever changes happen to this panel.
 		 */
-		public void updateLogicalState(float tpf, ResizablePanel rzpSource);
+		public void resizerUpdatedLogicalStateEvent(float tpf, ResizablePanel rzpSource);
 		public void removedFromParentEvent(ResizablePanel rzpSource);
 		public void resizedEvent(ResizablePanel rzpSource,Vector3f v3fNewSize);
 		public void endedResizingEvent(ResizablePanel rzpSource);
@@ -429,7 +429,7 @@ public class ResizablePanel extends Panel {
 		
 		if(bUpdateLogicalStateSuccess){
 			for(IResizableListener iuls:aiulslList){
-				iuls.updateLogicalState(tpf,this);
+				iuls.resizerUpdatedLogicalStateEvent(tpf,this);
 			}
 		}
 	}

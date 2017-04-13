@@ -25,23 +25,56 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.misc.jme;
+package com.github.devconslejme.misc.lemur;
 
-import com.github.devconslejme.misc.GlobalManagerI;
-import com.jme3.app.Application;
-
+import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector3f;
+import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PkgCfgI {
-	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
+public interface IEffect<THIS extends IEffect>{
+	public boolean isPlaying();
 	
-	public void configure(Application app){
-		com.github.devconslejme.misc.PkgCfgI.i().configure();
-		
-		GlobalManagerI.i().put(Application.class, app);  //first!
-		SimulationTimeStateI.i().configure();
-		QueueStateI.i().configure();
-	}
+	public Vector3f getLocationFrom();
+
+	public Vector3f getLocationTo();
+
+	void assertNotDiscarded();
+	
+	THIS setOwner(Spatial sptOwner);
+	
+	THIS setColor(ColorRGBA colorRef);
+
+	THIS setFromTo(Vector3f v3fFrom, Vector3f v3fTo);
+
+	THIS setNodeParent(Node node);
+
+	THIS setFollowToMouse(boolean b);
+
+	THIS setFollowToTarget(Spatial spt, Vector3f v3fDisplacement);
+
+	THIS setFollowFromTarget(Spatial spt, Vector3f v3fDisplacement);
+	
+	THIS getThis();
+	
+	THIS clone();
+	
+//		public String getUId();
+	
+	public void assertConfigIsValid();
+	
+	public void play(float tpf);
+	
+	public Object getOwner();
+	
+	public THIS setSkipDiscardingByOwner();
+
+	public THIS setPlay(boolean b);
+	
+	public THIS setAsDiscarded();
+
+	public boolean isDiscardingByOwner();
 }

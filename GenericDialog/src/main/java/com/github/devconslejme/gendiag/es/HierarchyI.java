@@ -45,6 +45,8 @@ import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestListenerI;
+import com.github.devconslejme.misc.lemur.EffectElectricity;
+import com.github.devconslejme.misc.lemur.EffectLine;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
@@ -197,13 +199,20 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 		private EntityId hierarchyParent=null;
 		private boolean	bHierarchyTop=false;
 		private boolean	bHierarchyModal=false;
+		private boolean bShowLinkToChild=true;
 		
 		public ShownState() {}
 		
-		public ShownState(EntityId hierarchyParent, Boolean bHierarchyTop,	Boolean bHierarchyModal) {
+		public ShownState(
+				EntityId hierarchyParent, 
+				Boolean bHierarchyTop,	
+				Boolean bHierarchyModal,
+				Boolean bShowLinkToChild
+		) {
 			this.hierarchyParent = hierarchyParent;
 			if(bHierarchyTop!=null)this.bHierarchyTop = bHierarchyTop;
 			if(bHierarchyModal!=null)this.bHierarchyModal = bHierarchyModal;
+			if(bShowLinkToChild!=null)this.bShowLinkToChild=bShowLinkToChild;
 		}
 
 		public EntityId getHierarchyParent() {
@@ -216,6 +225,10 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 
 		public boolean isHierarchyModal() {
 			return bHierarchyModal;
+		}
+
+		public boolean isShowLinkToChild() {
+			return bShowLinkToChild;
 		}
 	}
 	
@@ -277,6 +290,32 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 	 * @return 
 	 */
 	public void showDialogAsModal(EntityId entidParent, EntityId entidChild){
+		showAndApplyHierarchyChild(entidParent,entidChild,true);
+//		QueueI.i().enqueue(new CallableX() {
+//			@Override
+//			public Boolean call() {
+//				if(!ed.getComponent(entidParent, Initialized.class).isInitialized())return false;
+//				if(!ed.getComponent(entidChild, Initialized.class).isInitialized())return false;
+//				
+//				Entity entParent = ed.getEntity(entidParent, getAllRequiredComponentTypesArray());
+//				Entity entChild = ed.getEntity(entidChild, getAllRequiredComponentTypesArray());
+//				showAndApplyHierarchyChild(entParent,entChild,true);
+//				
+//				return true;
+//			}
+//		});
+	}
+	
+	/**
+	 * will close if parent closes
+	 * @param compChild
+	 * @return 
+	 */
+	public void showDialogAsModeless(EntityId entidParent, EntityId entidChild){
+		showAndApplyHierarchyChild(entidParent,entidChild,false);
+	}
+	
+	private void showAndApplyHierarchyChild(EntityId entidParent, EntityId entidChild, boolean bModal){
 		QueueI.i().enqueue(new CallableX() {
 			@Override
 			public Boolean call() {
@@ -285,37 +324,34 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 				
 				Entity entParent = ed.getEntity(entidParent, getAllRequiredComponentTypesArray());
 				Entity entChild = ed.getEntity(entidChild, getAllRequiredComponentTypesArray());
-				showAndApplyHierarchyChild(entParent,entChild,true);
+				
+				ResizablePanel rzpChild = entChild.get(GuiLink.class).getResizablePanel();
+				
+				ShownState ssChild = entChild.get(ShownState.class);
+//				entChild.set(new ShownState(
+				ed.setComponent(entChild.getId(),new ShownState(
+					entParent.getId(), 
+					ssChild==null?null:ssChild.isHierarchyTop(), 
+					bModal,
+					null)
+				);
+//				setHierarchyParentAtChild(entParent,entChild);
+				if(bModal)enableBlockingLayer(entParent,true);
+				
+				showDialog(rzpChild); //show it
+				setFocusRecursively(entChild.getId());
+//				updateLastFocusAppTimeNano(entChild.getId());
+				
+				ShownState ssParent = entChild.get(ShownState.class);
+				if(ssParent.isShowLinkToChild()){
+					ResizablePanel rzpParent = entParent.get(GuiLink.class).getResizablePanel();
+					applyParentToChildLinkEffect(rzpParent,rzpChild);
+				}
 				
 				return true;
 			}
 		});
-	}
-	
-	/**
-	 * will close if parent closes
-	 * @param compChild
-	 * @return 
-	 */
-	public void showDialogAsModeless(Entity entParent, Entity entChild){
-		showAndApplyHierarchyChild(entParent,entChild,false);
-	}
-	
-	private void showAndApplyHierarchyChild(Entity entParent, Entity entChild, boolean bModal){
-		ResizablePanel rzpChild = entChild.get(GuiLink.class).getResizablePanel();
 		
-		ShownState ss = entChild.get(ShownState.class);
-//		entChild.set(new ShownState(
-		ed.setComponent(entChild.getId(),new ShownState(
-			entParent.getId(), 
-			ss==null?null:ss.isHierarchyTop(), 
-			bModal));
-//		setHierarchyParentAtChild(entParent,entChild);
-		if(bModal)enableBlockingLayer(entParent,true);
-		
-		showDialog(rzpChild); //show it
-		setFocusRecursively(entChild.getId());
-//		updateLastFocusAppTimeNano(entChild.getId());
 	}
 	
 //	private void setHierarchyParentAtChild(Entity entParent, Entity entChild) {
@@ -323,7 +359,20 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 //		entChild.set(new ShownState(entParent.getId(), ss.isHierarchyTop(), ss.isHierarchyModal()));
 //	}
 	
-//	ArrayList<ResizablePanel> arzpZOrderList = new ArrayList<ResizablePanel>();
+	protected void applyParentToChildLinkEffect(ResizablePanel rzpParent, ResizablePanel rzpChild) {
+		EffectLine effLink = new EffectLine();
+//		EffectElectricity effLink = new EffectElectricity();
+		
+		effLink.setOwner(rzpParent);
+
+		effLink
+			.setFollowFromTarget(rzpParent, null)
+			.setFollowToTarget(rzpChild, null)
+			.setPlay(true)
+			;
+	}
+
+	//	ArrayList<ResizablePanel> arzpZOrderList = new ArrayList<ResizablePanel>();
 	public void showDialog(ResizablePanel rzp) {
 //		if(arzpZOrderList.contains(rzp)){
 //			arzpZOrderList.remove(rzp);
@@ -485,7 +534,7 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 	};
 	
 	/**
-	 * TODO generalize and put at the simple misc package
+	 * TODO generalize and put at the simple @MiscPackage
 	 * the last items will be the ones shown above all others
 	 * @param aentMainList
 	 */
@@ -696,8 +745,8 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 		}
 		
 		// being resized
-		if(entidUpdLFTime==null && rzpCurrentlyBeingResized!=null){
-			entidUpdLFTime=getEntityIdFor(rzpCurrentlyBeingResized);
+		if(entidUpdLFTime==null && getCurrentlyBeingResized()!=null){
+			entidUpdLFTime=getEntityIdFor(getCurrentlyBeingResized());
 		}
 		
 		if(entidUpdLFTime!=null){
@@ -705,7 +754,11 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 //			updateLastFocusAppTimeNano(entidUpdLFTime);
 		}
 	}
-
+	
+	public ResizablePanel getCurrentlyBeingResized(){
+		return rzpCurrentlyBeingResized;
+	}
+	
 	public boolean isHasAnyDialogOpened() {
 		return (getHierarchyDialogs(null).size()>0);
 	}
@@ -755,7 +808,10 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 			new ShownState(
 				ss==null?null:ss.getHierarchyParent(), 
 				true, 
-				ss==null?null:ss.isHierarchyModal()));
+				ss==null?null:ss.isHierarchyModal(),
+				null
+			)
+		);
 	}
 	
 	public EntityId getEntityIdFor(ResizablePanel rzp){
@@ -784,7 +840,7 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 	}
 	
 	@Override
-	public void updateLogicalState(float tpf, ResizablePanel rzpSource) {
+	public void resizerUpdatedLogicalStateEvent(float tpf, ResizablePanel rzpSource) {
 		EntityId entid = getEntityIdFor(rzpSource);
 		updateBlocker(tpf, entid, rzpSource);
 		
@@ -794,7 +850,11 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 			if(rp!=null){
 				ResizablePanel rzpParent = ed.getComponent(entidParent, GuiLink.class).getResizablePanel();
 				
-				if(DragParentestListenerI.i().getParentestBeingDragged()==rzpSource){
+				if(
+						DragParentestListenerI.i().getParentestBeingDragged()==rzpSource
+						||
+						getCurrentlyBeingResized()==rzpSource
+				){
 					/**
 					 * update displacement
 					 */

@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+	Copyright (c) 2016-2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 	
 	All rights reserved.
 
@@ -25,23 +25,33 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.misc.jme;
-
-import com.github.devconslejme.misc.GlobalManagerI;
-import com.jme3.app.Application;
-
+package com.github.devconslejme.misc;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PkgCfgI {
-	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
+public enum EType{
+	Int,
+	Long,
+	Float,
+	Double,
+	String,
+	Boolean,
+	;
 	
-	public void configure(Application app){
-		com.github.devconslejme.misc.PkgCfgI.i().configure();
+	public static EType forClass(Class clValue) throws UnsupportedOperationException{ //@STATIC_OK
+		EType e = null;
+		if(clValue==Float.class		|| clValue==float.class		){e=EType.Float;}else
+		if(clValue==Double.class	|| clValue==double.class	){e=EType.Double;}else
+		if(clValue==Integer.class	|| clValue==int.class			){e=EType.Int;}else
+		if(clValue==Long.class		|| clValue==long.class		){e=EType.Long;}else
+		if(clValue==Boolean.class	|| clValue==boolean.class	){e=EType.Boolean;}else
+		if(clValue==String.class														){e=EType.String;}else
+		{
+			throw new UnsupportedOperationException("unsupported value class type "+clValue.getName());
+		}
 		
-		GlobalManagerI.i().put(Application.class, app);  //first!
-		SimulationTimeStateI.i().configure();
-		QueueStateI.i().configure();
+		return e;
 	}
+	
 }

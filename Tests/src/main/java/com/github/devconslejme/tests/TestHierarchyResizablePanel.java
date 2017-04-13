@@ -68,7 +68,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 				createParentChild(400);
 				return true;
 			}
-		}.setDelaySeconds(10.0f)); //just to test if ES new entity initialization will be called at a later time
+		}.setDelaySeconds(1.0f));
 		
 		// multi child hierarchy
 		ResizablePanel rzpA = createPanel(new Vector3f(300,700,0),"MultiA",null);
@@ -96,17 +96,17 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 	@SuppressWarnings("unchecked")
 	private void createParentChild(int iBaseY) {
 		ResizablePanel rzpChild = createPanel(new Vector3f(200,iBaseY+200,20), "child"+iBaseY, "click to close");
-		((Button)rzpChild.getContents()).addClickCommands(new Command<Button>(){
+		((Button)rzpChild.getContents()).addClickCommands(new Command<Button>(){ //FIXME this is not compatible with CursorListener!
 			@Override
 			public void execute(Button source) {
-				rzpChild.removeFromParent();
+				rzpChild.removeFromParent(); //FIXME not being reached
 			}
 		});
 		
 		ResizablePanel rzpParent = createPanel(new Vector3f(100,iBaseY+100,10), "parent"+iBaseY, "click to open modal");
-		((Button)rzpChild.getContents()).addClickCommands(new Command<Button>(){
+		((Button)rzpChild.getContents()).addClickCommands(new Command<Button>(){ //FIXME this is not compatible with CursorListener!
 			@Override
-			public void execute(Button source) {
+			public void execute(Button source) { //FIXME not being reached
 				EntityId entidChild = UserDataI.i().getUserDataPSH(rzpChild,EntityId.class);
 				HierarchyI.i().showDialogAsModal(
 					UserDataI.i().getUserDataPSH(rzpParent,EntityId.class),
@@ -115,10 +115,9 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 			}
 		});
 		
-		// show it all
 		HierarchyI.i().showDialog(rzpParent);
 	}
-
+	
 	private ResizablePanel createPanel(Vector3f pos,String strName,String strInfo) {
 		if(strInfo==null)strInfo=strName;
 		

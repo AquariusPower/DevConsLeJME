@@ -232,5 +232,10 @@ public class DetailedException extends NullPointerException{
 	public static void performBugTrackChecks() {
 		chkprb.performChecks(getExitErrorMessage(), getExitRequestCause());
 	}
+	
+	public static <T> T throwIfNull(T obj, Object... aobj){
+		if(obj==null)throw new DetailedException("is null",obj,aobj);
+		return obj;
+	}
 }
 

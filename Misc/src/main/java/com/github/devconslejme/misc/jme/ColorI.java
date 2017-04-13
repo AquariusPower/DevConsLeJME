@@ -27,9 +27,12 @@
 
 package com.github.devconslejme.misc.jme;
 
+import java.util.HashMap;
+
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.jme3.app.Application;
+import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.FastMath;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -105,4 +108,23 @@ public class ColorI {
 //		
 //		return f;
 //	}
+
+	HashMap<Integer,Material> hmMatUnshadedColor = new HashMap<Integer,Material>();
+	/**
+	 * uses a cache too
+	 * @param color
+	 * @return
+	 */
+	public Material retrieveMaterialUnshadedColor(ColorRGBA color){
+		int i = color.asIntRGBA();
+		Material mat = hmMatUnshadedColor.get(i);
+		if(mat==null){
+			mat = new Material(GlobalManagerI.i().get(Application.class).getAssetManager(), 
+				"Common/MatDefs/Misc/Unshaded.j3md");
+			mat.setColor("Color", color);
+			hmMatUnshadedColor.put(i,mat);
+		}
+		return mat;
+	}
+
 }

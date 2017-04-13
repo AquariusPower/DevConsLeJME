@@ -27,19 +27,27 @@
 
 package com.github.devconslejme.misc.jme;
 
+import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
 import java.util.ArrayList;
 
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI.CallableWeak;
 import com.github.devconslejme.misc.QueueI.CallableX;
+import com.jme3.app.Application;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.font.BitmapText;
 import com.jme3.font.LineWrapMode;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Mesh;
+import com.jme3.scene.Mesh.Mode;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.VertexBuffer.Type;
+import com.jme3.util.BufferUtils;
 
 /**
  * DevSelfNote: Misc lib class should not exist. As soon coehsion is possible, do it!
@@ -162,5 +170,33 @@ public class MiscJmeI {
 		
 		return asptList;
 	}
+	
+	public Vector3f getMouseCursorPosition(){
+		Vector2f v2f = GlobalManagerI.i().get(Application.class).getInputManager().getCursorPosition();
+		return new Vector3f(v2f.x,v2f.y,0);
+	}
 
+	/**
+	 * 
+	 * @param av3f each dot from the multi-line
+	 * @return
+	 */
+	public Mesh updateMultiLineMesh(Mesh mesh, Vector3f[] av3f){
+		if(mesh==null)mesh=new Mesh();
+//		mesh.setStreamed();
+		mesh.setMode(Mode.LineStrip);
+		
+		FloatBuffer fbuf = BufferUtils.createFloatBuffer(av3f);
+		mesh.setBuffer(Type.Position,3,fbuf);
+		
+		ShortBuffer sbuf = BufferUtils.createShortBuffer(av3f.length);
+		for(Short si=0;si<sbuf.capacity();si++){sbuf.put(si);}
+		
+		mesh.setBuffer(Type.Index,1,sbuf);
+		
+		mesh.updateBound();
+		mesh.updateCounts();
+		
+		return mesh;
+	}
 }

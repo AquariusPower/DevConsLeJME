@@ -163,7 +163,7 @@ public final class SimpleGenericDialogComposite extends AbstractGenericDialogCom
 	}
 	
 	@Override
-	public void updateLogicalState(float tpf,ResizablePanel rzp) {
+	public void resizerUpdatedLogicalStateEvent(float tpf,ResizablePanel rzp) {
 		update(tpf);
 	}
 
