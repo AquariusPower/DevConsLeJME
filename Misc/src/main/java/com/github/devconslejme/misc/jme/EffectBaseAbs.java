@@ -29,6 +29,7 @@ package com.github.devconslejme.misc.jme;
 import com.github.devconslejme.misc.DetailedException;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
+import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
@@ -54,7 +55,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 	private Vector3f	v3fHoldPreviousTo=new Vector3f();
 	private int	iMaxHoldMilis = 1000;
 	
-	private ColorRGBA	colorRefDefault=ColorRGBA.White.clone();
+	private ColorRGBA	colorRefDefault=ColorI.i().colorChangeCopy(ColorRGBA.Cyan, 0f, 0.5f);
 	private ColorRGBA	colorRefBase;
 	private Node	nodeParent;
 	private Geometry	geom;
@@ -74,6 +75,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 		this.geom.setMesh(mesh);
 	}
 	
+	@Override
 	public Vector3f getLocationFrom() {
 		Vector3f v3fTargetSpot = v3fFrom==null?null:v3fFrom.clone();
 		if(sptFollowFrom!=null){
@@ -83,6 +85,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 		return v3fTargetSpot;
 	}
 	
+	@Override
 	public Vector3f getLocationTo() {
 		Vector3f v3fTargetSpot = v3fTo==null?null:v3fTo.clone();
 		if(bToMouse){
@@ -152,6 +155,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 		this.bToMouse = bToMouse;
 	}
 
+	@Override
 	public void assertNotDiscarded(){
 		if(bDiscarded){
 			throw new DetailedException("cant work with a discarded effect");

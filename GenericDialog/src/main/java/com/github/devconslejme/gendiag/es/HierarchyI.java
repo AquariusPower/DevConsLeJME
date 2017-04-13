@@ -42,9 +42,11 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.jme.EffectArrow;
 import com.github.devconslejme.misc.jme.EffectElectricity;
 import com.github.devconslejme.misc.jme.EffectLine;
 import com.github.devconslejme.misc.jme.EffectManagerStateI;
+import com.github.devconslejme.misc.jme.IEffect;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestListenerI;
@@ -103,6 +105,7 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 	private float	fCurrentOrderPosZ;
 	private ColorRGBA	colorBlocker = ColorI.i().colorChangeCopy(ColorRGBA.Red, 0f, 0.15f);
 	private ColorRGBA	colorInvisible = new ColorRGBA(0,0,0,0);
+	private IEffect	ieffParentToChildLink = new EffectArrow();
 	
 	public void configure(Node nodeToMonitor, float fBeginOrderZ){
 		this.fBeginOrderPosZ=fBeginOrderZ;
@@ -360,9 +363,12 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 //		entChild.set(new ShownState(entParent.getId(), ss.isHierarchyTop(), ss.isHierarchyModal()));
 //	}
 	
+	public void setParentToChildLinkEffect(IEffect i){
+		this.ieffParentToChildLink=i;
+	}
+	
 	protected void applyParentToChildLinkEffect(ResizablePanel rzpParent, ResizablePanel rzpChild) {
-		//EffectLine effLink = new EffectLine();
-		EffectElectricity effLink = new EffectElectricity();
+		IEffect effLink = ieffParentToChildLink.clone();
 		
 		effLink.setOwner(rzpParent);
 

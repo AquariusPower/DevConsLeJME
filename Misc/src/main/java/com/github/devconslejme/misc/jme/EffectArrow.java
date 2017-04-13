@@ -1,5 +1,5 @@
 /* 
-Copyright (c) 2016-2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+Copyright (c) 2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 
 All rights reserved.
 
@@ -28,30 +28,28 @@ package com.github.devconslejme.misc.jme;
 
 import com.jme3.math.Vector3f;
 import com.jme3.scene.debug.Arrow;
-import com.jme3.scene.shape.Line;
 
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class EffectLine extends EffectBaseAbs<EffectLine>{
+public class EffectArrow extends EffectBaseAbs<EffectArrow>{
 
 	@Override
-	public EffectLine getThis() {
+	public EffectArrow getThis() {
 		return this;
 	}
 	
-	public EffectLine() {
+	public EffectArrow() {
 		super();
-		getGeom().setMesh(new Line(new Vector3f(0,0,0),new Vector3f(1,1,1)));
+		getGeom().setMesh(new Arrow(new Vector3f(1,1,1)));
 	}
 	
 	@Override
 	protected void playWork() {
-		((Line)getGeom().getMesh()).updatePoints(
-			new Vector3f(),
-			new Vector3f(0,0,getLocationFrom().distance(getLocationTo())));
-		
+		((Arrow)getGeom().getMesh()).setArrowExtent(new Vector3f(0,0,getLocationFrom().distance(getLocationTo())));
+//		getGeom().setLocalRotation(getGeom().getLocalRotation().add(new Quaternion(0.1f, 0.1f, 0.1f, 0.1f)));
+		getGeom().setLocalScale(0.025f, 0.025f, 1f);
 		getGeom().lookAt(getLocationTo(), Vector3f.UNIT_Y);
 	}
 }

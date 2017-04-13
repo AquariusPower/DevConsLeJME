@@ -32,6 +32,7 @@ import java.util.HashMap;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.Application;
 import com.jme3.material.Material;
+import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
 
 /**
@@ -122,6 +123,8 @@ public class ColorI {
 			mat = new Material(GlobalManagerI.i().get(Application.class).getAssetManager(), 
 				"Common/MatDefs/Misc/Unshaded.j3md");
 			mat.setColor("Color", color);
+			if(color.a<1f)mat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
+      //			mat.setTransparent(color.a<1f);
 			hmMatUnshadedColor.put(i,mat);
 		}
 		return mat;
