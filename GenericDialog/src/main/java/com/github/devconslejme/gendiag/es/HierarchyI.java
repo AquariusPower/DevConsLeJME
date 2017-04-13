@@ -37,14 +37,14 @@ import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.HierarchySorterI.EHierarchy;
+import com.github.devconslejme.misc.HierarchySorterI.IHierarchy;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.EffectArrow;
-import com.github.devconslejme.misc.jme.EffectElectricity;
-import com.github.devconslejme.misc.jme.EffectLine;
 import com.github.devconslejme.misc.jme.EffectManagerStateI;
 import com.github.devconslejme.misc.jme.IEffect;
 import com.github.devconslejme.misc.jme.MiscJmeI;
@@ -214,8 +214,8 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 				Boolean bShowLinkToChild
 		) {
 			this.hierarchyParent = hierarchyParent;
-			if(bHierarchyTop!=null)this.bHierarchyTop = bHierarchyTop;
-			if(bHierarchyModal!=null)this.bHierarchyModal = bHierarchyModal;
+			if(bHierarchyTop   !=null)this.bHierarchyTop   = bHierarchyTop;
+			if(bHierarchyModal !=null)this.bHierarchyModal = bHierarchyModal;
 			if(bShowLinkToChild!=null)this.bShowLinkToChild=bShowLinkToChild;
 		}
 
@@ -234,6 +234,7 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 		public boolean isShowLinkToChild() {
 			return bShowLinkToChild;
 		}
+		
 	}
 	
 	public void setBlockerColor(ColorRGBA color){
@@ -247,18 +248,20 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 //	  ed.setComponent(entid, new Initialized(false));
 //	  ed.setComponent(entid, new Name(strName));
 	  
-		if(ed.getComponent(ent.getId(), ShownState.class)==null){
+//		if(ed.getComponent(ent.getId(), ShownState.class)==null){
+		//if(ent.get(ShownState.class)==null){
 			ed.setComponent(ent.getId(), new ShownState());
-		}
+//		}
 		
-		if(ed.getComponent(ent.getId(), LastFocusTime.class)==null){
+//		if(ed.getComponent(ent.getId(), LastFocusTime.class)==null){
+		//if(ent.get(LastFocusTime.class)==null){
 			ed.setComponent(ent.getId(), new LastFocusTime());
-		}
+//		}
 		
 		/////////////// blocker
 		ResizablePanel rzp = ent.get(GuiLink.class).getResizablePanel();
 		
-		if(ed.getComponent(ent.getId(), Blocker.class)==null){
+//		if(ed.getComponent(ent.getId(), Blocker.class)==null){
 			Panel pnlBlocker = new Panel("");
 			ed.setComponent(ent.getId(),new Blocker(pnlBlocker,null)); //ent.set(
 			
@@ -270,7 +273,7 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 			CursorEventControl.addListenersToSpatial(pnlBlocker,blockerListener);
 			
 			UserDataI.i().setUserDataPSH(pnlBlocker,ent.getId());
-		}
+//		}
 		
 		// panel
 		rzp.addUpdateLogicalStateListener(this);
@@ -435,19 +438,23 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 		}
 	}
 	
-	private void updateLastFocusAppTimeNano(EntityId entid) {
+	private EntityId updateLastFocusAppTimeNano(EntityId entid) {
 		EntityId entidParent = entid;
 		EntityId entidParentest = entidParent;
 //		System.err.println("cheking");
-		while(true){ //TODO updating parentest should suffice as all recursive childs should be based on it...
+		while(true){ 
 //			System.err.println(entidParent.getId());
 			entidParent = ed.getComponent(entidParent, ShownState.class).getHierarchyParent();
 			if(entidParent==null)break;
+//			ed.setComponent(entidParent,
+//					new LastFocusTime(TimeConvertI.i().getNanosFrom(app.getTimer())));
 			entidParentest = entidParent;
 		}
 				
 		ed.setComponent(entidParentest, 
 			new LastFocusTime(TimeConvertI.i().getNanosFrom(app.getTimer())));
+		
+		return entidParentest;
 	}
 	
 	public Spatial getFocused(){
@@ -542,11 +549,62 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 		}
 	};
 	
-	/**
-	 * TODO generalize and put at the simple @MiscPackage
-	 * the last items will be the ones shown above all others
-	 * @param aentMainList
-	 */
+	private static class HierarchySort implements IHierarchy{
+		private Entity	ent;
+		private ShownState ss;
+
+		public HierarchySort(Entity ent){
+			this.ent=ent;
+			ss = ent.get(ShownState.class);
+		}
+		
+		public Entity getEntity(){
+			return ent;
+		}
+		
+		@Override
+		public IHierarchy getHierarchyParent() {
+			return new HierarchySort(ss.getHierarchyParent());
+		}
+
+		@Override
+		public EHierarchy getHierarchyPriority() {
+			return null;
+		}
+
+		@Override
+		public long getLastActivationNanoTime() {
+			return 0;
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			return ent.getId().equals(((Entity)obj).getId());
+		}
+	}
+	
+//	Comparator<HierarchySort> cmprEntEquals = new Comparator<HierarchySort>() {
+//		@Override
+//		public int compare(HierarchySort o1, HierarchySort o2) {
+//			if(o1.getEntity().getId().equals(o2.getEntity().getId()))return 0;
+//			return -1; //anything not 0
+//		}
+//	};
+	
+//	private void sortDialogs(ArrayList<Entity> aentMainList) {
+//		ArrayList<HierarchySort> ahs = new ArrayList<HierarchySort>();
+//		for(Entity ent:aentMainList){
+//			ahs.add(new HierarchySort(ent));
+//		}
+//		
+//		HierarchySorterI.i().sort(ahs);//,cmprEntEquals);		
+//	}
+	
+//	/**
+//	 * TODO generalize and put at the simple @MiscPackage
+//	 * the last items will be the ones shown above all others
+//	 * @param aentMainList
+//	 */
 	private void sortDialogs(ArrayList<Entity> aentMainList) {
 		if(aentMainList.size()==0)return;
 		
