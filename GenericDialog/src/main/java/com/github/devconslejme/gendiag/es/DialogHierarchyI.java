@@ -107,7 +107,7 @@ public class DialogHierarchyI extends AbstractAppState implements IResizableList
 	private ColorRGBA	colorBlocker = ColorI.i().colorChangeCopy(ColorRGBA.Red, 0f, 0.15f);
 	private ColorRGBA	colorInvisible = new ColorRGBA(0,0,0,0);
 	private IEffect	ieffParentToChildLink = new EffectArrow();
-	private IEffect	ieffLinkedDragEffect = new EffectElectricity().setColor(ColorRGBA.Yellow);
+	private IEffect	ieffLinkedDragEffect = new EffectElectricity().setColor(ColorI.i().colorChangeCopy(ColorRGBA.Blue, 0f, 0.5f));
 	
 	public void configure(Node nodeToMonitor, float fBeginOrderZ){
 		this.fBeginOrderPosZ=fBeginOrderZ;
@@ -123,28 +123,28 @@ public class DialogHierarchyI extends AbstractAppState implements IResizableList
 	//	app.getStateManager().attach(this);
 		focusState=app.getStateManager().getState(FocusManagerState.class);
 		
-		QueueI.i().enqueue(new CallableX() 
-			{
-				@Override
-				public Boolean call() {
-					updateLoop();
-					
-					if(isHasAnyDialogOpened()){
-		//			if(getHierarchyComponentList(null).size()>0){
-						Entity ent = getTopMostDialog();
-						if(!ContextMenuI.i().isTheContextMenu(ent.get(GuiLink.class).getResizablePanel())){
-							ContextMenuI.i().hideContextMenu();
-						}
-					}
-					
-					return true;
-				}
-			}
-			.setName(DialogHierarchyI.class.getSimpleName())
-			.setDelaySeconds(0.25f)
-			.setLoop(true)
-			.setUserCanPause(true)
-		);
+//		QueueI.i().enqueue(new CallableX() 
+//			{
+//				@Override
+//				public Boolean call() {
+//					updateLoop();
+//					
+//					if(isHasAnyDialogOpened()){
+//		//			if(getHierarchyComponentList(null).size()>0){
+//						Entity ent = getTopMostDialog();
+//						if(!ContextMenuI.i().isTheContextMenu(ent.get(GuiLink.class).getResizablePanel())){
+//							ContextMenuI.i().hideContextMenu();
+//						}
+//					}
+//					
+//					return true;
+//				}
+//			}
+//			.setName(DialogHierarchyI.class.getSimpleName())
+//			.setDelaySeconds(0.25f)
+//			.setLoop(true)
+//			.setUserCanPause(true)
+//		);
 		
 		EffectManagerStateI.i().add(ieffLinkedDragEffect);
 	}
@@ -797,18 +797,18 @@ public class DialogHierarchyI extends AbstractAppState implements IResizableList
 		
 	}
 
-	private void updateLoop() {
-		fCurrentOrderPosZ = fBeginOrderPosZ;
-		for(Entity ent:getHierarchyDialogs(null)){
-			ResizablePanel rzp=ent.get(GuiLink.class).getResizablePanel();
-			
-			updateZOrder(rzp);
-			
-			updateFocusTime(ent,rzp);
-		}
-		
-		updateDragEffect();
-	}
+//	private void updateLoop() {
+//		fCurrentOrderPosZ = fBeginOrderPosZ;
+//		for(Entity ent:getHierarchyDialogs(null)){
+//			ResizablePanel rzp=ent.get(GuiLink.class).getResizablePanel();
+//			
+//			updateZOrder(rzp);
+//			
+//			updateFocusTime(ent,rzp);
+//		}
+//		
+//		updateDragEffect();
+//	}
 	
 	private void updateDragEffect(){
 		Panel pnl = DragParentestPanelListenerI.i().getParentestBeingDragged();
@@ -1104,6 +1104,25 @@ public class DialogHierarchyI extends AbstractAppState implements IResizableList
 	@Override
 	public void update(float tpf) {
 		applyFullQueryChanges(tpf);
+		
+		fCurrentOrderPosZ = fBeginOrderPosZ;
+		for(Entity ent:getHierarchyDialogs(null)){
+			ResizablePanel rzp=ent.get(GuiLink.class).getResizablePanel();
+			
+			updateZOrder(rzp);
+			
+			updateFocusTime(ent,rzp);
+		}
+		
+		updateDragEffect();
+		
+		if(isHasAnyDialogOpened()){
+//			if(getHierarchyComponentList(null).size()>0){
+			Entity ent = getTopMostDialog();
+			if(!ContextMenuI.i().isTheContextMenu(ent.get(GuiLink.class).getResizablePanel())){
+				ContextMenuI.i().hideContextMenu();
+			}
+		}
 	}
 	
 	private void initializeNewEntities(Float tpf,Set<Entity> entset) {
