@@ -30,12 +30,14 @@ package com.github.devconslejme.gendiag.es;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Set;
 
 import com.github.devconslejme.gendiag.ContextMenuI;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
-import com.github.devconslejme.gendiag.es.DialogEntitySystem.GuiLink;
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.TimeConvertI;
@@ -45,6 +47,7 @@ import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.jme3.app.Application;
+import com.jme3.app.state.AbstractAppState;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
@@ -54,6 +57,7 @@ import com.simsilica.es.Entity;
 import com.simsilica.es.EntityComponent;
 import com.simsilica.es.EntityId;
 import com.simsilica.es.EntitySet;
+import com.simsilica.es.Name;
 import com.simsilica.es.PersistentComponent;
 import com.simsilica.es.base.DefaultEntityData;
 import com.simsilica.lemur.GuiGlobals;
@@ -72,8 +76,10 @@ import com.simsilica.lemur.focus.FocusManagerState;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class HierarchyI implements IResizableListener{
+public class HierarchyI extends AbstractAppState implements IResizableListener{
 	public static HierarchyI i(){return GlobalInstanceManagerI.i().get(HierarchyI.class);}
+	
+	private EntitySet	entsetMainQuery;
 	
 	private Node nodeToMonitor;
 	private Application	app;
@@ -92,34 +98,42 @@ public class HierarchyI implements IResizableListener{
 	private float	fCurrentOrderPosZ;
 	
 	public void configure(Node nodeToMonitor, float fBeginOrderZ){
-		this.ed = GlobalInstanceManagerI.i().get(DialogEntitySystem.class).getEntityData();
-		this.app=GlobalInstanceManagerI.i().get(Application.class);
 		this.fBeginOrderPosZ=fBeginOrderZ;
 		this.nodeToMonitor=nodeToMonitor;
+		
+    ed = new DefaultEntityData(); //holds all components
+//    ed.getEntities(getAllComponentTypesArray()); //just to let the entset.getAddedEntities() work the 1st time
+		recreateMainQuery(); //just to create it empty so new entities will be detected
+		if(entsetMainQuery.size()>0)throw new DetailedException("must begin empty so news and changes can be properly applied",entsetMainQuery,ed);
+    
+		app=GlobalInstanceManagerI.i().get(Application.class);
+    app.getStateManager().attach(this);
+    
 	//	app.getStateManager().attach(this);
 		focusState=app.getStateManager().getState(FocusManagerState.class);
 		
-		QueueI.i().enqueue(new CallableX() {
-			@Override
-			public Boolean call() {
-				updateLoop();
-				
-				if(isHasAnyDialogOpened()){
-	//			if(getHierarchyComponentList(null).size()>0){
-					Entity ent = getTopMostDialog();
-					if(!ContextMenuI.i().isTheContextMenu(ent.get(GuiLink.class).getResizablePanel())){
-						ContextMenuI.i().hideContextMenu();
+		QueueI.i().enqueue(new CallableX() 
+			{
+				@Override
+				public Boolean call() {
+					updateLoop();
+					
+					if(isHasAnyDialogOpened()){
+		//			if(getHierarchyComponentList(null).size()>0){
+						Entity ent = getTopMostDialog();
+						if(!ContextMenuI.i().isTheContextMenu(ent.get(GuiLink.class).getResizablePanel())){
+							ContextMenuI.i().hideContextMenu();
+						}
 					}
+					
+					return true;
 				}
-				
-				return true;
 			}
-	
-		}
-		.setName(HierarchyI.class.getSimpleName())
-		.setDelaySeconds(0.25f)
-		.setLoop(true)
-		.setUserCanPause(true));
+			.setName(HierarchyI.class.getSimpleName())
+			.setDelaySeconds(0.25f)
+			.setLoop(true)
+			.setUserCanPause(true)
+		);
 	}
 	
 	protected Entity getTopMostDialog() {
@@ -160,7 +174,6 @@ public class HierarchyI implements IResizableListener{
 			EntityId entid = UserDataI.i().getUserDataPSH(capture,EntityId.class);
 			Blocker blk = HierarchyI.i().ed.getComponent(entid,Blocker.class);
 			if(blk.isBlocking()){
-//				HierarchyI.i().updateLastFocusAppTimeNano(entid);
 				HierarchyI.i().setFocusRecursively(entid);
 				event.setConsumed();
 			}
@@ -201,21 +214,13 @@ public class HierarchyI implements IResizableListener{
 		}
 	}
 	
-	public Class[] getAllComponentTypesArray() {
-		return getAllComponentTypesList().toArray(new Class[0]);
-	}
-	public ArrayList<Class> getAllComponentTypesList() {
-		if(aclAllComponentTypes==null){
-			aclAllComponentTypes = new ArrayList<Class>();
-			aclAllComponentTypes.addAll(DialogEntitySystem.i().getAllComponentTypesList());
-			aclAllComponentTypes.add(Blocker.class);
-			aclAllComponentTypes.add(LastFocusTime.class);
-			aclAllComponentTypes.add(ShownState.class);
-		}
-		return aclAllComponentTypes;
-	}
-	
-	public void initializeNewEntity(float tpf,Entity ent) {
+	public void initializeNewEntity(Float tpf,Entity ent) {
+//		EntityId entid = ent.getId();
+		
+//	  ed.setComponent(entid, new GuiLink(rzp));
+//	  ed.setComponent(entid, new Initialized(false));
+//	  ed.setComponent(entid, new Name(strName));
+	  
 		if(ed.getComponent(ent.getId(), ShownState.class)==null){
 			ed.setComponent(ent.getId(), new ShownState());
 		}
@@ -266,8 +271,8 @@ public class HierarchyI implements IResizableListener{
 	 */
 	public void showAsHierarchyModal(EntityId entidParent, EntityId entidChild){
 		showAndApplyHierarchyChild(
-				ed.getEntity(entidParent, getAllComponentTypesArray()),
-				ed.getEntity(entidChild, getAllComponentTypesArray()),
+				ed.getEntity(entidParent, getAllRequiredComponentTypesArray()),
+				ed.getEntity(entidChild, getAllRequiredComponentTypesArray()),
 				true);
 	}
 	
@@ -464,6 +469,7 @@ public class HierarchyI implements IResizableListener{
 	};
 	
 	/**
+	 * TODO generalize and put at the simple misc package
 	 * the last items will be the ones shown above all others
 	 * @param aentMainList
 	 */
@@ -543,7 +549,7 @@ public class HierarchyI implements IResizableListener{
 		}
 	}
 
-	public void updateChangedEntity(float tpf,EntityId entid){
+	public void updateChangedEntity(Float tpf,EntityId entid){
 		Entity ent = ed.getEntity(entid, GuiLink.class,ShownState.class);
 		
 		// close self if parent dialog closed
@@ -687,7 +693,7 @@ public class HierarchyI implements IResizableListener{
 		return (getHierarchyDialogs(null).size()>0);
 	}
 
-	public void cleanupRemovedEntity(float tpf, Entity ent) {
+	public void cleanupRemovedEntity(Float tpf, Entity ent) {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException("method not implemented yet");
 	}
@@ -750,9 +756,9 @@ public class HierarchyI implements IResizableListener{
 	}
 
 	public GuiLink getHierarchyParentGuiLinkFor(EntityId entid) {
-		Entity ent = HierarchyI.i().getEntityFor(entid,ShownState.class);
+		Entity ent = getEntityFor(entid,ShownState.class);
 		EntityId entidParent = ent.get(ShownState.class).getHierarchyParent();
-		Entity entParent = HierarchyI.i().getEntityFor(entidParent,GuiLink.class);
+		Entity entParent = getEntityFor(entidParent,GuiLink.class);
 		return entParent.get(GuiLink.class);
 	}
 
@@ -774,5 +780,108 @@ public class HierarchyI implements IResizableListener{
 	@Override
 	public void endedResizingFor(ResizablePanel rzpSource) {
 		rzpCurrentlyBeingResized=null; //user can resize only one at a time 
+	}
+
+	public DefaultEntityData getEntityData(){
+		return ed;
+	}
+
+	public static class GuiLink implements EntityComponent, PersistentComponent{
+		ResizablePanel val;
+		public GuiLink(ResizablePanel val) { this.val=val; }
+		public ResizablePanel getResizablePanel(){ return val; }
+	}
+	
+	public static class Initialized implements EntityComponent, PersistentComponent{
+		private boolean	bInitialized;
+		public Initialized(boolean bInitialized) {
+			this.bInitialized=bInitialized;
+		}
+		public boolean isInitialized() {
+			return bInitialized;
+		}
+	}
+	
+	public EntityId createEntity(ResizablePanel rzp,String strName){
+//		recreateQuery();
+//		if(entsetMainQuery.size()>0)throw new DetailedException("must begin empty so news and changes can be properly applied",entsetMainQuery,ed);
+	  EntityId entid = ed.createEntity(); //to attach components to
+	  ed.setComponent(entid, new Initialized(false));
+	  ed.setComponent(entid, new GuiLink(rzp));
+	  ed.setComponent(entid, new Name(strName));
+	  
+	  return entid;
+	}
+	
+	private void recreateMainQuery(){
+		if(entsetMainQuery!=null){
+			applyMainQueryChanges(null); //last update for it
+		}
+		
+		entsetMainQuery = ed.getEntities(getAllRequiredComponentTypesArray());
+	}
+	
+	private void applyMainQueryChanges(Float tpf){
+		if( entsetMainQuery.applyChanges() ) {
+			// newly matching entities
+			initializeNewEntities(tpf,entsetMainQuery.getAddedEntities());
+			
+			// entities that have merely changed TODO like in have any component changed? 
+			updateChangedEntities(tpf,entsetMainQuery.getChangedEntities());
+			
+			// entities that are no longer matching TODO like in one or more of the required query components went missing
+			cleanupRemovedEntities(tpf,entsetMainQuery.getRemovedEntities());
+		}
+	}
+	
+	@Override
+	public void update(float tpf) {
+		applyMainQueryChanges(tpf);
+	}
+	
+	private void initializeNewEntities(Float tpf,Set<Entity> entset) {
+		for(Entity ent:entset){
+			if(!ent.get(Initialized.class).isInitialized()){
+				initializeNewEntity(tpf,ent);
+				ed.setComponent(ent.getId(), new Initialized(true));
+			}
+		}
+	}
+	
+	private void updateChangedEntities(Float tpf,Set<Entity> entset) {
+		for(Entity ent:entset){
+			updateChangedEntity(tpf,ent.getId());
+		}
+	}
+
+	private void cleanupRemovedEntities(Float tpf,Set<Entity> entset) {
+		for(Entity ent:entset){
+			cleanupRemovedEntity(tpf,ent);
+		}
+	}
+	
+	public Class[] getAllRequiredComponentTypesArray() {
+		return getAllRequiredComponentTypesList().toArray(new Class[0]);
+	}
+	public ArrayList<Class> getAllRequiredComponentTypesList() {
+		if(aclAllComponentTypes==null){
+			aclAllComponentTypes = new ArrayList<Class>();
+			addRequiredComponentType(Initialized.class);
+			addRequiredComponentType(GuiLink.class);
+			addRequiredComponentType(Name.class);
+			addRequiredComponentType(Blocker.class);
+			addRequiredComponentType(LastFocusTime.class);
+			addRequiredComponentType(ShownState.class);
+		}
+		return aclAllComponentTypes;
+	}
+	public void addRequiredComponentType(Class cl){
+		if(!aclAllComponentTypes.contains(cl)){
+			aclAllComponentTypes.add(cl);
+			MessagesI.i().debugInfo(this,"added component: "+cl.getName());
+			recreateMainQuery();
+		}else{
+			MessagesI.i().warnMsg(this, "component already added "+cl.getName());
+		}
 	}
 }

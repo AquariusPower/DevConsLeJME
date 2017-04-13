@@ -28,7 +28,6 @@
 package com.github.devconslejme.tests;
 
 import com.github.devconslejme.gendiag.ResizablePanel;
-import com.github.devconslejme.gendiag.es.DialogEntitySystem;
 import com.github.devconslejme.gendiag.es.HierarchyI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
@@ -112,7 +111,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 	private ResizablePanel test(Vector3f pos,String strName) {
 		ResizablePanel rzp = new ResizablePanel(null);
 		
-		EntityId entid = DialogEntitySystem.i().createEntity(rzp,strName);
+		EntityId entid = HierarchyI.i().createEntity(rzp,strName);
 		UserDataI.i().setUserDataPSH(rzp, entid);
 		
 //		DragParentestListenerI.i().applyAt(rzp);
