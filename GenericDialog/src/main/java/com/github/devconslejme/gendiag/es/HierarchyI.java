@@ -79,7 +79,8 @@ import com.simsilica.lemur.focus.FocusManagerState;
 public class HierarchyI extends AbstractAppState implements IResizableListener{
 	public static HierarchyI i(){return GlobalInstanceManagerI.i().get(HierarchyI.class);}
 	
-	private EntitySet	entsetMainQuery;
+	private EntitySet	entsetBasicQuery;
+	private EntitySet	entsetHierarchyQuery;
 	
 	private Node nodeToMonitor;
 	private Application	app;
@@ -103,8 +104,8 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 		
     ed = new DefaultEntityData(); //holds all components
 //    ed.getEntities(getAllComponentTypesArray()); //just to let the entset.getAddedEntities() work the 1st time
-		recreateMainQuery(); //just to create it empty so new entities will be detected
-		if(entsetMainQuery.size()>0)throw new DetailedException("must begin empty so news and changes can be properly applied",entsetMainQuery,ed);
+		recreateFullQuery(); //just to create it empty so new entities will be detected
+		if(entsetHierarchyQuery.size()>0)throw new DetailedException("must begin empty so news and changes can be properly applied",entsetHierarchyQuery,ed);
     
 		app=GlobalInstanceManagerI.i().get(Application.class);
     app.getStateManager().attach(this);
@@ -803,6 +804,13 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 	}
 	
 	public EntityId createEntity(ResizablePanel rzp,String strName){
+	  if(entsetBasicQuery==null){ // keep here to be easy to sync with the settings below
+		  entsetBasicQuery = ed.getEntities(
+		  	Initialized.class,
+		  	GuiLink.class,
+		  	Name.class
+		  );
+	  }
 //		recreateQuery();
 //		if(entsetMainQuery.size()>0)throw new DetailedException("must begin empty so news and changes can be properly applied",entsetMainQuery,ed);
 	  EntityId entid = ed.createEntity(); //to attach components to
@@ -813,30 +821,32 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 	  return entid;
 	}
 	
-	private void recreateMainQuery(){
-		if(entsetMainQuery!=null){
-			applyMainQueryChanges(null); //last update for it
+	private void recreateFullQuery(){
+		if(entsetHierarchyQuery!=null){
+			applyFullQueryChanges(null); //last update for it
 		}
 		
-		entsetMainQuery = ed.getEntities(getAllRequiredComponentTypesArray());
+		entsetHierarchyQuery = ed.getEntities(getAllRequiredComponentTypesArray());
 	}
 	
-	private void applyMainQueryChanges(Float tpf){
-		if( entsetMainQuery.applyChanges() ) {
+	private void applyFullQueryChanges(Float tpf){
+		if(entsetBasicQuery!=null && entsetBasicQuery.applyChanges()) { //contains only basic components
 			// newly matching entities
-			initializeNewEntities(tpf,entsetMainQuery.getAddedEntities());
-			
+			initializeNewEntities(tpf,entsetBasicQuery.getAddedEntities()); //after this, will contain all hierarchy components
+		}
+		
+		if(entsetHierarchyQuery.applyChanges()) { //contains all components required by hierarchy
 			// entities that have merely changed TODO like in have any component changed? 
-			updateChangedEntities(tpf,entsetMainQuery.getChangedEntities());
+			updateChangedEntities(tpf,entsetHierarchyQuery.getChangedEntities());
 			
 			// entities that are no longer matching TODO like in one or more of the required query components went missing
-			cleanupRemovedEntities(tpf,entsetMainQuery.getRemovedEntities());
+			workOnEntitiesThatAreNotFullyMatchingAnymore(tpf,entsetHierarchyQuery.getRemovedEntities());
 		}
 	}
 	
 	@Override
 	public void update(float tpf) {
-		applyMainQueryChanges(tpf);
+		applyFullQueryChanges(tpf);
 	}
 	
 	private void initializeNewEntities(Float tpf,Set<Entity> entset) {
@@ -854,7 +864,7 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 		}
 	}
 
-	private void cleanupRemovedEntities(Float tpf,Set<Entity> entset) {
+	private void workOnEntitiesThatAreNotFullyMatchingAnymore(Float tpf,Set<Entity> entset) {
 		for(Entity ent:entset){
 			cleanupRemovedEntity(tpf,ent);
 		}
@@ -879,7 +889,7 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 		if(!aclAllComponentTypes.contains(cl)){
 			aclAllComponentTypes.add(cl);
 			MessagesI.i().debugInfo(this,"added component: "+cl.getName());
-			recreateMainQuery();
+			recreateFullQuery();
 		}else{
 			MessagesI.i().warnMsg(this, "component already added "+cl.getName());
 		}
