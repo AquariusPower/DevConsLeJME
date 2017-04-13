@@ -28,7 +28,7 @@
 package com.github.devconslejme.misc.lemur;
 
 import com.github.devconslejme.misc.DetailedException;
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.font.BitmapText;
 import com.jme3.math.FastMath;
@@ -46,7 +46,7 @@ import com.simsilica.lemur.grid.GridModel;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class MiscLemurI {
-	public static MiscLemurI i(){return GlobalInstanceManagerI.i().get(MiscLemurI.class);}
+	public static MiscLemurI i(){return GlobalManagerI.i().get(MiscLemurI.class);}
 	
 	public Integer getEntryHeightPixels(ListBox lstbx){
 		GridModel<Panel> gm = lstbx.getGridPanel().getModel();

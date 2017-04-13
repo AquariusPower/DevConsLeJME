@@ -29,7 +29,7 @@ package com.github.devconslejme.devcons;
 
 import java.util.ArrayList;
 
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.jme3.input.KeyInput;
 import com.simsilica.lemur.component.TextEntryComponent;
@@ -41,7 +41,7 @@ import com.simsilica.lemur.event.KeyModifiers;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class BindKeyI {
-	public static BindKeyI i(){return GlobalInstanceManagerI.i().get(BindKeyI.class);}
+	public static BindKeyI i(){return GlobalManagerI.i().get(BindKeyI.class);}
 	
 	private ArrayList<BindKey> abkList = new ArrayList<BindKey>();
 	private KeyActionListener	kal;

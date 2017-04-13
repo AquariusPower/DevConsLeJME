@@ -4,9 +4,9 @@ import com.jme3.app.SimpleApplication;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.style.BaseStyles;
 
-public class TestBaseCopyFrom extends SimpleApplication{
+public class _TestBasicCodeToCopyFrom_ extends SimpleApplication{
 	public static void main(String[] args) {
-		TestBaseCopyFrom test = new TestBaseCopyFrom();
+		_TestBasicCodeToCopyFrom_ test = new _TestBasicCodeToCopyFrom_();
 		test.start();
 	}
 

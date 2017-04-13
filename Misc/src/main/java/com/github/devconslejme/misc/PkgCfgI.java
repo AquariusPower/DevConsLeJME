@@ -32,7 +32,7 @@ package com.github.devconslejme.misc;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class PkgCfgI {
-	public static PkgCfgI i(){return GlobalInstanceManagerI.i().get(PkgCfgI.class);}
+	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
 	public void configure(){
 		MainThreadI.i().configure();

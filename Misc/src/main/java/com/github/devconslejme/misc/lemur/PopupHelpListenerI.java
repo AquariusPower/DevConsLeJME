@@ -27,7 +27,7 @@
 
 package com.github.devconslejme.misc.lemur;
 
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -46,7 +46,7 @@ import com.simsilica.lemur.style.ElementId;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class PopupHelpListenerI implements CursorListener{
-	public static PopupHelpListenerI i(){return GlobalInstanceManagerI.i().get(PopupHelpListenerI.class);}
+	public static PopupHelpListenerI i(){return GlobalManagerI.i().get(PopupHelpListenerI.class);}
 	
 	public static enum EPopup{
 		strPopupHelpUserData,

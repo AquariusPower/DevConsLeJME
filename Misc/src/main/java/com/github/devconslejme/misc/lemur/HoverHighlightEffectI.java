@@ -28,7 +28,7 @@
 package com.github.devconslejme.misc.lemur;
 
 import com.github.devconslejme.misc.DetailedException;
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.jme3.input.event.MouseMotionEvent;
@@ -51,7 +51,7 @@ import com.simsilica.lemur.event.MouseEventControl;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class HoverHighlightEffectI {
-	public static HoverHighlightEffectI i(){return GlobalInstanceManagerI.i().get(HoverHighlightEffectI.class);}
+	public static HoverHighlightEffectI i(){return GlobalManagerI.i().get(HoverHighlightEffectI.class);}
 	
 	private static enum EEffectIds{
 		ChannelHighLight,

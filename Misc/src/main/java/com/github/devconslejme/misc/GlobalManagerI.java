@@ -37,16 +37,16 @@ import java.util.HashMap;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class GlobalInstanceManagerI {
-  private static GlobalInstanceManagerI instance=new GlobalInstanceManagerI();
-  public static void setGlobalOverride (GlobalInstanceManagerI inst){
-  	if(GlobalInstanceManagerI.instance!=null)throw new DetailedException("already set "+instance+", "+inst);
-    GlobalInstanceManagerI.instance=inst;
+public class GlobalManagerI {
+  private static GlobalManagerI instance=new GlobalManagerI();
+  public static void setGlobalOverride (GlobalManagerI inst){
+  	if(GlobalManagerI.instance!=null)throw new DetailedException("already set "+instance+", "+inst);
+    GlobalManagerI.instance=inst;
   }
-  public static GlobalInstanceManagerI i (){return instance;}
+  public static GlobalManagerI i (){return instance;}
   
   public static interface IGlobalAddListener{
-  	void attendToGlobalAdded(Object objInst);
+  	void globalAddedEvent(Object objInst);
   }
   private ArrayList<IGlobalAddListener> aigalList = new ArrayList<IGlobalAddListener>();
   public void addGlobalAddListener(IGlobalAddListener igal){
@@ -83,7 +83,7 @@ public class GlobalInstanceManagerI {
     
     hmInst.put(cl,obj);
     for(IGlobalAddListener igal:aigalList){
-    	igal.attendToGlobalAdded(obj);
+    	igal.globalAddedEvent(obj);
     }
     
 		MessagesI.i().debugInfo(this,"created global instance: "+cl.getName(),obj);

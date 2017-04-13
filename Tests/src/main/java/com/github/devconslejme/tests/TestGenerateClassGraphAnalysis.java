@@ -36,11 +36,12 @@ import java.nio.charset.StandardCharsets;
 
 import com.github.devconslejme.devcons.DevConsPluginStateI;
 import com.github.devconslejme.extras.OSCmd;
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.google.common.io.Files;
 
 /**
- * TODO find a dependency graph generator..
+ * TODO can this generate a dependencies graph (by packages) in some way?
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class TestGenerateClassGraphAnalysis {
@@ -53,7 +54,7 @@ public class TestGenerateClassGraphAnalysis {
 		
 		Files.write(str, new File("Tests/src/main/analysis/GraphViz.dot"), StandardCharsets.UTF_8);
 		
-		GlobalInstanceManagerI.i().get(OSCmd.class).runOSCommand("linux 'dot -Tsvg "
+		GlobalManagerI.i().get(OSCmd.class).runOSCommand("linux 'dot -Tsvg "
 			+"< Tests/src/main/analysis/GraphViz.dot "
 			+"> Tests/src/main/analysis/GraphViz.svg'");
 	}

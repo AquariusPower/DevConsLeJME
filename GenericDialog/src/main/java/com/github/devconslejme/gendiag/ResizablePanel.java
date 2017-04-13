@@ -94,9 +94,9 @@ public class ResizablePanel extends Panel {
 		 * it is meant to provide insta updates whenever changes happen to this panel.
 		 */
 		public void updateLogicalState(float tpf, ResizablePanel rzpSource);
-		public void removedFromParent(ResizablePanel rzpSource);
-		public void resizedTo(ResizablePanel rzpSource,Vector3f v3fNewSize);
-		public void endedResizingFor(ResizablePanel rzpSource);
+		public void removedFromParentEvent(ResizablePanel rzpSource);
+		public void resizedEvent(ResizablePanel rzpSource,Vector3f v3fNewSize);
+		public void endedResizingEvent(ResizablePanel rzpSource);
 	}
 	private ArrayList<IResizableListener> aiulslList = new ArrayList<IResizableListener>();
 	
@@ -355,7 +355,7 @@ public class ResizablePanel extends Panel {
 			if(!v3fNewSize.equals(v3fOldSize)){ 
 //				resizedTo(v3fNewSize);
 				for(IResizableListener iuls:aiulslList){
-					iuls.resizedTo(this,v3fNewSize);
+					iuls.resizedEvent(this,v3fNewSize);
 				}
 			}
 		}else{
@@ -518,7 +518,7 @@ public class ResizablePanel extends Panel {
 				v3fDragFromPrevious=null;
 				eeInitialHook=(null);
 				for(IResizableListener iuls:aiulslList){
-					iuls.endedResizingFor(ResizablePanel.this);
+					iuls.endedResizingEvent(ResizablePanel.this);
 				}
 				event.setConsumed(); //this also prevents sending the event to other than this panel
 			}
@@ -721,7 +721,7 @@ public class ResizablePanel extends Panel {
 		boolean b = super.removeFromParent();
 		if(b){
 			for(IResizableListener iuls:aiulslList){
-				iuls.removedFromParent(this);
+				iuls.removedFromParentEvent(this);
 			}
 		}
 		return b;

@@ -27,7 +27,7 @@
 
 package com.github.devconslejme.misc.jme;
 
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MainThreadI;
 import com.github.devconslejme.misc.QueueI;
@@ -39,7 +39,7 @@ import com.jme3.scene.Spatial;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class UserDataI {
-	public static UserDataI i(){return GlobalInstanceManagerI.i().get(UserDataI.class);}
+	public static UserDataI i(){return GlobalManagerI.i().get(UserDataI.class);}
 	
 	/**
 	 * all super classes of the object will be the keys

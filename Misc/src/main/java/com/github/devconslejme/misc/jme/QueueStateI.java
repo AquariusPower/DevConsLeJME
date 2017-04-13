@@ -27,7 +27,7 @@
 
 package com.github.devconslejme.misc.jme;
 
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
@@ -36,12 +36,12 @@ import com.jme3.app.state.AbstractAppState;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class QueueStateI extends AbstractAppState{
-	public static QueueStateI i(){return GlobalInstanceManagerI.i().get(QueueStateI.class);}
+	public static QueueStateI i(){return GlobalManagerI.i().get(QueueStateI.class);}
 	
 	private Application	app;
 
 	public void configure(){
-		this.app=GlobalInstanceManagerI.i().get(Application.class);
+		this.app=GlobalManagerI.i().get(Application.class);
 		app.getStateManager().attach(this);
 		
 		QueueI.i().configure(app.getTimer().getResolution());

@@ -38,7 +38,7 @@ import java.util.ArrayList;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class ReportI {
-	public static ReportI i(){return GlobalInstanceManagerI.i().get(ReportI.class);}
+	public static ReportI i(){return GlobalManagerI.i().get(ReportI.class);}
 	
 	public static interface IReport{
 		public String getReport(boolean bFull);

@@ -36,7 +36,7 @@ import com.github.devconslejme.misc.StringI.EStringMatchMode;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class AutoCompleteI {
-	public static AutoCompleteI i(){return GlobalInstanceManagerI.i().get(AutoCompleteI.class);}
+	public static AutoCompleteI i(){return GlobalManagerI.i().get(AutoCompleteI.class);}
 	
 	public static class AutoCompleteResult{
 		private String strImprovedPart="";

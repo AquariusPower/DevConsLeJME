@@ -37,7 +37,7 @@ import java.util.concurrent.Callable;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class QueueI {
-	public static QueueI i(){return GlobalInstanceManagerI.i().get(QueueI.class);}
+	public static QueueI i(){return GlobalManagerI.i().get(QueueI.class);}
 	
 	ArrayList<CallableX> acxList = new ArrayList<CallableX>();
 //	private Application	app;

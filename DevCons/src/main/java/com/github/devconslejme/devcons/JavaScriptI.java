@@ -49,8 +49,8 @@ import javax.script.ScriptException;
 import com.github.devconslejme.misc.AutoCompleteI;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
 import com.github.devconslejme.misc.DetailedException;
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
-import com.github.devconslejme.misc.GlobalInstanceManagerI.IGlobalAddListener;
+import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.GlobalManagerI.IGlobalAddListener;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
@@ -64,7 +64,7 @@ import com.jme3.input.KeyInput;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class JavaScriptI implements IGlobalAddListener {
-	public static JavaScriptI i(){return GlobalInstanceManagerI.i().get(JavaScriptI.class);}
+	public static JavaScriptI i(){return GlobalManagerI.i().get(JavaScriptI.class);}
 	
 	private Object	objRetValUser;
 	private Object	objRetValFile;
@@ -229,14 +229,14 @@ public class JavaScriptI implements IGlobalAddListener {
 		/**
 		 * add all existing
 		 */
-		for(Object obj:GlobalInstanceManagerI.i().getListCopy()){
+		for(Object obj:GlobalManagerI.i().getListCopy()){
 			if(bndJSE.get(genKeyFor(obj))==null)setJSBinding(obj);
 		}
 		
 		/**
 		 * listen for new ones
 		 */
-		GlobalInstanceManagerI.i().addGlobalAddListener(this);
+		GlobalManagerI.i().addGlobalAddListener(this);
 	}
 	
 	private String genKeyFor(Object obj){
@@ -677,7 +677,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	}
 
 	@Override
-	public void attendToGlobalAdded(Object objInst) {
+	public void globalAddedEvent(Object objInst) {
 		setJSBinding(objInst);
 	}
 }

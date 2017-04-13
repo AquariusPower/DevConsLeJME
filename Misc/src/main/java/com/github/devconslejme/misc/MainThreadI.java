@@ -32,7 +32,7 @@ package com.github.devconslejme.misc;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class MainThreadI {
-	public static MainThreadI i(){return GlobalInstanceManagerI.i().get(MainThreadI.class);}
+	public static MainThreadI i(){return GlobalManagerI.i().get(MainThreadI.class);}
 
 	private Thread	threadMain;
 	

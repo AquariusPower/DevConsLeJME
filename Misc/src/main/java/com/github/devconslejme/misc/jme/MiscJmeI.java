@@ -30,7 +30,7 @@ package com.github.devconslejme.misc.jme;
 import java.util.ArrayList;
 
 import com.github.devconslejme.misc.DetailedException;
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI.CallableWeak;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.jme3.bounding.BoundingBox;
@@ -46,7 +46,7 @@ import com.jme3.scene.Spatial;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class MiscJmeI {
-	public static MiscJmeI i(){return GlobalInstanceManagerI.i().get(MiscJmeI.class);}
+	public static MiscJmeI i(){return GlobalManagerI.i().get(MiscJmeI.class);}
 	
 	@SuppressWarnings({ "unchecked" })
 	public <T extends Node> T getParentest(Spatial spt, Class<T> clTypeParentest, boolean bIncludeFirst){

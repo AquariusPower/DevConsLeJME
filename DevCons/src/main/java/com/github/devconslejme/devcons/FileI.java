@@ -32,7 +32,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.google.common.io.Files;
 
 
@@ -40,7 +40,7 @@ import com.google.common.io.Files;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class FileI {
-	public static FileI i(){return GlobalInstanceManagerI.i().get(FileI.class);}
+	public static FileI i(){return GlobalManagerI.i().get(FileI.class);}
 	
 	public void appendLine(File fl, String str){
 		try {

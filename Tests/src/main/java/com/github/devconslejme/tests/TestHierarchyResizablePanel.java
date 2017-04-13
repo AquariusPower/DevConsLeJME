@@ -60,64 +60,81 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 //		ConfigureTestsI.i().configure(this, getGuiNode());
 		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode());
 		
-		initTest(100);
+		createParentChild(100);
 		
 		QueueI.i().enqueue(new CallableX() {
 			@Override
 			public Boolean call() {
-				initTest(400);
+				createParentChild(400);
 				return true;
 			}
 		}.setDelaySeconds(10.0f)); //just to test if ES new entity initialization will be called at a later time
+		
+		// multi child hierarchy
+		ResizablePanel rzpA = createPanel(new Vector3f(300,700,0),"MultiA",null);
+		HierarchyI.i().showDialog(rzpA);
+		
+		ResizablePanel rzpB = createPanel(new Vector3f(310,710,0),"MultiB",null);
+		HierarchyI.i().showDialogAsModal(
+			UserDataI.i().getUserDataPSH(rzpA,EntityId.class),
+			UserDataI.i().getUserDataPSH(rzpB,EntityId.class)
+		);
+		
+		ResizablePanel rzpC = createPanel(new Vector3f(320,720,0),"MultiC",null);
+		HierarchyI.i().showDialogAsModal(
+			UserDataI.i().getUserDataPSH(rzpA,EntityId.class),
+			UserDataI.i().getUserDataPSH(rzpC,EntityId.class)
+		);
+		
+		ResizablePanel rzpD = createPanel(new Vector3f(320,720,0),"MultiD",null);
+		HierarchyI.i().showDialogAsModal(
+			UserDataI.i().getUserDataPSH(rzpB,EntityId.class),
+			UserDataI.i().getUserDataPSH(rzpD,EntityId.class)
+		);
 	}
 
 	@SuppressWarnings("unchecked")
-	private void initTest(int iBaseY) {
-		ResizablePanel rzpChild = test(new Vector3f(200,iBaseY+200,20), "child"+iBaseY);
-//		ColorRGBA color = ColorRGBA.Yellow.clone();color.a=0.25f;QuadBackgroundComponent qbc = new QuadBackgroundComponent(color);qbc.setMargin(10,5);testChild.setBorder(qbc);
-		Button btn = new Button("click to close");
-		btn.addClickCommands(new Command<Button>(){
+	private void createParentChild(int iBaseY) {
+		ResizablePanel rzpChild = createPanel(new Vector3f(200,iBaseY+200,20), "child"+iBaseY, "click to close");
+		((Button)rzpChild.getContents()).addClickCommands(new Command<Button>(){
 			@Override
 			public void execute(Button source) {
 				rzpChild.removeFromParent();
 			}
 		});
-		rzpChild.setContents(btn);
-		DragParentestListenerI.i().applyAt(btn);
 		
-		ResizablePanel rzpParent = test(new Vector3f(100,iBaseY+100,10), "parent"+iBaseY);
-		btn = new Button("click to open modal");
-		btn.addClickCommands(new Command<Button>(){
+		ResizablePanel rzpParent = createPanel(new Vector3f(100,iBaseY+100,10), "parent"+iBaseY, "click to open modal");
+		((Button)rzpChild.getContents()).addClickCommands(new Command<Button>(){
 			@Override
 			public void execute(Button source) {
-//				ResizablePanel rzpParentest = MiscJmeI.i().getParentest(source, ResizablePanel.class, true);
-				HierarchyI.i().showAsHierarchyModal(
+				EntityId entidChild = UserDataI.i().getUserDataPSH(rzpChild,EntityId.class);
+				HierarchyI.i().showDialogAsModal(
 					UserDataI.i().getUserDataPSH(rzpParent,EntityId.class),
-					UserDataI.i().getUserDataPSH(rzpChild,EntityId.class)
+					entidChild
 				);
-//				_HierarchyComponent comp = rzpParent.getComponent(_HierarchyComponent.class);
-//				_HierarchyComponent compChild = rzpChild.getComponent(_HierarchyComponent.class);
-//				_HierarchySystemI.i().workOn(comp).showAsHierarchyModal(compChild);
 			}
 		});
-		rzpParent.setContents(btn);
-		DragParentestListenerI.i().applyAt(btn);
 		
 		// show it all
 		HierarchyI.i().showDialog(rzpParent);
-//		getGuiNode().attachChild(rzpParent);
 	}
 
-	private ResizablePanel test(Vector3f pos,String strName) {
+	private ResizablePanel createPanel(Vector3f pos,String strName,String strInfo) {
+		if(strInfo==null)strInfo=strName;
+		
 		ResizablePanel rzp = new ResizablePanel(null);
 		
 		EntityId entid = HierarchyI.i().createEntity(rzp,strName);
 		UserDataI.i().setUserDataPSH(rzp, entid);
 		
-//		DragParentestListenerI.i().applyAt(rzp);
+		HierarchyI.i().setAutoMoveRelativelyToParent(entid);
 		
 		rzp.setPreferredSize(new Vector3f(300,200,0)); //TODO z will cause trouble?
 		rzp.setLocalTranslation(pos); //above DevCons
+		
+		Button btn = new Button(strInfo);
+		rzp.setContents(btn);
+		DragParentestListenerI.i().applyAt(btn);
 		
 		return rzp;
 	}

@@ -214,17 +214,17 @@ public final class SimpleGenericDialogComposite extends AbstractGenericDialogCom
 	}
 
 	@Override
-	public void removedFromParent(ResizablePanel rzpSource) {
+	public void removedFromParentEvent(ResizablePanel rzpSource) {
 	}
 
 	@Override
-	public void resizedTo(ResizablePanel rzpSource, Vector3f v3fNewSize) {
+	public void resizedEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException("method not implemented yet");
 	}
 
 	@Override
-	public void endedResizingFor(ResizablePanel rzpSource) {
+	public void endedResizingEvent(ResizablePanel rzpSource) {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException("method not implemented yet");
 	}

@@ -43,7 +43,7 @@ import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
 import com.github.devconslejme.gendiag.es.HierarchyI;
 import com.github.devconslejme.misc.DetailedException;
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
@@ -97,7 +97,7 @@ import com.simsilica.lemur.text.DocumentModel;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class DevConsPluginStateI extends AbstractAppState {
-	public static DevConsPluginStateI i(){return GlobalInstanceManagerI.i().get(DevConsPluginStateI.class);}
+	public static DevConsPluginStateI i(){return GlobalManagerI.i().get(DevConsPluginStateI.class);}
 	
 //	private Vector3f	v3fApplicationWindowSize;
 	private float	fLemurPreferredThickness = 1f;
@@ -270,7 +270,7 @@ public class DevConsPluginStateI extends AbstractAppState {
 	}
 	
 	public void configure(Node nodeParent) {
-		this.app=GlobalInstanceManagerI.i().get(Application.class);
+		this.app=GlobalManagerI.i().get(Application.class);
 		
 		this.nodeParent = nodeParent;
 		app.getStateManager().attach(this);

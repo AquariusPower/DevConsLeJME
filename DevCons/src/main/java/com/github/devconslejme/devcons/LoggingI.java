@@ -32,7 +32,7 @@ import java.io.PrintStream;
 
 import com.github.devconslejme.devcons.DevConsPluginStateI.EStatPriority;
 import com.github.devconslejme.devcons.DevConsPluginStateI.VarMon;
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
@@ -48,7 +48,7 @@ import com.simsilica.lemur.core.VersionedList;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class LoggingI {
-	public static LoggingI i(){return GlobalInstanceManagerI.i().get(LoggingI.class);}
+	public static LoggingI i(){return GlobalManagerI.i().get(LoggingI.class);}
 	
 	private VersionedList<String>	vlstrLogEntries;
 	private int iLogEntriesLimit = 100000;
@@ -152,7 +152,7 @@ public class LoggingI {
 //		dateForMarker.setTime(TimeConvertI.i().getMilisFrom(DCGlobal.app().getTimer())); //this is a delay from the start of the app
 //		strInfo = strInfo+" [A="+dateFormat.format(dateForMarker)+"]";
 		strInfo = strInfo+" [A="+TimeConvertI.i().formatElapsed(
-			GlobalInstanceManagerI.i().get(Application.class).getTimer())+"]";
+			GlobalManagerI.i().get(Application.class).getTimer())+"]";
 		
 		strInfo = Strings.padStart(strInfo, iWrapAtColumn/2 +strInfo.length()/2, '_');
 		strInfo = Strings.padEnd(strInfo, iWrapAtColumn, '_');

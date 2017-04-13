@@ -36,7 +36,7 @@ import com.github.devconslejme.gendiag.ContextMenuI;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.DetailedException;
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
@@ -70,14 +70,13 @@ import com.simsilica.lemur.focus.FocusManagerState;
 
 
 /**
- * only getters
- * unmuttable: do not extend, store things that cant be changed or references
- * TODO confirm if references is a valid unmuttable... or Ids should be used instead?
+ * DevSelfNote: Components: only getters; unmuttable: do not extend, store things that cant be changed or references; TODO confirm if references is a valid unmuttable... or Ids should be used instead?
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class HierarchyI extends AbstractAppState implements IResizableListener{
-	public static HierarchyI i(){return GlobalInstanceManagerI.i().get(HierarchyI.class);}
+
+	public static HierarchyI i(){return GlobalManagerI.i().get(HierarchyI.class);}
 	
 	private EntitySet	entsetBasicQuery;
 	private EntitySet	entsetHierarchyQuery;
@@ -86,6 +85,8 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 	private Application	app;
 	private FocusManagerState	focusState;
 	private float	fBeginOrderPosZ = 0f;
+
+	private ResizablePanel	rzpCurrentlyBeingResized;
 	
 	/**
 	 * so the blocker can stay in that gap
@@ -97,6 +98,8 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 	private BlockerListener blockerListener = new BlockerListener();
 	private float	fMinLemurPanelSizeZ = 0.01f;
 	private float	fCurrentOrderPosZ;
+	private ColorRGBA	colorBlocker = ColorI.i().colorChangeCopy(ColorRGBA.Red, 0f, 0.15f);
+	private ColorRGBA	colorInvisible = new ColorRGBA(0,0,0,0);
 	
 	public void configure(Node nodeToMonitor, float fBeginOrderZ){
 		this.fBeginOrderPosZ=fBeginOrderZ;
@@ -106,7 +109,7 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 		recreateFullQuery(); //just to create it empty so new entities will be detected
 		if(entsetHierarchyQuery.size()>0)throw new DetailedException("must begin empty so news and changes can be properly applied",entsetHierarchyQuery,ed);
     
-		app=GlobalInstanceManagerI.i().get(Application.class);
+		app=GlobalManagerI.i().get(Application.class);
     app.getStateManager().attach(this);
     
 	//	app.getStateManager().attach(this);
@@ -154,6 +157,7 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 	}
 
 	public static class Blocker implements EntityComponent, PersistentComponent{
+//		private ColorRGBA color;
 		Panel val;
 		private boolean bBlocking=false;
 		
@@ -164,6 +168,7 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 		
 		public Panel getLayer(){ return val; }
 		public boolean isBlocking() {return bBlocking;}
+//		public ColorRGBA getColor() {return color;}
 	}
 	
 	public static class BlockerListener extends DefaultCursorListener{
@@ -214,6 +219,10 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 		}
 	}
 	
+	public void setBlockerColor(ColorRGBA color){
+		colorBlocker = color;
+	}
+	
 	public void initializeNewEntity(Float tpf,Entity ent) {
 //		EntityId entid = ent.getId();
 		
@@ -236,9 +245,7 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 			Panel pnlBlocker = new Panel("");
 			ed.setComponent(ent.getId(),new Blocker(pnlBlocker,null)); //ent.set(
 			
-			pnlBlocker.setBackground(
-				new QuadBackgroundComponent(//ColorRGBA.Red));
-					ColorI.i().colorChangeCopy(ColorRGBA.Red, -0.75f, 0.5f)));
+			pnlBlocker.setBackground(new QuadBackgroundComponent(colorBlocker));
 			
 			//the blocker has not a parent panel! so it will let the dialog be dragged directly!
 			DragParentestListenerI.i().applyAt(pnlBlocker, rzp);  
@@ -260,7 +267,7 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 	}
 
 	public void enableBlockingLayer(Entity ent, boolean b){
-		Blocker blocker = ent.get(Blocker.class);
+		Blocker blocker = ent.get(Blocker.class); //ed.getComponent(ent.getId(), Blocker.class)
 		ent.set(new Blocker(blocker.getLayer(),b));
 	}
 	
@@ -269,11 +276,20 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 	 * @param compChild
 	 * @return 
 	 */
-	public void showAsHierarchyModal(EntityId entidParent, EntityId entidChild){
-		showAndApplyHierarchyChild(
-				ed.getEntity(entidParent, getAllRequiredComponentTypesArray()),
-				ed.getEntity(entidChild, getAllRequiredComponentTypesArray()),
-				true);
+	public void showDialogAsModal(EntityId entidParent, EntityId entidChild){
+		QueueI.i().enqueue(new CallableX() {
+			@Override
+			public Boolean call() {
+				if(!ed.getComponent(entidParent, Initialized.class).isInitialized())return false;
+				if(!ed.getComponent(entidChild, Initialized.class).isInitialized())return false;
+				
+				Entity entParent = ed.getEntity(entidParent, getAllRequiredComponentTypesArray());
+				Entity entChild = ed.getEntity(entidChild, getAllRequiredComponentTypesArray());
+				showAndApplyHierarchyChild(entParent,entChild,true);
+				
+				return true;
+			}
+		});
 	}
 	
 	/**
@@ -281,7 +297,7 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 	 * @param compChild
 	 * @return 
 	 */
-	public void showAsHierarchyModeless(Entity entParent, Entity entChild){
+	public void showDialogAsModeless(Entity entParent, Entity entChild){
 		showAndApplyHierarchyChild(entParent,entChild,false);
 	}
 	
@@ -617,10 +633,13 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 				if(Float.compare(v3fSize.length(),0f)!=0){ //waiting top panel be updated by lemur
 					Vector3f v3fPos = rzp.getLocalTranslation().clone();
 					
+					QuadBackgroundComponent qbc = ((QuadBackgroundComponent)pnlBlocker.getBackground());
 					if(isBlocking(ent)){
 						v3fPos.z += v3fSize.z + fInBetweenGapDistZ/2f; //above
+						qbc.setColor(colorBlocker);
 					}else{
-						v3fPos.z -= fInBetweenGapDistZ/2f; //below
+						v3fPos.z -= fInBetweenGapDistZ/2f; //below to not receive mouse/cursor events
+						qbc.setColor(colorInvisible);
 					}
 					
 					pnlBlocker.setLocalTranslation(v3fPos);
@@ -686,8 +705,6 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 //			updateLastFocusAppTimeNano(entidUpdLFTime);
 		}
 	}
-
-	private ResizablePanel	rzpCurrentlyBeingResized;
 
 	public boolean isHasAnyDialogOpened() {
 		return (getHierarchyDialogs(null).size()>0);
@@ -761,24 +778,59 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 		Entity entParent = getEntityFor(entidParent,GuiLink.class);
 		return entParent.get(GuiLink.class);
 	}
-
+	
+	public void setAutoMoveRelativelyToParent(EntityId entid){
+		ed.setComponent(entid, new RelativePos(null));
+	}
+	
 	@Override
 	public void updateLogicalState(float tpf, ResizablePanel rzpSource) {
-		updateBlocker(tpf, getEntityIdFor(rzpSource), rzpSource);
+		EntityId entid = getEntityIdFor(rzpSource);
+		updateBlocker(tpf, entid, rzpSource);
+		
+		EntityId entidParent = ed.getComponent(entid, ShownState.class).getHierarchyParent();
+		if(entidParent!=null){
+			RelativePos rp = ed.getComponent(entid, RelativePos.class);
+			if(rp!=null){
+				ResizablePanel rzpParent = ed.getComponent(entidParent, GuiLink.class).getResizablePanel();
+				
+				if(DragParentestListenerI.i().getParentestBeingDragged()==rzpSource){
+					/**
+					 * update displacement
+					 */
+					ed.setComponent(entid, new RelativePos(
+							rzpSource.getLocalTranslation().subtract(rzpParent.getLocalTranslation()) ) );
+				}else{
+					/**
+					 * set position relatively to parent
+					 */
+					Vector3f v3fNewPos = rzpParent.getLocalTranslation().clone();
+					v3fNewPos.addLocal(rp.getPositionRelativeToParent());
+					v3fNewPos.z=rzpSource.getLocalTranslation().z;
+					
+	//					v3fNewPos.x=rzpParent.getLocalTranslation().x 
+	//						+ (rzpParent.getSize().x/2f - rzpSource.getSize().x/2f + fCascadeDist);
+	//					v3fNewPos.y=rzpParent.getLocalTranslation().y 
+	//						- (rzpParent.getSize().y/2f - rzpSource.getSize().y/2f + fCascadeDist);
+					
+					rzpSource.setLocalTranslation(v3fNewPos);
+				}
+			}
+		}
 	}
 
 	@Override
-	public void removedFromParent(ResizablePanel rzpSource) {
+	public void removedFromParentEvent(ResizablePanel rzpSource) {
 		updateBlocker(null, getEntityIdFor(rzpSource), rzpSource);
 	}
 
 	@Override
-	public void resizedTo(ResizablePanel rzpSource, Vector3f v3fNewSize) {
+	public void resizedEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {
 		rzpCurrentlyBeingResized=rzpSource;
 	}
 
 	@Override
-	public void endedResizingFor(ResizablePanel rzpSource) {
+	public void endedResizingEvent(ResizablePanel rzpSource) {
 		rzpCurrentlyBeingResized=null; //user can resize only one at a time 
 	}
 
@@ -786,8 +838,21 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 		return ed;
 	}
 
+	public static class RelativePos implements EntityComponent, PersistentComponent{
+		private Vector3f	v3fPositionRelativeToParent = new Vector3f(20, -20, 0); //cascade like
+		/**
+		 * @param v3fPositionRelativeToParent if null will use default
+		 */
+		public RelativePos(Vector3f v3fPositionRelativeToParent) {
+			if(v3fPositionRelativeToParent!=null)this.v3fPositionRelativeToParent = v3fPositionRelativeToParent;
+		}
+		public Vector3f getPositionRelativeToParent() {
+			return v3fPositionRelativeToParent;
+		}
+	}
+	
 	public static class GuiLink implements EntityComponent, PersistentComponent{
-		ResizablePanel val;
+		private ResizablePanel val;
 		public GuiLink(ResizablePanel val) { this.val=val; }
 		public ResizablePanel getResizablePanel(){ return val; }
 	}

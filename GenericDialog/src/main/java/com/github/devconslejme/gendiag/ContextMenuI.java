@@ -32,7 +32,7 @@ import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
 import com.github.devconslejme.gendiag.es.HierarchyI;
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.MiscJmeI;
@@ -57,7 +57,7 @@ import com.simsilica.lemur.event.DefaultCursorListener;
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
 public class ContextMenuI {
-	public static ContextMenuI i(){return GlobalInstanceManagerI.i().get(ContextMenuI.class);}
+	public static ContextMenuI i(){return GlobalManagerI.i().get(ContextMenuI.class);}
 	
 //	private Node	nodeParent;
 	private ResizablePanel	hrp;
@@ -108,7 +108,7 @@ public class ContextMenuI {
 	}
 	
 	public static class ContextMenuOwnerListenerI extends DefaultCursorListener{
-		public static ContextMenuOwnerListenerI i(){return GlobalInstanceManagerI.i().get(ContextMenuOwnerListenerI.class);}
+		public static ContextMenuOwnerListenerI i(){return GlobalManagerI.i().get(ContextMenuOwnerListenerI.class);}
 		
 		@Override
 		protected void click(CursorButtonEvent event, Spatial target,				Spatial capture) {
@@ -192,7 +192,7 @@ public class ContextMenuI {
 		}
 		
 //		_HierarchyComponent comp = cm.getOwner().getComponent(_HierarchyComponent.class);
-		HierarchyI.i().showAsHierarchyModal(HierarchyI.i().getEntityIdFor(cm.getOwner()), entid);
+		HierarchyI.i().showDialogAsModal(HierarchyI.i().getEntityIdFor(cm.getOwner()), entid);
 //		comp=_HierarchySystemI.i().workOn(comp).showAsHierarchyModal(hrp.getComponent(_HierarchyComponent.class));
 //		nodeParent.attachChild(hrp);
 		

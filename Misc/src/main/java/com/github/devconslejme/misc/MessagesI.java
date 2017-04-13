@@ -41,7 +41,7 @@ import com.github.devconslejme.misc.ReportI.IReport;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class MessagesI {
-	public static MessagesI i(){return GlobalInstanceManagerI.i().get(MessagesI.class);}
+	public static MessagesI i(){return GlobalManagerI.i().get(MessagesI.class);}
 	
 	private HashMap<String,ReviewableMsg> hmMsgs = new HashMap<String,ReviewableMsg>();
 	private StringBuilder	sbStack;

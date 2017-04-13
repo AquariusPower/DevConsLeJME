@@ -40,7 +40,7 @@ import com.jme3.system.Timer;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class TimeConvertI {
-	public static TimeConvertI i(){return GlobalInstanceManagerI.i().get(TimeConvertI.class);}
+	public static TimeConvertI i(){return GlobalManagerI.i().get(TimeConvertI.class);}
 	
 	SimpleDateFormat dateFormat = new SimpleDateFormat();
 	Date dateRealTime = new Date();

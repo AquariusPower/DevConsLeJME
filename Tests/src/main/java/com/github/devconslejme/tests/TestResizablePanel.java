@@ -28,7 +28,7 @@
 package com.github.devconslejme.tests;
 
 import com.github.devconslejme.gendiag.ResizablePanel;
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MainThreadI;
 import com.github.devconslejme.misc.jme.QueueStateI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;

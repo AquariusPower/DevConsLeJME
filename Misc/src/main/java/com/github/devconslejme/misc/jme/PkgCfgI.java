@@ -27,7 +27,7 @@
 
 package com.github.devconslejme.misc.jme;
 
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.Application;
 
 
@@ -35,12 +35,12 @@ import com.jme3.app.Application;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class PkgCfgI {
-	public static PkgCfgI i(){return GlobalInstanceManagerI.i().get(PkgCfgI.class);}
+	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
 	public void configure(Application app){
 		com.github.devconslejme.misc.PkgCfgI.i().configure();
 		
-		GlobalInstanceManagerI.i().put(Application.class, app);  //required by queuer below
+		GlobalManagerI.i().put(Application.class, app);  //required by queuer below
 		QueueStateI.i().configure();
 	}
 }

@@ -27,7 +27,7 @@
 
 package com.github.devconslejme.misc.jme;
 
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 
@@ -35,7 +35,7 @@ import com.jme3.math.FastMath;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class ColorI {
-	public static ColorI i(){return GlobalInstanceManagerI.i().get(ColorI.class);}
+	public static ColorI i(){return GlobalManagerI.i().get(ColorI.class);}
 	
 	/**
 	 * no overlapping
@@ -53,7 +53,6 @@ public class ColorI {
 	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB, float fAlpha){
 		color = color.clone();
 		
-		color.r=Math.min(color.r+fAddRGB, 0f);
 		color.r=colorComponentLimit(color.r+=fAddRGB);
 		color.g=colorComponentLimit(color.g+=fAddRGB);
 		color.b=colorComponentLimit(color.b+=fAddRGB);

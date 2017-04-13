@@ -27,7 +27,7 @@
 
 package com.github.devconslejme.misc.lemur;
 
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.math.Vector3f;
@@ -45,7 +45,7 @@ import com.simsilica.lemur.event.CursorMotionEvent;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class DragParentestListenerI implements CursorListener{
-	public static DragParentestListenerI i(){return GlobalInstanceManagerI.i().get(DragParentestListenerI.class);}
+	public static DragParentestListenerI i(){return GlobalManagerI.i().get(DragParentestListenerI.class);}
 	
 	private boolean bDragging = false;
 	private boolean bHightlightToo = true;

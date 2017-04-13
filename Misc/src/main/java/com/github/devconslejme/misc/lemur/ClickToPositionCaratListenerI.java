@@ -27,7 +27,7 @@
 
 package com.github.devconslejme.misc.lemur;
 
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.font.BitmapText;
@@ -47,7 +47,7 @@ import com.simsilica.lemur.event.CursorMotionEvent;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class ClickToPositionCaratListenerI implements CursorListener{
-	public static ClickToPositionCaratListenerI i(){return GlobalInstanceManagerI.i().get(ClickToPositionCaratListenerI.class);}
+	public static ClickToPositionCaratListenerI i(){return GlobalManagerI.i().get(ClickToPositionCaratListenerI.class);}
 	
 	public void applyAt(Spatial spt){
 		CursorEventControl.addListenersToSpatial(spt, this);

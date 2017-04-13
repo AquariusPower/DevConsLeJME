@@ -31,7 +31,7 @@ import com.github.devconslejme.devcons.JavaScriptI;
 import com.github.devconslejme.extras.DynamicFPSLimiter;
 import com.github.devconslejme.extras.OSCmd;
 import com.github.devconslejme.extras.SingleAppInstance;
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.system.AppSettings;
@@ -45,7 +45,7 @@ import com.jme3.system.lwjgl.LwjglAbstractDisplay;
 public class TestDevCons extends SimpleApplication{
 
 	public static void main(String[] args) {
-		GlobalInstanceManagerI.i().get(SingleAppInstance.class).configureOptionalAtMainMethod(
+		GlobalManagerI.i().get(SingleAppInstance.class).configureOptionalAtMainMethod(
 			JmeSystem.getStorageFolder(StorageFolderType.Internal)); // this is optional
 		
 		TestDevCons tst = new TestDevCons();
@@ -71,20 +71,20 @@ public class TestDevCons extends SimpleApplication{
 		/*** optionals below ***/
 //		JavaScriptI.i().setJSBinding(this);
 		
-		GlobalInstanceManagerI.i().get(SingleAppInstance.class).configureRequiredAtApplicationInitialization(null);
+		GlobalManagerI.i().get(SingleAppInstance.class).configureRequiredAtApplicationInitialization(null);
 //		JavaScriptI.i().setJSBinding(GlobalInstanceManagerI.i().get(SingleAppInstance.class));
 		
 		getStateManager().attach(new AbstractAppState(){
 			@Override
 			public void update(float tpf) {
 				super.update(tpf);
-				GlobalInstanceManagerI.i().get(DynamicFPSLimiter.class).update(tpf);
+				GlobalManagerI.i().get(DynamicFPSLimiter.class).update(tpf);
 			}
 		});
 //		JavaScriptI.i().setJSBinding(GlobalInstanceManagerI.i().get(DynamicFPSLimiter.class));
 		
 		// Linux only: easy workaround to make strict focus policy painless
-		GlobalInstanceManagerI.i().get(OSCmd.class).runOSCommand(
+		GlobalManagerI.i().get(OSCmd.class).runOSCommand(
 			"linux 'xdotool windowactivate $(xdotool search --name \"^"+settings.getTitle()+"$\")'");
 //		JavaScriptI.i().setJSBinding(GlobalInstanceManagerI.i().get(OSCmd.class));
 	}
@@ -94,6 +94,6 @@ public class TestDevCons extends SimpleApplication{
 	 */
 	@Override
 	public void handleError(String errMsg, Throwable t) {
-		GlobalInstanceManagerI.i().get(SingleAppInstance.class).setExitRequestCause(errMsg,t);
+		GlobalManagerI.i().get(SingleAppInstance.class).setExitRequestCause(errMsg,t);
 	}
 }

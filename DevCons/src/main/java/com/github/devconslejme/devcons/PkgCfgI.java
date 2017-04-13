@@ -27,7 +27,7 @@
 
 package com.github.devconslejme.devcons;
 
-import com.github.devconslejme.misc.GlobalInstanceManagerI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.Application;
 import com.jme3.scene.Node;
 
@@ -36,7 +36,7 @@ import com.jme3.scene.Node;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class PkgCfgI {
-	public static PkgCfgI i(){return GlobalInstanceManagerI.i().get(PkgCfgI.class);}
+	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
 	public void configure(Application app, Node nodeParent){
 		com.github.devconslejme.gendiag.PkgCfgI.i().configure(app,nodeParent);

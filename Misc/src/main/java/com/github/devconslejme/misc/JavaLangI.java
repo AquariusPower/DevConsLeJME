@@ -39,7 +39,7 @@ import com.google.common.collect.Lists;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class JavaLangI {
-	public static JavaLangI i(){return GlobalInstanceManagerI.i().get(JavaLangI.class);}
+	public static JavaLangI i(){return GlobalManagerI.i().get(JavaLangI.class);}
 	
 	public static enum EArrayType{
 		/** HashMap TreeMap etc */
