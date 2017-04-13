@@ -46,7 +46,7 @@ public class HierarchySorterI {
 	}
 	
 	public static interface IHierarchy{
-		public IHierarchy getHierarchyParent();
+		public <T extends IHierarchy> T getHierarchyParent();
 		public EHierarchy getHierarchyPriority();
 		public long getLastActivationNanoTime();
 	}

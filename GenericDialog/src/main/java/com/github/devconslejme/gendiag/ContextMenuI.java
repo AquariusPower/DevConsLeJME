@@ -31,8 +31,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
-import com.github.devconslejme.gendiag.es.HierarchyI;
+import com.github.devconslejme.gendiag.es.DialogHierarchyI;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.HierarchySorterI.EHierarchy;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.MiscJmeI;
@@ -136,11 +137,11 @@ public class ContextMenuI {
 		
 //		HierarchyComponent comp = hrp.createComponent(HierarchyComponent.class);
 //		_HierarchyComponent comp = _HierarchySystemI.i().createComponentAt(hrp);
-		entid = HierarchyI.i().createEntity(hrp,ContextMenuI.class.getSimpleName());
+		entid = DialogHierarchyI.i().createEntity(hrp,ContextMenuI.class.getSimpleName());
 		
 //		hrp.updateComponent(new HierarchyComponent(comp,true,null));
 //		_HierarchySystemI.i().workOn(comp).setAsHierarchyTop();
-		HierarchyI.i().setAsHierarchyTop(entid);
+		DialogHierarchyI.i().setHierarchyPriority(entid,EHierarchy.Top);
 		
 		hrp.setAllEdgesEnabled(false); //it is here for the hierarchy (not the resizing)
 		
@@ -155,7 +156,7 @@ public class ContextMenuI {
 			@Override
 			public Boolean call() {
 				if(hrp.getParent()!=null){
-					ResizablePanel rzpParent = HierarchyI.i().getHierarchyParentGuiLinkFor(entid).getResizablePanel();
+					ResizablePanel rzpParent = DialogHierarchyI.i().getHierarchyParentGuiLinkFor(entid).getResizablePanel();
 					
 					hrp.setLocalTranslation(
 						rzpParent.getLocalTranslation().subtract(
@@ -192,7 +193,7 @@ public class ContextMenuI {
 		}
 		
 //		_HierarchyComponent comp = cm.getOwner().getComponent(_HierarchyComponent.class);
-		HierarchyI.i().showDialogAsModal(HierarchyI.i().getEntityIdFor(cm.getOwner()), entid);
+		DialogHierarchyI.i().showDialogAsModal(DialogHierarchyI.i().getEntityIdFor(cm.getOwner()), entid);
 //		comp=_HierarchySystemI.i().workOn(comp).showAsHierarchyModal(hrp.getComponent(_HierarchyComponent.class));
 //		nodeParent.attachChild(hrp);
 		

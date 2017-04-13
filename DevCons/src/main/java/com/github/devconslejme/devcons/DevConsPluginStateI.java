@@ -41,7 +41,7 @@ import com.github.devconslejme.gendiag.ContextMenuI;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
-import com.github.devconslejme.gendiag.es.HierarchyI;
+import com.github.devconslejme.gendiag.es.DialogHierarchyI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
@@ -905,8 +905,8 @@ public class DevConsPluginStateI extends AbstractAppState {
 		
 		hrpMain = new ResizablePanel(getStyle());
 		hrpMain.setName(DevConsPluginStateI.class.getSimpleName());//debug name
-		HierarchyI.i().setAsHierarchyTop(
-				HierarchyI.i().createEntity(hrpMain,"DevCons"));
+		DialogHierarchyI.i().setAsHierarchyTop(
+				DialogHierarchyI.i().createEntity(hrpMain,"DevCons"));
 		hrpMain.setContents(cntrMain);
 //		hrpMain.addResizableListener(this);
 		
