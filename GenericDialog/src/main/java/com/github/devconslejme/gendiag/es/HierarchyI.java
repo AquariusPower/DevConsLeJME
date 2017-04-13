@@ -103,7 +103,6 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 		this.nodeToMonitor=nodeToMonitor;
 		
     ed = new DefaultEntityData(); //holds all components
-//    ed.getEntities(getAllComponentTypesArray()); //just to let the entset.getAddedEntities() work the 1st time
 		recreateFullQuery(); //just to create it empty so new entities will be detected
 		if(entsetHierarchyQuery.size()>0)throw new DetailedException("must begin empty so news and changes can be properly applied",entsetHierarchyQuery,ed);
     
@@ -414,9 +413,9 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 		 * TODO how to make this work?
 		EntitySet entset = ed.getEntities(new FilterByHierarchyParent(ent), ShownState.class);
 		 */
-		EntitySet entset = ed.getEntities(GuiLink.class,ShownState.class,LastFocusTime.class);
+//		EntitySet entset = ed.getEntities(GuiLink.class,ShownState.class,LastFocusTime.class);
 		
-		for(Entity entChild:entset){
+		for(Entity entChild:entsetHierarchyQuery){
 			if(!entChild.get(GuiLink.class).getResizablePanel().isOpened())continue;
 			
 			boolean bAdd=false;
@@ -743,8 +742,8 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 	}
 	
 	public EntityId getEntityIdFor(ResizablePanel rzp){
-		EntitySet entset = ed.getEntities(GuiLink.class);
-		for(Entity ent:entset){
+//		EntitySet entset = ed.getEntities(GuiLink.class);
+		for(Entity ent:entsetBasicQuery){
 			if(rzp==ent.get(GuiLink.class).getResizablePanel()){
 				return ent.getId();
 			}
