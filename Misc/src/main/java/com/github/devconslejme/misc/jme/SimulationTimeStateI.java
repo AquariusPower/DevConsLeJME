@@ -28,9 +28,12 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.github.devconslejme.misc.jme;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.SimulationTimeI;
+import com.github.devconslejme.misc.jme.SavableHelperI.ISavableFieldAccess;
+import com.github.devconslejme.misc.jme.SavableHelperI.SaveSkipper;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.export.JmeExporter;
@@ -41,7 +44,7 @@ import com.jme3.export.Savable;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class SimulationTimeStateI extends AbstractAppState implements Savable {
+public class SimulationTimeStateI extends AbstractAppState implements Savable,ISavableFieldAccess {
 	public static SimulationTimeStateI i(){return GlobalManagerI.i().get(SimulationTimeStateI.class);}
 	
 	public void configure(){
@@ -68,5 +71,22 @@ public class SimulationTimeStateI extends AbstractAppState implements Savable {
 	@Override
 	public void read(JmeImporter im) throws IOException {
 		SavableHelperI.i().read(this,im);
+	}
+
+	@Override
+	public Object getFieldValue(Field fld) throws IllegalArgumentException,			IllegalAccessException {
+		throw new UnsupportedOperationException("method not implemented yet");
+//		return null;
+	}
+
+	@Override
+	public void setFieldValue(Field fld, Object value)			throws IllegalArgumentException, IllegalAccessException {
+		throw new UnsupportedOperationException("method not implemented yet");
+	}
+
+	@Override
+	public SaveSkipper<?> getSkipper() {
+		throw new UnsupportedOperationException("method not implemented yet");
+//		return null;
 	}
 }

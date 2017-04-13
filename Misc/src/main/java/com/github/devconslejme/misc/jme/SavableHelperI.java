@@ -37,6 +37,8 @@ import java.util.Set;
 
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.EType;
+import com.github.devconslejme.misc.JavaLangI;
+import com.github.devconslejme.misc.MessagesI;
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
@@ -44,11 +46,46 @@ import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
 
 /**
-* @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
-*/
+ * TODO this class should be an easy access to getters and setters configured by some kind of @Jme3Savable annotation... 
+ * 
+ * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+ */
 public class SavableHelperI {
 	private static SavableHelperI instance = new SavableHelperI();
 	public static SavableHelperI i(){return instance;}
+	
+	public static @interface AutoSavable{
+		//TODO use on getters and setters related to save/load, or use on fields that have such getters and setters
+	}
+	
+	/**
+	 * The class implementing it is agreeing to properly allow set and get of field values,
+	 * therefore this is an expected and safe access/behavior. 
+	 * So, the class implementing get and set, will ALWAYS have access to field's value management!
+	 * 
+	 * All classes from superest to concrete int the inheritance MUST implement these methods.
+	 * If some subclass misses such implementation, the superest will simply fail to access the Field object.
+	 */
+	public static interface IReflexFieldSafeAccess {
+		/**
+		 * //Use this at superest implementor:<br>
+		 * //if(fld.getDeclaringClass()!=CURRENT_SUB_CLASS.class)return super.getFieldValue(fld); //For subclasses uncomment this line<br>
+		 * return fld.get(Modifier.isStatic(fld.getModifiers()) ? null : this);<br>
+		 * //or if statics are not allowed/expected, use just:<br>
+		 * return fld.get(this);<br>
+		 */
+		public Object getFieldValue(Field fld) throws IllegalArgumentException, IllegalAccessException;
+		
+		/**
+		 * //Use this at superest implementor:<br>
+		 * //if(fld.getDeclaringClass()!=CURRENT_SUB_CLASS.class){super.setFieldValue(fld,value);return;} //For subclasses uncomment this line<br>
+		 * fld.set(Modifier.isStatic(fld.getModifiers()) ? null : this, value);<br>
+		 * //or if statics are not allowed/expected, use just:<br>
+		 * fld.set(this,value);<br>
+		 */
+		public void setFieldValue(Field fld, Object value) throws IllegalArgumentException, IllegalAccessException;
+	}
+
 	
 	public static interface ISavableFieldAccess extends IReflexFieldSafeAccess,Savable{
 		public SaveSkipper<?> getSkipper();
@@ -56,7 +93,6 @@ public class SavableHelperI {
 	
 	public SavableHelperI(){
 		aclGlobalSkip.add(ISaveSkipper.class);
-		aclGlobalSkip.add(CompositeControlAbs.class);
 	}
 	
 	public void setFieldVal(ISavableFieldAccess isfa, Field fld, Object val) throws IllegalArgumentException, IllegalAccessException {
@@ -80,7 +116,7 @@ public class SavableHelperI {
 		aobjDbg.add(svTargetToStore);
 		
 		if(svLoadedSource==null){
-			GlobalCommandsDelegatorI.i().dumpWarnEntry("null, nothing loaded",aobjDbg);
+			MessagesI.i().warnMsg(this,"null, nothing loaded",aobjDbg);
 			return false;
 		}
 		aobjDbg.add(svLoadedSource.getClass().getName());
@@ -89,7 +125,7 @@ public class SavableHelperI {
 		ISavableFieldAccess svBkpSelf = null;
 		if(!bRestoringSelfBackup){
 			if(svLoadedSource.getSkipper().isFailedToLoad()){
-				GlobalCommandsDelegatorI.i().dumpWarnEntry("cannot apply values from a 'failed to load' object",aobjDbg);
+				MessagesI.i().warnMsg(this,"cannot apply values from a 'failed to load' object",aobjDbg);
 				return false;
 			}
 			
@@ -100,7 +136,7 @@ public class SavableHelperI {
 			}
 		}
 		
-		if(!svTargetToStore.getClass().isInstance(svLoadedSource))throw new PrerequisitesNotMetException("incompatible", aobjDbg);
+		if(!svTargetToStore.getClass().isInstance(svLoadedSource))throw new DetailedException("incompatible", aobjDbg);
 		for(Entry<Field,FieldExtraInfo> entry:getAllFields(svTargetToStore)){
 			Field fld=entry.getKey();
 			aobjDbg.add(fld.getDeclaringClass());
@@ -109,36 +145,24 @@ public class SavableHelperI {
 			
 	//			allowFieldAccess(fld);
 				try {
-					if(VarCmdFieldAbs.class.isAssignableFrom(fld.getType())){
-						VarCmdFieldAbs<?,?> var=(VarCmdFieldAbs<?,?>)SavableHelperI.i().getFieldVal(svTargetToStore,fld);
-						VarCmdFieldAbs<?,?> varLoaded=(VarCmdFieldAbs<?,?>)SavableHelperI.i().getFieldVal(svLoadedSource,fld);
-						if(var.getClass()!=varLoaded.getClass()){
-							aobjDbg.add(var.getClass());
-							aobjDbg.add(varLoaded.getClass());
-							throw new DetailedException("should be the exactly same concrete instanced class, they differ:", aobjDbg);
-						}
-						var.setObjectRawValue(varLoaded.getRawValue());
-					}else
-					{	
-						if(fld.getType().isPrimitive()){}else
-						if(String.class.isAssignableFrom(fld.getType())){}else
-						{
-							throw new DetailedException("direct field value overwrite is only allowed for primitives and String!"
-								+" other classes must use their specific getters and setters",aobjDbg); 
-						}
-						
-						Object valLoaded = SavableHelperI.i().getFieldVal(svLoadedSource,fld);
-						if(valLoaded==null){
-							throw new DetailedException("how can the loaded value be null?", aobjDbg);
-						}
-						
-						SavableHelperI.i().setFieldVal(svTargetToStore,fld,valLoaded);
+					if(fld.getType().isPrimitive()){}else
+					if(String.class.isAssignableFrom(fld.getType())){}else
+					{
+						throw new DetailedException("direct field value overwrite is only allowed for primitives and String!"
+							+" other classes must use their specific getters and setters",aobjDbg); 
 					}
+					
+					Object valLoaded = SavableHelperI.i().getFieldVal(svLoadedSource,fld);
+					if(valLoaded==null){
+						throw new DetailedException("how can the loaded value be null?", aobjDbg);
+					}
+					
+					SavableHelperI.i().setFieldVal(svTargetToStore,fld,valLoaded);
 				} catch (IllegalArgumentException | IllegalAccessException | SecurityException e) {
 					if(bRestoringSelfBackup){
 						throw new DetailedException("during restore values", aobjDbg).initCauseAndReturnSelf(e);
 					}else{
-						GlobalCommandsDelegatorI.i().dumpExceptionEntry(e,aobjDbg);
+						MessagesI.i().debugInfo(this,e.getMessage(),e,aobjDbg);
 						applyValuesFrom(svTargetToStore,svBkpSelf,true); //restore values to remove any inconsistency
 					}
 					
@@ -156,7 +180,7 @@ public class SavableHelperI {
 	private Set<Entry<Field,FieldExtraInfo>> getAllFields(ISavableFieldAccess isfa){
 		if(isfa.getSkipper().getFieldExtraInfo()==null){
 			isfa.getSkipper().setFieldExtraInfo(new HashMap<Field,FieldExtraInfo>());
-			for(Class clOwner:MiscI.i().getSuperClassesOf(isfa,false)){
+			for(Class clOwner:JavaLangI.i().getSuperClassesOf(isfa,false)){
 				for(Field fld:clOwner.getDeclaredFields()){
 	//				boolean bAccessible = allowFieldAccess(fld);
 					if(checkSkip(isfa,fld))continue;
@@ -197,16 +221,13 @@ public class SavableHelperI {
 	//	private HashMap<Field,Boolean>	hmFieldAccessible;
 		private HashMap<Field,FieldExtraInfo> hmFieldExtraInfo;// = new HashMap<Field,FieldExtraInfo>();
 		private ISavableFieldAccess	isfaOwner;
-		private CompositeControlAbs	ccAccessKey;
 		
-		public SaveSkipper(CompositeControlAbs cc, ISavableFieldAccess isfa) {
-			cc.assertSelfNotNull();
-			this.ccAccessKey = cc;
+		public SaveSkipper(ISavableFieldAccess isfa) {
 			this.isfaOwner=isfa;
 		}
 		
 	//	private void assertIsfaOwner(ISavableFieldAccess isfaOwnerCheck){
-	//		if(this.isfaOwner!=isfaOwnerCheck)throw new PrerequisitesNotMetException("invalid owner", this, this.isfaOwner, isfaOwnerCheck, ISavableFieldAccess.class);
+	//		if(this.isfaOwner!=isfaOwnerCheck)throw new DetailedException("invalid owner", this, this.isfaOwner, isfaOwnerCheck, ISavableFieldAccess.class);
 	//	}
 		
 		public boolean isThisInstanceIsALoadedTmp() {
@@ -219,10 +240,7 @@ public class SavableHelperI {
 			this.bThisInstanceIsALoadedTmp = true;
 		}
 	//	public O getOwner(ISavableFieldAccess isfaOwnerCheck) {
-		public OWNER getOwner(CompositeControlAbs cc) {
-			cc.assertSelfNotNullEqualsStored(ccAccessKey);
-	//		assertIsfaOwner(isfaOwnerCheck);
-	//	protected O getOwner() {
+		public OWNER getOwner() {
 			return this.owner;
 		}
 		public boolean isOwnerSet() {
@@ -260,7 +278,7 @@ public class SavableHelperI {
 			if(!aclSkip.contains(cl)){
 				aclSkip.add(cl);
 			}else{
-				MsgI.i().devWarn("already set", cl);
+				MessagesI.i().warnMsg(this,"already set", cl);
 			}
 		}
 	//	private ArrayList<Class<?>> getSkipClassTypeListCopy() {
@@ -275,7 +293,7 @@ public class SavableHelperI {
 		if(!aclGlobalSkip.contains(cl)){
 			aclGlobalSkip.add(cl);
 		}else{
-			MsgI.i().devWarn("already set", cl);
+			MessagesI.i().warnMsg(this,"already set", cl);
 		}
 	}
 	
@@ -336,7 +354,7 @@ public class SavableHelperI {
 					
 					read(isfa,ic,clField,strName,fld,valDef,aobjDbg);
 				} catch (IllegalArgumentException | IllegalAccessException | NullPointerException e) {
-					GlobalCommandsDelegatorI.i().dumpExceptionEntry(e,aobjDbg);
+					MessagesI.i().debugInfo(this, e.getMessage(), e, aobjDbg);
 					isfa.getSkipper().bFailedToLoad=true;
 					break;
 	//			}finally{
@@ -356,12 +374,6 @@ public class SavableHelperI {
 			case Int:			valRead=ic.readInt		(strName, (int)objValDef);		break;
 			case Long:		valRead=ic.readLong		(strName, (long)objValDef);		break;
 			case String:	valRead=ic.readString	(strName, (String)objValDef);	break;
-			case Var:
-				VarCmdFieldAbs var = (VarCmdFieldAbs)SavableHelperI.i().getFieldVal(isfa,fld);
-				addDbgInfo(aobjDbg, var.getFailSafeDebugReport());
-				var.setObjectRawValue(
-					read(isfa, ic, var.getRawValue().getClass(), strName, null, var.getRawValueDefault(), aobjDbg));
-				return null;
 		}
 		
 		if(fld==null){ //called from var
@@ -409,11 +421,8 @@ public class SavableHelperI {
 				}
 				break;
 			case String:	if(valueDefault==null)valueDefault=((String)objValue)+"_Different";	break;
-			case Var:
-				// put nothing here!
-				break;
 		}
-	//	{throw new PrerequisitesNotMetException("unsupported value class type "+clValue);}
+	//	{throw new DetailedException("unsupported value class type "+clValue);}
 		
 		return (T)valueDefault;
 	}
@@ -459,13 +468,6 @@ public class SavableHelperI {
 			case Int:			oc.write((int)val,			strName, changeVal(isfa,int.class,			val, valDef));break;
 			case Long:		oc.write((long)val,			strName, changeVal(isfa,long.class,		val, valDef));break;
 			case String:	oc.write((String)val,		strName, changeVal(isfa,String.class,	val, valDef));break;
-			case Var:
-				VarCmdFieldAbs<?,?> var = (VarCmdFieldAbs<?,?>)val;
-				addDbgInfo(aobjDbg, var.getFailSafeDebugReport());
-	//			if(var.getRawValue() != var.getRawValueDefault()){
-					write(isfa,oc, strName, var.getRawValue(), var.getRawValueDefault(), aobjDbg);
-	//			}
-				return;
 		}
 	}
 	
@@ -489,13 +491,6 @@ public class SavableHelperI {
 							throw new DetailedException("default (initial) value, cannot be null!", fld); 
 						}
 						applyFieldExtraInfo(isfa,fld, null, val);
-						break;
-					case Var:
-						/**
-						 * it has its own internal default.
-						 * ensure consistency, Savable does not accept nulls...
-						 */
-						((VarCmdFieldAbs)SavableHelperI.i().getFieldVal(isfa,fld)).setDenyNullValue();
 						break;
 				}
 			} catch (IllegalArgumentException | IllegalAccessException e) {
