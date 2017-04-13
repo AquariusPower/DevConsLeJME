@@ -24,7 +24,7 @@ INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package com.github.devconslejme.misc.lemur;
+package com.github.devconslejme.misc.jme;
 
 import com.jme3.math.Vector3f;
 import com.jme3.scene.shape.Line;
@@ -50,7 +50,12 @@ public class EffectLine extends EffectBaseAbs<EffectLine>{
 	
 	@Override
 	protected void playWork() {
-		Vector3f v3fTo = getLocationTo();
-		((Line)getGeom().getMesh()).updatePoints(getLocationFrom(), v3fTo);
+//		Vector3f v3fTo = getLocationTo();
+//		((Line)getGeom().getMesh()).updatePoints(getLocationFrom(), v3fTo);
+		((Line)getGeom().getMesh()).updatePoints(
+			new Vector3f(),
+			new Vector3f(0,0,getLocationFrom().distance(getLocationTo())));
+		
+		getGeom().lookAt(getLocationTo(), Vector3f.UNIT_Y);
 	}
 }

@@ -41,6 +41,7 @@ public class PkgCfgI {
 		com.github.devconslejme.misc.PkgCfgI.i().configure();
 		
 		GlobalManagerI.i().put(Application.class, app);  //first!
+		EffectManagerStateI.i().configure();
 		SimulationTimeStateI.i().configure();
 		QueueStateI.i().configure();
 	}

@@ -42,11 +42,12 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.jme.EffectElectricity;
+import com.github.devconslejme.misc.jme.EffectLine;
+import com.github.devconslejme.misc.jme.EffectManagerStateI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestListenerI;
-import com.github.devconslejme.misc.lemur.EffectElectricity;
-import com.github.devconslejme.misc.lemur.EffectLine;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
@@ -360,8 +361,8 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 //	}
 	
 	protected void applyParentToChildLinkEffect(ResizablePanel rzpParent, ResizablePanel rzpChild) {
-		EffectLine effLink = new EffectLine();
-//		EffectElectricity effLink = new EffectElectricity();
+		//EffectLine effLink = new EffectLine();
+		EffectElectricity effLink = new EffectElectricity();
 		
 		effLink.setOwner(rzpParent);
 
@@ -370,6 +371,8 @@ public class HierarchyI extends AbstractAppState implements IResizableListener{
 			.setFollowToTarget(rzpChild, null)
 			.setPlay(true)
 			;
+		
+		EffectManagerStateI.i().add(effLink);
 	}
 
 	//	ArrayList<ResizablePanel> arzpZOrderList = new ArrayList<ResizablePanel>();
