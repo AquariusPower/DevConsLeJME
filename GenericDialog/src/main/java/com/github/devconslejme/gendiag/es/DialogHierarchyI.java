@@ -168,10 +168,59 @@ public class DialogHierarchyI extends AbstractAppState implements IResizableList
 	public static class HierarchyComp implements EntityComponent, PersistentComponent{
 		public static enum EField{
 			bBlocking, //#syncTo
+			bInitialized, //#syncTo
+			lLastFocusTime,
+			hierarchyParent,
+			eHierarchy,
+			bHierarchyModal,
+			bShowLinkToChild,
 			;
 		}
 		private boolean bBlocking=false; //#syncFrom bBlocking
+		private boolean	bInitialized=false; //#syncFrom bInitialized
+		private long lLastFocusTime=-1;
+		private EntityId hierarchyParent=null;
+		private EHierarchy	eHierarchy=EHierarchy.Normal;
+		private boolean	bHierarchyModal=false;
+		private boolean bShowLinkToChild=true;
+		
 		public boolean isBlocking() {return bBlocking;}
+		public boolean isInitialized() {return bInitialized;}
+		public long getLastFocusTime() {return lLastFocusTime;}
+		public EntityId getHierarchyParent() {return hierarchyParent;}
+		public EHierarchy getHierarchyPriority() {return eHierarchy;}
+		public boolean isHierarchyModal() {return bHierarchyModal;}
+		public boolean isShowLinkToChild() {return bShowLinkToChild;}
+		
+		public HierarchyComp(HierarchyComp copyFrom, Object... aobjFieldsAndValues){
+			copyFrom(copyFrom); //initialize
+			
+			EField e = null;
+			Object objValue = null;
+			for(Object obj:aobjFieldsAndValues){
+				if(e!=null){objValue=obj;}
+				else
+				if (obj instanceof EField){e = (EField) obj; continue;}
+				
+				switch (e) {
+					case bBlocking:				this.bBlocking=(Boolean)objValue;break;
+					case bInitialized:		this.bInitialized=(Boolean)objValue;break;
+					case bHierarchyModal:	this.bHierarchyModal=(Boolean)objValue;break;
+					case bShowLinkToChild:this.bShowLinkToChild=(Boolean)objValue;break;
+					case eHierarchy:			this.eHierarchy=(EHierarchy)objValue;break;
+					case hierarchyParent:	this.hierarchyParent=(EntityId)objValue;break;
+					case lLastFocusTime:	this.lLastFocusTime=(Long)objValue;break;
+				}
+				
+				e = null;
+			}
+		}
+		
+		private void copyFrom(HierarchyComp copyFrom) {
+			this.bBlocking=copyFrom.bBlocking;
+			this.bInitialized=copyFrom.bInitialized;
+		}
+
 	}
 	
 	public static class Blocker implements EntityComponent, PersistentComponent{

@@ -27,12 +27,17 @@
 
 package com.github.devconslejme.gendiag.es;
 
+import java.util.HashMap;
+
+import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.simsilica.es.Entity;
+import com.simsilica.es.EntityId;
 import com.simsilica.es.EntitySet;
+import com.simsilica.lemur.Panel;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -41,6 +46,9 @@ public class DialogState extends AbstractAppState{
 	public static DialogState i(){return GlobalManagerI.i().get(DialogState.class);}
 
 	private EntitySet	entset;
+	
+	private HashMap<EntityId,ResizablePanel> hmDiag = new HashMap<EntityId,ResizablePanel>();
+	private HashMap<EntityId,Panel> hmBlocker = new HashMap<EntityId,Panel>();
 	
 	public void configure(){
 		GlobalManagerI.i().get(Application.class).getStateManager().attach(this);
@@ -58,7 +66,8 @@ public class DialogState extends AbstractAppState{
 		super.update(tpf);
 		
 		for(Entity ent:entset){
-			
+			ResizablePanel rzp = hmDiag.get(ent.getId());
+			Panel pnlBlocker = hmBlocker.get(ent.getId());
 		}
 	}
 }
