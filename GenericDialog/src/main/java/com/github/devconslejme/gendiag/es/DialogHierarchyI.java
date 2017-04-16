@@ -81,7 +81,6 @@ import com.simsilica.lemur.focus.FocusManagerState;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class DialogHierarchyI extends AbstractAppState implements IResizableListener{
-
 	public static DialogHierarchyI i(){return GlobalManagerI.i().get(DialogHierarchyI.class);}
 	
 	private EntitySet	entsetBasicQuery;
@@ -165,7 +164,16 @@ public class DialogHierarchyI extends AbstractAppState implements IResizableList
 //		}
 //		return entTopMost;
 	}
-
+	
+	public static class HierarchyComp implements EntityComponent, PersistentComponent{
+		public static enum EField{
+			bBlocking, //#syncTo
+			;
+		}
+		private boolean bBlocking=false; //#syncFrom bBlocking
+		public boolean isBlocking() {return bBlocking;}
+	}
+	
 	public static class Blocker implements EntityComponent, PersistentComponent{
 //		private ColorRGBA color;
 		Panel val;
@@ -1170,4 +1178,9 @@ public class DialogHierarchyI extends AbstractAppState implements IResizableList
 			MessagesI.i().warnMsg(this, "component already added "+cl.getName());
 		}
 	}
+
+	public EntitySet getEntities() {
+		return ed.getEntities(getAllRequiredComponentTypesArray());
+	}
+	
 }

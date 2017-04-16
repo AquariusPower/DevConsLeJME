@@ -46,7 +46,7 @@ import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
 
 /**
- * TODO this class should be an easy access to getters and setters configured by some kind of @Jme3Savable annotation... 
+ * TODO this class should be an automatic access to getters and setters configured by some kind of @Jme3Savable annotation... 
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
