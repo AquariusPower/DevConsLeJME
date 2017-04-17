@@ -83,7 +83,7 @@ import com.simsilica.lemur.focus.FocusManagerState;
 public class DialogHierarchyI extends AbstractAppState implements IResizableListener{
 	public static DialogHierarchyI i(){return GlobalManagerI.i().get(DialogHierarchyI.class);}
 	
-	private EntitySet	entsetBasicQuery;
+	private EntitySet	entsetBasicQuery; 
 	private EntitySet	entsetHierarchyQuery;
 	
 	private Node nodeToMonitor;
