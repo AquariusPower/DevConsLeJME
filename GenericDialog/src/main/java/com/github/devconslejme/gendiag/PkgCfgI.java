@@ -28,6 +28,7 @@
 package com.github.devconslejme.gendiag;
 
 import com.github.devconslejme.gendiag.es.DialogHierarchyI;
+import com.github.devconslejme.gendiag.es.DialogStateI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.Application;
 import com.jme3.scene.Node;
@@ -44,5 +45,6 @@ public class PkgCfgI {
 		
 		DialogHierarchyI.i().configure(nodeParent,0f);
 		ContextMenuI.i().configure();
+		DialogStateI.i().configure();
 	}
 }

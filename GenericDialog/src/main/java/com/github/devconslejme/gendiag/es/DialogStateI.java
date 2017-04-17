@@ -42,8 +42,8 @@ import com.simsilica.lemur.Panel;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class DialogState extends AbstractAppState{
-	public static DialogState i(){return GlobalManagerI.i().get(DialogState.class);}
+public class DialogStateI extends AbstractAppState{
+	public static DialogStateI i(){return GlobalManagerI.i().get(DialogStateI.class);}
 
 	private EntitySet	entset;
 	

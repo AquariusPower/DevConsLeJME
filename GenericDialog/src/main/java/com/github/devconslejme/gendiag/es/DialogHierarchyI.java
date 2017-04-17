@@ -170,7 +170,7 @@ public class DialogHierarchyI extends AbstractAppState implements IResizableList
 			bBlocking, //#syncTo
 			bInitialized, //#syncTo
 			lLastFocusTime,
-			hierarchyParent,
+			eidParent,
 			eHierarchy,
 			bHierarchyModal,
 			bShowLinkToChild,
@@ -179,7 +179,7 @@ public class DialogHierarchyI extends AbstractAppState implements IResizableList
 		private boolean bBlocking=false; //#syncFrom bBlocking
 		private boolean	bInitialized=false; //#syncFrom bInitialized
 		private long lLastFocusTime=-1;
-		private EntityId hierarchyParent=null;
+		private EntityId eidParent=null;
 		private EHierarchy	eHierarchy=EHierarchy.Normal;
 		private boolean	bHierarchyModal=false;
 		private boolean bShowLinkToChild=true;
@@ -187,7 +187,7 @@ public class DialogHierarchyI extends AbstractAppState implements IResizableList
 		public boolean isBlocking() {return bBlocking;}
 		public boolean isInitialized() {return bInitialized;}
 		public long getLastFocusTime() {return lLastFocusTime;}
-		public EntityId getHierarchyParent() {return hierarchyParent;}
+		public EntityId getHierarchyParent() {return eidParent;}
 		public EHierarchy getHierarchyPriority() {return eHierarchy;}
 		public boolean isHierarchyModal() {return bHierarchyModal;}
 		public boolean isShowLinkToChild() {return bShowLinkToChild;}
@@ -208,7 +208,7 @@ public class DialogHierarchyI extends AbstractAppState implements IResizableList
 					case bHierarchyModal:	this.bHierarchyModal=(Boolean)objValue;break;
 					case bShowLinkToChild:this.bShowLinkToChild=(Boolean)objValue;break;
 					case eHierarchy:			this.eHierarchy=(EHierarchy)objValue;break;
-					case hierarchyParent:	this.hierarchyParent=(EntityId)objValue;break;
+					case eidParent:				this.eidParent=(EntityId)objValue;break;
 					case lLastFocusTime:	this.lLastFocusTime=(Long)objValue;break;
 				}
 				
