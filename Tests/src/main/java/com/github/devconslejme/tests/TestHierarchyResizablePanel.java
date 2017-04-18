@@ -27,8 +27,9 @@
 
 package com.github.devconslejme.tests;
 
+import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.gendiag.ResizablePanel;
-import com.github.devconslejme.gendiag.es.DialogHierarchyI;
+import com.github.devconslejme.gendiag.ShowDialogStateI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.UserDataI;
@@ -72,22 +73,22 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		
 		// multi child hierarchy
 		ResizablePanel rzpA = createPanel(new Vector3f(300,700,0),"MultiA",null);
-		DialogHierarchyI.i().showDialog(rzpA);
+		ShowDialogStateI.i().showDialog(rzpA);
 		
 		ResizablePanel rzpB = createPanel(new Vector3f(310,710,0),"MultiB",null);
-		DialogHierarchyI.i().showDialogAsModal(
+		ShowDialogStateI.i().showDialogAsModal(
 			UserDataI.i().getUserDataPSH(rzpA,EntityId.class),
 			UserDataI.i().getUserDataPSH(rzpB,EntityId.class)
 		);
 		
 		ResizablePanel rzpC = createPanel(new Vector3f(320,720,0),"MultiC",null);
-		DialogHierarchyI.i().showDialogAsModal(
+		ShowDialogStateI.i().showDialogAsModal(
 			UserDataI.i().getUserDataPSH(rzpA,EntityId.class),
 			UserDataI.i().getUserDataPSH(rzpC,EntityId.class)
 		);
 		
 		ResizablePanel rzpD = createPanel(new Vector3f(320,720,0),"MultiD",null);
-		DialogHierarchyI.i().showDialogAsModal(
+		ShowDialogStateI.i().showDialogAsModal(
 			UserDataI.i().getUserDataPSH(rzpB,EntityId.class),
 			UserDataI.i().getUserDataPSH(rzpD,EntityId.class)
 		);
@@ -108,25 +109,25 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 			@Override
 			public void execute(Button source) { //FIXME not being reached
 				EntityId entidChild = UserDataI.i().getUserDataPSH(rzpChild,EntityId.class);
-				DialogHierarchyI.i().showDialogAsModal(
+				ShowDialogStateI.i().showDialogAsModal(
 					UserDataI.i().getUserDataPSH(rzpParent,EntityId.class),
 					entidChild
 				);
 			}
 		});
 		
-		DialogHierarchyI.i().showDialog(rzpParent);
+		ShowDialogStateI.i().showDialog(rzpParent);
 	}
 	
 	private ResizablePanel createPanel(Vector3f pos,String strName,String strInfo) {
 		if(strInfo==null)strInfo=strName;
 		
+		EntityId entid = DialogHierarchySystemI.i().createEntity(strName);
 		ResizablePanel rzp = new ResizablePanel(null);
-		
-		EntityId entid = DialogHierarchyI.i().createEntity(rzp,strName);
+		ShowDialogStateI.i().put(entid,rzp);
 		UserDataI.i().setUserDataPSH(rzp, entid);
 		
-		DialogHierarchyI.i().setAutoMoveRelativelyToParent(entid);
+		ShowDialogStateI.i().setAutoMoveRelativelyToParent(entid);
 		
 		rzp.setPreferredSize(new Vector3f(300,200,0)); //TODO z will cause trouble?
 		rzp.setLocalTranslation(pos); //above DevCons

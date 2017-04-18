@@ -64,11 +64,11 @@ while true;do
 	# misc/lemur can only access misc or misc/jme or misc/lemur
 	FUNCchk misc/lemur misc/jme misc
 
-	FUNCchk gendiag misc/lemur misc/jme misc
+	FUNCchk es misc/lemur misc/jme misc
 	
-	FUNCchk gendiag/es gendiag misc/lemur misc/jme misc
+	FUNCchk gendiag misc/lemur misc/jme misc es
 
-	FUNCchk devcons gendiag misc/lemur misc/jme misc
+	FUNCchk devcons gendiag misc/lemur misc/jme misc es
 
 	FUNCchk extras
 

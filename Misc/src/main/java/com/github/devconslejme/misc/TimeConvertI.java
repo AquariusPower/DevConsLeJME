@@ -83,30 +83,30 @@ public class TimeConvertI {
 		return lTimeNano/lMilisToNano;
 	}
 	
-	public long getMilisFrom(Timer timer) {
-		if(timer.getResolution()==lOneSecondInNanos){
-			return nanoToMilis(timer.getTime());
+	public long getMilisFrom(long lResolution, long lTime) {
+		if(lResolution==lOneSecondInNanos){
+			return nanoToMilis(lTime);
 		}
 		
-		if(timer.getResolution()==lOneSecondInMilis){
-			return timer.getTime();
+		if(lResolution==lOneSecondInMilis){
+			return lTime;
 		}
 		
-		throw new UnsupportedOperationException("unsupported timer resolution "+timer.getResolution());
+		throw new UnsupportedOperationException("unsupported timer resolution "+lResolution);
 	}
-	public long getNanosFrom(Timer timer) {
-		if(timer.getResolution()==lOneSecondInNanos){
-			return timer.getTime();
+	public long getNanosFrom(long lResolution, long lTime) {
+		if(lResolution==lOneSecondInNanos){
+			return lTime;
 		}
 		
-		if(timer.getResolution()==lOneSecondInMilis){
-			return milisToNano(timer.getTime());
+		if(lResolution==lOneSecondInMilis){
+			return milisToNano(lTime);
 		}
 		
-		throw new UnsupportedOperationException("unsupported timer resolution "+timer.getResolution());
+		throw new UnsupportedOperationException("unsupported timer resolution "+lResolution);
 	}
-	public String formatElapsed(Timer timer) {
-		long lElapsedMilis=TimeConvertI.i().getMilisFrom(timer);
+	public String formatElapsed(long lResolution, long lTime) {
+		long lElapsedMilis=TimeConvertI.i().getMilisFrom(lResolution, lTime);
 		return sdf.format(new Date(lElapsedMilis - TimeZone.getDefault().getRawOffset()));
 	}
 	

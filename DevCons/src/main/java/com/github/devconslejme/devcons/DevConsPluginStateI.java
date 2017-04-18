@@ -37,11 +37,12 @@ import java.util.Set;
 
 import org.lwjgl.opengl.Display;
 
+import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.gendiag.ContextMenuI;
+import com.github.devconslejme.gendiag.ShowDialogStateI;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
-import com.github.devconslejme.gendiag.es.DialogHierarchyI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchy;
@@ -71,6 +72,7 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.system.JmeSystem;
 import com.jme3.system.JmeSystem.StorageFolderType;
+import com.simsilica.es.EntityId;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
 import com.simsilica.lemur.Container;
@@ -906,9 +908,9 @@ public class DevConsPluginStateI extends AbstractAppState {
 		
 		hrpMain = new ResizablePanel(getStyle());
 		hrpMain.setName(DevConsPluginStateI.class.getSimpleName());//debug name
-		DialogHierarchyI.i().setHierarchyPriority(
-				DialogHierarchyI.i().createEntity(hrpMain,"DevCons"),
-				EHierarchy.Top);
+		EntityId entid = DialogHierarchySystemI.i().createEntity("DevCons");
+		ShowDialogStateI.i().put(entid, hrpMain);
+		DialogHierarchySystemI.i().setHierarchyPriority(entid,EHierarchy.Top);
 		hrpMain.setContents(cntrMain);
 //		hrpMain.addResizableListener(this);
 		
