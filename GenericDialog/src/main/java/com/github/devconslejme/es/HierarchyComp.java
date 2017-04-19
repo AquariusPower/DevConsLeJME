@@ -33,6 +33,7 @@ import com.simsilica.es.EntityId;
 import com.simsilica.es.PersistentComponent;
 
 /**
+* DevSelfNote: Components: only getters; unmuttable: do not extend, store things that cant be changed or references; TODO confirm if references is a valid unmuttable... or Ids should be used instead?
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
 public class HierarchyComp implements EntityComponent, PersistentComponent{
