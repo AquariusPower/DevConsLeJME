@@ -138,7 +138,7 @@ public class ContextMenuI {
 //		HierarchyComponent comp = hrp.createComponent(HierarchyComponent.class);
 //		_HierarchyComponent comp = _HierarchySystemI.i().createComponentAt(hrp);
 		entid = DialogHierarchySystemI.i().createEntity(ContextMenuI.class.getSimpleName());
-		ShowDialogStateI.i().put(entid, rzp);
+		DialogHierarchyStateI.i().put(entid, rzp);
 		
 //		hrp.updateComponent(new HierarchyComponent(comp,true,null));
 //		_HierarchySystemI.i().workOn(comp).setAsHierarchyTop();
@@ -158,8 +158,8 @@ public class ContextMenuI {
 			public Boolean call() {
 				if(rzp.getParent()!=null){
 //					ResizablePanel rzpParent = DialogHierarchySystemI.i().getHierarchyParentGuiLinkFor(entid).getResizablePanel();
-					EntityId entidParent = ShowDialogStateI.i().getHierarchyParentOf(entid);
-					ResizablePanel rzpParent = ShowDialogStateI.i().getResizablePanelFor(entidParent);
+					EntityId entidParent = DialogHierarchyStateI.i().getHierarchyParentOf(entid);
+					ResizablePanel rzpParent = DialogHierarchyStateI.i().getResizablePanelFor(entidParent);
 					
 					rzp.setLocalTranslation(
 						rzpParent.getLocalTranslation().subtract(
@@ -196,8 +196,8 @@ public class ContextMenuI {
 		}
 		
 //		_HierarchyComponent comp = cm.getOwner().getComponent(_HierarchyComponent.class);
-		ShowDialogStateI.i().showDialogAsModal(
-			ShowDialogStateI.i().getEntityIdFor(cm.getOwner()), entid);
+		DialogHierarchyStateI.i().showDialogAsModal(
+			DialogHierarchyStateI.i().getEntityIdFor(cm.getOwner()), entid);
 //		comp=_HierarchySystemI.i().workOn(comp).showAsHierarchyModal(hrp.getComponent(_HierarchyComponent.class));
 //		nodeParent.attachChild(hrp);
 		

@@ -39,8 +39,8 @@ import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.gendiag.ContextMenuI;
-import com.github.devconslejme.gendiag.ShowDialogStateI;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
 import com.github.devconslejme.misc.DetailedException;
@@ -909,7 +909,7 @@ public class DevConsPluginStateI extends AbstractAppState {
 		hrpMain = new ResizablePanel(getStyle());
 		hrpMain.setName(DevConsPluginStateI.class.getSimpleName());//debug name
 		EntityId entid = DialogHierarchySystemI.i().createEntity("DevCons");
-		ShowDialogStateI.i().put(entid, hrpMain);
+		DialogHierarchyStateI.i().put(entid, hrpMain);
 		DialogHierarchySystemI.i().setHierarchyPriority(entid,EHierarchy.Top);
 		hrpMain.setContents(cntrMain);
 //		hrpMain.addResizableListener(this);
