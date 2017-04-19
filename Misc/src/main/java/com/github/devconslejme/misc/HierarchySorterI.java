@@ -69,10 +69,11 @@ public class HierarchySorterI {
 	
 	/**
 	 * The last items will be the ones to be priorized.
+	 * The class extending {@link IHierarchy} must implement equals() to be used to compare with the hierarchy parent.
 	 * @param ahMainList it will be modified
-	 * @param cmprEquals will be used to determine if the other is current parent, can be null
 	 */
-	public <T extends IHierarchy> void sort(ArrayList<T> ahMainList){//, Comparator<T> cmprEquals) {
+	@SuppressWarnings("unchecked")
+	public <T extends IHierarchy> void sort(ArrayList<T> ahMainList){
 		if(ahMainList.size()==0)return;
 		
 		/**
@@ -135,26 +136,36 @@ public class HierarchySorterI {
 		 */
 		Collections.reverse(ahChilds);
 		labelCheckChildListEmpty:while(ahChilds.size()>0){
-			for(IHierarchy ih:ahChilds.toArray(new IHierarchy[0])){
-				T ihParent = (T) ih.getHierarchyParent();
+			for(IHierarchy hChild:ahChilds.toArray(new IHierarchy[0])){
+				T hParent = (T) hChild.getHierarchyParent();
 				
 				// find the current index of the parent on the main list
-				int iIndexOfParentAtMain=-1;
-				for (int i = 0; i < ahMainList.size(); i++) {
-					T ihChk = ahMainList.get(i);
-					if(ihChk.equals(ihParent)){// || cmprEquals.compare(ihChk, ihParent)==0){
-						iIndexOfParentAtMain = i;
-						break;
+				int iIndexOfParentAtMain=ahMainList.indexOf(hParent);
+				if(iIndexOfParentAtMain>-1){ //found!
+					// move the child to just after its parent at main list
+					ahChilds.remove(hChild);
+					ahMainList.add(iIndexOfParentAtMain+1, (T)hChild);
+					continue labelCheckChildListEmpty; 
+				}else{
+					if(ahChilds.indexOf(hParent)==-1){
+						throw new DetailedException("inconsistent hierarchy: "
+							+"the parent should be at least still at childs list",
+							hParent,ahChilds,ahMainList);
 					}
-				}
-				
-				if(iIndexOfParentAtMain>-1){
-					ahChilds.remove(ih);
-					ahMainList.add(iIndexOfParentAtMain+1, (T)ih);
-					continue labelCheckChildListEmpty;
 				}
 			}
 		}
 	}
 	
+//	private <T extends IHierarchy> int indexOf(ArrayList<T> ah, T h){
+//		int iIndexOfParentAtMain=-1;
+//		for (int i = 0; i < ah.size(); i++) {
+//			T hChk = ah.get(i);
+//			if(hChk.equals(h)){
+//				iIndexOfParentAtMain = i;
+//				break;
+//			}
+//		}
+//		return iIndexOfParentAtMain;
+//	}
 }

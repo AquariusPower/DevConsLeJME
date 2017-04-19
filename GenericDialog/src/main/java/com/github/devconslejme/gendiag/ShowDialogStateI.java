@@ -140,6 +140,8 @@ public class ShowDialogStateI extends AbstractAppState implements IResizableList
 			
 //			updateFocusTime(ent,hc);
 		}
+		
+		hisys.prepareSortedHierarchyDialogs(null); //last thing
 	}
 	
 //	public void updateChangedEntity(Float tpf,EntityId entid){
@@ -192,6 +194,8 @@ public class ShowDialogStateI extends AbstractAppState implements IResizableList
 		}
 		
 		updateFocusTime(ent,rzp);
+		
+		updateShowHierarchyChildAndParent(ent,hc,rzp);
 		
 	}
 
@@ -353,7 +357,7 @@ public class ShowDialogStateI extends AbstractAppState implements IResizableList
 	 * @return 
 	 */
 	public void showDialogAsModal(EntityId entidParent, EntityId entidChild){
-		showAndApplyHierarchyChild(entidParent,entidChild,true);
+		applyHierarchyChild(entidParent,entidChild,true);
 //		QueueI.i().enqueue(new CallableX() {
 //			@Override
 //			public Boolean call() {
@@ -375,67 +379,44 @@ public class ShowDialogStateI extends AbstractAppState implements IResizableList
 	 * @return 
 	 */
 	public void showDialogAsModeless(EntityId entidParent, EntityId entidChild){
-		showAndApplyHierarchyChild(entidParent,entidChild,false);
+		applyHierarchyChild(entidParent,entidChild,false);
 	}
 	
-	private void showAndApplyHierarchyChild(EntityId entidParent, EntityId entidChild, boolean bModal){
-//		QueueI.i().enqueue(new CallableX() {
-//			@Override
-//			public Boolean call() {
-//				if(!ed.getComponent(entidParent, Initialized.class).isInitialized())return false;
-//				if(!ed.getComponent(entidChild, Initialized.class).isInitialized())return false;
-				HierarchyComp hcParent = ed.getComponent(entidParent, HierarchyComp.class);
-				if(!hcParent.isInitVisuals())return false;
-				HierarchyComp hcChild = ed.getComponent(entidChild, HierarchyComp.class);
-				if(!hcChild.isInitVisuals())return false;
-				
-				Entity entParent = ed.getEntity(entidParent, hisys.getAllRequiredComponentTypesArray());
-				Entity entChild = ed.getEntity(entidChild, hisys.getAllRequiredComponentTypesArray());
-				
-//				ShownState ssChild = entChild.get(ShownState.class);
-//				entChild.set(new ShownState(
-				ed.setComponent(entidChild,hcChild=new HierarchyComp(hcChild,
-					EField.eidHierarchyParent, entidParent,
-//					EField.eHierarchy, hcChild.getHierarchyPriority(), //ssChild==null?null:ssChild.getHierarchyPriority(),
-					EField.bHierarchyModal, bModal
-				));
-//				setHierarchyParentAtChild(entParent,entChild);
-				if(bModal)hisys.enableBlockingLayer(entParent,true);
-				
-				ResizablePanel rzpChild = hmDiag.get(entChild.getId().getId());
-				showDialog(rzpChild); //show it
-				setFocusRecursively(entChild.getId());
-//				updateLastFocusAppTimeNano(entChild.getId());
-				
-//				ShownState ssParent = entChild.get(ShownState.class);
-				if(hcParent.isShowLinkToChild()){
-					ResizablePanel rzpParent = hmDiag.get(entParent.getId().getId());
-					applyParentToChildLinkEffect(rzpParent,rzpChild);
-				}
-				
-//				return true;
-//			}
-//		});
+	private void applyHierarchyChild(EntityId entidParent, EntityId entidChild, boolean bModal){
+		HierarchyComp hcChild = ed.getComponent(entidChild, HierarchyComp.class);
+		ed.setComponent(entidChild,hcChild=new HierarchyComp(hcChild,
+			EField.eidHierarchyParent, entidParent,
+			EField.bHierarchyModal, bModal
+		));
+	}
+	private void updateShowHierarchyChildAndParent(Entity entChild, HierarchyComp hcChild, ResizablePanel rzpChild){
+//		HierarchyComp hcChild = ed.getComponent(entidChild, HierarchyComp.class);
+		if(hcChild.isOpened())return; //already opened
 		
+		EntityId entidParent=hcChild.getHierarchyParent();
+		if(entidParent==null)return;
+		
+		if(!hcChild.isInitVisuals())return;
+		
+		HierarchyComp hcParent = ed.getComponent(entidParent, HierarchyComp.class);
+		if(!hcParent.isInitVisuals())return;
+		
+		Entity entParent = ed.getEntity(entidParent, hisys.getAllRequiredComponentTypesArray());
+//		Entity entChild = ed.getEntity(entidChild, hisys.getAllRequiredComponentTypesArray());
+		
+		if(hcChild.isHierarchyModal())hisys.enableBlockingLayer(entParent,true);
+		
+//		ResizablePanel rzpChild = hmDiag.get(entChild.getId().getId());
+		showDialog(rzpChild); //show it
+		setFocusRecursively(entChild.getId());
+		
+		if(hcParent.isShowLinkToChild()){
+			ResizablePanel rzpParent = hmDiag.get(entParent.getId().getId());
+			applyParentToChildLinkEffect(rzpParent,rzpChild);
+		}
 	}
 	
 	public void initializeNewEntity(Float tpf,Entity ent) {
-	//	EntityId entid = ent.getId();
-		
-	//  ed.setComponent(entid, new GuiLink(rzp));
-	//  ed.setComponent(entid, new Initialized(false));
-	//  ed.setComponent(entid, new Name(strName));
-	  
-	//	if(ed.getComponent(ent.getId(), ShownState.class)==null){
-		//if(ent.get(ShownState.class)==null){
-	//		ed.setComponent(ent.getId(), new ShownState());
-	//	}
-		
-	//	if(ed.getComponent(ent.getId(), LastFocusTime.class)==null){
-		//if(ent.get(LastFocusTime.class)==null){
-	//		ed.setComponent(ent.getId(), new LastFocusTime());
-	//	}
-		
 		/////////////// blocker
 		ResizablePanel rzp = hmDiag.get(ent.getId().getId());
 		

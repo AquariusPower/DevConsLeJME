@@ -31,19 +31,23 @@ import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
+import com.jme3.scene.Node;
 
 
 /**
-* @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
-*/
+	* @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+	*/
 public class DialogHierarchyStateI extends AbstractAppState{
 	public static DialogHierarchyStateI i(){return GlobalManagerI.i().get(DialogHierarchyStateI.class);}
 	
 	private Application	app;
 
-	public void configure(){
+	public void configure(Node nodeToMonitor,float fBeginOrderZ){
 		app=GlobalManagerI.i().get(Application.class);
     app.getStateManager().attach(this);
+    
+		DialogHierarchySystemI.i().configure();
+		ShowDialogStateI.i().configure(nodeToMonitor,0f);
 	}
 	
 	@Override

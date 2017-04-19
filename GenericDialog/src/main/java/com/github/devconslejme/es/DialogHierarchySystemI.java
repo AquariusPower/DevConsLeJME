@@ -79,7 +79,7 @@ public class DialogHierarchySystemI {
 	}
 	
 	public Entity getTopMostDialog() {
-		ArrayList<Entity> aent = prepareSortedHierarchyDialogs(null);
+		ArrayList<Entity> aent = getSortedHierarchyDialogs();
 		return aent.get(aent.size()-1);
 	}
 	
@@ -227,6 +227,9 @@ public class DialogHierarchySystemI {
 			if(bAdd)aentSortedHierarchyDialogs.add(entChild);
 		}		
 		
+		/**
+		 * the filter will make it skip many and break the sort hierarchy
+		 */
 		if(entidParentFilter==null)sortDialogs(aentSortedHierarchyDialogs);
 //		Collections.sort(aent,cmpr); // uses LastFocusTime
 		
@@ -435,7 +438,7 @@ public class DialogHierarchySystemI {
 //	}
 	
 	public boolean isHasAnyDialogOpened() {
-		return (prepareSortedHierarchyDialogs(null).size()>0);
+		return (getSortedHierarchyDialogs().size()>0);
 	}
 
 	public void cleanupRemovedEntity(Float tpf, Entity ent) {
@@ -445,7 +448,7 @@ public class DialogHierarchySystemI {
 
 	public ArrayList<String> getListAsReport(){
 		ArrayList<String> astr = new ArrayList<String>();
-		for(Entity ent:prepareSortedHierarchyDialogs(null)){
+		for(Entity ent:getSortedHierarchyDialogs()){
 			astr.add(getReport(ent,false));
 		}
 		return astr;
@@ -597,8 +600,8 @@ public class DialogHierarchySystemI {
 		return ed.getEntities(getAllRequiredComponentTypesArray());
 	}
 
-	public Entity[] getSortedHierarchyDialogs() {
-		return aentSortedHierarchyDialogs.toArray(new Entity[0]);
+	public ArrayList<Entity> getSortedHierarchyDialogs() {
+		return new ArrayList<Entity>(aentSortedHierarchyDialogs);
 	}
 	
 }
