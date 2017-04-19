@@ -34,8 +34,6 @@ import com.github.devconslejme.es.HierarchyComp;
 import com.github.devconslejme.es.HierarchyComp.EField;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.EffectArrow;
 import com.github.devconslejme.misc.jme.EffectElectricity;
@@ -381,9 +379,9 @@ public class ShowDialogStateI extends AbstractAppState implements IResizableList
 	}
 	
 	private void showAndApplyHierarchyChild(EntityId entidParent, EntityId entidChild, boolean bModal){
-		QueueI.i().enqueue(new CallableX() {
-			@Override
-			public Boolean call() {
+//		QueueI.i().enqueue(new CallableX() {
+//			@Override
+//			public Boolean call() {
 //				if(!ed.getComponent(entidParent, Initialized.class).isInitialized())return false;
 //				if(!ed.getComponent(entidChild, Initialized.class).isInitialized())return false;
 				HierarchyComp hcParent = ed.getComponent(entidParent, HierarchyComp.class);
@@ -397,7 +395,7 @@ public class ShowDialogStateI extends AbstractAppState implements IResizableList
 //				ShownState ssChild = entChild.get(ShownState.class);
 //				entChild.set(new ShownState(
 				ed.setComponent(entidChild,hcChild=new HierarchyComp(hcChild,
-					EField.eidParent, entidParent,
+					EField.eidHierarchyParent, entidParent,
 //					EField.eHierarchy, hcChild.getHierarchyPriority(), //ssChild==null?null:ssChild.getHierarchyPriority(),
 					EField.bHierarchyModal, bModal
 				));
@@ -415,9 +413,9 @@ public class ShowDialogStateI extends AbstractAppState implements IResizableList
 					applyParentToChildLinkEffect(rzpParent,rzpChild);
 				}
 				
-				return true;
-			}
-		});
+//				return true;
+//			}
+//		});
 		
 	}
 	

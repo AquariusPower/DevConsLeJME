@@ -42,42 +42,46 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 		bInitVisuals(Boolean.class), //#syncTo
 		bInitHierarchy(Boolean.class),
 		lLastFocusTime(Long.class),
-		eidParent(EntityId.class),
-		eHierarchy(EHierarchy.class),
+		eidHierarchyParent(EntityId.class),
+		eHierarchyType(EHierarchy.class),
 		bHierarchyModal(Boolean.class),
 		bShowLinkToChild(Boolean.class),
 		fZ(Float.class),
 		fBlockerZ(Float.class),
-		fBoundingHeightZ(Float.class),
+		fBoundingHeightZ(Float.class), 
+		strDebugName(String.class),
 		;
 		Class cl;
 		EField(Class cl){this.cl=cl;}
 	}
+	
 	private boolean bOpened=false; //#syncFrom bBlocking
 	private boolean bBlocking=false; //#syncFrom bBlocking
 	private boolean	bInitVisuals=false;
 	private boolean	bInitHierarchy=false;
 	private long lLastFocusTime=-1;
-	private EntityId eidParent=null;
-	private EHierarchy	eHierarchy=EHierarchy.Normal;
+	private EntityId eidHierarchyParent=null;
+	private EHierarchy	eHierarchyType=EHierarchy.Normal;
 	private boolean	bHierarchyModal=false;
 	private boolean bShowLinkToChild=true;
 	private float fZ=0f;
 	private float fBlockerZ=0f;
 	private float fBoundingHeightZ=0f;
+	private String strDebugName="";
 	
 	public boolean isOpened() {return bOpened;}
 	public boolean isBlocking() {return bBlocking;}
 	public boolean isInitVisuals() {return bInitVisuals;}
 	public boolean isInitHierarchy() {return bInitHierarchy;}
 	public long getLastFocusTime() {return lLastFocusTime;}
-	public EntityId getHierarchyParent() {return eidParent;}
-	public EHierarchy getHierarchyPriority() {return eHierarchy;}
+	public EntityId getHierarchyParent() {return eidHierarchyParent;}
+	public EHierarchy getHierarchyPriority() {return eHierarchyType;}
 	public boolean isHierarchyModal() {return bHierarchyModal;}
 	public boolean isShowLinkToChild() {return bShowLinkToChild;}
 	public float getZ() {return fZ;}
 	public float getBlockerZ() {return fBlockerZ;}
 	public float getBoundingHeightZ() {return fBoundingHeightZ;}
+	public String getDebugName(){return strDebugName;}
 	
 //	public HierarchyComp(Object... aobjFieldsAndValues){
 //		this(null,aobjFieldsAndValues);
@@ -93,22 +97,25 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 			if (obj instanceof EField){e = (EField) obj; continue;}
 			
 			switch (e) {
-				case bOpened:					this.bOpened=(Boolean)objValue;break;
-				case bBlocking:				this.bBlocking=(Boolean)objValue;break;
-				case bInitHierarchy:	this.bInitHierarchy=(Boolean)objValue;break;
-				case bInitVisuals:		this.bInitVisuals=(Boolean)objValue;break;
-				case bHierarchyModal:	this.bHierarchyModal=(Boolean)objValue;break;
-				case bShowLinkToChild:this.bShowLinkToChild=(Boolean)objValue;break;
-				case eHierarchy:			this.eHierarchy=(EHierarchy)objValue;break;
-				case eidParent:				this.eidParent=(EntityId)objValue;break;
-				case lLastFocusTime:	this.lLastFocusTime=(Long)objValue;break;
-				case fZ:							this.fZ=(Float)objValue;break;
-				case fBlockerZ:				this.fBlockerZ=(Float)objValue;break;
-				case fBoundingHeightZ:this.fBoundingHeightZ=(Float)objValue;break;
+				case bOpened:						this.bOpened=(Boolean)objValue;break;
+				case bBlocking:					this.bBlocking=(Boolean)objValue;break;
+				case bInitHierarchy:		this.bInitHierarchy=(Boolean)objValue;break;
+				case bInitVisuals:			this.bInitVisuals=(Boolean)objValue;break;
+				case bHierarchyModal:		this.bHierarchyModal=(Boolean)objValue;break;
+				case bShowLinkToChild:	this.bShowLinkToChild=(Boolean)objValue;break;
+				case eHierarchyType:		this.eHierarchyType=(EHierarchy)objValue;break;
+				case eidHierarchyParent:this.eidHierarchyParent=(EntityId)objValue;break;
+				case lLastFocusTime:		this.lLastFocusTime=(Long)objValue;break;
+				case fZ:								this.fZ=(Float)objValue;break;
+				case fBlockerZ:					this.fBlockerZ=(Float)objValue;break;
+				case fBoundingHeightZ:	this.fBoundingHeightZ=(Float)objValue;break;
+				case strDebugName:			this.strDebugName=(String)objValue;break;
 			}
 			
 			e = null;
 		}
+		
+		System.out.println();//@DEBUG rm
 	}
 	
 	private void copyFrom(HierarchyComp copyFrom) {
@@ -118,12 +125,13 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 		this.bInitHierarchy=copyFrom.bInitHierarchy;
 		this.bHierarchyModal=copyFrom.bHierarchyModal;
 		this.bShowLinkToChild=copyFrom.bShowLinkToChild;
-		this.eHierarchy=copyFrom.eHierarchy;
-		this.eidParent=copyFrom.eidParent;
+		this.eHierarchyType=copyFrom.eHierarchyType;
+		this.eidHierarchyParent=copyFrom.eidHierarchyParent;
 		this.lLastFocusTime=copyFrom.lLastFocusTime;
 		this.fZ=copyFrom.fZ;
 		this.fBlockerZ=copyFrom.fBlockerZ;
 		this.fBoundingHeightZ=copyFrom.fBoundingHeightZ;
+		this.strDebugName=copyFrom.strDebugName;
 	}
 
 }

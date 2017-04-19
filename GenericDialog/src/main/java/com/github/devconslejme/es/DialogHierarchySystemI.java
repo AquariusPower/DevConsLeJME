@@ -481,7 +481,7 @@ public class DialogHierarchySystemI {
 		ed.setComponent(entid, 
 			new HierarchyComp(ss,
 //				ss==null?null:ss.getHierarchyParent(), 
-				EField.eHierarchy,eHierarchy 
+				EField.eHierarchyType,eHierarchy 
 //				ss==null?null:ss.isHierarchyModal(),
 //				null
 			)
@@ -492,125 +492,17 @@ public class DialogHierarchySystemI {
 		return ed.getEntity(entid, acl);
 	}
 
-//	public GuiLink getHierarchyParentGuiLinkFor(EntityId entid) {
-//		Entity ent = getEntityFor(entid,HierarchyComp.class);
-//		EntityId entidParent = ent.get(HierarchyComp.class).getHierarchyParent();
-//		Entity entParent = getEntityFor(entidParent,GuiLink.class);
-//		return entParent.get(GuiLink.class);
-//	}
-	
-//	@Override
-//	public void resizerUpdatedLogicalStateEvent(float tpf, ResizablePanel rzpSource) {
-//		EntityId entid = getEntityIdFor(rzpSource);
-//		updateBlocker(tpf, entid, rzpSource);
-//		
-//		EntityId entidParent = ed.getComponent(entid, HierarchyComp.class).getHierarchyParent();
-//		if(entidParent!=null){
-//			RelativePos rp = ed.getComponent(entid, RelativePos.class);
-//			if(rp!=null){
-//				ResizablePanel rzpParent = ed.getComponent(entidParent, GuiLink.class).getResizablePanel();
-//				
-////				Panel panelUserAction = DragParentestPanelListenerI.i().getParentestBeingDragged();
-////				if(panelUserAction==null){
-////					panelUserAction=getCurrentlyBeingResized();
-////				}
-//				
-//				if(
-//						DragParentestPanelListenerI.i().getParentestBeingDragged()==rzpSource
-//						||
-//						getCurrentlyBeingResized()==rzpSource
-//				){
-////				if(panelUserAction!=null){
-//					/**
-//					 * update displacement
-//					 */
-//					ed.setComponent(entid, new RelativePos(
-//							rzpSource.getLocalTranslation().subtract(rzpParent.getLocalTranslation()) ) );
-//					
-////					if(!ieffLinkedDragEffect.isPlaying()){
-////						ieffLinkedDragEffect
-////							.setOwner(rzpSource)
-////							.setFollowFromTarget(rzpParent, null)
-////							.setFollowToTarget(rzpSource, null)
-////							.setPlay(true)
-////							;
-////					}
-//				}else{
-////					if(ieffLinkedDragEffect.isPlaying()){
-////						ieffLinkedDragEffect.setPlay(false);
-////						ieffLinkedDragEffect.setOwner(null);
-////					}
-//					
-//					/**
-//					 * set position relatively to parent
-//					 */
-//					Vector3f v3fNewPos = rzpParent.getLocalTranslation().clone();
-//					v3fNewPos.addLocal(rp.getPositionRelativeToParent());
-//					v3fNewPos.z=rzpSource.getLocalTranslation().z;
-//					
-//	//					v3fNewPos.x=rzpParent.getLocalTranslation().x 
-//	//						+ (rzpParent.getSize().x/2f - rzpSource.getSize().x/2f + fCascadeDist);
-//	//					v3fNewPos.y=rzpParent.getLocalTranslation().y 
-//	//						- (rzpParent.getSize().y/2f - rzpSource.getSize().y/2f + fCascadeDist);
-//					
-//					rzpSource.setLocalTranslation(v3fNewPos);
-//				}
-//			}
-//		}
-//	}
-
-//	@Override
-//	public void removedFromParentEvent(ResizablePanel rzpSource) {
-//		updateBlocker(null, getEntityIdFor(rzpSource), rzpSource);
-//	}
-
-//	@Override
-//	public void resizedEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {
-//		rzpCurrentlyBeingResized=rzpSource;
-//	}
-//
-//	@Override
-//	public void endedResizingEvent(ResizablePanel rzpSource) {
-//		rzpCurrentlyBeingResized=null; //user can resize only one at a time 
-//	}
-
 	public DefaultEntityData getEntityData(){
 		return ed;
 	}
 
-//	public static class GuiLink implements EntityComponent, PersistentComponent{
-//		private ResizablePanel val;
-//		public GuiLink(ResizablePanel val) { this.val=val; }
-//		public ResizablePanel getResizablePanel(){ return val; }
-//	}
-	
-//	public static class Initialized implements EntityComponent, PersistentComponent{
-//		private boolean	bInitialized;
-//		public Initialized(boolean bInitialized) {
-//			this.bInitialized=bInitialized;
-//		}
-//		public boolean isInitialized() {
-//			return bInitialized;
-//		}
-//	}
-	
-//	public EntityId createEntity(ResizablePanel rzp,String strName){
 	public EntityId createEntity(String strName){
-//	  if(entsetBasicQuery==null){ // keep here to be easy to sync with the settings below
-//		  entsetBasicQuery = ed.getEntities(
-//		  	Initialized.class,
-//		  	GuiLink.class,
-//		  	Name.class
-//		  );
-//	  }
-//		recreateQuery();
-//		if(entsetMainQuery.size()>0)throw new DetailedException("must begin empty so news and changes can be properly applied",entsetMainQuery,ed);
 	  EntityId entid = ed.createEntity(); //to attach components to
-//	  ed.setComponent(entid, new Initialized(false));
 	  ed.setComponent(entid, new HierarchyComp(null,
-	  	EField.bInitVisuals,false
+	  	EField.bInitVisuals,false,
+	  	EField.strDebugName,strName
 	  ));
-//	  ed.setComponent(entid, new GuiLink(rzp));
+	  
 	  ed.setComponent(entid, new Name(strName));
 	  
 	  return entid;
@@ -672,23 +564,6 @@ public class DialogHierarchySystemI {
 	public void update(float tpf, long lTime) {
 		this.lTime=lTime;
 		applyFullQueryChanges(tpf);
-		
-//		fCurrentOrderPosZ = fBeginOrderPosZ;
-//		for(Entity ent:prepareSortedHierarchyDialogs(null)){
-//			updateZOrder(ent);
-//			
-////			updateFocusTime(ent,hc);
-//		}
-		
-//		updateDragEffect();
-		
-//		if(isHasAnyDialogOpened()){
-////			if(getHierarchyComponentList(null).size()>0){
-//			Entity ent = getTopMostDialog();
-//			if(!ContextMenuI.i().isTheContextMenu(ent.get(GuiLink.class).getResizablePanel())){
-//				ContextMenuI.i().hideContextMenu();
-//			}
-//		}
 	}
 	
 	private void workOnEntitiesThatAreNotFullyMatchingAnymore(Float tpf,Set<Entity> entset) {
@@ -704,12 +579,7 @@ public class DialogHierarchySystemI {
 		if(aclAllComponentTypes==null){
 			aclAllComponentTypes = new ArrayList<Class>();
 			addRequiredComponentType(HierarchyComp.class);
-//			addRequiredComponentType(Initialized.class);
-//			addRequiredComponentType(GuiLink.class);
 			addRequiredComponentType(Name.class);
-//			addRequiredComponentType(Blocker.class);
-//			addRequiredComponentType(LastFocusTime.class);
-//			addRequiredComponentType(ShownState.class);
 		}
 		return aclAllComponentTypes;
 	}
