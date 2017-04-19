@@ -165,7 +165,14 @@ public class ShowDialogStateI extends AbstractAppState implements IResizableList
 		HierarchyComp hc = ent.get(HierarchyComp.class);
 		if(!hc.isInitVisuals()){
 			initializeNewEntity(tpf,ent);
-			ed.setComponent(ent.getId(), new HierarchyComp(hc,EField.bInitVisuals,true));
+			ed.setComponent(ent.getId(), hc=new HierarchyComp(hc,EField.bInitVisuals,true));
+		}
+		
+		if(hc.isOpened() && rzp.getParent()==null){
+			ent.set(hc=new HierarchyComp(hc, EField.bOpened, false));
+		}else
+		if(!hc.isOpened() && rzp.getParent()!=null){
+			ent.set(hc=new HierarchyComp(hc, EField.bOpened, true));
 		}
 		
 //		ResizablePanel rzp = hmDiag.get(ent.getId().getId());
@@ -181,7 +188,7 @@ public class ShowDialogStateI extends AbstractAppState implements IResizableList
 		
 		Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSize(rzp);
 		if(v3fSize!=null){//wait it be ready
-			ent.set(new HierarchyComp(hc,
+			ent.set(hc=new HierarchyComp(hc,
 				EField.fBoundingHeightZ, v3fSize.z
 			));
 		}
@@ -389,7 +396,7 @@ public class ShowDialogStateI extends AbstractAppState implements IResizableList
 				
 //				ShownState ssChild = entChild.get(ShownState.class);
 //				entChild.set(new ShownState(
-				ed.setComponent(entidChild,new HierarchyComp(hcChild,
+				ed.setComponent(entidChild,hcChild=new HierarchyComp(hcChild,
 					EField.eidParent, entidParent,
 //					EField.eHierarchy, hcChild.getHierarchyPriority(), //ssChild==null?null:ssChild.getHierarchyPriority(),
 					EField.bHierarchyModal, bModal

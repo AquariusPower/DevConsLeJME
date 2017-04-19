@@ -72,22 +72,22 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		}.setDelaySeconds(1.0f));
 		
 		// multi child hierarchy
-		ResizablePanel rzpA = createPanel(new Vector3f(300,700,0),"MultiA",null);
+		ResizablePanel rzpA = createDialog(new Vector3f(300,700,0),"MultiA",null);
 		ShowDialogStateI.i().showDialog(rzpA);
 		
-		ResizablePanel rzpB = createPanel(new Vector3f(310,710,0),"MultiB",null);
+		ResizablePanel rzpB = createDialog(new Vector3f(310,710,0),"MultiB",null);
 		ShowDialogStateI.i().showDialogAsModal(
 			UserDataI.i().getUserDataPSH(rzpA,EntityId.class),
 			UserDataI.i().getUserDataPSH(rzpB,EntityId.class)
 		);
 		
-		ResizablePanel rzpC = createPanel(new Vector3f(320,720,0),"MultiC",null);
+		ResizablePanel rzpC = createDialog(new Vector3f(320,720,0),"MultiC",null);
 		ShowDialogStateI.i().showDialogAsModal(
 			UserDataI.i().getUserDataPSH(rzpA,EntityId.class),
 			UserDataI.i().getUserDataPSH(rzpC,EntityId.class)
 		);
 		
-		ResizablePanel rzpD = createPanel(new Vector3f(320,720,0),"MultiD",null);
+		ResizablePanel rzpD = createDialog(new Vector3f(320,720,0),"MultiD",null);
 		ShowDialogStateI.i().showDialogAsModal(
 			UserDataI.i().getUserDataPSH(rzpB,EntityId.class),
 			UserDataI.i().getUserDataPSH(rzpD,EntityId.class)
@@ -96,7 +96,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 
 	@SuppressWarnings("unchecked")
 	private void createParentChild(int iBaseY) {
-		ResizablePanel rzpChild = createPanel(new Vector3f(200,iBaseY+200,20), "child"+iBaseY, "click to close");
+		ResizablePanel rzpChild = createDialog(new Vector3f(200,iBaseY+200,20), "child"+iBaseY, "click to close");
 		((Button)rzpChild.getContents()).addClickCommands(new Command<Button>(){ //FIXME this is not compatible with CursorListener!
 			@Override
 			public void execute(Button source) {
@@ -104,7 +104,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 			}
 		});
 		
-		ResizablePanel rzpParent = createPanel(new Vector3f(100,iBaseY+100,10), "parent"+iBaseY, "click to open modal");
+		ResizablePanel rzpParent = createDialog(new Vector3f(100,iBaseY+100,10), "parent"+iBaseY, "click to open modal");
 		((Button)rzpChild.getContents()).addClickCommands(new Command<Button>(){ //FIXME this is not compatible with CursorListener!
 			@Override
 			public void execute(Button source) { //FIXME not being reached
@@ -119,7 +119,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		ShowDialogStateI.i().showDialog(rzpParent);
 	}
 	
-	private ResizablePanel createPanel(Vector3f pos,String strName,String strInfo) {
+	private ResizablePanel createDialog(Vector3f pos,String strName,String strInfo) {
 		if(strInfo==null)strInfo=strName;
 		
 		EntityId entid = DialogHierarchySystemI.i().createEntity(strName);

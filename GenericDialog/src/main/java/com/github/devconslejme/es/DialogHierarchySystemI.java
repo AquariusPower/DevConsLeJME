@@ -154,7 +154,7 @@ public class DialogHierarchySystemI {
 	public void enableBlockingLayer(Entity ent, boolean b){
 		HierarchyComp hc = ent.get(HierarchyComp.class); //ed.getComponent(ent.getId(), Blocker.class)
 //		ent.set(new Blocker(hc.getLayer(),b));
-		ent.set(new HierarchyComp(hc,
+		ent.set(hc=new HierarchyComp(hc,
 			EField.bBlocking,b));
 	}
 	
@@ -173,7 +173,8 @@ public class DialogHierarchySystemI {
 		}
 		
 		Entity entParentest = entsetHierarchyQuery.getEntity(entidParentest);
-		entParentest.set(new HierarchyComp(entParentest.get(HierarchyComp.class), 
+		HierarchyComp hcParentest=entParentest.get(HierarchyComp.class);
+		entParentest.set(hcParentest=new HierarchyComp(hcParentest, 
 			EField.lLastFocusTime, lTime //TimeConvertI.i().getNanosFrom(app.getTimer())
 		));
 //		ed.setComponent(entidParentest, 
@@ -646,7 +647,10 @@ public class DialogHierarchySystemI {
 			HierarchyComp hc = ent.get(HierarchyComp.class);
 			if(!hc.isInitHierarchy()){
 				initializeNewEntity(tpf,ent);
-				ed.setComponent(ent.getId(), new HierarchyComp(hc,EField.bInitHierarchy,true));
+				
+				// TODO this should be useful in some way.. logic elsewhere should depend on this
+//				ed.setComponent(ent.getId(), new HierarchyComp(hc,EField.bInitHierarchy,true));
+				ent.set(new HierarchyComp(hc, EField.bInitHierarchy, true));
 			}
 		}
 	}

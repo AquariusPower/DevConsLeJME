@@ -33,8 +33,8 @@ import java.util.Comparator;
 
 /**
  * turn a hierarchical tree into a list
- * based on priority and activation time
- * mainly for dialogs
+ * based on priority, activation time and parenting (parent<->child)
+ * initially for dialogs
  * 
  * FIXME an activated child of the same parent wont gain priority over the others (of the same parent)
  * 
@@ -111,7 +111,7 @@ public class HierarchySorterI {
 		Collections.sort(ahChilds,cmprByLastActivationTime);
 		
 		//////////////////////////// populate main
-		// add roots, THIS ORDER MATTERS!
+		// add roots (parent-less), THIS ORDER MATTERS!
 		ahMainList.addAll(ahBottom);
 		ahMainList.addAll(ahNormal);
 		ahMainList.addAll(ahTop);
