@@ -27,9 +27,14 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.github.devconslejme.es;
 
+import java.util.ArrayList;
+
 import com.github.devconslejme.es.HierarchyComp.EField;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.HierarchySorterI;
+import com.github.devconslejme.misc.HierarchySorterI.EHierarchy;
+import com.github.devconslejme.misc.HierarchySorterI.IHierarchy;
 import com.simsilica.es.Entity;
 import com.simsilica.es.EntityId;
 import com.simsilica.es.EntitySet;
@@ -44,6 +49,47 @@ public class DialogHierarchySystemI {
 	
 	private DefaultEntityData	ed;
 	private EntitySet	entsetHierarchyQuery;
+	private ArrayList<Entity>	aentSortedHierarchyDialogs = new ArrayList<Entity>();
+	
+	private static class DiagHierarchyWrapper implements IHierarchy{
+		private Entity	ent;
+		private HierarchyComp hc;
+
+		public DiagHierarchyWrapper(Entity ent){
+			this.ent=ent;
+			hc = ent.get(HierarchyComp.class);
+		}
+		
+		public Entity getEntity(){
+			return ent;
+		}
+		
+		@Override
+		public DiagHierarchyWrapper getHierarchyParent() {
+			if(hc.getHierarchyParent()==null)return null;
+			
+			return new DiagHierarchyWrapper(
+				DialogHierarchySystemI.i().entsetHierarchyQuery.getEntity(
+					hc.getHierarchyParent()
+				)
+			);
+		}
+
+		@Override
+		public EHierarchy getHierarchyPriority() {
+			return hc.getHierarchyPriority();
+		}
+
+		@Override
+		public long getLastActivationNanoTime() {
+			return ent.get(HierarchyComp.class).getLastFocusTime();
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			return ent.getId().equals(((DiagHierarchyWrapper)obj).getEntity().getId());
+		}
+	}
 	
 	public void configure(){
     ed = new DefaultEntityData(); //holds all components
@@ -73,16 +119,86 @@ public class DialogHierarchySystemI {
 	 * @return
 	 */
 	public void setHierarchyComp(EntityId entid, Object... aobj) {
-		Entity ent = entsetHierarchyQuery.getEntity(entid);
-		if(ent==null)ent=ed.getEntity(entid, HierarchyComp.class); //go the slow path if the query is not ready
+		Entity ent = getEntity(entid);
 		HierarchyComp hc = ent.get(HierarchyComp.class);
 		ent.set(hc = new HierarchyComp(hc, aobj));
 	}
 
 	public HierarchyComp getHierarchyComp(EntityId entid) {
-		Entity ent = entsetHierarchyQuery.getEntity(entid);
-		if(ent==null)ent=ed.getEntity(entid, HierarchyComp.class); //go the slow path if the query is not ready
-		return ent.get(HierarchyComp.class);
+		return getEntity(entid).get(HierarchyComp.class);
 	}
 	
+	/**
+	 * better deal with entity things only at the system
+	 * @param entid
+	 * @return
+	 */
+	private Entity getEntity(EntityId entid){
+		Entity ent = entsetHierarchyQuery.getEntity(entid);
+		if(ent==null)ent=ed.getEntity(entid, HierarchyComp.class); //go the slow path if the query is not ready
+		return ent;
+	}
+	
+	public boolean isBlocking(EntityId entid){
+		return getEntity(entid).get(HierarchyComp.class).isBlocking();
+	}
+
+	public void enableBlockingLayer(EntityId entid, boolean bEnable){
+		setHierarchyComp(entid, EField.bBlocking, bEnable);
+	}
+	
+	/**
+	 * 
+	 * @param entParentFilter if null will bring all possible
+	 * @return
+	 */
+	public ArrayList<Entity> prepareSortedHierarchyDialogs(EntityId entidParentFilter){
+		aentSortedHierarchyDialogs.clear();
+		
+		/**
+		 * TODO how to make this work?
+		EntitySet entset = ed.getEntities(new FilterByHierarchyParent(ent), ShownState.class);
+		 */
+//		EntitySet entset = ed.getEntities(GuiLink.class,ShownState.class,LastFocusTime.class);
+		
+		for(Entity entChild:entsetHierarchyQuery){
+			HierarchyComp hcChild = entChild.get(HierarchyComp.class);
+			if(!hcChild.isOpened())continue;
+			
+			boolean bAdd=false;
+			if(entidParentFilter==null){
+				bAdd=true;
+			}else{
+				EntityId entidParent = hcChild.getHierarchyParent();
+				if(entidParentFilter.equals(entidParent)){
+					bAdd=true;
+				}
+			}
+			
+			if(bAdd)aentSortedHierarchyDialogs.add(entChild);
+		}		
+		
+		/**
+		 * the filter will make it skip many and break the sort hierarchy
+		 */
+		if(entidParentFilter==null)sortDialogs(aentSortedHierarchyDialogs);
+//		Collections.sort(aent,cmpr); // uses LastFocusTime
+		
+		return aentSortedHierarchyDialogs;
+	}
+
+	private void sortDialogs(ArrayList<Entity> aentMainList) {
+		ArrayList<DiagHierarchyWrapper> ahs = new ArrayList<DiagHierarchyWrapper>();
+		for(Entity ent:aentMainList){
+			ahs.add(new DiagHierarchyWrapper(ent));
+		}
+		
+		HierarchySorterI.i().sort(ahs);//,cmprEntEquals);
+		
+		aentMainList.clear();
+		
+		for(DiagHierarchyWrapper hs:ahs){
+			aentMainList.add(hs.getEntity());
+		}
+	}
 }

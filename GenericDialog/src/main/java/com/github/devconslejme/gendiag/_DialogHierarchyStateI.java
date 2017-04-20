@@ -80,15 +80,8 @@ public class _DialogHierarchyStateI extends AbstractAppState implements IResizab
 	private float	fBeginOrderPosZ = 0f;
 	private float	fCurrentOrderPosZ;
 	
-	/**
-	 * so the blocker can stay in that gap
-	 */
-	private float	fInBetweenGapDistZ=1.0f;
-	private float	fMinLemurPanelSizeZ = 0.01f;
-	
 	private DefaultEntityData	ed;
 	private DialogHierarchySystemI	hisys;
-	private ColorRGBA	colorInvisible = new ColorRGBA(0,0,0,0);
 	
 	@Override
 	public void initialize(AppStateManager stateManager, Application app) {

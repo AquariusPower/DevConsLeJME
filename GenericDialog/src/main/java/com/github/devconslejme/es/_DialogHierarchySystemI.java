@@ -55,7 +55,6 @@ import com.simsilica.es.base.DefaultEntityData;
 public class _DialogHierarchySystemI {
 	public static _DialogHierarchySystemI i(){return GlobalManagerI.i().get(_DialogHierarchySystemI.class);}
 	
-	private ArrayList<Entity>	aentSortedHierarchyDialogs = new ArrayList<Entity>();
 	
 	public Entity getTopMostDialog() {
 		ArrayList<Entity> aent = getSortedHierarchyDialogs();
@@ -124,19 +123,6 @@ public class _DialogHierarchySystemI {
 //		
 //	}
 	
-	public boolean isBlocking(Entity ent){
-		HierarchyComp hc=ent.get(HierarchyComp.class);
-		if(hc==null)return false;
-		return hc.isBlocking();
-	}
-
-	public void enableBlockingLayer(Entity ent, boolean b){
-		HierarchyComp hc = ent.get(HierarchyComp.class); //ed.getComponent(ent.getId(), Blocker.class)
-//		ent.set(new Blocker(hc.getLayer(),b));
-		ent.set(hc=new HierarchyComp(hc,
-			EField.bBlocking,b));
-	}
-	
 	public EntityId updateLastFocusAppTimeNano(EntityId entid) {
 		EntityId entidParent = entid;
 		EntityId entidParentest = entidParent;
@@ -175,45 +161,6 @@ public class _DialogHierarchySystemI {
 		}
 	}
 	
-	/**
-	 * 
-	 * @param entParentFilter if null will bring all possible
-	 * @return
-	 */
-	public ArrayList<Entity> prepareSortedHierarchyDialogs(EntityId entidParentFilter){
-		aentSortedHierarchyDialogs.clear();
-		
-		/**
-		 * TODO how to make this work?
-		EntitySet entset = ed.getEntities(new FilterByHierarchyParent(ent), ShownState.class);
-		 */
-//		EntitySet entset = ed.getEntities(GuiLink.class,ShownState.class,LastFocusTime.class);
-		
-		for(Entity entChild:entsetHierarchyQuery){
-			HierarchyComp hcChild = entChild.get(HierarchyComp.class);
-			if(!hcChild.isOpened())continue;
-			
-			boolean bAdd=false;
-			if(entidParentFilter==null){
-				bAdd=true;
-			}else{
-				EntityId entidParent = hcChild.getHierarchyParent();
-				if(entidParentFilter.equals(entidParent)){
-					bAdd=true;
-				}
-			}
-			
-			if(bAdd)aentSortedHierarchyDialogs.add(entChild);
-		}		
-		
-		/**
-		 * the filter will make it skip many and break the sort hierarchy
-		 */
-		if(entidParentFilter==null)sortDialogs(aentSortedHierarchyDialogs);
-//		Collections.sort(aent,cmpr); // uses LastFocusTime
-		
-		return aentSortedHierarchyDialogs;
-	}
 	
 	private Comparator<Entity> cmprByLastFocusTime = new Comparator<Entity>() {
 		@Override
@@ -227,45 +174,6 @@ public class _DialogHierarchySystemI {
 
 	private long	lTime;
 	
-	private static class DiagHierarchyWrapper implements IHierarchy{
-		private Entity	ent;
-		private HierarchyComp hc;
-
-		public DiagHierarchyWrapper(Entity ent){
-			this.ent=ent;
-			hc = ent.get(HierarchyComp.class);
-		}
-		
-		public Entity getEntity(){
-			return ent;
-		}
-		
-		@Override
-		public DiagHierarchyWrapper getHierarchyParent() {
-			if(hc.getHierarchyParent()==null)return null;
-			
-			return new DiagHierarchyWrapper(
-				DialogHierarchySystemI.i().entsetHierarchyQuery.getEntity(
-					hc.getHierarchyParent()
-				)
-			);
-		}
-
-		@Override
-		public EHierarchy getHierarchyPriority() {
-			return hc.getHierarchyPriority();
-		}
-
-		@Override
-		public long getLastActivationNanoTime() {
-			return ent.get(HierarchyComp.class).getLastFocusTime();
-		}
-		
-		@Override
-		public boolean equals(Object obj) {
-			return ent.getId().equals(((DiagHierarchyWrapper)obj).getEntity().getId());
-		}
-	}
 	
 //	Comparator<HierarchySort> cmprEntEquals = new Comparator<HierarchySort>() {
 //		@Override
@@ -275,20 +183,6 @@ public class _DialogHierarchySystemI {
 //		}
 //	};
 	
-	private void sortDialogs(ArrayList<Entity> aentMainList) {
-		ArrayList<DiagHierarchyWrapper> ahs = new ArrayList<DiagHierarchyWrapper>();
-		for(Entity ent:aentMainList){
-			ahs.add(new DiagHierarchyWrapper(ent));
-		}
-		
-		HierarchySorterI.i().sort(ahs);//,cmprEntEquals);
-		
-		aentMainList.clear();
-		
-		for(DiagHierarchyWrapper hs:ahs){
-			aentMainList.add(hs.getEntity());
-		}
-	}
 	
 //	/**
 //	 * TODO generalize and put at the simple @MiscPackage

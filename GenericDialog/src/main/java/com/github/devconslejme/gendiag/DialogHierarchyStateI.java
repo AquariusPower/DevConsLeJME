@@ -38,6 +38,7 @@ import com.github.devconslejme.misc.jme.EffectArrow;
 import com.github.devconslejme.misc.jme.EffectElectricity;
 import com.github.devconslejme.misc.jme.EffectManagerStateI;
 import com.github.devconslejme.misc.jme.IEffect;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
@@ -47,6 +48,7 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.simsilica.es.Entity;
 import com.simsilica.es.EntityId;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
@@ -72,6 +74,10 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	private ColorRGBA	colorBlocker = ColorI.i().colorChangeCopy(ColorRGBA.Red, 0f, 0.15f);
 	private DialogHierarchySystemI sys = DialogHierarchySystemI.i();
 	private ResizablePanel	rzpCurrentlyBeingResized;
+	/** so the blocker can stay in that gap */
+	private float	fInBetweenGapDistZ=1.0f;
+	private float	fMinLemurPanelSizeZ = 0.01f;
+	private ColorRGBA	colorInvisible = new ColorRGBA(0,0,0,0);
 	
 	public static class BlockerListener extends DefaultCursorListener{
 		@Override
@@ -270,35 +276,30 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	 * @param entid
 	 * @param rzp
 	 */
-	public void updateBlocker(Float tpf,EntityId entid, ResizablePanel rzp){
-/*
-		Entity ent = ed.getEntity(entid, HierarchyComp.class);
-		
+//	public void updateBlocker(Float tpf,EntityId entid, ResizablePanel rzp){
+	public void updateBlocker(Float tpf,Visuals vs){
 		// blocker work
-		Panel pnlBlocker = hmBlocker.get(ent.getId().getId());
-		if(rzp.isOpened()){
+		Panel pnlBlocker = vs.getBlocker();
+		if(vs.getDialog().isOpened()){
 			if(pnlBlocker.getParent()==null){
 				nodeToMonitor.attachChild(pnlBlocker);
 			}
 			
 			// how many childs are modal
 			int iModalCount=0;
-			for(Entity entChild:sys.prepareSortedHierarchyDialogs(ent.getId())){
+			for(Entity entChild:sys.prepareSortedHierarchyDialogs(vs.getEntityId())){
 				if(entChild.get(HierarchyComp.class).isHierarchyModal())iModalCount++;
 			}
-			
-			if(iModalCount==0){
-				sys.enableBlockingLayer(ent,false);
-			}
+			if(iModalCount==0)sys.enableBlockingLayer(vs.getEntityId(),false);
 			
 			// z order
-			Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSize(rzp);
+			Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSize(vs.getDialog());
 			if(v3fSize!=null){
 				if(Float.compare(v3fSize.length(),0f)!=0){ //waiting top panel be updated by lemur
-					Vector3f v3fPos = rzp.getLocalTranslation().clone();
+					Vector3f v3fPos = vs.getDialog().getLocalTranslation().clone();
 					
 					QuadBackgroundComponent qbc = ((QuadBackgroundComponent)pnlBlocker.getBackground());
-					if(sys.isBlocking(ent)){
+					if(sys.isBlocking(vs.getEntityId())){
 						v3fPos.z += v3fSize.z + fInBetweenGapDistZ/2f; //above
 						qbc.setColor(colorBlocker);
 					}else{
@@ -319,14 +320,13 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 				pnlBlocker.removeFromParent();
 			}
 		}
-*/		
 	}
 	
 	@Override
 	public void resizerUpdatedLogicalStateEvent(float tpf, ResizablePanel rzpSource) {
 		Visuals vs = getVisuals(rzpSource);
-		EntityId entid = vs.getEntityId();
-		updateBlocker(tpf, entid, rzpSource);
+//		EntityId entid = vs.getEntityId();
+		updateBlocker(tpf, vs);
 		
 		HierarchyComp hc = getHierarchyComp(rzpSource);
 		EntityId entidParent = hc.getHierarchyParent();
@@ -374,7 +374,8 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 
 	@Override
 	public void removedFromParentEvent(ResizablePanel rzpSource) {
-		updateBlocker(null, getVisuals(rzpSource).getEntityId(), rzpSource);
+//		updateBlocker(null, getVisuals(rzpSource).getEntityId(), rzpSource);
+		updateBlocker(null, getVisuals(rzpSource));
 	}
 	
 }
