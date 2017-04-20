@@ -246,6 +246,8 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 			throw new DetailedException("playing and 'to' not set",this);
 		}
 		
+		if(sptOwner==null)sptOwner=sptFollowFrom;
+		
 		if(nodeParent==null){
 //			if (objOwner instanceof ILinkedSpatial) {
 //				ILinkedSpatial ils = (ILinkedSpatial) objOwner;
@@ -350,7 +352,9 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 		assertNotDiscarded();
 		if(!isbPlay())return;
 		
-		if(!getNodeParent().hasChild(getGeom()))getNodeParent().attachChild(this.getGeom());
+		if(!getNodeParent().hasChild(getGeom())){
+			getNodeParent().attachChild(this.getGeom());
+		}
 		
 		playWork();
 		

@@ -90,7 +90,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		private EntityId entid;
 		private ResizablePanel rzpDiag;
 		private Panel pnlBlocker;
-//		private IEffect ieff;
+		private IEffect ieffLinkToParent;
 		private Vector3f	v3fPositionRelativeToParent = new Vector3f(20, -20, 0); //cascade like
 //		@Override
 //		public boolean equals(Object obj) {
@@ -106,7 +106,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		public void setEntityId(EntityId entid) {
 			this.entid = entid;
 		}
-		public ResizablePanel getDiag() {
+		public ResizablePanel getDialog() {
 			return rzpDiag;
 		}
 		public void setDiag(ResizablePanel rzpDiag) {
@@ -123,6 +123,12 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		}
 		public void setPositionRelativeToParent(Vector3f v3fPositionRelativeToParent) {
 			this.v3fPositionRelativeToParent = v3fPositionRelativeToParent;
+		}
+		public IEffect getEffLinkToParent() {
+			return ieffLinkToParent;
+		}
+		public void setEffLinkToParent(IEffect ieffLinkToParent) {
+			this.ieffLinkToParent = ieffLinkToParent;
 		}
 		
 	}
@@ -169,7 +175,14 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	}
 	
 	public Visuals getVisuals(Spatial spt){
+		if(spt==null)return null;
 		return UserDataI.i().getUserDataPSH(spt,Visuals.class);
+	}
+	
+	public HierarchyComp getHierarchyComp(Spatial spt){
+		Visuals vs = getVisuals(spt);
+		if(vs==null)return null;
+		return sys.getHierarchyComp(vs.getEntityId());
 	}
 	
 	public void showDialog(ResizablePanel rzp) {
@@ -190,6 +203,64 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		);
 		
 		showDialog(rzpChild);
+		
+		applyParentToChildLinkEffect(rzpParent, rzpChild);
+	}
+	
+	protected void applyParentToChildLinkEffect(ResizablePanel rzpParent, ResizablePanel rzpChild) {
+		if(!getHierarchyComp(rzpParent).isShowLinksFromChilds())return;
+		
+		Visuals vsChild = getVisuals(rzpChild);
+		if(vsChild.getEffLinkToParent()==null){
+			IEffect effLink = ieffParentToChildLink.clone();
+			
+			effLink
+				.setFollowFromTarget(rzpParent, null)
+				.setFollowToTarget(rzpChild, null)
+				.setPlay(true)
+				;
+			
+			EffectManagerStateI.i().add(effLink);
+			
+			vsChild.setEffLinkToParent(effLink);
+		}
+	}
+	
+	@Override
+	public void update(float tpf) {
+		super.update(tpf);
+		
+		updateDragEffect();
+	}
+	
+	private void updateDragEffect(){
+		Panel pnl = DragParentestPanelListenerI.i().getParentestBeingDragged();
+		HierarchyComp hc = getHierarchyComp(pnl);
+		if(hc!=null){
+			EntityId entidParent = hc.getHierarchyParent();
+			if(entidParent!=null){
+				ResizablePanel rzpParent = getDialog(entidParent);
+				if(!ieffLinkedDragEffect.isPlaying()){
+					ieffLinkedDragEffect
+						.setOwner(pnl)
+						.setFollowFromTarget(rzpParent, null)
+						.setFollowToTarget(pnl, null)
+						.setPlay(true)
+						;
+				}
+			}
+		}else{
+			ieffLinkedDragEffect.setPlay(false);
+		}
+	}
+	
+	public ResizablePanel getDialog(EntityId entid){
+		for(Spatial spt:nodeToMonitor.getChildren()){
+			Visuals vs = getVisuals(spt);
+			if(vs==null)continue;
+			if(vs.getEntityId().equals(entid))return vs.getDialog();
+		}
+		return null;
 	}
 	
 	@Override	public void resizerUpdatedLogicalStateEvent(float tpf,			ResizablePanel rzpSource) {	}

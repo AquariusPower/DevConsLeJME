@@ -44,6 +44,11 @@ public interface IEffect<THIS extends IEffect>{
 
 	void assertNotDiscarded();
 	
+	/**
+	 * where the effect geometry will be attached, can be initially null
+	 * @param sptOwner
+	 * @return
+	 */
 	THIS setOwner(Spatial sptOwner);
 	
 	THIS setColor(ColorRGBA colorRef);

@@ -355,32 +355,32 @@ public class _DialogHierarchyStateI extends AbstractAppState implements IResizab
 			EField.bHierarchyModal, bModal
 		));
 	}
-	private void updateShowHierarchyChildAndParent(Entity entChild, HierarchyComp hcChild, ResizablePanel rzpChild){
-//		HierarchyComp hcChild = ed.getComponent(entidChild, HierarchyComp.class);
-		if(hcChild.isOpened())return; //already opened
-		
-		EntityId entidParent=hcChild.getHierarchyParent();
-		if(entidParent==null)return;
-		
-		if(!hcChild.isInitVisuals())return;
-		
-		HierarchyComp hcParent = ed.getComponent(entidParent, HierarchyComp.class);
-		if(!hcParent.isInitVisuals())return;
-		
-		Entity entParent = ed.getEntity(entidParent, hisys.getAllRequiredComponentTypesArray());
-//		Entity entChild = ed.getEntity(entidChild, hisys.getAllRequiredComponentTypesArray());
-		
-		if(hcChild.isHierarchyModal())hisys.enableBlockingLayer(entParent,true);
-		
-//		ResizablePanel rzpChild = hmDiag.get(entChild.getId().getId());
-		showDialog(rzpChild); //show it
-		setFocusRecursively(entChild.getId());
-		
-		if(hcParent.isShowLinkToChild()){
-			ResizablePanel rzpParent = hmDiag.get(entParent.getId().getId());
-			applyParentToChildLinkEffect(rzpParent,rzpChild);
-		}
-	}
+//	private void updateShowHierarchyChildAndParent(Entity entChild, HierarchyComp hcChild, ResizablePanel rzpChild){
+////		HierarchyComp hcChild = ed.getComponent(entidChild, HierarchyComp.class);
+//		if(hcChild.isOpened())return; //already opened
+//		
+//		EntityId entidParent=hcChild.getHierarchyParent();
+//		if(entidParent==null)return;
+//		
+//		if(!hcChild.isInitVisuals())return;
+//		
+//		HierarchyComp hcParent = ed.getComponent(entidParent, HierarchyComp.class);
+//		if(!hcParent.isInitVisuals())return;
+//		
+//		Entity entParent = ed.getEntity(entidParent, hisys.getAllRequiredComponentTypesArray());
+////		Entity entChild = ed.getEntity(entidChild, hisys.getAllRequiredComponentTypesArray());
+//		
+//		if(hcChild.isHierarchyModal())hisys.enableBlockingLayer(entParent,true);
+//		
+////		ResizablePanel rzpChild = hmDiag.get(entChild.getId().getId());
+//		showDialog(rzpChild); //show it
+//		setFocusRecursively(entChild.getId());
+//		
+//		if(hcParent.isShowLinkToChild()){
+//			ResizablePanel rzpParent = hmDiag.get(entParent.getId().getId());
+//			applyParentToChildLinkEffect(rzpParent,rzpChild);
+//		}
+//	}
 	
 	public void setParentToChildLinkEffect(IEffect i){
 		this.ieffParentToChildLink=i;
@@ -392,19 +392,6 @@ public class _DialogHierarchyStateI extends AbstractAppState implements IResizab
 	 */
 	public void setDragEffect(IEffect i){
 		this.ieffLinkedDragEffect =i;
-	}
-	
-	protected void applyParentToChildLinkEffect(ResizablePanel rzpParent, ResizablePanel rzpChild) {
-		IEffect effLink = ieffParentToChildLink.clone();
-		
-		effLink
-			.setOwner(rzpParent)
-			.setFollowFromTarget(rzpParent, null)
-			.setFollowToTarget(rzpChild, null)
-			.setPlay(true)
-			;
-		
-		EffectManagerStateI.i().add(effLink);
 	}
 	
 	/**
@@ -491,26 +478,6 @@ public class _DialogHierarchyStateI extends AbstractAppState implements IResizab
 //		return null;
 	}
 
-	private void updateDragEffect(){
-		Panel pnl = DragParentestPanelListenerI.i().getParentestBeingDragged();
-		if(pnl!=null && ResizablePanel.class.isInstance(pnl)){
-			EntityId entid = getEntityIdFor((ResizablePanel)pnl);
-			EntityId entidParent = ed.getComponent(entid, HierarchyComp.class).getHierarchyParent();
-			if(entidParent!=null){
-				ResizablePanel rzpParent = hmDiag.get(entidParent.getId());
-				if(!ieffLinkedDragEffect.isPlaying()){
-					ieffLinkedDragEffect
-						.setOwner(pnl)
-						.setFollowFromTarget(rzpParent, null)
-						.setFollowToTarget(pnl, null)
-						.setPlay(true)
-						;
-				}
-			}
-		}else{
-			ieffLinkedDragEffect.setPlay(false);
-		}
-	}
 
 	public EntityId getHierarchyParentOf(EntityId entid) {
 		Entity ent = hisys.getEntityFor(entid,HierarchyComp.class);
