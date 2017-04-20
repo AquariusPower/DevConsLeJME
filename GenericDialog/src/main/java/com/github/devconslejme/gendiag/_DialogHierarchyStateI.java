@@ -69,8 +69,8 @@ import com.simsilica.lemur.focus.FocusManagerState;
 /**
 	* @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 	*/
-public class DialogHierarchyStateI extends AbstractAppState implements IResizableListener{
-	public static DialogHierarchyStateI i(){return GlobalManagerI.i().get(DialogHierarchyStateI.class);}
+public class _DialogHierarchyStateI extends AbstractAppState implements IResizableListener{
+	public static _DialogHierarchyStateI i(){return GlobalManagerI.i().get(_DialogHierarchyStateI.class);}
 	
 	private EntitySet	entset;
 	private FocusManagerState	focusState;
@@ -86,30 +86,9 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	private float	fInBetweenGapDistZ=1.0f;
 	private float	fMinLemurPanelSizeZ = 0.01f;
 	
-	private HashBiMap<Long,ResizablePanel> hmDiag = HashBiMap.create();
-	private HashBiMap<Long,Panel> hmBlocker = HashBiMap.create();
 	private DefaultEntityData	ed;
 	private DialogHierarchySystemI	hisys;
-	private BlockerListener blockerListener = new BlockerListener();
-	private IEffect	ieffParentToChildLink = new EffectArrow();
-	private IEffect	ieffLinkedDragEffect = new EffectElectricity().setColor(ColorI.i().colorChangeCopy(ColorRGBA.Blue, 0f, 0.5f));
-	private Application	app;
-	private ColorRGBA	colorBlocker = ColorI.i().colorChangeCopy(ColorRGBA.Red, 0f, 0.15f);
 	private ColorRGBA	colorInvisible = new ColorRGBA(0,0,0,0);
-	
-	public void configure(Node nodeToMonitor,float fBeginOrderZ){
-		this.fBeginOrderPosZ=fBeginOrderZ;
-		this.nodeToMonitor=nodeToMonitor;
-		
-		app=GlobalManagerI.i().get(Application.class);
-    app.getStateManager().attach(this);
-		focusState=app.getStateManager().getState(FocusManagerState.class);
-    
-		EffectManagerStateI.i().add(ieffLinkedDragEffect);
-		
-		DialogHierarchySystemI.i().configure();
-		ed=DialogHierarchySystemI.i().getEntityData();
-	}
 	
 	@Override
 	public void initialize(AppStateManager stateManager, Application app) {
@@ -206,10 +185,6 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		
 	}
 
-	public void put(EntityId entid, ResizablePanel rzp) {
-		hmDiag.put(entid.getId(), rzp);
-	}
-	
 	private void updateFocusTime(Entity ent, ResizablePanel rzp) {
 		EntityId entidUpdLFTime=null;
 		
@@ -342,22 +317,6 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		}
 	}
 
-
-	public static class BlockerListener extends DefaultCursorListener{
-		@Override
-		protected void click(CursorButtonEvent event, Spatial target, 	Spatial capture) {
-			super.click(event, target, capture);
-			
-			EntityId entid = UserDataI.i().getUserDataPSH(capture,EntityId.class);
-			HierarchyComp blk = DialogHierarchyStateI.i().ed.getComponent(entid,HierarchyComp.class);
-			if(blk.isBlocking()){
-				DialogHierarchyStateI.i().setFocusRecursively(entid);
-				event.setConsumed();
-			}
-		}
-		
-	}
-	
 	/**
 	 * will prevent access to parent
 	 * @param compChild
@@ -423,43 +382,6 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		}
 	}
 	
-	public void initializeNewEntity(Float tpf,Entity ent) {
-		/////////////// blocker
-		ResizablePanel rzp = hmDiag.get(ent.getId().getId());
-		
-	//	if(ed.getComponent(ent.getId(), Blocker.class)==null){
-			Panel pnlBlocker = new Panel("");
-			hmBlocker.put(ent.getId().getId(), pnlBlocker);
-//			ed.setComponent(ent.getId(),new Blocker(pnlBlocker,null)); //ent.set(
-			
-			pnlBlocker.setBackground(new QuadBackgroundComponent(colorBlocker));
-			
-			//the blocker has not a parent panel! so it will let the dialog be dragged directly!
-			DragParentestPanelListenerI.i().applyAt(pnlBlocker, rzp);  
-			
-			CursorEventControl.addListenersToSpatial(pnlBlocker,blockerListener);
-			
-			UserDataI.i().setUserDataPSH(pnlBlocker,ent.getId());
-	//	}
-		
-		// panel
-		rzp.addUpdateLogicalStateListener(this);
-		HoverHighlightEffectI.i().applyAt(rzp, (QuadBackgroundComponent)rzp.getResizableBorder());
-	}
-	
-	//	ArrayList<ResizablePanel> arzpZOrderList = new ArrayList<ResizablePanel>();
-	public void showDialog(ResizablePanel rzp) {
-//		if(arzpZOrderList.contains(rzp)){
-//			arzpZOrderList.remove(rzp);
-//		}
-//		
-//		arzpZOrderList.add(rzp);
-//		
-//		recursiveWorkOnChildDiagsOf(rzp,true);
-		
-		nodeToMonitor.attachChild(rzp);
-	}
-
 	public void setParentToChildLinkEffect(IEffect i){
 		this.ieffParentToChildLink=i;
 	}
@@ -613,21 +535,21 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		}
 	}
 
-	public static class RelativePos implements EntityComponent, PersistentComponent{
-		private Vector3f	v3fPositionRelativeToParent = new Vector3f(20, -20, 0); //cascade like
-		/**
-		 * @param v3fPositionRelativeToParent if null will use default
-		 */
-		public RelativePos(Vector3f v3fPositionRelativeToParent) {
-			if(v3fPositionRelativeToParent!=null)this.v3fPositionRelativeToParent = v3fPositionRelativeToParent;
-		}
-		public Vector3f getPositionRelativeToParent() {
-			return v3fPositionRelativeToParent;
-		}
-	}
-
-	public void setAutoMoveRelativelyToParent(EntityId entid){
-		ed.setComponent(entid, new RelativePos(null));
-	}
+//	public static class RelativePos implements EntityComponent, PersistentComponent{
+//		private Vector3f	v3fPositionRelativeToParent = new Vector3f(20, -20, 0); //cascade like
+//		/**
+//		 * @param v3fPositionRelativeToParent if null will use default
+//		 */
+//		public RelativePos(Vector3f v3fPositionRelativeToParent) {
+//			if(v3fPositionRelativeToParent!=null)this.v3fPositionRelativeToParent = v3fPositionRelativeToParent;
+//		}
+//		public Vector3f getPositionRelativeToParent() {
+//			return v3fPositionRelativeToParent;
+//		}
+//	}
+//
+//	public void setAutoMoveRelativelyToParent(EntityId entid){
+//		ed.setComponent(entid, new RelativePos(null));
+//	}
 	
 }

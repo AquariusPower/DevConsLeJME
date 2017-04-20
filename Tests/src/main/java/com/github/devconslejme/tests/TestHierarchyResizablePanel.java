@@ -27,7 +27,6 @@
 
 package com.github.devconslejme.tests;
 
-import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.misc.QueueI;
@@ -76,22 +75,13 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		DialogHierarchyStateI.i().showDialog(rzpA);
 		
 		ResizablePanel rzpB = createDialog(new Vector3f(310,710,0),"MultiB",null);
-		DialogHierarchyStateI.i().showDialogAsModal(
-			UserDataI.i().getUserDataPSH(rzpA,EntityId.class),
-			UserDataI.i().getUserDataPSH(rzpB,EntityId.class)
-		);
+		DialogHierarchyStateI.i().showDialogAsModal(rzpA,rzpB);
 		
 		ResizablePanel rzpC = createDialog(new Vector3f(320,720,0),"MultiC",null);
-		DialogHierarchyStateI.i().showDialogAsModal(
-			UserDataI.i().getUserDataPSH(rzpA,EntityId.class),
-			UserDataI.i().getUserDataPSH(rzpC,EntityId.class)
-		);
+		DialogHierarchyStateI.i().showDialogAsModal(rzpA,rzpC);
 		
 		ResizablePanel rzpD = createDialog(new Vector3f(320,720,0),"MultiD",null);
-		DialogHierarchyStateI.i().showDialogAsModal(
-			UserDataI.i().getUserDataPSH(rzpB,EntityId.class),
-			UserDataI.i().getUserDataPSH(rzpD,EntityId.class)
-		);
+		DialogHierarchyStateI.i().showDialogAsModal(rzpB,rzpD);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -100,19 +90,15 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		((Button)rzpChild.getContents()).addClickCommands(new Command<Button>(){ //FIXME this is not compatible with CursorListener!
 			@Override
 			public void execute(Button source) {
-				rzpChild.removeFromParent(); //FIXME not being reached
+				rzpChild.removeFromParent(); 
 			}
 		});
 		
 		ResizablePanel rzpParent = createDialog(new Vector3f(100,iBaseY+100,10), "parent"+iBaseY, "click to open modal");
-		((Button)rzpChild.getContents()).addClickCommands(new Command<Button>(){ //FIXME this is not compatible with CursorListener!
+		((Button)rzpParent.getContents()).addClickCommands(new Command<Button>(){ //FIXME this is not compatible with CursorListener!
 			@Override
-			public void execute(Button source) { //FIXME not being reached
-				EntityId entidChild = UserDataI.i().getUserDataPSH(rzpChild,EntityId.class);
-				DialogHierarchyStateI.i().showDialogAsModal(
-					UserDataI.i().getUserDataPSH(rzpParent,EntityId.class),
-					entidChild
-				);
+			public void execute(Button source) { 
+				DialogHierarchyStateI.i().showDialogAsModal(rzpParent,rzpChild);
 			}
 		});
 		
@@ -122,12 +108,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 	private ResizablePanel createDialog(Vector3f pos,String strName,String strInfo) {
 		if(strInfo==null)strInfo=strName;
 		
-		EntityId entid = DialogHierarchySystemI.i().createEntity(strName);
-		ResizablePanel rzp = new ResizablePanel(null);
-		DialogHierarchyStateI.i().put(entid,rzp);
-		UserDataI.i().setUserDataPSH(rzp, entid);
-		
-		DialogHierarchyStateI.i().setAutoMoveRelativelyToParent(entid);
+		ResizablePanel rzp = DialogHierarchyStateI.i().createDialog(strName);
 		
 		rzp.setPreferredSize(new Vector3f(300,200,0)); //TODO z will cause trouble?
 		rzp.setLocalTranslation(pos); //above DevCons

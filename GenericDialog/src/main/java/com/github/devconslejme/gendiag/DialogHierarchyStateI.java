@@ -27,37 +27,27 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.github.devconslejme.gendiag;
 
-import java.util.ArrayList;
-
 import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.es.HierarchyComp;
 import com.github.devconslejme.es.HierarchyComp.EField;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.EffectArrow;
 import com.github.devconslejme.misc.jme.EffectElectricity;
 import com.github.devconslejme.misc.jme.EffectManagerStateI;
 import com.github.devconslejme.misc.jme.IEffect;
-import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
-import com.google.common.collect.HashBiMap;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
-import com.jme3.app.state.AppStateManager;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.simsilica.es.Entity;
-import com.simsilica.es.EntityComponent;
 import com.simsilica.es.EntityId;
-import com.simsilica.es.EntitySet;
-import com.simsilica.es.PersistentComponent;
-import com.simsilica.es.base.DefaultEntityData;
-import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.event.CursorButtonEvent;
@@ -71,4 +61,140 @@ import com.simsilica.lemur.focus.FocusManagerState;
 	*/
 public class DialogHierarchyStateI extends AbstractAppState implements IResizableListener{
 	public static DialogHierarchyStateI i(){return GlobalManagerI.i().get(DialogHierarchyStateI.class);}
+	
+	private Application	app;
+	private float	fBeginOrderPosZ;
+	private Node	nodeToMonitor;
+	private FocusManagerState	focusState;
+	private IEffect	ieffParentToChildLink = new EffectArrow();
+	private IEffect	ieffLinkedDragEffect = new EffectElectricity().setColor(ColorI.i().colorChangeCopy(ColorRGBA.Blue, 0f, 0.5f));
+	private BlockerListener blockerListener = new BlockerListener();
+	private ColorRGBA	colorBlocker = ColorI.i().colorChangeCopy(ColorRGBA.Red, 0f, 0.15f);
+	private DialogHierarchySystemI sys = DialogHierarchySystemI.i();
+	
+	public static class BlockerListener extends DefaultCursorListener{
+		@Override
+		protected void click(CursorButtonEvent event, Spatial target, 	Spatial capture) {
+			super.click(event, target, capture);
+			
+			Visuals vs = DialogHierarchyStateI.i().getVisuals(capture);
+			HierarchyComp hc = DialogHierarchySystemI.i().getHierarchyComp(vs.getEntityId());
+			if(hc.isBlocking()){
+				DialogHierarchyStateI.i().setFocusRecursively(entid);
+				event.setConsumed();
+			}
+		}
+		
+	}
+	private static class Visuals{
+		private EntityId entid;
+		private ResizablePanel rzpDiag;
+		private Panel pnlBlocker;
+//		private IEffect ieff;
+		private Vector3f	v3fPositionRelativeToParent = new Vector3f(20, -20, 0); //cascade like
+//		@Override
+//		public boolean equals(Object obj) {
+//			if(obj==rzpDiag)return true;
+//			if(obj==pnlBlocker)return true;
+//			if(obj==ieff)return true;
+//			if((Long)obj==entid.getId())return true;
+//			return false;
+//		}
+		public EntityId getEntityId() {
+			return entid;
+		}
+		public void setEntityId(EntityId entid) {
+			this.entid = entid;
+		}
+		public ResizablePanel getDiag() {
+			return rzpDiag;
+		}
+		public void setDiag(ResizablePanel rzpDiag) {
+			this.rzpDiag = rzpDiag;
+		}
+		public Panel getBlocker() {
+			return pnlBlocker;
+		}
+		public void setBlocker(Panel pnlBlocker) {
+			this.pnlBlocker = pnlBlocker;
+		}
+		public Vector3f getPositionRelativeToParent() {
+			return v3fPositionRelativeToParent;
+		}
+		public void setPositionRelativeToParent(Vector3f v3fPositionRelativeToParent) {
+			this.v3fPositionRelativeToParent = v3fPositionRelativeToParent;
+		}
+		
+	}
+
+	public void configure(Node nodeToMonitor,float fBeginOrderZ){
+		this.fBeginOrderPosZ=fBeginOrderZ;
+		this.nodeToMonitor=nodeToMonitor;
+		
+		app=GlobalManagerI.i().get(Application.class);
+    app.getStateManager().attach(this);
+		focusState=app.getStateManager().getState(FocusManagerState.class);
+    
+		EffectManagerStateI.i().add(ieffLinkedDragEffect);
+		
+		DialogHierarchySystemI.i().configure();
+//		ed=DialogHierarchySystemI.i().getEntityData();
+	}
+	
+//	private HashBiMap<Long,Visuals> hmDiag = HashBiMap.create();
+	
+	public ResizablePanel createDialog(String strName) {
+		EntityId entid = DialogHierarchySystemI.i().createEntity(strName);
+		
+		// main dialog panel
+		ResizablePanel rzp = new ResizablePanel(null);
+		rzp.addUpdateLogicalStateListener(this);
+		HoverHighlightEffectI.i().applyAt(rzp, (QuadBackgroundComponent)rzp.getResizableBorder());
+		
+		// blocker
+		Panel pnlBlocker = new Panel("");
+		pnlBlocker.setBackground(new QuadBackgroundComponent(colorBlocker));
+		DragParentestPanelListenerI.i().applyAt(pnlBlocker, rzp); // the blocker has not a parent panel! so it will let the dialog be dragged directly!  
+		CursorEventControl.addListenersToSpatial(pnlBlocker,blockerListener);
+		
+		// visual data
+		Visuals vs = new Visuals();
+		vs.entid=entid;
+		vs.rzpDiag=rzp;
+		vs.pnlBlocker=pnlBlocker;
+		UserDataI.i().setUserDataPSH(rzp, vs);
+		UserDataI.i().setUserDataPSH(pnlBlocker, vs);
+		
+		return rzp;
+	}
+	
+	public Visuals getVisuals(Spatial spt){
+		return UserDataI.i().getUserDataPSH(spt,Visuals.class);
+	}
+	
+	public void showDialog(ResizablePanel rzp) {
+		nodeToMonitor.attachChild(rzp);
+		
+		sys.setHierarchyComp(getVisuals(rzp).getEntityId(), 
+			EField.bOpened, true,
+			EField.lLastFocusTime, app.getTimer().getTime()
+		);
+	}
+
+	public void showDialogAsModal(ResizablePanel rzpParent, ResizablePanel rzpChild) {
+		if(!rzpParent.isOpened())throw new DetailedException("parent not open",rzpParent,rzpChild);
+		
+		sys.setHierarchyComp(getVisuals(rzpChild).getEntityId(), 
+			EField.eidHierarchyParent, getVisuals(rzpParent).getEntityId(),
+			EField.bHierarchyModal, true
+		);
+		
+		showDialog(rzpChild);
+	}
+	
+	@Override	public void resizerUpdatedLogicalStateEvent(float tpf,			ResizablePanel rzpSource) {	}
+	@Override	public void removedFromParentEvent(ResizablePanel rzpSource) {	}
+	@Override	public void resizedEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {	}
+	@Override	public void endedResizingEvent(ResizablePanel rzpSource) {	}
+	
 }

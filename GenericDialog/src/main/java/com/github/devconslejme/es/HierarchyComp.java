@@ -38,51 +38,51 @@ import com.simsilica.es.PersistentComponent;
 */
 public class HierarchyComp implements EntityComponent, PersistentComponent{
 	public static enum EField{
-		bOpened(Boolean.class), //#syncTo
-		bBlocking(Boolean.class), //#syncTo
-		bInitVisuals(Boolean.class), //#syncTo
-		bInitHierarchy(Boolean.class),
-		lLastFocusTime(Long.class),
-		eidHierarchyParent(EntityId.class),
-		eHierarchyType(EHierarchy.class),
-		bHierarchyModal(Boolean.class),
-		bShowLinkToChild(Boolean.class),
-		fZ(Float.class),
 		fBlockerZ(Float.class),
+		bBlocking(Boolean.class), //#syncTo
 		fBoundingHeightZ(Float.class), 
 		strDebugName(String.class),
+		bHierarchyModal(Boolean.class),
+		eidHierarchyParent(EntityId.class),
+		eHierarchyType(EHierarchy.class),
+		bInitHierarchy(Boolean.class),
+//		bInitVisuals(Boolean.class),
+		lLastFocusTime(Long.class),
+		bOpened(Boolean.class),
+		bShowLinkToChild(Boolean.class),
+		fZ(Float.class),
 		;
 		Class cl;
 		EField(Class cl){this.cl=cl;}
 	}
 	
-	private boolean bOpened=false; //#syncFrom bBlocking
-	private boolean bBlocking=false; //#syncFrom bBlocking
-	private boolean	bInitVisuals=false;
-	private boolean	bInitHierarchy=false;
-	private long lLastFocusTime=-1;
-	private EntityId eidHierarchyParent=null;
-	private EHierarchy	eHierarchyType=EHierarchy.Normal;
-	private boolean	bHierarchyModal=false;
-	private boolean bShowLinkToChild=true;
-	private float fZ=0f;
 	private float fBlockerZ=0f;
+	private boolean bBlocking=false; //#syncFrom bBlocking
 	private float fBoundingHeightZ=0f;
 	private String strDebugName="";
+	private boolean	bHierarchyModal=false;
+	private EntityId eidHierarchyParent=null;
+	private EHierarchy	eHierarchyType=EHierarchy.Normal;
+	private boolean	bInitHierarchy=false;
+//	private boolean	bInitVisuals=false;
+	private long lLastFocusTime=-1;
+	private boolean bOpened=false;
+	private boolean bShowLinkToChild=true;
+	private float fZ=0f;
 	
-	public boolean isOpened() {return bOpened;}
-	public boolean isBlocking() {return bBlocking;}
-	public boolean isInitVisuals() {return bInitVisuals;}
-	public boolean isInitHierarchy() {return bInitHierarchy;}
-	public long getLastFocusTime() {return lLastFocusTime;}
-	public EntityId getHierarchyParent() {return eidHierarchyParent;}
-	public EHierarchy getHierarchyPriority() {return eHierarchyType;}
-	public boolean isHierarchyModal() {return bHierarchyModal;}
-	public boolean isShowLinkToChild() {return bShowLinkToChild;}
-	public float getZ() {return fZ;}
 	public float getBlockerZ() {return fBlockerZ;}
+	public boolean isBlocking() {return bBlocking;}
 	public float getBoundingHeightZ() {return fBoundingHeightZ;}
 	public String getDebugName(){return strDebugName;}
+	public boolean isHierarchyModal() {return bHierarchyModal;}
+	public EntityId getHierarchyParent() {return eidHierarchyParent;}
+	public EHierarchy getHierarchyPriority() {return eHierarchyType;}
+	public boolean isInitHierarchy() {return bInitHierarchy;}
+//	public boolean isInitVisuals() {return bInitVisuals;}
+	public long getLastFocusTime() {return lLastFocusTime;}
+	public boolean isOpened() {return bOpened;}
+	public boolean isShowLinkToChild() {return bShowLinkToChild;}
+	public float getZ() {return fZ;}
 	
 //	public HierarchyComp(Object... aobjFieldsAndValues){
 //		this(null,aobjFieldsAndValues);
@@ -98,41 +98,39 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 			if (obj instanceof EField){e = (EField) obj; continue;}
 			
 			switch (e) {
-				case bOpened:						this.bOpened=(Boolean)objValue;break;
-				case bBlocking:					this.bBlocking=(Boolean)objValue;break;
-				case bInitHierarchy:		this.bInitHierarchy=(Boolean)objValue;break;
-				case bInitVisuals:			this.bInitVisuals=(Boolean)objValue;break;
-				case bHierarchyModal:		this.bHierarchyModal=(Boolean)objValue;break;
-				case bShowLinkToChild:	this.bShowLinkToChild=(Boolean)objValue;break;
-				case eHierarchyType:		this.eHierarchyType=(EHierarchy)objValue;break;
-				case eidHierarchyParent:this.eidHierarchyParent=(EntityId)objValue;break;
-				case lLastFocusTime:		this.lLastFocusTime=(Long)objValue;break;
-				case fZ:								this.fZ=(Float)objValue;break;
 				case fBlockerZ:					this.fBlockerZ=(Float)objValue;break;
+				case bBlocking:					this.bBlocking=(Boolean)objValue;break;
 				case fBoundingHeightZ:	this.fBoundingHeightZ=(Float)objValue;break;
 				case strDebugName:			this.strDebugName=(String)objValue;break;
+				case bInitHierarchy:		this.bInitHierarchy=(Boolean)objValue;break;
+//				case bInitVisuals:			this.bInitVisuals=(Boolean)objValue;break;
+				case bHierarchyModal:		this.bHierarchyModal=(Boolean)objValue;break;
+				case eidHierarchyParent:this.eidHierarchyParent=(EntityId)objValue;break;
+				case eHierarchyType:		this.eHierarchyType=(EHierarchy)objValue;break;
+				case lLastFocusTime:		this.lLastFocusTime=(Long)objValue;break;
+				case bOpened:						this.bOpened=(Boolean)objValue;break;
+				case bShowLinkToChild:	this.bShowLinkToChild=(Boolean)objValue;break;
+				case fZ:								this.fZ=(Float)objValue;break;
 			}
 			
 			e = null;
 		}
-		
-		System.out.println();//@DEBUG rm
 	}
 	
 	private void copyFrom(HierarchyComp copyFrom) {
-		this.bOpened=copyFrom.bOpened;
-		this.bBlocking=copyFrom.bBlocking;
-		this.bInitVisuals=copyFrom.bInitVisuals;
-		this.bInitHierarchy=copyFrom.bInitHierarchy;
-		this.bHierarchyModal=copyFrom.bHierarchyModal;
-		this.bShowLinkToChild=copyFrom.bShowLinkToChild;
-		this.eHierarchyType=copyFrom.eHierarchyType;
-		this.eidHierarchyParent=copyFrom.eidHierarchyParent;
-		this.lLastFocusTime=copyFrom.lLastFocusTime;
-		this.fZ=copyFrom.fZ;
 		this.fBlockerZ=copyFrom.fBlockerZ;
+		this.bBlocking=copyFrom.bBlocking;
 		this.fBoundingHeightZ=copyFrom.fBoundingHeightZ;
 		this.strDebugName=copyFrom.strDebugName;
+		this.bInitHierarchy=copyFrom.bInitHierarchy;
+//		this.bInitVisuals=copyFrom.bInitVisuals;
+		this.bHierarchyModal=copyFrom.bHierarchyModal;
+		this.eidHierarchyParent=copyFrom.eidHierarchyParent;
+		this.eHierarchyType=copyFrom.eHierarchyType;
+		this.lLastFocusTime=copyFrom.lLastFocusTime;
+		this.bOpened=copyFrom.bOpened;
+		this.bShowLinkToChild=copyFrom.bShowLinkToChild;
+		this.fZ=copyFrom.fZ;
 	}
 
 }

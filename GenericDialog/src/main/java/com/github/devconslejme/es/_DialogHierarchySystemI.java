@@ -52,29 +52,10 @@ import com.simsilica.es.base.DefaultEntityData;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class DialogHierarchySystemI {
-	public static DialogHierarchySystemI i(){return GlobalManagerI.i().get(DialogHierarchySystemI.class);}
+public class _DialogHierarchySystemI {
+	public static _DialogHierarchySystemI i(){return GlobalManagerI.i().get(_DialogHierarchySystemI.class);}
 	
-//	private EntitySet	entsetBasicQuery; 
-	private EntitySet	entsetHierarchyQuery;
-	
-//	private Application	app;
-
-//	private ResizablePanel	rzpCurrentlyBeingResized;
-	
-	private DefaultEntityData	ed;
-	private ArrayList<Class>	aclAllComponentTypes;
-
 	private ArrayList<Entity>	aentSortedHierarchyDialogs = new ArrayList<Entity>();
-	
-	public void configure(){
-    ed = new DefaultEntityData(); //holds all components
-		recreateFullQuery(); //just to create it empty so new entities will be detected
-		if(entsetHierarchyQuery.size()>0)throw new DetailedException("must begin empty so news and changes can be properly applied",entsetHierarchyQuery,ed);
-    
-//		app=GlobalManagerI.i().get(Application.class);
-//    app.getStateManager().attach(this);
-	}
 	
 	public Entity getTopMostDialog() {
 		ArrayList<Entity> aent = getSortedHierarchyDialogs();
@@ -497,26 +478,6 @@ public class DialogHierarchySystemI {
 		return ed;
 	}
 
-	public EntityId createEntity(String strName){
-	  EntityId entid = ed.createEntity(); //to attach components to
-	  ed.setComponent(entid, new HierarchyComp(null,
-	  	EField.bInitVisuals,false,
-	  	EField.strDebugName,strName
-	  ));
-	  
-	  ed.setComponent(entid, new Name(strName));
-	  
-	  return entid;
-	}
-	
-	private void recreateFullQuery(){
-		if(entsetHierarchyQuery!=null){
-			applyFullQueryChanges(null); //last update for it
-		}
-		
-		entsetHierarchyQuery = ed.getEntities(getAllRequiredComponentTypesArray());
-	}
-	
 	private void applyFullQueryChanges(Float tpf){
 //		if(entsetBasicQuery!=null && entsetBasicQuery.applyChanges()) { //contains only basic components
 //			// newly matching entities
@@ -573,27 +534,6 @@ public class DialogHierarchySystemI {
 		}
 	}
 	
-	public Class[] getAllRequiredComponentTypesArray() {
-		return getAllRequiredComponentTypesList().toArray(new Class[0]);
-	}
-	public ArrayList<Class> getAllRequiredComponentTypesList() {
-		if(aclAllComponentTypes==null){
-			aclAllComponentTypes = new ArrayList<Class>();
-			addRequiredComponentType(HierarchyComp.class);
-			addRequiredComponentType(Name.class);
-		}
-		return aclAllComponentTypes;
-	}
-	public void addRequiredComponentType(Class cl){
-		if(!aclAllComponentTypes.contains(cl)){
-			aclAllComponentTypes.add(cl);
-			MessagesI.i().debugInfo(this,"added component: "+cl.getName());
-			recreateFullQuery();
-		}else{
-			MessagesI.i().warnMsg(this, "component already added "+cl.getName());
-		}
-	}
-
 	public EntitySet getEntities() {
 		return ed.getEntities(getAllRequiredComponentTypesArray());
 	}
