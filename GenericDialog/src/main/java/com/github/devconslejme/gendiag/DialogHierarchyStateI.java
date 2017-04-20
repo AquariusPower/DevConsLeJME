@@ -71,6 +71,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	private BlockerListener blockerListener = new BlockerListener();
 	private ColorRGBA	colorBlocker = ColorI.i().colorChangeCopy(ColorRGBA.Red, 0f, 0.15f);
 	private DialogHierarchySystemI sys = DialogHierarchySystemI.i();
+	private ResizablePanel	rzpCurrentlyBeingResized;
 	
 	public static class BlockerListener extends DefaultCursorListener{
 		@Override
@@ -230,10 +231,10 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	public void update(float tpf) {
 		super.update(tpf);
 		
-		updateDragEffect();
+		updateDragLinkToParentEffect();
 	}
 	
-	private void updateDragEffect(){
+	private void updateDragLinkToParentEffect(){
 		Panel pnl = DragParentestPanelListenerI.i().getParentestBeingDragged();
 		HierarchyComp hc = getHierarchyComp(pnl);
 		if(hc!=null){
@@ -263,9 +264,117 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		return null;
 	}
 	
-	@Override	public void resizerUpdatedLogicalStateEvent(float tpf,			ResizablePanel rzpSource) {	}
-	@Override	public void removedFromParentEvent(ResizablePanel rzpSource) {	}
-	@Override	public void resizedEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {	}
-	@Override	public void endedResizingEvent(ResizablePanel rzpSource) {	}
+	/**
+	 * 
+	 * @param tpf ignored if null
+	 * @param entid
+	 * @param rzp
+	 */
+	public void updateBlocker(Float tpf,EntityId entid, ResizablePanel rzp){
+/*
+		Entity ent = ed.getEntity(entid, HierarchyComp.class);
+		
+		// blocker work
+		Panel pnlBlocker = hmBlocker.get(ent.getId().getId());
+		if(rzp.isOpened()){
+			if(pnlBlocker.getParent()==null){
+				nodeToMonitor.attachChild(pnlBlocker);
+			}
+			
+			// how many childs are modal
+			int iModalCount=0;
+			for(Entity entChild:sys.prepareSortedHierarchyDialogs(ent.getId())){
+				if(entChild.get(HierarchyComp.class).isHierarchyModal())iModalCount++;
+			}
+			
+			if(iModalCount==0){
+				sys.enableBlockingLayer(ent,false);
+			}
+			
+			// z order
+			Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSize(rzp);
+			if(v3fSize!=null){
+				if(Float.compare(v3fSize.length(),0f)!=0){ //waiting top panel be updated by lemur
+					Vector3f v3fPos = rzp.getLocalTranslation().clone();
+					
+					QuadBackgroundComponent qbc = ((QuadBackgroundComponent)pnlBlocker.getBackground());
+					if(sys.isBlocking(ent)){
+						v3fPos.z += v3fSize.z + fInBetweenGapDistZ/2f; //above
+						qbc.setColor(colorBlocker);
+					}else{
+						v3fPos.z -= fInBetweenGapDistZ/2f; //below to not receive mouse/cursor events
+						qbc.setColor(colorInvisible);
+					}
+					
+					pnlBlocker.setLocalTranslation(v3fPos);
+					
+					Vector3f v3fBlockerSize = v3fSize.clone();
+					v3fBlockerSize.z=fMinLemurPanelSizeZ;
+					pnlBlocker.setPreferredSize(v3fBlockerSize);//rzp.getPreferredSize());
+				}
+			}
+			
+		}else{
+			if(pnlBlocker.getParent()!=null){
+				pnlBlocker.removeFromParent();
+			}
+		}
+*/		
+	}
+	
+	@Override
+	public void resizerUpdatedLogicalStateEvent(float tpf, ResizablePanel rzpSource) {
+		Visuals vs = getVisuals(rzpSource);
+		EntityId entid = vs.getEntityId();
+		updateBlocker(tpf, entid, rzpSource);
+		
+		HierarchyComp hc = getHierarchyComp(rzpSource);
+		EntityId entidParent = hc.getHierarchyParent();
+		if(entidParent!=null){
+			if(vs.getPositionRelativeToParent()!=null){
+				ResizablePanel rzpParent = getDialog(entidParent);
+				
+				if(
+						DragParentestPanelListenerI.i().getParentestBeingDragged()==rzpSource
+						||
+						getCurrentlyBeingResized()==rzpSource
+				){
+					/**
+					 * update displacement
+					 */
+					vs.setPositionRelativeToParent(
+						rzpSource.getLocalTranslation().subtract(rzpParent.getLocalTranslation())
+					);
+				}else{
+					/**
+					 * set position relatively to parent
+					 */
+					Vector3f v3fNewPos = rzpParent.getLocalTranslation().clone();
+					v3fNewPos.addLocal(vs.getPositionRelativeToParent());
+					v3fNewPos.z=rzpSource.getLocalTranslation().z;
+					rzpSource.setLocalTranslation(v3fNewPos);
+				}
+			}
+		}
+	}
+	
+	public ResizablePanel getCurrentlyBeingResized(){
+		return rzpCurrentlyBeingResized;
+	}
+
+	@Override
+	public void resizedEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {
+		rzpCurrentlyBeingResized=rzpSource;
+	}
+
+	@Override
+	public void endedResizingEvent(ResizablePanel rzpSource) {
+		rzpCurrentlyBeingResized=null; //user can resize only one at a time 
+	}
+
+	@Override
+	public void removedFromParentEvent(ResizablePanel rzpSource) {
+		updateBlocker(null, getVisuals(rzpSource).getEntityId(), rzpSource);
+	}
 	
 }
