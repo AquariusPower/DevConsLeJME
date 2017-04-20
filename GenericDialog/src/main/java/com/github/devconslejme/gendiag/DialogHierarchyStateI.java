@@ -87,7 +87,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			Visuals vs = DialogHierarchyStateI.i().getVisuals(capture);
 			HierarchyComp hc = DialogHierarchySystemI.i().getHierarchyComp(vs.getEntityId());
 			if(hc.isBlocking()){
-				DialogHierarchyStateI.i().setFocusRecursively(entid);
+				DialogHierarchyStateI.i().setFocusRecursively(vs.getEntityId());
 				event.setConsumed();
 			}
 		}
