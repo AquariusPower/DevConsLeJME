@@ -210,10 +210,13 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	public void showDialog(ResizablePanel rzp) {
 		nodeToMonitor.attachChild(rzp);
 		
-		sys.setHierarchyComp(getVisuals(rzp).getEntityId(), 
+		EntityId entid = getVisuals(rzp).getEntityId();
+		sys.setHierarchyComp(entid, 
 			EField.bOpened, true,
 			EField.lLastFocusTime, app.getTimer().getTime()
 		);
+		
+		setFocusRecursively(entid);
 	}
 
 	public void showDialogAsModeless(ResizablePanel rzpParent, ResizablePanel rzpChild) {
@@ -434,7 +437,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		Vector3f v3f = rzp.getLocalTranslation().clone();
 		v3f.z=fCurrentOrderPosZ;
 		rzp.setLocalTranslation(v3f);
-		sys.setHierarchyComp(entid, EField.fZ, fCurrentOrderPosZ);
+		sys.setHierarchyComp(entid, EField.fDialogZ, fCurrentOrderPosZ);
 		
 		// prepare next
 		BoundingBox bb = (BoundingBox)getDialog(entid).getWorldBound();
@@ -445,6 +448,17 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		}
 	}
 	
+	private CallableX cxZOrder = new CallableX() {
+		@Override
+		public Boolean call() {
+			fCurrentOrderPosZ = fBeginOrderPosZ;
+			for(Entity ent:sys.getSortedHierarchyDialogs()){
+				updateZOrder(ent.getId());
+			}
+			return true;
+		}
+	};
+	
 	/**
 	 * for the entire current tree
 	 * @param entid
@@ -452,16 +466,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	public void setFocusRecursively(EntityId entid){
 		setFocusRecursively(sys.getParentest(entid), false);
 		
-		QueueI.i().enqueue(new CallableX() {
-			@Override
-			public Boolean call() {
-				fCurrentOrderPosZ = fBeginOrderPosZ;
-				for(Entity ent:sys.getSortedHierarchyDialogs()){
-					updateZOrder(ent.getId());
-				}
-				return true;
-			}
-		});
+		QueueI.i().enqueue(cxZOrder);
 	}
 	public void setFocusRecursively(EntityId entid, boolean bRecursing){
 		ResizablePanel rzp = getDialog(entid);
