@@ -30,6 +30,8 @@ eval `secinit`
 SECFUNCuniqueLock --waitbecomedaemon
 
 function FUNCchk(){ # <package to validate> <<what package beyond self can it access> ...>
+	local lbMore=false;if [[ "$1" == "--more" ]];then lbMore=true;shift;fi
+	
 	local lstrPkg="$1";shift
 	
 	local lastrOtherPkgs=()
@@ -44,8 +46,14 @@ function FUNCchk(){ # <package to validate> <<what package beyond self can it ac
 	local lstrOtherPkgs="`echo "${lastrOtherPkgs[@]}" |tr " " "|"`"
 	
 	# grep: before ':' is the full path for the class file being analised
-	if echo "$strAllDeps" |grep "/$lstrPkg/[^/]*:" |egrep -v ":(.*/($lstrOtherPkgs)/)";then
+	if echo "$strDevConsDeps" |grep "/$lstrPkg/[^/]*:" |egrep -v ":(.*/($lstrOtherPkgs)/)";then
 		bProblemFound=true
+	fi
+	
+	if $lbMore;then #TODO it could depend on anything that comes in the JDK tho, or other small libraries maybe like ZayES?
+		if echo "$strAllDeps" |grep "^[.]/.*/$lstrPkg/[^/]*class:" |egrep -v ":(java|com/github/devconslejme/$lstrPkg)";then
+			bProblemFound=true
+		fi
 	fi
 	
 	return 0 #prevents last cmd no-problem error
@@ -56,11 +64,13 @@ while true;do
 	
 	pwd
 	
-	strAllDeps="`secJavaDependencyList.sh |sort -u |grep ":com/github/devconslejme"`"
-	echo "totDepsEntries='`echo "$strAllDeps" |wc -l`'"
+	strAllDeps="`secJavaDependencyList.sh |sort -u`"
+	strDevConsDeps="`echo "$strAllDeps" |grep ":com/github/devconslejme"`"
+	echo "totDepsEntries='`echo "$strDevConsDeps" |wc -l`'"
 
 	# misc can only access misc
-	FUNCchk misc
+	FUNCchk --more misc
+	#~ echo "$strAllDeps" |grep "^[.]/.*/misc/[^/]*class:" |egrep -v ":(java|com/github/devconslejme/misc)"
 
 	FUNCchk misc/jme misc
 
@@ -73,7 +83,8 @@ while true;do
 
 	FUNCchk devcons gendiag misc/lemur misc/jme misc es
 
-	FUNCchk extras
+	FUNCchk --more extras
+	#~ echo "$strAllDeps" |grep "^[.]/.*/extras/[^/]*class:" |egrep -v ":(java|com/github/devconslejme/extras)"
 
 	if $bProblemFound;then
 		echoc -p --info --say "problem found!"

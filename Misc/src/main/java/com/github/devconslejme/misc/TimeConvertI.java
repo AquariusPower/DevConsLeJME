@@ -27,13 +27,10 @@
 
 package com.github.devconslejme.misc;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
-
-import com.jme3.system.Timer;
 
 
 /**
@@ -125,6 +122,7 @@ public class TimeConvertI {
 		
 		dateFormat.applyPattern(strDateFormatPattern);
 		dateRealTime.setTime(lMilis);
+//		System.out.println(XMLDecoder.createHandler(null,null,null));
 		return dateFormat.format(dateRealTime);
 	}
 
