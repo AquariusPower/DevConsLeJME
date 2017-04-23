@@ -54,6 +54,7 @@ public class DialogHierarchySystemI {
 	/** to spare CPU */
 	private long	lLastFullSortAppTime;
 	private long	lLastSortAppTime;
+	private boolean	bUpdateOnlyParentestFocusTime = false;
 	
 	private static class DiagHierarchyWrapper implements IHierarchy{
 		private Entity	ent;
@@ -236,18 +237,26 @@ public class DialogHierarchySystemI {
 		}
 	}
 	
-	public EntityId updateLastFocusAppTimeNano(EntityId entid, long lTime) {
+	public EntityId getParentest(EntityId entid){
+		EntityId entidParentest = null;
 		EntityId entidParent = entid;
-		EntityId entidParentest = entidParent;
-		while(true){ 
-			entidParent = getHierarchyComp(entidParent).getHierarchyParent();
-			if(entidParent==null)break;
+		while(entidParent!=null){
 			entidParentest = entidParent;
+			entidParent = getHierarchyComp(entidParent).getHierarchyParent();
+		}
+		return entidParentest;
+	}
+	
+	public EntityId updateLastFocusAppTimeNano(EntityId entid, long lTime) {
+		EntityId entidToUpdate = entid;
+		
+		if(bUpdateOnlyParentestFocusTime){
+			entidToUpdate=getParentest(entid);
 		}
 		
-		setHierarchyComp(entidParentest, EField.lLastFocusTime, lTime);
+		setHierarchyComp(entidToUpdate, EField.lLastFocusTime, lTime);
 		
-		return entidParentest;
+		return entidToUpdate;
 	}
 	
 }

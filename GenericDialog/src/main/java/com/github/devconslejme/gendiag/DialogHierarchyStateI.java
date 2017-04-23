@@ -191,6 +191,11 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		return rzp;
 	}
 	
+	/**
+	 * the blocker and the dialog share the same object!
+	 * @param spt
+	 * @return
+	 */
 	public Visuals getVisuals(Spatial spt){
 		if(spt==null)return null;
 		return UserDataI.i().getUserDataPSH(spt,Visuals.class);
@@ -262,7 +267,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		Panel pnl = DragParentestPanelListenerI.i().getParentestBeingDragged();
 		HierarchyComp hc = getHierarchyComp(pnl);
 		if(hc!=null){
-			if(!ieffLinkedDragEffect.isPlaying()){
+			if(!ieffLinkedDragEffect.isPlaying()){ //this also identifies the start of the dragging!
 				EntityId entidParent = hc.getHierarchyParent();
 				if(entidParent!=null){
 					ResizablePanel rzpParent = getDialog(entidParent);
@@ -273,6 +278,8 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 						.setPlay(true)
 						;
 				}
+				
+				setFocusRecursively(getEntityId(pnl));
 			}
 		}else{
 			ieffLinkedDragEffect.setPlay(false);
@@ -398,6 +405,10 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 
 	@Override
 	public void resizedEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {
+		if(rzpCurrentlyBeingResized==null){ //marks it's start!
+			setFocusRecursively(getEntityId(rzpSource));
+		}
+		
 		rzpCurrentlyBeingResized=rzpSource;
 	}
 
@@ -419,6 +430,10 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	}
 	
 	private void updateZOrder(EntityId entid){
+		ResizablePanel rzp = getDialog(entid);
+		Vector3f v3f = rzp.getLocalTranslation().clone();
+		v3f.z=fCurrentOrderPosZ;
+		rzp.setLocalTranslation(v3f);
 		sys.setHierarchyComp(entid, EField.fZ, fCurrentOrderPosZ);
 		
 		// prepare next
@@ -435,14 +450,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	 * @param entid
 	 */
 	public void setFocusRecursively(EntityId entid){
-		EntityId entidParent = entid;
-		EntityId entidParentest = entidParent;
-		while(entidParent!=null){
-			if(entidParent!=null)entidParentest=entidParent;
-			entidParent = sys.getHierarchyComp(entidParent).getHierarchyParent();
-		}
-		
-		setFocusRecursively(entidParentest,false);
+		setFocusRecursively(sys.getParentest(entid), false);
 		
 		QueueI.i().enqueue(new CallableX() {
 			@Override
@@ -455,7 +463,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			}
 		});
 	}
-	public void setFocusRecursively(EntityId entid,boolean bRecursing){
+	public void setFocusRecursively(EntityId entid, boolean bRecursing){
 		ResizablePanel rzp = getDialog(entid);
 		GuiGlobals.getInstance().requestFocus(rzp);
 		sys.updateLastFocusAppTimeNano(entid, app.getTimer().getTime());
