@@ -35,6 +35,8 @@ import com.github.devconslejme.es.HierarchyComp.EField;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.EffectArrow;
 import com.github.devconslejme.misc.jme.EffectElectricity;
@@ -46,6 +48,7 @@ import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
+import com.jme3.bounding.BoundingBox;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
@@ -81,6 +84,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	private float	fInBetweenGapDistZ=1.0f;
 	private float	fMinLemurPanelSizeZ = 0.01f;
 	private ColorRGBA	colorInvisible = new ColorRGBA(0,0,0,0);
+	protected float	fCurrentOrderPosZ;
 	
 	public static class BlockerListener extends DefaultCursorListener{
 		@Override
@@ -249,7 +253,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	public void update(float tpf) {
 		super.update(tpf);
 		
-		sys.update(tpf);
+		sys.update(tpf, app.getTimer().getTime());
 		
 		updateDragLinkToParentEffect();
 	}
@@ -258,10 +262,10 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		Panel pnl = DragParentestPanelListenerI.i().getParentestBeingDragged();
 		HierarchyComp hc = getHierarchyComp(pnl);
 		if(hc!=null){
-			EntityId entidParent = hc.getHierarchyParent();
-			if(entidParent!=null){
-				ResizablePanel rzpParent = getDialog(entidParent);
-				if(!ieffLinkedDragEffect.isPlaying()){
+			if(!ieffLinkedDragEffect.isPlaying()){
+				EntityId entidParent = hc.getHierarchyParent();
+				if(entidParent!=null){
+					ResizablePanel rzpParent = getDialog(entidParent);
 					ieffLinkedDragEffect
 						.setOwner(pnl)
 						.setFollowFromTarget(rzpParent, null)
@@ -301,7 +305,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			
 			// how many childs are modal
 			int iModalCount=0;
-			for(Entity entChild:sys.prepareSortedHierarchyDialogs(vs.getEntityId())){
+			for(Entity entChild:sys.getAllOpenedDialogs(vs.getEntityId())){
 				if(entChild.get(HierarchyComp.class).isHierarchyModal())iModalCount++;
 			}
 			sys.enableBlockingLayer(vs.getEntityId(),iModalCount>0);
@@ -336,12 +340,28 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		}
 	}
 	
+	/**
+	 * see {@link DialogHierarchySystemI#getAllOpenedDialogs(EntityId)}
+	 * @return
+	 */
+	public ResizablePanel[] getAllOpenedDialogs() {
+		ArrayList<ResizablePanel> arzp = new ArrayList<ResizablePanel>();
+		for(Entity ent:sys.getAllOpenedDialogs(null)){
+			arzp.add(getDialog(ent.getId()));
+		}
+		return arzp.toArray(new ResizablePanel[0]);
+	}
+	
 	@Override
 	public void resizerUpdatedLogicalStateEvent(float tpf, ResizablePanel rzpSource) {
 		Visuals vs = getVisuals(rzpSource);
 //		EntityId entid = vs.getEntityId();
 		updateBlocker(tpf, vs);
 		
+		updateDragResizeRelativeParentPos(tpf, rzpSource, vs);
+	}
+	
+	private void updateDragResizeRelativeParentPos(float tpf, ResizablePanel rzpSource, Visuals vs) {
 		HierarchyComp hc = getHierarchyComp(rzpSource);
 		EntityId entidParent = hc.getHierarchyParent();
 		if(entidParent!=null){
@@ -371,7 +391,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			}
 		}
 	}
-	
+
 	public ResizablePanel getCurrentlyBeingResized(){
 		return rzpCurrentlyBeingResized;
 	}
@@ -398,25 +418,61 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		vs.getEffLinkToParent().setAsDiscarded();
 	}
 	
+	private void updateZOrder(EntityId entid){
+		sys.setHierarchyComp(entid, EField.fZ, fCurrentOrderPosZ);
+		
+		// prepare next
+		BoundingBox bb = (BoundingBox)getDialog(entid).getWorldBound();
+		if(bb!=null){ //only if it is ready
+			float fHeight = bb.getZExtent()*2f;
+			sys.setHierarchyComp(entid, EField.fBoundingHeightZ, fHeight);
+			fCurrentOrderPosZ += fHeight +fInBetweenGapDistZ;
+		}
+	}
+	
+	/**
+	 * for the entire current tree
+	 * @param entid
+	 */
 	public void setFocusRecursively(EntityId entid){
-		setFocusRecursively(entid,false);
+		EntityId entidParent = entid;
+		EntityId entidParentest = entidParent;
+		while(entidParent!=null){
+			if(entidParent!=null)entidParentest=entidParent;
+			entidParent = sys.getHierarchyComp(entidParent).getHierarchyParent();
+		}
+		
+		setFocusRecursively(entidParentest,false);
+		
+		QueueI.i().enqueue(new CallableX() {
+			@Override
+			public Boolean call() {
+				fCurrentOrderPosZ = fBeginOrderPosZ;
+				for(Entity ent:sys.getSortedHierarchyDialogs()){
+					updateZOrder(ent.getId());
+				}
+				return true;
+			}
+		});
 	}
 	public void setFocusRecursively(EntityId entid,boolean bRecursing){
-		Entity[] aentChild = sys.prepareSortedHierarchyDialogs(entid);
-//		if(ed.getComponent(entid, Blocker.class).isBlocking()){
-		if(aentChild.length==0){
-			ResizablePanel rzp = getDialog(entid);
-			GuiGlobals.getInstance().requestFocus(rzp);
-			sys.updateLastFocusAppTimeNano(entid, app.getTimer().getTime());
-		}else{
-			for(Entity ent:aentChild){
-				setFocusRecursively(ent.getId(),true);
-			}
+		ResizablePanel rzp = getDialog(entid);
+		GuiGlobals.getInstance().requestFocus(rzp);
+		sys.updateLastFocusAppTimeNano(entid, app.getTimer().getTime());
+		
+		for(Entity ent:sys.getAllOpenedDialogs(entid)){
+			setFocusRecursively(ent.getId(),true);
 		}
 	}
 
 	public EntityId getEntityId(Spatial spt) {
 		return getVisuals(spt).getEntityId();
 	}
+
+//	public String getReport(ResizablePanel rzp) {
+//		String str="";
+//		return getHierarchyComp(rzp).toString();
+//		return str;
+//	}
 
 }

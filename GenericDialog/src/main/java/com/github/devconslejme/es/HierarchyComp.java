@@ -133,5 +133,36 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 		this.bShowLinksFromChilds=copyFrom.bShowLinksFromChilds;
 		this.fZ=copyFrom.fZ;
 	}
-
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("HierarchyComp [fBlockerZ=");
+		builder.append(fBlockerZ);
+		builder.append(", bBlocked=");
+		builder.append(bBlocked);
+		builder.append(", fBoundingHeightZ=");
+		builder.append(fBoundingHeightZ);
+		builder.append(", strDebugName=");
+		builder.append(strDebugName);
+		builder.append(", bHierarchyModal=");
+		builder.append(bHierarchyModal);
+		builder.append(", eidHierarchyParent=");
+		builder.append(eidHierarchyParent);
+		builder.append(", eHierarchyType=");
+		builder.append(eHierarchyType);
+		builder.append(", bInitHierarchy=");
+		builder.append(bInitHierarchy);
+		builder.append(", lLastFocusTime=");
+		builder.append(lLastFocusTime);
+		builder.append(", bOpened=");
+		builder.append(bOpened);
+		builder.append(", bShowLinksFromChilds=");
+		builder.append(bShowLinksFromChilds);
+		builder.append(", fZ=");
+		builder.append(fZ);
+		builder.append("]");
+		return builder.toString();
+	}
+	
+	
 }

@@ -110,18 +110,40 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		DialogHierarchyStateI.i().showDialog(rzpParent);
 	}
 	
+	enum EUserData{
+		keyBaseText,
+		;
+		public String s(){return toString();}
+	}
+	
 	private ResizablePanel createDialog(Vector3f pos,String strName,String strInfo) {
 		if(strInfo==null)strInfo=strName;
 		
 		ResizablePanel rzp = DialogHierarchyStateI.i().createDialog(strName,null);
 		
-		rzp.setPreferredSize(new Vector3f(300,200,0)); //TODO z will cause trouble?
+		rzp.setPreferredSize(new Vector3f(300,250,0)); //TODO z will cause trouble?
 		rzp.setLocalTranslation(pos); //above DevCons
 		
-		Button btn = new Button(strInfo);
+		String strBaseText=strName+"/"+strInfo;
+		Button btn = new Button(strBaseText);
+		UserDataI.i().setUserDataPSH(btn, EUserData.keyBaseText.s(), strBaseText);
 		rzp.setContents(btn);
 		DragParentestPanelListenerI.i().applyAt(btn);
 		
 		return rzp;
+	}
+	
+	@Override
+	public void update() {
+		super.update();
+		
+		for(ResizablePanel rzp:DialogHierarchyStateI.i().getAllOpenedDialogs()){
+			Button btn = (Button)rzp.getContents();
+			String str = UserDataI.i().getUserDataPSH(btn, EUserData.keyBaseText.s());
+			btn.setText(str+"\n"
+				+DialogHierarchyStateI.i().getHierarchyComp(rzp).toString().replace(",", "\n")
+			);
+//				+DialogHierarchyStateI.i().getReport(rzp).replace(",", "\n"));
+		}
 	}
 }

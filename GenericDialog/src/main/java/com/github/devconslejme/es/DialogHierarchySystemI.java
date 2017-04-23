@@ -50,6 +50,10 @@ public class DialogHierarchySystemI {
 	private DefaultEntityData	ed;
 	private EntitySet	entsetHierarchyQuery;
 	private ArrayList<Entity>	aentSortedHierarchyDialogs = new ArrayList<Entity>();
+	private long	lAppTime;
+	/** to spare CPU */
+	private long	lLastFullSortAppTime;
+	private long	lLastSortAppTime;
 	
 	private static class DiagHierarchyWrapper implements IHierarchy{
 		private Entity	ent;
@@ -112,7 +116,9 @@ public class DialogHierarchySystemI {
 	  return entid;
 	}
 	
-	public void update(Float tpf){ //TODO this is still quite dummy here...
+	public void update(Float tpf, long lAppTime){ //TODO this is still quite dummy here...
+		this.lAppTime=lAppTime;
+		
 		if(entsetHierarchyQuery.applyChanges()) { //contains all components required by hierarchy
 			// newly matching entities
 			entsetHierarchyQuery.getAddedEntities();
@@ -163,10 +169,10 @@ public class DialogHierarchySystemI {
 	/**
 	 * 
 	 * @param entParentFilter if null will bring all possible
-	 * @return
+	 * @return unsorted
 	 */
-	public Entity[] prepareSortedHierarchyDialogs(EntityId entidParentFilter){
-		aentSortedHierarchyDialogs.clear();
+	public ArrayList<Entity> getAllOpenedDialogs(EntityId entidParentFilter){
+		ArrayList<Entity> aent = new ArrayList<Entity>();
 		
 		/**
 		 * TODO how to make this work?
@@ -188,14 +194,29 @@ public class DialogHierarchySystemI {
 				}
 			}
 			
-			if(bAdd)aentSortedHierarchyDialogs.add(entChild);
+			if(bAdd)aent.add(entChild);
 		}		
 		
-		/**
-		 * the filter will make it skip many and break the sort hierarchy
-		 */
-		if(entidParentFilter==null)sortDialogs(aentSortedHierarchyDialogs);
-//		Collections.sort(aent,cmpr); // uses LastFocusTime
+		return aent;
+	}
+	
+	/**
+	 * 
+	 * @param entParentFilter if null will bring all possible
+	 * @return
+	 */
+	public Entity[] getSortedHierarchyDialogs(){
+		if(lAppTime!=lLastSortAppTime){
+			aentSortedHierarchyDialogs.clear();
+			
+			/**
+			 * the filter would make it skip many and break the sort hierarchy
+			 */
+			aentSortedHierarchyDialogs.addAll(getAllOpenedDialogs(null));
+			sortDialogs(aentSortedHierarchyDialogs);
+			
+			lLastSortAppTime=lAppTime;
+		}
 		
 		return aentSortedHierarchyDialogs.toArray(new Entity[0]);
 	}
