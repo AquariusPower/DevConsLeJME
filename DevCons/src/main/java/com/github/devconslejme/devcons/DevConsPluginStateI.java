@@ -38,6 +38,7 @@ import java.util.Set;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.es.DialogHierarchySystemI;
+import com.github.devconslejme.es.HierarchyComp.EField;
 import com.github.devconslejme.gendiag.ContextMenuI;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
@@ -906,11 +907,12 @@ public class DevConsPluginStateI extends AbstractAppState {
 	private void initMainContainer() {
 		cntrMain = new Container(new BorderLayout(), getStyle());
 		
-		hrpMain = new ResizablePanel(getStyle());
-		hrpMain.setName(DevConsPluginStateI.class.getSimpleName());//debug name
-		EntityId entid = DialogHierarchySystemI.i().createEntity("DevCons");
-		DialogHierarchyStateI.i().put(entid, hrpMain);
-		DialogHierarchySystemI.i().setHierarchyPriority(entid,EHierarchy.Top);
+//		hrpMain = new ResizablePanel(getStyle());
+//		hrpMain.setName(DevConsPluginStateI.class.getSimpleName());//debug name
+		hrpMain = DialogHierarchyStateI.i().createDialog(DevConsPluginStateI.class.getSimpleName(), strStyle);
+		EntityId entid = DialogHierarchyStateI.i().getEntityId(hrpMain); //DialogHierarchySystemI.i().createEntity(ContextMenuI.class.getSimpleName());
+		DialogHierarchySystemI.i().setHierarchyComp(entid, EField.eHierarchyType, EHierarchy.Top);
+		
 		hrpMain.setContents(cntrMain);
 //		hrpMain.addResizableListener(this);
 		

@@ -65,7 +65,9 @@ public class EffectManagerStateI extends AbstractAppState {
 		if(lLastUpdateMilis+(1000/iFPStarget) < SimulationTimeI.i().getMillis()){
 			for(IEffect ie:aEffectList){//.values()){
 				if(!ie.isPlaying())continue;
-				ie.assertConfigIsValid(); //config may change during play
+				ie.assertConfigIsValidAndFixIt(); //config may change during play
+				if(ie.isWaitingParent())continue;
+//				if(ie.getNodeParent()==null)continue;
 				ie.play(tpf);
 			}
 			lLastUpdateMilis=SimulationTimeI.i().getMillis();

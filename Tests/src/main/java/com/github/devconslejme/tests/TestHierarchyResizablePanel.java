@@ -62,26 +62,31 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		
 		createParentChild(100);
 		
-		QueueI.i().enqueue(new CallableX() {
-			@Override
-			public Boolean call() {
-				createParentChild(400);
-				return true;
-			}
-		}.setDelaySeconds(1.0f));
+		boolean bMore=true;
+		if(bMore){
+			QueueI.i().enqueue(new CallableX() {
+				@Override
+				public Boolean call() {
+					createParentChild(400);
+					return true;
+				}
+			}.setDelaySeconds(1.0f));
+		}
 		
 		// multi child hierarchy
-		ResizablePanel rzpA = createDialog(new Vector3f(300,700,0),"MultiA",null);
-		DialogHierarchyStateI.i().showDialog(rzpA);
-		
-		ResizablePanel rzpB = createDialog(new Vector3f(310,710,0),"MultiB",null);
-		DialogHierarchyStateI.i().showDialogAsModal(rzpA,rzpB);
-		
-		ResizablePanel rzpC = createDialog(new Vector3f(320,720,0),"MultiC",null);
-		DialogHierarchyStateI.i().showDialogAsModal(rzpA,rzpC);
-		
-		ResizablePanel rzpD = createDialog(new Vector3f(320,720,0),"MultiD",null);
-		DialogHierarchyStateI.i().showDialogAsModal(rzpB,rzpD);
+		if(bMore){
+			ResizablePanel rzpA = createDialog(new Vector3f(300,700,0),"MultiA",null);
+			DialogHierarchyStateI.i().showDialog(rzpA);
+			
+			ResizablePanel rzpB = createDialog(new Vector3f(310,710,0),"MultiB",null);
+			DialogHierarchyStateI.i().showDialogAsModal(rzpA,rzpB);
+			
+			ResizablePanel rzpC = createDialog(new Vector3f(320,720,0),"MultiC",null);
+			DialogHierarchyStateI.i().showDialogAsModal(rzpA,rzpC);
+			
+			ResizablePanel rzpD = createDialog(new Vector3f(320,720,0),"MultiD",null);
+			DialogHierarchyStateI.i().showDialogAsModal(rzpB,rzpD);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -108,7 +113,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 	private ResizablePanel createDialog(Vector3f pos,String strName,String strInfo) {
 		if(strInfo==null)strInfo=strName;
 		
-		ResizablePanel rzp = DialogHierarchyStateI.i().createDialog(strName);
+		ResizablePanel rzp = DialogHierarchyStateI.i().createDialog(strName,null);
 		
 		rzp.setPreferredSize(new Vector3f(300,200,0)); //TODO z will cause trouble?
 		rzp.setLocalTranslation(pos); //above DevCons

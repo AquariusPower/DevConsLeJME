@@ -112,6 +112,19 @@ public class DialogHierarchySystemI {
 	  return entid;
 	}
 	
+	public void update(Float tpf){ //TODO this is still quite dummy here...
+		if(entsetHierarchyQuery.applyChanges()) { //contains all components required by hierarchy
+			// newly matching entities
+			entsetHierarchyQuery.getAddedEntities();
+			
+			// entities that have merely changed TODO like in have any component changed? 
+			entsetHierarchyQuery.getChangedEntities();
+			
+			// entities that are no longer matching TODO like in one or more of the required query components went missing
+			entsetHierarchyQuery.getRemovedEntities();
+		}
+	}
+	
 	/**
 	 * 
 	 * @param entid
@@ -139,12 +152,12 @@ public class DialogHierarchySystemI {
 		return ent;
 	}
 	
-	public boolean isBlocking(EntityId entid){
-		return getEntity(entid).get(HierarchyComp.class).isBlocking();
+	public boolean isBlocked(EntityId entid){
+		return getEntity(entid).get(HierarchyComp.class).isBlocked();
 	}
 
 	public void enableBlockingLayer(EntityId entid, boolean bEnable){
-		setHierarchyComp(entid, EField.bBlocking, bEnable);
+		setHierarchyComp(entid, EField.bBlocked, bEnable);
 	}
 	
 	/**
@@ -152,7 +165,7 @@ public class DialogHierarchySystemI {
 	 * @param entParentFilter if null will bring all possible
 	 * @return
 	 */
-	public ArrayList<Entity> prepareSortedHierarchyDialogs(EntityId entidParentFilter){
+	public Entity[] prepareSortedHierarchyDialogs(EntityId entidParentFilter){
 		aentSortedHierarchyDialogs.clear();
 		
 		/**
@@ -184,7 +197,7 @@ public class DialogHierarchySystemI {
 		if(entidParentFilter==null)sortDialogs(aentSortedHierarchyDialogs);
 //		Collections.sort(aent,cmpr); // uses LastFocusTime
 		
-		return aentSortedHierarchyDialogs;
+		return aentSortedHierarchyDialogs.toArray(new Entity[0]);
 	}
 
 	private void sortDialogs(ArrayList<Entity> aentMainList) {
@@ -201,4 +214,19 @@ public class DialogHierarchySystemI {
 			aentMainList.add(hs.getEntity());
 		}
 	}
+	
+	public EntityId updateLastFocusAppTimeNano(EntityId entid, long lTime) {
+		EntityId entidParent = entid;
+		EntityId entidParentest = entidParent;
+		while(true){ 
+			entidParent = getHierarchyComp(entidParent).getHierarchyParent();
+			if(entidParent==null)break;
+			entidParentest = entidParent;
+		}
+		
+		setHierarchyComp(entidParentest, EField.lLastFocusTime, lTime);
+		
+		return entidParentest;
+	}
+	
 }

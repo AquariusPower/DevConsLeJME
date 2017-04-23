@@ -217,20 +217,6 @@ public class _DialogHierarchyStateI extends AbstractAppState implements IResizab
 		return sptParentest.equals(sptFocusedParentest);
 	}
 
-	public void setFocusRecursively(EntityId entid){
-		ArrayList<Entity> aentChild = hisys.prepareSortedHierarchyDialogs(entid);
-//		if(ed.getComponent(entid, Blocker.class).isBlocking()){
-		if(aentChild.size()==0){
-			ResizablePanel rzp = hmDiag.get(entid);
-			GuiGlobals.getInstance().requestFocus(rzp);
-			hisys.updateLastFocusAppTimeNano(entid);
-		}else{
-			for(Entity ent:aentChild){
-				setFocusRecursively(ent.getId());
-			}
-		}
-	}
-
 	/**
 	 * will prevent access to parent
 	 * @param compChild

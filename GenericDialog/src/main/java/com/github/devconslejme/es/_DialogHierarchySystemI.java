@@ -123,30 +123,6 @@ public class _DialogHierarchySystemI {
 //		
 //	}
 	
-	public EntityId updateLastFocusAppTimeNano(EntityId entid) {
-		EntityId entidParent = entid;
-		EntityId entidParentest = entidParent;
-//		System.err.println("cheking");
-		while(true){ 
-//			System.err.println(entidParent.getId());
-//			entidParent = ed.getComponent(entidParent, ShownState.class).getHierarchyParent();
-			entidParent = ed.getComponent(entidParent, HierarchyComp.class).getHierarchyParent();
-			if(entidParent==null)break;
-//			ed.setComponent(entidParent,
-//					new LastFocusTime(TimeConvertI.i().getNanosFrom(app.getTimer())));
-			entidParentest = entidParent;
-		}
-		
-		Entity entParentest = entsetHierarchyQuery.getEntity(entidParentest);
-		HierarchyComp hcParentest=entParentest.get(HierarchyComp.class);
-		entParentest.set(hcParentest=new HierarchyComp(hcParentest, 
-			EField.lLastFocusTime, lTime //TimeConvertI.i().getNanosFrom(app.getTimer())
-		));
-//		ed.setComponent(entidParentest, 
-//			new LastFocusTime(TimeConvertI.i().getNanosFrom(app.getTimer())));
-		
-		return entidParentest;
-	}
 	
 	private static class FilterByHierarchyParent implements ComponentFilter<EntityComponent>{
 		private Entity	ent;

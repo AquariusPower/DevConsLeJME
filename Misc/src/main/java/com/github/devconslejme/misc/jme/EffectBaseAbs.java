@@ -62,6 +62,8 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 	private Spatial	sptOwner;
 	private boolean	bPlay = false;
 	private boolean	bDiscardingByOwner=true;
+	private boolean	bSimplyWaitParentIfNull=true;
+	private boolean	bWaitParentBeSet=false;
 	
 	public EffectBaseAbs(Spatial sptOwner){
 		this();
@@ -230,7 +232,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 	}
 
 	@Override
-	public void assertConfigIsValid() {
+	public void assertConfigIsValidAndFixIt() {
 		assertNotDiscarded();
 		if(!isPlaying())return; //not redundant when called directly after adding the effect
 		
@@ -260,8 +262,24 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 //				}
 //			}
 			
+		}
+		
+		if(bSimplyWaitParentIfNull){
+			setWaitParent(nodeParent==null);
+		}else{
 			DetailedException.throwIfNull(nodeParent, "parent", sptOwner, this);
 		}
+	}
+	
+	@Override
+	public boolean isWaitingParent() {
+		return bWaitParentBeSet;
+	}
+	
+	@Override
+	public THIS setWaitParent(boolean bWaitParentBeSet) {
+		this.bWaitParentBeSet=bWaitParentBeSet;
+		return getThis();
 	}
 	
 	@Override
@@ -335,6 +353,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 		this.bPlay = bPlay;
 	}
 
+	@Override
 	public Node getNodeParent() {
 		return nodeParent;
 	}
@@ -362,4 +381,9 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 	}
 
 	protected abstract void playWork();
+	
+	@Override
+	public boolean isDiscarded() {
+		return bDiscarded;
+	}
 }

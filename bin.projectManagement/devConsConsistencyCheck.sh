@@ -53,8 +53,11 @@ function FUNCchk(){ # <package to validate> <<what package beyond self can it ac
 
 while true;do 
 	bProblemFound=false
-
+	
+	pwd
+	
 	strAllDeps="`secJavaDependencyList.sh |sort -u |grep ":com/github/devconslejme"`"
+	echo "totDepsEntries='`echo "$strAllDeps" |wc -l`'"
 
 	# misc can only access misc
 	FUNCchk misc

@@ -39,7 +39,7 @@ import com.simsilica.es.PersistentComponent;
 public class HierarchyComp implements EntityComponent, PersistentComponent{
 	public static enum EField{
 		fBlockerZ(Float.class),
-		bBlocking(Boolean.class), //#syncTo
+		bBlocked(Boolean.class), //#syncTo
 		fBoundingHeightZ(Float.class), 
 		strDebugName(String.class),
 		bHierarchyModal(Boolean.class),
@@ -57,7 +57,7 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 	}
 	
 	private float fBlockerZ=0f;
-	private boolean bBlocking=false; //#syncFrom bBlocking
+	private boolean bBlocked=false; //#syncFrom bBlocking
 	private float fBoundingHeightZ=0f;
 	private String strDebugName="";
 	private boolean	bHierarchyModal=false;
@@ -71,7 +71,7 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 	private float fZ=0f;
 	
 	public float getBlockerZ() {return fBlockerZ;}
-	public boolean isBlocking() {return bBlocking;}
+	public boolean isBlocked() {return bBlocked;}
 	public float getBoundingHeightZ() {return fBoundingHeightZ;}
 	public String getDebugName(){return strDebugName;}
 	public boolean isHierarchyModal() {return bHierarchyModal;}
@@ -100,7 +100,7 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 			switch (e) {
 //			case fBlockerZ:						this.fBlockerZ=e.cl.cast(objValue);break;
 				case fBlockerZ:						this.fBlockerZ=(Float)objValue;break;
-				case bBlocking:						this.bBlocking=(Boolean)objValue;break;
+				case bBlocked:						this.bBlocked=(Boolean)objValue;break;
 				case fBoundingHeightZ:		this.fBoundingHeightZ=(Float)objValue;break;
 				case strDebugName:				this.strDebugName=(String)objValue;break;
 				case bInitHierarchy:			this.bInitHierarchy=(Boolean)objValue;break;
@@ -120,7 +120,7 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 	
 	private void copyFrom(HierarchyComp copyFrom) {
 		this.fBlockerZ=copyFrom.fBlockerZ;
-		this.bBlocking=copyFrom.bBlocking;
+		this.bBlocked=copyFrom.bBlocked;
 		this.fBoundingHeightZ=copyFrom.fBoundingHeightZ;
 		this.strDebugName=copyFrom.strDebugName;
 		this.bInitHierarchy=copyFrom.bInitHierarchy;

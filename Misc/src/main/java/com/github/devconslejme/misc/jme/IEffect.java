@@ -38,6 +38,9 @@ import com.jme3.scene.Spatial;
 public interface IEffect<THIS extends IEffect>{
 	public boolean isPlaying();
 	
+	public boolean isWaitingParent();
+	THIS setWaitParent(boolean bWaitParentBeSet);
+	
 	public Vector3f getLocationFrom();
 
 	public Vector3f getLocationTo();
@@ -57,6 +60,8 @@ public interface IEffect<THIS extends IEffect>{
 
 	THIS setNodeParent(Node node);
 
+	Node getNodeParent();
+	
 	THIS setFollowToMouse(boolean b);
 
 	THIS setFollowToTarget(Spatial spt, Vector3f v3fDisplacement);
@@ -69,7 +74,7 @@ public interface IEffect<THIS extends IEffect>{
 	
 //		public String getUId();
 	
-	public void assertConfigIsValid();
+	public void assertConfigIsValidAndFixIt();
 	
 	public void play(float tpf);
 	
@@ -82,4 +87,6 @@ public interface IEffect<THIS extends IEffect>{
 	public THIS setAsDiscarded();
 
 	public boolean isDiscardingByOwner();
+	
+	public boolean isDiscarded();
 }

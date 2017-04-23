@@ -32,6 +32,7 @@ import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
 import com.github.devconslejme.es.DialogHierarchySystemI;
+import com.github.devconslejme.es.HierarchyComp.EField;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchy;
 import com.github.devconslejme.misc.QueueI;
@@ -133,16 +134,16 @@ public class ContextMenuI {
 	public void configure(){//Node nodeParent) {
 		strStyle = GuiGlobals.getInstance().getStyles().getDefaultStyle();
 		
-		rzp = new ResizablePanel(strStyle);
-		
+//		rzp = new ResizablePanel(strStyle);
 //		HierarchyComponent comp = hrp.createComponent(HierarchyComponent.class);
 //		_HierarchyComponent comp = _HierarchySystemI.i().createComponentAt(hrp);
-		entid = DialogHierarchySystemI.i().createEntity(ContextMenuI.class.getSimpleName());
-		DialogHierarchyStateI.i().put(entid, rzp);
+		rzp = DialogHierarchyStateI.i().createDialog(ContextMenuI.class.getSimpleName(), strStyle);
+		entid = DialogHierarchyStateI.i().getEntityId(rzp); //DialogHierarchySystemI.i().createEntity(ContextMenuI.class.getSimpleName());
+//		DialogHierarchyStateI.i().put(entid, rzp);
 		
 //		hrp.updateComponent(new HierarchyComponent(comp,true,null));
 //		_HierarchySystemI.i().workOn(comp).setAsHierarchyTop();
-		DialogHierarchySystemI.i().setHierarchyPriority(entid,EHierarchy.Top);
+		DialogHierarchySystemI.i().setHierarchyComp(entid, EField.eHierarchyType, EHierarchy.Top);
 		
 		rzp.setAllEdgesEnabled(false); //it is here for the hierarchy (not the resizing)
 		
@@ -158,8 +159,8 @@ public class ContextMenuI {
 			public Boolean call() {
 				if(rzp.getParent()!=null){
 //					ResizablePanel rzpParent = DialogHierarchySystemI.i().getHierarchyParentGuiLinkFor(entid).getResizablePanel();
-					EntityId entidParent = DialogHierarchyStateI.i().getHierarchyParentOf(entid);
-					ResizablePanel rzpParent = DialogHierarchyStateI.i().getResizablePanelFor(entidParent);
+					EntityId entidParent = DialogHierarchySystemI.i().getHierarchyComp(entid).getHierarchyParent();
+					ResizablePanel rzpParent = DialogHierarchyStateI.i().getDialog(entidParent);
 					
 					rzp.setLocalTranslation(
 						rzpParent.getLocalTranslation().subtract(
@@ -197,7 +198,8 @@ public class ContextMenuI {
 		
 //		_HierarchyComponent comp = cm.getOwner().getComponent(_HierarchyComponent.class);
 		DialogHierarchyStateI.i().showDialogAsModal(
-			DialogHierarchyStateI.i().getEntityIdFor(cm.getOwner()), entid);
+			cm.getOwner(),
+			DialogHierarchyStateI.i().getDialog(entid));
 //		comp=_HierarchySystemI.i().workOn(comp).showAsHierarchyModal(hrp.getComponent(_HierarchyComponent.class));
 //		nodeParent.attachChild(hrp);
 		
