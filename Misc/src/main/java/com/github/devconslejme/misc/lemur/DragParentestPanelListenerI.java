@@ -31,6 +31,7 @@ import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.jme3.app.Application;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Button;
@@ -46,6 +47,7 @@ import com.simsilica.lemur.event.CursorMotionEvent;
 import com.simsilica.lemur.event.DefaultMouseListener;
 import com.simsilica.lemur.event.FocusMouseListener;
 import com.simsilica.lemur.event.MouseEventControl;
+import com.simsilica.lemur.focus.FocusManagerState;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -57,19 +59,27 @@ public class DragParentestPanelListenerI implements CursorListener{
 	private boolean bHightlightToo = true;
 	private Vector3f	v3fDistToCursor;
 	private Panel	pnlParentestBeingDragged;
+	private FocusManagerState	focusman;
 	
+	public void configure(){
+		focusman = GlobalManagerI.i().get(Application.class).getStateManager().getState(FocusManagerState.class);
+	}
 	
 	private Vector3f getCursorPos(AbstractCursorEvent event){
 		return new Vector3f(event.getX(),event.getY(),0);
 	}
 	
 	@Override
-	public void cursorButtonEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
+	public void cursorButtonEvent(CursorButtonEvent event, Spatial target, Spatial capture) {
 //		if(event.isConsumed())return;
 		
 		if(event.getButtonIndex()==0){
 			bDragging=event.isPressed();
 			if(bDragging){
+				if(focusman.getFocus()==capture){
+					focusman.setFocus(null);
+				}
+				
 				//find parentest 
 				Panel pnlParentest = (Panel)capture.getUserData(getUserDataIdFor(EDrag.ApplyDragAt));
 				if(pnlParentest==null)pnlParentest = MiscJmeI.i().getParentest(capture, Panel.class, true);
@@ -160,24 +170,26 @@ public class DragParentestPanelListenerI implements CursorListener{
 	 * @param pnl
 	 */
 	private void bugfixWorkaroundMouseListenerConflict(Panel pnl){
-		MouseEventControl mec = pnl.getControl(MouseEventControl.class);
-		if(mec!=null){
-			if(
-					mec.getMouseListener(DefaultMouseListener.class)!=null
-					||
-					mec.getMouseListener(FocusMouseListener.class)!=null
-			){
-				if (Button.class.isInstance(pnl) || TextField.class.isInstance(pnl)) {
-					throw new DetailedException(
-						"do not use with these Panel classes because they use these MouseListener "
-						+"that always pre-consume the event and will be problematic with this class "
-						+"because your custom click commands would then be ignored in case the button "
-						+"has the requestFocus() (as the event is pre-consumed) "
-						+"(and it only happens if a CursorListener is also active, but why???) ",
-						Button.class, TextField.class,
-						FocusMouseListener.class, DefaultMouseListener.class, //not accessible: ButtonMouseHandler.class
-						DragParentestPanelListenerI.class
-					);
+		if(false){
+			MouseEventControl mec = pnl.getControl(MouseEventControl.class);
+			if(mec!=null){
+				if(
+						mec.getMouseListener(DefaultMouseListener.class)!=null
+						||
+						mec.getMouseListener(FocusMouseListener.class)!=null
+				){
+					if (Button.class.isInstance(pnl) || TextField.class.isInstance(pnl)) {
+						throw new DetailedException(
+							"do not use with these Panel classes because they use these MouseListener "
+							+"that always pre-consume the event and will be problematic with this class "
+							+"because your custom click commands would then be ignored in case the button "
+							+"has the requestFocus() (as the event is pre-consumed, "
+							+"and it only happens if a CursorListener is also active, but why???) ",
+							Button.class, TextField.class,
+							FocusMouseListener.class, DefaultMouseListener.class, //not accessible: ButtonMouseHandler.class
+							DragParentestPanelListenerI.class
+						);
+					}
 				}
 			}
 		}

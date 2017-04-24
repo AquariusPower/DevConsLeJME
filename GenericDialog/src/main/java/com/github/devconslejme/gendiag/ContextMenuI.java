@@ -39,13 +39,20 @@ import com.github.devconslejme.misc.HierarchySorterI.EHierarchy;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
+import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
+import com.jme3.app.Application;
+import com.jme3.bounding.BoundingBox;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Geometry;
+import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.shape.Sphere;
 import com.simsilica.es.EntityId;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
@@ -74,6 +81,8 @@ public class ContextMenuI {
 	private EntityId	entid;
 	private Label	lbl;
 	private boolean	bShowDbgInfo = false;
+	private boolean	bUseContextMenuAvailableIndicators=true;
+	
 	private Command<Button>	btncmd = new Command<Button>() {
 		@Override
 		public void execute(Button source) {
@@ -117,6 +126,30 @@ public class ContextMenuI {
 			return pnlSource;
 		}
 		
+		public void addSubMenu(String strTextKey, ContextMenu cmSub){
+			addNewEntry(strTextKey, new Command<Button>() {
+				@Override
+				public void execute(Button source) {
+					ResizablePanel rzp = MiscJmeI.i().getParentest(source, ResizablePanel.class, false);
+					cmSub.setHierarchyParent(rzp);
+					
+					/*
+					Vector3f v3f = source.getWorldTranslation().clone();
+					v3f.x+=source.getSize().x;
+					v3f.y-=source.getSize().y/2f;
+					*/
+					Vector2f v2f = GlobalManagerI.i().get(Application.class).getInputManager().getCursorPosition();
+					
+					ContextMenuI.i().showContextMenu(
+						v2f, //MiscJmeI.i().toV2f(v3f),
+						source.getText(), 
+						cmSub.setContextSource(source));
+				}
+			});
+			
+			throw new UnsupportedOperationException("TODO: this requires the context menu to not be limited to 1");
+		}
+		
 		@SuppressWarnings("unchecked")
 		public ContextMenu addNewEntry(String strTextKey, Command<Button> cmd){
 			Button btn = new Button(strTextKey);
@@ -158,8 +191,7 @@ public class ContextMenuI {
 			ContextMenu cm = UserDataI.i().getUserDataPSH(btn, ContextMenu.class);
 			
 			if(cm!=null){
-				cm.setContextSource(btn);
-				ContextMenuI.i().showContextMenu(event,btn,cm);
+				ContextMenuI.i().showContextMenu(event.getLocation(), btn.getText(), cm.setContextSource(btn));
 				event.setConsumed();
 			}
 		}
@@ -229,15 +261,45 @@ public class ContextMenuI {
 	public void attachContextMenuAt(Spatial spt, ContextMenu cm){
 		UserDataI.i().setUserDataPSH(spt, cm);
 		CursorEventControl.addListenersToSpatial(spt,ContextMenuOwnerListenerI.i());
+		
+		if(bUseContextMenuAvailableIndicators){
+			if (spt instanceof Node) {
+				Node node = (Node) spt;
+				QueueI.i().enqueue(new CallableX() {
+					@Override
+					public Boolean call() {
+						BoundingBox bb = (BoundingBox)node.getWorldBound();
+						float fRadius=bb.getYExtent();
+						if(fRadius==0f)return false;
+						
+						Geometry geom = new Geometry("ContextMenuAvailableIndicator", new Sphere(4, 7, fRadius));
+						geom.setLocalTranslation(
+							fRadius,//(bb.getXExtent()*2f)-fRadius, 
+							-bb.getYExtent(), 
+							bb.getZExtent()*2f
+						);
+						geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(
+							ColorI.i().colorChangeCopy(ColorRGBA.Green, 0f, 0.15f)));
+						node.attachChild(geom);
+						
+						return true;
+					}
+				});
+			}
+		}
+		
 	}
 	
+//	private void showContextMenu(Vector3f v3fMouseCursorPos, String strContextMenuTitle, ContextMenu cm) {
+//		showContextMenu(new Vector2f(v3fMouseCursorPos.x, v3fMouseCursorPos.y), strContextMenuTitle, cm);
+//	}
 	@SuppressWarnings("unchecked")
-	private void showContextMenu(CursorButtonEvent event, Button btnOwner, ContextMenu cm) {
+	private void showContextMenu(Vector2f v2fMouseCursorPos, String strContextMenuTitle, ContextMenu cm) {
 		//TODO populate context menu
 		cntrContextOptions.clearChildren();
 		
 		int i=0;
-		lbl.setText("Context:"+btnOwner.getText());
+		lbl.setText("Context:"+strContextMenuTitle);
 		DragParentestPanelListenerI.i().applyAt(lbl);
 		cntrContextOptions.addChild(lbl, i++, 0);
 		for(Entry<String, Button> entry : (cm.hmContextOptions).entrySet()){
@@ -253,9 +315,18 @@ public class ContextMenuI {
 //		comp=_HierarchySystemI.i().workOn(comp).showAsHierarchyModal(hrp.getComponent(_HierarchyComponent.class));
 //		nodeParent.attachChild(hrp);
 		
-		rzpContextMenu.setPreferredSize(new Vector3f(200, 30*cm.hmContextOptions.size(), rzpContextMenu.getPreferredSize().z));
+		rzpContextMenu.setPreferredSize(
+			new Vector3f(
+				200, 
+				30*cm.hmContextOptions.size(), 
+				rzpContextMenu.getPreferredSize().z)
+		);
+		
 		int iDisplacement=20;
-		rzpContextMenu.setLocalTranslation(event.getX()-iDisplacement, event.getY()+iDisplacement, 0); // z will be fixed by diag hierarchy
+		rzpContextMenu.setLocalTranslation(
+				v2fMouseCursorPos.getX()-iDisplacement, 
+				v2fMouseCursorPos.getY()+iDisplacement, 
+				0); // z will be fixed by diag hierarchy
 		
 //		v3fHierarchyParentInitialDisplacement = cm.getHierarchyParent().getLocalTranslation().subtract(
 //			rzp.getLocalTranslation());
@@ -295,5 +366,15 @@ public class ContextMenuI {
 	
 	public String getReport(){
 		return toString()+","+DialogHierarchyStateI.i().getHierarchyComp(rzpContextMenu).toString();
+	}
+
+
+	public boolean isUseContextMenuAvailableIndicators() {
+		return bUseContextMenuAvailableIndicators;
+	}
+
+
+	public void setUseContextMenuAvailableIndicators(boolean bUseContextMenuIndicators) {
+		this.bUseContextMenuAvailableIndicators = bUseContextMenuIndicators;
 	}
 }

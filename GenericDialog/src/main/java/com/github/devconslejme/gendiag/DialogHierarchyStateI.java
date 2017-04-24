@@ -332,7 +332,9 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		
 		if(!hc.isVolatileModal())return;
 		
-		if(!rzp.isUpdateLogicalStateSucces())return;
+		if(hc.isBlocked())return; //it can have an active child
+		
+		if(!rzp.isUpdateLogicalStateSucces())return; //as 1st time it may not be ready yet
 		
 		if(!MiscLemurI.i().isMouseCursorOver(rzp)){
 			rzp.close();

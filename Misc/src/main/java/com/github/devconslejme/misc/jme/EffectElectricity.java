@@ -91,6 +91,7 @@ public class EffectElectricity extends EffectBaseAbs<EffectElectricity>{
 		Vector3f v3fDirectionNormalized = v3fTargetSpot.subtract(getLocationFrom()).normalize();
 		Vector3f v3fRelativePartStepMaxPos = v3fDirectionNormalized.mult(iPartMaxDotsCurrent);
 		int iMinDotsLength = (int) (iPartMaxDotsCurrent*fPartMinPerc);
+		if(iMinDotsLength==0)iMinDotsLength=1;
 		int iMaxAllowedParts = (iDotsMaxDist/iMinDotsLength);
 		
 		boolean bUpdate=false;

@@ -207,4 +207,11 @@ public class MiscJmeI {
 			spt.setName(spt.getName()+"/"+str);
 		}
 	}
+
+	public Vector2f toV2f(Vector3f v3f) {
+		return new Vector2f(v3f.x,v3f.y);
+	}
+	public Vector3f toV3f(Vector2f v2f) {
+		return new Vector3f(v2f.x,v2f.y,0);
+	}
 }

@@ -51,5 +51,6 @@ public class PkgCfgI {
 		
 		// after lemur inits
 		PopupHintHelpListenerI.i().configure(nodeParent);
+		DragParentestPanelListenerI.i().configure();
 }
 }
