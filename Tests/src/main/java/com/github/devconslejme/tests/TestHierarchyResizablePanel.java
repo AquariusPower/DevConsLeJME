@@ -38,6 +38,8 @@ import com.jme3.math.Vector3f;
 import com.simsilica.es.EntityId;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
+import com.simsilica.lemur.Insets3f;
+import com.simsilica.lemur.event.MouseEventControl;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -95,7 +97,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		((Button)rzpChild.getContents()).addClickCommands(new Command<Button>(){ //FIXME this is not compatible with CursorListener!
 			@Override
 			public void execute(Button source) {
-				rzpChild.removeFromParent(); 
+				rzpChild.close(); 
 			}
 		});
 		
@@ -103,7 +105,13 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		((Button)rzpParent.getContents()).addClickCommands(new Command<Button>(){ //FIXME this is not compatible with CursorListener!
 			@Override
 			public void execute(Button source) { 
-				DialogHierarchyStateI.i().showDialogAsModal(rzpParent,rzpChild);
+				QueueI.i().enqueue(new CallableX() {
+					@Override
+					public Boolean call() {
+						DialogHierarchyStateI.i().showDialogAsModal(rzpParent,rzpChild);
+						return true;
+					}
+				});
 			}
 		});
 		
@@ -128,7 +136,13 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		Button btn = new Button(strBaseText);
 		UserDataI.i().setUserDataPSH(btn, EUserData.keyBaseText.s(), strBaseText);
 		rzp.setContents(btn);
-		DragParentestPanelListenerI.i().applyAt(btn);
+//		btn.setInsets(new Insets3f(10, 0, 0, 0));
+//		DragParentestPanelListenerI.i().applyAt(rzp);
+//		/**
+//		 * removing the MouseEventControl, will prevent the click commands from working,
+//		 */
+//		btn.removeControl(MouseEventControl.class);
+//		DragParentestPanelListenerI.i().applyAt(btn);
 		
 		return rzp;
 	}

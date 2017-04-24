@@ -562,7 +562,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	
 	
 	public void addRequestAutoFocus(Panel pnl) {
-		if(!apnlAutoFocus .contains(pnl))apnlAutoFocus.add(pnl);
+		if(!apnlAutoFocus.contains(pnl))apnlAutoFocus.add(pnl);
 	}
 
 //	public String getReport(ResizablePanel rzp) {

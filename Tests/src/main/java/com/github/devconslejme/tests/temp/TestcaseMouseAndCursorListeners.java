@@ -14,9 +14,9 @@ import com.simsilica.lemur.style.BaseStyles;
 import com.simsilica.lemur.event.MouseListener;
 import com.simsilica.lemur.event.CursorListener;
 
-public class TestMouseAndCursorListeners extends SimpleApplication{
+public class TestcaseMouseAndCursorListeners extends SimpleApplication{
 	public static void main(String[] args) {
-		TestMouseAndCursorListeners test = new TestMouseAndCursorListeners();
+		TestcaseMouseAndCursorListeners test = new TestcaseMouseAndCursorListeners();
 		test.start();
 	}
 

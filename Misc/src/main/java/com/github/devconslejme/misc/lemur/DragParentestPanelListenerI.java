@@ -27,12 +27,15 @@
 
 package com.github.devconslejme.misc.lemur;
 
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
+import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Panel;
+import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.core.GuiComponent;
 import com.simsilica.lemur.event.AbstractCursorEvent;
@@ -40,6 +43,9 @@ import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.CursorListener;
 import com.simsilica.lemur.event.CursorMotionEvent;
+import com.simsilica.lemur.event.DefaultMouseListener;
+import com.simsilica.lemur.event.FocusMouseListener;
+import com.simsilica.lemur.event.MouseEventControl;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -148,11 +154,43 @@ public class DragParentestPanelListenerI implements CursorListener{
 	}
 	
 	/**
+	 * this is a limitation or may be a bug on lemur:
+	 * https://github.com/jMonkeyEngine-Contributions/Lemur/issues/50
+	 * so as may be fixed in the future, this method may be disabled/removed one day.
+	 * @param pnl
+	 */
+	private void bugfixWorkaroundMouseListenerConflict(Panel pnl){
+		MouseEventControl mec = pnl.getControl(MouseEventControl.class);
+		if(mec!=null){
+			if(
+					mec.getMouseListener(DefaultMouseListener.class)!=null
+					||
+					mec.getMouseListener(FocusMouseListener.class)!=null
+			){
+				if (Button.class.isInstance(pnl) || TextField.class.isInstance(pnl)) {
+					throw new DetailedException(
+						"do not use with these Panel classes because they use these MouseListener "
+						+"that always pre-consume the event and will be problematic with this class "
+						+"because your custom click commands would then be ignored in case the button "
+						+"has the requestFocus() (as the event is pre-consumed) "
+						+"(and it only happens if a CursorListener is also active, but why???) ",
+						Button.class, TextField.class,
+						FocusMouseListener.class, DefaultMouseListener.class, //not accessible: ButtonMouseHandler.class
+						DragParentestPanelListenerI.class
+					);
+				}
+			}
+		}
+	}
+	
+	/**
 	 * 
 	 * @param pnl
 	 * @param pnlApplyDragAt can be used to move a non attached/linked/parent panel
 	 */
 	public void applyAt(Panel pnl, Panel pnlApplyDragAt) {
+		bugfixWorkaroundMouseListenerConflict(pnl);
+		
 		CursorEventControl.addListenersToSpatial(pnl, this);
 		if(pnlApplyDragAt!=null){
 			pnl.setUserData(getUserDataIdFor(EDrag.ApplyDragAt), pnlApplyDragAt);

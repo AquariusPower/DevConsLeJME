@@ -67,8 +67,8 @@ public class GlobalManagerI {
       	put(cl, ((T)(obj=cl.newInstance())) );
 //				hmInst.put(cl,obj=cl.newInstance ());
 			} catch (InstantiationException | IllegalAccessException e) {
-				NullPointerException npe = new DetailedException("unable to create new instance");
-				npe.initCause(e);
+				NullPointerException npe = new DetailedException("unable to create new instance")
+					.initCauseAndReturnSelf(e);
 				throw npe;
 			}
     }
