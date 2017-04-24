@@ -69,8 +69,8 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 	private VersionedList<OptionData>	vlodOptions;
 	private LinkedHashMap<String,OptionData> hmOptionsRoot = new LinkedHashMap<String,OptionData>();
 	private TextField	tfInput;
-	private boolean	bUseInputTextValue;
-	private boolean	bUserSubmitInputValue;
+	private boolean	bReturnJustTheInputTextValue;
+	private boolean	bUserSubmitedInputValue;
 	private KeyActionListener	kal;
 	private boolean	bUpdateListItems = true;
 	private static class SectionIndicator{}
@@ -97,6 +97,7 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 	private DefaultCellRenderer<OptionData>	crOptions;
 	private VersionedReference<Set<Integer>>	vrSelection;
 	protected boolean	bUpdateOptionSelected;
+	private boolean	bCloseOnChoiceMade=true;
 	
 	public static class OptionData{
 		private String strTextKey;
@@ -278,7 +279,7 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 					switch(key.getKeyCode()){
 						case KeyInput.KEY_RETURN:
 						case KeyInput.KEY_NUMPADENTER:
-							bUserSubmitInputValue=true;
+							bUserSubmitedInputValue=true;
 							break;
 					}
 				}
@@ -441,33 +442,25 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 			bUpdateOptionSelected=false;
 		}
 		
-//		if(vrSlider.update()){
-//			applyListenerToListBoxItems();
-//		}
-		
-		if(bUseInputTextValue){
-//			GuiGlobals.getInstance().requestFocus(tfInput);
-//			GuiGlobals.getInstance().requestFocus(getDialog()); //will traverse to the text input
-			if(bUserSubmitInputValue){
-				setSelectedOptionValue(getInputText());
-				bUserSubmitInputValue=false;
+		if(bReturnJustTheInputTextValue){
+			if(bUserSubmitedInputValue){
+				setChosenValue(getInputText());
+				bUserSubmitedInputValue=false;
 			}
 		}else{ // set as soon an option is selected
 			Integer i=getSelectedOptionIndex();
 			if(i!=null){
-				setSelectedOptionValue(getSelectedOptionValue());
+				setChosenValue(getSelectedOptionValue());
 			}
 		}
 		
 		if(isOptionSelected()){
-			getDialog().close();
+			if(bCloseOnChoiceMade){
+				getDialog().close();
+			}
 		}
 	}
 	
-//	private boolean updateUserSubmitInputValue() {
-//		return false;
-//	}
-
 	private void updateOptionSelected() {
 		OptionData od = getSelectedOptionData();
 		if(SectionIndicator.class.isInstance(od.getValue())){
@@ -491,17 +484,21 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 	 * options text will be used to fill the input text and be returned as the value instead of the custom objects
 	 * @param b
 	 */
-	public void setUseInputTextValue(boolean b){
-		this.bUseInputTextValue=b;
+	public void setReturnJustTheInputTextValue(boolean b){
+		this.bReturnJustTheInputTextValue=b;
 	}
 	
 	public boolean isUseInputTextValue(){
-		return bUseInputTextValue;
+		return bReturnJustTheInputTextValue;
 	}
 	
 	@Override
 	public void resizerUpdatedLogicalStateEvent(float tpf,ResizablePanel rzp) {
 		update(tpf);
+	}
+
+	public void setCloseOnChoiceMade(boolean bCloseOnSelect) {
+		this.bCloseOnChoiceMade=bCloseOnSelect;
 	}
 
 }

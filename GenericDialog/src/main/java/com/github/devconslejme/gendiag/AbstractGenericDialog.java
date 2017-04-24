@@ -179,7 +179,7 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 	 * 
 	 * @param obj ignored if null
 	 */
-	protected void setSelectedOptionValue(Object obj){
+	protected void setChosenValue(Object obj){
 		if(obj==null)return; 
 		this.objSelected=obj;
 	}
