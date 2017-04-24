@@ -231,6 +231,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		Panel pnlBlocker = new Panel(strStyle);
 		pnlBlocker.setBackground(new QuadBackgroundComponent(colorBlocker));
 		DragParentestPanelListenerI.i().applyAt(pnlBlocker, rzp); // the blocker has not a parent panel! so it will let the dialog be dragged directly!  
+		DragParentestPanelListenerI.i().applyAt(rzp); // the resizable border can be used to move/drag the parentest with the middle mouse button!  
 		CursorEventControl.addListenersToSpatial(pnlBlocker,blockerListener);
 		
 		// visual data

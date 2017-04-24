@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.github.devconslejme.gendiag.ResizablePanel;
+import com.github.devconslejme.gendiag.ResizablePanel.ResizerCursorListener;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
@@ -79,7 +81,16 @@ public class DragParentestPanelListenerI implements CursorListener{
 	public void cursorButtonEvent(CursorButtonEvent event, Spatial target, Spatial capture) {
 //		if(event.isConsumed())return;
 		
-		if(event.getButtonIndex()==0){
+		int iButtonClickOk=0;
+		if(capture.getControl(CursorEventControl.class).getMouseListener(ResizerCursorListener.class)!=null){
+			/**
+			 * the resizable will be preferred over the dragging for button 0,
+			 * so accept only button 2 to move the parentest (mainly thru the resizable border) 
+			 */
+			iButtonClickOk=2;
+		}
+		
+		if(event.getButtonIndex()==iButtonClickOk){
 			bDragging=event.isPressed();
 			if(bDragging){
 //				if(focusman.getFocus()==capture){

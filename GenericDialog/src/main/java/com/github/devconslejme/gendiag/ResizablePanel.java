@@ -75,7 +75,7 @@ public class ResizablePanel extends Panel {
 	private Vector3f	v3fDragFromPrevious;
 	private Vector3f	v3fMinSize = new Vector3f(0,0,0);
 	private float fCornerHotSpotRange = 20;
-	private ResizerCursorListener dcl = new ResizerCursorListener();
+	private ResizerCursorListener dcl = new ResizerCursorListener(this);
 	private int	iMouseButtonIndexToDrag=0;
 	private EEdge eeInitialHook = null;
 //	private static int iGrowParentestFixAttemptLimitGlobal=100;
@@ -508,22 +508,28 @@ public class ResizablePanel extends Panel {
 //  	setContents(pnlContents);
 //	}
 
-	private class ResizerCursorListener implements CursorListener{
+	public static class ResizerCursorListener implements CursorListener{
+		private ResizablePanel	rzp;
+
+		public ResizerCursorListener(ResizablePanel rzp){
+			this.rzp=rzp;
+		}
+		
 		@Override
 		public void cursorButtonEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
-			if(capture!=ResizablePanel.this)return;
+			if(capture!=rzp)return;
 			
-			if(event.getButtonIndex()!=iMouseButtonIndexToDrag)return;
+			if(event.getButtonIndex()!=rzp.iMouseButtonIndexToDrag)return;
 			
 			if(event.isPressed()){
-				v3fDragFromPrevious=(new Vector3f(event.getX(),event.getY(),0));
+				rzp.v3fDragFromPrevious=(new Vector3f(event.getX(),event.getY(),0));
 				event.setConsumed(); //acknoledges event absorption
 			}else{
 				// button UP ends all
-				v3fDragFromPrevious=null;
-				eeInitialHook=(null);
-				for(IResizableListener iuls:listeners){
-					iuls.endedResizingEvent(ResizablePanel.this);
+				rzp.v3fDragFromPrevious=null;
+				rzp.eeInitialHook=(null);
+				for(IResizableListener iuls:rzp.listeners){
+					iuls.endedResizingEvent(rzp);
 				}
 				event.setConsumed(); //this also prevents sending the event to other than this panel
 			}
@@ -531,15 +537,15 @@ public class ResizablePanel extends Panel {
 		
   	@Override
   	public void cursorMoved(CursorMotionEvent event, Spatial target, Spatial capture) {
-  		if(v3fDragFromPrevious!=null){
-  			resizeThruDragging(event.getX(),event.getY());
+  		if(rzp.v3fDragFromPrevious!=null){
+  			rzp.resizeThruDragging(event.getX(),event.getY());
   			event.setConsumed(); //acknoledges event absorption 
   		}
   	}
 
 		@Override
 		public void cursorEntered(CursorMotionEvent event, Spatial target,				Spatial capture) {
-  		if(v3fDragFromPrevious==null){ //to help on pressing button on border
+  		if(rzp.v3fDragFromPrevious==null){ //to help on pressing button on border
   		}
 		}
 

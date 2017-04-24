@@ -73,11 +73,11 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 		
 		rzpDialog.addResizableListener(this);
 		
-		preInitContentsContainer();
+		initPreContentsContainer();
 		initContentsContainer();
 	}
 	
-	protected abstract void preInitContentsContainer();
+	protected abstract void initPreContentsContainer();
 	
 	private class BorderLayoutFT extends BorderLayout implements FocusTraversal{
 		DefaultFocusTraversalControl dftc = new DefaultFocusTraversalControl();
@@ -111,6 +111,8 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 	private void initContentsContainer() {
 		DetailedException.assertNotNull(bl, this);
 		
+		DragParentestPanelListenerI.i().applyAt(rzpDialog);
+		
 		cntrMain = new Container(bl, rzpDialog.getStyle());
 //		cntrMain = new Container(new BorderLayout(), rzpDialog.getStyle());
 		DetailedException.assertNotAlreadySet(getDialog().getContents(), cntrMain, this);
@@ -118,8 +120,9 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 		getDialog().setContents(cntrMain);
 		
 		cfgSection(getSection(ESection.Info),BorderLayout.Position.North,EEdge.Bottom);
-		CursorEventControl.addListenersToSpatial(
-			getSection(ESection.Info).getContents(), DragParentestPanelListenerI.i());
+		DragParentestPanelListenerI.i().applyAt(getSection(ESection.Info).getContents());
+//		CursorEventControl.addListenersToSpatial(
+//			getSection(ESection.Info).getContents(), DragParentestPanelListenerI.i());
 		cfgSection(getSection(ESection.Options),BorderLayout.Position.Center,EEdge.Bottom);
 		cfgSection(getSection(ESection.Input),BorderLayout.Position.South,EEdge.Top);
 	}

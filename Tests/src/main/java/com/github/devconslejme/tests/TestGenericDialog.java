@@ -87,7 +87,7 @@ public class TestGenericDialog extends SimpleApplication {
 		gdc.getDialog().setPreferredSize(new Vector3f(600,500,0));
 		
 		gdc.setTextInfo("This is a good info about something.\nSecond line.");
-		gdc.setUseInputTextValue(true);
+//		gdc.setUseInputTextValue(true);
 		
 		gdc.putOption(null, "option A", 10);
 		gdc.putOption(null, "option B", "This is option B");
