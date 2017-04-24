@@ -27,7 +27,12 @@
 
 eval `secinit`
 
-astrRunClasses=(`egrep "public static void main[(]" ./src/* -rIc |grep -v :0 |sed -r 's".*/src/(.*)[.]java:1$"\1"' |tr "/" "."`)&&:
+astrRunClasses=(`egrep "public static void main[(]" * -rIc --include="*.java" \
+	|grep -v :0 \
+	|sed -r 's".*/src/main/java/(.*)[.]java:1$"\1"' \
+	|tr "/" "."\
+`)&&:
+
 declare -p astrRunClasses
 #echoc --info "astrRunClasses='${astrRunClasses[@]}'"
 

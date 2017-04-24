@@ -153,6 +153,8 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	protected Vector3f	v3fDefaultSize;
 	private Vector3f	v3fBkpLastNonDefaultSize;
 	private ContextMenu	cmVarMon;
+	private boolean	bAutoUpdateWrapAt=true;
+	private VersionedReference<Set<Integer>>	vrSelectionChangedToUpdateInputText;
 	
 	private Comparator<VarMon>	cmprStat = new Comparator<VarMon>() {
 		@Override
@@ -162,7 +164,6 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			return i;
 		}
 	};
-	private VersionedReference<Set<Integer>>	vrSelectionChangedToUpdateInputText;
 	private String[]	astrType = new String[]{
 			String.class.getSimpleName(),
 			
@@ -174,7 +175,6 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			int.class.getSimpleName(),
 			long.class.getSimpleName(),
 	};
-	
 	private static class VersionedStatus extends VersionedList<String>{
 		private HashMap<String,Integer> hmKV = new HashMap<String,Integer>();
 		public void put(String strKey, String strValue){
@@ -370,7 +370,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 					
 					lstbxLoggingSection.setVisibleItems(iLines);
 					
-					updateLoggingWrapAt();
+					if(bAutoUpdateWrapAt)updateLoggingWrapAt();
 					
 					bUpdateNoWrap=true;
 					
@@ -1324,6 +1324,14 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 				return true;
 			}
 		});
+	}
+
+	public boolean isAutoUpdateWrapAt() {
+		return bAutoUpdateWrapAt;
+	}
+
+	public void setAutoUpdateWrapAt(boolean bAutoUpdateWrapAt) {
+		this.bAutoUpdateWrapAt = bAutoUpdateWrapAt;
 	}
 	
 }
