@@ -50,6 +50,6 @@ public class PkgCfgI {
 		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS); //this can be set again later
 		
 		// after lemur inits
-		PopupHelpListenerI.i().configure(nodeParent);
+		PopupHintHelpListenerI.i().configure(nodeParent);
 }
 }

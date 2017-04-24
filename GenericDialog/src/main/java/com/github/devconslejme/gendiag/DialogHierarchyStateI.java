@@ -35,6 +35,7 @@ import com.github.devconslejme.es.HierarchyComp.EField;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.ColorI;
@@ -46,10 +47,12 @@ import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
+import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -57,6 +60,7 @@ import com.simsilica.es.Entity;
 import com.simsilica.es.EntityId;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Panel;
+import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
@@ -82,9 +86,37 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	private ResizablePanel	rzpCurrentlyBeingResized;
 	/** so the blocker can stay in that gap */
 	private float	fInBetweenGapDistZ=1.0f;
-	private float	fMinLemurPanelSizeZ = 0.01f;
+	private float	fMinLemurPanelSizeZ = 0.01f; //TODO collect this value dinamically from lemur in some way
 	private ColorRGBA	colorInvisible = new ColorRGBA(0,0,0,0);
 	protected float	fCurrentOrderPosZ;
+	private CallableX cxZOrder = new CallableX() {
+		@Override
+		public Boolean call() {
+			fCurrentOrderPosZ = fBeginOrderPosZ;
+			for(Entity ent:sys.getSortedHierarchyDialogs()){
+				updateZOrder(ent.getId());
+			}
+			return true;
+		}
+	};
+	private CallableX	cxAutoFocus = new CallableX() { //TODO this delay still has a chance of typing something at other input field? like when holding for long a key?
+		@Override
+		public Boolean call() {
+			for(Panel pnl:apnlAutoFocus){
+				ResizablePanel rzp = MiscJmeI.i().getParentest(pnl, ResizablePanel.class, true);
+				HierarchyComp hc = DialogHierarchyStateI.i().getHierarchyComp(rzp);
+				if(!hc.isOpened())continue;
+				
+				if(!hc.isBlocked()){
+					GuiGlobals.getInstance().requestFocus(pnl);
+					return true; //skip others, they cant fight against each other...
+				}
+			}
+			
+			return true;
+		}
+	}.setName("FocusAtDevConsInput").setDelaySeconds(0.25f).setLoop(true);
+	private ArrayList<Panel>	apnlAutoFocus = new ArrayList<Panel>();
 	
 	public static class BlockerListener extends DefaultCursorListener{
 		@Override
@@ -100,7 +132,10 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		}
 	}
 	
-	private static class Visuals{
+	/**
+	 * keep setters private
+	 */
+	public static class Visuals{
 		private EntityId entid;
 		private ResizablePanel rzpDiag;
 		private Panel pnlBlocker;
@@ -108,6 +143,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		/** only one effect per child, but many per parent */
 		private IEffect ieffLinkToParent;
 		
+		private boolean bAllowPositionRelativeToParent=true;
 		private Vector3f	v3fPositionRelativeToParent = new Vector3f(20, -20, 0); //cascade like
 //		@Override
 //		public boolean equals(Object obj) {
@@ -120,32 +156,47 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		public EntityId getEntityId() {
 			return entid;
 		}
-		public void setEntityId(EntityId entid) {
+		private void setEntityId(EntityId entid) {
 			this.entid = entid;
 		}
+		
 		public ResizablePanel getDialog() {
 			return rzpDiag;
 		}
-		public void setDiag(ResizablePanel rzpDiag) {
+		private void setDiag(ResizablePanel rzpDiag) {
 			this.rzpDiag = rzpDiag;
 		}
+		
 		public Panel getBlocker() {
 			return pnlBlocker;
 		}
-		public void setBlocker(Panel pnlBlocker) {
+		private void setBlocker(Panel pnlBlocker) {
 			this.pnlBlocker = pnlBlocker;
 		}
+		
 		public Vector3f getPositionRelativeToParent() {
 			return v3fPositionRelativeToParent;
 		}
-		public void setPositionRelativeToParent(Vector3f v3fPositionRelativeToParent) {
+		private void setPositionRelativeToParent(Vector3f v3fPositionRelativeToParent) {
+//			if(!isAllowPositionRelativeToParent())return;
 			this.v3fPositionRelativeToParent = v3fPositionRelativeToParent;
 		}
+		
 		public IEffect getEffLinkToParent() {
 			return ieffLinkToParent;
 		}
-		public void setEffLinkToParent(IEffect ieffLinkToParent) {
+		private void setEffLinkToParent(IEffect ieffLinkToParent) {
 			this.ieffLinkToParent = ieffLinkToParent;
+		}
+		
+		public boolean isAllowPositionRelativeToParent() {
+			return bAllowPositionRelativeToParent;
+		}
+		/**
+		 * will prevent it from being updated by user input
+		 */
+		public void ignorePositionRelativeToParent() {
+			this.bAllowPositionRelativeToParent = false;
 		}
 		
 	}
@@ -162,6 +213,8 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		
 		DialogHierarchySystemI.i().configure();
 //		ed=DialogHierarchySystemI.i().getEntityData();
+		
+		QueueI.i().enqueue(cxAutoFocus);
 	}
 	
 //	private HashBiMap<Long,Visuals> hmDiag = HashBiMap.create();
@@ -171,7 +224,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		
 		// main dialog panel
 		ResizablePanel rzp = new ResizablePanel(strStyle);
-		rzp.addUpdateLogicalStateListener(this);
+		rzp.addResizableListener(this);
 		HoverHighlightEffectI.i().applyAt(rzp, (QuadBackgroundComponent)rzp.getResizableBorder());
 		
 		// blocker
@@ -182,9 +235,9 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		
 		// visual data
 		Visuals vs = new Visuals();
-		vs.entid=entid;
-		vs.rzpDiag=rzp;
-		vs.pnlBlocker=pnlBlocker;
+		vs.setEntityId(entid);
+		vs.setDiag(rzp);
+		vs.setBlocker(pnlBlocker);
 		UserDataI.i().setUserDataPSH(rzp, vs);
 		UserDataI.i().setUserDataPSH(pnlBlocker, vs);
 		
@@ -264,8 +317,27 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		sys.update(tpf, app.getTimer().getTime());
 		
 		updateDragLinkToParentEffect();
+		
+		updateVolatileModalAutoClose();
 	}
 	
+	private void updateVolatileModalAutoClose() {
+		Spatial spt = focusState.getFocus();
+		if(spt==null)return;
+		
+		ResizablePanel rzp = MiscJmeI.i().getParentest(spt, ResizablePanel.class, true);
+		HierarchyComp hc = getHierarchyComp(rzp);
+		if(hc==null)return;
+		
+		if(!hc.isVolatileModal())return;
+		
+		if(!rzp.isUpdateLogicalStateSucces())return;
+		
+		if(!MiscLemurI.i().isMouseCursorOver(rzp)){
+			rzp.close();
+		}
+	}
+
 	private void updateDragLinkToParentEffect(){
 		Panel pnl = DragParentestPanelListenerI.i().getParentestBeingDragged();
 		HierarchyComp hc = getHierarchyComp(pnl);
@@ -273,7 +345,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			if(!ieffLinkedDragEffect.isPlaying()){ //this also identifies the start of the dragging!
 				EntityId entidParent = hc.getHierarchyParent();
 				if(entidParent!=null){
-					ResizablePanel rzpParent = getDialog(entidParent);
+					ResizablePanel rzpParent = getOpenDialog(entidParent);
 					ieffLinkedDragEffect
 						.setOwner(pnl)
 						.setFollowFromTarget(rzpParent, null)
@@ -289,7 +361,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		}
 	}
 	
-	public ResizablePanel getDialog(EntityId entid){
+	public ResizablePanel getOpenDialog(EntityId entid){
 		for(Spatial spt:nodeToMonitor.getChildren()){
 			Visuals vs = getVisuals(spt);
 			if(vs==null)continue;
@@ -357,7 +429,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	public ResizablePanel[] getAllOpenedDialogs() {
 		ArrayList<ResizablePanel> arzp = new ArrayList<ResizablePanel>();
 		for(Entity ent:sys.getAllOpenedDialogs(null)){
-			arzp.add(getDialog(ent.getId()));
+			arzp.add(getOpenDialog(ent.getId()));
 		}
 		return arzp.toArray(new ResizablePanel[0]);
 	}
@@ -372,11 +444,13 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	}
 	
 	private void updateDragResizeRelativeParentPos(float tpf, ResizablePanel rzpSource, Visuals vs) {
+		if(!vs.isAllowPositionRelativeToParent())return;
+		
 		HierarchyComp hc = getHierarchyComp(rzpSource);
 		EntityId entidParent = hc.getHierarchyParent();
 		if(entidParent!=null){
 			if(vs.getPositionRelativeToParent()!=null){
-				ResizablePanel rzpParent = getDialog(entidParent);
+				ResizablePanel rzpParent = getOpenDialog(entidParent);
 				
 				if(
 						DragParentestPanelListenerI.i().getParentestBeingDragged()==rzpSource
@@ -390,13 +464,15 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 						rzpSource.getLocalTranslation().subtract(rzpParent.getLocalTranslation())
 					);
 				}else{
-					/**
-					 * set position relatively to parent
-					 */
-					Vector3f v3fNewPos = rzpParent.getLocalTranslation().clone();
-					v3fNewPos.addLocal(vs.getPositionRelativeToParent());
-					v3fNewPos.z=rzpSource.getLocalTranslation().z;
-					rzpSource.setLocalTranslation(v3fNewPos);
+//					if(vs.isAllowPositionRelativeToParent()){
+						/**
+						 * set position relatively to parent
+						 */
+						Vector3f v3fNewPos = rzpParent.getLocalTranslation().clone();
+						v3fNewPos.addLocal(vs.getPositionRelativeToParent());
+						v3fNewPos.z=rzpSource.getLocalTranslation().z;
+						rzpSource.setLocalTranslation(v3fNewPos);
+//					}
 				}
 			}
 		}
@@ -429,35 +505,27 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		
 		sys.setHierarchyComp(vs.getEntityId(), EField.bOpened, false);
 		
-		vs.getEffLinkToParent().setAsDiscarded();
+		if(vs.getEffLinkToParent()!=null)vs.getEffLinkToParent().setAsDiscarded();
 	}
 	
 	private void updateZOrder(EntityId entid){
-		ResizablePanel rzp = getDialog(entid);
+		ResizablePanel rzp = getOpenDialog(entid);
 		Vector3f v3f = rzp.getLocalTranslation().clone();
 		v3f.z=fCurrentOrderPosZ;
 		rzp.setLocalTranslation(v3f);
 		sys.setHierarchyComp(entid, EField.fDialogZ, fCurrentOrderPosZ);
 		
 		// prepare next
-		BoundingBox bb = (BoundingBox)getDialog(entid).getWorldBound();
+		BoundingBox bb = (BoundingBox)getOpenDialog(entid).getWorldBound();
 		if(bb!=null){ //only if it is ready
 			float fHeight = bb.getZExtent()*2f;
 			sys.setHierarchyComp(entid, EField.fBoundingHeightZ, fHeight);
 			fCurrentOrderPosZ += fHeight +fInBetweenGapDistZ;
+			
+			MessagesI.i().debugInfo(this, "DiagHierarchyZOrder:"+rzp.getName()+","+entid+","+v3f.z+","+fHeight);
 		}
+		
 	}
-	
-	private CallableX cxZOrder = new CallableX() {
-		@Override
-		public Boolean call() {
-			fCurrentOrderPosZ = fBeginOrderPosZ;
-			for(Entity ent:sys.getSortedHierarchyDialogs()){
-				updateZOrder(ent.getId());
-			}
-			return true;
-		}
-	};
 	
 	/**
 	 * for the entire current tree
@@ -469,7 +537,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		QueueI.i().enqueue(cxZOrder);
 	}
 	public void setFocusRecursively(EntityId entid, boolean bRecursing){
-		ResizablePanel rzp = getDialog(entid);
+		ResizablePanel rzp = getOpenDialog(entid);
 		GuiGlobals.getInstance().requestFocus(rzp);
 		sys.updateLastFocusAppTimeNano(entid, app.getTimer().getTime());
 		
@@ -480,6 +548,19 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 
 	public EntityId getEntityId(Spatial spt) {
 		return getVisuals(spt).getEntityId();
+	}
+
+	public float getInBetweenGapDistZ() {
+		return fInBetweenGapDistZ;
+	}
+
+	public void setInBetweenGapDistZ(float fInBetweenGapDistZ) {
+		this.fInBetweenGapDistZ = fInBetweenGapDistZ;
+	}
+	
+	
+	public void addRequestAutoFocus(Panel pnl) {
+		if(!apnlAutoFocus .contains(pnl))apnlAutoFocus.add(pnl);
 	}
 
 //	public String getReport(ResizablePanel rzp) {

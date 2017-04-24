@@ -144,6 +144,9 @@ public class DialogHierarchySystemI {
 		ent.set(hc = new HierarchyComp(hc, aobj));
 	}
 
+	public HierarchyComp getHierarchyComp(long lId) {
+		return getHierarchyComp(new EntityId(lId));
+	}
 	public HierarchyComp getHierarchyComp(EntityId entid) {
 		return getEntity(entid).get(HierarchyComp.class);
 	}

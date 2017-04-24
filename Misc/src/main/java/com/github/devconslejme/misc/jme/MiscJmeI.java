@@ -199,4 +199,12 @@ public class MiscJmeI {
 		
 		return mesh;
 	}
+	
+	public void addToName(Spatial spt, String str, boolean bPrepend){
+		if(bPrepend){
+			spt.setName(str+"/"+spt.getName());
+		}else{
+			spt.setName(spt.getName()+"/"+str);
+		}
+	}
 }

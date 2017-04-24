@@ -30,8 +30,11 @@ package com.github.devconslejme.misc.lemur;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.jme3.app.Application;
 import com.jme3.font.BitmapText;
 import com.jme3.math.FastMath;
+import com.jme3.math.Vector2f;
+import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.Panel;
@@ -74,5 +77,23 @@ public class MiscLemurI {
 	
 	public TextComponent getTextComponentFrom(Label lbl){
 		return lbl.getControl(GuiControl.class).getComponent(Label.LAYER_TEXT);
+	}
+
+	public boolean isMouseCursorOver(Panel pnl) {
+		Vector2f v2f = GlobalManagerI.i().get(Application.class).getInputManager().getCursorPosition();
+		
+		Vector3f v3fPos = pnl.getLocalTranslation();
+		Vector3f v3fSize = pnl.getSize();
+		
+		if(
+				(v2f.x >= (v3fPos.x)) &&
+				(v2f.x <= (v3fPos.x+v3fSize.x)) &&
+				(v2f.y <= (v3fPos.y)) &&
+				(v2f.y >= (v3fPos.y-v3fSize.y))
+		){
+			return true;
+		}
+		
+		return false;
 	}
 }

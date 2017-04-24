@@ -103,7 +103,7 @@ public abstract class AbstractGenericDialogComposite implements IResizableListen
 	
 	public AbstractGenericDialogComposite(ResizablePanel rzpOwner) {
 		this.rzpOwner=rzpOwner;
-		rzpOwner.addUpdateLogicalStateListener(this);
+		rzpOwner.addResizableListener(this);
 		preInitContentsContainer();
 		initContentsContainer();
 	//	this.app=GlobalInstanceManagerI.i().get(Application.class);

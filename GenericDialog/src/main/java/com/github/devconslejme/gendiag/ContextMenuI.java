@@ -32,14 +32,18 @@ import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
 import com.github.devconslejme.es.DialogHierarchySystemI;
+import com.github.devconslejme.es.HierarchyComp;
 import com.github.devconslejme.es.HierarchyComp.EField;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchy;
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
+import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 import com.simsilica.es.EntityId;
@@ -50,6 +54,7 @@ import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.Panel;
+import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.CursorMotionEvent;
@@ -62,27 +67,52 @@ public class ContextMenuI {
 	public static ContextMenuI i(){return GlobalManagerI.i().get(ContextMenuI.class);}
 	
 //	private Node	nodeParent;
-	private ResizablePanel	rzp;
+	private ResizablePanel	rzpContextMenu;
 	private String	strStyle;
-	private Container	cntr;
-	private Vector3f	v3fHierarchyParentDisplacement;
+	private Container	cntrContextOptions;
+//	private Vector3f	v3fHierarchyParentInitialDisplacement;
 	private EntityId	entid;
+	private Label	lbl;
+	private boolean	bShowDbgInfo = false;
+	private Command<Button>	btncmd = new Command<Button>() {
+		@Override
+		public void execute(Button source) {
+			rzpContextMenu.close();
+		}
+	};
+	private CallableX	cxDbgInfo = new CallableX() {
+		@Override
+		public Boolean call() {
+			HierarchyComp hc = DialogHierarchyStateI.i().getHierarchyComp(rzpContextMenu);
+			
+			if(!rzpContextMenu.isOpened())return true;
+			
+			//after diag hierarchy is ready
+			if(hc.getLastFocusTime()==-1)return true;
+			
+			String str = hc.toString().replace(",", "\n");
+			PopupHintHelpListenerI.i().setPopupHelp(lbl, str);
+			MessagesI.i().debugInfo(ContextMenuI.this, str);
+			
+			return true;
+		}
+	}.setDelaySeconds(1f).setLoop(true);
 	
 	public static class ContextMenu{
 		LinkedHashMap<String,Button> hmContextOptions = new LinkedHashMap<String,Button>();
-		private Panel owner;
+		private Panel pnlSource;
 		private ResizablePanel	hrpParent;
 		
 		/**
 		 * to be set only when clicking from the listener here
-		 * @param owner
+		 * @param pnlSource
 		 */
-		private void setContextOwner(Panel owner){
-			this.owner=owner;
+		private void setContextSource(Panel pnlSource){
+			this.pnlSource=pnlSource;
 		}
 		
 		public Panel getContextOwner(){
-			return owner;
+			return pnlSource;
 		}
 		
 		@SuppressWarnings("unchecked")
@@ -92,7 +122,7 @@ public class ContextMenuI {
 			hmContextOptions.put(strTextKey, btn);
 		}
 
-		public ResizablePanel getOwner() {
+		public ResizablePanel getHierarchyParent() {
 			return hrpParent;
 		}
 		
@@ -119,13 +149,13 @@ public class ContextMenuI {
 			if(event.getButtonIndex()!=1)return; //right mouse button
 			if(!Button.class.isInstance(capture))return;
 			
-			Button btnOwner = (Button)capture;
+			Button btn = (Button)capture;
 			
-			ContextMenu cm = UserDataI.i().getUserDataPSH(btnOwner, ContextMenu.class);
+			ContextMenu cm = UserDataI.i().getUserDataPSH(btn, ContextMenu.class);
 			
 			if(cm!=null){
-				cm.setContextOwner(btnOwner);
-				ContextMenuI.i().showContextMenu(event,btnOwner,cm);
+				cm.setContextSource(btn);
+				ContextMenuI.i().showContextMenu(event,btn,cm);
 				event.setConsumed();
 			}
 		}
@@ -134,41 +164,54 @@ public class ContextMenuI {
 	public void configure(){//Node nodeParent) {
 		strStyle = GuiGlobals.getInstance().getStyles().getDefaultStyle();
 		
-//		rzp = new ResizablePanel(strStyle);
-//		HierarchyComponent comp = hrp.createComponent(HierarchyComponent.class);
-//		_HierarchyComponent comp = _HierarchySystemI.i().createComponentAt(hrp);
-		rzp = DialogHierarchyStateI.i().createDialog(ContextMenuI.class.getSimpleName(), strStyle);
-		entid = DialogHierarchyStateI.i().getEntityId(rzp); //DialogHierarchySystemI.i().createEntity(ContextMenuI.class.getSimpleName());
-//		DialogHierarchyStateI.i().put(entid, rzp);
+		rzpContextMenu = DialogHierarchyStateI.i().createDialog(ContextMenuI.class.getSimpleName(), strStyle);
+		entid = DialogHierarchyStateI.i().getEntityId(rzpContextMenu); //DialogHierarchySystemI.i().createEntity(ContextMenuI.class.getSimpleName());
 		
-//		hrp.updateComponent(new HierarchyComponent(comp,true,null));
-//		_HierarchySystemI.i().workOn(comp).setAsHierarchyTop();
-		DialogHierarchySystemI.i().setHierarchyComp(entid, EField.eHierarchyType, EHierarchy.Top);
+		DialogHierarchyStateI.i().getVisuals(rzpContextMenu).ignorePositionRelativeToParent();
 		
-		rzp.setAllEdgesEnabled(false); //it is here for the hierarchy (not the resizing)
+		MiscJmeI.i().addToName(rzpContextMenu, ContextMenuI.class.getSimpleName(), true);
 		
-		cntr = new Container(strStyle);
-		rzp.setContents(cntr);
+		DialogHierarchySystemI.i().setHierarchyComp(entid, 
+			EField.eHierarchyType, EHierarchy.Top,
+			EField.bVolatileModal, true
+		);
 		
-		CursorEventControl.addListenersToSpatial(rzp, new ContextMenuListenerI());
+		rzpContextMenu.setAllEdgesEnabled(false); //it is here for the hierarchy (not the resizing)
 		
-//		this.nodeParent=nodeParent;
+		cntrContextOptions = new Container(strStyle);
+		rzpContextMenu.setContents(cntrContextOptions);
+		rzpContextMenu.setBackground(new QuadBackgroundComponent(ColorRGBA.Cyan));
 		
-		QueueI.i().enqueue(new CallableX() {
-			@Override
-			public Boolean call() {
-				if(rzp.getParent()!=null){
-//					ResizablePanel rzpParent = DialogHierarchySystemI.i().getHierarchyParentGuiLinkFor(entid).getResizablePanel();
-					EntityId entidParent = DialogHierarchySystemI.i().getHierarchyComp(entid).getHierarchyParent();
-					ResizablePanel rzpParent = DialogHierarchyStateI.i().getDialog(entidParent);
-					
-					rzp.setLocalTranslation(
-						rzpParent.getLocalTranslation().subtract(
-							v3fHierarchyParentDisplacement));
-				}
-				return true;
-			}
-		}.setName("ContextMenuUpdate").setLoop(true).setDelaySeconds(0.1f));
+		lbl = new Label("");
+		
+		CursorEventControl.addListenersToSpatial(rzpContextMenu, new ContextMenuListenerI());
+		
+		DialogHierarchyStateI.i().addRequestAutoFocus(rzpContextMenu);
+		
+		if(bShowDbgInfo )QueueI.i().enqueue(cxDbgInfo);
+		
+//		QueueI.i().enqueue(new CallableX() {
+//				@Override
+//				public Boolean call() {
+//					if(rzp.isOpened()){
+//	//					ResizablePanel rzpParent = DialogHierarchySystemI.i().getHierarchyParentGuiLinkFor(entid).getResizablePanel();
+//						EntityId entidParent = DialogHierarchySystemI.i().getHierarchyComp(entid).getHierarchyParent();
+//						ResizablePanel rzpParent = DialogHierarchyStateI.i().getOpenDialog(entidParent);
+//						
+//						if(rzpParent!=null){
+//							rzp.setLocalTranslation(
+//								rzpParent.getLocalTranslation().subtract(
+//									v3fHierarchyParentInitialDisplacement));
+//						}else{
+//							rzp.close();
+//						}
+//					}
+//					return true;
+//				}
+//			}	.setName("ContextMenuUpdate")
+//				.setLoop(true)
+//				.setDelaySeconds(0.1f)
+//		);
 	}
 	
 	
@@ -184,39 +227,69 @@ public class ContextMenuI {
 		CursorEventControl.addListenersToSpatial(spt,ContextMenuOwnerListenerI.i());
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void showContextMenu(CursorButtonEvent event, Button btnOwner, ContextMenu cm) {
 		//TODO populate context menu
-		cntr.clearChildren();
+		cntrContextOptions.clearChildren();
 		
 		int i=0;
-		Label lbl = new Label("Context:"+btnOwner.getText());
+		lbl.setText("Context:"+btnOwner.getText());
 		DragParentestPanelListenerI.i().applyAt(lbl);
-		cntr.addChild(lbl, i++, 0);
+		cntrContextOptions.addChild(lbl, i++, 0);
 		for(Entry<String, Button> entry : (cm.hmContextOptions).entrySet()){
-			cntr.addChild(entry.getValue(), i++, 0);
+			Button btnOption = entry.getValue();
+			btnOption.addClickCommands(btncmd);
+			cntrContextOptions.addChild(btnOption, i++, 0);
 		}
 		
 //		_HierarchyComponent comp = cm.getOwner().getComponent(_HierarchyComponent.class);
-		DialogHierarchyStateI.i().showDialogAsModal(
-			cm.getOwner(),
-			DialogHierarchyStateI.i().getDialog(entid));
+		DialogHierarchyStateI.i().showDialogAsModal(cm.getHierarchyParent(), rzpContextMenu);
+//		QueueI.i().enqueue(cxDbgInfo);
+
 //		comp=_HierarchySystemI.i().workOn(comp).showAsHierarchyModal(hrp.getComponent(_HierarchyComponent.class));
 //		nodeParent.attachChild(hrp);
 		
-		rzp.setPreferredSize(new Vector3f(200,30*cm.hmContextOptions.size(),rzp.getPreferredSize().z));
-		rzp.setLocalTranslation(event.getX(),event.getY(),0);//btnOwner.getWorldTranslation());
+		rzpContextMenu.setPreferredSize(new Vector3f(200, 30*cm.hmContextOptions.size(), rzpContextMenu.getPreferredSize().z));
+		int iDisplacement=20;
+		rzpContextMenu.setLocalTranslation(event.getX()-iDisplacement, event.getY()+iDisplacement, 0); // z will be fixed by diag hierarchy
 		
-		v3fHierarchyParentDisplacement = cm.getOwner().getLocalTranslation().subtract(
-			rzp.getLocalTranslation());
+//		v3fHierarchyParentInitialDisplacement = cm.getHierarchyParent().getLocalTranslation().subtract(
+//			rzp.getLocalTranslation());
 	}
 	
 	public void hideContextMenu() {
-		rzp.removeFromParent();
+		rzpContextMenu.removeFromParent();
+	}
+	
+	public boolean isTheContextMenu(ResizablePanel hs) {
+		return (hs==rzpContextMenu);
 	}
 
 
-	public boolean isTheContextMenu(ResizablePanel hs) {
-		return (hs==rzp);
-	}	
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("ContextMenuI [rzp=");
+		builder.append(rzpContextMenu);
+		builder.append(", strStyle=");
+		builder.append(strStyle);
+		builder.append(", cntr=");
+		builder.append(cntrContextOptions);
+		builder.append(", entid=");
+		builder.append(entid);
+		builder.append(", lbl=");
+		builder.append(lbl);
+		builder.append(", bShowDbgInfo=");
+		builder.append(bShowDbgInfo);
+		builder.append(", btncmd=");
+		builder.append(btncmd);
+		builder.append(", cxDbgInfo=");
+		builder.append(cxDbgInfo);
+		builder.append("]");
+		return builder.toString();
+	}
 	
+	public String getReport(){
+		return toString()+","+DialogHierarchyStateI.i().getHierarchyComp(rzpContextMenu).toString();
+	}
 }

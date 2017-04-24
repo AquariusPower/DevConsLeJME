@@ -27,7 +27,6 @@
 
 package com.github.devconslejme.tests;
 
-import com.github.devconslejme.devcons.JavaScriptI;
 import com.github.devconslejme.extras.DynamicFPSLimiter;
 import com.github.devconslejme.extras.OSCmd;
 import com.github.devconslejme.extras.SingleAppInstance;
@@ -65,14 +64,9 @@ public class TestDevCons extends SimpleApplication{
 	@Override
 	public void simpleInitApp() {
 		com.github.devconslejme.devcons.PkgCfgI.i().configure(this,getGuiNode());
-//		GlobalInstanceManagerI.i().put(Application.class, this);
-//		DevConsPluginStateI.i().configure(getGuiNode());
 		
 		/*** optionals below ***/
-//		JavaScriptI.i().setJSBinding(this);
-		
 		GlobalManagerI.i().get(SingleAppInstance.class).configureRequiredAtApplicationInitialization(null);
-//		JavaScriptI.i().setJSBinding(GlobalInstanceManagerI.i().get(SingleAppInstance.class));
 		
 		getStateManager().attach(new AbstractAppState(){
 			@Override
@@ -81,12 +75,10 @@ public class TestDevCons extends SimpleApplication{
 				GlobalManagerI.i().get(DynamicFPSLimiter.class).update(tpf);
 			}
 		});
-//		JavaScriptI.i().setJSBinding(GlobalInstanceManagerI.i().get(DynamicFPSLimiter.class));
 		
 		// Linux only: easy workaround to make strict focus policy painless
 		GlobalManagerI.i().get(OSCmd.class).runOSCommand(
 			"linux 'xdotool windowactivate $(xdotool search --name \"^"+settings.getTitle()+"$\")'");
-//		JavaScriptI.i().setJSBinding(GlobalInstanceManagerI.i().get(OSCmd.class));
 	}
 	
 	/**

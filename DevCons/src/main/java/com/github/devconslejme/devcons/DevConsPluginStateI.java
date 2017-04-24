@@ -29,6 +29,7 @@ package com.github.devconslejme.devcons;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -56,8 +57,8 @@ import com.github.devconslejme.misc.lemur.ClickToPositionCaratListenerI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
-import com.github.devconslejme.misc.lemur.PopupHelpListenerI;
-import com.github.devconslejme.misc.lemur.PopupHelpListenerI.EPopup;
+import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
+import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI.EPopup;
 import com.github.devconslejme.misc.lemur.VersionedVector3f;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
@@ -126,6 +127,31 @@ public class DevConsPluginStateI extends AbstractAppState {
 	private HashMap<String,VarMon> hmVarMon = new HashMap<String,VarMon>();
 	private ListBox<String> lstbxVarMonitorBar = new ListBox<String>();
 	private CallableXScrollTo cxScrollTo;
+	private boolean	bKeepScrollAtBottom;
+	private VersionedReference<List<String>>	vrListBoxChangedToAutoScrollToBottom;
+	private VersionedReference<Double>	vrSliderChangedToSuspendAutoScrollBottom;
+	private ResizablePanel	rzpMain;
+	private Application	app;
+	private ResizablePanel	rzpVarBar;
+	private Button	btnShowVarMon;
+	private boolean	bUpdateNoWrap;
+	private Button	btnRestoreSize;
+	private VersionedReference<Set<Integer>>	vrSelectionChangedToShowVarHelp;
+	private VarMon	vmAppTime;
+	private VarMon	vmCursorPos;
+	private VarMon	vmVisibleRows;
+	private VarMon	vmSlider;
+	private String	strBaseTitle = "DevCons";
+	private Vector3f	v3fDefaultPos = new Vector3f(0, getWindowSize().y-20, 0);
+	private Vector3f	v3fBkpLastNonDefaultPos;
+	private Vector3f	v3fDefaultBarSize = new Vector3f(100,100,0);
+	private float	fDistToToggleRestorePosSize = 5f;
+	private VersionedStatus vlstrVarMonitorEntries = new VersionedStatus();
+	//private Vector3f	v3fBkpLastNonDefaultBarSize;
+	private Float	fBkpLastNonDefaultBarWidthX;
+	protected Vector3f	v3fDefaultSize;
+	private Vector3f	v3fBkpLastNonDefaultSize;
+	private ContextMenu	cmVarMon;
 	
 	private Comparator<VarMon>	cmprStat = new Comparator<VarMon>() {
 		@Override
@@ -147,25 +173,6 @@ public class DevConsPluginStateI extends AbstractAppState {
 			int.class.getSimpleName(),
 			long.class.getSimpleName(),
 	};
-	private boolean	bKeepScrollAtBottom;
-	private VersionedReference<List<String>>	vrListBoxChangedToAutoScrollToBottom;
-	private VersionedReference<Double>	vrSliderChangedToSuspendAutoScrollBottom;
-	private ResizablePanel	hrpMain;
-	private Application	app;
-	private ResizablePanel	rzpVarBar;
-	private Button	btnShowVarMon;
-	private boolean	bUpdateNoWrap;
-	private Button	btnRestoreSize;
-	private VersionedReference<Set<Integer>>	vrSelectionChangedToShowVarHelp;
-	private VarMon	vmAppTime;
-	private VarMon	vmCursorPos;
-	private VarMon	vmVisibleRows;
-	private VarMon	vmSlider;
-	private String	strBaseTitle = "DevCons";
-	private Vector3f	v3fDefaultPos = new Vector3f(0, getWindowSize().y-20, 0);
-	private Vector3f	v3fBkpLastNonDefaultPos;
-	private Vector3f	v3fDefaultBarSize = new Vector3f(100,100,0);
-	private float	fDistToToggleRestorePosSize = 5f;
 	
 	private static class VersionedStatus extends VersionedList<String>{
 		private HashMap<String,Integer> hmKV = new HashMap<String,Integer>();
@@ -181,12 +188,6 @@ public class DevConsPluginStateI extends AbstractAppState {
 			}
 		}
 	}
-	private VersionedStatus vlstrVarMonitorEntries = new VersionedStatus();
-//	private Vector3f	v3fBkpLastNonDefaultBarSize;
-	private Float	fBkpLastNonDefaultBarWidthX;
-	protected Vector3f	v3fDefaultSize;
-	private Vector3f	v3fBkpLastNonDefaultSize;
-	private ContextMenu	cmVarMon;
 	
 //	private VersionedList<String>	vlstrVarMonitorEntries = new VersionedList<String>(){
 //		private HashMap<String,Integer> hmKV = new HashMap<String,Integer>();
@@ -277,6 +278,7 @@ public class DevConsPluginStateI extends AbstractAppState {
 		this.app=GlobalManagerI.i().get(Application.class);
 		
 		this.nodeParent = nodeParent;
+		
 		app.getStateManager().attach(this);
 		
 		flStorageFolder = new File(
@@ -326,7 +328,8 @@ public class DevConsPluginStateI extends AbstractAppState {
 				}
 			}
 		};
-		app.getInputManager().addMapping(strInputMappingToggleDeveloperConsole , new KeyTrigger(iKeyCodeToggleConsole ));
+		app.getInputManager().addMapping(strInputMappingToggleDeveloperConsole, 
+			new KeyTrigger(iKeyCodeToggleConsole));
 		app.getInputManager().addListener(al, strInputMappingToggleDeveloperConsole);
 		
 		// js
@@ -386,12 +389,12 @@ public class DevConsPluginStateI extends AbstractAppState {
 	public void toggleDefaultPosSize(boolean bForceDefault) {
 		boolean bRestoreDefault = false;
 		
-		Vector3f v3fCurrentPos = hrpMain.getLocalTranslation().clone();
+		Vector3f v3fCurrentPos = rzpMain.getLocalTranslation().clone();
 		if(bForceDefault || v3fCurrentPos.distance(v3fDefaultPos)>fDistToToggleRestorePosSize){
 			bRestoreDefault=true;
 		}
 		
-		Vector3f v3fCurrentSize = hrpMain.getSize().clone();
+		Vector3f v3fCurrentSize = rzpMain.getSize().clone();
 		if(bForceDefault || v3fCurrentSize.distance(v3fDefaultSize)>fDistToToggleRestorePosSize){
 			bRestoreDefault=true;
 		}
@@ -404,21 +407,21 @@ public class DevConsPluginStateI extends AbstractAppState {
 		
 		
 		if(bRestoreDefault){
-			hrpMain.setLocalTranslation(v3fDefaultPos);
+			rzpMain.setLocalTranslation(v3fDefaultPos);
 			setConsoleSizeByHeightPerc(fConsoleHeightPerc);
 			rzpVarBar.getPreferredSize().x=v3fDefaultBarSize.x;
-			if(hrpMain.isUpdateLogicalStateSucces()){
+			if(rzpMain.isUpdateLogicalStateSucces()){
 				v3fBkpLastNonDefaultPos = v3fCurrentPos.clone();
 				fBkpLastNonDefaultBarWidthX = fCurrentBarWidthX;
-				v3fBkpLastNonDefaultSize = hrpMain.getSize().clone();
+				v3fBkpLastNonDefaultSize = rzpMain.getSize().clone();
 			}
 			LoggingI.i().logEntry("DevCons: restoring default pos size");
 		}else{
 			if(v3fBkpLastNonDefaultPos!=null){
-				hrpMain.setLocalTranslation(v3fBkpLastNonDefaultPos);
+				rzpMain.setLocalTranslation(v3fBkpLastNonDefaultPos);
 			}
 			if(v3fBkpLastNonDefaultSize!=null){
-				hrpMain.setPreferredSize(v3fBkpLastNonDefaultSize);
+				rzpMain.setPreferredSize(v3fBkpLastNonDefaultSize);
 			}
 			if(fBkpLastNonDefaultBarWidthX!=null){
 				rzpVarBar.getPreferredSize().x=fBkpLastNonDefaultBarWidthX;
@@ -471,7 +474,7 @@ public class DevConsPluginStateI extends AbstractAppState {
 	
 	private void initVarMonitorContextMenu() {
 		cmVarMon = new ContextMenu();
-		cmVarMon.setHierarchyParent(hrpMain);
+		cmVarMon.setHierarchyParent(rzpMain);
 		
 		Command<Button> cmd = new Command<Button>(){
 			@Override
@@ -488,7 +491,7 @@ public class DevConsPluginStateI extends AbstractAppState {
 					Panel pnl = cmVarMon.getContextOwner();
 					Button btn = (Button)pnl;
 					VarMon vm = hmVarMon.get(btn.getText());
-					vm.set(e);
+					if(vm!=null)vm.set(e);
 				}else{
 					//other possible commands
 				}
@@ -534,7 +537,7 @@ public class DevConsPluginStateI extends AbstractAppState {
 		super.update(tpf);
 		
 		if(bUpdateNoWrap){
-			MiscJmeI.i().recursivelyApplyTextNoWrap(hrpMain);
+			MiscJmeI.i().recursivelyApplyTextNoWrap(rzpMain);
 			bUpdateNoWrap=false;
 		}
 	}
@@ -614,9 +617,10 @@ public class DevConsPluginStateI extends AbstractAppState {
 		if(!isInitialized())throw new DetailedException("not initialized");
 		
 		if(enabled){
-			nodeParent.attachChild(hrpMain);
+			DialogHierarchyStateI.i().showDialog(rzpMain);
+//			nodeParent.attachChild(hrpMain);
 		}else{
-			hrpMain.removeFromParent();
+			rzpMain.close();
 		}
 		
 		super.setEnabled(enabled);
@@ -630,13 +634,17 @@ public class DevConsPluginStateI extends AbstractAppState {
 		
 		BindKeyI.i().prepareKeyMappings();
 		
-		QueueI.i().enqueue(new CallableX() { //TODO this delay still has a chance of typing something at other input field? like when holding for long a key?
-			@Override
-			public Boolean call() {
-				GuiGlobals.getInstance().requestFocus(tfInput);
-				return true;
-			}
-		}.setName("FocusAtDevConsInput").setDelaySeconds(0.25f).setLoop(true));
+		DialogHierarchyStateI.i().addRequestAutoFocus(tfInput);
+		
+//		QueueI.i().enqueue(new CallableX() { //TODO this delay still has a chance of typing something at other input field? like when holding for long a key?
+//			@Override
+//			public Boolean call() {
+//				if(!DialogHierarchyStateI.i().getHierarchyComp(rzpMain).isBlocked()){
+//					GuiGlobals.getInstance().requestFocus(tfInput);
+//				}
+//				return true;
+//			}
+//		}.setName("FocusAtDevConsInput").setDelaySeconds(0.25f).setLoop(true));
 		
 	}
 	
@@ -737,15 +745,15 @@ public class DevConsPluginStateI extends AbstractAppState {
 		int iButtonIndex=0;
 		
 		btnRestoreSize = new Button("DefaultPosSize",getStyle());
-		PopupHelpListenerI.i().setPopupHelp(btnRestoreSize, "Restore DevCons defaults Size and Position");
+		PopupHintHelpListenerI.i().setPopupHelp(btnRestoreSize, "Restore DevCons defaults Size and Position");
 		apnl.add(btnRestoreSize);
 		
 		btnShowVarMon = new Button("VarMonBar:Toggle",getStyle());
-		PopupHelpListenerI.i().setPopupHelp(btnShowVarMon, "Show Variables Monitor Bar");
+		PopupHintHelpListenerI.i().setPopupHelp(btnShowVarMon, "Show Variables Monitor Bar");
 		apnl.add(btnShowVarMon);
 		
 		btnClipboardShow = new Button("Clipboard:Show",getStyle());
-		PopupHelpListenerI.i().setPopupHelp(btnClipboardShow, "Show Clipboard Contents");
+		PopupHintHelpListenerI.i().setPopupHelp(btnClipboardShow, "Show Clipboard Contents");
 		apnl.add(btnClipboardShow);
 		
 		lblTitle = new Label(strBaseTitle ,getStyle());
@@ -905,16 +913,13 @@ public class DevConsPluginStateI extends AbstractAppState {
 	}
 	
 	private void initMainContainer() {
-		cntrMain = new Container(new BorderLayout(), getStyle());
-		
-//		hrpMain = new ResizablePanel(getStyle());
-//		hrpMain.setName(DevConsPluginStateI.class.getSimpleName());//debug name
-		hrpMain = DialogHierarchyStateI.i().createDialog(DevConsPluginStateI.class.getSimpleName(), strStyle);
-		EntityId entid = DialogHierarchyStateI.i().getEntityId(hrpMain); //DialogHierarchySystemI.i().createEntity(ContextMenuI.class.getSimpleName());
+		rzpMain = DialogHierarchyStateI.i().createDialog(DevConsPluginStateI.class.getSimpleName(), strStyle);
+		EntityId entid = DialogHierarchyStateI.i().getEntityId(rzpMain); //DialogHierarchySystemI.i().createEntity(ContextMenuI.class.getSimpleName());
 		DialogHierarchySystemI.i().setHierarchyComp(entid, EField.eHierarchyType, EHierarchy.Top);
+		rzpMain.setApplyContentsBoundingBoxSize(false);
 		
-		hrpMain.setContents(cntrMain);
-//		hrpMain.addResizableListener(this);
+		cntrMain = new Container(new BorderLayout(), getStyle());
+		rzpMain.setContents(cntrMain);
 		
 		setConsoleSizeByHeightPerc(fConsoleHeightPerc); //just to init default value
 	}
@@ -997,17 +1002,17 @@ public class DevConsPluginStateI extends AbstractAppState {
 				/**
 				 * PUTS A NEW SIZE REQUEST
 				 */
-				hrpMain.setPreferredSize(v3f);
+				rzpMain.setPreferredSize(v3f);
 //				updateVisibleLogItems();
 				
 				QueueI.i().enqueue(new CallableX() {
 					@Override
 					public Boolean call() {
-						if(!hrpMain.isUpdateLogicalStateSucces())return false;
+						if(!rzpMain.isUpdateLogicalStateSucces())return false;
 						/**
 						 * WAITS FOR THE NEW SIZE REQUEST SUCCEED
 						 */
-						v3fDefaultSize=hrpMain.getSize().clone();
+						v3fDefaultSize=rzpMain.getSize().clone();
 						return true;
 					}
 				}.setName("DevCons: updates default size"));
@@ -1148,4 +1153,108 @@ public class DevConsPluginStateI extends AbstractAppState {
 			LoggingI.i().logSubEntry(cx.toString());
 		}
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("DevConsPluginStateI [fLemurPreferredThickness=");
+		builder.append(fLemurPreferredThickness);
+		builder.append(", fConsoleHeightPercDefault=");
+		builder.append(fConsoleHeightPercDefault);
+		builder.append(", fConsoleHeightPerc=");
+		builder.append(fConsoleHeightPerc);
+		builder.append(", strStyle=");
+		builder.append(strStyle);
+		builder.append(", lstbxLoggingSection=");
+		builder.append(lstbxLoggingSection);
+		builder.append(", cntrMain=");
+		builder.append(cntrMain);
+		builder.append(", nodeParent=");
+		builder.append(nodeParent);
+		builder.append(", font=");
+		builder.append(font);
+		builder.append(", colorConsoleStyleBackground=");
+		builder.append(colorConsoleStyleBackground);
+		builder.append(", cntrStatus=");
+		builder.append(cntrStatus);
+		builder.append(", lblTitle=");
+		builder.append(lblTitle);
+		builder.append(", btnClipboardShow=");
+		builder.append(btnClipboardShow);
+		builder.append(", btnclk=");
+		builder.append(btnclk);
+		builder.append(", tfInput=");
+		builder.append(tfInput);
+		builder.append(", iKeyCodeToggleConsole=");
+		builder.append(iKeyCodeToggleConsole);
+		builder.append(", strInputMappingToggleDeveloperConsole=");
+		builder.append(strInputMappingToggleDeveloperConsole);
+		builder.append(", flStorageFolder=");
+		builder.append(flStorageFolder);
+		builder.append(", hmVarMon=");
+		builder.append(hmVarMon);
+		builder.append(", lstbxVarMonitorBar=");
+		builder.append(lstbxVarMonitorBar);
+		builder.append(", cxScrollTo=");
+		builder.append(cxScrollTo);
+		builder.append(", cmprStat=");
+		builder.append(cmprStat);
+		builder.append(", vrSelectionChangedToUpdateInputText=");
+		builder.append(vrSelectionChangedToUpdateInputText);
+		builder.append(", astrType=");
+		builder.append(Arrays.toString(astrType));
+		builder.append(", bKeepScrollAtBottom=");
+		builder.append(bKeepScrollAtBottom);
+		builder.append(", vrListBoxChangedToAutoScrollToBottom=");
+		builder.append(vrListBoxChangedToAutoScrollToBottom);
+		builder.append(", vrSliderChangedToSuspendAutoScrollBottom=");
+		builder.append(vrSliderChangedToSuspendAutoScrollBottom);
+		builder.append(", rzpMain=");
+		builder.append(rzpMain);
+		builder.append(", app=");
+		builder.append(app);
+		builder.append(", rzpVarBar=");
+		builder.append(rzpVarBar);
+		builder.append(", btnShowVarMon=");
+		builder.append(btnShowVarMon);
+		builder.append(", bUpdateNoWrap=");
+		builder.append(bUpdateNoWrap);
+		builder.append(", btnRestoreSize=");
+		builder.append(btnRestoreSize);
+		builder.append(", vrSelectionChangedToShowVarHelp=");
+		builder.append(vrSelectionChangedToShowVarHelp);
+		builder.append(", vmAppTime=");
+		builder.append(vmAppTime);
+		builder.append(", vmCursorPos=");
+		builder.append(vmCursorPos);
+		builder.append(", vmVisibleRows=");
+		builder.append(vmVisibleRows);
+		builder.append(", vmSlider=");
+		builder.append(vmSlider);
+		builder.append(", strBaseTitle=");
+		builder.append(strBaseTitle);
+		builder.append(", v3fDefaultPos=");
+		builder.append(v3fDefaultPos);
+		builder.append(", v3fBkpLastNonDefaultPos=");
+		builder.append(v3fBkpLastNonDefaultPos);
+		builder.append(", v3fDefaultBarSize=");
+		builder.append(v3fDefaultBarSize);
+		builder.append(", fDistToToggleRestorePosSize=");
+		builder.append(fDistToToggleRestorePosSize);
+		builder.append(", vlstrVarMonitorEntries=");
+		builder.append(vlstrVarMonitorEntries);
+		builder.append(", fBkpLastNonDefaultBarWidthX=");
+		builder.append(fBkpLastNonDefaultBarWidthX);
+		builder.append(", v3fDefaultSize=");
+		builder.append(v3fDefaultSize);
+		builder.append(", v3fBkpLastNonDefaultSize=");
+		builder.append(v3fBkpLastNonDefaultSize);
+		builder.append(", cmVarMon=");
+		builder.append(cmVarMon);
+		builder.append(", vrLoggingSectionSize=");
+		builder.append(vrLoggingSectionSize);
+		builder.append("]");
+		return builder.toString();
+	}
+	
 }

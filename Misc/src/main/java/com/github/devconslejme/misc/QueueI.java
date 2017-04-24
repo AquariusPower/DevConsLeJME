@@ -76,6 +76,8 @@ public class QueueI {
 		private HashMap<String,Object> hmKeyValue = new HashMap<String,Object>();
 		private boolean	bAnonymousClass;
 		
+		private boolean bRunImediatelyOnce = false;
+		
 		private static String strLastUId="0";
 //		private boolean bDone;
 		
@@ -132,6 +134,10 @@ public class QueueI {
 		}
 		
 		public boolean isReady(){
+			if(bRunImediatelyOnce){
+				bRunImediatelyOnce=false;
+				return true;
+			}
 			return QueueI.i().isReady(lRunAtTime);
 		}
 
@@ -193,6 +199,7 @@ public class QueueI {
 			hmKeyValue.put(strKey,objVal);
 			return this;
 		}
+		@SuppressWarnings("unchecked")
 		synchronized public <T> T getValue(String strKey) {
 			return (T)hmKeyValue.get(strKey);
 		}
@@ -202,6 +209,12 @@ public class QueueI {
 //		public void setName(String strName) {
 //			this.strName = strName;
 //		}
+		public boolean isRunImediatelyOnce() {
+			return bRunImediatelyOnce;
+		}
+		public void runImediatelyOnce() {
+			this.bRunImediatelyOnce = true;
+		}
 		
 	}
 	

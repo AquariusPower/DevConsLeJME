@@ -28,13 +28,19 @@
 package com.github.devconslejme.misc.lemur;
 
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.simsilica.lemur.Container;
 import com.simsilica.lemur.GuiGlobals;
+import com.simsilica.lemur.Insets3f;
 import com.simsilica.lemur.Label;
+import com.simsilica.lemur.component.QuadBackgroundComponent;
+import com.simsilica.lemur.component.TbtQuadBackgroundComponent;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.CursorListener;
@@ -45,8 +51,8 @@ import com.simsilica.lemur.style.ElementId;
  * DevSelfNote: Misc lib class should not exist. As soon coehsion is possible, do it!
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PopupHelpListenerI implements CursorListener{
-	public static PopupHelpListenerI i(){return GlobalManagerI.i().get(PopupHelpListenerI.class);}
+public class PopupHintHelpListenerI implements CursorListener{
+	public static PopupHintHelpListenerI i(){return GlobalManagerI.i().get(PopupHintHelpListenerI.class);}
 	
 	public static enum EPopup{
 		strPopupHelpUserData,
@@ -58,6 +64,7 @@ public class PopupHelpListenerI implements CursorListener{
 	private Label	lblPopupHelp;
 	private String	strPopupHelp;
 	private Node	nodeGui;
+	private Container	cntrPopupHelp;
 
 	@Override
 	public void cursorButtonEvent(CursorButtonEvent event, Spatial target,			Spatial capture) {
@@ -81,19 +88,24 @@ public class PopupHelpListenerI implements CursorListener{
 	
 	private void updatePopupHelp(Vector2f v2fMousePos){
 		if(strPopupHelp!=null){
-			lblPopupHelp.setText("["+strPopupHelp+"]");
+			lblPopupHelp.setText(strPopupHelp);
+			lblPopupHelp.setInsets(new Insets3f(3, 3, 3, 3));
 			
 			Vector3f v3fSize = lblPopupHelp.getSize();
 			
 			float fDistFromCursor=10f;
-			float fZAboveAll=1000;
-			lblPopupHelp.setLocalTranslation(v2fMousePos.x-v3fSize.x/2, v2fMousePos.y+v3fSize.y+fDistFromCursor, fZAboveAll);
+			float fZAboveAll=1001; //TODO even above lemur mouse cursor's picker raycast?
+			cntrPopupHelp.setLocalTranslation(
+				v2fMousePos.x-v3fSize.x/2, 
+				v2fMousePos.y+v3fSize.y+fDistFromCursor, 
+				fZAboveAll
+			);
 			
-			if(lblPopupHelp.getParent()==null)nodeGui.attachChild(lblPopupHelp);
+			if(cntrPopupHelp.getParent()==null)nodeGui.attachChild(cntrPopupHelp);
 		}else{
 //			if(lblPopupHelp!=null){
-				if(lblPopupHelp.getParent()!=null){
-					lblPopupHelp.removeFromParent();
+				if(cntrPopupHelp.getParent()!=null){
+					cntrPopupHelp.removeFromParent();
 				}
 //			}
 		}
@@ -108,6 +120,7 @@ public class PopupHelpListenerI implements CursorListener{
 //		spt.setUserData(EUserDataMiscJme.strPopupHelp.s(), strHelp);
 	}
 
+//	public void configure(Node nodeParent,String strPopupStyle) {
 	public void configure(Node nodeParent) {
 		this.nodeGui = nodeParent;
 		
@@ -116,9 +129,20 @@ public class PopupHelpListenerI implements CursorListener{
 				"nothing yet...", 
 				new ElementId(EPopup.strPopupHelpUserData.s()),
 				GuiGlobals.getInstance().getStyles().getDefaultStyle() //BaseStyles.GLASS
+//				strPopupStyle==null?GuiGlobals.getInstance().getStyles().getDefaultStyle():strPopupStyle //BaseStyles.GLASS
 			); 
 			lblPopupHelp.setName("Popup Help/Hint Label");
 //		}
+			lblPopupHelp.setColor(ColorRGBA.Blue);
+		
+		MiscJmeI.i().addToName(lblPopupHelp, PopupHintHelpListenerI.class.getSimpleName(), true);
+		
+		cntrPopupHelp = new Container();
+		cntrPopupHelp.setBackground(new QuadBackgroundComponent(ColorRGBA.Cyan));
+		
+		cntrPopupHelp.addChild(lblPopupHelp, 0);
+		MiscJmeI.i().addToName(cntrPopupHelp, PopupHintHelpListenerI.class.getSimpleName(), true);
+//		((TbtQuadBackgroundComponent)cntrPopupHelp.getBackground()).setColor(ColorRGBA.Cyan);
 	}
 	
 }

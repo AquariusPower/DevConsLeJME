@@ -33,6 +33,8 @@ import java.util.HashMap;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.misc.DetailedException;
+import com.jme3.bounding.BoundingBox;
+import com.jme3.bounding.BoundingVolume;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
@@ -98,7 +100,7 @@ public class ResizablePanel extends Panel {
 		public void resizedEvent(ResizablePanel rzpSource,Vector3f v3fNewSize);
 		public void endedResizingEvent(ResizablePanel rzpSource);
 	}
-	private ArrayList<IResizableListener> aiulslList = new ArrayList<IResizableListener>();
+	private ArrayList<IResizableListener> listeners = new ArrayList<IResizableListener>();
 	
 	public static interface IBorderMargin {
 		public void setMargin(int i);
@@ -107,6 +109,7 @@ public class ResizablePanel extends Panel {
 	private boolean	bSkipGrowFix;
 	private boolean	bUseSameBorderAtResizable = false;
 	private boolean	bUpdateLogicalStateSuccess;
+	private boolean	bApplyBoundingBoxSize = true;
 	
 	public static enum EEdge{
 		// !!!!!!!!!!!!!!THIS ORDER IS IMPORTANT!!!!!!!!!!!!!!
@@ -354,7 +357,7 @@ public class ResizablePanel extends Panel {
 			
 			if(!v3fNewSize.equals(v3fOldSize)){ 
 //				resizedTo(v3fNewSize);
-				for(IResizableListener iuls:aiulslList){
+				for(IResizableListener iuls:listeners){
 					iuls.resizedEvent(this,v3fNewSize);
 				}
 			}
@@ -403,6 +406,8 @@ public class ResizablePanel extends Panel {
 	
 	@Override
 	public void updateLogicalState(float tpf) {
+		if(bApplyBoundingBoxSize)applyBoundingBoxSizeAfterResizing();
+		
 		int i=0;
 		while(true){
 			try{
@@ -428,7 +433,7 @@ public class ResizablePanel extends Panel {
 		}
 		
 		if(bUpdateLogicalStateSuccess){
-			for(IResizableListener iuls:aiulslList){
+			for(IResizableListener iuls:listeners){
 				iuls.resizerUpdatedLogicalStateEvent(tpf,this);
 			}
 		}
@@ -517,7 +522,7 @@ public class ResizablePanel extends Panel {
 				// button UP ends all
 				v3fDragFromPrevious=null;
 				eeInitialHook=(null);
-				for(IResizableListener iuls:aiulslList){
+				for(IResizableListener iuls:listeners){
 					iuls.endedResizingEvent(ResizablePanel.this);
 				}
 				event.setConsumed(); //this also prevents sending the event to other than this panel
@@ -553,6 +558,22 @@ public class ResizablePanel extends Panel {
   	attrs.set( LAYER_RESIZABLE_BORDERS, qbc, false );
   }
   
+	private void applyBoundingBoxSizeAfterResizing() {
+		if(v3fDragFromPrevious!=null)return; // ignore while being resized
+		
+		BoundingVolume bv = getWorldBound();
+		Vector3f v3fBB = ((BoundingBox)bv).getExtent(null).mult(2f);
+
+		Vector3f v3f = getSize().clone();
+//		Vector3f v3f = getPreferredSize().clone();
+//		Vector3f v3fP = getPreferredSize().clone();
+		boolean b=false;
+		if(v3f.x<v3fBB.x){v3f.x=v3fBB.x;b=true;}
+		if(v3f.y<v3fBB.y){v3f.y=v3fBB.y;b=true;}
+		
+		if(b)setPreferredSize(v3f);
+	}
+	
 	@StyleAttribute(value=LAYER_RESIZABLE_BORDERS, lookupDefault=false)
 	public ResizablePanel setResizableBorder( GuiComponent bg ) {        
 		if(!bUseSameBorderAtResizable){
@@ -669,11 +690,11 @@ public class ResizablePanel extends Panel {
 	public Edge getDraggedEdge() {
 		return hmEdge.get(eeInitialHook);
 	}
-	public ResizablePanel addUpdateLogicalStateListener(IResizableListener listener) {
+	public ResizablePanel addResizableListener(IResizableListener listener) {
 		if(listener==null)throw new DetailedException("invalid null listener");
 		
-		if(!aiulslList.contains(listener)){
-			aiulslList.add(listener);
+		if(!listeners.contains(listener)){
+			listeners.add(listener);
 		}else{
 			warnMsg("listener already added "+listener);
 		}
@@ -720,10 +741,16 @@ public class ResizablePanel extends Panel {
 	public boolean removeFromParent() {
 		boolean b = super.removeFromParent();
 		if(b){
-			for(IResizableListener iuls:aiulslList){
+			for(IResizableListener iuls:listeners){
 				iuls.removedFromParentEvent(this);
 			}
 		}
 		return b;
+	}
+	public boolean isApplyBoundingBoxSize() {
+		return bApplyBoundingBoxSize;
+	}
+	public void setApplyContentsBoundingBoxSize(boolean bApplyBoundingBoxSize) {
+		this.bApplyBoundingBoxSize = bApplyBoundingBoxSize;
 	}
 }

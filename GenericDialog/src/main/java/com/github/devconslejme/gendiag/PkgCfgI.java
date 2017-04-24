@@ -42,6 +42,6 @@ public class PkgCfgI {
 		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(app, nodeParent);
 		
 		DialogHierarchyStateI.i().configure(nodeParent,0f);
-		//TODO re-enable:		ContextMenuI.i().configure();
+		ContextMenuI.i().configure();
 	}
 }

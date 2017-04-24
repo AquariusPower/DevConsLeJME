@@ -372,14 +372,32 @@ public class JavaScriptI implements IGlobalAddListener {
 		queueExecFile(asFile(strFile), fDelaySeconds, bLoop);
 	}
 	public void queueExecFile(File flJS, float fDelaySeconds, boolean bLoop){
+		queueExec(null, flJS, fDelaySeconds, bLoop);
+	}
+	public void queueExecScript(String strSimpleScript, float fDelaySeconds, boolean bLoop){
+		queueExec(strSimpleScript, null, fDelaySeconds, bLoop);
+	}
+	/**
+	 * 
+	 * @param strSimpleScript can be null
+	 * @param flJS priority if not null
+	 * @param fDelaySeconds
+	 * @param bLoop
+	 */
+	private void queueExec(String strSimpleScript, File flJS, float fDelaySeconds, boolean bLoop){
 		QueueI.i().enqueue(new CallableX() {
 				@Override
 				public Boolean call() {
-					execFile(flJS);
+					if(flJS!=null){
+						execFile(flJS);
+					}else{
+						execScript(strSimpleScript, true);
+					}
+					
 					return true;
 				}
 			}
-			.setName(flJS.getName())
+			.setName(flJS!=null?flJS.getName():"SimpleScript")
 			.setDelaySeconds(fDelaySeconds)
 			.setLoop(bLoop)
 			.setUserCanKill(true)
