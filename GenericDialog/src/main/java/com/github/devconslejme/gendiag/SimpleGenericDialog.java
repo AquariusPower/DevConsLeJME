@@ -46,12 +46,18 @@ import com.simsilica.lemur.event.KeyActionListener;
 
 
 /**
+ * A text based generic dialog.
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public final class SimpleGenericDialogComposite extends AbstractGenericDialogComposite {
-	public SimpleGenericDialogComposite(ResizablePanel rzpOwner) {
+public final class SimpleGenericDialog extends AbstractGenericDialog {
+	public SimpleGenericDialog(ResizablePanel rzpOwner) {
 		super(rzpOwner);
 //		configureDefaults();
+	}
+
+	public SimpleGenericDialog() {
+		this(DialogHierarchyStateI.i().createDialog(SimpleGenericDialog.class.getSimpleName(), null));
 	}
 
 	private Label	btnInfo;
@@ -66,31 +72,7 @@ public final class SimpleGenericDialogComposite extends AbstractGenericDialogCom
 
 	private boolean	bUserSubmitInputValue;
 
-	private KeyActionListener	kal = new KeyActionListener() {
-		@Override
-		public void keyAction(TextEntryComponent source, KeyAction key) {
-			switch(key.getKeyCode()){
-				case KeyInput.KEY_RETURN:
-				case KeyInput.KEY_NUMPADENTER:
-					bUserSubmitInputValue=true;
-					break;
-			}
-		}
-	};
-
-//	@Override
-//	public void initialize(AppStateManager stateManager, Application app) {
-//		super.initialize(stateManager, app);
-//		
-//		GuiGlobals.getInstance().requestFocus(tfInput);
-//	}
-	
-//	@Override
-//	public void configure(CfgParams cfg) {
-//		super.configure(cfg);
-//		
-//		configureDefaults();
-//	}
+	private KeyActionListener	kal;
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -102,14 +84,14 @@ public final class SimpleGenericDialogComposite extends AbstractGenericDialogCom
 			/**
 			 * IMPORTANT: Button works MUCH better than Label when clicking to drag for ex.
 			 */
-			btnInfo = new Button("(No Info)", getEntityOwner().getStyle());
+			btnInfo = new Button("(No Info)", getDialog().getStyle());
 			setSection(es,btnInfo);
 		}
 		
 		es=ESection.Options;
 		if(getSection(es)==null){
 			vlsOptions = new VersionedList<String>();
-			lstbxOptions = new ListBox<String>(vlsOptions, getEntityOwner().getStyle());
+			lstbxOptions = new ListBox<String>(vlsOptions, getDialog().getStyle());
 			lstbxOptions.addClickCommands(new Command<ListBox>(){
 				@Override
 				public void execute(ListBox source) {
@@ -122,10 +104,23 @@ public final class SimpleGenericDialogComposite extends AbstractGenericDialogCom
 		
 		es=ESection.Input;
 		if(getSection(es)==null){
-			tfInput = new TextField("", getEntityOwner().getStyle());
+			kal = new KeyActionListener() {
+				@Override
+				public void keyAction(TextEntryComponent source, KeyAction key) {
+					switch(key.getKeyCode()){
+						case KeyInput.KEY_RETURN:
+						case KeyInput.KEY_NUMPADENTER:
+							bUserSubmitInputValue=true;
+							break;
+					}
+				}
+			};
+			
+			tfInput = new TextField("", getDialog().getStyle());
 			
 			tfInput.getActionMap().put(new KeyAction(KeyInput.KEY_NUMPADENTER),kal); 
-			tfInput.getActionMap().put(new KeyAction(KeyInput.KEY_RETURN),kal); 
+			tfInput.getActionMap().put(new KeyAction(KeyInput.KEY_RETURN),kal);
+			//tfInput.getActionMap().entrySet()
 			
 			setSection(es,tfInput);
 		}
@@ -150,7 +145,7 @@ public final class SimpleGenericDialogComposite extends AbstractGenericDialogCom
 		vlsOptions.add(strTextKey);
 	}
 	
-	public int getSelectedOptionIndex(){
+	public Integer getSelectedOptionIndex(){
 		return lstbxOptions.getSelectionModel().getSelection();
 	}
 	
@@ -162,11 +157,6 @@ public final class SimpleGenericDialogComposite extends AbstractGenericDialogCom
 		return hmOptions.get(getSelectedOptionText());
 	}
 	
-	@Override
-	public void resizerUpdatedLogicalStateEvent(float tpf,ResizablePanel rzp) {
-		update(tpf);
-	}
-
 	public void update(float tpf) {
 		if(bUseInputTextValue){
 			GuiGlobals.getInstance().requestFocus(tfInput);
@@ -183,7 +173,7 @@ public final class SimpleGenericDialogComposite extends AbstractGenericDialogCom
 		
 		if(isOptionSelected()){
 //			setEnabled(false);
-			getEntityOwner().removeFromParent();
+			getDialog().removeFromParent();
 		}
 	}
 	
@@ -192,9 +182,9 @@ public final class SimpleGenericDialogComposite extends AbstractGenericDialogCom
 //	}
 
 	@Override
-	public Object collectSelectedOption() {
+	public Object extractSelectedOption() {
 		lstbxOptions.getSelectionModel().setSelection(-1);
-		return super.collectSelectedOption();
+		return super.extractSelectedOption();
 	}
 	
 	public String getInputText(){
@@ -212,26 +202,10 @@ public final class SimpleGenericDialogComposite extends AbstractGenericDialogCom
 	public boolean isUseInputTextValue(){
 		return bUseInputTextValue;
 	}
-
+	
 	@Override
-	public void removedFromParentEvent(ResizablePanel rzpSource) {
+	public void resizerUpdatedLogicalStateEvent(float tpf,ResizablePanel rzp) {
+		update(tpf);
 	}
-
-	@Override
-	public void resizedEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented yet");
-	}
-
-	@Override
-	public void endedResizingEvent(ResizablePanel rzpSource) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented yet");
-	}
-
-//	@SuppressWarnings("unchecked")
-//	@Override
-//	public Class<SimpleGenericDialogComposite> getCompositeType() {
-//		return SimpleGenericDialogComposite.class;
-//	}
+	
 }

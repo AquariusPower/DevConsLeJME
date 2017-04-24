@@ -27,14 +27,14 @@
 
 package com.github.devconslejme.tests;
 
-import com.github.devconslejme.gendiag.AbstractGenericDialogComposite;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.gendiag.ResizablePanel;
-import com.github.devconslejme.gendiag.SimpleGenericDialogComposite;
+import com.github.devconslejme.gendiag.SimpleGenericDialog;
+import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
-import com.simsilica.lemur.style.BaseStyles;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -45,9 +45,9 @@ public class TestGenericDialog extends SimpleApplication {
 		tst.start();
 	}
 
-	private ResizablePanel	diag;
+//	private ResizablePanel	diag;
 	private Button	btnChosenOption;
-	private SimpleGenericDialogComposite	gdc;
+	private SimpleGenericDialog	gdc;
 	
 	@Override
 	public void simpleInitApp() {
@@ -55,49 +55,38 @@ public class TestGenericDialog extends SimpleApplication {
 		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode());
 		
 		prepareDialog();
-		prepareButtonCallsDiag();
+		prepareButtonThatCallsDiag();
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void prepareButtonCallsDiag() {
-		btnChosenOption = new Button("Click to change option",BaseStyles.GLASS);
+	private void prepareButtonThatCallsDiag() {
+		ResizablePanel diagParent = DialogHierarchyStateI.i().createDialog("main", null);
+		
+		btnChosenOption = new Button("Click to change option");
 		btnChosenOption.addClickCommands(new Command<Button>(){
 			@Override
 			public void execute(Button source) {
-				getGuiNode().attachChild(diag);
-//				diag.setEnabled(true);
-//				getStateManager().getState(PopupState.class).showPopup(
-//						diag.getMainResizablePanel(), ClickMode.Consume, null, ColorRGBA.Blue);
+				DialogHierarchyStateI.i().showDialogAsModal(diagParent, gdc.getDialog());
 			}
 		});
-		btnChosenOption.setLocalTranslation(200, 230, 0);
-		getGuiNode().attachChild(btnChosenOption);
+		diagParent.setContents(btnChosenOption);
+		diagParent.setLocalTranslation(200, 230, 0);
+		
+		DialogHierarchyStateI.i().showDialog(diagParent);
+		
+		DragParentestPanelListenerI.i().applyAt(btnChosenOption);
+//		getGuiNode().attachChild(btnChosenOption);
 //		getStateManager().getState(PopupState.class).showPopup(btnChosenOption, ClickMode.Consume, null, ColorRGBA.Red);
 	}
 
 	private void prepareDialog() {
-		diag = new ResizablePanel(null);
-		gdc = new SimpleGenericDialogComposite(diag);
-//		diag.putComposite(gdc);
-		
-//		diag.configure(
-//			new CfgParams()
-//		diag.setNodeParent(getGuiNode());
-//		diag.setStyle(BaseStyles.GLASS);
-		diag.setLocalTranslation(new Vector3f(100,550,10));
-		diag.setPreferredSize(new Vector3f(600,500,0));
-//		);
+		gdc = new SimpleGenericDialog();
+//		gdc = new SimpleGenericDialog(DialogHierarchyStateI.i().createDialog("options", null));
+		gdc.getDialog().setLocalTranslation(new Vector3f(100,550,10));
+		gdc.getDialog().setPreferredSize(new Vector3f(600,500,0));
 		
 		gdc.setTextInfo("This is a good info about something.\nSecond line.");
 		gdc.setUseInputTextValue(true);
-		
-//		QueueI.i().enqueue(new CallableX(0,false) {
-//			@Override
-//			public Boolean call() {
-//				diag.getMainResizablePanel().setUseBumpResizableBorderMode(true);
-//				return true;
-//			}
-//		});
 		
 		gdc.putOption("option A", 10);
 		gdc.putOption("option B", "This is option B");
@@ -111,14 +100,9 @@ public class TestGenericDialog extends SimpleApplication {
 	public void update() {
 		super.update();
 		
-//		if(btnChosenOption.getText().isEmpty()){
-			if(diag.getParent()==null){//isEnabled()){
-				Object objSelectedOption = gdc.collectSelectedOption();
-//				Object objSelectedOption = diag.getComposite(SimpleGenericDialogComposite.class).collectSelectedOption();
-				if(objSelectedOption!=null){
-					btnChosenOption.setText("Chosen="+objSelectedOption);
-				}
-			}
-//		}
+		if(!gdc.getDialog().isOpened() && gdc.isOptionSelected()){
+			Object objSelectedOption = gdc.extractSelectedOption();
+			btnChosenOption.setText("Chosen="+objSelectedOption);
+		}
 	}
 }

@@ -558,8 +558,12 @@ public class ResizablePanel extends Panel {
   	attrs.set( LAYER_RESIZABLE_BORDERS, qbc, false );
   }
   
+  /**
+   * this is good to let the container surround the contents (that could be going beyond the borders limits)
+   */
 	private void applyBoundingBoxSizeAfterResizing() {
 		if(v3fDragFromPrevious!=null)return; // ignore while being resized
+		if(!bUpdateLogicalStateSuccess)return; //wait it be ready once at least
 		
 		BoundingVolume bv = getWorldBound();
 		Vector3f v3fBB = ((BoundingBox)bv).getExtent(null).mult(2f);
