@@ -64,6 +64,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 	private boolean	bDiscardingByOwner=true;
 	private boolean	bSimplyWaitParentIfNull=true;
 	private boolean	bWaitParentBeSet=false;
+	private boolean	bUseFollowToPosZ = false;
 	
 	public EffectBaseAbs(Spatial sptOwner){
 		this();
@@ -84,6 +85,11 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 			//TODO if sptFollow is a node, add a node to it and apply displacement to let rotations etc apply
 			v3fTargetSpot=sptFollowFrom.getWorldTranslation().add(v3fFollowFromDisplacement);
 		}
+		
+		if(isUseFollowToPosZ()){
+			v3fTargetSpot.z = getLocationTo().z;
+		}
+		
 		return v3fTargetSpot;
 	}
 	
@@ -185,6 +191,17 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 		sptFollowFrom=spt;
 		v3fFollowFromDisplacement = v3fDisplacement==null?new Vector3f():v3fDisplacement;
 		return getThis();
+	}
+	
+	@Override
+	public THIS useFollowToPosZ() {
+		bUseFollowToPosZ=true;
+		return getThis();
+	}
+	
+	@Override
+	public boolean isUseFollowToPosZ() {
+		return bUseFollowToPosZ;
 	}
 	
 	@Override

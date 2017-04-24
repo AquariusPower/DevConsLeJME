@@ -106,28 +106,32 @@ public class ContextMenuI {
 		/**
 		 * to be set only when clicking from the listener here
 		 * @param pnlSource
+		 * @return 
 		 */
-		private void setContextSource(Panel pnlSource){
+		private ContextMenu setContextSource(Panel pnlSource){
 			this.pnlSource=pnlSource;
+			return this;
 		}
 		
-		public Panel getContextOwner(){
+		public Panel getContextSource(){
 			return pnlSource;
 		}
 		
 		@SuppressWarnings("unchecked")
-		public void addNewEntry(String strTextKey, Command<Button> cmd){
+		public ContextMenu addNewEntry(String strTextKey, Command<Button> cmd){
 			Button btn = new Button(strTextKey);
 			btn.addClickCommands(cmd);
 			hmContextOptions.put(strTextKey, btn);
+			return this;
 		}
 
 		public ResizablePanel getHierarchyParent() {
 			return hrpParent;
 		}
 		
-		public void setHierarchyParent(ResizablePanel hrpParent) {
+		public ContextMenu setHierarchyParent(ResizablePanel hrpParent) {
 			this.hrpParent=hrpParent;
+			return this;
 		}
 	}
 	

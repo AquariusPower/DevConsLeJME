@@ -68,6 +68,9 @@ public interface IEffect<THIS extends IEffect>{
 
 	THIS setFollowFromTarget(Spatial spt, Vector3f v3fDisplacement);
 	
+	THIS useFollowToPosZ(); //TODO make a general setter to use X, Y or Z, and chose to use "From" or "To" as reference
+	boolean isUseFollowToPosZ();
+	
 	THIS getThis();
 	
 	THIS clone();

@@ -488,7 +488,7 @@ public class DevConsPluginStateI extends AbstractAppState {
 				}
 				
 				if(e!=null){
-					Panel pnl = cmVarMon.getContextOwner();
+					Panel pnl = cmVarMon.getContextSource();
 					Button btn = (Button)pnl;
 					VarMon vm = hmVarMon.get(btn.getText());
 					if(vm!=null)vm.set(e);
@@ -504,11 +504,8 @@ public class DevConsPluginStateI extends AbstractAppState {
 			EStatPriority e = EStatPriority.values()[i];
 			cmVarMon.addNewEntry(EStatPriority.class.getSimpleName()+":"+e.s(), cmd);
 		}
-		
 	}
 	
-	
-
 	private void initVarMonValues() {
 		vmSlider = createVarMon(EStatPriority.Bottom, "Slider", "DevCons Logging area Slider Value");
 		vmVisibleRows = createVarMon(EStatPriority.Bottom, "VisibleRows", "DevCons Logging area Visible Rows");
@@ -580,7 +577,12 @@ public class DevConsPluginStateI extends AbstractAppState {
 		String strAddToTitle="";
 		for(VarMon st:astList){
 			switch(st.esp){
-				case Hidden: continue;
+				case Hidden:
+					if(bAllowHiddenStats){
+						continue;
+					}else{
+						break;
+					}
 				case Title:
 					strAddToTitle+=st.strKey+"="+st.strValue+";";
 					break;
@@ -603,7 +605,10 @@ public class DevConsPluginStateI extends AbstractAppState {
 		QueueI.i().enqueue(new CallableX() {
 			@Override
 			public Boolean call() {
+				if(lstbxVarMonitorBar.getGridPanel().getModel().getRowCount()==0)return false;
+				
 				ContextMenuI.i().attachContextMenuAtListBoxItems(lstbxVarMonitorBar,cmVarMon);
+				
 				return true;
 			}
 		}.setName("ContextMenuAtListBoxAfterPopulated"));
@@ -734,7 +739,15 @@ public class DevConsPluginStateI extends AbstractAppState {
 	protected void closeConsole() {
 		LoggingI.i().logExceptionEntry(new UnsupportedOperationException("method not implemented yet"), null);
 	}
-
+	
+	boolean bAllowHiddenStats=false;
+	Command<Button> cmdToggleHiddenStats = new Command<Button>(){
+		@Override
+		public void execute(Button source) {
+			bAllowHiddenStats=!bAllowHiddenStats;
+		}
+	};
+	
 	private void initStatusSection() {
 		cntrStatus = new Container(getStyle());
 		cntrMain.addChild(cntrStatus, BorderLayout.Position.North);
@@ -750,6 +763,10 @@ public class DevConsPluginStateI extends AbstractAppState {
 		
 		btnShowVarMon = new Button("VarMonBar:Toggle",getStyle());
 		PopupHintHelpListenerI.i().setPopupHelp(btnShowVarMon, "Show Variables Monitor Bar");
+		ContextMenuI.i().attachContextMenuAt(btnShowVarMon,new ContextMenu()
+			.setHierarchyParent(rzpMain)
+			.addNewEntry("ToggleHiddenStats", cmdToggleHiddenStats)
+		);
 		apnl.add(btnShowVarMon);
 		
 		btnClipboardShow = new Button("Clipboard:Show",getStyle());
@@ -790,6 +807,8 @@ public class DevConsPluginStateI extends AbstractAppState {
 		@Override
 		protected void click(CursorButtonEvent event, Spatial target,				Spatial capture) {
 			super.click(event, target, capture);
+			
+			if(event.getButtonIndex()!=0)return;
 			
 			if(capture.equals(btnClipboardShow)){
 				ClipboardI.i().showClipboard();
