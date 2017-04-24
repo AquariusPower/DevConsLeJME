@@ -28,21 +28,31 @@
 package com.github.devconslejme.gendiag;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
 
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
-import com.jme3.app.Application;
+import com.google.common.base.Function;
+import com.google.common.base.Strings;
 import com.jme3.input.KeyInput;
-import com.jme3.math.Vector3f;
+import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
-import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
+import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.TextEntryComponent;
 import com.simsilica.lemur.core.VersionedList;
+import com.simsilica.lemur.core.VersionedReference;
+import com.simsilica.lemur.event.CursorButtonEvent;
+import com.simsilica.lemur.event.CursorEventControl;
+import com.simsilica.lemur.event.CursorListener;
+import com.simsilica.lemur.event.DefaultCursorListener;
 import com.simsilica.lemur.event.KeyAction;
 import com.simsilica.lemur.event.KeyActionListener;
+import com.simsilica.lemur.list.DefaultCellRenderer;
 
 
 /**
@@ -51,6 +61,103 @@ import com.simsilica.lemur.event.KeyActionListener;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public final class SimpleGenericDialog extends AbstractGenericDialog {
+	private Label	btnInfo;
+	private ListBox<OptionData>	lstbxOptions;
+	private VersionedList<OptionData>	vlsOptions;
+	private LinkedHashMap<String,OptionData> hmOptionsRoot = new LinkedHashMap<String,OptionData>();
+	private TextField	tfInput;
+	private boolean	bUseInputTextValue;
+	private boolean	bUserSubmitInputValue;
+	private KeyActionListener	kal;
+	private boolean	bUpdateListItems = true;
+	private static class SectionIndicator{}
+	private SectionIndicator sectionIndicator = new SectionIndicator();
+	private Function<OptionData, String>	transform;
+	private boolean bToggleExpandedOnce=false;
+	private VersionedReference<Double>	vrSlider;
+//	private Command<? super Button>	cmdToggleExpand = new Command<Button>() {
+//		@Override
+//		public void execute(Button source) {
+//			/**
+//			 * the click will select it
+//			 */
+//			bToggleExpandedOnce=true;
+//		}
+//	};
+	private CursorListener	clToggleExpand = new DefaultCursorListener(){
+		@Override
+		protected void click(CursorButtonEvent event, Spatial target, Spatial capture) {
+			bToggleExpandedOnce=true;
+		}
+	};
+	
+	public static class OptionData{
+		private String strTextKey;
+		private OptionData odParent;
+		private Object objValue;
+		private boolean bExpanded=true;
+		private LinkedHashMap<String,OptionData> hmOptions = new LinkedHashMap<String,OptionData>();
+		
+		public void toggleExpanded(){
+			bExpanded=!bExpanded;
+		}
+		private void setTextKey(String strTextKey) {
+			this.strTextKey = strTextKey;
+		}
+		private void setSectionParent(OptionData odParent) {
+			this.odParent = odParent;
+		}
+		private void setValue(Object objValue) {
+			this.objValue = objValue;
+		}
+		public String getTextKey() {
+			return strTextKey;
+		}
+		public OptionData getSectionParent() {
+			return odParent;
+		}
+		public Object getValue() {
+			return objValue;
+		}
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+			builder.append("OptionData [strTextKey=");
+			builder.append(strTextKey);
+			builder.append(", odParent=");
+			builder.append(odParent==null?null:odParent.getTextKey()); //!!!!!!!!!!!!!!! CUSTOM !!!!!!!!!!!!!!
+			builder.append(", objValue=");
+			builder.append(objValue);
+			builder.append(", bExpanded=");
+			builder.append(bExpanded);
+			builder.append(", hmOptions=");
+			builder.append(hmOptions);
+			builder.append("]");
+			return builder.toString();
+		}
+		public boolean isExpanded() {
+			return bExpanded;
+		}
+		private void setExpanded(boolean bExpanded) {
+			this.bExpanded = bExpanded;
+		}
+		public String getVisibleText() {
+			int iDepth=0;
+			OptionData odParent=this;while((odParent=odParent.getSectionParent())!=null)iDepth++;
+			
+			String str=strTextKey;
+			
+			if(getValue() instanceof SectionIndicator){
+				str="["+(isExpanded()?"-":"+")+"] "+str+"["+hmOptions.size()+"]";
+			}
+			
+			str=" "+str;
+			str=Strings.padStart(str, str.length()+iDepth, '>');
+			
+			return str;
+		}
+	}
+	
 	public SimpleGenericDialog(ResizablePanel rzpOwner) {
 		super(rzpOwner);
 //		configureDefaults();
@@ -59,20 +166,6 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 	public SimpleGenericDialog() {
 		this(DialogHierarchyStateI.i().createDialog(SimpleGenericDialog.class.getSimpleName(), null));
 	}
-
-	private Label	btnInfo;
-	
-	private ListBox<String>	lstbxOptions;
-	private VersionedList<String>	vlsOptions;
-	HashMap<String,Object> hmOptions = new HashMap<String, Object>();
-	
-	private TextField	tfInput;
-
-	private boolean	bUseInputTextValue;
-
-	private boolean	bUserSubmitInputValue;
-
-	private KeyActionListener	kal;
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -90,16 +183,28 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 		
 		es=ESection.Options;
 		if(getSection(es)==null){
-			vlsOptions = new VersionedList<String>();
-			lstbxOptions = new ListBox<String>(vlsOptions, getDialog().getStyle());
+			transform = new Function<SimpleGenericDialog.OptionData, String>() {
+				@Override
+				public String apply(OptionData input) {
+					return input.getVisibleText();
+				}
+			};
+			
+			vlsOptions = new VersionedList<OptionData>();
+			lstbxOptions = new ListBox<OptionData>(vlsOptions, getDialog().getStyle());
+			((DefaultCellRenderer<OptionData>)lstbxOptions.getCellRenderer()).setTransform(transform);
 			lstbxOptions.addClickCommands(new Command<ListBox>(){
 				@Override
 				public void execute(ListBox source) {
-					tfInput.setText(getSelectedOptionText());
+					tfInput.setText(getSelectedOptionVisibleText());
 				}
 			});
 			setSection(es,lstbxOptions);
 //			getSection(es).setMinSize(new Vector3f(100,getEntryHeight(),0));
+			
+			vrSlider = lstbxOptions.getSlider().getModel().createReference();
+			
+			applyListenerToListBoxItems();
 		}
 		
 		es=ESection.Input;
@@ -127,39 +232,150 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 		
 	}
 	
-	public int getEntryHeight(){
-		boolean bWasEmpty=vlsOptions.isEmpty();
-		if(bWasEmpty)vlsOptions.add("W");
-		int i = MiscLemurI.i().getEntryHeightPixels(lstbxOptions);
-		if(bWasEmpty)vlsOptions.clear();
-		return i;
-	}
+//	public int getEntryHeight(){
+//		boolean bWasEmpty=vlsOptions.isEmpty();
+//		if(bWasEmpty)vlsOptions.add("W");
+//		int i = MiscLemurI.i().getEntryHeightPixels(lstbxOptions);
+//		if(bWasEmpty)vlsOptions.clear();
+//		return i;
+//	}
 	
 	public void setTextInfo(String strInfo){
 		btnInfo.setText(strInfo);
 	}
 	
-	public void putOption(String strTextKey, Object objValue){
-		hmOptions.put(strTextKey, objValue);
-		vlsOptions.remove(strTextKey);
-		vlsOptions.add(strTextKey);
+	public OptionData putSection(OptionData odParent, String strNewSectionKey){
+		OptionData od = new OptionData();
+		od.setSectionParent(odParent);
+		od.setTextKey(strNewSectionKey);
+		od.setValue(sectionIndicator);
+		
+		put(odParent,strNewSectionKey,od);
+//		hmOptionsRoot.put(strNewSectionKey, od);
+		
+		return od;
+	}
+	
+	/**
+	 * 
+	 * @param strSectionParentKey if null, will be root/topmost on the hierarchy
+	 * @param strTextOptionKey also is the displayed unique text per section
+	 * @param objValue
+	 */
+	public void putOption(OptionData odParent, String strTextOptionKey, Object objValue){
+		OptionData od = new OptionData();
+		od.setSectionParent(odParent);
+		od.setTextKey(strTextOptionKey);
+		od.setValue(objValue);
+		
+		put(odParent,strTextOptionKey,od);
+	}
+	
+	private void put(OptionData odParent, String strTextOptionKey, OptionData od){
+		HashMap<String,OptionData> hmOpt = hmOptionsRoot;
+		if(odParent!=null){
+//			OptionData odParent = findSectionRecursively(hmOpt, strSectionParentKey);
+//			DetailedException.assertNotNull(odParent, "the parent section must be set before being referenced/requested/used!", odParent);
+			hmOpt=odParent.hmOptions;
+		}
+		
+		OptionData odPrevious = hmOpt.put(strTextOptionKey, od);
+		if(odPrevious!=null)MessagesI.i().warnMsg(this, "option was already set", odPrevious.toString(), od.toString());
+	}
+	
+	private OptionData findSectionRecursively(HashMap<String,OptionData> hmOpt, String strSectionKey){
+		OptionData odFound= hmOpt.get(strSectionKey);
+		if(odFound!=null)return odFound;
+		
+		//look for sub-sections
+		for(OptionData od:hmOpt.values()){
+			if(od.getValue() instanceof SectionIndicator){
+				odFound = findSectionRecursively(od.hmOptions,strSectionKey);
+				if(odFound!=null)return odFound;
+			}
+		}
+		
+		return null;
+	}
+	
+	private void recreateListItems(){
+		vlsOptions.clear();
+		recreateListItemsRecursively(hmOptionsRoot,0);
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void recreateListItemsRecursively(HashMap<String, OptionData> hmOpt, int iDepth){
+		for(Entry<String, OptionData> entry:hmOpt.entrySet()){
+			OptionData od = entry.getValue();
+//			String strTextKey = od.getTextKey();
+//			vlsOptions.remove(strTextKey); //to be like replace
+//			strTextKey=Strings.padStart(" "+strTextKey, strTextKey.length()+iDepth, '>');
+			vlsOptions.add(od);
+			if(od.getValue() instanceof SectionIndicator){
+				if(od.isExpanded()){
+					recreateListItemsRecursively(od.hmOptions,++iDepth);
+				}
+			}
+		}
+		
+//		for(Panel pnl:MiscLemurI.i().getAllListBoxItems(lstbxOptions)){
+//			Button btn=(Button)pnl;
+//			CursorEventControl.addListenersToSpatial(btn, clToggleExpand);
+////			btn.addClickCommands(cmdToggleExpand);
+////			UserDataI.i().setUserDataPSH(btn, obj)
+////			btn.
+//		}
 	}
 	
 	public Integer getSelectedOptionIndex(){
 		return lstbxOptions.getSelectionModel().getSelection();
 	}
 	
-	public String getSelectedOptionText(){
+	public OptionData getSelectedOptionData(){
 		return vlsOptions.get(getSelectedOptionIndex());
 	}
 	
+	public String getSelectedOptionVisibleText(){
+		return vlsOptions.get(getSelectedOptionIndex()).getVisibleText();
+	}
+	
 	public Object getSelectedOptionValue(){
-		return hmOptions.get(getSelectedOptionText());
+		Object obj = vlsOptions.get(getSelectedOptionIndex()).getValue();
+		if (obj instanceof SectionIndicator)return null;
+		return obj;
+//		return hmOptionsRoot.get(getSelectedOptionText()).getValue();
+	}
+	
+	private void applyListenerToListBoxItems(){
+		for(Panel pnl:MiscLemurI.i().getAllListBoxItems(lstbxOptions)){
+			Button btn=(Button)pnl;
+			CursorEventControl.addListenersToSpatial(btn, clToggleExpand);
+		}
 	}
 	
 	public void update(float tpf) {
+		if(bToggleExpandedOnce){
+			getSelectedOptionData().toggleExpanded();
+			
+			applyListenerToListBoxItems();
+			
+			bUpdateListItems = true;
+			
+			bToggleExpandedOnce=false;
+		}
+		
+		if(bUpdateListItems){
+			recreateListItems();
+			bUpdateListItems=false;
+		}
+		
+		if(vrSlider.update()){
+			applyListenerToListBoxItems();
+		}
+		
 		if(bUseInputTextValue){
-			GuiGlobals.getInstance().requestFocus(tfInput);
+//			GuiGlobals.getInstance().requestFocus(tfInput);
+//			GuiGlobals.getInstance().requestFocus(getDialog()); //will traverse to the text input
 			if(bUserSubmitInputValue){
 				setSelectedOptionValue(getInputText());
 				bUserSubmitInputValue=false;
@@ -172,8 +388,7 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 		}
 		
 		if(isOptionSelected()){
-//			setEnabled(false);
-			getDialog().removeFromParent();
+			getDialog().close();
 		}
 	}
 	
@@ -207,5 +422,5 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 	public void resizerUpdatedLogicalStateEvent(float tpf,ResizablePanel rzp) {
 		update(tpf);
 	}
-	
+
 }

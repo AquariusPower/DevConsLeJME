@@ -30,6 +30,7 @@ package com.github.devconslejme.tests;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.SimpleGenericDialog;
+import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
@@ -88,12 +89,18 @@ public class TestGenericDialog extends SimpleApplication {
 		gdc.setTextInfo("This is a good info about something.\nSecond line.");
 		gdc.setUseInputTextValue(true);
 		
-		gdc.putOption("option A", 10);
-		gdc.putOption("option B", "This is option B");
+		gdc.putOption(null, "option A", 10);
+		gdc.putOption(null, "option B", "This is option B");
 		
 		String str="option C";
-		gdc.putOption(str, true);
-		gdc.putOption(str, false); //test overwrite option return value
+		gdc.putOption(null, str, true);
+		gdc.putOption(null, str, false); //test overwrite option return value
+		
+		OptionData od1 = gdc.putSection(null, "SubSection1");
+		gdc.putOption(od1, "Option D", 100.35f);
+		
+		OptionData od1d1 = gdc.putSection(od1, "SubSection1.1");
+		gdc.putOption(od1d1, "Option E", 43);
 	}
 
 	@Override

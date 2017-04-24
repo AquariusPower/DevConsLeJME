@@ -27,6 +27,8 @@
 
 package com.github.devconslejme.misc.lemur;
 
+import java.util.ArrayList;
+
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
@@ -102,4 +104,7 @@ public class MiscLemurI {
 		return new Vector3f(event.getX(),event.getY(),0);
 	}
 	
+	public ArrayList<Panel> getAllListBoxItems(ListBox lstbx){
+		return MiscJmeI.i().getAllChildrenRecursiveFrom(lstbx.getGridPanel(), Panel.class, 1);
+	}
 }

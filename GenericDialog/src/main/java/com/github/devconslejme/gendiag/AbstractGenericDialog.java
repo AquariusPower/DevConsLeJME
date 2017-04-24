@@ -32,12 +32,16 @@ import java.util.HashMap;
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
 import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Container;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.event.CursorEventControl;
+import com.simsilica.lemur.focus.DefaultFocusTraversalControl;
+import com.simsilica.lemur.focus.FocusTraversal;
 
 
 /**
@@ -48,23 +52,67 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 	private Object	objSelected;
 	HashMap<ESection,ResizablePanel> hmSection = new HashMap<ESection,ResizablePanel>();
 	private ResizablePanel	rzpDialog;
+//	private DefaultFocusTraversalControl ctrl = new DefaultFocusTraversalControl(){
+//		@Override
+//		public Spatial getDefaultFocus() {
+//			return getSection(ESection.Input);
+//		};
+//	};
 	
 	public AbstractGenericDialog setSection(ESection e, Panel pnl) {
 		hmSection.put(e,new ResizablePanel(rzpDialog.getStyle()).setContents(pnl));
 		return this;
 	}
 	
-	public AbstractGenericDialog(ResizablePanel rzpOwner) {
-		this.rzpDialog=rzpOwner;
-		rzpOwner.addResizableListener(this);
+	public AbstractGenericDialog(ResizablePanel rzpDialog) {
+		this.rzpDialog=rzpDialog;
+		MiscJmeI.i().addToName(rzpDialog, this.getClass().getSimpleName(), true);
+//		rzpDialog.addControl(ctrl);
+		
+		bl = new BorderLayoutFT(getDialog());
+		
+		rzpDialog.addResizableListener(this);
+		
 		preInitContentsContainer();
 		initContentsContainer();
 	}
 	
 	protected abstract void preInitContentsContainer();
+	
+	private class BorderLayoutFT extends BorderLayout implements FocusTraversal{
+		DefaultFocusTraversalControl dftc = new DefaultFocusTraversalControl();
+//		FocusTraversalAdapter dftc = new FocusTraversalAdapter();
+		
+		public BorderLayoutFT(Spatial spt){
+			super();
+			DetailedException.assertNotNull(spt, this);
+			dftc.setSpatial(spt);
+			dftc.setFocusRoot(true);
+		}
+		
+		@Override
+		public Spatial getDefaultFocus() {
+			return getSection(ESection.Input).getContents();
+		}
 
+		@Override
+		public Spatial getRelativeFocus(Spatial from, TraversalDirection direction) {
+			return dftc.getRelativeFocus(from, direction);
+		}
+
+		@Override
+		public boolean isFocusRoot() {
+			return dftc.isFocusRoot();
+		}
+		
+	};
+	private BorderLayoutFT bl;
+	
 	private void initContentsContainer() {
-		cntrMain = new Container(new BorderLayout(), rzpDialog.getStyle());
+		DetailedException.assertNotNull(bl, this);
+		
+		cntrMain = new Container(bl, rzpDialog.getStyle());
+//		cntrMain = new Container(new BorderLayout(), rzpDialog.getStyle());
 		DetailedException.assertNotAlreadySet(getDialog().getContents(), cntrMain, this);
 		
 		getDialog().setContents(cntrMain);
@@ -107,7 +155,7 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 	}
 	
 	/**
-	 * will also reset the selected
+	 * will also reset the selected to null
 	 * @return
 	 */
 	public Object extractSelectedOption() {
@@ -124,7 +172,12 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 		return objSelected!=null;
 	}
 	
+	/**
+	 * 
+	 * @param obj ignored if null
+	 */
 	protected void setSelectedOptionValue(Object obj){
+		if(obj==null)return; 
 		this.objSelected=obj;
 	}
 
@@ -144,4 +197,5 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 	@Override
 	public void resizerUpdatedLogicalStateEvent(float tpf,ResizablePanel rzp) {
 	}
+	
 }

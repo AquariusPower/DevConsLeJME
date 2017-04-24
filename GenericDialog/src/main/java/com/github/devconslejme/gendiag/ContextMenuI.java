@@ -43,6 +43,7 @@ import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
+import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
 import com.jme3.app.Application;
 import com.jme3.bounding.BoundingBox;
@@ -252,7 +253,8 @@ public class ContextMenuI {
 	
 	
 	public void attachContextMenuAtListBoxItems(ListBox lstbx, ContextMenu cm){
-		ArrayList<Panel> apnl = MiscJmeI.i().getAllChildrenRecursiveFrom(lstbx.getGridPanel(), Panel.class, null);
+//		ArrayList<Panel> apnl = MiscJmeI.i().getAllChildrenRecursiveFrom(lstbx.getGridPanel(), Panel.class, null);
+		ArrayList<Panel> apnl = MiscLemurI.i().getAllListBoxItems(lstbx);
 		for(Panel pnl:apnl){
 			attachContextMenuAt(pnl, cm);
 		}

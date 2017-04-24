@@ -1303,12 +1303,13 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		QueueI.i().enqueue(new CallableX() {
 			@Override
 			public Boolean call() {
-				ArrayList<Button> abtn = MiscJmeI.i().getAllChildrenRecursiveFrom(lstbxLoggingSection, Button.class, null);
+//				ArrayList<Button> abtn = MiscJmeI.i().getAllChildrenRecursiveFrom(lstbxLoggingSection, Button.class, null);
+				ArrayList<Panel> abtn = MiscLemurI.i().getAllListBoxItems(lstbxLoggingSection);
 //				Panel pnl = lstbxLoggingSection.getGridPanel().getCell(0,0);
 //				Panel pnl = lstbxLoggingSection.getGridPanel().getModel().getCell(0,0,null);
 				if(abtn.isEmpty())return false; //wait something show up
 				
-				Button btn = abtn.get(0);
+				Panel btn = abtn.get(0);
 				Vector3f v3f = btn.getSize();
 				if(v3f.length()==0)return false; //wait it be ready
 				
