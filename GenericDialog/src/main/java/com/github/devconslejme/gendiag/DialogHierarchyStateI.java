@@ -58,6 +58,7 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.simsilica.es.Entity;
 import com.simsilica.es.EntityId;
+import com.simsilica.lemur.Button;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.TextField;
@@ -265,6 +266,20 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		nodeToMonitor.attachChild(rzp);
 		
 		EntityId entid = getVisuals(rzp).getEntityId();
+		
+		if(sys.getHierarchyComp(entid).getLastFocusTime()==-1){ //1st time only
+			DefaultCursorListener cl = new DefaultCursorListener(){
+				@Override
+				protected void click(CursorButtonEvent event, Spatial target, Spatial capture) {
+					setFocusRecursively(entid);
+				};
+			};
+			
+			for(Panel pnl:MiscJmeI.i().getAllChildrenRecursiveFrom(rzp, Panel.class, null)){
+				CursorEventControl.addListenersToSpatial(pnl,cl);
+			}
+		}
+		
 		sys.setHierarchyComp(entid, 
 			EField.bOpened, true,
 			EField.lLastFocusTime, app.getTimer().getTime()
@@ -537,17 +552,24 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	 * @param entid
 	 */
 	public void setFocusRecursively(EntityId entid){
-		setFocusRecursively(sys.getParentest(entid), false);
+		setFocus(sys.getParentest(entid), true);
+		
+		// one second time priorizing the specific hierarchy sub-tree
+		for(EntityId entidP:sys.getParentList(entid)){
+			setFocus(entidP, false);
+		}
 		
 		QueueI.i().enqueue(cxZOrder);
 	}
-	public void setFocusRecursively(EntityId entid, boolean bRecursing){
+	public void setFocus(EntityId entid, boolean bRecursive){
 		ResizablePanel rzp = getOpenDialog(entid);
 		GuiGlobals.getInstance().requestFocus(rzp);
 		sys.updateLastFocusAppTimeNano(entid, app.getTimer().getTime());
 		
-		for(Entity ent:sys.getAllOpenedDialogs(entid)){
-			setFocusRecursively(ent.getId(),true);
+		if(bRecursive){
+			for(Entity ent:sys.getAllOpenedDialogs(entid)){
+				setFocus(ent.getId(),true);
+			}
 		}
 	}
 

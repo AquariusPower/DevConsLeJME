@@ -29,6 +29,7 @@ package com.github.devconslejme.misc.jme;
 
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.Application;
+import com.jme3.scene.Node;
 
 
 /**
@@ -37,12 +38,13 @@ import com.jme3.app.Application;
 public class PkgCfgI {
 	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
-	public void configure(Application app){
+	public void configure(Application app,Node nodeParent){
 		com.github.devconslejme.misc.PkgCfgI.i().configure();
 		
 		GlobalManagerI.i().put(Application.class, app);  //first!
 		EffectManagerStateI.i().configure();
 		SimulationTimeStateI.i().configure();
 		QueueStateI.i().configure();
+		OrthogonalCursorStateI.i().configure(nodeParent);
 	}
 }

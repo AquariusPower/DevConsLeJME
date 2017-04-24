@@ -27,7 +27,6 @@
 
 package com.github.devconslejme.misc.lemur;
 
-import com.github.devconslejme.gendiag.ContextMenuI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.Application;
 import com.jme3.scene.Node;
@@ -42,7 +41,7 @@ public class PkgCfgI {
 	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
 	public void configure(Application app, Node nodeParent){
-		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app);
+		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app,nodeParent);
 		
 		// lermur inits
 		if(GuiGlobals.getInstance()==null)GuiGlobals.initialize(app); //GuiGlobals.initialize(app);

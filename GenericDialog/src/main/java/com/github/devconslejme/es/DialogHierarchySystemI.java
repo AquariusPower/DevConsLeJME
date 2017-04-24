@@ -261,5 +261,14 @@ public class DialogHierarchySystemI {
 		
 		return entidToUpdate;
 	}
+
+	public ArrayList<EntityId> getParentList(EntityId entid) {
+		ArrayList<EntityId> aentid = new ArrayList<EntityId>();
+		while(entid!=null){
+			aentid.add(0,entid);
+			entid=getHierarchyComp(entid).getHierarchyParent();
+		}
+		return aentid;
+	}
 	
 }

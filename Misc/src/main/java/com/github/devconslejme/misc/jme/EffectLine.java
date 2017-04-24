@@ -35,7 +35,8 @@ import com.jme3.scene.shape.Line;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class EffectLine extends EffectBaseAbs<EffectLine>{
-
+//	private boolean bOrthoSpin=false;
+	
 	@Override
 	public EffectLine getThis() {
 		return this;
@@ -54,4 +55,18 @@ public class EffectLine extends EffectBaseAbs<EffectLine>{
 		
 		getGeom().lookAt(getLocationTo(), Vector3f.UNIT_Y);
 	}
+	
+//	public void spin(float fDegrees, float fDelay){
+//		
+//	}
+	
+//	public boolean isOrthoSpin() {
+//		return bOrthoSpin;
+//	}
+//
+//	public void setOrthoSpin(boolean bOrthoSpin) {
+//		this.bOrthoSpin = bOrthoSpin;
+//	}
+	
+	
 }
