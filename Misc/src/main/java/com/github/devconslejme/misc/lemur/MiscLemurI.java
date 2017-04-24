@@ -42,6 +42,7 @@ import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.TextComponent;
 import com.simsilica.lemur.component.TextEntryComponent;
 import com.simsilica.lemur.core.GuiControl;
+import com.simsilica.lemur.event.AbstractCursorEvent;
 import com.simsilica.lemur.grid.GridModel;
 
 /**
@@ -96,4 +97,9 @@ public class MiscLemurI {
 		
 		return false;
 	}
+	
+	public Vector3f getCursorPosCopy(AbstractCursorEvent event){
+		return new Vector3f(event.getX(),event.getY(),0);
+	}
+	
 }

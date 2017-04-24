@@ -142,7 +142,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 //		 * removing the MouseEventControl, will prevent the click commands from working,
 //		 */
 //		btn.removeControl(MouseEventControl.class);
-//		DragParentestPanelListenerI.i().applyAt(btn);
+		DragParentestPanelListenerI.i().applyAt(btn);
 		
 		return rzp;
 	}

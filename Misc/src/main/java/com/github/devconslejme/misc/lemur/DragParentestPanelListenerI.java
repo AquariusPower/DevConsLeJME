@@ -27,19 +27,24 @@
 
 package com.github.devconslejme.misc.lemur;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.jme.UserDataI;
 import com.jme3.app.Application;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Button;
+import com.simsilica.lemur.Command;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.core.GuiComponent;
-import com.simsilica.lemur.event.AbstractCursorEvent;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.CursorListener;
@@ -60,15 +65,16 @@ public class DragParentestPanelListenerI implements CursorListener{
 	private Vector3f	v3fDistToCursor;
 	private Panel	pnlParentestBeingDragged;
 	private FocusManagerState	focusman;
+	private boolean	bBugfixClickCommands=true;
+	private Vector3f	v3fInitialDragPos;
+	private Vector3f	v3fInitialCurPos;
+	private boolean	bIsReallyDragging;
 	
 	public void configure(){
 		focusman = GlobalManagerI.i().get(Application.class).getStateManager().getState(FocusManagerState.class);
 	}
 	
-	private Vector3f getCursorPos(AbstractCursorEvent event){
-		return new Vector3f(event.getX(),event.getY(),0);
-	}
-	
+	@SuppressWarnings("unchecked")
 	@Override
 	public void cursorButtonEvent(CursorButtonEvent event, Spatial target, Spatial capture) {
 //		if(event.isConsumed())return;
@@ -76,24 +82,88 @@ public class DragParentestPanelListenerI implements CursorListener{
 		if(event.getButtonIndex()==0){
 			bDragging=event.isPressed();
 			if(bDragging){
-				if(focusman.getFocus()==capture){
-					focusman.setFocus(null);
-				}
+//				if(focusman.getFocus()==capture){
+//					focusman.setFocus(null);
+//				}
 				
 				//find parentest 
 				Panel pnlParentest = (Panel)capture.getUserData(getUserDataIdFor(EDrag.ApplyDragAt));
 				if(pnlParentest==null)pnlParentest = MiscJmeI.i().getParentest(capture, Panel.class, true);
 				
 				// base dist calc
-				v3fDistToCursor=pnlParentest.getWorldTranslation().subtract(getCursorPos(event));
+				v3fInitialDragPos = pnlParentest.getWorldTranslation().clone();
+				v3fInitialCurPos = MiscLemurI.i().getCursorPosCopy(event);
+				v3fDistToCursor=v3fInitialDragPos.subtract(v3fInitialCurPos);
 				v3fDistToCursor.z=0; //DO NOT MESS WITH Z!!!!
+				
+				bIsReallyDragging=false;
+				
+				bugfixAbsorbClickCommands(capture);
 			}else{
 				pnlParentestBeingDragged=null;
+				
+				// just click, not dragging
+				if(!bIsReallyDragging)bugfixDelegateClickCommands(capture);
 			}
 			event.setConsumed();
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
+	private void bugfixAbsorbClickCommands(Spatial capture) {
+		if(!isBugfixClickCommands())return;
+		
+		if (capture instanceof Button) {
+			Button btn = (Button) capture;
+			List<Command<? super Button>> clickCommands = btn.getClickCommands();
+			if(clickCommands==null)return; 
+			
+			if(clickCommands.size()>0){
+				clickCommands = new ArrayList<Command<? super Button>>(clickCommands); //copy b4 clearing
+				btn.removeClickCommands(clickCommands.toArray(new Command[0]));
+				
+				ArrayList<Command<? super Button>> clickCommandsStored = 
+					UserDataI.i().getUserDataPSH(btn, EUserData.ClickCommands.s());
+				if(clickCommandsStored==null){
+					clickCommandsStored=new ArrayList<Command<? super Button>>();
+					UserDataI.i().setUserDataPSH(btn, EUserData.ClickCommands.s(), clickCommandsStored);
+				}
+				clickCommandsStored.addAll(clickCommands);
+			}
+		}
+	}
+
+	private static enum EUserData{
+		ClickCommands,
+		;
+		public String s(){return toString();}
+	}
+	
+	/**
+	 * In case Button click commands are not working when the button has focus.
+	 * @param capture
+	 */
+	private void bugfixDelegateClickCommands(Spatial capture) {
+		if(!isBugfixClickCommands())return;
+		
+//		if(focusman.getFocus()!=capture)return; //the ignored click commands bug happens only when the Button has focus
+		
+		if (capture instanceof Button) {
+			Button btn = (Button) capture;
+			ArrayList<Command<? super Button>> clickCommandsStored = 
+				UserDataI.i().getUserDataPSH(btn, EUserData.ClickCommands.s());
+//				List<Command<? super Button>> clickCommands = btn.getClickCommands();
+//				if(clickCommands!=null){
+//					for(Command<? super Button> a:clickCommands){
+			if(clickCommandsStored!=null){
+				for(Command<? super Button> a:clickCommandsStored){
+					a.execute(btn);
+				}
+			}
+		}
+		
+	}
+
 	public Panel getParentestBeingDragged(){
 		return pnlParentestBeingDragged;
 	}
@@ -135,12 +205,17 @@ public class DragParentestPanelListenerI implements CursorListener{
 	@Override
 	public void cursorMoved(CursorMotionEvent event, Spatial target,				Spatial capture) {
 		if(bDragging){ //((Panel)capture).getPreferredSize() ((Panel)capture).getSize()
+			Vector3f v3fCurPos = MiscLemurI.i().getCursorPosCopy(event);
+			if(!bIsReallyDragging && v3fInitialCurPos.distance(v3fCurPos)<3f)return;
+			
+			bIsReallyDragging=true;
+			
 			// find parentest
 			Panel pnlParentest = (Panel)capture.getUserData(getUserDataIdFor(EDrag.ApplyDragAt));
 			if(pnlParentest==null)pnlParentest = MiscJmeI.i().getParentest(capture, Panel.class, true);
 			
 			// position parentest
-			Vector3f v3f = getCursorPos(event).add(v3fDistToCursor);
+			Vector3f v3f = v3fCurPos.add(v3fDistToCursor);
 			v3f.z=pnlParentest.getLocalTranslation().z; //DO NOT MESS WITH Z!!!!
 			pnlParentest.setLocalTranslation(v3f);
 			
@@ -169,7 +244,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 	 * so as may be fixed in the future, this method may be disabled/removed one day.
 	 * @param pnl
 	 */
-	private void bugfixWorkaroundMouseListenerConflict(Panel pnl){
+	private void bugfixWorkaroundMouseListenerConflictDenier(Panel pnl){
 		if(false){
 			MouseEventControl mec = pnl.getControl(MouseEventControl.class);
 			if(mec!=null){
@@ -201,7 +276,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 	 * @param pnlApplyDragAt can be used to move a non attached/linked/parent panel
 	 */
 	public void applyAt(Panel pnl, Panel pnlApplyDragAt) {
-		bugfixWorkaroundMouseListenerConflict(pnl);
+		bugfixWorkaroundMouseListenerConflictDenier(pnl);
 		
 		CursorEventControl.addListenersToSpatial(pnl, this);
 		if(pnlApplyDragAt!=null){
@@ -227,5 +302,13 @@ public class DragParentestPanelListenerI implements CursorListener{
 
 	public void setHightlightToo(boolean bHightlightToo) {
 		this.bHightlightToo = bHightlightToo;
+	}
+
+	public boolean isBugfixClickCommands() {
+		return bBugfixClickCommands;
+	}
+
+	public void setBugfixClickCommandsDisabled() {
+		this.bBugfixClickCommands = false;
 	}
 }
