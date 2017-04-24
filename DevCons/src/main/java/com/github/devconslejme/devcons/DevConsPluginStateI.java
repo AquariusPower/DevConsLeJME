@@ -45,6 +45,7 @@ import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
+import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchy;
@@ -101,7 +102,7 @@ import com.simsilica.lemur.text.DocumentModel;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class DevConsPluginStateI extends AbstractAppState {
+public class DevConsPluginStateI extends AbstractAppState {//implements IResizableListener{
 	public static DevConsPluginStateI i(){return GlobalManagerI.i().get(DevConsPluginStateI.class);}
 	
 //	private Vector3f	v3fApplicationWindowSize;
@@ -369,12 +370,14 @@ public class DevConsPluginStateI extends AbstractAppState {
 					
 					lstbxLoggingSection.setVisibleItems(iLines);
 					
+					updateLoggingWrapAt();
+					
 					bUpdateNoWrap=true;
 					
 					return true;
 				}
 			}
-			.setName("UpdateVisibleLogRows")
+			.setName("UpdateVisibleLogRowsAndWrapAt")
 			.setDelaySeconds(0.25f)
 			.setLoop(true)
 		);
@@ -429,6 +432,7 @@ public class DevConsPluginStateI extends AbstractAppState {
 			LoggingI.i().logEntry("DevCons: applying last non-default pos size");
 		}
 		
+//		updateLoggingWrapAt();
 //		updateVisibleLogItems();
 //		setConsoleSizeByHeightPerc(fConsoleHeightPercDefault);
 //		updateConsoleHeight(fConsoleHeightPercDefault);
@@ -441,6 +445,7 @@ public class DevConsPluginStateI extends AbstractAppState {
 		rzpVarBar = new ResizablePanel(null);
 		rzpVarBar.setContents(lstbxVarMonitorBar);
 		rzpVarBar.setName(rzpVarBar.getName()+"/VarMonitorBar");
+//		rzpVarBar.addResizableListener(this);
 		
 		rzpVarBar.setMinSize(new Vector3f(50,50,0));
 		
@@ -524,6 +529,9 @@ public class DevConsPluginStateI extends AbstractAppState {
 		}else{
 			cntrMain.removeChild(rzpVarBar);
 		}
+		
+//		updateLoggingWrapAt();
+
 		bUpdateNoWrap=true;
 //		MiscJmeI.i().recursivelyApplyTextNoWrap(lstbxLoggingSection);
 //		MiscJmeI.i().recursivelyApplyTextNoWrap(lstbxVarMonitorBar);
@@ -936,6 +944,7 @@ public class DevConsPluginStateI extends AbstractAppState {
 		EntityId entid = DialogHierarchyStateI.i().getEntityId(rzpMain); //DialogHierarchySystemI.i().createEntity(ContextMenuI.class.getSimpleName());
 		DialogHierarchySystemI.i().setHierarchyComp(entid, EField.eHierarchyType, EHierarchy.Top);
 		rzpMain.setApplyContentsBoundingBoxSize(false);
+//		rzpMain.addResizableListener(this);
 		
 		cntrMain = new Container(new BorderLayout(), getStyle());
 		rzpMain.setContents(cntrMain);
@@ -1274,6 +1283,47 @@ public class DevConsPluginStateI extends AbstractAppState {
 		builder.append(vrLoggingSectionSize);
 		builder.append("]");
 		return builder.toString();
+	}
+
+//	@Override
+//	public void resizerUpdatedLogicalStateEvent(float tpf,			ResizablePanel rzpSource) {
+//	}
+//	@Override
+//	public void removedFromParentEvent(ResizablePanel rzpSource) {
+//	}
+//	@Override
+//	public void resizedEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {
+//	}
+//	@Override
+//	public void endedResizingEvent(ResizablePanel rzpSource) {
+//		updateLoggingWrapAt();
+//	}
+
+	private void updateLoggingWrapAt() {
+		QueueI.i().enqueue(new CallableX() {
+			@Override
+			public Boolean call() {
+				ArrayList<Button> abtn = MiscJmeI.i().getAllChildrenRecursiveFrom(lstbxLoggingSection, Button.class, null);
+//				Panel pnl = lstbxLoggingSection.getGridPanel().getCell(0,0);
+//				Panel pnl = lstbxLoggingSection.getGridPanel().getModel().getCell(0,0,null);
+				if(abtn.isEmpty())return false; //wait something show up
+				
+				Button btn = abtn.get(0);
+				Vector3f v3f = btn.getSize();
+				if(v3f.length()==0)return false; //wait it be ready
+				
+				int iFontWidth = MiscLemurI.i().getFontCharWidthForStyle(btn.getStyle());
+				int iWrapAt = (int) (v3f.x/iFontWidth);
+				iWrapAt-=2; //safety margin to look good
+				if(iWrapAt<10){
+					iWrapAt=10;
+				}
+//				if(iWrapAt)
+				LoggingI.i().setWrapAtColumn(iWrapAt);
+				
+				return true;
+			}
+		});
 	}
 	
 }
