@@ -27,9 +27,12 @@
 
 package com.github.devconslejme.tests;
 
+import com.github.devconslejme.debug.DebugTrackProblemsJME;
 import com.github.devconslejme.extras.DynamicFPSLimiter;
 import com.github.devconslejme.extras.OSCmd;
 import com.github.devconslejme.extras.SingleAppInstance;
+import com.github.devconslejme.extras.SingleAppInstance.CallChkProblemsAbs;
+import com.github.devconslejme.misc.CheckProblemsI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
@@ -66,7 +69,17 @@ public class TestDevCons extends SimpleApplication{
 		com.github.devconslejme.devcons.PkgCfgI.i().configure(this,getGuiNode());
 		
 		/*** optionals below ***/
+		CheckProblemsI.i().addProblemsChecker(DebugTrackProblemsJME.i());
+		
 		GlobalManagerI.i().get(SingleAppInstance.class).configureRequiredAtApplicationInitialization(null);
+		GlobalManagerI.i().get(SingleAppInstance.class).addCheckProblemsCall(
+			new CallChkProblemsAbs(){
+				@Override
+				public Integer call() throws Exception {
+					return CheckProblemsI.i().checkProblems(getExitErrorMessage(),getExitErrorCause());
+				}
+			}
+		);
 		
 		getStateManager().attach(new AbstractAppState(){
 			@Override
@@ -87,5 +100,6 @@ public class TestDevCons extends SimpleApplication{
 	@Override
 	public void handleError(String errMsg, Throwable t) {
 		GlobalManagerI.i().get(SingleAppInstance.class).setExitRequestCause(errMsg,t);
+		super.handleError(errMsg, t);
 	}
 }

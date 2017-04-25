@@ -27,6 +27,8 @@
 
 package com.github.devconslejme.misc;
 
+import groovy.lang.DeprecationException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -53,14 +55,18 @@ public class DetailedException extends NullPointerException{
 		boolean isConsoleCommandRunningFromDirectUserInput();
 	}
 	
-	public static interface ICheckProblems {
-		Object performChecks(String strMessage, Throwable thr);
-	}
-	private static ICheckProblems chkprb = null;
-
-	public static void setProblemsChecker(ICheckProblems chkprb){
-		DetailedException.chkprb=chkprb;
-	}
+//	public static interface ICheckProblems {
+//		Object performChecks(String strMessage, Throwable thr);
+//	}
+//	private static ArrayList<ICheckProblems> achkprbList = new ArrayList<ICheckProblems>();
+//	public static void setProblemsChecker(ICheckProblems chkprb){
+//		DetailedException.achkprbList.add(chkprb);
+//	}
+//	public static void performBugTrackChecks() {
+//		for(ICheckProblems chkprb:achkprbList){
+//			chkprb.performChecks(getExitErrorMessage(), getExitRequestCause());
+//		}
+//	}
 
 	private static String prepareExceptionReport(String strMessage, Object... aobj){
 		if(JavaLangI.i().isRecursiveLoopOnMethod("<init>",DetailedException.class)){
@@ -223,16 +229,13 @@ public class DetailedException extends NullPointerException{
 	@Deprecated
 	@Override
 	public synchronized Throwable initCause(Throwable cause) {
-		throw new DetailedException("do not use, just to avoid ignoring the more useful ones");
+		System.err.println("WARNING: "+DetailedException.class.getSimpleName()+": there are more useful methods...");
+		return super.initCause(cause);
 	}
 	public static String getExitErrorMessage() {
 		return strErrorMessage;
 	}
 
-	public static void performBugTrackChecks() {
-		chkprb.performChecks(getExitErrorMessage(), getExitRequestCause());
-	}
-	
 	public static <T> T throwIfNull(T obj, Object... aobj){
 		if(obj==null)throw new DetailedException("is null",obj,aobj);
 		return obj;

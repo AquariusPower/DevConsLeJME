@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import com.github.devconslejme.misc.DetailedException;
 
@@ -81,10 +82,11 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 	private int	lWaitCount;
 	private boolean	bAllowCfgOutOfMainMethod = false;
 	private boolean bCreateLockOutputOnce=true;
-	private Throwable	twbExitCause;
+	private Throwable	twbExitErrorCause;
 	private String	strExitErrorMessage;
 	private Object	app;
 	private File	flAppStorageBaseFolder;
+	private ArrayList<CallChkProblemsAbs>	acallCheckProblemsList = new ArrayList<CallChkProblemsAbs>();
 	
 	public SingleAppInstance() {
 //		if(instance!=null)throw new DetailedException("already instanced");
@@ -150,7 +152,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 			}
 			
 			if(bDelete){
-				outputTD("Cleaning old lock: "+fl.getName());
+				msgOutputTD("Cleaning old lock: "+fl.getName());
 				fl.delete();
 			}
 		}
@@ -231,10 +233,10 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 		}
 		
 		if(bExitApplicationTD){
-			outputTD(strReport);
+			msgOutputTD(strReport);
 		}else{
 			if(iSimultaneousLocksCount>0){
-				outputTD(strReport+"This instance will continue running.");
+				msgOutputTD(strReport+"This instance will continue running.");
 				clearOldLocksTD();
 			}
 		}
@@ -260,7 +262,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 				try {
 					boolean bWasDeleted=false;
 					if(!flSelfLock.exists()){
-						outputTD("WARNING!!! Lock was deleted, recreating: "+flSelfLock.getName());
+						msgOutputTD("WARNING!!! Lock was deleted, recreating: "+flSelfLock.getName());
 						bWasDeleted=true;
 					}
 					
@@ -273,7 +275,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 					}
 					
 					if(checkExitTD()){
-						outputTD("Other "+strExitReasonOtherInstance+" instance is running, exiting this...");
+						msgOutputTD("Other "+strExitReasonOtherInstance+" instance is running, exiting this...");
 						cleanup();
 //						flSelfLock.delete();
 						break;
@@ -303,25 +305,67 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 			long lDelayMilis = System.currentTimeMillis()-lStartMilis;
 			
 			if(threadMain!=null && !threadMain.isAlive()){
-				outputTD("Main thread ended.");
+				msgOutputTD("Main thread ended.");
 			}
 			
-			outputTD("Checked times: "+lCheckCountsTD);
-			outputTD("Checked total delay (milis): "+lCheckTotalDelay);
-			outputTD("Lasted for "+String.format("%.3f", lDelayMilis/1000f)+"s");
-			if(twbExitCause!=null){
+			msgOutputTD("Checked times: "+lCheckCountsTD);
+			msgOutputTD("Checked total delay (milis): "+lCheckTotalDelay);
+			msgOutputTD("Lasted for "+String.format("%.3f", lDelayMilis/1000f)+"s");
+			if(twbExitErrorCause!=null){
 				/**
 				 * this is good to repeat the exception message to the end of the log
 				 */
-				outputTD("Exit because of exception:");
-				outputTD("ErrorMessage:"+strExitErrorMessage);
-				performBugTrackChecks();
-				twbExitCause.printStackTrace();
+				msgOutputTD("Exit because of exception:");
+				msgOutputTD("ErrorMessage:"+strExitErrorMessage);
+				runCheckProblems();
+				twbExitErrorCause.printStackTrace();
 			}
 			
 			System.exit(0);
 		}
 
+	}
+	
+	/**
+	 * 
+	 * @param call must return true if problems are found
+	 * @return
+	 */
+	public SingleAppInstance addCheckProblemsCall(CallChkProblemsAbs call) {
+		this.acallCheckProblemsList.add(call);
+		return this;
+	}
+	
+	public static abstract class CallChkProblemsAbs implements Callable<Integer>{
+		private String	strExitErrorMessage;
+		private Throwable	twbExitErrorCause;
+
+		public void setError(String strExitErrorMessage, Throwable twbExitErrorCause){
+			this.strExitErrorMessage = strExitErrorMessage;
+			this.twbExitErrorCause = twbExitErrorCause;
+		}
+
+		public String getExitErrorMessage() {
+			return strExitErrorMessage;
+		}
+
+		public Throwable getExitErrorCause() {
+			return twbExitErrorCause;
+		}
+	}
+	
+	private void runCheckProblems(){
+		int i=0;
+		for(CallChkProblemsAbs call:acallCheckProblemsList){
+			try {
+				call.setError(strExitErrorMessage,twbExitErrorCause);
+				i+=call.call();
+			} catch (Exception e) {
+				e.printStackTrace();
+				i++;
+			}
+		}
+		msgOutputTD("Problems found: "+i);
 	}
 	
 	private Long getCreationTimeOfTD(File fl){ //LINE 1
@@ -366,7 +410,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 				attrSelfLock = fileReadAttributes(flSelfLock);
 				
 				if(bCreateLockOutputOnce){
-					outputTD("Created lock: "+flSelfLock.getName()+" "+getSelfMode(true));
+					msgOutputTD("Created lock: "+flSelfLock.getName()+" "+getSelfMode(true));
 					bCreateLockOutputOnce=false;
 				}
 				
@@ -427,7 +471,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 	
 		this.bAllowCfgOutOfMainMethod=bAllowCfgOutOfMainMethod;
 		if(!bAllowCfgOutOfMainMethod){
-			outputTD("DEVELOPER: if too much resources are being allocated, try the 'configuration at main()' option.");
+			msgOutputTD("DEVELOPER: if too much resources are being allocated, try the 'configuration at main()' option.");
 		}
 		
 		lSelfLockCreationTimeMilis = System.currentTimeMillis();
@@ -456,7 +500,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 		};
 		
 		if(bDebugIDE){
-			outputTD("This instance is in DEBUG mode. ");
+			msgOutputTD("This instance is in DEBUG mode. ");
 		}
 		
 		/**
@@ -487,7 +531,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 		}
 		
 		if(!bIsFromMainMethod){
-			outputTD(
+			msgOutputTD(
 				"The flow that reaches this method must be called at 'main()'. " 
 				+"This must be called before the main window shows up, what will allocate resources."
 				+"Alternatively, skip it by allowing configuration out of 'main()' method."
@@ -528,10 +572,10 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		outputTD("Waited times: "+lWaitCount);
+		msgOutputTD("Waited times: "+lWaitCount);
 	}
 	
-	private void outputTD(String str){
+	private void msgOutputTD(String str){
 		System.err.println(""
 			+"["+SingleAppInstance.class.getSimpleName()+"]"
 			+"["+new SimpleDateFormat("HH:mm:ss.SSS").format(Calendar.getInstance().getTime())+"]"
@@ -572,26 +616,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 
 	public void setExitRequestCause(String strErrMsg, Throwable t) {
 		this.strExitErrorMessage=strErrMsg;
-		this.twbExitCause=t;
+		this.twbExitErrorCause=t;
 	}
 	
-	public static interface ICheckProblems {
-		/**
-		 * Both params can be verified by checkers for matching clues to track and pin point problems
-		 * that are not made 100% clear by some exceptions...
-		 * @param strMessage 
-		 * @param thr 
-		 * @return
-		 */
-		Object performChecks(String strMessage, Throwable thr);
-	}
-	private static ArrayList<ICheckProblems> achkprb = new ArrayList<ICheckProblems>();
-	public static void addProblemsChecker(ICheckProblems chkprb){
-		achkprb.add(chkprb);
-	}
-	private void performBugTrackChecks() {
-		for(ICheckProblems chkprb:achkprb){
-			chkprb.performChecks(strExitErrorMessage, twbExitCause);
-		}
-	}
 }
