@@ -18,6 +18,7 @@ Console-*
 *.bkp
 *.old
 /bin/
+/javadoc/
 /.tmp/
 /.jme3
 output.graphml

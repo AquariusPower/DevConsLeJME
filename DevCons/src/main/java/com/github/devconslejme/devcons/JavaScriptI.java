@@ -303,7 +303,7 @@ public class JavaScriptI implements IGlobalAddListener {
 //			strURI+="./";
 //			strURI+=objBind.getClass().getPackage().getName().replace(".","/");
 			if(objBind!=null){
-				strURI+="doc/";
+				strURI+="javadoc/";
 				strURI+=objBind.getClass().getName().replace(".","/");
 				strURI+=".html";
 				uri = new File(strURI).toURI();

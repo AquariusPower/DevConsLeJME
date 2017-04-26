@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="javadoc">
+    <target name="javadoc">
+        <javadoc 
+        access="public" 
+        author="true" 
+        classpath="../LIBRARIES/lib.jme310stable/gluegen-rt-main.jar:../LIBRARIES/lib.jme310stable/eventbus.jar:../LIBRARIES/lib.lemur-1.10.1/slf4j-log4j12-1.7.5.jar:../LIBRARIES/lib.lemur-1.10.1/lemur-proto-1.9.1.jar:../LIBRARIES/lib.jme310stable/gluegen-rt.jar:../LIBRARIES/lib.lemur-1.10.1/slf4j-api-1.7.5.jar:../LIBRARIES/lib.jme310stable/gluegen-rt-natives-linux-armv6hf.jar:../LIBRARIES/lib.jme310stable/lwjgl-platform-natives-linux.jar:../LIBRARIES/lib.jme310stable/jme3-bullet.jar:../LIBRARIES/lib.jme310stable/denseC64.jar:../LIBRARIES/lib.jme310stable/jme3-plugins.jar:../LIBRARIES/lib.lemur-1.10.1/log4j-1.2.12.jar:../LIBRARIES/lib.jme310stable/core.jar:../LIBRARIES/lib.jme310stable/jme3-effects.jar:../LIBRARIES/lib.jme310stable/xpp3.jar:../LIBRARIES/lib.guava/guava-21.0.jar:../LIBRARIES/lib.jme310stable/jme3-testdata.jar:../LIBRARIES/lib.fast-classpath-scanner/fast-classpath-scanner-2.0.18.jar:../LIBRARIES/lib.jme310stable/gluegen-rt-natives-linux-i586.jar:../LIBRARIES/lib.jme310stable/simple.jar:../LIBRARIES/lib.lemur-1.10.1/lemur-1.10.1.jar:../LIBRARIES/lib.jme310stable/jme3-jogl.jar:../LIBRARIES/lib.jme310stable/jsr305.jar:../LIBRARIES/lib.ZayES-1.2.1/zay-es-1.2.1.jar:../LIBRARIES/lib.jme310stable/jinput.jar:../LIBRARIES/lib.jme310stable/jme3-bullet-native.jar:../LIBRARIES/lib.jme310stable/jutils.jar:../LIBRARIES/lib.jme310stable/vecmath.jar:../LIBRARIES/lib.jme310stable/jme3-terrain.jar:../LIBRARIES/lib.jme310stable/jglfont-core.jar:../LIBRARIES/lib.jme310stable/jme3-jogg.jar:../LIBRARIES/lib.jme310stable/gluegen-rt-natives-linux-armv6.jar:../LIBRARIES/lib.jme310stable/j-ogg-all.jar:../LIBRARIES/lib.jme310stable/lwjgl.jar:../LIBRARIES/lib.lemur-1.10.1/groovy-all-2.1.9.jar:../LIBRARIES/lib.jme310stable/dense64.jar:../LIBRARIES/lib.jme310stable/jme3-desktop.jar:../LIBRARIES/lib.jme310stable/jme3-jbullet.jar:../LIBRARIES/lib.jme310stable/jme3-networking.jar:../LIBRARIES/lib.jme310stable/jme3-blender.jar:../LIBRARIES/lib.ZayES-1.2.1/zay-es-net-1.2.1.jar:../LIBRARIES/lib.jme310stable/gluegen-rt-natives-linux-amd64.jar:../LIBRARIES/lib.jme310stable/jinput-platform-natives-linux.jar:../LIBRARIES/lib.jme310stable/jme3-core.jar:../LIBRARIES/lib.jme310stable/jme3-lwjgl.jar" 
+        destdir="javadoc" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" 
+        notree="false" 
+        packagenames="com.github.devconslejme.debug,com.github.devconslejme.misc,com.github.devconslejme.tests,com.github.devconslejme.devcons,com.github.devconslejme.gendiag,com.github.devconslejme.misc.jme,com.github.devconslejme.es,com.github.devconslejme.misc.lemur,com.github.devconslejme.extras,com.github.devconslejme.tests.temp" 
+        source="1.8" 
+        sourcepath="Tests/src/main/java:Misc/src/main/java:GenericDialog/src/main/java:Debug/src/main/java:DevCons/src/main/java:Extras/src/main/java:DevCons/src/resources" 
+        splitindex="true" use="true" version="true"/>
+    </target>
+</project>
