@@ -178,7 +178,7 @@ public class DetailedException extends NullPointerException{
 	}
 
 	public static void assertIsFalse(String strDescWhat, boolean b, Object... aobjMoreObjectsForDebugInfo){
-		if(!b){
+		if(b){
 			throw new DetailedException("ALREADY "+strDescWhat+"!", aobjMoreObjectsForDebugInfo);
 		}
 	}
