@@ -83,7 +83,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 	private boolean	bAllowCfgOutOfMainMethod = false;
 	private boolean bCreateLockOutputOnce=true;
 	private Throwable	twbExitErrorCause;
-	private String	strExitErrorMessage;
+//	private String	strExitErrorMessage;
 	private Object	app;
 	private File	flAppStorageBaseFolder;
 	private ArrayList<CallChkProblemsAbs>	acallCheckProblemsList = new ArrayList<CallChkProblemsAbs>();
@@ -316,7 +316,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 				 * this is good to repeat the exception message to the end of the log
 				 */
 				msgOutputTD("Exit because of exception:");
-				msgOutputTD("ErrorMessage:"+strExitErrorMessage);
+//				msgOutputTD("ErrorMessage:"+twbExitErrorCause.getMessage());
 				runCheckProblems();
 				twbExitErrorCause.printStackTrace();
 			}
@@ -337,17 +337,17 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 	}
 	
 	public static abstract class CallChkProblemsAbs implements Callable<Integer>{
-		private String	strExitErrorMessage;
+//		private String	strExitErrorMessage;
 		private Throwable	twbExitErrorCause;
 
-		public void setError(String strExitErrorMessage, Throwable twbExitErrorCause){
-			this.strExitErrorMessage = strExitErrorMessage;
+		public void setError(Throwable twbExitErrorCause){
+//			this.strExitErrorMessage = strExitErrorMessage;
 			this.twbExitErrorCause = twbExitErrorCause;
 		}
 
-		public String getExitErrorMessage() {
-			return strExitErrorMessage;
-		}
+//		public String getExitErrorMessage() {
+//			return strExitErrorMessage;
+//		}
 
 		public Throwable getExitErrorCause() {
 			return twbExitErrorCause;
@@ -358,7 +358,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 		int i=0;
 		for(CallChkProblemsAbs call:acallCheckProblemsList){
 			try {
-				call.setError(strExitErrorMessage,twbExitErrorCause);
+				call.setError(twbExitErrorCause);
 				i+=call.call();
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -614,8 +614,8 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 		return astr;
 	}
 
-	public void setExitRequestCause(String strErrMsg, Throwable t) {
-		this.strExitErrorMessage=strErrMsg;
+	public void setExitRequestCause(Throwable t) {
+//		this.strExitErrorMessage=strErrMsg;
 		this.twbExitErrorCause=t;
 	}
 	

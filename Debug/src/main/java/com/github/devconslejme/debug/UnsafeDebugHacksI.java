@@ -34,6 +34,7 @@ import java.lang.reflect.Method;
 import org.lwjgl.opengl.XRandR;
 import org.lwjgl.opengl.XRandR.Screen;
 
+import com.github.devconslejme.misc.DetailedException.IHandleExceptions;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 
@@ -56,10 +57,6 @@ public class UnsafeDebugHacksI {
 	private IHandleExceptions	ihe;
 	private boolean	bConfigured;
 	
-	public static interface IHandleExceptions{
-		void handleExceptionThreaded(Exception e);
-	}
-	
 	public static class SimpleHandleExceptions implements IHandleExceptions{
 		@Override
 		public void handleExceptionThreaded(Exception e) {
@@ -71,7 +68,7 @@ public class UnsafeDebugHacksI {
 	 * 
 	 * @param ihe can be null
 	 */
-	public void configure(IHandleExceptions ihe){
+	public void setHandleExceptions(IHandleExceptions ihe){
 		if(bConfigured)throw new NullPointerException("already configured."); // KEEP ON TOP
 		
 		this.ihe=ihe!=null?ihe:new SimpleHandleExceptions();

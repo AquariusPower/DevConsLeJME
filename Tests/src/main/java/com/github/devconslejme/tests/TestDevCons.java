@@ -28,6 +28,7 @@
 package com.github.devconslejme.tests;
 
 import com.github.devconslejme.debug.DebugTrackProblemsJME;
+import com.github.devconslejme.debug.UnsafeDebugHacksI;
 import com.github.devconslejme.extras.DynamicFPSLimiter;
 import com.github.devconslejme.extras.OSCmd;
 import com.github.devconslejme.extras.SingleAppInstance;
@@ -68,19 +69,24 @@ public class TestDevCons extends SimpleApplication{
 	public void simpleInitApp() {
 		com.github.devconslejme.devcons.PkgCfgI.i().configure(this,getGuiNode());
 		
-		/*** optionals below ***/
-		CheckProblemsI.i().addProblemsChecker(DebugTrackProblemsJME.i());
-		
+		// below are not required
+		initOptionalExtras();
+		initOptionalOtherStuff();
+	}
+	
+	private void initOptionalExtras() {
+		//// SingleAppInstance
 		GlobalManagerI.i().get(SingleAppInstance.class).configureRequiredAtApplicationInitialization(null);
 		GlobalManagerI.i().get(SingleAppInstance.class).addCheckProblemsCall(
 			new CallChkProblemsAbs(){
 				@Override
 				public Integer call() throws Exception {
-					return CheckProblemsI.i().checkProblems(getExitErrorMessage(),getExitErrorCause());
+					return CheckProblemsI.i().checkProblems(getExitErrorCause());
 				}
 			}
 		);
 		
+		//// DynamicFPSLimiter
 		getStateManager().attach(new AbstractAppState(){
 			@Override
 			public void update(float tpf) {
@@ -88,18 +94,29 @@ public class TestDevCons extends SimpleApplication{
 				GlobalManagerI.i().get(DynamicFPSLimiter.class).update(tpf);
 			}
 		});
+	}
+
+	private void initOptionalOtherStuff() {
+		//// Debug Track Problems
+		DebugTrackProblemsJME.i().configure(getGuiNode(), getRootNode());
+		CheckProblemsI.i().addProblemsChecker(DebugTrackProblemsJME.i());
 		
-		// Linux only: easy workaround to make strict focus policy painless
+		//// Workarounds
+		// Linux only: raise application window as easy workaround to make strict focus policy painless
 		GlobalManagerI.i().get(OSCmd.class).runOSCommand(
 			"linux 'xdotool windowactivate $(xdotool search --name \"^"+settings.getTitle()+"$\")'");
+		
+		//// Unsafe Hacks
+		UnsafeDebugHacksI.i().setAllowHacks(true);
+		UnsafeDebugHacksI.i().hackXRandRpreventResolutionRestore();
 	}
-	
+
 	/**
 	 * this is called for uncaugth exceptions! from {@link LwjglAbstractDisplay}
 	 */
 	@Override
 	public void handleError(String errMsg, Throwable t) {
-		GlobalManagerI.i().get(SingleAppInstance.class).setExitRequestCause(errMsg,t);
-		super.handleError(errMsg, t);
+		GlobalManagerI.i().get(SingleAppInstance.class).setExitRequestCause(t);
+//		super.handleError(errMsg, t);
 	}
 }

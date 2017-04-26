@@ -27,6 +27,7 @@
 
 package com.github.devconslejme.misc.lemur;
 
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.Application;
 import com.jme3.scene.Node;
@@ -40,7 +41,10 @@ import com.simsilica.lemur.style.BaseStyles;
 public class PkgCfgI {
 	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
+	private boolean	bConfigured;
+	
 	public void configure(Application app, Node nodeParent){
+		DetailedException.assertIsFalse("configured", bConfigured, this);
 		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app,nodeParent);
 		
 		// lermur inits
@@ -51,5 +55,8 @@ public class PkgCfgI {
 		// after lemur inits
 		PopupHintHelpListenerI.i().configure(nodeParent);
 		DragParentestPanelListenerI.i().configure();
-}
+		
+		bConfigured=true;
+	}
+	
 }

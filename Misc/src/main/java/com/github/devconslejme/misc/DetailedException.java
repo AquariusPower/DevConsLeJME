@@ -27,8 +27,6 @@
 
 package com.github.devconslejme.misc;
 
-import groovy.lang.DeprecationException;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -47,13 +45,17 @@ public class DetailedException extends NullPointerException{
 	private static final long	serialVersionUID	= -2021594801806561912L;
 	
 	private static Throwable	exRequestExit;
-	private static IUserInputDetector	userInputDetector;
+//	private static IUserInputDetector	userInputDetector;
 	private static String	strErrorMessage;
 	private static String strHeader = "["+DetailedException.class.getSimpleName()+"]";
 
-	public interface IUserInputDetector {
-		boolean isConsoleCommandRunningFromDirectUserInput();
+	public static interface IHandleExceptions{
+		void handleExceptionThreaded(Exception e);
 	}
+	
+//	public interface IUserInputDetector {
+//		boolean isConsoleCommandRunningFromDirectUserInput();
+//	}
 	
 //	public static interface ICheckProblems {
 //		Object performChecks(String strMessage, Throwable thr);
@@ -94,7 +96,7 @@ public class DetailedException extends NullPointerException{
 		
 		this.strMessageKey=strMessage;
 		
-		if(bExitApplication && (userInputDetector!=null && !userInputDetector.isConsoleCommandRunningFromDirectUserInput())){
+		if(bExitApplication){// && (userInputDetector!=null && !userInputDetector.isConsoleCommandRunningFromDirectUserInput())){
 			DetailedException.exRequestExit = this;
 		}
 	}
@@ -109,9 +111,9 @@ public class DetailedException extends NullPointerException{
 		setCauseAndReturnSelf(ex);
 	}
 
-	public static void setUserInputDetector(IUserInputDetector u){
-		userInputDetector = u;
-	}
+//	public static void setUserInputDetector(IUserInputDetector u){
+//		userInputDetector = u;
+//	}
 
 	public static boolean isExitRequested(){
 		return exRequestExit!=null;
@@ -175,6 +177,12 @@ public class DetailedException extends NullPointerException{
 		}
 	}
 
+	public static void assertIsFalse(String strDescWhat, boolean b, Object... aobjMoreObjectsForDebugInfo){
+		if(!b){
+			throw new DetailedException("ALREADY "+strDescWhat+"!", aobjMoreObjectsForDebugInfo);
+		}
+	}
+	
 	public static void assertIsTrue(String strDescWhat, boolean b, Object... aobjMoreObjectsForDebugInfo){
 		if(!b){
 			throw new DetailedException("NOT "+strDescWhat+"!", aobjMoreObjectsForDebugInfo);

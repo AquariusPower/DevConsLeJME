@@ -34,7 +34,11 @@ package com.github.devconslejme.misc;
 public class PkgCfgI {
 	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
+	private boolean	bConfigured;
 	public void configure(){
+		DetailedException.assertIsFalse("configured", bConfigured, this);
 		MainThreadI.i().configure();
+		
+		bConfigured=true;
 	}
 }

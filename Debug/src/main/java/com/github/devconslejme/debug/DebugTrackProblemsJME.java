@@ -27,13 +27,21 @@
 package com.github.devconslejme.debug;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.github.devconslejme.misc.CheckProblemsI.ICheckProblems;
+import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.MessagesI;
+import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
+import com.jme3.math.Vector3f;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.shape.Line;
+import com.jme3.scene.shape.Sphere;
 
 /**
  * 
@@ -43,40 +51,36 @@ import com.jme3.scene.Spatial;
 public class DebugTrackProblemsJME implements ICheckProblems{
 	public static DebugTrackProblemsJME i(){return GlobalManagerI.i().get(DebugTrackProblemsJME.class);}
 
-	private ArrayList<Node>	anode = new ArrayList<Node>();
+	private ArrayList<Node>	anodeList = new ArrayList<Node>();
 	
 	@Override
-	public int checkProblems(String strMsg, Throwable thr){
-		return checkForSpatialsImproperlyModified(strMsg, thr, true).size();
+	public int checkProblems(Throwable thr){
+		return checkForSpatialsImproperlyModified(thr, true).size();
 	}
 	
-	public void addNode(Node node){
-		anode.add(node);
+	public void configure(Node... anode){
+		this.anodeList.addAll(Arrays.asList(anode));
 	}
 	
-	private ArrayList<Spatial> checkForSpatialsImproperlyModified(String strMsg, Throwable thr, boolean bDumpMessage){
-		if(strMsg!=null){
-			if(!strMsg.contains("Make sure you do not modify the scene from another thread!"))return null;
-		}
-		
+	private ArrayList<Spatial> checkForSpatialsImproperlyModified(Throwable thr, boolean bDumpMessage){
 		ArrayList<Spatial> asptList = new ArrayList<Spatial>();
-		for(Node node:anode){
-			asptList.addAll(checkForSpatialsImproperlyModified(node));
-		}
-//		ArrayList<Spatial> asptList = checkForSpatialsImproperlyModified(GlobalRootNodeI.i());
-//		asptList.addAll(checkForSpatialsImproperlyModified(GlobalGUINodeI.i()));
 		
-		if(bDumpMessage){
-			if(asptList.size()>0){
-				String strSpatialNames="";
+		if(thr.getMessage().contains("Make sure you do not modify the scene from another thread!")){
+			for(Node node:anodeList){
+				asptList.addAll(checkForSpatialsImproperlyModified(node));
+			}
+	//		ArrayList<Spatial> asptList = checkForSpatialsImproperlyModified(GlobalRootNodeI.i());
+	//		asptList.addAll(checkForSpatialsImproperlyModified(GlobalGUINodeI.i()));
+			
+			if(bDumpMessage && asptList.size()>0){
+				String str="";
 				for(Spatial spt : asptList){
-					strSpatialNames+=","+spt.getName();
+					str+=spt.getName()+"@";
+					for(Node node:MiscJmeI.i().getAllParents(spt)){
+						str+=node.getName()+"/";
+					}
 				}
-				
-				String strMsgOverride = strMsg;
-				strMsgOverride += "Problem spatial name(s):" + strSpatialNames; 
-				
-				System.err.println(strMsgOverride);
+				System.err.println(DebugTrackProblemsJME.class.getSimpleName()+":SpatialProblem:"+str);
 			}
 		}
 		
@@ -89,7 +93,7 @@ public class DebugTrackProblemsJME implements ICheckProblems{
 		return recursiveFindModifications(nodeParentest,null);
 	}
 	
-	public ArrayList<Spatial> recursiveFindModifications(Node node, ArrayList<Spatial> asptIn){
+	private ArrayList<Spatial> recursiveFindModifications(Node node, ArrayList<Spatial> asptIn){
 		if(asptIn==null)asptIn = new ArrayList<Spatial>();
 		for(Spatial sptChild : node.getChildren()){
 			if(UnsafeDebugHacksI.i().getOrSetFieldValueHK(Spatial.class, sptChild, "refreshFlags", int.class, null, false, null)!=0){
@@ -100,6 +104,31 @@ public class DebugTrackProblemsJME implements ICheckProblems{
 			}
 		}
 		return asptIn;
+	}
+	
+	public void testSimulateTheProblem(){
+		Geometry geom = new Geometry();
+		geom.setName(DebugTrackProblemsJME.class.getSimpleName()+":TestModifySpatialProblem");
+//		geom.setMesh(new Line(Vector3f.UNIT_XYZ.mult(100),Vector3f.UNIT_XYZ.mult(100)));
+		geom.setMesh(new Sphere(10,10,100));
+		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(ColorRGBA.White));
+		anodeList.get(0).attachChild(geom);
+		
+		Thread thread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				while(true){
+					geom.setLocalTranslation(FastMath.nextRandomFloat(),0,0);
+					try {
+						Thread.sleep(10);
+						System.out.println(geom.getMesh().getClass()+","+geom.getLocalTranslation());
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+		thread.start();
 	}
 
 }

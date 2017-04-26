@@ -72,6 +72,16 @@ public class MiscJmeI {
 		return parentest;
 	}
 	
+	public ArrayList<Node> getAllParents(Spatial spt) {
+		ArrayList<Node> anode = new ArrayList<>();
+		Node nodeParent = spt.getParent();
+		while(nodeParent!=null){
+			anode.add(nodeParent);
+			nodeParent=nodeParent.getParent();
+		}
+		return anode;
+	}
+	
 	public Vector3f getBoundingBoxSize(Spatial spt){
 		BoundingVolume bv = spt.getWorldBound();
 		if(bv==null)return null; //it is not ready yet
@@ -214,4 +224,5 @@ public class MiscJmeI {
 	public Vector3f toV3f(Vector2f v2f) {
 		return new Vector3f(v2f.x,v2f.y,0);
 	}
+
 }

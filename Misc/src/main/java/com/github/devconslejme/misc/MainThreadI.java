@@ -39,8 +39,11 @@ public class MainThreadI {
 	/**
 	 * call from main thread
 	 */
+	private boolean	bConfigured;
 	public void configure(){
+		DetailedException.assertIsFalse("configured", bConfigured, this);
 		this.threadMain=Thread.currentThread();
+		bConfigured=true;
 	}
 	
 	/**

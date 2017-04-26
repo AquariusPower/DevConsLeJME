@@ -27,6 +27,7 @@
 
 package com.github.devconslejme.misc.jme;
 
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.Application;
 import com.jme3.scene.Node;
@@ -38,7 +39,9 @@ import com.jme3.scene.Node;
 public class PkgCfgI {
 	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
+	private boolean	bConfigured;
 	public void configure(Application app,Node nodeParent){
+		DetailedException.assertIsFalse("configured", bConfigured, this);
 		com.github.devconslejme.misc.PkgCfgI.i().configure();
 		
 		GlobalManagerI.i().put(Application.class, app);  //first!
@@ -46,5 +49,7 @@ public class PkgCfgI {
 		SimulationTimeStateI.i().configure();
 		QueueStateI.i().configure();
 		OrthogonalCursorStateI.i().configure(nodeParent);
+		
+		bConfigured=true;
 	}
 }
