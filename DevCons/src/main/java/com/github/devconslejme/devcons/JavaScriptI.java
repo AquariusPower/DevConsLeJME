@@ -27,18 +27,13 @@
 
 package com.github.devconslejme.devcons;
 
-import java.awt.Desktop;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -55,13 +50,13 @@ import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.GlobalManagerI.IGlobalAddListener;
 import com.github.devconslejme.misc.JavaLangI;
-import com.github.devconslejme.misc.JavaLangI.MethodHelp;
+import com.github.devconslejme.misc.JavadocI;
+import com.github.devconslejme.misc.JavadocI.MethodHelp;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.ReportI;
 import com.google.common.collect.HashBiMap;
-import com.google.common.primitives.Primitives;
 import com.jme3.input.KeyInput;
 
 /**
@@ -192,7 +187,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		MethodHelp mh = retrieveMethodHelp(strFullMethodHelp);
 		if(mh!=null){
 			LoggingI.i().logEntry("Externally browsing javadoc for: "+mh.getFullHelp(false,false));
-			JavaLangI.i().browseJavadoc(mh);
+			JavadocI.i().browseJavadoc(mh);
 		}
 	}
 	
@@ -245,7 +240,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	public ArrayList<MethodHelp> retrieveAllMethodsHelpFor(Object obj){
 		ArrayList<MethodHelp> amh = hmMethodsHelp.get(obj);
 		if(amh==null){
-			amh = JavaLangI.i().prepareAllMethodsHelp(obj);
+			amh = JavadocI.i().prepareAllMethodsHelp(obj);
 			DetailedException.assertIsFalse("empty", amh.size()==0, obj);
 			hmMethodsHelp.put(obj,amh);
 		}

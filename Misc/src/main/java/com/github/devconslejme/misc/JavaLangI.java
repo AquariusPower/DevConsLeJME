@@ -27,32 +27,14 @@
 
 package com.github.devconslejme.misc;
 
-import java.awt.Desktop;
-import java.awt.Dimension;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import javafx.application.Platform;
-import javafx.embed.swing.JFXPanel;
-import javafx.scene.Scene;
-import javafx.scene.web.WebView;
-
-import javax.swing.JFrame;
-
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Primitives;
-import com.jme3.app.Application;
-import com.jme3.system.JmeCanvasContext;
-import com.jme3.system.SystemListener;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -98,7 +80,6 @@ public class JavaLangI {
 			char.class,
 			byte.class,
 	};
-	private String	strJavadocFolder = "javadoc/";
 //	private String[] astrType;
 	
 	public JavaLangI(){
@@ -292,193 +273,7 @@ public class JavaLangI {
 		return astrType;
 	}
 	
-	public static class MethodHelp{
-		/** mainly to help on debug */
-		private String strLastFullHelp;
-		private Method m;
-		private Object obj;
-		private Class clDeclaring;
-		private Class clConcrete;
-		private boolean bStatic;
-		private int iNonUserTypeableParamsCount;
-		
-		public Method getMethod() {
-			return m;
-		}
-		public boolean isStatic() {
-			return bStatic;
-		}
-		public int getNonUserTypeableParamsCount() {
-			return iNonUserTypeableParamsCount;
-		}
-		public Class getDeclaring() {
-			return clDeclaring;
-		}
-		public Class getConcrete() {
-			return clConcrete;
-		}
-		private void setMethod(Method m) {
-			this.m = m;
-		}
-		private void setStatic(boolean bStatic) {
-			this.bStatic = bStatic;
-		}
-		private void setNonUserTypeableParamsCount(int iNonUserTypeableParamsCount) {
-			this.iNonUserTypeableParamsCount = iNonUserTypeableParamsCount;
-		}
-		private void setDeclaring(Class clDeclaring) {
-			this.clDeclaring = clDeclaring;
-		}
-		private void setConcrete(Class clConcrete) {
-			this.clConcrete = clConcrete;
-		}
-		
-		public Class getMethodReturnType(){
-			return m.getReturnType();
-		}
-		
-		public String getFullHelp(boolean bUseSimpleNames, boolean bOverrideWithConcrete){
-			
-			String strFull="";
-			
-			String strConcrete=(bUseSimpleNames?clConcrete.getSimpleName():clConcrete.getName());
-			String strDecl		=(bUseSimpleNames?clDeclaring.getSimpleName():clDeclaring.getName());
-			strFull+=(bOverrideWithConcrete?strConcrete:strDecl)+".";
-			
-			strFull+=getMethodHelp(bUseSimpleNames);
-			
-			/**
-			 * as a comment that is compatible with java scripting 
-			 */
-			strFull+=" //";
-			
-			Class clRet = getMethodReturnType();
-			strFull+=(bUseSimpleNames?clRet.getSimpleName():clRet.getName());
-			
-			if(bStatic)strFull+=" <STATIC>";
-			
-			if(bOverrideWithConcrete)strFull+=" <"+strDecl+">";
-			
-			if(getNonUserTypeableParamsCount()>0)strFull+=" <UserCannotType="+getNonUserTypeableParamsCount()+">";
-			
-			this.strLastFullHelp=strFull.trim();
-			
-			return strLastFullHelp;
-		}
-		
-		public URI getAsJavadocURI(){
-			URI uri=null;
-			try {
-				// the html file
-				String strURI=JavaLangI.i().getJavadocFolder();
-				strURI+=clDeclaring.getName().replace(".","/");
-				strURI+=".html";
-				
-				uri = new File(strURI).toURI();
-				
-				// the method anchor
-				String strParamTypes="";
-				for(Class clPT:m.getParameterTypes()){
-					if(!strParamTypes.isEmpty())strParamTypes+="-"; //in between
-					strParamTypes+=clPT.getName(); //primitives has no dots (only wrappers does)
-				}
-				strURI=uri.toString()+"#"+m.getName()+"-"+strParamTypes+"-";
-				
-				uri=new URI(strURI);
-			} catch (URISyntaxException e) {
-				throw new DetailedException(e,uri);
-			}
-			
-			return uri;
-		}
-		
-		public String getMethodHelp(boolean bUseSimpleParamNames){
-			String strM = "";
-			
-			
-			strM+=m.getName();
-			
-			strM+="(";
-			String strP="";
-			for(Class<?> p:m.getParameterTypes()){
-				if(!strP.isEmpty())strP+=",";
-				strP+=bUseSimpleParamNames?p.getSimpleName():p.getName();
-			}
-			strM+=strP+")";
-			
-			return strM;
-		}
-		private void setObject(Object obj) {
-			this.obj=obj;
-		}
-		public Object getObject(){
-			return obj;
-		}
-		@Override
-		public String toString() {
-			StringBuilder builder = new StringBuilder();
-			builder.append("MethodHelp [strLastFullHelp=");
-			builder.append(strLastFullHelp);
-			builder.append(", m=");
-			builder.append(m);
-			builder.append(", obj=");
-			builder.append(obj);
-			builder.append(", clDeclaring=");
-			builder.append(clDeclaring);
-			builder.append(", clConcrete=");
-			builder.append(clConcrete);
-			builder.append(", bStatic=");
-			builder.append(bStatic);
-			builder.append(", iNonUserTypeableParamsCount=");
-			builder.append(iNonUserTypeableParamsCount);
-			builder.append("]");
-			return builder.toString();
-		}
-		
-		
-	}
 	
-	public ArrayList<MethodHelp> prepareAllMethodsHelp(Object obj){
-		ArrayList<MethodHelp> amh = new ArrayList<MethodHelp>();
-		
-		for(Method m:obj.getClass().getMethods()){
-			MethodHelp mh = new MethodHelp();
-			mh.setConcrete(obj.getClass());
-			mh.setObject(obj);
-			mh.setDeclaring(m.getDeclaringClass());
-			mh.setMethod(m);
-			mh.setStatic(Modifier.isStatic(m.getModifiers()));
-			
-			int i=0;
-			for(Class<?> p:m.getParameterTypes()){
-				if(!isCanUserTypeIt(p))i++;
-			}
-			mh.setNonUserTypeableParamsCount(i);
-			
-			amh.add(mh);
-		}
-		
-		return amh;
-	}
-	
-	public void browseJavadoc(MethodHelp mh) {
-		URI uri = mh.getAsJavadocURI();
-		try {
-			// external web browser 
-			Desktop.getDesktop().browse(uri);
-		} catch (IOException e) {
-			MessagesI.i().warnMsg(this, e.getMessage(), e, mh, uri);
-		}
-	}
-	
-	public String getJavadocFolder() {
-		return strJavadocFolder;
-	}
-
-	public void setJavadocFolder(String strJavadocFolder) {
-		this.strJavadocFolder = strJavadocFolder;
-	}
-
 	public boolean isCanUserTypeIt(Object obj){
 		return isCanUserTypeIt(obj.getClass());
 	}
