@@ -1,0 +1,136 @@
+<?xml version="1.0" ?>
+
+<!--
+	Copyright (c) 2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+	
+	All rights reserved.
+
+	Redistribution and use in source and binary forms, with or without modification, are permitted 
+	provided that the following conditions are met:
+
+	1.	Redistributions of source code must retain the above copyright notice, this list of conditions 
+		and the following disclaimer.
+
+	2.	Redistributions in binary form must reproduce the above copyright notice, this list of conditions 
+		and the following disclaimer in the documentation and/or other materials provided with the distribution.
+	
+	3.	Neither the name of the copyright holder nor the names of its contributors may be used to endorse 
+		or promote products derived from this software without specific prior written permission.
+
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED 
+	WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR 
+	ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+	LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
+	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<!-- Configuration of the Ant build system to generate a Jar file --> 
+<project name="DeveloperConsole" default="CreateAllJars">
+	<tstamp>
+		<format property="DATE_TIME_NOW" pattern="yyyyMMddHHmmss"  locale="en,UK" />
+	</tstamp>
+	
+	<property name="projname" value="DevCons"/>
+	<property name="version" value="1.0.${DATE_TIME_NOW}.alpha"/>
+	<property name="projv" value="${projname}-${version}"/>
+		
+	<target name="CreateAllJars" description="Create all Jar files">
+		<!-- binaries -->
+		
+		<property name="subprojDevCons" value="devcons"/>
+		<jar jarfile="${projv}-${subprojDevCons}.jar" compress="true" >
+			<fileset dir="./" includes="LICENSE" />
+			<!-- <fileset dir="./bin/" includes="**/*.class" /> -->
+			<fileset dir="./bin/com/github/devconslejme/${subprojDevCons}/" />
+		</jar>
+		
+		<property name="subprojDebug" value="debug"/>
+		<jar jarfile="${projv}-${subprojDebug}.jar" compress="true" >
+			<fileset dir="./" includes="LICENSE" />
+			<!-- <fileset dir="./bin/" includes="**/*.class" /> -->
+			<fileset dir="./bin/com/github/devconslejme/${subprojDebug}/" />
+		</jar>
+		
+		<property name="subprojExtras" value="extras"/>
+		<jar jarfile="${projv}-${subprojExtras}.jar" compress="true" >
+			<fileset dir="./" includes="LICENSE" />
+			<!-- <fileset dir="./bin/" includes="**/*.class" /> -->
+			<fileset dir="./bin/com/github/devconslejme/${subprojExtras}/" />
+		</jar>
+		
+		<property name="subprojGenericDialog" value="gendiag"/>
+		<jar jarfile="${projv}-${subprojGenericDialog}.jar" compress="true" >
+			<fileset dir="./" includes="LICENSE" />
+			<!-- <fileset dir="./bin/" includes="**/*.class" /> -->
+			<fileset dir="./bin/com/github/devconslejme/${subprojGenericDialog}/" />
+		</jar>
+		
+		<property name="subprojMisc" value="misc"/>
+		<jar jarfile="${projv}-${subprojMisc}.jar" compress="true" >
+			<fileset dir="./" includes="LICENSE" />
+			<fileset dir="./bin/com/github/devconslejme/${subprojMisc}/" includes="*.class" />
+		</jar>
+		
+		<jar jarfile="${projv}-miscjme.jar" compress="true" >
+			<fileset dir="./" includes="LICENSE" />
+			<fileset dir="./bin/com/github/devconslejme/misc/jme/" includes="*.class" />
+		</jar>
+		
+		<jar jarfile="${projv}-misclemur.jar" compress="true" >
+			<fileset dir="./" includes="LICENSE" />
+			<fileset dir="./bin/com/github/devconslejme/misc/lemur/" includes="*.class" />
+		</jar>
+		
+		<property name="subprojTests" value="tests"/>
+		<jar jarfile="${projv}-${subprojTests}.jar" compress="true" >
+			<fileset dir="./" includes="LICENSE" />
+			<!-- <fileset dir="./bin/" includes="**/*.class" /> -->
+			<fileset dir="./bin/com/github/devconslejme/${subprojTests}/" />
+			<manifest>
+				<attribute name="Main-Class" value="com.github.devconslejme.tests.TestDevCons"/>
+			</manifest>
+		</jar>
+		
+		<jar jarfile="${projv}-sources.jar" compress="true" >
+			<fileset dir="./">
+				<include name=".settings/org.eclipse.jdt.core.prefs" />
+					
+				<include name=".jme3/com/github/devconslejme/**/UserInit.cfg" />
+				
+				<include name="DevCons/src/main/java/**/*.java" />
+				<include name="Debug/src/main/java/**/*.java" />
+				<include name="Extras/src/main/java/**/*.java" />
+				<include name="GenericDialog/src/main/java/**/*.java" />
+				<include name="Misc/src/main/java/**/*.java" />
+				<include name="Tests/src/main/java/**/*.java" />
+				
+				<include name="bin.projectManagement/**" />
+				<include name="doc/**" />
+				
+				<include name="build.xml" />
+				<include name="javadoc.xml" />
+				
+				<include name="LICENSE" />
+				<include name="README.md" />
+				
+				<include name=".project" />
+				<include name=".classpath" />
+				
+				<include name=".gitignore" />
+			</fileset>
+			<!-- <fileset dir="./src/" includes="**/*.java" /> -->
+		</jar>
+		
+		<!-- each assets' package MUST contain only files with compatible licenses!!! --> 
+		<jar jarfile="${projv}-assets.jar" compress="true" >
+			<!-- <fileset dir="./assets/" /> -->
+			<include name="DevCons/src/resources/Interface/**" />
+		</jar>
+		
+	</target>
+	
+</project>
+<!--  -->
