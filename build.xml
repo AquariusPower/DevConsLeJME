@@ -38,63 +38,83 @@
 	<property name="projv" value="${projname}-${version}"/>
 		
 	<target name="CreateAllJars" description="Create all Jar files">
-		<!-- binaries -->
+		
+		<!-- BINARIES -->
 		
 		<property name="subprojDevCons" value="devcons"/>
 		<jar jarfile="${projv}-${subprojDevCons}.jar" compress="true" >
 			<fileset dir="./" includes="LICENSE" />
 			<!-- <fileset dir="./bin/" includes="**/*.class" /> -->
-			<fileset dir="./bin/com/github/devconslejme/${subprojDevCons}/" />
+			<fileset dir="./bin">
+				<include name="com/github/devconslejme/${subprojDevCons}/**/*.class" />
+			</fileset>
 		</jar>
 		
 		<property name="subprojDebug" value="debug"/>
 		<jar jarfile="${projv}-${subprojDebug}.jar" compress="true" >
 			<fileset dir="./" includes="LICENSE" />
 			<!-- <fileset dir="./bin/" includes="**/*.class" /> -->
-			<fileset dir="./bin/com/github/devconslejme/${subprojDebug}/" />
+			<fileset dir="./bin">
+				<include name="com/github/devconslejme/${subprojDebug}/**/*.class" />
+			</fileset>
 		</jar>
 		
 		<property name="subprojExtras" value="extras"/>
 		<jar jarfile="${projv}-${subprojExtras}.jar" compress="true" >
 			<fileset dir="./" includes="LICENSE" />
 			<!-- <fileset dir="./bin/" includes="**/*.class" /> -->
-			<fileset dir="./bin/com/github/devconslejme/${subprojExtras}/" />
+			<fileset dir="./bin">
+				<include name="com/github/devconslejme/${subprojExtras}/**/*.class" />
+			</fileset>
 		</jar>
 		
 		<property name="subprojGenericDialog" value="gendiag"/>
 		<jar jarfile="${projv}-${subprojGenericDialog}.jar" compress="true" >
 			<fileset dir="./" includes="LICENSE" />
 			<!-- <fileset dir="./bin/" includes="**/*.class" /> -->
-			<fileset dir="./bin/com/github/devconslejme/${subprojGenericDialog}/" />
-		</jar>
-		
-		<property name="subprojMisc" value="misc"/>
-		<jar jarfile="${projv}-${subprojMisc}.jar" compress="true" >
-			<fileset dir="./" includes="LICENSE" />
-			<fileset dir="./bin/com/github/devconslejme/${subprojMisc}/" includes="*.class" />
-		</jar>
-		
-		<jar jarfile="${projv}-miscjme.jar" compress="true" >
-			<fileset dir="./" includes="LICENSE" />
-			<fileset dir="./bin/com/github/devconslejme/misc/jme/" includes="*.class" />
-		</jar>
-		
-		<jar jarfile="${projv}-misclemur.jar" compress="true" >
-			<fileset dir="./" includes="LICENSE" />
-			<fileset dir="./bin/com/github/devconslejme/misc/lemur/" includes="*.class" />
+			<fileset dir="./bin">
+				<include name="com/github/devconslejme/${subprojGenericDialog}/**/*.class" />
+			</fileset>
 		</jar>
 		
 		<property name="subprojTests" value="tests"/>
 		<jar jarfile="${projv}-${subprojTests}.jar" compress="true" >
 			<fileset dir="./" includes="LICENSE" />
 			<!-- <fileset dir="./bin/" includes="**/*.class" /> -->
-			<fileset dir="./bin/com/github/devconslejme/${subprojTests}/" />
+			<fileset dir="./bin">
+				<include name="com/github/devconslejme/${subprojTests}/**/*.class" />
+			</fileset>
 			<manifest>
 				<attribute name="Main-Class" value="com.github.devconslejme.tests.TestDevCons"/>
 			</manifest>
 		</jar>
 		
-		<jar jarfile="${projv}-sources.jar" compress="true" >
+		<!-- MISC PACKAGES IS SPECIAL AS EACH SUB-FOLDER IS A NEW PACKAGE -->
+		
+		<jar jarfile="${projv}-misc.jar" compress="true" >
+			<fileset dir="./" includes="LICENSE" />
+			<fileset dir="./bin">
+				<include name="com/github/devconslejme/misc/*.class" />
+			</fileset>
+		</jar>
+		
+		<jar jarfile="${projv}-miscjme.jar" compress="true" >
+			<fileset dir="./" includes="LICENSE" />
+			<fileset dir="./bin">
+				<include name="com/github/devconslejme/misc/jme/*.class" />
+			</fileset>
+		</jar>
+		
+		<jar jarfile="${projv}-misclemur.jar" compress="true" >
+			<fileset dir="./" includes="LICENSE" />
+			<fileset dir="./bin">
+				<include name="com/github/devconslejme/misc/lemur/*.class" />
+			</fileset>
+		</jar>
+		
+		<!-- SOURCES ALL TOGUETHER -->
+		
+		<jar jarfile="${projv}-ALL-sources.jar" compress="true" >
 			<fileset dir="./">
 				<include name=".settings/org.eclipse.jdt.core.prefs" />
 					
@@ -124,10 +144,13 @@
 			<!-- <fileset dir="./src/" includes="**/*.java" /> -->
 		</jar>
 		
-		<!-- each assets' package MUST contain only files with compatible licenses!!! --> 
+		<!-- EACH ASSETS' PACKAGE MUST CONTAIN ONLY FILES WITH COMPATIBLE LICENSES!!! -->
+		
 		<jar jarfile="${projv}-assets.jar" compress="true" >
-			<!-- <fileset dir="./assets/" /> -->
-			<include name="DevCons/src/resources/Interface/**" />
+			<fileset dir="./DevCons/src/resources/">
+				<!-- <fileset dir="./assets/" /> -->
+				<include name="Interface/**" />
+			</fileset>
 		</jar>
 		
 	</target>
