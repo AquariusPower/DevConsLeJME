@@ -28,6 +28,7 @@
 package com.github.devconslejme.misc;
 
 import java.awt.Desktop;
+import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -40,9 +41,18 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.github.devconslejme.devcons.LoggingI;
+import javafx.application.Platform;
+import javafx.embed.swing.JFXPanel;
+import javafx.scene.Scene;
+import javafx.scene.web.WebView;
+
+import javax.swing.JFrame;
+
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Primitives;
+import com.jme3.app.Application;
+import com.jme3.system.JmeCanvasContext;
+import com.jme3.system.SystemListener;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -451,107 +461,15 @@ public class JavaLangI {
 		return amh;
 	}
 	
-//	public ArrayList<String> getMethodsAsHelp(Object obj, boolean bUseSimpleParamTypeName, boolean bOnlyMethodAndParamTypes, boolean bOverrideWithConcreteClassName){
-//		Class cl = obj.getClass();
-//		Method[] am = cl.getMethods();
-//		ArrayList<String> astr=new ArrayList<String>();
-//		for(Method m:am){
-//			String strConcreteClassSName = cl.getSimpleName();
-//			
-//			String strM = "";
-//			String strDeclClassSName=m.getDeclaringClass().getSimpleName();
-//			
-//			if(!bOnlyMethodAndParamTypes){
-//				if(bOverrideWithConcreteClassName){
-//					strM+=strConcreteClassSName+".";
-//				}else{
-//					strM+=strDeclClassSName+".";
-//				}
-//			}
-//			strM+=m.getName();
-//			
-//			strM+="(";
-//			String strP="";
-//			boolean bHasNonUserTypeableParam = false;
-//			for(Class<?> p:m.getParameterTypes()){
-//				if(!isCanUserTypeIt(p))bHasNonUserTypeableParam=true;
-//				if(!strP.isEmpty())strP+=",";
-//				strP+=bUseSimpleParamTypeName?p.getSimpleName():p.getName();
-//			}
-//			strM+=strP+")";
-//			
-//			astr.add(strM);
-//		}
-//		
-//		return astr;
-//	}
-	
 	public void browseJavadoc(MethodHelp mh) {
 		URI uri = mh.getAsJavadocURI();
 		try {
+			// external web browser 
 			Desktop.getDesktop().browse(uri);
 		} catch (IOException e) {
 			MessagesI.i().warnMsg(this, e.getMessage(), e, mh, uri);
 		}
 	}
-	
-//	public void browseJavadoc(String strParams, Class cl) {
-//		int iComment=strParams.indexOf("//");
-//		if(iComment>-1)strParams=strParams.substring(0, iComment);
-//		strParams=strParams.trim();
-//		
-//		String strURI="";
-//		URI uri=null;
-//		try {
-//			String[] astr=strParams.split("[.]");
-//			String strBind=astr[0];
-//			String strTag = null;
-//			if(astr.length>1)strTag=astr[1];
-//			Object objBind = bndJSE.get(strBind);
-////			strURI+="./";
-////			strURI+=objBind.getClass().getPackage().getName().replace(".","/");
-//			if(objBind!=null){
-//				strURI+=strJavadocFolder;
-//				strURI+=objBind.getClass().getName().replace(".","/");
-//				strURI+=".html";
-//				uri = new File(strURI).toURI();
-//				if(strTag!=null){
-//					for(Method m:objBind.getClass().getMethods()){
-//						if(strTag.equals(getFilteredHelpFromMethod(objBind, m, true, true))){ //compare with cleaned param type mode
-//							strTag=getFilteredHelpFromMethod(objBind, m, false, true); //collect the with the full param type mode
-//							break;
-//						}
-//					}
-//					
-//					int iL=strTag.indexOf("(");
-//					String strMethod=strTag.substring(0, iL);
-//					String strParamTypes=strTag.substring(iL+1, strTag.length()-1);
-//					String[] astrPT=strParamTypes.split("[,]");
-//					strParamTypes="";
-//					for(String strPT:astrPT){
-//						if(!strParamTypes.isEmpty())strParamTypes+="-";
-//						if(strPT.contains(".")){
-//							strParamTypes+=Class.forName(strPT).getName();
-//						}else{
-//							strParamTypes+=strPT; //primitives has no dots (wrappers does)
-//						}
-//					}
-////					astr=strTag.split("[(]")[0]
-////					String strMethod=
-////					strTag=strTag.replace("(", "-");
-////					strTag=strTag.replace(")", "-");
-//					strURI=uri.toString()+"#"+strMethod+"-"+strParamTypes+"-";
-//					uri=new URI(strURI);
-//				}
-//			}else{
-//				strURI+=strParams;
-//				uri = new URI(strURI);
-//			}
-//			Desktop.getDesktop().browse(uri);
-//		} catch (IOException|URISyntaxException | ClassNotFoundException e) {
-//			LoggingI.i().logExceptionEntry(e, "URI='"+strURI+"'");//, strURI, uri);
-//		}
-//	}
 	
 	public String getJavadocFolder() {
 		return strJavadocFolder;

@@ -7,7 +7,14 @@
 	<classpathentry kind="src" path="Extras/src/main/java"/>
 	<classpathentry kind="src" path="GenericDialog/src/main/java"/>
 	<classpathentry kind="src" path="DevCons/src/resources"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8">
+		<accessrules>
+			<accessrule kind="discouraged" pattern="javafx/embed/swing/**"/>
+			<accessrule kind="discouraged" pattern="javafx/scene/web/**"/>
+			<accessrule kind="discouraged" pattern="javafx/application/**"/>
+			<accessrule kind="discouraged" pattern="javafx/scene/Scene/**"/>
+		</accessrules>
+	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/jme310stable"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/lemur-1.10.1"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/fast-classpath-scanner"/>
