@@ -190,7 +190,24 @@ public class JavaScriptI implements IGlobalAddListener {
 	
 	private void showJavadoc(String strFullMethodHelp) {
 		MethodHelp mh = retrieveMethodHelp(strFullMethodHelp);
-		if(mh!=null)JavaLangI.i().browseJavadoc(mh);
+		if(mh!=null){
+			LoggingI.i().logEntry("Externally browsing javadoc for: "+mh.getFullHelp(false,false));
+			JavaLangI.i().browseJavadoc(mh);
+		}
+	}
+	
+	private String takeOnlyWhatMatters(String str){
+		str=str.trim();
+		
+		// remove comments
+		int iComment = str.indexOf("//");
+		if(iComment>-1)str=str.substring(0,iComment);
+		
+		return str.trim();
+	}
+	
+	private boolean cmpEqualsOnlyWhatMatters(String strA,String strB){
+		return takeOnlyWhatMatters(strA).equals(takeOnlyWhatMatters(strB));
 	}
 	
 	public MethodHelp retrieveMethodHelp(String strFullMethodHelp){
@@ -214,7 +231,7 @@ public class JavaScriptI implements IGlobalAddListener {
 //		if(i1stDot>-1 && strFullMethodHelp.length()>i1stDot){ //has method anchor
 			for(MethodHelp mh:amh){
 				if(isMethodMatchesFilter(mh)){
-					if(strFullMethodHelp.equals(convertToUserHelp(mh))){
+					if(cmpEqualsOnlyWhatMatters(strFullMethodHelp,convertToUserHelp(mh))){
 						return mh;
 					}
 				}
@@ -224,6 +241,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		LoggingI.i().logWarn("method not found for: "+strFullMethodHelp);
 		return null;
 	}
+	
 	public ArrayList<MethodHelp> retrieveAllMethodsHelpFor(Object obj){
 		ArrayList<MethodHelp> amh = hmMethodsHelp.get(obj);
 		if(amh==null){
@@ -554,7 +572,7 @@ public class JavaScriptI implements IGlobalAddListener {
 				isShowAllPublicMembers() ||
 				(
 					!mh.isStatic() &&
-					mh.getNonUserTypeableParamsCount()>0 &&
+					mh.getNonUserTypeableParamsCount()==0 &&
 					// to skip all "user typeable super class type" methods to avoid "useless" cluttering (like Boolean.class methods)
 					!JavaLangI.i().isCanUserTypeIt(mh.getDeclaring()) && 
 					!mh.getDeclaring().equals(Object.class)
@@ -682,17 +700,19 @@ public class JavaScriptI implements IGlobalAddListener {
 		strInputTilCarat=strInputTilCarat.trim();
 		AutoCompleteResult ar = JavaScriptI.i().showHelp(strInputTilCarat);
 		String strNewInput=ar.getImprovedPart();
-		if( // is to auto guess and complete as a base command?
+		if( // is to auto guess and complete with a base command?
 				!strInputTilCarat.isEmpty() && 
 				!strInputTilCarat.startsWith(strCmdChar) && 
 				!ar.isPartGotImproved() && //ar.getImprovedPart().equals(strInput) && //so if it was not improved
 				!ar.getImprovedPart().contains(".") && //skips an object looking for methods
-				!ar.isImprovedAnExactMatch() && //				ar.getResultList().size()==2
 				!ar.isImprovedAnExactMatch() && 
 				ar.getResultList().size()==1
-		){ //nothing changed
-			ar = JavaScriptI.i().showHelp(strCmdChar+strInputTilCarat);
-			strNewInput = ar.getImprovedPart();
+		){ //if nothing changed, try again as base command
+			AutoCompleteResult arTryAgain = JavaScriptI.i().showHelp(strCmdChar+strInputTilCarat);
+			if(arTryAgain.isPartGotImproved()){
+				strNewInput = arTryAgain.getImprovedPart();
+				ar = arTryAgain;
+			}
 		}
 		
 //		int i = strNewInput.indexOf("//");if(i>-1)strNewInput=strNewInput.substring(0,i).trim()+" "; //remove trailing comments
@@ -702,6 +722,9 @@ public class JavaScriptI implements IGlobalAddListener {
 		DevConsPluginStateI.i().insertAtInputTextCaratPos(
 				strNewInput,
 				iInitialLength);
+		
+		addCmdToHistory(strInputTilCarat);
+		if(ar.isPartGotImproved())addCmdToHistory(strNewInput);
 		
 		DevConsPluginStateI.i().scrollKeepAtBottom();
 	}

@@ -283,6 +283,8 @@ public class JavaLangI {
 	}
 	
 	public static class MethodHelp{
+		/** mainly to help on debug */
+		private String strLastFullHelp;
 		private Method m;
 		private Object obj;
 		private Class clDeclaring;
@@ -326,6 +328,7 @@ public class JavaLangI {
 		}
 		
 		public String getFullHelp(boolean bUseSimpleNames, boolean bOverrideWithConcrete){
+			
 			String strFull="";
 			
 			String strConcrete=(bUseSimpleNames?clConcrete.getSimpleName():clConcrete.getName());
@@ -348,7 +351,9 @@ public class JavaLangI {
 			
 			if(getNonUserTypeableParamsCount()>0)strFull+=" <UserCannotType="+getNonUserTypeableParamsCount()+">";
 			
-			return strFull.trim();
+			this.strLastFullHelp=strFull.trim();
+			
+			return strLastFullHelp;
 		}
 		
 		public URI getAsJavadocURI(){
@@ -402,7 +407,9 @@ public class JavaLangI {
 		@Override
 		public String toString() {
 			StringBuilder builder = new StringBuilder();
-			builder.append("MethodHelp [m=");
+			builder.append("MethodHelp [strLastFullHelp=");
+			builder.append(strLastFullHelp);
+			builder.append(", m=");
 			builder.append(m);
 			builder.append(", obj=");
 			builder.append(obj);
