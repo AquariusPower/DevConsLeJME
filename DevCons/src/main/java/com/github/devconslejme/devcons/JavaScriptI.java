@@ -189,7 +189,8 @@ public class JavaScriptI implements IGlobalAddListener {
 	}
 	
 	private void showJavadoc(String strFullMethodHelp) {
-		JavaLangI.i().browseJavadoc(retrieveMethodHelp(strFullMethodHelp));
+		MethodHelp mh = retrieveMethodHelp(strFullMethodHelp);
+		if(mh!=null)JavaLangI.i().browseJavadoc(mh);
 	}
 	
 	public MethodHelp retrieveMethodHelp(String strFullMethodHelp){
@@ -675,26 +676,32 @@ public class JavaScriptI implements IGlobalAddListener {
 	}
 
 	protected void autoComplete() {
-//		String strInputTilCarat=DevConsPluginStateI.i().getInputLettersBeforeCarat();
-		String strInput= DevConsPluginStateI.i().getInputText();
-		strInput=strInput.trim();
-		AutoCompleteResult ar = JavaScriptI.i().showHelp(strInput);
+		String strInputTilCarat=DevConsPluginStateI.i().getInputTextBeforeCarat(null);
+		int iInitialLength = strInputTilCarat.length();
+//		String strInput= DevConsPluginStateI.i().getInputText();
+		strInputTilCarat=strInputTilCarat.trim();
+		AutoCompleteResult ar = JavaScriptI.i().showHelp(strInputTilCarat);
 		String strNewInput=ar.getImprovedPart();
-		if(
-				!strInput.isEmpty() && 
-				!strInput.startsWith(strCmdChar) && 
+		if( // is to auto guess and complete as a base command?
+				!strInputTilCarat.isEmpty() && 
+				!strInputTilCarat.startsWith(strCmdChar) && 
 				!ar.isPartGotImproved() && //ar.getImprovedPart().equals(strInput) && //so if it was not improved
 				!ar.getImprovedPart().contains(".") && //skips an object looking for methods
 				!ar.isImprovedAnExactMatch() && //				ar.getResultList().size()==2
 				!ar.isImprovedAnExactMatch() && 
 				ar.getResultList().size()==1
 		){ //nothing changed
-			strNewInput = JavaScriptI.i().showHelp(strCmdChar+strInput).getImprovedPart();
+			ar = JavaScriptI.i().showHelp(strCmdChar+strInputTilCarat);
+			strNewInput = ar.getImprovedPart();
 		}
 		
-		int i = strNewInput.indexOf("//");if(i>-1)strNewInput=strNewInput.substring(0,i).trim()+" "; //remove trailing comment
-		DevConsPluginStateI.i().setInputText(strNewInput);
-//		DevConsPluginStateI.i().insertAtInputTextCaratPos(strNewInput.substring(strInputTilCarat.length()));
+//		int i = strNewInput.indexOf("//");if(i>-1)strNewInput=strNewInput.substring(0,i).trim()+" "; //remove trailing comments
+		int i = strNewInput.indexOf("//");if(i>-1)strNewInput=strNewInput.substring(0,i).trim(); //remove trailing comments
+//		DevConsPluginStateI.i().setInputText(strNewInput);
+		if(ar.isImprovedAnExactMatch())strNewInput+=" ";
+		DevConsPluginStateI.i().insertAtInputTextCaratPos(
+				strNewInput,
+				iInitialLength);
 		
 		DevConsPluginStateI.i().scrollKeepAtBottom();
 	}
@@ -703,10 +710,10 @@ public class JavaScriptI implements IGlobalAddListener {
 		// boolean
 		String str=DevConsPluginStateI.i().getInputLettersBeforeCarat();
 		if(Boolean.TRUE.toString().startsWith(str)){ //actually lowercase
-			DevConsPluginStateI.i().insertAtInputTextCaratPos(Boolean.TRUE.toString().substring(str.length()));
+			DevConsPluginStateI.i().insertAtInputTextCaratPos(Boolean.TRUE.toString().substring(str.length()),null);
 		}else
 		if(Boolean.FALSE.toString().startsWith(str)){ //actually lowercase
-			DevConsPluginStateI.i().insertAtInputTextCaratPos(Boolean.FALSE.toString().substring(str.length()));
+			DevConsPluginStateI.i().insertAtInputTextCaratPos(Boolean.FALSE.toString().substring(str.length()),null);
 		}
 	}
 

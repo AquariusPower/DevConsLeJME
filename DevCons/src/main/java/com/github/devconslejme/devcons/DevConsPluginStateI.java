@@ -1101,7 +1101,14 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		return flStorageFolder;
 	}
 
-	public void insertAtInputTextCaratPos(String str) {
+	public void insertAtInputTextCaratPos(String str, Integer iDeleteBeforeIt) {
+		if(iDeleteBeforeIt!=null){
+			for(int i=0;i<iDeleteBeforeIt;i++){
+				tfInput.getDocumentModel().left();
+				tfInput.getDocumentModel().delete();
+			}
+		}
+		
 		tfInput.getDocumentModel().insert(str);
 	}
 	
@@ -1154,16 +1161,29 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	}
 
 	public String getInputLettersBeforeCarat() {
+		return getInputTextBeforeCarat("[a-zA-Z]");
+	}
+	/**
+	 * 
+	 * @param strRegexToMatchEachValidChar can be null
+	 * @return
+	 */
+	public String getInputTextBeforeCarat(String strRegexToMatchEachValidChar) {
 		String str=getInputText();
 		str=str.substring(0,tfInput.getDocumentModel().getCarat());
-		Integer iNotAlpha=0;
-		for(int i=str.length()-1;i>=0;i--){
-			if( !(str.charAt(i)+"").matches("[a-zA-Z]") ){
-				iNotAlpha=i+1;
-				break;
+		
+		if(strRegexToMatchEachValidChar!=null){
+			Integer iNotAlpha=0;
+			for(int i=str.length()-1;i>=0;i--){
+				if( !(str.charAt(i)+"").matches(strRegexToMatchEachValidChar) ){
+					iNotAlpha=i+1;
+					break;
+				}
 			}
+			str=str.substring(iNotAlpha);
 		}
-		return str.substring(iNotAlpha);
+		
+		return str;
 	}
 
 	public void showQueue(){
