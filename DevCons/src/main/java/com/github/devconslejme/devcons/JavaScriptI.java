@@ -55,6 +55,7 @@ import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.GlobalManagerI.IGlobalAddListener;
 import com.github.devconslejme.misc.JavaLangI;
+import com.github.devconslejme.misc.JavaLangI.MethodHelp;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
@@ -84,6 +85,9 @@ public class JavaScriptI implements IGlobalAddListener {
 	private File	flUserInit;
 	private int iNavigateCmdHistoryIndex = 0;
 	private HashBiMap<String,File> hmFileReaderExecJS = HashBiMap.create(); 
+	WriterCapture wrc = new WriterCapture();
+	private String	strCmdChar = "/";
+	private HashMap<Object,ArrayList<MethodHelp>> hmMethodsHelp = new HashMap<Object,ArrayList<MethodHelp>>();
 	
 	enum EJSObjectBind {
 		selfScript,
@@ -111,17 +115,15 @@ public class JavaScriptI implements IGlobalAddListener {
 		private String strInfo = "";
 		
 		public String s(){return toString();}
-		
-		private static ArrayList<String> astr = new ArrayList<String>(); 
-		static{
-			for(EBaseCommand ebc:EBaseCommand.values()){
-				astr.add(strCmdChar+ebc.s()+" // "+ebc.strInfo+" ("+EBaseCommand.class.getSimpleName()+")");
-			}
+	}
+	
+	public String[] getBaseCommandsValuesAsHelp() {
+		String[] astrBaseCommands = new String[EBaseCommand.values().length];
+		int i=0;
+		for(EBaseCommand ebc:EBaseCommand.values()){
+			astrBaseCommands[i++]=(strCmdChar+ebc.s()+" // "+ebc.strInfo+" ("+EBaseCommand.class.getSimpleName()+")");
 		}
-		
-		public static Collection<? extends String> valuesAsHelp() {
-			return astr;
-		}
+		return astrBaseCommands;
 	}
 	
 	public boolean isAndExecBaseCommand(String strCmd){
@@ -186,6 +188,56 @@ public class JavaScriptI implements IGlobalAddListener {
 		return false;
 	}
 	
+	private void showJavadoc(String strFullMethodHelp) {
+		JavaLangI.i().browseJavadoc(retrieveMethodHelp(strFullMethodHelp));
+	}
+	
+	public MethodHelp retrieveMethodHelp(String strFullMethodHelp){
+//		// remove comments
+//		int iComment = strFullMethodHelp.indexOf("//");
+//		if(iComment>-1)strFullMethodHelp=strFullMethodHelp.substring(0,iComment);
+		strFullMethodHelp=strFullMethodHelp.trim();
+		
+		// parts
+		int i1stDot = strFullMethodHelp.indexOf(".");
+		String strBind = i1stDot==-1 ? strFullMethodHelp : strFullMethodHelp.substring(0,i1stDot);
+		Object objJSBind = bndJSE.get(strBind);
+		
+		if(objJSBind==null){
+			LoggingI.i().logExceptionEntry(new DetailedException("invalid bind id",strBind), strFullMethodHelp);
+			return null;
+		}
+		
+		ArrayList<MethodHelp> amh = retrieveAllMethodsHelpFor(objJSBind);
+		if(strFullMethodHelp.contains("(")){ //has method anchor
+//		if(i1stDot>-1 && strFullMethodHelp.length()>i1stDot){ //has method anchor
+			for(MethodHelp mh:amh){
+				if(isMethodMatchesFilter(mh)){
+					if(strFullMethodHelp.equals(convertToUserHelp(mh))){
+						return mh;
+					}
+				}
+			}
+		}
+		
+		LoggingI.i().logWarn("method not found for: "+strFullMethodHelp);
+		return null;
+	}
+	public ArrayList<MethodHelp> retrieveAllMethodsHelpFor(Object obj){
+		ArrayList<MethodHelp> amh = hmMethodsHelp.get(obj);
+		if(amh==null){
+			amh = JavaLangI.i().prepareAllMethodsHelp(obj);
+			DetailedException.assertIsFalse("empty", amh.size()==0, obj);
+			hmMethodsHelp.put(obj,amh);
+		}
+		return amh;
+	}
+	
+	public String convertToUserHelp(MethodHelp mh){
+//		return strCmdChar+EBaseCommand.javadoc+" "+mh.getFullHelp(true, true);
+		return mh.getFullHelp(true, true);
+	}
+	
 	public void showHistory(String strParams) {
 		String strPrev = "";
 		for(String str:astrCmdHistory){
@@ -213,8 +265,6 @@ public class JavaScriptI implements IGlobalAddListener {
 			if(!s.equals("\n"))LoggingI.i().logEntry("SysO: "+s,false,null);
 		}
 	}
-	WriterCapture wrc = new WriterCapture();
-	private static String	strCmdChar = "/";
 	
 	public void configure() {
 		jse  = new ScriptEngineManager().getEngineByMimeType("text/javascript");
@@ -287,64 +337,6 @@ public class JavaScriptI implements IGlobalAddListener {
 		DevConsPluginStateI.i().clearInput();
 	}
 	
-	private void showJavadoc(String strParams) {
-		int iComment=strParams.indexOf("//");
-		if(iComment>-1)strParams=strParams.substring(0, iComment);
-		strParams=strParams.trim();
-		
-		String strURI="";
-		URI uri=null;
-		try {
-			String[] astr=strParams.split("[.]");
-			String strBind=astr[0];
-			String strTag = null;
-			if(astr.length>1)strTag=astr[1];
-			Object objBind = bndJSE.get(strBind);
-//			strURI+="./";
-//			strURI+=objBind.getClass().getPackage().getName().replace(".","/");
-			if(objBind!=null){
-				strURI+="javadoc/";
-				strURI+=objBind.getClass().getName().replace(".","/");
-				strURI+=".html";
-				uri = new File(strURI).toURI();
-				if(strTag!=null){
-					for(Method m:objBind.getClass().getMethods()){
-						if(strTag.equals(getFilteredHelpFromMethod(objBind, m, true, true))){ //compare with cleaned param type mode
-							strTag=getFilteredHelpFromMethod(objBind, m, false, true); //collect the with the full param type mode
-							break;
-						}
-					}
-					
-					int iL=strTag.indexOf("(");
-					String strMethod=strTag.substring(0, iL);
-					String strParamTypes=strTag.substring(iL+1, strTag.length()-1);
-					String[] astrPT=strParamTypes.split("[,]");
-					strParamTypes="";
-					for(String strPT:astrPT){
-						if(!strParamTypes.isEmpty())strParamTypes+="-";
-						if(strPT.contains(".")){
-							strParamTypes+=Class.forName(strPT).getName();
-						}else{
-							strParamTypes+=strPT; //primitives has no dots (wrappers does)
-						}
-					}
-//					astr=strTag.split("[(]")[0]
-//					String strMethod=
-//					strTag=strTag.replace("(", "-");
-//					strTag=strTag.replace(")", "-");
-					strURI=uri.toString()+"#"+strMethod+"-"+strParamTypes+"-";
-					uri=new URI(strURI);
-				}
-			}else{
-				strURI+=strParams;
-				uri = new URI(strURI);
-			}
-			Desktop.getDesktop().browse(uri);
-		} catch (IOException|URISyntaxException | ClassNotFoundException e) {
-			LoggingI.i().logExceptionEntry(e, "URI='"+strURI+"'");//, strURI, uri);
-		}
-	}
-	
 	/**
 	 * Initially, a short help will be shown with {@link EBaseCommand} and JS bindings.
 	 * Only if a full JS class bind id is the filter, its methods will be shown. 
@@ -355,7 +347,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		LoggingI.i().logMarker("Help for: "+strFilter);
 		
 		ArrayList<String> astr = new ArrayList<String>();
-		astr.addAll(EBaseCommand.valuesAsHelp());
+		astr.addAll(Arrays.asList(getBaseCommandsValuesAsHelp()));
 		ArrayList<String> astrBnd = new ArrayList<String>(bndJSE.keySet());
 		Collections.sort(astrBnd);
 		astr.addAll(astrBnd);
@@ -509,7 +501,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		}else{
 //				LoggingI.i().logSubEntry("ReturnType: "+objJSLastEval.toString()+" ("+objJSLastEval.getClass()+")");
 			LoggingI.i().logSubEntry("Return type: "+obj.getClass());
-			if(isCanUserTypeIt(obj)){ // simple types result in simple and readable strings
+			if(JavaLangI.i().isCanUserTypeIt(obj)){ // simple types result in simple and readable strings
 				LoggingI.i().logSubEntry("Return value = '"+obj+"'");
 			}else
 			if(!isAndShowArray(obj)){
@@ -529,13 +521,10 @@ public class JavaScriptI implements IGlobalAddListener {
 	
 	private void showMethods(Object obj){
 		LoggingI.i().logSubEntry("Accessible Methods:");
-		
-//		amLastReturnValueMethods.clear();
-//		amLastReturnValueMethods.addAll(getAllMethodsFrom(obj));
-		
-		for(Method m:obj.getClass().getMethods()){
-			String str = getFilteredHelpFromMethod(obj, m, true, false);
-			if(str!=null)LoggingI.i().logSubEntry(str);
+		for(MethodHelp mh:retrieveAllMethodsHelpFor(obj)){
+			if(isMethodMatchesFilter(mh)){
+				LoggingI.i().logSubEntry(convertToUserHelp(mh));
+			}
 		}
 	}
 	
@@ -543,10 +532,9 @@ public class JavaScriptI implements IGlobalAddListener {
 		ArrayList<String> astr = new ArrayList<String>();
 		for(Entry<String, Object> entry:bndJSE.entrySet()){
 			Object objJSBindValue = entry.getValue();
-			for(Method m:entry.getValue().getClass().getMethods()){
-				String str=getFilteredHelpFromMethod(objJSBindValue,m,true, false);
-				if(str!=null){
-					astr.add(str);
+			for(MethodHelp mh:retrieveAllMethodsHelpFor(objJSBindValue)){
+				if(isMethodMatchesFilter(mh)){
+					astr.add(convertToUserHelp(mh));
 				}
 			}
 		}
@@ -560,52 +548,21 @@ public class JavaScriptI implements IGlobalAddListener {
 	 * @param m
 	 * @return null if did not match filters
 	 */
-	public String getFilteredHelpFromMethod(Object obj, Method m, boolean bUseSimpleParamTypeName, boolean bOnlyMethodAndParamTypes){
-		String strConcreteClassSName = obj.getClass().getSimpleName();
-		
-		String strM = "";
-		String strDeclClassSName=m.getDeclaringClass().getSimpleName();
-		
-		if(!bOnlyMethodAndParamTypes){
-			strM+=strConcreteClassSName+".";
-		}
-		strM+=m.getName();
-		
-		strM+="(";
-		String strP="";
-		boolean bHasNonUserTypeableParam = false;
-		for(Class<?> p:m.getParameterTypes()){
-			if(!isCanUserTypeIt(p))bHasNonUserTypeableParam=true;
-			if(!strP.isEmpty())strP+=",";
-			strP+=bUseSimpleParamTypeName?p.getSimpleName():p.getName();
-		}
-		strM+=strP+")";
-		
-		boolean bIsStatic=Modifier.isStatic(m.getModifiers());
-		if(!bOnlyMethodAndParamTypes){
-			/**
-			 * as comment to be compatible with scripting 
-			 */
-			strM+=" //"+m.getReturnType().getSimpleName();
-			
-			if(bIsStatic)strM+=" <STATIC>";
-			
-			strM+=" <"+strDeclClassSName+">";
-		}
-		
+	public boolean isMethodMatchesFilter(MethodHelp mh){
 		if(
 				isShowAllPublicMembers() ||
 				(
-					!bIsStatic &&
-					!bHasNonUserTypeableParam &&
-					!isCanUserTypeIt(m.getDeclaringClass()) && // to show methods only for non primitive/simple/basic types
-					!m.getDeclaringClass().equals(Object.class)
+					!mh.isStatic() &&
+					mh.getNonUserTypeableParamsCount()>0 &&
+					// to skip all "user typeable super class type" methods to avoid "useless" cluttering (like Boolean.class methods)
+					!JavaLangI.i().isCanUserTypeIt(mh.getDeclaring()) && 
+					!mh.getDeclaring().equals(Object.class)
 				)
 		){
-			return strM;
+			return true;
 		}
 		
-		return null;
+		return false;
 	}
 	
 	public boolean isShowAllPublicMembers() {
@@ -614,18 +571,6 @@ public class JavaScriptI implements IGlobalAddListener {
 
 	public void setShowAllPublicMembers(boolean bShowAllPublicMembers) {
 		this.bShowAllPublicMembers = bShowAllPublicMembers;
-	}
-
-	public boolean isCanUserTypeIt(Object obj){
-		return isCanUserTypeIt(obj.getClass());
-	}
-	public boolean isCanUserTypeIt(Class cl){
-		if(String.class==cl)return true;
-		
-		if(cl.isPrimitive())return true;
-		if(Primitives.isWrapperType(cl))return true; //last as is probably "slower"
-		
-		return false;
 	}
 
 	public void init() {
@@ -730,6 +675,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	}
 
 	protected void autoComplete() {
+//		String strInputTilCarat=DevConsPluginStateI.i().getInputLettersBeforeCarat();
 		String strInput= DevConsPluginStateI.i().getInputText();
 		strInput=strInput.trim();
 		AutoCompleteResult ar = JavaScriptI.i().showHelp(strInput);
@@ -746,9 +692,9 @@ public class JavaScriptI implements IGlobalAddListener {
 			strNewInput = JavaScriptI.i().showHelp(strCmdChar+strInput).getImprovedPart();
 		}
 		
-//		String str = strImprovedPart;
 		int i = strNewInput.indexOf("//");if(i>-1)strNewInput=strNewInput.substring(0,i).trim()+" "; //remove trailing comment
 		DevConsPluginStateI.i().setInputText(strNewInput);
+//		DevConsPluginStateI.i().insertAtInputTextCaratPos(strNewInput.substring(strInputTilCarat.length()));
 		
 		DevConsPluginStateI.i().scrollKeepAtBottom();
 	}
@@ -756,10 +702,10 @@ public class JavaScriptI implements IGlobalAddListener {
 	public void autoCompleteWord() {
 		// boolean
 		String str=DevConsPluginStateI.i().getInputLettersBeforeCarat();
-		if(Boolean.TRUE.toString().startsWith(str)){
+		if(Boolean.TRUE.toString().startsWith(str)){ //actually lowercase
 			DevConsPluginStateI.i().insertAtInputTextCaratPos(Boolean.TRUE.toString().substring(str.length()));
 		}else
-		if(Boolean.FALSE.toString().startsWith(str)){
+		if(Boolean.FALSE.toString().startsWith(str)){ //actually lowercase
 			DevConsPluginStateI.i().insertAtInputTextCaratPos(Boolean.FALSE.toString().substring(str.length()));
 		}
 	}
@@ -768,4 +714,5 @@ public class JavaScriptI implements IGlobalAddListener {
 	public void globalAddedEvent(Object objInst) {
 		setJSBinding(objInst);
 	}
+
 }

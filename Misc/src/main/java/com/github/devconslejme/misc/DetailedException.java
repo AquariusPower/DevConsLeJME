@@ -103,11 +103,11 @@ public class DetailedException extends NullPointerException{
 	public DetailedException(String str, Object... aobj) {
 		this(true,str,aobj);
 	}
-	public DetailedException() {
-		this("(no extra info)");
-	}
-	public DetailedException(Exception ex) {
-		this("(just rethrowing the cause)");
+//	public DetailedException() {
+//		this("(no extra info)");
+//	}
+	public DetailedException(Exception ex, Object... aobj) {
+		this("(just rethrowing the cause)",aobj);
 		setCauseAndReturnSelf(ex);
 	}
 
@@ -179,13 +179,13 @@ public class DetailedException extends NullPointerException{
 
 	public static void assertIsFalse(String strDescWhat, boolean b, Object... aobjMoreObjectsForDebugInfo){
 		if(b){
-			throw new DetailedException("ALREADY "+strDescWhat+"!", aobjMoreObjectsForDebugInfo);
+			throw new DetailedException("IS (or ALREADY) "+strDescWhat+"!", aobjMoreObjectsForDebugInfo);
 		}
 	}
 	
 	public static void assertIsTrue(String strDescWhat, boolean b, Object... aobjMoreObjectsForDebugInfo){
 		if(!b){
-			throw new DetailedException("NOT "+strDescWhat+"!", aobjMoreObjectsForDebugInfo);
+			throw new DetailedException("NOT (or DON'T) "+strDescWhat+"!", aobjMoreObjectsForDebugInfo);
 		}
 	}
 

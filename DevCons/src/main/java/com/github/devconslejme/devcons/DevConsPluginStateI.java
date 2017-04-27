@@ -49,6 +49,7 @@ import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchy;
+import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
@@ -163,17 +164,6 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			if(i==0) i = o1.strKey.compareTo(o2.strKey);
 			return i;
 		}
-	};
-	private String[]	astrType = new String[]{
-			String.class.getSimpleName(),
-			
-			boolean.class.getSimpleName(),
-			
-			float.class.getSimpleName(),
-			double.class.getSimpleName(),
-			
-			int.class.getSimpleName(),
-			long.class.getSimpleName(),
 	};
 	private static class VersionedStatus extends VersionedList<String>{
 		private HashMap<String,Integer> hmKV = new HashMap<String,Integer>();
@@ -1132,7 +1122,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		// remove useless type text
 		String strAfter = strText.substring(iMoveTo+1);
 		boolean bFoundType=false;
-		for(String strType:astrType){
+		for(String strType:JavaLangI.i().getPrimitivesAndStringStrArray(false)){
 			if(strAfter.startsWith(strType)){
 				strText=strText.substring(0, iMoveTo+1);
 				if(strType.equals(String.class.getSimpleName())){
@@ -1229,8 +1219,6 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		builder.append(cmprStat);
 		builder.append(", vrSelectionChangedToUpdateInputText=");
 		builder.append(vrSelectionChangedToUpdateInputText);
-		builder.append(", astrType=");
-		builder.append(Arrays.toString(astrType));
 		builder.append(", bKeepScrollAtBottom=");
 		builder.append(bKeepScrollAtBottom);
 		builder.append(", vrListBoxChangedToAutoScrollToBottom=");

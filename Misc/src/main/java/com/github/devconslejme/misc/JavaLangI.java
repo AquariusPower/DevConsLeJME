@@ -27,13 +27,22 @@
 
 package com.github.devconslejme.misc;
 
+import java.awt.Desktop;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.github.devconslejme.devcons.LoggingI;
 import com.google.common.collect.Lists;
+import com.google.common.primitives.Primitives;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -51,6 +60,42 @@ public class JavaLangI {
 		/** Collection, ArrayList, List etc */
 		Iterable,
 		;
+	}
+	
+//	public static enum EPrimivesAndString{
+//		String(String.class),
+//		Boolean(boolean.class),
+//		;
+//		private Class	cl;
+//		EPrimivesAndString(Class cl){
+//			this.cl=cl;
+//		}
+//		public String s(){return toString();}
+//	}
+	
+	private Class[]	aclType = new Class[]{
+			String.class,
+			
+			boolean.class,
+			
+			float.class,
+			double.class,
+			
+			short.class,
+			int.class,
+			long.class,
+			
+			char.class,
+			byte.class,
+	};
+	private String	strJavadocFolder = "javadoc/";
+//	private String[] astrType;
+	
+	public JavaLangI(){
+//		astrType = new String[aclType.length];
+//		for(Class cl:aclType){
+//			astrType[i++]=cl.getSimpleName();
+//		}
 	}
 	
 	public boolean isSomeArrayType(Object objValue){
@@ -216,6 +261,307 @@ public class JavaLangI {
 				}
 			}
 		}
+		
+		return false;
+	}
+	
+	public Class[] getPrimitivesAndString(){
+		return aclType;
+	}
+	
+	/**
+	 * 
+	 * @param bFull if false will be simple name
+	 * @return
+	 */
+	public ArrayList<String> getPrimitivesAndStringStrArray(boolean bFull) {
+		ArrayList<String> astrType = new ArrayList<String>();
+		for(Class cl:aclType){
+			astrType.add(bFull?cl.getName():cl.getSimpleName());
+		}
+		return astrType;
+	}
+	
+	public static class MethodHelp{
+		private Method m;
+		private Object obj;
+		private Class clDeclaring;
+		private Class clConcrete;
+		private boolean bStatic;
+		private int iNonUserTypeableParamsCount;
+		
+		public Method getMethod() {
+			return m;
+		}
+		public boolean isStatic() {
+			return bStatic;
+		}
+		public int getNonUserTypeableParamsCount() {
+			return iNonUserTypeableParamsCount;
+		}
+		public Class getDeclaring() {
+			return clDeclaring;
+		}
+		public Class getConcrete() {
+			return clConcrete;
+		}
+		private void setMethod(Method m) {
+			this.m = m;
+		}
+		private void setStatic(boolean bStatic) {
+			this.bStatic = bStatic;
+		}
+		private void setNonUserTypeableParamsCount(int iNonUserTypeableParamsCount) {
+			this.iNonUserTypeableParamsCount = iNonUserTypeableParamsCount;
+		}
+		private void setDeclaring(Class clDeclaring) {
+			this.clDeclaring = clDeclaring;
+		}
+		private void setConcrete(Class clConcrete) {
+			this.clConcrete = clConcrete;
+		}
+		
+		public Class getMethodReturnType(){
+			return m.getReturnType();
+		}
+		
+		public String getFullHelp(boolean bUseSimpleNames, boolean bOverrideWithConcrete){
+			String strFull="";
+			
+			String strConcrete=(bUseSimpleNames?clConcrete.getSimpleName():clConcrete.getName());
+			String strDecl		=(bUseSimpleNames?clDeclaring.getSimpleName():clDeclaring.getName());
+			strFull+=(bOverrideWithConcrete?strConcrete:strDecl)+".";
+			
+			strFull+=getMethodHelp(bUseSimpleNames);
+			
+			/**
+			 * as a comment that is compatible with java scripting 
+			 */
+			strFull+=" //";
+			
+			Class clRet = getMethodReturnType();
+			strFull+=(bUseSimpleNames?clRet.getSimpleName():clRet.getName());
+			
+			if(bStatic)strFull+=" <STATIC>";
+			
+			if(bOverrideWithConcrete)strFull+=" <"+strDecl+">";
+			
+			if(getNonUserTypeableParamsCount()>0)strFull+=" <UserCannotType="+getNonUserTypeableParamsCount()+">";
+			
+			return strFull.trim();
+		}
+		
+		public URI getAsJavadocURI(){
+			URI uri=null;
+			try {
+				// the html file
+				String strURI=JavaLangI.i().getJavadocFolder();
+				strURI+=clDeclaring.getName().replace(".","/");
+				strURI+=".html";
+				
+				uri = new File(strURI).toURI();
+				
+				// the method anchor
+				String strParamTypes="";
+				for(Class clPT:m.getParameterTypes()){
+					if(!strParamTypes.isEmpty())strParamTypes+="-"; //in between
+					strParamTypes+=clPT.getName(); //primitives has no dots (only wrappers does)
+				}
+				strURI=uri.toString()+"#"+m.getName()+"-"+strParamTypes+"-";
+				
+				uri=new URI(strURI);
+			} catch (URISyntaxException e) {
+				throw new DetailedException(e,uri);
+			}
+			
+			return uri;
+		}
+		
+		public String getMethodHelp(boolean bUseSimpleParamNames){
+			String strM = "";
+			
+			
+			strM+=m.getName();
+			
+			strM+="(";
+			String strP="";
+			for(Class<?> p:m.getParameterTypes()){
+				if(!strP.isEmpty())strP+=",";
+				strP+=bUseSimpleParamNames?p.getSimpleName():p.getName();
+			}
+			strM+=strP+")";
+			
+			return strM;
+		}
+		private void setObject(Object obj) {
+			this.obj=obj;
+		}
+		public Object getObject(){
+			return obj;
+		}
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+			builder.append("MethodHelp [m=");
+			builder.append(m);
+			builder.append(", obj=");
+			builder.append(obj);
+			builder.append(", clDeclaring=");
+			builder.append(clDeclaring);
+			builder.append(", clConcrete=");
+			builder.append(clConcrete);
+			builder.append(", bStatic=");
+			builder.append(bStatic);
+			builder.append(", iNonUserTypeableParamsCount=");
+			builder.append(iNonUserTypeableParamsCount);
+			builder.append("]");
+			return builder.toString();
+		}
+		
+		
+	}
+	
+	public ArrayList<MethodHelp> prepareAllMethodsHelp(Object obj){
+		ArrayList<MethodHelp> amh = new ArrayList<MethodHelp>();
+		
+		for(Method m:obj.getClass().getMethods()){
+			MethodHelp mh = new MethodHelp();
+			mh.setConcrete(obj.getClass());
+			mh.setObject(obj);
+			mh.setDeclaring(m.getDeclaringClass());
+			mh.setMethod(m);
+			mh.setStatic(Modifier.isStatic(m.getModifiers()));
+			
+			int i=0;
+			for(Class<?> p:m.getParameterTypes()){
+				if(!isCanUserTypeIt(p))i++;
+			}
+			mh.setNonUserTypeableParamsCount(i);
+			
+			amh.add(mh);
+		}
+		
+		return amh;
+	}
+	
+//	public ArrayList<String> getMethodsAsHelp(Object obj, boolean bUseSimpleParamTypeName, boolean bOnlyMethodAndParamTypes, boolean bOverrideWithConcreteClassName){
+//		Class cl = obj.getClass();
+//		Method[] am = cl.getMethods();
+//		ArrayList<String> astr=new ArrayList<String>();
+//		for(Method m:am){
+//			String strConcreteClassSName = cl.getSimpleName();
+//			
+//			String strM = "";
+//			String strDeclClassSName=m.getDeclaringClass().getSimpleName();
+//			
+//			if(!bOnlyMethodAndParamTypes){
+//				if(bOverrideWithConcreteClassName){
+//					strM+=strConcreteClassSName+".";
+//				}else{
+//					strM+=strDeclClassSName+".";
+//				}
+//			}
+//			strM+=m.getName();
+//			
+//			strM+="(";
+//			String strP="";
+//			boolean bHasNonUserTypeableParam = false;
+//			for(Class<?> p:m.getParameterTypes()){
+//				if(!isCanUserTypeIt(p))bHasNonUserTypeableParam=true;
+//				if(!strP.isEmpty())strP+=",";
+//				strP+=bUseSimpleParamTypeName?p.getSimpleName():p.getName();
+//			}
+//			strM+=strP+")";
+//			
+//			astr.add(strM);
+//		}
+//		
+//		return astr;
+//	}
+	
+	public void browseJavadoc(MethodHelp mh) {
+		URI uri = mh.getAsJavadocURI();
+		try {
+			Desktop.getDesktop().browse(uri);
+		} catch (IOException e) {
+			MessagesI.i().warnMsg(this, e.getMessage(), e, mh, uri);
+		}
+	}
+	
+//	public void browseJavadoc(String strParams, Class cl) {
+//		int iComment=strParams.indexOf("//");
+//		if(iComment>-1)strParams=strParams.substring(0, iComment);
+//		strParams=strParams.trim();
+//		
+//		String strURI="";
+//		URI uri=null;
+//		try {
+//			String[] astr=strParams.split("[.]");
+//			String strBind=astr[0];
+//			String strTag = null;
+//			if(astr.length>1)strTag=astr[1];
+//			Object objBind = bndJSE.get(strBind);
+////			strURI+="./";
+////			strURI+=objBind.getClass().getPackage().getName().replace(".","/");
+//			if(objBind!=null){
+//				strURI+=strJavadocFolder;
+//				strURI+=objBind.getClass().getName().replace(".","/");
+//				strURI+=".html";
+//				uri = new File(strURI).toURI();
+//				if(strTag!=null){
+//					for(Method m:objBind.getClass().getMethods()){
+//						if(strTag.equals(getFilteredHelpFromMethod(objBind, m, true, true))){ //compare with cleaned param type mode
+//							strTag=getFilteredHelpFromMethod(objBind, m, false, true); //collect the with the full param type mode
+//							break;
+//						}
+//					}
+//					
+//					int iL=strTag.indexOf("(");
+//					String strMethod=strTag.substring(0, iL);
+//					String strParamTypes=strTag.substring(iL+1, strTag.length()-1);
+//					String[] astrPT=strParamTypes.split("[,]");
+//					strParamTypes="";
+//					for(String strPT:astrPT){
+//						if(!strParamTypes.isEmpty())strParamTypes+="-";
+//						if(strPT.contains(".")){
+//							strParamTypes+=Class.forName(strPT).getName();
+//						}else{
+//							strParamTypes+=strPT; //primitives has no dots (wrappers does)
+//						}
+//					}
+////					astr=strTag.split("[(]")[0]
+////					String strMethod=
+////					strTag=strTag.replace("(", "-");
+////					strTag=strTag.replace(")", "-");
+//					strURI=uri.toString()+"#"+strMethod+"-"+strParamTypes+"-";
+//					uri=new URI(strURI);
+//				}
+//			}else{
+//				strURI+=strParams;
+//				uri = new URI(strURI);
+//			}
+//			Desktop.getDesktop().browse(uri);
+//		} catch (IOException|URISyntaxException | ClassNotFoundException e) {
+//			LoggingI.i().logExceptionEntry(e, "URI='"+strURI+"'");//, strURI, uri);
+//		}
+//	}
+	
+	public String getJavadocFolder() {
+		return strJavadocFolder;
+	}
+
+	public void setJavadocFolder(String strJavadocFolder) {
+		this.strJavadocFolder = strJavadocFolder;
+	}
+
+	public boolean isCanUserTypeIt(Object obj){
+		return isCanUserTypeIt(obj.getClass());
+	}
+	public boolean isCanUserTypeIt(Class cl){
+		if(String.class==cl)return true;
+		
+		if(cl.isPrimitive())return true;
+		if(Primitives.isWrapperType(cl))return true; //last as is probably "slower"
 		
 		return false;
 	}
