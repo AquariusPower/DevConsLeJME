@@ -29,6 +29,7 @@ package com.github.devconslejme.tests;
 
 import com.github.devconslejme.debug.DebugTrackProblemsJME;
 import com.github.devconslejme.debug.UnsafeDebugHacksI;
+import com.github.devconslejme.devcons.JavaScriptI;
 import com.github.devconslejme.extras.DynamicFPSLimiter;
 import com.github.devconslejme.extras.OSCmd;
 import com.github.devconslejme.extras.SingleAppInstance;
@@ -43,10 +44,11 @@ import com.jme3.system.JmeSystem.StorageFolderType;
 import com.jme3.system.lwjgl.LwjglAbstractDisplay;
 
 /**
+ * its {@link GlobalManagerI} global will be auto set as {@link Application} thru the package configuration.
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class TestDevCons extends SimpleApplication{
-
 	public static void main(String[] args) {
 		GlobalManagerI.i().get(SingleAppInstance.class).configureOptionalAtMainMethod(
 			JmeSystem.getStorageFolder(StorageFolderType.Internal)); // this is optional
@@ -70,6 +72,10 @@ public class TestDevCons extends SimpleApplication{
 		com.github.devconslejme.devcons.PkgCfgI.i().configure(this,getGuiNode());
 		
 		// below are not required
+		/**
+		 * to remove JS auto global access to some class/object, ex.: 
+		JavaScriptI.i().addForbidClassAccessJS(TestDevCons.class);
+		 */
 		initOptionalExtras();
 		initOptionalOtherStuff();
 	}

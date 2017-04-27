@@ -29,6 +29,7 @@ package com.github.devconslejme.misc;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import com.github.devconslejme.misc.ReportI.IReport;
@@ -54,7 +55,9 @@ public class MessagesI {
 	 * @param aobj
 	 */
 	public void warnMsg(Object objSource, String strMsg, Object... aobj){
-		output(true,System.err,"WARN",objSource,strMsg,aobj);
+		Object[] aobj2 = Arrays.copyOf(aobj, aobj.length+1);
+		aobj2[aobj2.length-1]=Thread.currentThread().getStackTrace()[2];
+		output(true,System.err,"WARN",objSource,strMsg,aobj2);
 //		output(true,"WARN",objSource,Object... aobj); 
 	}
 	

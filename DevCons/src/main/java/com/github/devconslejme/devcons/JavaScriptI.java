@@ -74,6 +74,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	private Method[] amLastReturnValue;
 	private HashMap<Object,Method>	hmAllJSClassBindMethods = new HashMap<Object,Method>();
 //	private ArrayList<Method>	amLastReturnValueMethods = new ArrayList<Method>();
+	private ArrayList<Class> aclForbidJS = new ArrayList<Class>();
 	private ArrayList<String> astrCmdHistory = new ArrayList<String>();
 	private ArrayList<String> astrUserInit = new ArrayList<String>();
 	private File	flCmdHistory;
@@ -205,6 +206,13 @@ public class JavaScriptI implements IGlobalAddListener {
 		return takeOnlyWhatMatters(strA).equals(takeOnlyWhatMatters(strB));
 	}
 	
+//	public void getJSBinds(){
+//		if(aclForbidJS.contains(objBindValue.getClass())){
+//			MessagesI.i().warnMsg(this, "forbidden JS access to class", objBindValue.getClass());
+//			return;
+//		}
+//	}
+	
 	public MethodHelp retrieveMethodHelp(String strFullMethodHelp){
 //		// remove comments
 //		int iComment = strFullMethodHelp.indexOf("//");
@@ -314,6 +322,8 @@ public class JavaScriptI implements IGlobalAddListener {
 	 * @return previous value for id
 	 */
 	public void setJSBinding(String strBindId, Object objBindValue){
+		if(isForbidAccess(objBindValue))return;
+		
 		if(bndJSE.get(strBindId)!=null){
 			throw new DetailedException("already set: "+strBindId);
 		}
@@ -324,6 +334,15 @@ public class JavaScriptI implements IGlobalAddListener {
 		
 //		astrJSClassBindList.add(strBindId);
 	}
+	private boolean isForbidAccess(Object objBindValue) {
+		if(aclForbidJS.contains(objBindValue.getClass())){
+			MessagesI.i().warnMsg(this, "forbidden JS access to class", objBindValue.getClass());
+			return true;
+		}
+		
+		return false;
+	}
+
 	/**
 	 * 
 	 * @param objBindValue automatic id based on object class simple name
@@ -739,5 +758,17 @@ public class JavaScriptI implements IGlobalAddListener {
 	public void globalAddedEvent(Object objInst) {
 		setJSBinding(objInst);
 	}
-
+	
+	/**
+	 * mainly to deal with {@link GlobalManagerI} assignments
+	 * @param cl
+	 */
+	public void addForbidClassAccessJS(Class cl){
+		if(!aclForbidJS.contains(cl))aclForbidJS.add(cl);
+		for(Entry<String, Object> entry:bndJSE.entrySet()){
+			if(entry.getValue().getClass().equals(cl)){
+				MessagesI.i().warnMsg(this, "removed JS access to", cl, bndJSE.remove(cl.getSimpleName()));
+			}
+		}
+	}
 }

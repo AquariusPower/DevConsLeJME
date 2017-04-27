@@ -193,7 +193,6 @@ public class LoggingI {
 
 	public void logWarn(String string) {
 		logEntry("!WARN: "+string+"; STE "+Thread.currentThread().getStackTrace()[2]);
-//		MessagesI.i().warnMsg(this, string);
 	}
 
 	public void clear() {
