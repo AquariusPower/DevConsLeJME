@@ -91,4 +91,7 @@ public class UserDataI {
 		if(sh==null)return null;
 		return sh.getRef();
 	}
+//	public <R> R getUserDataPSH(Spatial spt, IUDKey eKey){
+//		((Enum)eKey).toString();
+//	}
 }

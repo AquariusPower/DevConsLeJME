@@ -93,13 +93,8 @@ public class ContextMenuI {
 		;
 		
 		private Class	cl;
-
 		EUDKey(Class cl){this.cl=cl;}
-		
-		@Override
-		public Class getType() {
-			return cl;
-		}
+		@Override	public Class getType() {return cl;}
 	}
 	
 	private Command<Button>	btncmd = new Command<Button>() {
@@ -249,10 +244,11 @@ public class ContextMenuI {
 	public void createContextMenuAvailableIndicator(){
 //		float fRadius = 0.1f;
 		geomContextMenuAvailableIndicator = new Geometry("ContextMenuAvailableIndicator",
-			new Box(10,10,10));
+			new Box(1,1,3));
 //			new Sphere(4, 7, fRadius));
 		geomContextMenuAvailableIndicator.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(
-			ColorI.i().colorChangeCopy(ColorRGBA.Green, 0f, 0.15f)));
+			ColorRGBA.Cyan));
+//			ColorI.i().colorChangeCopy(ColorRGBA.Green, 0f, 0.15f)));
 	}
 	
 	public void configure(){//Node nodeParent) {
@@ -314,6 +310,7 @@ public class ContextMenuI {
 					if(geomContextMenuAvailableIndicator.getParent()!=null){
 						Spatial spt = UserDataI.i().getUserDataPSH(geomContextMenuAvailableIndicator,strUDKeyFollowContextMenuTarget);
 						geomContextMenuAvailableIndicator.setLocalTranslation(spt.getWorldTranslation());
+						geomContextMenuAvailableIndicator.rotate(0.1f,0.1f,0.1f);
 					}
 					return true;
 				}
