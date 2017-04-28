@@ -468,8 +468,8 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	}
 	
 	private void initVarMonitorContextMenu() {
-		cmVarMon = new ContextMenu();
-		cmVarMon.setHierarchyParent(rzpMain);
+		cmVarMon = new ContextMenu(rzpMain);
+//		cmVarMon.setHierarchyParent(rzpMain);
 		
 		Command<Button> cmd = new Command<Button>(){
 			@Override
@@ -761,8 +761,8 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		
 		btnShowVarMon = new Button("VarMonBar:Toggle",getStyle());
 		PopupHintHelpListenerI.i().setPopupHelp(btnShowVarMon, "Show Variables Monitor Bar");
-		ContextMenuI.i().attachContextMenuAt(btnShowVarMon,new ContextMenu()
-			.setHierarchyParent(rzpMain)
+		ContextMenuI.i().attachContextMenuAt(btnShowVarMon,new ContextMenu(rzpMain)
+//			.setHierarchyParent(rzpMain)
 			.addNewEntry("ToggleHiddenStats", cmdToggleHiddenStats)
 		);
 		apnl.add(btnShowVarMon);

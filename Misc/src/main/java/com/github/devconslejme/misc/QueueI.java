@@ -81,6 +81,11 @@ public class QueueI {
 		private static String strLastUId="0";
 //		private boolean bDone;
 		
+		/**
+		 * the name is alternatively automatically the enclosing method
+		 * @param strName
+		 * @return
+		 */
 		public CallableX setName(String strName) {
 			this.strName = strName;
 			return this;

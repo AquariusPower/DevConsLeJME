@@ -33,8 +33,7 @@ import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.lwjgl.opengl.Display;
-
+import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
@@ -118,8 +117,8 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 	private ArrayList<Button>	abtnInfoSection;
 	private Command<? super Button>	cmdInfoSectionButtons;
 	private Container	cntrDiagControls;
-	private Button	btnRestoreIniSize;
-	private Button	btnUpdateDefaultSize;
+//	private Button	btnRestoreIniSize;
+//	private Button	btnUpdateDefaultSize;
 	private int	iDiagControlColumnInitIndex;
 	protected String	strUDKeyPosBeforeMaximize = SimpleGenericDialog.class+"/PosBeforeMaximize";
 	protected boolean	bKeepMaximized;
@@ -257,12 +256,12 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 							bKeepMaximized=true;
 						}
 					}else
-					if(source==btnRestoreIniSize){
-						getDialog().restoreDefaultSafeSize();
-					}else
-					if(source==btnUpdateDefaultSize){
-						getDialog().applyCurrentSafeSizeAsDefault();
-					}else
+//					if(source==btnRestoreIniSize){
+//						getDialog().restoreDefaultSafeSize();
+//					}else
+//					if(source==btnUpdateDefaultSize){
+//						getDialog().applyCurrentSafeSizeAsDefault();
+//					}else
 					if(source==btnClose){
 						getDialog().close();
 					}else
@@ -282,8 +281,8 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 //			cntrDiagControls.addChild(btnMinimize = createInfoButton("-","Minimize"), iDiagControlColumnInitIndex++);
 //			cntrDiagControls.addChild(btnMaximizeRestore = createInfoButton("M","Maximize/Restore"), iDiagControlColumnInitIndex++);
 //			cntrDiagControls.addChild(btnClose = createInfoButton("X","Close"), iDiagControlColumnInitIndex++);
-			btnRestoreIniSize=appendNewDiagControl("r","Restore to default/initial size");
-			btnUpdateDefaultSize=appendNewDiagControl("u","Update default size to current");
+//			btnRestoreIniSize=appendNewDiagControl("r","Restore to default/initial size");
+//			btnUpdateDefaultSize=appendNewDiagControl("u","Update default size to current");
 			btnMinimize=appendNewDiagControl("-","Minimize");
 			btnMaximizeRestore=appendNewDiagControl("M","Maximize/Restore");
 			btnClose=appendNewDiagControl("X","Close");
@@ -292,9 +291,16 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 			// title row put it all
 			cntrTitle = new Container(new BorderLayout());
 			
+			ContextMenu cm = new ContextMenu(getDialog());
+			cm.addNewEntry("Restore to default/initial size", new Command<Button>() {@Override public void execute(Button source) {
+				getDialog().restoreDefaultSafeSize();}});
+			cm.addNewEntry("Update default size to current", new Command<Button>() {@Override public void execute(Button source) {
+				getDialog().applyCurrentSafeSizeAsDefault();}});
+			
 			btnTitleText = createInfoButton(strTitle,null);
 			MiscLemurI.i().changeBackgroundColor(btnTitleText, ColorI.i().colorChangeCopy(ColorRGBA.Blue,0f,0.25f), true); //TODO use a lemur style instead
 			DragParentestPanelListenerI.i().applyAt(btnTitleText);
+			ContextMenuI.i().attachContextMenuAt(btnTitleText, cm);
 			
 //			cntrTitle.setPreferredSize(new Vector3f(1,1,0.1f));
 			cntrTitle.addChild(btnTitleText, BorderLayout.Position.Center);

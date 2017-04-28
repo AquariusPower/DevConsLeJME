@@ -79,6 +79,9 @@ public class UserDataI {
 		return false;
 	}
 	
+	public static interface IUDKey{
+		Class getType();
+	}
 	public <R> R getUserDataPSH(Spatial spt, Class<R> cl){
 		return getUserDataPSH(spt, cl.getName());
 	}

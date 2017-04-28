@@ -42,6 +42,7 @@ import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
+import com.github.devconslejme.misc.jme.UserDataI.IUDKey;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
@@ -53,6 +54,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
 import com.simsilica.es.EntityId;
 import com.simsilica.lemur.Button;
@@ -82,7 +84,23 @@ public class ContextMenuI {
 	private EntityId	entid;
 	private Label	lbl;
 	private boolean	bShowDbgInfo = false;
-	private boolean	bUseContextMenuAvailableIndicators=true;
+	private boolean	bUseContextMenuAvailablePermanentIndicators=false;
+	private Geometry	geomContextMenuAvailableIndicator;
+	private String	strUDKeyFollowContextMenuTarget = "FollowContextMenuTarget";
+	
+	public static enum EUDKey implements IUDKey{
+		FollowContextMenuTarget(Spatial.class),
+		;
+		
+		private Class	cl;
+
+		EUDKey(Class cl){this.cl=cl;}
+		
+		@Override
+		public Class getType() {
+			return cl;
+		}
+	}
 	
 	private Command<Button>	btncmd = new Command<Button>() {
 		@Override
@@ -113,6 +131,10 @@ public class ContextMenuI {
 		private Panel pnlSource;
 		private ResizablePanel	hrpParent;
 		
+		public ContextMenu(ResizablePanel	hrpParent){
+			this.hrpParent=hrpParent;
+		}
+		
 		/**
 		 * to be set only when clicking from the listener here
 		 * @param pnlSource
@@ -127,12 +149,14 @@ public class ContextMenuI {
 			return pnlSource;
 		}
 		
-		public void addSubMenu(String strTextKey, ContextMenu cmSub){
+		public ContextMenu createSubMenu(String strTextKey){
+			ContextMenu cmSub = new ContextMenu(ContextMenuI.i().rzpContextMenu);
+			
 			addNewEntry(strTextKey, new Command<Button>() {
 				@Override
 				public void execute(Button source) {
 					ResizablePanel rzp = MiscJmeI.i().getParentest(source, ResizablePanel.class, false);
-					cmSub.setHierarchyParent(rzp);
+//					cmSub.setHierarchyParent(rzp);
 					
 					/*
 					Vector3f v3f = source.getWorldTranslation().clone();
@@ -148,7 +172,9 @@ public class ContextMenuI {
 				}
 			});
 			
-			throw new UnsupportedOperationException("TODO: this requires the context menu to not be limited to 1");
+			if(true)throw new UnsupportedOperationException(
+				"TODO: this requires the context menu to not be limited to 1");
+			return cmSub;
 		}
 		
 		@SuppressWarnings("unchecked")
@@ -163,10 +189,10 @@ public class ContextMenuI {
 			return hrpParent;
 		}
 		
-		public ContextMenu setHierarchyParent(ResizablePanel hrpParent) {
-			this.hrpParent=hrpParent;
-			return this;
-		}
+//		public ContextMenu setHierarchyParent(ResizablePanel hrpParent) {
+//			this.hrpParent=hrpParent;
+//			return this;
+//		}
 	}
 	
 	private class ContextMenuListenerI extends DefaultCursorListener{
@@ -196,8 +222,39 @@ public class ContextMenuI {
 				event.setConsumed();
 			}
 		}
+		
+		@Override
+		public void cursorEntered(CursorMotionEvent event, Spatial target, Spatial capture) {
+			super.cursorEntered(event, target, capture);
+			if(target==null)return;
+			
+			if(ContextMenuI.i().geomContextMenuAvailableIndicator.getParent()==null){
+				MiscJmeI.i().getParentest(target, Node.class, false).attachChild(
+					ContextMenuI.i().geomContextMenuAvailableIndicator);
+				UserDataI.i().setUserDataPSH(
+					ContextMenuI.i().geomContextMenuAvailableIndicator,
+					ContextMenuI.i().strUDKeyFollowContextMenuTarget,
+					target);
+			}
+//			ContextMenuI.i().geomContextMenuAvailableIndicator.setLocalTranslation(target.getWorldTranslation());
+		}
+		
+		@Override
+		public void cursorExited(CursorMotionEvent event, Spatial target,Spatial capture) {
+			super.cursorExited(event, target, capture);
+			ContextMenuI.i().geomContextMenuAvailableIndicator.removeFromParent();
+		}
 	}
-
+	
+	public void createContextMenuAvailableIndicator(){
+//		float fRadius = 0.1f;
+		geomContextMenuAvailableIndicator = new Geometry("ContextMenuAvailableIndicator",
+			new Box(10,10,10));
+//			new Sphere(4, 7, fRadius));
+		geomContextMenuAvailableIndicator.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(
+			ColorI.i().colorChangeCopy(ColorRGBA.Green, 0f, 0.15f)));
+	}
+	
 	public void configure(){//Node nodeParent) {
 		strStyle = GuiGlobals.getInstance().getStyles().getDefaultStyle();
 		
@@ -249,8 +306,25 @@ public class ContextMenuI {
 //				.setLoop(true)
 //				.setDelaySeconds(0.1f)
 //		);
+		createContextMenuAvailableIndicator();
+		
+		QueueI.i().enqueue(new CallableX() {
+				@Override
+				public Boolean call() {
+					if(geomContextMenuAvailableIndicator.getParent()!=null){
+						Spatial spt = UserDataI.i().getUserDataPSH(geomContextMenuAvailableIndicator,strUDKeyFollowContextMenuTarget);
+						geomContextMenuAvailableIndicator.setLocalTranslation(spt.getWorldTranslation());
+					}
+					return true;
+				}
+			}
+			.setName("PositionContextMenuAvailableIndicator")
+			.setUserCanPause(true)
+			.setDelaySeconds(0.1f)
+			.setLoop(true)
+		);
+		
 	}
-	
 	
 	public void attachContextMenuAtListBoxItems(ListBox lstbx, ContextMenu cm){
 //		ArrayList<Panel> apnl = MiscJmeI.i().getAllChildrenRecursiveFrom(lstbx.getGridPanel(), Panel.class, null);
@@ -264,7 +338,7 @@ public class ContextMenuI {
 		UserDataI.i().setUserDataPSH(spt, cm);
 		CursorEventControl.addListenersToSpatial(spt,ContextMenuOwnerListenerI.i());
 		
-		if(bUseContextMenuAvailableIndicators){
+		if(bUseContextMenuAvailablePermanentIndicators){
 			if (spt instanceof Node) {
 				Node node = (Node) spt;
 				QueueI.i().enqueue(new CallableX() {
@@ -297,7 +371,6 @@ public class ContextMenuI {
 //	}
 	@SuppressWarnings("unchecked")
 	private void showContextMenu(Vector2f v2fMouseCursorPos, String strContextMenuTitle, ContextMenu cm) {
-		//TODO populate context menu
 		cntrContextOptions.clearChildren();
 		
 		int i=0;
@@ -372,11 +445,11 @@ public class ContextMenuI {
 
 
 	public boolean isUseContextMenuAvailableIndicators() {
-		return bUseContextMenuAvailableIndicators;
+		return bUseContextMenuAvailablePermanentIndicators;
 	}
 
 
 	public void setUseContextMenuAvailableIndicators(boolean bUseContextMenuIndicators) {
-		this.bUseContextMenuAvailableIndicators = bUseContextMenuIndicators;
+		this.bUseContextMenuAvailablePermanentIndicators = bUseContextMenuIndicators;
 	}
 }
