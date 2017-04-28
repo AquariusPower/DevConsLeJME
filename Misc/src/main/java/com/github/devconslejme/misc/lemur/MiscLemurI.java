@@ -29,20 +29,28 @@ package com.github.devconslejme.misc.lemur;
 
 import java.util.ArrayList;
 
+import org.lwjgl.opengl.Display;
+
+import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.app.Application;
 import com.jme3.font.BitmapText;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.TextField;
+import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.component.TextComponent;
 import com.simsilica.lemur.component.TextEntryComponent;
+import com.simsilica.lemur.core.GuiComponent;
 import com.simsilica.lemur.core.GuiControl;
 import com.simsilica.lemur.event.AbstractCursorEvent;
 import com.simsilica.lemur.grid.GridModel;
@@ -107,4 +115,45 @@ public class MiscLemurI {
 	public ArrayList<Panel> getAllListBoxItems(ListBox lstbx){
 		return MiscJmeI.i().getAllChildrenRecursiveFrom(lstbx.getGridPanel(), Panel.class, 1);
 	}
+
+	public boolean isMaximized(Panel pnl) {
+		Vector3f v3fSize = pnl.getSize();
+		Vector3f v3fPos = pnl.getLocalTranslation();
+		return 
+			v3fSize.x==Display.getWidth() && 
+			v3fSize.y==Display.getHeight() &&
+			v3fPos.x==0 &&
+			v3fPos.y==Display.getHeight()
+			;
+	}
+
+	public void maximize(Panel pnl) {
+		Vector3f v3fPos = pnl.getLocalTranslation(); //do not mess with z!!!
+		pnl.setLocalTranslation(new Vector3f(0,Display.getHeight(),v3fPos.z));
+		
+		Vector3f v3fSize = pnl.getSize(); //do not mess with z!!!
+		pnl.setPreferredSize(new Vector3f(Display.getWidth(),Display.getHeight(),v3fSize.z));
+	}
+
+	public void changeBackgroundColor(Button btnTitleText, ColorRGBA color) {
+		changeBackgroundColor(btnTitleText, color, false);
+	}
+	public void changeBackgroundColor(Button btnTitleText, ColorRGBA color, boolean bForceNewBackground) {
+		GuiComponent gc = btnTitleText.getBackground();
+		QuadBackgroundComponent qbg =null;
+		if(gc instanceof QuadBackgroundComponent){
+			qbg = (QuadBackgroundComponent)gc;
+		}
+		
+		if(qbg!=null){
+			qbg.setColor(color);
+		}else{
+			if(bForceNewBackground){
+				btnTitleText.setBackground(new QuadBackgroundComponent(color));
+			}else{
+				MessagesI.i().warnMsg(this, "background type should be", QuadBackgroundComponent.class, gc, btnTitleText, color);
+			}
+		}
+	}
+	
 }

@@ -396,19 +396,74 @@ public class ResizablePanel extends Panel {
 		Panel pnlParentest = getParentest();
 		
 		Vector3f v3f = pnlParentest.getPreferredSize().add(new Vector3f(1, 1, 0));
+		if(v3f.equals(new Vector3f(Display.getWidth(),Display.getHeight(),0))){
+			safeSizeRecursively(EReSizeApplyMode.Restore,pnlParentest);
+			return;
+		}
+		
 		if(v3f.x > Display.getWidth())v3f.x=Display.getWidth();
-		if(v3f.y > Display.getWidth())v3f.y=Display.getWidth();
+		if(v3f.y > Display.getHeight())v3f.y=Display.getHeight();
 		
 		warnMsg("("+i+") increasing size of "+pnlParentest.getName()+" to "+v3f);
 		
 		pnlParentest.setPreferredSize(v3f);
 	}
 	
+	private String strUDKeySafeSizeLast=ResizablePanel.class.getName()+"/SafeSize";
+	private String strUDKeySafeSizeDefault=ResizablePanel.class.getName()+"/SafeSizeDefault";
+	
+	public static enum EReSizeApplyMode{
+		Save,
+		Restore,
+		RestoreDefault,
+		UpdateDefaultToCurrent,
+		;
+		public String s(){return toString();}
+	}
+	
+	public void applyCurrentSafeSizeAsDefault(){
+		if(isUpdateLogicalStateSucces()){
+			safeSizeRecursively(EReSizeApplyMode.UpdateDefaultToCurrent, this);
+		}
+	}
+	
+	private void safeSizeRecursively(EReSizeApplyMode eapply, Panel pnl) { //TODO @ThisMethodCouldBeAtMiscClass
+//		if(
+//				eapply.equals(EReSizeApplyMode.UpdateDefaultToCurrent) || 
+//				pnl.getUserData(strUDKeySafeSizeDefault)==null //initial will be first default
+//		){ 
+//			pnl.setUserData(strUDKeySafeSizeDefault, pnl.getPreferredSize());
+//		}
+		
+		switch(eapply){
+			case Restore:{
+				Vector3f v3fSafeSize = (Vector3f)pnl.getUserData(strUDKeySafeSizeLast);
+				if(v3fSafeSize!=null)pnl.setPreferredSize(v3fSafeSize);
+			}break;
+			case RestoreDefault:{
+				Vector3f v3fSafeSize = (Vector3f)pnl.getUserData(strUDKeySafeSizeDefault);
+				if(v3fSafeSize!=null)pnl.setPreferredSize(v3fSafeSize);
+			}break;
+			case Save:{
+				pnl.setUserData(strUDKeySafeSizeLast,pnl.getPreferredSize());
+			}break;
+			case UpdateDefaultToCurrent:{
+				pnl.setUserData(strUDKeySafeSizeDefault, pnl.getPreferredSize());
+			}break;
+		}
+		
+		for(Spatial sptChild:pnl.getChildren()){
+			if (sptChild instanceof Panel) {
+				safeSizeRecursively(eapply,(Panel)sptChild);
+			}
+		}
+	}
+	
 	@Override
 	public void updateLogicalState(float tpf) {
 		if(bApplyBoundingBoxSize)applyBoundingBoxSizeAfterResizing();
 		
-		int i=0;
+		int iGrowParentFixCount=0;
 		while(true){
 			try{
 				super.updateLogicalState(tpf);
@@ -427,12 +482,18 @@ public class ResizablePanel extends Panel {
 					warnMsg("maximum size reached during grow fix");
 					throw ex;
 				} //prevents endless growth
-				growParentestFixAttempt(i);
-				i++;
+				growParentestFixAttempt(iGrowParentFixCount);
+				iGrowParentFixCount++;
 			}
 		}
 		
 		if(bUpdateLogicalStateSuccess){
+			if(getUserData(strUDKeySafeSizeLast)==null){ // 1st/initial safe size will be default
+				safeSizeRecursively(EReSizeApplyMode.UpdateDefaultToCurrent,this);
+			}
+			
+			safeSizeRecursively(EReSizeApplyMode.Save,getParentest());
+			
 			for(IResizableListener iuls:listeners){
 				iuls.resizerUpdatedLogicalStateEvent(tpf,this);
 			}
@@ -672,13 +733,13 @@ public class ResizablePanel extends Panel {
 	@Override
 	public void setSize(Vector3f size) {
 		super.setSize(size);
-		bUpdateLogicalStateSuccess=false;
+		bUpdateLogicalStateSuccess=false; //requesting revalidation
 	}
 	
 	@Override
 	public void setPreferredSize(Vector3f size) {
 		super.setPreferredSize(size);
-		bUpdateLogicalStateSuccess=false;
+		bUpdateLogicalStateSuccess=false; //requesting revalidation
 	}
 	
 	public int getMouseButtonIndex() {
@@ -727,7 +788,7 @@ public class ResizablePanel extends Panel {
 	}
 	
 	private void warnMsg(String str){ //TODO @ThisMethodCouldBeAtMiscClass
-		System.err.println("WARN["+this.getClass().getSimpleName()+"]: "+str); //TODO log?
+		System.err.println("WARN["+this.getClass().getSimpleName()+"]: "+str+"; STE "+Thread.currentThread().getStackTrace()[2]); //TODO log?
 	}
 //	public static int getGrowParentestFixAttemptLimitGlobal() {
 //		return iGrowParentestFixAttemptLimitGlobal;
@@ -762,5 +823,9 @@ public class ResizablePanel extends Panel {
 	}
 	public void setApplyContentsBoundingBoxSize(boolean bApplyBoundingBoxSize) {
 		this.bApplyBoundingBoxSize = bApplyBoundingBoxSize;
+	}
+	
+	public void restoreDefaultSafeSize() {
+		safeSizeRecursively(EReSizeApplyMode.RestoreDefault, this);
 	}
 }

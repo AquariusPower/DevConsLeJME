@@ -145,7 +145,8 @@ public class UnsafeDebugHacksI {
 	 * @return the value that was stored at the variable that was set to null to let this fix work 
 	 */
 	public Screen[] hackXRandRpreventResolutionRestore(){
-		Screen[] a = UnsafeDebugHacksI.i().getOrSetFieldValueHK(XRandR.class, null, "savedConfiguration", Screen[].class, null, true, null);
+		Screen[] a = UnsafeDebugHacksI.i().getOrSetFieldValueHK(
+			XRandR.class, null, "savedConfiguration", Screen[].class, null, true, null);
 		return a;
 	}
 	

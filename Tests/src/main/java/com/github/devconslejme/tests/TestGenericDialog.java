@@ -27,6 +27,8 @@
 
 package com.github.devconslejme.tests;
 
+import org.lwjgl.opengl.Display;
+
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.SimpleGenericDialog;
@@ -71,7 +73,7 @@ public class TestGenericDialog extends SimpleApplication {
 			}
 		});
 		diagParent.setContents(btnChosenOption);
-		diagParent.setLocalTranslation(200, 230, 0);
+		diagParent.setLocalTranslation(200, Display.getHeight()-100, 0);
 		
 		DialogHierarchyStateI.i().showDialog(diagParent);
 		
@@ -86,7 +88,14 @@ public class TestGenericDialog extends SimpleApplication {
 		gdc.getDialog().setLocalTranslation(new Vector3f(100,550,10));
 		gdc.getDialog().setPreferredSize(new Vector3f(600,500,0));
 		
-		gdc.setTextInfo("This could be a good info about something.\nSecond line.");
+		gdc.setTextInfo("This could be a good info about something.\n"+
+				"+1 line.\n"+
+				"+1 line.\n"+
+				"+1 line.\n"+
+				"+1 line.\n"+
+				"+1 line.\n"+
+				""
+		);
 		/*
 		gdc.setCloseOnChoiceMade(false);
 		gdc.setReturnJustTheInputTextValue(true);

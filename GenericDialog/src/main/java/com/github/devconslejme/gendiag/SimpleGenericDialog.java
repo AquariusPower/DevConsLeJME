@@ -27,34 +27,43 @@
 
 package com.github.devconslejme.gendiag;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.lwjgl.opengl.Display;
+
 import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
+import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
+import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.jme3.input.KeyInput;
+import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
+import com.simsilica.lemur.Container;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.TextField;
+import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.component.TextEntryComponent;
 import com.simsilica.lemur.core.VersionedList;
 import com.simsilica.lemur.core.VersionedReference;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
-import com.simsilica.lemur.event.CursorListener;
 import com.simsilica.lemur.event.DefaultCursorListener;
 import com.simsilica.lemur.event.KeyAction;
 import com.simsilica.lemur.event.KeyActionListener;
-import com.simsilica.lemur.list.CellRenderer;
 import com.simsilica.lemur.list.DefaultCellRenderer;
 
 
@@ -64,7 +73,7 @@ import com.simsilica.lemur.list.DefaultCellRenderer;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public final class SimpleGenericDialog extends AbstractGenericDialog {
-	private Label	btnInfo;
+	private Label	btnInfoText;
 	private ListBox<OptionData>	lstbxOptions;
 	private VersionedList<OptionData>	vlodOptions;
 	private LinkedHashMap<String,OptionData> hmOptionsRoot = new LinkedHashMap<String,OptionData>();
@@ -98,6 +107,22 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 	private VersionedReference<Set<Integer>>	vrSelection;
 	protected boolean	bUpdateOptionSelected;
 	private boolean	bCloseOnChoiceMade=true;
+	private Container	cntrInfo;
+	private String	strName;
+	private String	strTitle;
+	private Button	btnTitleText;
+	private Container	cntrTitle;
+	private Button	btnMinimize;
+	private Button	btnMaximizeRestore;
+	private Button	btnClose;
+	private ArrayList<Button>	abtnInfoSection;
+	private Command<? super Button>	cmdInfoSectionButtons;
+	private Container	cntrDiagControls;
+	private Button	btnRestoreIniSize;
+	private Button	btnUpdateDefaultSize;
+	private int	iDiagControlColumnInitIndex;
+	protected String	strUDKeyPosBeforeMaximize = SimpleGenericDialog.class+"/PosBeforeMaximize";
+	protected boolean	bKeepMaximized;
 	
 	public static class OptionData{
 		private String strTextKey;
@@ -189,6 +214,15 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 //		}
 	}
 	
+	private Button createInfoButton(String strText,String strHintPopup){
+		Button btn = new Button(strText,getDialog().getStyle());
+		abtnInfoSection.add(btn);
+		if(strHintPopup!=null)PopupHintHelpListenerI.i().setPopupHelp(btn,strHintPopup);
+//		btn.setPreferredSize(new Vector3f(1,1,0.1f));
+//		btn.setSize(new Vector3f(1,1,0.1f));
+		return btn;
+	}
+	
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void initPreContentsContainer() {
@@ -196,11 +230,94 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 		
 		es=ESection.Info;
 		if(getSection(es)==null){
+			abtnInfoSection = new ArrayList<Button>();
+			
+			cmdInfoSectionButtons = new Command<Button>() {
+				@Override
+				public void execute(Button source) {
+					if(source==btnMaximizeRestore){ //toggle
+						if(MiscLemurI.i().isMaximized(getDialog())){
+							/**
+							 * restore
+							 */
+							getDialog().restoreDefaultSafeSize();
+							
+							Vector3f v3fPosBM = (Vector3f)getDialog().getUserData(strUDKeyPosBeforeMaximize);
+							v3fPosBM.z=getDialog().getLocalTranslation().z; //do not mess with z!!!
+							getDialog().setLocalTranslation(v3fPosBM);
+							
+							bKeepMaximized=false;
+						}else{
+							/**
+							 * maximize
+							 */
+							getDialog().setUserData(strUDKeyPosBeforeMaximize,getDialog().getLocalTranslation());
+//							MiscLemurI.i().maximize(getDialog());
+							
+							bKeepMaximized=true;
+						}
+					}else
+					if(source==btnRestoreIniSize){
+						getDialog().restoreDefaultSafeSize();
+					}else
+					if(source==btnUpdateDefaultSize){
+						getDialog().applyCurrentSafeSizeAsDefault();
+					}else
+					if(source==btnClose){
+						getDialog().close();
+					}else
+					{
+						MessagesI.i().warnMsg(SimpleGenericDialog.this, "cmd not supported yet", source);
+					}
+				}
+			};
+			
+			strTitle="(no title)";
+			
+			// title row
+			cntrDiagControls = new Container();
+			iDiagControlColumnInitIndex=0;
+//			cntrDiagControls.addChild(btnRestoreIniSize = createInfoButton("r","Restore to default/initial size"), iDiagControlColumnInitIndex++);
+//			cntrDiagControls.addChild(btnUpdateDefaultSize = createInfoButton("u","Update default size to current"), iDiagControlColumnInitIndex++);
+//			cntrDiagControls.addChild(btnMinimize = createInfoButton("-","Minimize"), iDiagControlColumnInitIndex++);
+//			cntrDiagControls.addChild(btnMaximizeRestore = createInfoButton("M","Maximize/Restore"), iDiagControlColumnInitIndex++);
+//			cntrDiagControls.addChild(btnClose = createInfoButton("X","Close"), iDiagControlColumnInitIndex++);
+			btnRestoreIniSize=appendNewDiagControl("r","Restore to default/initial size");
+			btnUpdateDefaultSize=appendNewDiagControl("u","Update default size to current");
+			btnMinimize=appendNewDiagControl("-","Minimize");
+			btnMaximizeRestore=appendNewDiagControl("M","Maximize/Restore");
+			btnClose=appendNewDiagControl("X","Close");
+			MiscLemurI.i().changeBackgroundColor(btnClose, ColorI.i().colorChangeCopy(ColorRGBA.Red,0f,0.25f), true); //TODO use a lemur style instead
+			
+			// title row put it all
+			cntrTitle = new Container(new BorderLayout());
+			
+			btnTitleText = createInfoButton(strTitle,null);
+			MiscLemurI.i().changeBackgroundColor(btnTitleText, ColorI.i().colorChangeCopy(ColorRGBA.Blue,0f,0.25f), true); //TODO use a lemur style instead
+			DragParentestPanelListenerI.i().applyAt(btnTitleText);
+			
+//			cntrTitle.setPreferredSize(new Vector3f(1,1,0.1f));
+			cntrTitle.addChild(btnTitleText, BorderLayout.Position.Center);
+			cntrTitle.addChild(cntrDiagControls, BorderLayout.Position.East);
+			
+			// text info row
 			/**
 			 * IMPORTANT: Button works MUCH better than Label when clicking to drag for ex.
+			 * as the label will require aiming at the label's text...
 			 */
-			btnInfo = new Button("(No Info)", getDialog().getStyle());
-			setSection(es,btnInfo);
+			btnInfoText = createInfoButton("(No Info)",null);
+			
+			// cfg all buttons
+			for(Button btn:abtnInfoSection){
+				btn.addClickCommands(cmdInfoSectionButtons);
+			}
+			
+			// info section
+			cntrInfo = new Container(new BorderLayout());
+			cntrInfo.addChild(cntrTitle, BorderLayout.Position.North);
+			cntrInfo.addChild(btnInfoText, BorderLayout.Position.Center);
+			
+			setSection(es,cntrInfo);
 		}
 		
 		es=ESection.Options;
@@ -304,8 +421,15 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 //		return i;
 //	}
 	
+	private Button appendNewDiagControl(String strText, String strHint) {
+		Button btn = createInfoButton(strText,strHint);
+		MiscJmeI.i().addToName(btn, strText, true);
+		cntrDiagControls.addChild(btn, iDiagControlColumnInitIndex++);
+		return btn;
+	}
+
 	public void setTextInfo(String strInfo){
-		btnInfo.setText(strInfo);
+		btnInfoText.setText(strInfo);
 	}
 	
 	public OptionData putSection(OptionData odParent, String strNewSectionKey){
@@ -418,6 +542,10 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 //	}
 	
 	public void update(float tpf) {
+		if(bKeepMaximized){
+			MiscLemurI.i().maximize(getDialog());
+		}
+		
 		if(bToggleExpandedOnce){
 			getSelectedOptionData().toggleExpanded();
 			

@@ -25,7 +25,7 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.tests;
+package com.github.devconslejme.projman;
 
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import io.github.lukehutch.fastclasspathscanner.scanner.ScanResult;
@@ -44,7 +44,7 @@ import com.google.common.io.Files;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestGenerateClassGraphAnalysis {
+public class GenerateClassGraphAnalysis {
 	public static void main(String[] args) throws IOException {
 		ScanResult scanResult = new FastClasspathScanner(
 			DevConsPluginStateI.class.getPackage().getName())

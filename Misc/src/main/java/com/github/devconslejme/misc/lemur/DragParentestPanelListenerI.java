@@ -76,10 +76,10 @@ public class DragParentestPanelListenerI implements CursorListener{
 		focusman = GlobalManagerI.i().get(Application.class).getStateManager().getState(FocusManagerState.class);
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public void cursorButtonEvent(CursorButtonEvent event, Spatial target, Spatial capture) {
 //		if(event.isConsumed())return;
+		if(capture==null)return; //TODO rare condition, how to simulate it? click ouside at nothing and release over a panel?
 		
 		int iButtonClickOk=0;
 		if(capture.getControl(CursorEventControl.class).getMouseListener(ResizerCursorListener.class)!=null){
