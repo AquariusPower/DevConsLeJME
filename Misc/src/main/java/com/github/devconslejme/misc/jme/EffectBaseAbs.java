@@ -29,7 +29,6 @@ package com.github.devconslejme.misc.jme;
 import com.github.devconslejme.misc.DetailedException;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
-import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
@@ -275,7 +274,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 //			}else{
 //				if (objOwner instanceof Spatial) {
 //					Spatial spt = (Spatial) objOwner;
-					nodeParent=MiscJmeI.i().getParentest(sptOwner,Node.class,false);
+					nodeParent=JmeSpatialHierarchyI.i().getParentest(sptOwner,Node.class,false);
 //				}
 //			}
 			

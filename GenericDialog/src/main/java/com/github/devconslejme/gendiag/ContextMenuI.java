@@ -41,6 +41,7 @@ import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.jme.JmeSpatialHierarchyI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.jme.UserDataI.IUDKey;
@@ -56,7 +57,6 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
 import com.simsilica.es.EntityId;
 import com.simsilica.lemur.Button;
@@ -159,7 +159,7 @@ public class ContextMenuI {
 				new Command<Button>() {
 					@Override
 					public void execute(Button source) {
-						ResizablePanel rzp = MiscJmeI.i().getParentest(source, ResizablePanel.class, false);
+						ResizablePanel rzp = JmeSpatialHierarchyI.i().getParentest(source, ResizablePanel.class, false);
 	//					cmSub.setHierarchyParent(rzp);
 						
 						/*
@@ -311,7 +311,7 @@ public class ContextMenuI {
 			if(target==null)return;
 			
 			if(ContextMenuI.i().geomContextMenuAvailableIndicator.getParent()==null){
-				MiscJmeI.i().getParentest(target, Node.class, false).attachChild(
+				JmeSpatialHierarchyI.i().getParentest(target, Node.class, false).attachChild(
 					ContextMenuI.i().geomContextMenuAvailableIndicator);
 				UserDataI.i().setUserDataPSH(
 					ContextMenuI.i().geomContextMenuAvailableIndicator,

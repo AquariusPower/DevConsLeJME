@@ -28,14 +28,14 @@
 package com.github.devconslejme.misc.lemur;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
+import com.github.devconslejme.misc.Annotations.Bugfix;
+import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
-import com.github.devconslejme.misc.Annotations.Bugfix;
-import com.github.devconslejme.misc.Annotations.Workaround;
+import com.github.devconslejme.misc.jme.JmeSpatialHierarchyI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.ResizablePanel.ResizerCursorListener;
@@ -100,7 +100,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 				
 				//find parentest 
 				Panel pnlParentest = (Panel)capture.getUserData(getUserDataIdFor(EDrag.ApplyDragAt));
-				if(pnlParentest==null)pnlParentest = MiscJmeI.i().getParentest(capture, Panel.class, true);
+				if(pnlParentest==null)pnlParentest = JmeSpatialHierarchyI.i().getParentest(capture, Panel.class, true);
 				
 				// base dist calc
 				v3fInitialDragPos = pnlParentest.getWorldTranslation().clone();
@@ -226,7 +226,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 			
 			// find parentest
 			ResizablePanel pnlParentest = (ResizablePanel)capture.getUserData(getUserDataIdFor(EDrag.ApplyDragAt));
-			if(pnlParentest==null)pnlParentest = MiscJmeI.i().getParentest(capture, ResizablePanel.class, true);
+			if(pnlParentest==null)pnlParentest = JmeSpatialHierarchyI.i().getParentest(capture, ResizablePanel.class, true);
 			
 			// position parentest
 			Vector3f v3f = v3fCurPos.add(v3fDistToCursor);

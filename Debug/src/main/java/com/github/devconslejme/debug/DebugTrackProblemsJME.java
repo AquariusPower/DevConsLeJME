@@ -30,17 +30,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import com.github.devconslejme.misc.CheckProblemsI.ICheckProblems;
-import com.github.devconslejme.misc.jme.ColorI;
-import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.jme.JmeSpatialHierarchyI;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
-import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.shape.Line;
 import com.jme3.scene.shape.Sphere;
 
 /**
@@ -76,7 +74,7 @@ public class DebugTrackProblemsJME implements ICheckProblems{
 				String str="";
 				for(Spatial spt : asptList){
 					str+=spt.getName()+"@";
-					for(Node node:MiscJmeI.i().getAllParents(spt)){
+					for(Node node:JmeSpatialHierarchyI.i().getAllParents(spt)){
 						str+=node.getName()+"/";
 					}
 				}

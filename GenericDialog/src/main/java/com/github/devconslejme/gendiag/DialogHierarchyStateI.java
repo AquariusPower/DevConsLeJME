@@ -42,6 +42,7 @@ import com.github.devconslejme.misc.jme.EffectArrow;
 import com.github.devconslejme.misc.jme.EffectElectricity;
 import com.github.devconslejme.misc.jme.EffectManagerStateI;
 import com.github.devconslejme.misc.jme.IEffect;
+import com.github.devconslejme.misc.jme.JmeSpatialHierarchyI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
@@ -53,16 +54,13 @@ import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.simsilica.es.Entity;
 import com.simsilica.es.EntityId;
-import com.simsilica.lemur.Button;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Panel;
-import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
@@ -105,7 +103,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		@Override
 		public Boolean call() {
 			for(Panel pnl:apnlAutoFocus){
-				ResizablePanel rzp = MiscJmeI.i().getParentest(pnl, ResizablePanel.class, true);
+				ResizablePanel rzp = JmeSpatialHierarchyI.i().getParentest(pnl, ResizablePanel.class, true);
 				HierarchyComp hc = DialogHierarchyStateI.i().getHierarchyComp(rzp);
 				if(!hc.isOpened())continue;
 				
@@ -279,7 +277,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 				};
 			};
 			
-			for(Panel pnl:MiscJmeI.i().getAllChildrenRecursiveFrom(rzp, Panel.class, null)){
+			for(Panel pnl:JmeSpatialHierarchyI.i().getAllChildrenRecursiveFrom(rzp, Panel.class, null)){
 				CursorEventControl.addListenersToSpatial(pnl,cl);
 			}
 		}
@@ -346,7 +344,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		Spatial spt = focusState.getFocus();
 		if(spt==null)return;
 		
-		ResizablePanel rzp = MiscJmeI.i().getParentest(spt, ResizablePanel.class, true);
+		ResizablePanel rzp = JmeSpatialHierarchyI.i().getParentest(spt, ResizablePanel.class, true);
 		HierarchyComp hc = getHierarchyComp(rzp);
 		if(hc==null)return;
 		

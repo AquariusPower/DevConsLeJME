@@ -876,7 +876,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		LoggingI.i().logExceptionEntry(new UnsupportedOperationException("method not implemented yet"), null);
 	}
 	
-	boolean bAllowHiddenStats=false;
+	boolean bAllowHiddenStats=true; //TODO shouldnt it init as false? :)
 //	Command<Button> cmdToggleHiddenStats = new Command<Button>(){
 //		@Override
 //		public void execute(Button source) {

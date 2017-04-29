@@ -34,6 +34,7 @@ import org.lwjgl.opengl.Display;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.jme.JmeSpatialHierarchyI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.app.Application;
 import com.jme3.font.BitmapText;
@@ -76,7 +77,7 @@ public class MiscLemurI {
 		String str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 		Label lbl = new Label(str,strStyle);
 //		float fLineWidth = MiscJmeI.i().getBitmapTextFrom(lbl).getLineWidth();
-		float fLineWidth = MiscJmeI.i().getChildRecursiveExactMatch(lbl,BitmapText.class).getLineWidth();
+		float fLineWidth = JmeSpatialHierarchyI.i().getChildRecursiveExactMatch(lbl,BitmapText.class).getLineWidth();
 		int iCharWidthPixels = Math.round(fLineWidth/=str.length());
 		
 		return iCharWidthPixels;
@@ -118,7 +119,7 @@ public class MiscLemurI {
 		ElementId elidItem = elid.child("item");
 		ElementId elidSelector = elid.child(ListBox.SELECTOR_ID);
 		
-		ArrayList<Panel> apnl = MiscJmeI.i().getAllChildrenRecursiveFrom(lstbx, Panel.class, null);
+		ArrayList<Panel> apnl = JmeSpatialHierarchyI.i().getAllChildrenRecursiveFrom(lstbx, Panel.class, null);
 		for(Panel pnl:apnl.toArray(new Panel[0])){
 			if(pnl.getElementId().equals(elidItem))continue;
 			if(bIncludeSelector){
