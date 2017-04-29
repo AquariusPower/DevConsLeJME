@@ -29,13 +29,14 @@ package com.github.devconslejme.tests;
 
 import com.github.devconslejme.debug.DebugTrackProblemsJME;
 import com.github.devconslejme.debug.UnsafeDebugHacksI;
-import com.github.devconslejme.devcons.JavaScriptI;
 import com.github.devconslejme.extras.DynamicFPSLimiter;
 import com.github.devconslejme.extras.OSCmd;
 import com.github.devconslejme.extras.SingleAppInstance;
 import com.github.devconslejme.extras.SingleAppInstance.CallChkProblemsAbs;
 import com.github.devconslejme.misc.CheckProblemsI;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.Annotations.Workaround;
+import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.system.AppSettings;
@@ -107,14 +108,24 @@ public class TestDevCons extends SimpleApplication{
 		DebugTrackProblemsJME.i().configure(getGuiNode(), getRootNode());
 		CheckProblemsI.i().addProblemsChecker(DebugTrackProblemsJME.i());
 		
-		//// Workarounds
-		// Linux only: raise application window as easy workaround to make strict focus policy painless
+		//// linux only
+		if(System.getProperty("os.name").equalsIgnoreCase("linux")){
+			//// Workarounds
+			raiseAppWindowAtLinux();
+		
+			//// Unsafe Hacks
+			UnsafeDebugHacksI.i().setAllowHacks(true);
+			UnsafeDebugHacksI.i().hackXRandRpreventResolutionRestore();
+		}
+	}
+
+	/**
+	 * Linux only: raise application window as easy workaround to make strict focus policy painless
+	 */
+	@Workaround
+	private void raiseAppWindowAtLinux() {
 		GlobalManagerI.i().get(OSCmd.class).runOSCommand(
 			"linux 'xdotool windowactivate $(xdotool search --name \"^"+settings.getTitle()+"$\")'");
-		
-		//// Unsafe Hacks
-		UnsafeDebugHacksI.i().setAllowHacks(true);
-		UnsafeDebugHacksI.i().hackXRandRpreventResolutionRestore();
 	}
 
 	/**

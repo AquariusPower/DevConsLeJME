@@ -29,7 +29,6 @@ package com.github.devconslejme.devcons;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -45,7 +44,7 @@ import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
-import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
+import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchy;
@@ -483,13 +482,14 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 				}
 				
 				if(e!=null){
-					Panel pnl = cmVarMon.getContextSource();
-					Button btn = (Button)pnl;
+					Button btn = (Button)cmVarMon.getContextSource();
 					VarMon vm = hmVarMon.get(btn.getText());
 					if(vm!=null)vm.set(e);
 				}else{
 					//other possible commands
 				}
+				
+				grantContextMenuAtVarMonList();
 			}
 		};
 		
@@ -559,12 +559,26 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		// show specific status help
 		if(vrSelectionChangedToShowVarHelp!=null){
 			if(vrSelectionChangedToShowVarHelp.update()){
-				VarMon vm = hmVarMon.get(vlstrVarMonitorEntries.get(lstbxVarMonitorBar.getSelectionModel().getSelection()));
-				if(vm!=null){
-					LoggingI.i().logEntry("VarHelp:"+vm.strHelp);
+				Integer iSel = lstbxVarMonitorBar.getSelectionModel().getSelection();
+				if(iSel!=null){
+					VarMon vm = hmVarMon.get(vlstrVarMonitorEntries.get(iSel));
+					if(vm!=null){
+						LoggingI.i().logEntry("VarHelp:"+vm.strHelp);
+					}
+					grantContextMenuAtVarMonList();
 				}
 			}
 		}
+	}
+	
+	/**
+	 * if there is a selected item, the var mon context menu will not work,
+	 * because the selection Panel highlighter will receive the mouse cursor raycast hit on click (as it is positioned above the listbox item),
+	 * instead of the listbox item (that is below it)...
+	 */
+	@Workaround
+	private void grantContextMenuAtVarMonList(){
+		lstbxVarMonitorBar.getSelectionModel().setSelection(-1);
 	}
 	
 	private void updateVarMonList() {
@@ -605,7 +619,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			public Boolean call() {
 				if(lstbxVarMonitorBar.getGridPanel().getModel().getRowCount()==0)return false;
 				
-				ContextMenuI.i().attachContextMenuAtListBoxItems(lstbxVarMonitorBar,cmVarMon);
+				ContextMenuI.i().applyContextMenuAtListBoxItems(lstbxVarMonitorBar,cmVarMon);
 				
 				return true;
 			}
@@ -761,7 +775,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		
 		btnShowVarMon = new Button("VarMonBar:Toggle",getStyle());
 		PopupHintHelpListenerI.i().setPopupHelp(btnShowVarMon, "Show Variables Monitor Bar");
-		ContextMenuI.i().attachContextMenuAt(btnShowVarMon,new ContextMenu(rzpMain)
+		ContextMenuI.i().applyContextMenuAt(btnShowVarMon,new ContextMenu(rzpMain)
 //			.setHierarchyParent(rzpMain)
 			.addNewEntry("ToggleHiddenStats", cmdToggleHiddenStats)
 		);
@@ -1312,7 +1326,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			@Override
 			public Boolean call() {
 //				ArrayList<Button> abtn = MiscJmeI.i().getAllChildrenRecursiveFrom(lstbxLoggingSection, Button.class, null);
-				ArrayList<Panel> abtn = MiscLemurI.i().getAllListBoxItems(lstbxLoggingSection);
+				ArrayList<Panel> abtn = MiscLemurI.i().getAllListBoxItems(lstbxLoggingSection,false);
 //				Panel pnl = lstbxLoggingSection.getGridPanel().getCell(0,0);
 //				Panel pnl = lstbxLoggingSection.getGridPanel().getModel().getCell(0,0,null);
 				if(abtn.isEmpty())return false; //wait something show up

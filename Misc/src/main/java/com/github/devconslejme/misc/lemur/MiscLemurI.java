@@ -31,7 +31,6 @@ import java.util.ArrayList;
 
 import org.lwjgl.opengl.Display;
 
-import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
@@ -54,6 +53,7 @@ import com.simsilica.lemur.core.GuiComponent;
 import com.simsilica.lemur.core.GuiControl;
 import com.simsilica.lemur.event.AbstractCursorEvent;
 import com.simsilica.lemur.grid.GridModel;
+import com.simsilica.lemur.style.ElementId;
 
 /**
  * DevSelfNote: Misc lib class should not exist. As soon coehsion is possible, do it!
@@ -112,8 +112,22 @@ public class MiscLemurI {
 		return new Vector3f(event.getX(),event.getY(),0);
 	}
 	
-	public ArrayList<Panel> getAllListBoxItems(ListBox lstbx){
-		return MiscJmeI.i().getAllChildrenRecursiveFrom(lstbx.getGridPanel(), Panel.class, 1);
+	public ArrayList<Panel> getAllListBoxItems(ListBox lstbx, boolean bIncludeSelector){
+//		return MiscJmeI.i().getAllChildrenRecursiveFrom(lstbx.getGridPanel(), Panel.class, 1);
+		ElementId elid = new ElementId(ListBox.ELEMENT_ID);
+		ElementId elidItem = elid.child("item");
+		ElementId elidSelector = elid.child(ListBox.SELECTOR_ID);
+		
+		ArrayList<Panel> apnl = MiscJmeI.i().getAllChildrenRecursiveFrom(lstbx, Panel.class, null);
+		for(Panel pnl:apnl.toArray(new Panel[0])){
+			if(pnl.getElementId().equals(elidItem))continue;
+			if(bIncludeSelector){
+				if(pnl.getElementId().equals(elidSelector))continue;
+			}
+			apnl.remove(pnl);
+		}
+		
+		return apnl;
 	}
 
 	public boolean isMaximized(Panel pnl) {

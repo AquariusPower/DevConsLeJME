@@ -86,7 +86,7 @@ public class ContextMenuI {
 	private boolean	bShowDbgInfo = false;
 	private boolean	bUseContextMenuAvailablePermanentIndicators=false;
 	private Geometry	geomContextMenuAvailableIndicator;
-	private String	strUDKeyFollowContextMenuTarget = "FollowContextMenuTarget";
+//	private String	strUDKeyFollowContextMenuTarget = "FollowContextMenuTarget";
 	
 	public static enum EUDKey implements IUDKey{
 		FollowContextMenuTarget(Spatial.class),
@@ -206,7 +206,8 @@ public class ContextMenuI {
 			super.click(event, target, capture);
 			
 			if(event.getButtonIndex()!=1)return; //right mouse button
-			if(!Button.class.isInstance(capture))return;
+//			if(!Panel.class.isInstance(capture))return;
+//			if(!Button.class.isInstance(capture))return;
 			
 			Button btn = (Button)capture;
 			
@@ -228,7 +229,7 @@ public class ContextMenuI {
 					ContextMenuI.i().geomContextMenuAvailableIndicator);
 				UserDataI.i().setUserDataPSH(
 					ContextMenuI.i().geomContextMenuAvailableIndicator,
-					ContextMenuI.i().strUDKeyFollowContextMenuTarget,
+					EUDKey.FollowContextMenuTarget,
 					target);
 			}
 //			ContextMenuI.i().geomContextMenuAvailableIndicator.setLocalTranslation(target.getWorldTranslation());
@@ -247,7 +248,7 @@ public class ContextMenuI {
 			new Box(1,1,3));
 //			new Sphere(4, 7, fRadius));
 		geomContextMenuAvailableIndicator.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(
-			ColorRGBA.Cyan));
+			ColorI.i().colorChangeCopy(ColorRGBA.Cyan,0f,0.75f)));
 //			ColorI.i().colorChangeCopy(ColorRGBA.Green, 0f, 0.15f)));
 	}
 	
@@ -308,7 +309,7 @@ public class ContextMenuI {
 				@Override
 				public Boolean call() {
 					if(geomContextMenuAvailableIndicator.getParent()!=null){
-						Spatial spt = UserDataI.i().getUserDataPSH(geomContextMenuAvailableIndicator,strUDKeyFollowContextMenuTarget);
+						Spatial spt = UserDataI.i().getUserDataPSH(geomContextMenuAvailableIndicator,EUDKey.FollowContextMenuTarget);
 						geomContextMenuAvailableIndicator.setLocalTranslation(spt.getWorldTranslation());
 						geomContextMenuAvailableIndicator.rotate(0.1f,0.1f,0.1f);
 					}
@@ -323,15 +324,20 @@ public class ContextMenuI {
 		
 	}
 	
-	public void attachContextMenuAtListBoxItems(ListBox lstbx, ContextMenu cm){
+	public void applyContextMenuAtListBoxItems(ListBox lstbx, ContextMenu cm){
 //		ArrayList<Panel> apnl = MiscJmeI.i().getAllChildrenRecursiveFrom(lstbx.getGridPanel(), Panel.class, null);
-		ArrayList<Panel> apnl = MiscLemurI.i().getAllListBoxItems(lstbx);
+		ArrayList<Panel> apnl = MiscLemurI.i().getAllListBoxItems(lstbx,false);
 		for(Panel pnl:apnl){
-			attachContextMenuAt(pnl, cm);
+			applyContextMenuAt(pnl, cm);
 		}
 	}
 	
-	public void attachContextMenuAt(Spatial spt, ContextMenu cm){
+	/**
+	 * {@link Spatial} N -> 1 {@link ContextMenu}
+	 * @param spt
+	 * @param cm
+	 */
+	public void applyContextMenuAt(Spatial spt, ContextMenu cm){
 		UserDataI.i().setUserDataPSH(spt, cm);
 		CursorEventControl.addListenersToSpatial(spt,ContextMenuOwnerListenerI.i());
 		

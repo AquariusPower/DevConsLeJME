@@ -34,6 +34,7 @@ import java.lang.reflect.Method;
 import org.lwjgl.opengl.XRandR;
 import org.lwjgl.opengl.XRandR.Screen;
 
+import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.DetailedException.IHandleExceptions;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
@@ -144,9 +145,13 @@ public class UnsafeDebugHacksI {
 	 * 
 	 * @return the value that was stored at the variable that was set to null to let this fix work 
 	 */
+	@Bugfix
 	public Screen[] hackXRandRpreventResolutionRestore(){
+		if(!System.getProperty("os.name").equalsIgnoreCase("linux"))return null;
+		
 		Screen[] a = UnsafeDebugHacksI.i().getOrSetFieldValueHK(
 			XRandR.class, null, "savedConfiguration", Screen[].class, null, true, null);
+		
 		return a;
 	}
 	

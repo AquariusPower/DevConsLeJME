@@ -33,7 +33,7 @@ import java.util.HashMap;
 /**
  * This makes it easy to:
  * - override a global instance.
- * - list all globals (to use on scripts for ex.)
+ * - list all globals (to use on javascript for ex.)
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */

@@ -35,6 +35,8 @@ import java.util.Set;
 
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.Annotations.Bugfix;
+import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
@@ -300,7 +302,7 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 			btnTitleText = createInfoButton(strTitle,null);
 			MiscLemurI.i().changeBackgroundColor(btnTitleText, ColorI.i().colorChangeCopy(ColorRGBA.Blue,0f,0.25f), true); //TODO use a lemur style instead
 			DragParentestPanelListenerI.i().applyAt(btnTitleText);
-			ContextMenuI.i().attachContextMenuAt(btnTitleText, cm);
+			ContextMenuI.i().applyContextMenuAt(btnTitleText, cm);
 			
 //			cntrTitle.setPreferredSize(new Vector3f(1,1,0.1f));
 			cntrTitle.addChild(btnTitleText, BorderLayout.Position.Center);
@@ -346,11 +348,11 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 			};
 			
 			/**
-			 * FIXME: BUGFIX
 			 * for some reason, some of the buttons on the listbox will not work with the
-			 * Button.addClickCommands(), to workaround that, I am using together the 
+			 * Button.addClickCommands(). To force it to work, I am using together the 
 			 * CursorListener.
 			 */
+			@Workaround @Bugfix
 			DefaultCursorListener clOption = new DefaultCursorListener(){
 				@Override
 				protected void click(CursorButtonEvent event, Spatial target, Spatial capture) {

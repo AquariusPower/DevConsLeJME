@@ -36,6 +36,8 @@ import com.github.devconslejme.gendiag.ResizablePanel.ResizerCursorListener;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.Annotations.Bugfix;
+import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.jme3.app.Application;
@@ -67,7 +69,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 	private Vector3f	v3fDistToCursor;
 	private Panel	pnlParentestBeingDragged;
 	private FocusManagerState	focusman;
-	private boolean	bBugfixClickCommands=true;
+	private boolean	bDelegateClickCommands=true;
 	private Vector3f	v3fInitialDragPos;
 	private Vector3f	v3fInitialCurPos;
 	private boolean	bIsReallyDragging;
@@ -109,20 +111,21 @@ public class DragParentestPanelListenerI implements CursorListener{
 				
 				bIsReallyDragging=false;
 				
-				bugfixAbsorbClickCommands(capture);
+				absorbClickCommands(capture);
 			}else{
 				pnlParentestBeingDragged=null;
 				
 				// just click, not dragging
-				if(!bIsReallyDragging)bugfixDelegateClickCommands(capture);
+				if(!bIsReallyDragging)delegateClickCommands(capture);
 			}
 			event.setConsumed();
 		}
 	}
 	
+	@Bugfix
 	@SuppressWarnings("unchecked")
-	private void bugfixAbsorbClickCommands(Spatial capture) {
-		if(!isBugfixClickCommands())return;
+	private void absorbClickCommands(Spatial capture) {
+		if(!isDelegateClickCommands())return;
 		
 		if (capture instanceof Button) {
 			Button btn = (Button) capture;
@@ -154,8 +157,9 @@ public class DragParentestPanelListenerI implements CursorListener{
 	 * In case Button click commands are not working when the button has focus.
 	 * @param capture
 	 */
-	private void bugfixDelegateClickCommands(Spatial capture) {
-		if(!isBugfixClickCommands())return;
+	@Bugfix
+	private void delegateClickCommands(Spatial capture) {
+		if(!isDelegateClickCommands())return;
 		
 //		if(focusman.getFocus()!=capture)return; //the ignored click commands bug happens only when the Button has focus
 		
@@ -255,7 +259,9 @@ public class DragParentestPanelListenerI implements CursorListener{
 	 * so as may be fixed in the future, this method may be disabled/removed one day.
 	 * @param pnl
 	 */
-	private void bugfixWorkaroundMouseListenerConflictDenier(Panel pnl){
+	@Bugfix
+	@Workaround
+	private void mouseListenerConflictDenier(Panel pnl){
 		if(false){
 			MouseEventControl mec = pnl.getControl(MouseEventControl.class);
 			if(mec!=null){
@@ -287,7 +293,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 	 * @param pnlApplyDragAt can be used to move a non attached/linked/parent panel
 	 */
 	public void applyAt(Panel pnl, Panel pnlApplyDragAt) {
-		bugfixWorkaroundMouseListenerConflictDenier(pnl);
+		mouseListenerConflictDenier(pnl);
 		
 		CursorEventControl.addListenersToSpatial(pnl, this);
 		if(pnlApplyDragAt!=null){
@@ -314,12 +320,14 @@ public class DragParentestPanelListenerI implements CursorListener{
 	public void setHightlightToo(boolean bHightlightToo) {
 		this.bHightlightToo = bHightlightToo;
 	}
-
-	public boolean isBugfixClickCommands() {
-		return bBugfixClickCommands;
+	
+	@Bugfix
+	public boolean isDelegateClickCommands() {
+		return bDelegateClickCommands;
 	}
-
-	public void setBugfixClickCommandsDisabled() {
-		this.bBugfixClickCommands = false;
+	
+	@Bugfix
+	public void setDelegateClickCommandsDisabled() {
+		this.bDelegateClickCommands = false;
 	}
 }

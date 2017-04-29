@@ -27,6 +27,7 @@
 
 package com.github.devconslejme.misc.jme;
 
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MainThreadI;
@@ -64,7 +65,11 @@ public class UserDataI {
 			@SuppressWarnings("unchecked")
 			@Override
 			public Boolean call() {
-				spt.setUserData(strKey, new PseudoSavableHolder(obj));
+				try{
+					spt.setUserData(strKey, obj);
+				}catch(IllegalArgumentException ex){
+					spt.setUserData(strKey, new PseudoSavableHolder(obj));
+				}
 				return true;
 			}
 		};
@@ -86,12 +91,42 @@ public class UserDataI {
 		return getUserDataPSH(spt, cl.getName());
 	}
 	public <R> R getUserDataPSH(Spatial spt, String strKey){
-		@SuppressWarnings("unchecked")
-		PseudoSavableHolder<R> sh = (PseudoSavableHolder<R>)spt.getUserData(strKey);
-		if(sh==null)return null;
-		return sh.getRef();
+		R ret = spt.getUserData(strKey);
+		if(ret==null)return null;
+		
+		if(ret instanceof PseudoSavableHolder){
+			@SuppressWarnings("unchecked")
+			PseudoSavableHolder<R> sh = (PseudoSavableHolder<R>)ret;
+			return sh.getRef();
+		}
+		
+		return ret;
+				
+//		@SuppressWarnings("unchecked")
+//		PseudoSavableHolder<R> sh = (PseudoSavableHolder<R>)spt.getUserData(strKey);
+//		if(sh==null)return null;
+//		return sh.getRef();
 	}
-//	public <R> R getUserDataPSH(Spatial spt, IUDKey eKey){
-//		((Enum)eKey).toString();
-//	}
+	/**
+	 * 
+	 * @param spt
+	 * @param eKey enum
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public <R> R getUserDataPSH(Spatial spt, IUDKey eKey){
+		R ret = getUserDataPSH( spt, ((Enum)eKey).toString() );
+		if(ret!=null && !eKey.getType().isAssignableFrom(ret.getClass())){
+			throw new DetailedException("incompatible types",ret.getClass(),eKey.getType(),spt,eKey);
+		}
+		return ret;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public boolean setUserDataPSH(Spatial spt, IUDKey eKey, Object obj){
+		if(obj!=null && !eKey.getType().isAssignableFrom(obj.getClass())){
+			throw new DetailedException("incompatible types",obj.getClass(),eKey,eKey.getType(),spt);
+		}
+		return setUserDataPSH(spt, ((Enum)eKey).toString(), obj);
+	}
 }

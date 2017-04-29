@@ -33,6 +33,7 @@ import java.util.HashMap;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.Annotations.Workaround;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.math.ColorRGBA;
@@ -392,6 +393,7 @@ public class ResizablePanel extends Panel {
 	/**
 	 * after resizing, if things change anywhere (even on childs) on the panel, it may break.
 	 */
+	@Workaround
 	private void growParentestFixAttempt(int i){
 		Panel pnlParentest = getParentest();
 		
