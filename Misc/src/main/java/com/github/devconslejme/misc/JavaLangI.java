@@ -285,4 +285,13 @@ public class JavaLangI {
 		
 		return false;
 	}
+	
+	/**
+	 * as the simple enum name toString() may conflict with other enum classes in a same HashMap for ex.
+	 * @param e
+	 * @return
+	 */
+	public String enumUId(Enum e) {
+		return e.getClass().getName()+"."+e.toString();
+	}
 }

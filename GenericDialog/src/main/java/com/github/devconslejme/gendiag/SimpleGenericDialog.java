@@ -219,7 +219,7 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 	private Button createInfoButton(String strText,String strHintPopup){
 		Button btn = new Button(strText,getDialog().getStyle());
 		abtnInfoSection.add(btn);
-		if(strHintPopup!=null)PopupHintHelpListenerI.i().setPopupHelp(btn,strHintPopup);
+		if(strHintPopup!=null)PopupHintHelpListenerI.i().setPopupHintHelp(btn,strHintPopup);
 //		btn.setPreferredSize(new Vector3f(1,1,0.1f));
 //		btn.setSize(new Vector3f(1,1,0.1f));
 		return btn;

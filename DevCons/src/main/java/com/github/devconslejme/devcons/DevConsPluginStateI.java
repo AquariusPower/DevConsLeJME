@@ -40,8 +40,8 @@ import org.lwjgl.opengl.Display;
 import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.es.HierarchyComp.EField;
 import com.github.devconslejme.gendiag.ContextMenuI;
+import com.github.devconslejme.gendiag.ContextMenuI.ContextCallX;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
-import com.github.devconslejme.gendiag.ContextMenuI.EContext;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
@@ -199,7 +199,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		public CallableXScrollTo(){
 			super();
 			setDelaySeconds(0.25f);
-			setLoop(true);
+			enableLoop();
 			setUserCanPause(true);
 		}
 		
@@ -315,7 +315,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		vm.set(esp,strKey,strHelp,"",cx);
 		
 		cx.putKeyClassValue(vm);
-		QueueI.i().enqueue(cx.setName(vm.getQueueName()).setLoop(true).setDelaySeconds(1f));
+		QueueI.i().enqueue(cx.setName(vm.getQueueName()).enableLoop().setDelaySeconds(1f));
 		
 		enqueueUpdateVarMonList();
 //		updateVarMonList();
@@ -404,7 +404,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			}
 			.setName("UpdateVisibleRowsAndWrapAt")
 			.setDelaySeconds(0.25f)
-			.setLoop(true)
+			.enableLoop()
 		);
 		
 		bUpdateNoWrap=true;
@@ -494,7 +494,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		}
 		.setName("VarMonHelp")
 		.setDelaySeconds(1f)
-		.setLoop(true)
+		.enableLoop()
 		.setUserCanPause(true));
 		
 		initVarMonitorContextMenu();
@@ -535,17 +535,17 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		for(int i=0;i<EStatPriority.values().length;i++){
 			EStatPriority esp = EStatPriority.values()[i];
 			String str=EStatPriority.class.getSimpleName()+":"+esp.s();
-			cmVarMon.addNewEntry(str, cmd, new CallableX() {
+			cmVarMon.addNewEntry(str, cmd, new ContextCallX() {
 				@Override
 				public Boolean call() {
-//					ContextMenu cm = getValue(EContext.Menu.s());
-					Button btn = (Button)cmVarMon.getContextSource();
-					VarMon vm = hmVarMon.get(btn.getText());
+					Button btnSource = (Button)cmVarMon.getContextSource();
+					VarMon vm = hmVarMon.get(btnSource.getText());
 					if(vm.esp.equals(esp)){
-//						putKeyValue(EContext.PopupHintHelp.s(),esp.toString());
-						putKeyValue(EContext.PopupHintHelp.uId(),"CURRENT");
+						setPopupHintHelp("Current choice");
+						return true;
 					}
-					return true;
+					
+					return false;
 				}
 			});
 		}
@@ -895,11 +895,11 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		int iButtonIndex=0;
 		
 		btnRestoreSize = new Button("DefaultPosSize",getStyle());
-		PopupHintHelpListenerI.i().setPopupHelp(btnRestoreSize, "Restore DevCons defaults Size and Position");
+		PopupHintHelpListenerI.i().setPopupHintHelp(btnRestoreSize, "Restore DevCons defaults Size and Position");
 		apnl.add(btnRestoreSize);
 		
 		btnShowVarMon = new Button("VarMonBar:Toggle",getStyle());
-		PopupHintHelpListenerI.i().setPopupHelp(btnShowVarMon, "Show Variables Monitor Bar");
+		PopupHintHelpListenerI.i().setPopupHintHelp(btnShowVarMon, "Show Variables Monitor Bar");
 		ContextMenu cm = new ContextMenu(rzpMain);
 		cm.addNewEntry(
 			"ToggleHiddenStats", 
@@ -910,10 +910,10 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 					enqueueUpdateVarMonList();
 				}
 			},
-			new CallableX() {
+			new ContextCallX() {
 				@Override
 				public Boolean call() {
-					putKeyClassValue("("+(bAllowHiddenStats?"show":"hide")+")"); //say the next action on clicking
+					setPopupHintHelp("("+(bAllowHiddenStats?"show":"hide")+")"); //say the next action on clicking
 					return true;
 				}
 			}
@@ -922,7 +922,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		apnl.add(btnShowVarMon);
 		
 		btnClipboardShow = new Button("Clipboard:Show",getStyle());
-		PopupHintHelpListenerI.i().setPopupHelp(btnClipboardShow, "Show Clipboard Contents");
+		PopupHintHelpListenerI.i().setPopupHintHelp(btnClipboardShow, "Show Clipboard Contents");
 		apnl.add(btnClipboardShow);
 		
 		lblTitle = new Label(strBaseTitle ,getStyle());

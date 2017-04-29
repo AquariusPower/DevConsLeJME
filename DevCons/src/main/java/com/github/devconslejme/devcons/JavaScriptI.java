@@ -486,7 +486,7 @@ public class JavaScriptI implements IGlobalAddListener {
 			}
 			.setName(flJS!=null?flJS.getName():"SimpleScript")
 			.setDelaySeconds(fDelaySeconds)
-			.setLoop(bLoop)
+			.setLoopEnabled(bLoop)
 			.setUserCanKill(true)
 			.setUserCanPause(true)
 		);

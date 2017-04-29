@@ -86,18 +86,36 @@ public class QueueI {
 		 * @param strName
 		 * @return
 		 */
-		public CallableX setName(String strName) {
+		@SuppressWarnings("unchecked")
+		public <T extends CallableX> T setName(String strName) {
 			this.strName = strName;
-			return this;
+			return (T) this;
 		}
-		public CallableX setLoop(boolean bLoop) {
-			this.bLoop=bLoop;
-			return this;
+		@SuppressWarnings("unchecked")
+		public <T extends CallableX> T setLoopEnabled(boolean b) {
+			this.bLoop=b;
+			return (T)this;
 		}
-		public CallableX setDelaySeconds(float fDelaySeconds) {
+		@SuppressWarnings("unchecked")
+		public <T extends CallableX> T enableLoop() {
+			this.bLoop=true;
+			return (T) this;
+		}
+		@SuppressWarnings("unchecked")
+		public <T extends CallableX> T killSelf() {
+			disableLoop();
+			return (T)this;
+		}
+		@SuppressWarnings("unchecked")
+		public <T extends CallableX> T disableLoop() {
+			this.bLoop=false;
+			return (T)this;
+		}
+		@SuppressWarnings("unchecked")
+		public <T extends CallableX> T setDelaySeconds(float fDelaySeconds) {
 			this.fDelaySeconds=(fDelaySeconds);
 			updateRunAt();
-			return this;
+			return (T) this;
 		}
 		
 		public CallableX(){
@@ -177,22 +195,21 @@ public class QueueI {
 			return strUId;
 		}
 
-		public void breakLoop() {
-			bLoop=false;
-		}
 		public boolean isUserCanKill() {
 			return bUserCanKill;
 		}
-		public CallableX setUserCanKill(boolean bUserCanKill) {
+		@SuppressWarnings("unchecked")
+		public <T extends CallableX> T setUserCanKill(boolean bUserCanKill) {
 			this.bUserCanKill = bUserCanKill;
-			return this;
+			return (T) this;
 		}
 		public boolean isUserCanPause() {
 			return bUserCanPause;
 		}
-		public CallableX setUserCanPause(boolean bUserCanPause) {
+		@SuppressWarnings("unchecked")
+		public <T extends CallableX> T setUserCanPause(boolean bUserCanPause) {
 			this.bUserCanPause = bUserCanPause;
-			return this;
+			return (T) this;
 		}
 		public void togglePause() {
 			bPaused=!bPaused;
@@ -200,13 +217,15 @@ public class QueueI {
 		public boolean isPaused() {
 			return bPaused;
 		}
-		synchronized public CallableX putKeyClassValue(Object objVal) {
+		@SuppressWarnings("unchecked")
+		synchronized public <T extends CallableX> T putKeyClassValue(Object objVal) {
 			hmKeyValue.put(objVal.getClass().getName(),objVal);
-			return this;
+			return (T) this;
 		}
-		synchronized public CallableX putKeyValue(String strKey, Object objVal) {
+		@SuppressWarnings("unchecked")
+		synchronized public <T extends CallableX> T putKeyValue(String strKey, Object objVal) {
 			hmKeyValue.put(strKey,objVal);
-			return this;
+			return (T) this;
 		}
 		@SuppressWarnings("unchecked")
 		synchronized public <T> T getValue(Class<T> cl) {
@@ -299,7 +318,7 @@ public class QueueI {
 		for(CallableX cx:acxList){
 			if(strUId.equalsIgnoreCase( strUId.endsWith(".js") ? cx.getName() : cx.getUId() )){
 				if(bKill){
-					if(cx.isUserCanKill())cx.breakLoop();
+					if(cx.isUserCanKill())cx.disableLoop();
 				}else{
 					if(cx.isUserCanPause())cx.togglePause();
 				}

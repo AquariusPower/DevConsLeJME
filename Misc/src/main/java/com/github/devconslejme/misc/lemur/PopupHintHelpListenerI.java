@@ -116,7 +116,7 @@ public class PopupHintHelpListenerI implements CursorListener{
 	public void resetPopupHelp(Spatial spt){
 		UserDataI.i().setUserDataPSH(spt, EPopup.strPopupHelpUserData.uId(), null);
 	}
-	public void setPopupHelp(Spatial spt, String strHelp){
+	public void setPopupHintHelp(Spatial spt, String strHelp){
 		UserDataI.i().setUserDataPSH(spt, EPopup.strPopupHelpUserData.uId(), strHelp);
 		CursorEventControl.addListenersToSpatial(spt, this);
 //		spt.setUserData(EUserDataMiscJme.strPopupHelp.s(), strHelp);

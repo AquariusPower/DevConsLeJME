@@ -31,8 +31,10 @@ import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
 
+import com.github.devconslejme.gendiag.ContextMenuI.EUDKey;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableWeak;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.jme3.app.Application;
@@ -40,13 +42,16 @@ import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.font.BitmapText;
 import com.jme3.font.LineWrapMode;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Mesh.Mode;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.VertexBuffer.Type;
+import com.jme3.scene.shape.Box;
 import com.jme3.util.BufferUtils;
 
 /**
@@ -217,12 +222,37 @@ public class MiscJmeI {
 			spt.setName(spt.getName()+"/"+str);
 		}
 	}
-
+	
 	public Vector2f toV2f(Vector3f v3f) {
 		return new Vector2f(v3f.x,v3f.y);
 	}
 	public Vector3f toV3f(Vector2f v2f) {
 		return new Vector3f(v2f.x,v2f.y,0);
 	}
-
+	
+	public Geometry createIndicator(ColorRGBA color){
+		Geometry geomContextMenuAvailableIndicator = new Geometry("ContextMenuAvailableIndicator",
+				new Box(1,1,3));
+//				new Sphere(4, 7, fRadius));
+		geomContextMenuAvailableIndicator.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
+		
+		QueueI.i().enqueue(new CallableX() {
+					@Override
+					public Boolean call() {
+						if(geomContextMenuAvailableIndicator.getParent()!=null){
+							Spatial spt = UserDataI.i().getUserDataPSH(geomContextMenuAvailableIndicator,EUDKey.FollowContextMenuTarget);
+							geomContextMenuAvailableIndicator.setLocalTranslation(spt.getWorldTranslation());
+							geomContextMenuAvailableIndicator.rotate(0.1f,0.1f,0.1f);
+						}
+						return true;
+					}
+				}
+				.setName("PositionContextMenuAvailableIndicator")
+				.setUserCanPause(true)
+				.setDelaySeconds(0.1f)
+				.enableLoop()
+			);
+		
+		return geomContextMenuAvailableIndicator;
+	}
 }

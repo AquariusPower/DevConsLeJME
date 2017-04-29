@@ -36,6 +36,7 @@ import com.github.devconslejme.es.HierarchyComp;
 import com.github.devconslejme.es.HierarchyComp.EField;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchy;
+import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
@@ -47,7 +48,6 @@ import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
-import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI.EPopup;
 import com.jme3.app.Application;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.math.ColorRGBA;
@@ -99,7 +99,8 @@ public class ContextMenuI {
 		@Override	public Class getType() {return cl;}
 		
 		@Override
-		public String uId(){return EUDKey.class.getName()+"/"+toString();}
+//		public String getUId(){return EUDKey.class.getName()+"/"+toString();}
+		public String getUId(){return JavaLangI.i().enumUId(this);}
 	}
 	
 	private Command<Button>	btncmd = new Command<Button>() {
@@ -119,17 +120,18 @@ public class ContextMenuI {
 			if(hc.getLastFocusTime()==-1)return true;
 			
 			String str = hc.toString().replace(",", "\n");
-			PopupHintHelpListenerI.i().setPopupHelp(lbl, str);
+			PopupHintHelpListenerI.i().setPopupHintHelp(lbl, str);
 			MessagesI.i().debugInfo(ContextMenuI.this, str);
 			
 			return true;
 		}
-	}.setDelaySeconds(1f).setLoop(true);
+	}.setDelaySeconds(1f).enableLoop();
 	
 	public static class ContextMenu{
-		LinkedHashMap<String,Button> hmContextOptions = new LinkedHashMap<String,Button>();
+		LinkedHashMap<String,ContextButton> hmContextOptions = new LinkedHashMap<String,ContextButton>();
 		private Panel pnlSource;
 		private ResizablePanel	hrpParent;
+		private ContextButton	btnChoice;
 		
 		public ContextMenu(ResizablePanel	hrpParent){
 			this.hrpParent=hrpParent;
@@ -181,11 +183,21 @@ public class ContextMenuI {
 			return cmSub;
 		}
 		
+		/**
+		 * Each choice can have an UserData hint updater.
+		 * That updater must set a hint help.
+		 * 
+		 * @param strTextKey
+		 * @param cmd
+		 * @param cxHintUpdater
+		 * @return
+		 */
 		@SuppressWarnings("unchecked")
-		public Button addNewEntry(String strTextKey, Command<Button> cmd, CallableX cxHintUpdater){
-			Button btn = new Button(strTextKey);
+		public Button addNewEntry(String strTextKey, Command<Button> cmd, ContextCallX cxHintUpdater){
+			ContextButton btn = new ContextButton(strTextKey);
 			btn.addClickCommands(cmd);
-			if(cxHintUpdater!=null)UserDataI.i().setUserDataPSH(btn, EContext.HintUpdater, cxHintUpdater);
+//			if(cxHintUpdater!=null)UserDataI.i().setUserDataPSH(btn, EContext.HintUpdater, cxHintUpdater);
+			btn.setHintUpdater(cxHintUpdater);
 			hmContextOptions.put(strTextKey, btn);
 			return btn;
 		}
@@ -193,11 +205,75 @@ public class ContextMenuI {
 		public ResizablePanel getHierarchyParent() {
 			return hrpParent;
 		}
+
+		@SuppressWarnings("unchecked")
+		public <T extends ContextMenu> T setSingleChoice(ContextButton btnChoice) {
+			this.btnChoice = btnChoice;
+			return (T) this;
+		}
+
+		public ContextButton getSingleChoice() {
+			return btnChoice;
+		}
 		
 //		public ContextMenu setHierarchyParent(ResizablePanel hrpParent) {
 //			this.hrpParent=hrpParent;
 //			return this;
 //		}
+	}
+	
+	/**
+	 * keep private to keep this logic restricted to this class.
+	 * To avoid creating usage confusion outside here.
+	 */
+	private static enum EContext implements IUDKey{
+//		Choice(Button.class),
+//		Menu(ContextMenu.class),
+//		HintUpdater(CallableX.class),
+		PopupHintHelp(String.class),
+		;
+		
+		private Class	cl;
+		private EContext(Class cl) {
+			this.cl=cl;
+		}
+		
+//		public String uId(){return EContext.class.getName()+"/"+toString();}
+		@Override
+		public String getUId(){return JavaLangI.i().enumUId(this);}
+		
+		@Override
+		public Class getType() {
+			return cl;
+		}
+	}
+	
+	public static abstract class ContextCallX extends CallableX{
+		public void setPopupHintHelp(String str){
+			putKeyValue(EContext.PopupHintHelp.getUId(),str);
+		}
+
+		public String getPopupHintHelp() {
+			return getValue(EContext.PopupHintHelp.getUId());
+		}
+	}
+	
+	private static class ContextButton extends Button{
+		private ContextCallX	cxHintUpdater;
+
+		public ContextButton(String s) {
+			super(s);
+		}
+		
+		@SuppressWarnings("unchecked")
+		public <T extends ContextButton> T setHintUpdater(ContextCallX cxHintUpdater) {
+			this.cxHintUpdater = cxHintUpdater;
+			return (T)this;
+		}
+
+		public ContextCallX getHintUpdater() {
+			return cxHintUpdater;
+		}
 	}
 	
 	private class ContextMenuListenerI extends DefaultCursorListener{
@@ -252,15 +328,15 @@ public class ContextMenuI {
 		}
 	}
 	
-	public void createContextMenuAvailableIndicator(){
-//		float fRadius = 0.1f;
-		geomContextMenuAvailableIndicator = new Geometry("ContextMenuAvailableIndicator",
-			new Box(1,1,3));
-//			new Sphere(4, 7, fRadius));
-		geomContextMenuAvailableIndicator.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(
-			ColorI.i().colorChangeCopy(ColorRGBA.Cyan,0f,0.75f)));
-//			ColorI.i().colorChangeCopy(ColorRGBA.Green, 0f, 0.15f)));
-	}
+//	public void createContextMenuAvailableIndicator(){
+////		float fRadius = 0.1f;
+//		geomContextMenuAvailableIndicator = new Geometry("ContextMenuAvailableIndicator",
+//			new Box(1,1,3));
+////			new Sphere(4, 7, fRadius));
+//		geomContextMenuAvailableIndicator.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(
+//			ColorI.i().colorChangeCopy(ColorRGBA.Cyan,0f,0.75f)));
+////			ColorI.i().colorChangeCopy(ColorRGBA.Green, 0f, 0.15f)));
+//	}
 	
 	public void configure(){//Node nodeParent) {
 		strStyle = GuiGlobals.getInstance().getStyles().getDefaultStyle();
@@ -313,24 +389,25 @@ public class ContextMenuI {
 //				.setLoop(true)
 //				.setDelaySeconds(0.1f)
 //		);
-		createContextMenuAvailableIndicator();
 		
-		QueueI.i().enqueue(new CallableX() {
-				@Override
-				public Boolean call() {
-					if(geomContextMenuAvailableIndicator.getParent()!=null){
-						Spatial spt = UserDataI.i().getUserDataPSH(geomContextMenuAvailableIndicator,EUDKey.FollowContextMenuTarget);
-						geomContextMenuAvailableIndicator.setLocalTranslation(spt.getWorldTranslation());
-						geomContextMenuAvailableIndicator.rotate(0.1f,0.1f,0.1f);
-					}
-					return true;
-				}
-			}
-			.setName("PositionContextMenuAvailableIndicator")
-			.setUserCanPause(true)
-			.setDelaySeconds(0.1f)
-			.setLoop(true)
-		);
+		geomContextMenuAvailableIndicator = MiscJmeI.i().createIndicator(ColorI.i().colorChangeCopy(ColorRGBA.Cyan,0f,0.75f));
+//		createContextMenuAvailableIndicator();
+//		QueueI.i().enqueue(new CallableX() {
+//				@Override
+//				public Boolean call() {
+//					if(geomContextMenuAvailableIndicator.getParent()!=null){
+//						Spatial spt = UserDataI.i().getUserDataPSH(geomContextMenuAvailableIndicator,EUDKey.FollowContextMenuTarget);
+//						geomContextMenuAvailableIndicator.setLocalTranslation(spt.getWorldTranslation());
+//						geomContextMenuAvailableIndicator.rotate(0.1f,0.1f,0.1f);
+//					}
+//					return true;
+//				}
+//			}
+//			.setName("PositionContextMenuAvailableIndicator")
+//			.setUserCanPause(true)
+//			.setDelaySeconds(0.1f)
+//			.enableLoop()
+//		);
 		
 	}
 	
@@ -379,34 +456,7 @@ public class ContextMenuI {
 		
 	}
 	
-	public static enum EContext implements IUDKey{
-//		Choice(Button.class),
-//		Menu(ContextMenu.class),
-		HintUpdater(CallableX.class),
-		PopupHintHelp(String.class),
-		;
-		
-		private Class	cl;
-		private EContext(Class cl) {
-			this.cl=cl;
-		}
-		
-		public String uId(){return EContext.class.getName()+"/"+toString();}
-		
-		@Override
-		public Class getType() {
-			return cl;
-		}
-	}
-	
-//	private void showContextMenu(Vector3f v3fMouseCursorPos, String strContextMenuTitle, ContextMenu cm) {
-//		showContextMenu(new Vector2f(v3fMouseCursorPos.x, v3fMouseCursorPos.y), strContextMenuTitle, cm);
-//	}
-	
 	/**
-	 * Each choice can have an UserData hint updater.
-	 * That updater must fill/set/prepare a hint help.
-	 * 
 	 * @param v2fMouseCursorPos
 	 * @param strContextMenuTitle
 	 * @param cm
@@ -419,30 +469,27 @@ public class ContextMenuI {
 		lbl.setText("Context:"+strContextMenuTitle);
 		DragParentestPanelListenerI.i().applyAt(lbl);
 		cntrContextOptions.addChild(lbl, i++, 0);
-		for(Entry<String, Button> entry : (cm.hmContextOptions).entrySet()){
-			Button btnChoice = entry.getValue();
+		for(Entry<String, ContextButton> entry : (cm.hmContextOptions).entrySet()){
+			ContextButton btnChoice = entry.getValue();
 			
 			btnChoice.addClickCommands(btncmd);
 			
 			// popup hint help
 			PopupHintHelpListenerI.i().resetPopupHelp(btnChoice); //clear
-			CallableX cxHintUpdater = UserDataI.i().getUserDataPSH(btnChoice, EContext.HintUpdater);
-			if(cxHintUpdater!=null){
-				cxHintUpdater.putKeyValue(EContext.PopupHintHelp.uId(), null); //clear
-				if(cxHintUpdater.call()){
-					PopupHintHelpListenerI.i().setPopupHelp(btnChoice, cxHintUpdater.getValue(EContext.PopupHintHelp.uId()));
+			ContextCallX cxHU = btnChoice.getHintUpdater();
+			if(cxHU!=null){
+				cxHU.setPopupHintHelp(null);
+				if(cxHU.call()){
+					cm.setSingleChoice(btnChoice);
+//					btnChoice.getBackground().set
+					PopupHintHelpListenerI.i().setPopupHintHelp(btnChoice, cxHU.getPopupHintHelp());
 				}
 			}
 			
 			cntrContextOptions.addChild(btnChoice, i++, 0);
 		}
 		
-//		_HierarchyComponent comp = cm.getOwner().getComponent(_HierarchyComponent.class);
 		DialogHierarchyStateI.i().showDialogAsModal(cm.getHierarchyParent(), rzpContextMenu);
-//		QueueI.i().enqueue(cxDbgInfo);
-
-//		comp=_HierarchySystemI.i().workOn(comp).showAsHierarchyModal(hrp.getComponent(_HierarchyComponent.class));
-//		nodeParent.attachChild(hrp);
 		
 		rzpContextMenu.setPreferredSize(
 			new Vector3f(
@@ -453,12 +500,9 @@ public class ContextMenuI {
 		
 		int iDisplacement=20;
 		rzpContextMenu.setLocalTranslation(
-				v2fMouseCursorPos.getX()-iDisplacement, 
-				v2fMouseCursorPos.getY()+iDisplacement, 
-				0); // z will be fixed by diag hierarchy
-		
-//		v3fHierarchyParentInitialDisplacement = cm.getHierarchyParent().getLocalTranslation().subtract(
-//			rzp.getLocalTranslation());
+			v2fMouseCursorPos.getX()-iDisplacement, 
+			v2fMouseCursorPos.getY()+iDisplacement, 
+			0); // z will be fixed by diag hierarchy
 	}
 	
 	public void hideContextMenu() {

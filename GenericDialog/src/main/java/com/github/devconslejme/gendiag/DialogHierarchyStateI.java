@@ -117,7 +117,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			
 			return true;
 		}
-	}.setName("FocusAtDevConsInput").setDelaySeconds(0.25f).setLoop(true);
+	}.setName("FocusAtDevConsInput").setDelaySeconds(0.25f).enableLoop();
 	private ArrayList<Panel>	apnlAutoFocus = new ArrayList<Panel>();
 	
 	public static class BlockerListener extends DefaultCursorListener{
