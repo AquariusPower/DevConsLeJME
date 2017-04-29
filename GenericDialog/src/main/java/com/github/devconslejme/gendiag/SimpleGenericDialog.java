@@ -43,6 +43,7 @@ import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
+import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.jme3.input.KeyInput;
@@ -237,15 +238,16 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 				@Override
 				public void execute(Button source) {
 					if(source==btnMaximizeRestore){ //toggle
-						if(MiscLemurI.i().isMaximized(getDialog())){
+//						if(MiscLemurI.i().isMaximized(getDialog())){
+						if(bKeepMaximized){
 							/**
 							 * restore
 							 */
 							getDialog().restoreDefaultSafeSize();
 							
 							Vector3f v3fPosBM = (Vector3f)getDialog().getUserData(strUDKeyPosBeforeMaximize);
-							v3fPosBM.z=getDialog().getLocalTranslation().z; //do not mess with z!!!
-							getDialog().setLocalTranslation(v3fPosBM);
+//							v3fPosBM.z=getDialog().getLocalTranslation().z; //do not mess with z!!!
+							getDialog().setLocalTranslationXY(v3fPosBM);
 							
 							bKeepMaximized=false;
 						}else{
@@ -295,9 +297,9 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 			
 			ContextMenu cm = new ContextMenu(getDialog());
 			cm.addNewEntry("Restore to default/initial size", new Command<Button>() {@Override public void execute(Button source) {
-				getDialog().restoreDefaultSafeSize();}});
+				getDialog().restoreDefaultSafeSize();}}, null);
 			cm.addNewEntry("Update default size to current", new Command<Button>() {@Override public void execute(Button source) {
-				getDialog().applyCurrentSafeSizeAsDefault();}});
+				getDialog().applyCurrentSafeSizeAsDefault();}}, null);
 			
 			btnTitleText = createInfoButton(strTitle,null);
 			MiscLemurI.i().changeBackgroundColor(btnTitleText, ColorI.i().colorChangeCopy(ColorRGBA.Blue,0f,0.25f), true); //TODO use a lemur style instead
@@ -499,7 +501,6 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 		recreateListItemsRecursively(hmOptionsRoot,0);
 	}
 	
-	@SuppressWarnings("unchecked")
 	private void recreateListItemsRecursively(HashMap<String, OptionData> hmOpt, int iDepth){
 		for(Entry<String, OptionData> entry:hmOpt.entrySet()){
 			OptionData od = entry.getValue();
@@ -537,7 +538,7 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 	
 	public Object getSelectedOptionValue(){
 		Object obj = vlodOptions.get(getSelectedOptionIndex()).getValue();
-		if (obj instanceof SectionIndicator)return null;
+		if(obj instanceof SectionIndicator)return null;
 		return obj;
 //		return hmOptionsRoot.get(getSelectedOptionText()).getValue();
 	}

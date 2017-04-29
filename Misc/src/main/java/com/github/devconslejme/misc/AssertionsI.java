@@ -25,55 +25,25 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.tests;
-
-import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.MainThreadI;
-import com.github.devconslejme.misc.jme.QueueStateI;
-import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
-import com.github.devconslejme.misc.lemur.ResizablePanel;
-import com.jme3.app.Application;
-import com.jme3.app.SimpleApplication;
-import com.jme3.math.Vector3f;
-import com.simsilica.lemur.Button;
-import com.simsilica.lemur.GuiGlobals;
-import com.simsilica.lemur.component.QuadBackgroundComponent;
-import com.simsilica.lemur.style.BaseStyles;
+package com.github.devconslejme.misc;
 
 /**
+ * use as:
+ * SomeDevConsClass.someMethodThere(){assert(AssertionsI.i().someMethodHere());}
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestResizablePanel extends SimpleApplication {
-	public static void main(String[] args) {
-		TestResizablePanel tst = new TestResizablePanel();
-		tst.start();
-	}
+public class AssertionsI {
+	public static AssertionsI i(){return GlobalManagerI.i().get(AssertionsI.class);}
 	
-	@Override
-	public void simpleInitApp() {
-//		GuiGlobals.initialize(this);
-//		BaseStyles.loadGlassStyle();
-//		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
-//		
-//		ConfigureTestsI.i().configure(this, getGuiNode());
-		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(this, getGuiNode());
+	/**
+	 * devcons project shall stick to the alternative methods
+	 * @return
+	 */
+	public boolean useAlternativeMethods(){
+		String strPkg = this.getClass().getPackage().getName();
+		strPkg = strPkg.substring(0, strPkg.lastIndexOf(".")-1);
 		
-		int i=300;
-		test(new Vector3f(100,i+100,10));
-		test(new Vector3f(200,i+200,20));
-		test(new Vector3f(300,i+300,30));
-	}
-
-	private void test(Vector3f pos) {
-		ResizablePanel rzp = new ResizablePanel(null);
-		rzp.setPreferredSize(new Vector3f(300,200,0));
-		rzp.setLocalTranslationXY(pos); //above DevCons
-		getGuiNode().attachChild(rzp);
-		
-		HoverHighlightEffectI.i().applyAt(rzp, (QuadBackgroundComponent)rzp.getResizableBorder());
-		
-		Button btn = new Button("drag borders to resize:"+pos);
-//		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
-		rzp.setContents(btn);
+		return !Thread.currentThread().getStackTrace()[3].getClassName().startsWith(strPkg);
 	}
 }

@@ -30,10 +30,10 @@ package com.github.devconslejme.tests;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
-import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.gendiag.SimpleGenericDialog;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
+import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
@@ -85,7 +85,7 @@ public class TestGenericDialog extends SimpleApplication {
 	private void prepareDialog() {
 		gdc = new SimpleGenericDialog();
 //		gdc = new SimpleGenericDialog(DialogHierarchyStateI.i().createDialog("options", null));
-		gdc.getDialog().setLocalTranslation(new Vector3f(100,550,10));
+		gdc.getDialog().setLocalTranslationXY(new Vector3f(100,550,0)).setLocalTranslationZ(10);
 		gdc.getDialog().setPreferredSize(new Vector3f(600,500,0));
 		
 		gdc.setTextInfo("This could be a good info about something.\n"+

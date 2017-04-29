@@ -58,8 +58,7 @@ public class PopupHintHelpListenerI implements CursorListener{
 		strPopupHelpUserData,
 		DialogStyleElementIdPopupHelp,
 		;
-		
-		public String s(){return this.toString();}
+		public String uId(){return EPopup.class.getName()+"/"+toString();}
 	}
 	private Label	lblPopupHelp;
 	private String	strPopupHelp;
@@ -112,10 +111,13 @@ public class PopupHintHelpListenerI implements CursorListener{
 	}
 	
 	public String getPopupHelp(Spatial spt){
-		return UserDataI.i().getUserDataPSH(spt, EPopup.strPopupHelpUserData.s());
+		return UserDataI.i().getUserDataPSH(spt, EPopup.strPopupHelpUserData.uId());
+	}
+	public void resetPopupHelp(Spatial spt){
+		UserDataI.i().setUserDataPSH(spt, EPopup.strPopupHelpUserData.uId(), null);
 	}
 	public void setPopupHelp(Spatial spt, String strHelp){
-		UserDataI.i().setUserDataPSH(spt, EPopup.strPopupHelpUserData.s(), strHelp);
+		UserDataI.i().setUserDataPSH(spt, EPopup.strPopupHelpUserData.uId(), strHelp);
 		CursorEventControl.addListenersToSpatial(spt, this);
 //		spt.setUserData(EUserDataMiscJme.strPopupHelp.s(), strHelp);
 	}
@@ -127,7 +129,7 @@ public class PopupHintHelpListenerI implements CursorListener{
 //		if(lblPopupHelp==null){
 			lblPopupHelp = new Label(
 				"nothing yet...", 
-				new ElementId(EPopup.strPopupHelpUserData.s()),
+				new ElementId(EPopup.strPopupHelpUserData.uId()),
 				GuiGlobals.getInstance().getStyles().getDefaultStyle() //BaseStyles.GLASS
 //				strPopupStyle==null?GuiGlobals.getInstance().getStyles().getDefaultStyle():strPopupStyle //BaseStyles.GLASS
 			); 

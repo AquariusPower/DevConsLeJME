@@ -200,9 +200,17 @@ public class QueueI {
 		public boolean isPaused() {
 			return bPaused;
 		}
+		synchronized public CallableX putKeyClassValue(Object objVal) {
+			hmKeyValue.put(objVal.getClass().getName(),objVal);
+			return this;
+		}
 		synchronized public CallableX putKeyValue(String strKey, Object objVal) {
 			hmKeyValue.put(strKey,objVal);
 			return this;
+		}
+		@SuppressWarnings("unchecked")
+		synchronized public <T> T getValue(Class<T> cl) {
+			return (T)hmKeyValue.get(cl.getName());
 		}
 		@SuppressWarnings("unchecked")
 		synchronized public <T> T getValue(String strKey) {

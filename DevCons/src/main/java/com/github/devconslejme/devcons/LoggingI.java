@@ -57,7 +57,7 @@ public class LoggingI {
 	private File	flLog;
 //	DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss"); //yyyy/MM/dd
 //	Date dateRealTimeForMarker = new Date();
-	private VarMon	stWrapAt;
+//	private VarMon	stWrapAt;
 	
 	public void configure() {
 		flLog = new File(DevConsPluginStateI.i().getStorageFolder(), LoggingI.class.getSimpleName()+".log");
@@ -70,15 +70,13 @@ public class LoggingI {
 		 */
 		logEntry("Initializing console.");
 		
-		stWrapAt = DevConsPluginStateI.i().createVarMon(EStatPriority.Normal, "WrapAt", LoggingI.class.getSimpleName()+": Wrap at column");
-		
-		QueueI.i().enqueue(new CallableX() {
+		DevConsPluginStateI.i().createVarMon(EStatPriority.Normal, "WrapAt", LoggingI.class.getSimpleName()+": Wrap at column",new CallableX() {
 			@Override
 			public Boolean call() {
-				stWrapAt.set(""+getWrapAtColumn());
+				getValue(VarMon.class).set(""+getWrapAtColumn());
 				return true;
 			}
-		}.setDelaySeconds(1f).setLoop(true));
+		});
 	}
 	
 	public void logExceptionEntry(Exception ex, String strJS) {

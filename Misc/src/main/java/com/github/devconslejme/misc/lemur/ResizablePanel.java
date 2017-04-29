@@ -25,13 +25,14 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.gendiag;
+package com.github.devconslejme.misc.lemur;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.lwjgl.opengl.Display;
 
+import com.github.devconslejme.misc.AssertionsI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.jme3.bounding.BoundingBox;
@@ -351,7 +352,7 @@ public class ResizablePanel extends Panel {
 		
 		setPreferredSize(v3fNewSize);
 		if(validateParentest()){
-			setLocalTranslation(v3fNewPos);
+			setLocalTranslationXY(v3fNewPos);
 			
 			if(bUpdateDragFromX)v3fDragFromPrevious.x+=fDeltaX;
 			if(bUpdateDragFromY)v3fDragFromPrevious.y+=fDeltaY;
@@ -829,5 +830,28 @@ public class ResizablePanel extends Panel {
 	
 	public void restoreDefaultSafeSize() {
 		safeSizeRecursively(EReSizeApplyMode.RestoreDefault, this);
+	}
+	
+	/**
+	 * to help on not messing with Z!!!
+	 * ignores Z from param, reuses self Z
+	 * @param localTranslation
+	 * @return 
+	 */
+	@SuppressWarnings("unchecked")
+	public <T extends ResizablePanel> T setLocalTranslationXY(Vector3f v3f) {
+		super.setLocalTranslation(v3f.x, v3f.y, this.getLocalTranslation().z);
+		return (T)this;
+	}
+	@SuppressWarnings("unchecked")
+	public <T extends ResizablePanel> T setLocalTranslationZ(float fZ) {
+		Vector3f v3f = this.getLocalTranslation();
+		super.setLocalTranslation(v3f.x, v3f.y, fZ);
+		return (T)this;
+	}
+	@Override
+	public void setLocalTranslation(Vector3f v3f) {
+		assert(AssertionsI.i().useAlternativeMethods()); 
+		super.setLocalTranslation(v3f);
 	}
 }

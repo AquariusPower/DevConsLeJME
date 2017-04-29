@@ -46,6 +46,8 @@ import com.github.devconslejme.misc.jme.UserDataI.IUDKey;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
+import com.github.devconslejme.misc.lemur.ResizablePanel;
+import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI.EPopup;
 import com.jme3.app.Application;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.math.ColorRGBA;
@@ -95,6 +97,9 @@ public class ContextMenuI {
 		private Class	cl;
 		EUDKey(Class cl){this.cl=cl;}
 		@Override	public Class getType() {return cl;}
+		
+		@Override
+		public String uId(){return EUDKey.class.getName()+"/"+toString();}
 	}
 	
 	private Command<Button>	btncmd = new Command<Button>() {
@@ -147,25 +152,29 @@ public class ContextMenuI {
 		public ContextMenu createSubMenu(String strTextKey){
 			ContextMenu cmSub = new ContextMenu(ContextMenuI.i().rzpContextMenu);
 			
-			addNewEntry(strTextKey, new Command<Button>() {
-				@Override
-				public void execute(Button source) {
-					ResizablePanel rzp = MiscJmeI.i().getParentest(source, ResizablePanel.class, false);
-//					cmSub.setHierarchyParent(rzp);
-					
-					/*
-					Vector3f v3f = source.getWorldTranslation().clone();
-					v3f.x+=source.getSize().x;
-					v3f.y-=source.getSize().y/2f;
-					*/
-					Vector2f v2f = GlobalManagerI.i().get(Application.class).getInputManager().getCursorPosition();
-					
-					ContextMenuI.i().showContextMenu(
-						v2f, //MiscJmeI.i().toV2f(v3f),
-						source.getText(), 
-						cmSub.setContextSource(source));
-				}
-			});
+			addNewEntry(
+				strTextKey, 
+				new Command<Button>() {
+					@Override
+					public void execute(Button source) {
+						ResizablePanel rzp = MiscJmeI.i().getParentest(source, ResizablePanel.class, false);
+	//					cmSub.setHierarchyParent(rzp);
+						
+						/*
+						Vector3f v3f = source.getWorldTranslation().clone();
+						v3f.x+=source.getSize().x;
+						v3f.y-=source.getSize().y/2f;
+						*/
+						Vector2f v2f = GlobalManagerI.i().get(Application.class).getInputManager().getCursorPosition();
+						
+						ContextMenuI.i().showContextMenu(
+							v2f, //MiscJmeI.i().toV2f(v3f),
+							source.getText(), 
+							cmSub.setContextSource(source));
+					}
+				},
+				null
+			);
 			
 			if(true)throw new UnsupportedOperationException(
 				"TODO: this requires the context menu to not be limited to 1");
@@ -173,11 +182,12 @@ public class ContextMenuI {
 		}
 		
 		@SuppressWarnings("unchecked")
-		public ContextMenu addNewEntry(String strTextKey, Command<Button> cmd){
+		public Button addNewEntry(String strTextKey, Command<Button> cmd, CallableX cxHintUpdater){
 			Button btn = new Button(strTextKey);
 			btn.addClickCommands(cmd);
+			if(cxHintUpdater!=null)UserDataI.i().setUserDataPSH(btn, EContext.HintUpdater, cxHintUpdater);
 			hmContextOptions.put(strTextKey, btn);
-			return this;
+			return btn;
 		}
 
 		public ResizablePanel getHierarchyParent() {
@@ -369,9 +379,38 @@ public class ContextMenuI {
 		
 	}
 	
+	public static enum EContext implements IUDKey{
+//		Choice(Button.class),
+//		Menu(ContextMenu.class),
+		HintUpdater(CallableX.class),
+		PopupHintHelp(String.class),
+		;
+		
+		private Class	cl;
+		private EContext(Class cl) {
+			this.cl=cl;
+		}
+		
+		public String uId(){return EContext.class.getName()+"/"+toString();}
+		
+		@Override
+		public Class getType() {
+			return cl;
+		}
+	}
+	
 //	private void showContextMenu(Vector3f v3fMouseCursorPos, String strContextMenuTitle, ContextMenu cm) {
 //		showContextMenu(new Vector2f(v3fMouseCursorPos.x, v3fMouseCursorPos.y), strContextMenuTitle, cm);
 //	}
+	
+	/**
+	 * Each choice can have an UserData hint updater.
+	 * That updater must fill/set/prepare a hint help.
+	 * 
+	 * @param v2fMouseCursorPos
+	 * @param strContextMenuTitle
+	 * @param cm
+	 */
 	@SuppressWarnings("unchecked")
 	private void showContextMenu(Vector2f v2fMouseCursorPos, String strContextMenuTitle, ContextMenu cm) {
 		cntrContextOptions.clearChildren();
@@ -381,9 +420,21 @@ public class ContextMenuI {
 		DragParentestPanelListenerI.i().applyAt(lbl);
 		cntrContextOptions.addChild(lbl, i++, 0);
 		for(Entry<String, Button> entry : (cm.hmContextOptions).entrySet()){
-			Button btnOption = entry.getValue();
-			btnOption.addClickCommands(btncmd);
-			cntrContextOptions.addChild(btnOption, i++, 0);
+			Button btnChoice = entry.getValue();
+			
+			btnChoice.addClickCommands(btncmd);
+			
+			// popup hint help
+			PopupHintHelpListenerI.i().resetPopupHelp(btnChoice); //clear
+			CallableX cxHintUpdater = UserDataI.i().getUserDataPSH(btnChoice, EContext.HintUpdater);
+			if(cxHintUpdater!=null){
+				cxHintUpdater.putKeyValue(EContext.PopupHintHelp.uId(), null); //clear
+				if(cxHintUpdater.call()){
+					PopupHintHelpListenerI.i().setPopupHelp(btnChoice, cxHintUpdater.getValue(EContext.PopupHintHelp.uId()));
+				}
+			}
+			
+			cntrContextOptions.addChild(btnChoice, i++, 0);
 		}
 		
 //		_HierarchyComponent comp = cm.getOwner().getComponent(_HierarchyComponent.class);

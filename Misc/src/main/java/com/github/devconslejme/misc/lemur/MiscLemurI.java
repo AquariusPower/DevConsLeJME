@@ -129,8 +129,16 @@ public class MiscLemurI {
 		
 		return apnl;
 	}
-
-	public boolean isMaximized(Panel pnl) {
+	
+	/**
+	 * this was just a guesser,
+	 * maximization scope/limits would be required,
+	 * nah... use a boolean!
+	 * @param pnl
+	 * @return
+	 */
+	@Deprecated
+	private boolean isMaximized(Panel pnl) {
 		Vector3f v3fSize = pnl.getSize();
 		Vector3f v3fPos = pnl.getLocalTranslation();
 		return 
@@ -141,9 +149,10 @@ public class MiscLemurI {
 			;
 	}
 
-	public void maximize(Panel pnl) {
-		Vector3f v3fPos = pnl.getLocalTranslation(); //do not mess with z!!!
-		pnl.setLocalTranslation(new Vector3f(0,Display.getHeight(),v3fPos.z));
+	public void maximize(ResizablePanel pnl) {
+//		Vector3f v3fPos = pnl.getLocalTranslation(); //do not mess with z!!!
+//		pnl.setLocalTranslation(new Vector3f(0,Display.getHeight(),v3fPos.z));
+		pnl.setLocalTranslationXY(new Vector3f(0,Display.getHeight(),0));
 		
 		Vector3f v3fSize = pnl.getSize(); //do not mess with z!!!
 		pnl.setPreferredSize(new Vector3f(Display.getWidth(),Display.getHeight(),v3fSize.z));

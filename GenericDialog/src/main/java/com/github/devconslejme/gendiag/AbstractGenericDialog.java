@@ -29,11 +29,12 @@ package com.github.devconslejme.gendiag;
 
 import java.util.HashMap;
 
-import com.github.devconslejme.gendiag.ResizablePanel.EEdge;
-import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
+import com.github.devconslejme.misc.lemur.ResizablePanel;
+import com.github.devconslejme.misc.lemur.ResizablePanel.EEdge;
+import com.github.devconslejme.misc.lemur.ResizablePanel.IResizableListener;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Container;

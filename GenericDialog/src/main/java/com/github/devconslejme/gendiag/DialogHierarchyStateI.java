@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.es.HierarchyComp;
 import com.github.devconslejme.es.HierarchyComp.EField;
-import com.github.devconslejme.gendiag.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
@@ -48,6 +47,8 @@ import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
+import com.github.devconslejme.misc.lemur.ResizablePanel;
+import com.github.devconslejme.misc.lemur.ResizablePanel.IResizableListener;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.bounding.BoundingBox;
@@ -139,7 +140,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	public static class Visuals{
 		private EntityId entid;
 		private ResizablePanel rzpDiag;
-		private Panel pnlBlocker;
+		private ResizablePanel pnlBlocker;
 		
 		/** only one effect per child, but many per parent */
 		private IEffect ieffLinkToParent;
@@ -168,10 +169,10 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			this.rzpDiag = rzpDiag;
 		}
 		
-		public Panel getBlocker() {
+		public ResizablePanel getBlocker() {
 			return pnlBlocker;
 		}
-		private void setBlocker(Panel pnlBlocker) {
+		private void setBlocker(ResizablePanel pnlBlocker) {
 			this.pnlBlocker = pnlBlocker;
 		}
 		
@@ -229,8 +230,11 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		HoverHighlightEffectI.i().applyAt(rzp, (QuadBackgroundComponent)rzp.getResizableBorder());
 		
 		// blocker
-		Panel pnlBlocker = new Panel(strStyle);
-		pnlBlocker.setBackground(new QuadBackgroundComponent(colorBlocker));
+		ResizablePanel pnlBlocker = new ResizablePanel(strStyle);
+//		pnlBlocker.setAllEdgesEnabled(false);
+//		pnlBlocker.setBackground(new QuadBackgroundComponent(colorBlocker));
+		pnlBlocker.setResizableBorder(new QuadBackgroundComponent(colorBlocker));
+		pnlBlocker.setBackground(null);
 		DragParentestPanelListenerI.i().applyAt(pnlBlocker, rzp); // the blocker has not a parent panel! so it will let the dialog be dragged directly!  
 		DragParentestPanelListenerI.i().applyAt(rzp); // the resizable border can be used to move/drag the parentest with the middle mouse button!  
 		CursorEventControl.addListenersToSpatial(pnlBlocker,blockerListener);
@@ -399,7 +403,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 //	public void updateBlocker(Float tpf,EntityId entid, ResizablePanel rzp){
 	public void updateBlocker(Float tpf,Visuals vs){
 		// blocker work
-		Panel pnlBlocker = vs.getBlocker();
+		ResizablePanel pnlBlocker = vs.getBlocker();
 		if(vs.getDialog().isOpened()){
 			if(pnlBlocker.getParent()==null){
 				nodeToMonitor.attachChild(pnlBlocker);
@@ -418,7 +422,8 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 				if(Float.compare(v3fSize.length(),0f)!=0){ //waiting top panel be updated by lemur
 					Vector3f v3fPos = vs.getDialog().getLocalTranslation().clone();
 					
-					QuadBackgroundComponent qbc = ((QuadBackgroundComponent)pnlBlocker.getBackground());
+//					QuadBackgroundComponent qbc = ((QuadBackgroundComponent)pnlBlocker.getBackground());
+					QuadBackgroundComponent qbc = (QuadBackgroundComponent)pnlBlocker.getResizableBorder();
 					if(sys.isBlocked(vs.getEntityId())){
 						v3fPos.z += v3fSize.z + fInBetweenGapDistZ/2f; //above
 						qbc.setColor(colorBlocker);
@@ -427,7 +432,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 						qbc.setColor(colorInvisible);
 					}
 					
-					pnlBlocker.setLocalTranslation(v3fPos);
+					pnlBlocker.setLocalTranslationXY(v3fPos).setLocalTranslationZ(v3fPos.z);
 					
 					Vector3f v3fBlockerSize = v3fSize.clone();
 					v3fBlockerSize.z=fMinLemurPanelSizeZ;
@@ -490,8 +495,8 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 						 */
 						Vector3f v3fNewPos = rzpParent.getLocalTranslation().clone();
 						v3fNewPos.addLocal(vs.getPositionRelativeToParent());
-						v3fNewPos.z=rzpSource.getLocalTranslation().z;
-						rzpSource.setLocalTranslation(v3fNewPos);
+//						v3fNewPos.z=rzpSource.getLocalTranslation().z;
+						rzpSource.setLocalTranslationXY(v3fNewPos);
 //					}
 				}
 			}
@@ -530,19 +535,22 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	
 	private void updateZOrder(EntityId entid){
 		ResizablePanel rzp = getOpenDialog(entid);
-		Vector3f v3f = rzp.getLocalTranslation().clone();
-		v3f.z=fCurrentOrderPosZ;
-		rzp.setLocalTranslation(v3f);
+		rzp.setLocalTranslationZ(fCurrentOrderPosZ);
+//		Vector3f v3f = rzp.getLocalTranslation().clone();
+//		v3f.z=fCurrentOrderPosZ;
+//		rzp.setLocalTranslation(v3f);
 		sys.setHierarchyComp(entid, EField.fDialogZ, fCurrentOrderPosZ);
 		
 		// prepare next
 		BoundingBox bb = (BoundingBox)getOpenDialog(entid).getWorldBound();
 		if(bb!=null){ //only if it is ready
 			float fHeight = bb.getZExtent()*2f;
-			sys.setHierarchyComp(entid, EField.fBoundingHeightZ, fHeight);
-			fCurrentOrderPosZ += fHeight +fInBetweenGapDistZ;
+			MessagesI.i().debugInfo(this, "DiagHierarchyZOrder:"+rzp.getName()+","+entid+","+fCurrentOrderPosZ+","+fHeight);
 			
-			MessagesI.i().debugInfo(this, "DiagHierarchyZOrder:"+rzp.getName()+","+entid+","+v3f.z+","+fHeight);
+			sys.setHierarchyComp(entid, EField.fBoundingHeightZ, fHeight);
+			
+			// now updates it
+			fCurrentOrderPosZ += fHeight +fInBetweenGapDistZ;
 		}
 		
 	}

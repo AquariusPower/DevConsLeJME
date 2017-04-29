@@ -86,6 +86,8 @@ public class UserDataI {
 	
 	public static interface IUDKey{
 		Class getType();
+		/** use the full enum package + class name + enum id */
+		String uId();
 	}
 	public <R> R getUserDataPSH(Spatial spt, Class<R> cl){
 		return getUserDataPSH(spt, cl.getName());
@@ -115,7 +117,7 @@ public class UserDataI {
 	 */
 	@SuppressWarnings("unchecked")
 	public <R> R getUserDataPSH(Spatial spt, IUDKey eKey){
-		R ret = getUserDataPSH( spt, ((Enum)eKey).toString() );
+		R ret = getUserDataPSH( spt, eKey.uId() );
 		if(ret!=null && !eKey.getType().isAssignableFrom(ret.getClass())){
 			throw new DetailedException("incompatible types",ret.getClass(),eKey.getType(),spt,eKey);
 		}
@@ -127,6 +129,6 @@ public class UserDataI {
 		if(obj!=null && !eKey.getType().isAssignableFrom(obj.getClass())){
 			throw new DetailedException("incompatible types",obj.getClass(),eKey,eKey.getType(),spt);
 		}
-		return setUserDataPSH(spt, ((Enum)eKey).toString(), obj);
+		return setUserDataPSH(spt, eKey.uId(), obj);
 	}
 }

@@ -3,9 +3,9 @@ package com.github.devconslejme.tests.temp;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
-import com.github.devconslejme.gendiag.ResizablePanel;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
+import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
@@ -73,7 +73,7 @@ public class TestcaseLemurClickImmuneButton extends SimpleApplication{
 		ResizablePanel rzp = DialogHierarchyStateI.i().createDialog(strName,null);
 		
 		rzp.setPreferredSize(new Vector3f(300,250,0)); //TODO z will cause trouble?
-		rzp.setLocalTranslation(pos); //above DevCons
+		rzp.setLocalTranslationXY(pos); //above DevCons
 		
 		String strBaseText=strName+"/"+strInfo;
 		Button btn = new Button(strBaseText);
