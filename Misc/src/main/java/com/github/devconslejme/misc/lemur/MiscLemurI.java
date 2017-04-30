@@ -34,14 +34,16 @@ import org.lwjgl.opengl.Display;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
-import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.jme.SpatialHierarchyI;
+import com.github.devconslejme.misc.jme.UserDataI;
 import com.jme3.app.Application;
 import com.jme3.font.BitmapText;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
@@ -192,4 +194,52 @@ public class MiscLemurI {
 		));
 //		pnl.getWorldBound().setCenter(new Vector3f(Display.getWidth()/2f,Display.getHeight()/2f,pnl.getLocalTranslation().z));
 	}
+	
+	public static enum EReSizeApplyMode{
+		Save,
+		Restore,
+		RestoreDefault,
+		UpdateDefaultToCurrent,
+		;
+		public String s(){return toString();}
+	}
+	public static class SafeSize{
+		public SafeSize(){};
+		Vector3f v3fSafeSizeLast=null;
+		Vector3f v3fSafeSizeDefault=null;
+	}
+//	private String strUDKeySafeSizeLast=ResizablePanel.class.getName()+"/SafeSize";
+//	private String strUDKeySafeSizeDefault=ResizablePanel.class.getName()+"/SafeSizeDefault";
+	public void safeSizeRecursively(EReSizeApplyMode eapply, Panel pnl) {
+		SafeSize ss = UserDataI.i().getUserDataPSH(pnl, SafeSize.class, true);
+		switch(eapply){
+			case Restore:{
+				Vector3f v3fSafeSize = ss.v3fSafeSizeLast;
+				if(v3fSafeSize!=null)pnl.setPreferredSize(v3fSafeSize);
+			}break;
+			case RestoreDefault:{
+				Vector3f v3fSafeSize = ss.v3fSafeSizeDefault;
+				if(v3fSafeSize!=null)pnl.setPreferredSize(v3fSafeSize);
+			}break;
+			case Save:{
+				ss.v3fSafeSizeLast=pnl.getPreferredSize().clone();
+			}break;
+			case UpdateDefaultToCurrent:{
+				ss.v3fSafeSizeDefault=pnl.getPreferredSize().clone();
+			}break;
+		}
+		
+		for(Spatial sptChild:pnl.getChildren()){
+			if (sptChild instanceof Panel) {
+				safeSizeRecursively(eapply,(Panel)sptChild);
+			}
+		}
+	}
+	public void safeSizeInitialize(Panel pnl){
+		SafeSize ss = UserDataI.i().getUserDataPSH(pnl, SafeSize.class, true);
+		if(ss.v3fSafeSizeLast==null){ // 1st/initial safe size will be default
+			MiscLemurI.i().safeSizeRecursively(EReSizeApplyMode.UpdateDefaultToCurrent,pnl);
+		}
+	}
+	
 }

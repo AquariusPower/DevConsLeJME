@@ -42,11 +42,11 @@ public class SpatialHierarchyI {
 	public static SpatialHierarchyI i(){return GlobalManagerI.i().get(SpatialHierarchyI.class);}
 	
 	@SuppressWarnings({ "unchecked" })
-	public <T extends Node> T getParentest(Spatial spt, Class<T> clTypeParentest, boolean bIncludeFirst){
+	public <T extends Node> T getParentest(Spatial sptStartFrom, Class<T> clTypeParentest, boolean bIncludeStartFrom){
 		T parentest = null;
-		if(bIncludeFirst && clTypeParentest.isInstance(spt))parentest=(T)spt;
+		if(bIncludeStartFrom && clTypeParentest.isInstance(sptStartFrom))parentest=(T)sptStartFrom;
 		
-		Node nodeParent = spt.getParent();
+		Node nodeParent = sptStartFrom.getParent();
 		while(nodeParent!=null){
 			if(clTypeParentest.isInstance(nodeParent)){
 				parentest=(T)nodeParent;

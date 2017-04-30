@@ -89,6 +89,24 @@ public class UserDataI {
 		/** use the full enum package + class name + enum id */
 		String getUId();
 	}
+	/**
+	 * 
+	 * @param spt
+	 * @param cl
+	 * @param bCreateIfNull requires class to have empty constructor
+	 * @return
+	 */
+	public <R> R getUserDataPSH(Spatial spt, Class<R> cl, boolean bCreateIfNull){
+		R ret = getUserDataPSH(spt, cl);
+		if(ret==null && bCreateIfNull){
+			try {
+				setUserDataPSH(spt, ret=cl.newInstance());
+			} catch (InstantiationException | IllegalAccessException e) {
+				throw new DetailedException(e,spt,cl,bCreateIfNull);
+			}
+		}
+		return ret;
+	}
 	public <R> R getUserDataPSH(Spatial spt, Class<R> cl){
 		return getUserDataPSH(spt, cl.getName());
 	}

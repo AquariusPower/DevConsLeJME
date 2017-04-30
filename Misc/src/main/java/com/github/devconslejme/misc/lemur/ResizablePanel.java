@@ -32,14 +32,15 @@ import java.util.HashMap;
 
 import org.lwjgl.opengl.Display;
 
-import com.github.devconslejme.misc.AssertionsI;
-import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.Annotations.Workaround;
+import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.jme.SpatialHierarchyI;
+import com.github.devconslejme.misc.lemur.MiscLemurI.EReSizeApplyMode;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Panel;
@@ -263,7 +264,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 			}
 			
 			if(eeX==null && eeY==null){
-				warnMsg("impossible condition: cursor at no edge?");
+				MessagesI.i().warnMsg(this,"impossible condition: cursor at no edge?");
 				return;
 			}
 			
@@ -376,20 +377,25 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 	 */
 //	protected void resizedTo(Vector3f v3fNewSize) {}
 
-	private Panel getParentest(){ //TODO @ThisMethodCouldBeAtMiscClass
+//	@CouldBeAGenericUtilMisc
+//	private Panel getParentest(){
+//		if(pnlParentest!=null)return pnlParentest;
+//		
+//		// find it
+//		pnlParentest = this;
+//		Node nodeParent = getParent();
+//		while(nodeParent!=null){
+//			if(nodeParent instanceof Panel){
+//				pnlParentest=(Panel)nodeParent;
+//			}
+//			nodeParent=nodeParent.getParent();
+//		}
+//		
+//		return pnlParentest;
+//	}
+	private Panel getParentest(){
 		if(pnlParentest!=null)return pnlParentest;
-		
-		// find it
-		pnlParentest = this;
-		Node nodeParent = getParent();
-		while(nodeParent!=null){
-			if(nodeParent instanceof Panel){
-				pnlParentest=(Panel)nodeParent;
-			}
-			nodeParent=nodeParent.getParent();
-		}
-		
-		return pnlParentest;
+		return SpatialHierarchyI.i().getParentest(this,Panel.class,true);
 	}
 	
 	/**
@@ -401,67 +407,68 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		
 		Vector3f v3f = pnlParentest.getPreferredSize().add(new Vector3f(1, 1, 0));
 		if(v3f.equals(new Vector3f(Display.getWidth(),Display.getHeight(),0))){
-			safeSizeRecursively(EReSizeApplyMode.Restore,pnlParentest);
+			MiscLemurI.i().safeSizeRecursively(EReSizeApplyMode.Restore,pnlParentest);
 			return;
 		}
 		
 		if(v3f.x > Display.getWidth())v3f.x=Display.getWidth();
 		if(v3f.y > Display.getHeight())v3f.y=Display.getHeight();
 		
-		warnMsg("("+i+") increasing size of "+pnlParentest.getName()+" to "+v3f);
+		MessagesI.i().warnMsg(this,"("+i+") increasing size of "+pnlParentest.getName()+" to "+v3f);
 		
 		pnlParentest.setPreferredSize(v3f);
 	}
 	
-	private String strUDKeySafeSizeLast=ResizablePanel.class.getName()+"/SafeSize";
-	private String strUDKeySafeSizeDefault=ResizablePanel.class.getName()+"/SafeSizeDefault";
+//	private String strUDKeySafeSizeLast=ResizablePanel.class.getName()+"/SafeSize";
+//	private String strUDKeySafeSizeDefault=ResizablePanel.class.getName()+"/SafeSizeDefault";
 	
-	public static enum EReSizeApplyMode{
-		Save,
-		Restore,
-		RestoreDefault,
-		UpdateDefaultToCurrent,
-		;
-		public String s(){return toString();}
-	}
+//	public static enum EReSizeApplyMode{
+//		Save,
+//		Restore,
+//		RestoreDefault,
+//		UpdateDefaultToCurrent,
+//		;
+//		public String s(){return toString();}
+//	}
 	
 	public void applyCurrentSafeSizeAsDefault(){
 		if(isUpdateLogicalStateSucces()){
-			safeSizeRecursively(EReSizeApplyMode.UpdateDefaultToCurrent, this);
+			MiscLemurI.i().safeSizeRecursively(EReSizeApplyMode.UpdateDefaultToCurrent, this);
 		}
 	}
 	
-	private void safeSizeRecursively(EReSizeApplyMode eapply, Panel pnl) { //TODO @ThisMethodCouldBeAtMiscClass
-//		if(
-//				eapply.equals(EReSizeApplyMode.UpdateDefaultToCurrent) || 
-//				pnl.getUserData(strUDKeySafeSizeDefault)==null //initial will be first default
-//		){ 
-//			pnl.setUserData(strUDKeySafeSizeDefault, pnl.getPreferredSize());
+//	@CouldBeAGenericUtilMisc
+//	private void safeSizeRecursively(EReSizeApplyMode eapply, Panel pnl) {
+////		if(
+////				eapply.equals(EReSizeApplyMode.UpdateDefaultToCurrent) || 
+////				pnl.getUserData(strUDKeySafeSizeDefault)==null //initial will be first default
+////		){ 
+////			pnl.setUserData(strUDKeySafeSizeDefault, pnl.getPreferredSize());
+////		}
+//		
+//		switch(eapply){
+//			case Restore:{
+//				Vector3f v3fSafeSize = (Vector3f)pnl.getUserData(strUDKeySafeSizeLast);
+//				if(v3fSafeSize!=null)pnl.setPreferredSize(v3fSafeSize);
+//			}break;
+//			case RestoreDefault:{
+//				Vector3f v3fSafeSize = (Vector3f)pnl.getUserData(strUDKeySafeSizeDefault);
+//				if(v3fSafeSize!=null)pnl.setPreferredSize(v3fSafeSize);
+//			}break;
+//			case Save:{
+//				pnl.setUserData(strUDKeySafeSizeLast,pnl.getPreferredSize());
+//			}break;
+//			case UpdateDefaultToCurrent:{
+//				pnl.setUserData(strUDKeySafeSizeDefault, pnl.getPreferredSize());
+//			}break;
 //		}
-		
-		switch(eapply){
-			case Restore:{
-				Vector3f v3fSafeSize = (Vector3f)pnl.getUserData(strUDKeySafeSizeLast);
-				if(v3fSafeSize!=null)pnl.setPreferredSize(v3fSafeSize);
-			}break;
-			case RestoreDefault:{
-				Vector3f v3fSafeSize = (Vector3f)pnl.getUserData(strUDKeySafeSizeDefault);
-				if(v3fSafeSize!=null)pnl.setPreferredSize(v3fSafeSize);
-			}break;
-			case Save:{
-				pnl.setUserData(strUDKeySafeSizeLast,pnl.getPreferredSize());
-			}break;
-			case UpdateDefaultToCurrent:{
-				pnl.setUserData(strUDKeySafeSizeDefault, pnl.getPreferredSize());
-			}break;
-		}
-		
-		for(Spatial sptChild:pnl.getChildren()){
-			if (sptChild instanceof Panel) {
-				safeSizeRecursively(eapply,(Panel)sptChild);
-			}
-		}
-	}
+//		
+//		for(Spatial sptChild:pnl.getChildren()){
+//			if (sptChild instanceof Panel) {
+//				safeSizeRecursively(eapply,(Panel)sptChild);
+//			}
+//		}
+//	}
 	
 	@Override
 	public void updateLogicalState(float tpf) {
@@ -491,7 +498,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 				Vector3f v3fSize = pnlParentest.getSize();
 				if(v3fSize.x==Display.getWidth() && v3fSize.y==Display.getHeight()){
 					debugRecursiveChildPanelSizes("",getParentest());
-					warnMsg("maximum size reached during grow fix");
+					MessagesI.i().warnMsg(this,"maximum size reached during grow fix");
 					throw ex;
 				} //prevents endless growth
 				growParentestFixAttempt(iGrowParentFixCount);
@@ -500,11 +507,12 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		}
 		
 		if(bUpdateLogicalStateSuccess){
-			if(getUserData(strUDKeySafeSizeLast)==null){ // 1st/initial safe size will be default
-				safeSizeRecursively(EReSizeApplyMode.UpdateDefaultToCurrent,this);
-			}
+			MiscLemurI.i().safeSizeInitialize(this);
+//			if(getUserData(strUDKeySafeSizeLast)==null){ // 1st/initial safe size will be default
+//				MiscLemurI.i().safeSizeRecursively(EReSizeApplyMode.UpdateDefaultToCurrent,this);
+//			}
 			
-			safeSizeRecursively(EReSizeApplyMode.Save,getParentest());
+			MiscLemurI.i().safeSizeRecursively(EReSizeApplyMode.Save,getParentest());
 			
 			for(IResizableListener iuls:listeners){
 				iuls.resizerUpdatedLogicalStateEvent(tpf,this);
@@ -517,7 +525,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		for(Spatial sptChild:pnl.getChildren()){
 			if (sptChild instanceof Panel) {
 				Panel pnlChild = (Panel) sptChild;
-				warnMsg(strIndent+pnlChild.getName()+",p"+pnlChild.getPreferredSize()+",s"+pnlChild.getSize());
+				MessagesI.i().warnMsg(this,strIndent+pnlChild.getName()+",p"+pnlChild.getPreferredSize()+",s"+pnlChild.getSize());
 				debugRecursiveChildPanelSizes(strIndent,pnlChild);
 			}
 		}
@@ -534,7 +542,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 			getParentest().updateLogicalState(0.001f); //TODO use current tpf? 
 			b=true;
 		}catch(Exception ex){
-			warnMsg("skipping impossible new size: "+ex.getMessage());
+			MessagesI.i().warnMsg(this,"skipping impossible new size: "+ex.getMessage());
 		}
 		bSkipGrowFix=false;
 		return b;
@@ -774,7 +782,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		if(!listeners.contains(listener)){
 			listeners.add(listener);
 		}else{
-			warnMsg("listener already added "+listener);
+			MessagesI.i().warnMsg(this,"listener already added "+listener);
 		}
 		
 		return this;
@@ -794,9 +802,11 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		return hmEdge.get(edge);
 	}
 	
-	private void warnMsg(String str){ //TODO @ThisMethodCouldBeAtMiscClass
-		System.err.println("WARN["+this.getClass().getSimpleName()+"]: "+str+"; STE "+Thread.currentThread().getStackTrace()[2]); //TODO log?
-	}
+//	@CouldBeAGenericUtilMisc
+//	private void warnMsg(String str){
+//		System.err.println("WARN["+this.getClass().getSimpleName()+"]: "+str+"; STE "+Thread.currentThread().getStackTrace()[2]); //TODO log?
+//	}
+	
 //	public static int getGrowParentestFixAttemptLimitGlobal() {
 //		return iGrowParentestFixAttemptLimitGlobal;
 //	}
@@ -833,7 +843,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 	}
 	
 	public void restoreDefaultSafeSize() {
-		safeSizeRecursively(EReSizeApplyMode.RestoreDefault, this);
+		MiscLemurI.i().safeSizeRecursively(EReSizeApplyMode.RestoreDefault, this);
 	}
 	
 }

@@ -64,6 +64,7 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 	private boolean	bRotating=true;
 	private Node	nodeInfo;
 	private Node	nodeHook;
+	private float	fAboveLemurCursorRayCast = 1001; //TODO dynamically collect this value
 	
 	public void configure(Node nodeParent){
 		app = GlobalManagerI.i().get(Application.class);
@@ -104,7 +105,7 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 		super.update(tpf);
 		if(inputman.isCursorVisible()){
 			Vector2f v2fCursorPos = inputman.getCursorPosition();
-			geom.setLocalTranslation(v2fCursorPos.x-fSize, v2fCursorPos.y+fSize, 1001);
+			geom.setLocalTranslation(v2fCursorPos.x-fSize, v2fCursorPos.y+fSize, fAboveLemurCursorRayCast );
 			
 //			bt.setSize(20);
 			bt.setText(
@@ -150,7 +151,7 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 				v3fPos.addLocal(v3fSize);
 			}
 			nodeHook.setLocalTranslation(v3fPos);
-			nodeInfo.setLocalTranslation(MiscJmeI.i().toV3f(v2fCursorPos));
+			nodeInfo.setLocalTranslation(MiscJmeI.i().toV3f(v2fCursorPos,fAboveLemurCursorRayCast));
 		}
 	}
 	
