@@ -151,6 +151,11 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 		 * south with input to be used as options filter or typeable custom choice (like creating the player name)
 		 */
 		Input,
+		
+		/**
+		 * West with buttons to execute related commands like updating the list of options and anything else!
+		 */
+		Commands,
 		;
 	}
 	
@@ -189,17 +194,9 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 		return rzpDialog;
 	}
 
-	@Override
-	public void removedFromParentEvent(ResizablePanel rzpSource) {
-	}
-	@Override
-	public void resizedEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {
-	}
-	@Override
-	public void endedResizingEvent(ResizablePanel rzpSource) {
-	}
-	@Override
-	public void resizerUpdatedLogicalStateEvent(float tpf,ResizablePanel rzp) {
-	}
+	@Override	public void removedFromParentEvent(ResizablePanel rzpSource) {	}
+	@Override	public void resizedEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {	}
+	@Override	public void endedResizingEvent(ResizablePanel rzpSource) {	}
+	@Override	public void resizerUpdatedLogicalStateEvent(float tpf,ResizablePanel rzp) {	}
 	
 }

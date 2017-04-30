@@ -48,6 +48,9 @@ import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.core.GuiComponent;
 import com.simsilica.lemur.core.GuiControl;
+import com.simsilica.lemur.core.VersionedHolder;
+import com.simsilica.lemur.core.VersionedObject;
+import com.simsilica.lemur.core.VersionedReference;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.CursorListener;
@@ -74,7 +77,8 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
   public static final String ELEMENT_ID = "resizablePanel";
 	private BorderLayout layout;
 	private Panel contents;
-	private static int iBorderSizeDefault = 2;
+//	private static int iResizableBorderSizeDefault = 2;
+	private static VersionedHolder<Integer> vhiResizableBorderSizeDefault = new VersionedHolder<Integer>(2);
 	private Vector3f	v3fDragFromPrevious;
 	private Vector3f	v3fMinSize = new Vector3f(0,0,0);
 	private float fCornerHotSpotRange = 20;
@@ -432,7 +436,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 //	}
 	
 	public void applyCurrentSafeSizeAsDefault(){
-		if(isUpdateLogicalStateSucces()){
+		if(isUpdateLogicalStateSuccess()){
 			MiscLemurI.i().safeSizeRecursively(EReSizeApplyMode.UpdateDefaultToCurrent, this);
 		}
 	}
@@ -636,9 +640,19 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
   	ColorRGBA color = ColorRGBA.Cyan.clone();
   	color.a=0.25f;
   	QuadBackgroundComponent qbc = new QuadBackgroundComponent(color);
-  	qbc.setMargin(iBorderSizeDefault, iBorderSizeDefault);
+  	qbc.setMargin(getResizableBorderSizeDefault(), getResizableBorderSizeDefault());
   	attrs.set( LAYER_RESIZABLE_BORDERS, qbc, false );
   }
+	public static int getResizableBorderSizeDefault() {
+		return vhiResizableBorderSizeDefault.getObject();
+	}
+	public static void setResizableBorderSizeDefault(int iBorderSizeDefault) {
+		vhiResizableBorderSizeDefault.setObject(iBorderSizeDefault);
+//		ResizablePanel.iResizableBorderSizeDefault = iBorderSizeDefault;
+	}
+	public static VersionedReference<Integer> getResizableBorderSizeDefaultVersionedReference(){
+		return vhiResizableBorderSizeDefault.createReference();
+	}
   
   /**
    * this is good to let the container surround the contents (that could be going beyond the borders limits)
@@ -658,6 +672,15 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		if(v3fSize.y<v3fBB.y){v3fSize.y=v3fBB.y;b=true;}
 		
 		if(b)setPreferredSize(v3fSize);
+	}
+	
+	public void setResizableBorderSize(float x, float y){
+		GuiComponent gc = getResizableBorder();
+		if(gc instanceof QuadBackgroundComponent){
+			((QuadBackgroundComponent)gc).setMargin(x, y);
+		}else{
+			MessagesI.i().warnMsg(this, "unable to set margin for", gc.getClass(), this);
+		}
 	}
 	
 	@StyleAttribute(value=LAYER_RESIZABLE_BORDERS, lookupDefault=false)
@@ -813,7 +836,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 //	public static void setGrowParentestFixAttemptLimitGlobal(int iGrowParentestFixAttemptLimitGlobal) {
 //		ResizablePanel.iGrowParentestFixAttemptLimitGlobal = iGrowParentestFixAttemptLimitGlobal;
 //	}
-	public boolean isUpdateLogicalStateSucces() {
+	public boolean isUpdateLogicalStateSuccess() {
 		return bUpdateLogicalStateSuccess;
 	}
 	

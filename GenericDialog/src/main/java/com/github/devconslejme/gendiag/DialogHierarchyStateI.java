@@ -62,6 +62,7 @@ import com.simsilica.es.EntityId;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
+import com.simsilica.lemur.core.VersionedReference;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.DefaultCursorListener;
@@ -75,6 +76,8 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	public static DialogHierarchyStateI i(){return GlobalManagerI.i().get(DialogHierarchyStateI.class);}
 	
 	private Application	app;
+	/** dialogs may close, but not be discarded TODO confirm this:  */
+	private ArrayList<ResizablePanel> arzpAllCreatedDialogs = new ArrayList<ResizablePanel>();
 	private float	fBeginOrderPosZ;
 	private Node	nodeToMonitor;
 	private FocusManagerState	focusState;
@@ -117,6 +120,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		}
 	}.setName("FocusAtDevConsInput").setDelaySeconds(0.25f).enableLoop();
 	private ArrayList<Panel>	apnlAutoFocus = new ArrayList<Panel>();
+	private VersionedReference<Integer>	vriResizableBorderSize;
 	
 	public static class BlockerListener extends DefaultCursorListener{
 		@Override
@@ -208,6 +212,8 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		app=GlobalManagerI.i().get(Application.class);
     app.getStateManager().attach(this);
 		focusState=app.getStateManager().getState(FocusManagerState.class);
+		
+		vriResizableBorderSize = ResizablePanel.getResizableBorderSizeDefaultVersionedReference();
     
 		EffectManagerStateI.i().add(ieffLinkedDragEffect);
 		
@@ -244,6 +250,8 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		vs.setBlocker(pnlBlocker);
 		UserDataI.i().setUserDataPSH(rzp, vs);
 		UserDataI.i().setUserDataPSH(pnlBlocker, vs);
+		
+		arzpAllCreatedDialogs.add(rzp);
 		
 		return rzp;
 	}
@@ -343,11 +351,24 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		
 		sys.update(tpf, app.getTimer().getTime());
 		
+		updateDialogsResizableBorderSize();
+		
 		updateDragLinkToParentEffect();
 		
 		updateVolatileModalAutoClose();
 	}
 	
+	/**
+	 * even the not currently opened ones
+	 */
+	private void updateDialogsResizableBorderSize() {
+		if(vriResizableBorderSize.update()){
+			for(ResizablePanel rzp:arzpAllCreatedDialogs){
+				rzp.setResizableBorderSize(vriResizableBorderSize.get(), vriResizableBorderSize.get());
+			}
+		}
+	}
+
 	private void updateVolatileModalAutoClose() {
 		Spatial spt = focusState.getFocus();
 		if(spt==null)return;
@@ -360,7 +381,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		
 		if(hc.isBlocked())return; //it can have an active child
 		
-		if(!rzp.isUpdateLogicalStateSucces())return; //as 1st time it may not be ready yet
+		if(!rzp.isUpdateLogicalStateSuccess())return; //as 1st time it may not be ready yet
 		
 		if(!MiscLemurI.i().isMouseCursorOver(rzp)){
 			rzp.close();

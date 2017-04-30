@@ -33,11 +33,18 @@
 		<format property="DATE_TIME_NOW" pattern="yyyyMMddHHmmss"  locale="en,UK" />
 	</tstamp>
 	
+	<import file="./javadoc.xml" as="javadocXmlFile"/>
+<!--
+	<target name="CreateJavaDoc">
+	    <ant antfile="javadoc.xml" target="javadoc"/>
+	</target>
+-->
+	
 	<property name="projname" value="DevCons"/>
 	<property name="version" value="1.0.${DATE_TIME_NOW}.alpha"/>
 	<property name="projv" value="${projname}-${version}"/>
 		
-	<target name="CreateAllJars" description="Create all Jar files">
+	<target name="CreateAllJars" depends="javadocXmlFile.javadoc" description="Create all Jar files">
 		
 		<!-- BINARIES -->
 		

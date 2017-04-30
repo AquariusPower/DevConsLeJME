@@ -159,6 +159,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	private ContextMenuAnon	cmVarMon;
 	private boolean	bAutoUpdateWrapAt=true;
 	private VersionedReference<Set<Integer>>	vrSelectionChangedToUpdateInputText;
+	VersionedReference<Vector3f> vrLoggingSectionSize;
 	
 	private Comparator<VarMon>	cmprStat = new Comparator<VarMon>() {
 		@Override
@@ -381,34 +382,35 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 
 //		GuiGlobals.getInstance().requestFocus(tfInput);
 		
-		QueueI.i().enqueue(new CallableX(){
-				@Override
-				public Boolean call() {
-					if(!vrLoggingSectionSize.update())return true;
-					
-					float fHeight = lstbxLoggingSection.getSize().y; //TODO inner container needs some time to be setup by lemur?
-					
-					int iLines = (int) (fHeight/MiscLemurI.i().getEntryHeightPixels(lstbxLoggingSection));
-					iLines--; //to avoid the text being too close to each other
-					
-					if(lstbxLoggingSection.getVisibleItems()!=iLines){
-						lstbxLoggingSection.setVisibleItems(iLines);
-						lstbxVarMonitorBar.setVisibleItems(iLines);
-						enqueueUpdateVarMonList();
-//						updateVarMonList();
-					}
-					
-					if(bAutoUpdateWrapAt)updateLoggingWrapAt();
-					
-					bUpdateNoWrap=true;
-					
-					return true;
-				}
-			}
-			.setName("UpdateVisibleRowsAndWrapAt")
-			.setDelaySeconds(0.25f)
-			.enableLoop()
-		);
+		MiscLemurI.i().createLisbBoxVisibleItemsUpdater(lstbxLoggingSection); //TODO complete
+//		QueueI.i().enqueue(new CallableX(){
+//				@Override
+//				public Boolean call() {
+//					if(!vrLoggingSectionSize.update())return true;
+//					
+//					float fHeight = lstbxLoggingSection.getSize().y; //TODO inner container needs some time to be setup by lemur?
+//					
+//					int iLines = (int) (fHeight/MiscLemurI.i().getEntryHeightPixels(lstbxLoggingSection));
+//					iLines--; //to avoid the text being too close to each other
+//					
+//					if(lstbxLoggingSection.getVisibleItems()!=iLines){
+//						lstbxLoggingSection.setVisibleItems(iLines);
+//						lstbxVarMonitorBar.setVisibleItems(iLines);
+//						enqueueUpdateVarMonList();
+////						updateVarMonList();
+//					}
+//					
+//					if(bAutoUpdateWrapAt)updateLoggingWrapAt();
+//					
+//					bUpdateNoWrap=true;
+//					
+//					return true;
+//				}
+//			}
+//			.setName("UpdateVisibleRowsAndWrapAt")
+//			.setDelaySeconds(0.25f)
+//			.enableLoop()
+//		);
 		
 		bUpdateNoWrap=true;
 		
@@ -439,7 +441,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			rzpMain.setLocalTranslationXY(v3fDefaultPos);
 			setConsoleSizeByHeightPerc(fConsoleHeightPerc);
 			rzpVarBar.getPreferredSize().x=v3fDefaultBarSize.x;
-			if(rzpMain.isUpdateLogicalStateSucces()){
+			if(rzpMain.isUpdateLogicalStateSuccess()){
 				v3fBkpLastNonDefaultPos = v3fCurrentPos.clone();
 				fBkpLastNonDefaultBarWidthX = fCurrentBarWidthX;
 				v3fBkpLastNonDefaultSize = rzpMain.getSize().clone();
@@ -1132,7 +1134,6 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		VersionedVector3f voLoggingSize = new VersionedVector3f(lstbxLoggingSection.getSize());
 		vrLoggingSectionSize = new VersionedReference<Vector3f>(voLoggingSize);
 	}
-	VersionedReference<Vector3f> vrLoggingSectionSize;
 //	public static class VersionedVector3f implements VersionedObject<Vector3f>{
 //		private Vector3f	v3fPrevious;
 //		private Vector3f	v3f;
@@ -1200,7 +1201,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 				QueueI.i().enqueue(new CallableX() {
 					@Override
 					public Boolean call() {
-						if(!rzpMain.isUpdateLogicalStateSucces())return false;
+						if(!rzpMain.isUpdateLogicalStateSuccess())return false;
 						/**
 						 * WAITS FOR THE NEW SIZE REQUEST SUCCEED
 						 */

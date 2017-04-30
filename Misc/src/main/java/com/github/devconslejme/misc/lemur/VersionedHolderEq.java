@@ -24,34 +24,29 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package com.github.devconslejme.projman;
+package com.github.devconslejme.misc.lemur;
 
-import com.jme3.app.SimpleApplication;
-import com.simsilica.lemur.GuiGlobals;
-import com.simsilica.lemur.style.BaseStyles;
+import com.simsilica.lemur.core.VersionedHolder;
 
 /**
+ * WONT WORK!!! if the stored object changes some of it's fields values, the comparison with self will always be true...
+ * WONT WORK!!! do not auto clone() nor store a previous copy of custom objects, that would be a mess... 
+ * 
+ * The difference here is that it will always use the .equals() to compare,
+ * so the object's inner fields will (expectedly) be compared, like with Vector3f.
+ * TODO suggest an option at {@link VersionedHolder} to do this trick tho.
+ * TODO the option could also be automatic in case the stored object implements .equals() !
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class _TestBasicCodeToCopyFrom_ extends SimpleApplication{
-	public static void main(String[] args) {
-		assert(true);
-		_TestBasicCodeToCopyFrom_ test = new _TestBasicCodeToCopyFrom_();
-		test.start();
-	}
-
+@Deprecated
+public class VersionedHolderEq<T> extends VersionedHolder<T>{
 	@Override
-	public void simpleInitApp() {
-		GuiGlobals.initialize(this);
-		BaseStyles.loadGlassStyle();
-		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
-		//TODO com.github.devconslejme.TODO.PkgCfgI.i().configure();
-		
-		initTest();
-	}
-
-	private void initTest() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented yet");
+  public boolean updateObject( T value ) {
+    if( getObject() != null && getObject().equals(value) )
+        return false;
+    
+    setObject(value);
+    
+    return true;
 	}
 }

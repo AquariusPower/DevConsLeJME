@@ -28,6 +28,9 @@
 package com.github.devconslejme.misc;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+
+import com.google.common.base.Strings;
 
 
 /**
@@ -155,5 +158,27 @@ public class StringI {
 			if(strAppendOnTrunc!=null)str+=strAppendOnTrunc;
 		}
 		return str;
+	}
+	
+	public String createTable(int iColumns, String... astr){
+//		ArrayList<String> astrList = new ArrayList<String>();
+		int iMaxWidth=0;
+		for(String str:astr){
+			if(str.length()>iMaxWidth)iMaxWidth=str.length();
+		}
+		
+		String strOut="";
+		int iCount=0;
+		for(String str:astr){
+//			strOut+=iCount+":"
+			strOut+=Strings.padStart(str, iMaxWidth, ' ')+" ";
+			iCount++;
+			if(iCount==3){
+				strOut+="\n";
+				iCount=0;
+			}
+		}
+		
+		return strOut;
 	}
 }

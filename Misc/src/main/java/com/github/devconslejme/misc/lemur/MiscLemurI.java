@@ -34,6 +34,8 @@ import org.lwjgl.opengl.Display;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.UserDataI;
@@ -54,6 +56,7 @@ import com.simsilica.lemur.component.TextComponent;
 import com.simsilica.lemur.component.TextEntryComponent;
 import com.simsilica.lemur.core.GuiComponent;
 import com.simsilica.lemur.core.GuiControl;
+import com.simsilica.lemur.core.VersionedReference;
 import com.simsilica.lemur.event.AbstractCursorEvent;
 import com.simsilica.lemur.grid.GridModel;
 import com.simsilica.lemur.style.ElementId;
@@ -242,4 +245,32 @@ public class MiscLemurI {
 		}
 	}
 	
+	public void createLisbBoxVisibleItemsUpdater(ListBox lstbx){
+		QueueI.i().enqueue(new CallableX(){
+				private VersionedVector3f voLoggingSize = new VersionedVector3f(lstbx.getSize());
+				private VersionedReference<Vector3f> vrLoggingSectionSize = new VersionedReference<Vector3f>(voLoggingSize);
+				
+				@Override
+				public Boolean call() {
+					if(!vrLoggingSectionSize.update())return true;
+					
+					float fHeight = lstbx.getSize().y; //TODO inner container needs some time to be setup by lemur?
+					
+					int iLines = (int) (fHeight/MiscLemurI.i().getEntryHeightPixels(lstbx));
+					iLines--; //to avoid the text being too close to each other
+					
+					if(lstbx.getVisibleItems()!=iLines){
+						lstbx.setVisibleItems(iLines);
+//						lstbxVarMonitorBar.setVisibleItems(iLines);
+//						enqueueUpdateVarMonList();
+					}
+					
+					return true;
+				}
+			}
+			.setName("UpdateVisibleRowsAndWrapAt")
+			.setDelaySeconds(0.25f)
+			.enableLoop()
+		);
+	}
 }

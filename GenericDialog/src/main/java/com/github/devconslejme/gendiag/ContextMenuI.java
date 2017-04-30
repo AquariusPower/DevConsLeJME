@@ -143,7 +143,8 @@ public class ContextMenuI implements IResizableListener{
 			
 			cntrContextOptions = new Container(strStyle);
 			rzpContextMenu.setContents(cntrContextOptions);
-			rzpContextMenu.setBackground(new QuadBackgroundComponent(ColorRGBA.Cyan));
+			rzpContextMenu.setBackground(new QuadBackgroundComponent(
+				ColorI.i().colorChangeCopy(ColorRGBA.Cyan, -0.5f, 0.75f)));
 			
 			lbl = new Label("");
 			
@@ -307,6 +308,10 @@ public class ContextMenuI implements IResizableListener{
 		}
 	}
 	
+	/**
+	 * see {@link ContextMenuI#showContextMenu(Vector2f, String, ContextMenu)}<br>
+	 * use {@link #setPopupHintHelp(String)}
+	 */
 	public static abstract class HintUpdater extends CallableX<HintUpdater>{
 		public void setPopupHintHelp(String str){
 			putKeyValue(EContext.PopupHintHelp.getUId(),str);
@@ -492,6 +497,8 @@ public class ContextMenuI implements IResizableListener{
 	}
 	
 	/**
+	 * the popup hint help will only be set if {@link HintUpdater#call()} succeeds 
+	 * 
 	 * @param v2fMouseCursorPos
 	 * @param strContextMenuTitle
 	 * @param cm

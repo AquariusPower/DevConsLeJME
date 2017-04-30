@@ -34,9 +34,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
-import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.gendiag.ContextMenuI.HintUpdater;
 import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.Workaround;
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
@@ -71,10 +72,11 @@ import com.simsilica.lemur.list.DefaultCellRenderer;
 
 /**
  * A text based generic dialog.
+ * TODO auto list viewable items, see devcons, make misc method
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public final class SimpleGenericDialog extends AbstractGenericDialog {
+public class SimpleGenericDialog extends AbstractGenericDialog {
 	private Label	btnInfoText;
 	private ListBox<OptionData>	lstbxOptions;
 	private VersionedList<OptionData>	vlodOptions;
@@ -226,11 +228,8 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 	}
 	
 	@SuppressWarnings("unchecked")
-	@Override
-	protected void initPreContentsContainer() {
-		ESection es;
-		
-		es=ESection.Info;
+	private void initSectionInfo(){
+		ESection es=ESection.Info;
 		if(getSection(es)==null){
 			abtnInfoSection = new ArrayList<Button>();
 			
@@ -297,9 +296,44 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 			
 			ContextMenu cm = new ContextMenu(getDialog());
 			cm.addNewEntry("Restore to default/initial size", new Command<Button>() {@Override public void execute(Button source) {
-				getDialog().restoreDefaultSafeSize();}}, null);
+				getDialog().restoreDefaultSafeSize(); }}, null);
 			cm.addNewEntry("Update default size to current", new Command<Button>() {@Override public void execute(Button source) {
-				getDialog().applyCurrentSafeSizeAsDefault();}}, null);
+				getDialog().applyCurrentSafeSizeAsDefault(); }}, null);
+			cm.addNewEntry("Toggle Info Visibility", 
+				new Command<Button>() {@Override public void execute(Button source) {
+					if(btnInfoText.getParent()!=null){
+						cntrInfo.removeChild(btnInfoText);
+					}else{
+						cntrInfo.addChild(btnInfoText, BorderLayout.Position.Center);
+					}
+				}},
+				new HintUpdater() {
+					@Override
+					public Boolean call() {
+						setPopupHintHelp(btnInfoText.getParent()==null?"show":"hide"); //inverted to show next action on click
+						return true;
+					}
+				}
+			);
+			ContextMenu cmSubBorderSize = cm.createSubMenu("global resizable border size");
+			Command<Button> cmdBorderSize = new Command<Button>() {
+				@Override
+				public void execute(Button source) {
+					int i = Integer.parseInt(source.getText());
+					ResizablePanel.setResizableBorderSizeDefault(i);
+					getDialog().setResizableBorderSize(i,i);
+				}
+			};
+			cmSubBorderSize.addNewEntry("1", cmdBorderSize, null);
+			cmSubBorderSize.addNewEntry("2", cmdBorderSize, null);
+			cmSubBorderSize.addNewEntry("3", cmdBorderSize, null);
+			cmSubBorderSize.addNewEntry("4", cmdBorderSize, null);
+			cmSubBorderSize.addNewEntry("5", cmdBorderSize, null);
+			cmSubBorderSize.addNewEntry("6", cmdBorderSize, null);
+			cmSubBorderSize.addNewEntry("7", cmdBorderSize, null);
+			cmSubBorderSize.addNewEntry("8", cmdBorderSize, null);
+			cmSubBorderSize.addNewEntry("9", cmdBorderSize, null);
+			cmSubBorderSize.addNewEntry("10", cmdBorderSize, null);
 			
 			btnTitleText = createInfoButton(strTitle,null);
 			MiscLemurI.i().changeBackgroundColor(btnTitleText, ColorI.i().colorChangeCopy(ColorRGBA.Blue,0f,0.25f), true); //TODO use a lemur style instead
@@ -329,8 +363,50 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 			
 			setSection(es,cntrInfo);
 		}
-		
-		es=ESection.Options;
+	}
+	
+	@Override
+	protected void initPreContentsContainer() {
+		initSectionInfo();
+		initSectionOptions();
+		initSectionInput();
+		initSectionCommands();
+	}
+	
+	private void initSectionCommands() {
+		ESection es=ESection.Input;
+		if(getSection(es)==null){
+			
+		}
+	}
+
+	private void initSectionInput() {
+		ESection es=ESection.Input;
+		if(getSection(es)==null){
+			kal = new KeyActionListener() {
+				@Override
+				public void keyAction(TextEntryComponent source, KeyAction key) {
+					switch(key.getKeyCode()){
+						case KeyInput.KEY_RETURN:
+						case KeyInput.KEY_NUMPADENTER:
+							bUserSubmitedInputValue=true;
+							break;
+					}
+				}
+			};
+			
+			tfInput = new TextField("", getDialog().getStyle());
+			
+			tfInput.getActionMap().put(new KeyAction(KeyInput.KEY_NUMPADENTER),kal); 
+			tfInput.getActionMap().put(new KeyAction(KeyInput.KEY_RETURN),kal);
+			//tfInput.getActionMap().entrySet()
+			
+			setSection(es,tfInput);
+		}
+	}
+
+	private void initSectionOptions() {
+		ESection es=ESection.Options;
 		if(getSection(es)==null){
 			trOptions = new Function<SimpleGenericDialog.OptionData, String>() {
 				@Override
@@ -377,52 +453,28 @@ public final class SimpleGenericDialog extends AbstractGenericDialog {
 			
 			vrSelection = lstbxOptions.getSelectionModel().createReference();
 			
-//			((DefaultCellRenderer<OptionData>)lstbxOptions.getCellRenderer()).setTransform(trOptions);
-//			lstbxOptions.addClickCommands(new Command<ListBox>(){
-//				@Override
-//				public void execute(ListBox source) {
-//					bToggleExpandedOnce=true;
-////					tfInput.setText(getSelectedOptionVisibleText());
-//					OptionData od = getSelectedOptionData();
-//					if(!SectionIndicator.class.isInstance(od.getValue())){
-//						tfInput.setText(od.getTextKey());
-//					}
-//				}
-//			});
+	//		((DefaultCellRenderer<OptionData>)lstbxOptions.getCellRenderer()).setTransform(trOptions);
+	//		lstbxOptions.addClickCommands(new Command<ListBox>(){
+	//			@Override
+	//			public void execute(ListBox source) {
+	//				bToggleExpandedOnce=true;
+	////				tfInput.setText(getSelectedOptionVisibleText());
+	//				OptionData od = getSelectedOptionData();
+	//				if(!SectionIndicator.class.isInstance(od.getValue())){
+	//					tfInput.setText(od.getTextKey());
+	//				}
+	//			}
+	//		});
 			setSection(es,lstbxOptions);
 			lstbxOptions.setVisibleItems(10); //TODO make automatic
-//			getSection(es).setMinSize(new Vector3f(100,getEntryHeight(),0));
+	//		getSection(es).setMinSize(new Vector3f(100,getEntryHeight(),0));
 			
-//			vrSlider = lstbxOptions.getSlider().getModel().createReference();
+	//		vrSlider = lstbxOptions.getSlider().getModel().createReference();
 			
-//			applyListenerToListBoxItems();
+	//		applyListenerToListBoxItems();
 		}
-		
-		es=ESection.Input;
-		if(getSection(es)==null){
-			kal = new KeyActionListener() {
-				@Override
-				public void keyAction(TextEntryComponent source, KeyAction key) {
-					switch(key.getKeyCode()){
-						case KeyInput.KEY_RETURN:
-						case KeyInput.KEY_NUMPADENTER:
-							bUserSubmitedInputValue=true;
-							break;
-					}
-				}
-			};
-			
-			tfInput = new TextField("", getDialog().getStyle());
-			
-			tfInput.getActionMap().put(new KeyAction(KeyInput.KEY_NUMPADENTER),kal); 
-			tfInput.getActionMap().put(new KeyAction(KeyInput.KEY_RETURN),kal);
-			//tfInput.getActionMap().entrySet()
-			
-			setSection(es,tfInput);
-		}
-		
 	}
-	
+
 //	public int getEntryHeight(){
 //		boolean bWasEmpty=vlsOptions.isEmpty();
 //		if(bWasEmpty)vlsOptions.add("W");

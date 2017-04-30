@@ -175,8 +175,13 @@ public class MiscJmeI {
 			FastMath.nextRandomFloat()*2f-1f).normalize();
 	}
 	
-  public BitmapFont loadDefaultGuiFont() {
-    return GlobalManagerI.i().get(Application.class).getAssetManager().loadFont("Interface/Fonts/Default.fnt");
+  public BitmapFont loadDefaultFont() {
+  	return loadFont("Interface/Fonts/Default.fnt");
   }
-
+  public BitmapFont loadDefaultMonoFont() {
+  	return loadFont("Interface/Fonts/Console.fnt");
+  }
+  public BitmapFont loadFont(String strPath) {
+  	return GlobalManagerI.i().get(Application.class).getAssetManager().loadFont(strPath);
+  }
 }

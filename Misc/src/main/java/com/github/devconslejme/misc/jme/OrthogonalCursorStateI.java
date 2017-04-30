@@ -27,9 +27,13 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.github.devconslejme.misc.jme;
 
+import java.util.Formatter;
+
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.StringI;
+import com.google.common.collect.Table;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
@@ -62,9 +66,14 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 	private BitmapText	bt;
 	private ColorRGBA	color;
 	private boolean	bRotating=true;
+	private boolean	bRotateOnlyIfMouseMoves=true;
 	private Node	nodeInfo;
 	private Node	nodeHook;
 	private float	fAboveLemurCursorRayCast = 1001; //TODO dynamically collect this value
+	private float	fRotateSpeed=1f;
+	private float	fDistanceToCursor=100;
+	private Vector2f v2fCursorPosPrevious = new Vector2f();
+	private float	fGoodReadableRotateSpeedZ = -0.0025f;
 	
 	public void configure(Node nodeParent){
 		app = GlobalManagerI.i().get(Application.class);
@@ -90,9 +99,9 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 		nodeParent.attachChild(geom);
 		
 		// info
-		bt = MiscJmeI.i().loadDefaultGuiFont().createLabel("");
+		bt = MiscJmeI.i().loadDefaultMonoFont().createLabel("");
 		bt.setColor(ColorI.i().colorChangeCopy(color, 0f, 0.3f));
-		bt.setSize(12);
+		bt.setSize(13);
 		nodeInfo=new Node();
 		nodeHook = new Node();
 		nodeHook.attachChild(bt);
@@ -107,15 +116,34 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 			Vector2f v2fCursorPos = inputman.getCursorPosition();
 			geom.setLocalTranslation(v2fCursorPos.x-fSize, v2fCursorPos.y+fSize, fAboveLemurCursorRayCast );
 			
+//			new Formatter().;
+//			Table<R, C, V>
+			
 //			bt.setSize(20);
-			bt.setText(
-				String.format("%s\n%dx%d\n%.1fx%.1f%%",
-					v2fCursorPos.toString(),
-					Display.getWidth(),Display.getHeight(),
-					(v2fCursorPos.x/(float)Display.getWidth ())*100,
-					(v2fCursorPos.y/(float)Display.getHeight())*100
-				)
+			String str=StringI.i().createTable(3,
+				"xy", String.format("%.0f",v2fCursorPos.x), String.format("%.0f",v2fCursorPos.y),
+				"max", ""+Display.getWidth(), ""+Display.getHeight(),
+				"diff", ""+(Display.getWidth()-(int)v2fCursorPos.x), ""+(Display.getHeight()-(int)v2fCursorPos.y),
+				"%",	String.format("%.1f", (v2fCursorPos.x/(float)Display.getWidth ())*100),
+							String.format("%.1f", (v2fCursorPos.y/(float)Display.getHeight())*100)
 			);
+			
+			bt.setText(str);
+//				String.format(
+////						"xy=%.0fx%.0f\n"
+////								+"max=%dx%d\n"
+////								+"dif=%dx%d\n"
+////								+"%%=%.1fx%.1f",
+//					 " xy\t%.0f\t%.0f\n"
+//					+"max\t%d\t%d\n"
+//					+"dif\t%d\t%d\n"
+//					+" %%\t%.1f\t%.1f",
+//					v2fCursorPos.x,v2fCursorPos.y, //xy
+//					Display.getWidth(),Display.getHeight(), //max
+//					Display.getWidth()-(int)v2fCursorPos.x, Display.getHeight()-(int)v2fCursorPos.y, //dif
+//					(v2fCursorPos.x/(float)Display.getWidth ())*100, (v2fCursorPos.y/(float)Display.getHeight())*100 //perc
+//				)
+//			);
 //			bt.setBox(null);
 			Vector3f v3fSize=null;
 			if(bRotating){
@@ -130,16 +158,28 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 			
 			Vector3f v3fPos = new Vector3f();
 			if(bRotating){
-				v3fPos.addLocal(100,0,0);
+				boolean bRotateNow=true;
+				float fSpeedMultWhileMovingCursor=1f;
+				if(v2fCursorPosPrevious.equals(v2fCursorPos)){
+					if(bRotateOnlyIfMouseMoves){
+						bRotateNow=false;
+					}
+				}else{
+					fSpeedMultWhileMovingCursor=v2fCursorPosPrevious.distance(v2fCursorPos)*5f;
+				}
 				
-				Vector3f v3fRot = new Vector3f(0,0,-0.005f);
-				nodeInfo.rotate(v3fRot.x,v3fRot.y,v3fRot.z);
-				
-				v3fRot.negateLocal(); //invert the rotation to compensate the parent
-				nodeHook.rotate(v3fRot.x,v3fRot.y,v3fRot.z);
-				
-				v3fSize.y*=-1;
-				bt.setLocalTranslation(v3fSize.mult(0.5f).negate()); //the center of the text at the hook spot
+					v3fPos.addLocal(fDistanceToCursor,0,0);
+					
+				if(bRotateNow){
+					Vector3f v3fRot = new Vector3f(0,0,fGoodReadableRotateSpeedZ*fRotateSpeed*fSpeedMultWhileMovingCursor);
+					nodeInfo.rotate(v3fRot.x,v3fRot.y,v3fRot.z);
+					
+					v3fRot.negateLocal(); //invert the rotation to compensate the parent
+					nodeHook.rotate(v3fRot.x,v3fRot.y,v3fRot.z);
+				}
+					
+					v3fSize.y*=-1;
+					bt.setLocalTranslation(v3fSize.mult(0.5f).negate()); //the center of the text at the hook spot
 			}else{
 				//resets
 				nodeInfo.setLocalRotation(new Quaternion());
@@ -152,6 +192,8 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 			}
 			nodeHook.setLocalTranslation(v3fPos);
 			nodeInfo.setLocalTranslation(MiscJmeI.i().toV3f(v2fCursorPos,fAboveLemurCursorRayCast));
+			
+			v2fCursorPosPrevious.set(v2fCursorPos);
 		}
 	}
 	
@@ -173,5 +215,37 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 
 	public void setRotating(boolean bRotating) {
 		this.bRotating = bRotating;
+	}
+
+	public float getRotateSpeed() {
+		return fRotateSpeed;
+	}
+
+	public void setRotateSpeed(float fRotateSpeed) {
+		this.fRotateSpeed = fRotateSpeed;
+	}
+
+	public float getDistanceToCursor() {
+		return fDistanceToCursor;
+	}
+
+	public void setDistanceToCursor(float fDistanceToCursor) {
+		this.fDistanceToCursor = fDistanceToCursor;
+	}
+
+	public float getGoodReadableRotateSpeedZ() {
+		return fGoodReadableRotateSpeedZ;
+	}
+
+	public void setGoodReadableRotateSpeedZ(float fGoodReadableRotateSpeedZ) {
+		this.fGoodReadableRotateSpeedZ = fGoodReadableRotateSpeedZ;
+	}
+
+	public boolean isRotateOnlyIfMouseMoves() {
+		return bRotateOnlyIfMouseMoves;
+	}
+
+	public void setRotateOnlyIfMouseMoves(boolean bRotateOnlyIfMouseMoves) {
+		this.bRotateOnlyIfMouseMoves = bRotateOnlyIfMouseMoves;
 	}
 }
