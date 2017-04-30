@@ -33,7 +33,7 @@ import com.github.devconslejme.misc.CheckProblemsI.ICheckProblems;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.jme.ColorI;
-import com.github.devconslejme.misc.jme.JmeSpatialHierarchyI;
+import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.scene.Geometry;
@@ -74,7 +74,7 @@ public class DebugTrackProblemsJME implements ICheckProblems{
 				String str="";
 				for(Spatial spt : asptList){
 					str+=spt.getName()+"@";
-					for(Node node:JmeSpatialHierarchyI.i().getAllParents(spt)){
+					for(Node node:SpatialHierarchyI.i().getAllParents(spt)){
 						str+=node.getName()+"/";
 					}
 				}

@@ -34,21 +34,26 @@ import java.util.Map.Entry;
 import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.es.HierarchyComp;
 import com.github.devconslejme.es.HierarchyComp.EField;
+import com.github.devconslejme.misc.Annotations.ToDo;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchy;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
-import com.github.devconslejme.misc.jme.JmeSpatialHierarchyI;
+import com.github.devconslejme.misc.jme.IndicatorI;
+import com.github.devconslejme.misc.jme.IndicatorI.GeomIndicator;
 import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.jme.UserDataI.IUDKey;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
+import com.github.devconslejme.misc.lemur.ResizablePanel.IResizableListener;
 import com.jme3.app.Application;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.math.ColorRGBA;
@@ -75,7 +80,7 @@ import com.simsilica.lemur.event.DefaultCursorListener;
 /**
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
-public class ContextMenuI {
+public class ContextMenuI implements IResizableListener{
 	public static ContextMenuI i(){return GlobalManagerI.i().get(ContextMenuI.class);}
 	
 //	private Node	nodeParent;
@@ -87,25 +92,26 @@ public class ContextMenuI {
 	private Label	lbl;
 	private boolean	bShowDbgInfo = false;
 	private boolean	bUseContextMenuAvailablePermanentIndicators=false;
-	private Geometry	geomContextMenuAvailableIndicator;
+	private GeomIndicator	giContextMenuAvailableIndicator;
 //	private String	strUDKeyFollowContextMenuTarget = "FollowContextMenuTarget";
 	
-	public static enum EUDKey implements IUDKey{
-		FollowContextMenuTarget(Spatial.class),
-		;
-		
-		private Class	cl;
-		EUDKey(Class cl){this.cl=cl;}
-		@Override	public Class getType() {return cl;}
-		
-		@Override
-//		public String getUId(){return EUDKey.class.getName()+"/"+toString();}
-		public String getUId(){return JavaLangI.i().enumUId(this);}
-	}
+//	public static enum EUDKey implements IUDKey{
+////		FollowContextMenuTarget(Spatial.class),
+//		;
+//		
+//		private Class	cl;
+//		EUDKey(Class cl){this.cl=cl;}
+//		@Override	public Class getType() {return cl;}
+//		
+//		@Override
+////		public String getUId(){return EUDKey.class.getName()+"/"+toString();}
+//		public String getUId(){return JavaLangI.i().enumUId(this);}
+//	}
 	
 	private Command<Button>	btncmd = new Command<Button>() {
 		@Override
 		public void execute(Button source) {
+//			hideContextMenu();
 			rzpContextMenu.close();
 		}
 	};
@@ -127,11 +133,19 @@ public class ContextMenuI {
 		}
 	}.setDelaySeconds(1f).enableLoop();
 	
-	public static class ContextMenu{
+	public static class ContextMenuAnon extends ContextMenu<ContextMenuAnon>{
+		public ContextMenuAnon(ResizablePanel hrpParent) {
+			super(hrpParent);
+		}}
+	/**
+	 * use {@link ContextMenuAnon} for anonymous classes
+	 */
+	public static class ContextMenu<SELF extends ContextMenu<SELF>>{
 		LinkedHashMap<String,ContextButton> hmContextOptions = new LinkedHashMap<String,ContextButton>();
 		private Panel pnlSource;
 		private ResizablePanel	hrpParent;
 		private ContextButton	btnChoice;
+		private boolean	bSingleChoiceMode;
 		
 		public ContextMenu(ResizablePanel	hrpParent){
 			this.hrpParent=hrpParent;
@@ -142,15 +156,17 @@ public class ContextMenuI {
 		 * @param pnlSource
 		 * @return 
 		 */
-		private ContextMenu setContextSource(Panel pnlSource){
+		private SELF setContextSource(Panel pnlSource){
 			this.pnlSource=pnlSource;
-			return this;
+			return getThis();
 		}
 		
 		public Panel getContextSource(){
 			return pnlSource;
 		}
 		
+		@SuppressWarnings("unused")
+		@ToDo
 		public ContextMenu createSubMenu(String strTextKey){
 			ContextMenu cmSub = new ContextMenu(ContextMenuI.i().rzpContextMenu);
 			
@@ -159,7 +175,7 @@ public class ContextMenuI {
 				new Command<Button>() {
 					@Override
 					public void execute(Button source) {
-						ResizablePanel rzp = JmeSpatialHierarchyI.i().getParentest(source, ResizablePanel.class, false);
+						ResizablePanel rzp = SpatialHierarchyI.i().getParentest(source, ResizablePanel.class, false);
 	//					cmSub.setHierarchyParent(rzp);
 						
 						/*
@@ -180,6 +196,7 @@ public class ContextMenuI {
 			
 			if(true)throw new UnsupportedOperationException(
 				"TODO: this requires the context menu to not be limited to 1");
+			
 			return cmSub;
 		}
 		
@@ -193,7 +210,7 @@ public class ContextMenuI {
 		 * @return
 		 */
 		@SuppressWarnings("unchecked")
-		public Button addNewEntry(String strTextKey, Command<Button> cmd, ContextCallX cxHintUpdater){
+		public Button addNewEntry(String strTextKey, Command<Button> cmd, HintUpdater cxHintUpdater){
 			ContextButton btn = new ContextButton(strTextKey);
 			btn.addClickCommands(cmd);
 //			if(cxHintUpdater!=null)UserDataI.i().setUserDataPSH(btn, EContext.HintUpdater, cxHintUpdater);
@@ -206,14 +223,31 @@ public class ContextMenuI {
 			return hrpParent;
 		}
 
-		@SuppressWarnings("unchecked")
-		public <T extends ContextMenu> T setSingleChoice(ContextButton btnChoice) {
+		public SELF setSingleChoice(ContextButton btnChoice) {
 			this.btnChoice = btnChoice;
-			return (T) this;
+			return getThis();
 		}
 
 		public ContextButton getSingleChoice() {
 			return btnChoice;
+		}
+		
+		public SELF setSingleChoiceMode(boolean b){
+			this.bSingleChoiceMode=b;
+			return getThis();
+		}
+		
+		/**
+		 * this must be overriden by sub-classes
+		 * @return
+		 */
+		@SuppressWarnings("unchecked")
+		protected SELF getThis() {
+			return (SELF) this;
+		}
+
+		public boolean isSingleChoiceMode() {
+			return bSingleChoiceMode;
 		}
 		
 //		public ContextMenu setHierarchyParent(ResizablePanel hrpParent) {
@@ -248,41 +282,55 @@ public class ContextMenuI {
 		}
 	}
 	
-	public static abstract class ContextCallX extends CallableX{
+	public static abstract class HintUpdater extends CallableX<HintUpdater>{
 		public void setPopupHintHelp(String str){
 			putKeyValue(EContext.PopupHintHelp.getUId(),str);
+//			this.setLoopEnabled(true).setPopupHintHelp(""); //tst dummy
 		}
 
 		public String getPopupHintHelp() {
 			return getValue(EContext.PopupHintHelp.getUId());
 		}
+		
+		@Override
+		protected HintUpdater getThis() {
+			return this;
+		}
 	}
 	
-	private static class ContextButton extends Button{
-		private ContextCallX	cxHintUpdater;
+	private static class ContextButton<SELF extends ContextButton<SELF>> extends Button{
+		private HintUpdater	cxHintUpdater;
 
 		public ContextButton(String s) {
 			super(s);
 		}
 		
-		@SuppressWarnings("unchecked")
-		public <T extends ContextButton> T setHintUpdater(ContextCallX cxHintUpdater) {
+		public SELF setHintUpdater(HintUpdater cxHintUpdater) {
 			this.cxHintUpdater = cxHintUpdater;
-			return (T)this;
+			return getThis();
 		}
 
-		public ContextCallX getHintUpdater() {
+		/**
+		 * sub-classes must override this!
+		 * @return
+		 */
+		@SuppressWarnings("unchecked")
+		protected SELF getThis() {
+			return (SELF)this;
+		}
+
+		public HintUpdater getHintUpdater() {
 			return cxHintUpdater;
 		}
 	}
 	
-	private class ContextMenuListenerI extends DefaultCursorListener{
-		@Override
-		public void cursorExited(CursorMotionEvent event, Spatial target,				Spatial capture) {
-			super.cursorExited(event, target, capture);
-			//TODO not working well: hideContextMenu(); 
-		}
-	}
+//	private class ContextMenuListenerI extends DefaultCursorListener{
+//		@Override
+//		public void cursorExited(CursorMotionEvent event, Spatial target,				Spatial capture) {
+//			super.cursorExited(event, target, capture);
+//			//TODO not working well, see hideContextMenu(); 
+//		}
+//	}
 	
 	public static class ContextMenuOwnerListenerI extends DefaultCursorListener{
 		public static ContextMenuOwnerListenerI i(){return GlobalManagerI.i().get(ContextMenuOwnerListenerI.class);}
@@ -308,41 +356,31 @@ public class ContextMenuI {
 		@Override
 		public void cursorEntered(CursorMotionEvent event, Spatial target, Spatial capture) {
 			super.cursorEntered(event, target, capture);
-			if(target==null)return;
+//			Spatial spt = target==null?capture:target;
 			
-			if(ContextMenuI.i().geomContextMenuAvailableIndicator.getParent()==null){
-				JmeSpatialHierarchyI.i().getParentest(target, Node.class, false).attachChild(
-					ContextMenuI.i().geomContextMenuAvailableIndicator);
-				UserDataI.i().setUserDataPSH(
-					ContextMenuI.i().geomContextMenuAvailableIndicator,
-					EUDKey.FollowContextMenuTarget,
-					target);
-			}
-//			ContextMenuI.i().geomContextMenuAvailableIndicator.setLocalTranslation(target.getWorldTranslation());
+//			System.out.println("Enter="+((Button)spt).getText());
+//			if(target==null)return;
+			
+//			if(!ContextMenuI.i().giContextMenuAvailableIndicator.isEnabled()){
+			ContextMenuI.i().giContextMenuAvailableIndicator.setEnabled(true).setTarget(target);
 		}
 		
 		@Override
 		public void cursorExited(CursorMotionEvent event, Spatial target,Spatial capture) {
 			super.cursorExited(event, target, capture);
-			ContextMenuI.i().geomContextMenuAvailableIndicator.removeFromParent();
+//			System.out.println("Exit="+((Button)target).getText());
+			
+			ContextMenuI.i().giContextMenuAvailableIndicator.setEnabled(false);
 		}
 	}
-	
-//	public void createContextMenuAvailableIndicator(){
-////		float fRadius = 0.1f;
-//		geomContextMenuAvailableIndicator = new Geometry("ContextMenuAvailableIndicator",
-//			new Box(1,1,3));
-////			new Sphere(4, 7, fRadius));
-//		geomContextMenuAvailableIndicator.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(
-//			ColorI.i().colorChangeCopy(ColorRGBA.Cyan,0f,0.75f)));
-////			ColorI.i().colorChangeCopy(ColorRGBA.Green, 0f, 0.15f)));
-//	}
 	
 	public void configure(){//Node nodeParent) {
 		strStyle = GuiGlobals.getInstance().getStyles().getDefaultStyle();
 		
 		rzpContextMenu = DialogHierarchyStateI.i().createDialog(ContextMenuI.class.getSimpleName(), strStyle);
 		entid = DialogHierarchyStateI.i().getEntityId(rzpContextMenu); //DialogHierarchySystemI.i().createEntity(ContextMenuI.class.getSimpleName());
+		
+		rzpContextMenu.addResizableListener(this);
 		
 		DialogHierarchyStateI.i().getVisuals(rzpContextMenu).ignorePositionRelativeToParent();
 		
@@ -361,54 +399,13 @@ public class ContextMenuI {
 		
 		lbl = new Label("");
 		
-		CursorEventControl.addListenersToSpatial(rzpContextMenu, new ContextMenuListenerI());
+//		CursorEventControl.addListenersToSpatial(rzpContextMenu, new ContextMenuListenerI());
 		
 		DialogHierarchyStateI.i().addRequestAutoFocus(rzpContextMenu);
 		
-		if(bShowDbgInfo )QueueI.i().enqueue(cxDbgInfo);
+		if(bShowDbgInfo)QueueI.i().enqueue(cxDbgInfo);
 		
-//		QueueI.i().enqueue(new CallableX() {
-//				@Override
-//				public Boolean call() {
-//					if(rzp.isOpened()){
-//	//					ResizablePanel rzpParent = DialogHierarchySystemI.i().getHierarchyParentGuiLinkFor(entid).getResizablePanel();
-//						EntityId entidParent = DialogHierarchySystemI.i().getHierarchyComp(entid).getHierarchyParent();
-//						ResizablePanel rzpParent = DialogHierarchyStateI.i().getOpenDialog(entidParent);
-//						
-//						if(rzpParent!=null){
-//							rzp.setLocalTranslation(
-//								rzpParent.getLocalTranslation().subtract(
-//									v3fHierarchyParentInitialDisplacement));
-//						}else{
-//							rzp.close();
-//						}
-//					}
-//					return true;
-//				}
-//			}	.setName("ContextMenuUpdate")
-//				.setLoop(true)
-//				.setDelaySeconds(0.1f)
-//		);
-		
-		geomContextMenuAvailableIndicator = MiscJmeI.i().createIndicator(ColorI.i().colorChangeCopy(ColorRGBA.Cyan,0f,0.75f));
-//		createContextMenuAvailableIndicator();
-//		QueueI.i().enqueue(new CallableX() {
-//				@Override
-//				public Boolean call() {
-//					if(geomContextMenuAvailableIndicator.getParent()!=null){
-//						Spatial spt = UserDataI.i().getUserDataPSH(geomContextMenuAvailableIndicator,EUDKey.FollowContextMenuTarget);
-//						geomContextMenuAvailableIndicator.setLocalTranslation(spt.getWorldTranslation());
-//						geomContextMenuAvailableIndicator.rotate(0.1f,0.1f,0.1f);
-//					}
-//					return true;
-//				}
-//			}
-//			.setName("PositionContextMenuAvailableIndicator")
-//			.setUserCanPause(true)
-//			.setDelaySeconds(0.1f)
-//			.enableLoop()
-//		);
-		
+		giContextMenuAvailableIndicator = IndicatorI.i().createIndicator(ColorI.i().colorChangeCopy(ColorRGBA.Cyan,0f,0.75f));
 	}
 	
 	public void applyContextMenuAtListBoxItems(ListBox lstbx, ContextMenu cm){
@@ -416,6 +413,32 @@ public class ContextMenuI {
 		ArrayList<Panel> apnl = MiscLemurI.i().getAllListBoxItems(lstbx,false);
 		for(Panel pnl:apnl){
 			applyContextMenuAt(pnl, cm);
+		}
+	}
+	
+	private void permanentIndicator(Spatial spt){
+		if (spt instanceof Node) {
+			Node node = (Node) spt;
+			QueueI.i().enqueue(new CallableX() {
+				@Override
+				public Boolean call() {
+					BoundingBox bb = (BoundingBox)node.getWorldBound();
+					float fRadius=bb.getYExtent();
+					if(fRadius==0f)return false;
+					
+					Geometry geom = new Geometry("ContextMenuAvailableIndicator", new Sphere(4, 7, fRadius));
+					geom.setLocalTranslation(
+						fRadius,//(bb.getXExtent()*2f)-fRadius, 
+						-bb.getYExtent(), 
+						bb.getZExtent()*2f
+					);
+					geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(
+						ColorI.i().colorChangeCopy(ColorRGBA.Green, 0f, 0.15f)));
+					node.attachChild(geom);
+					
+					return true;
+				}
+			});
 		}
 	}
 	
@@ -429,29 +452,7 @@ public class ContextMenuI {
 		CursorEventControl.addListenersToSpatial(spt,ContextMenuOwnerListenerI.i());
 		
 		if(bUseContextMenuAvailablePermanentIndicators){
-			if (spt instanceof Node) {
-				Node node = (Node) spt;
-				QueueI.i().enqueue(new CallableX() {
-					@Override
-					public Boolean call() {
-						BoundingBox bb = (BoundingBox)node.getWorldBound();
-						float fRadius=bb.getYExtent();
-						if(fRadius==0f)return false;
-						
-						Geometry geom = new Geometry("ContextMenuAvailableIndicator", new Sphere(4, 7, fRadius));
-						geom.setLocalTranslation(
-							fRadius,//(bb.getXExtent()*2f)-fRadius, 
-							-bb.getYExtent(), 
-							bb.getZExtent()*2f
-						);
-						geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(
-							ColorI.i().colorChangeCopy(ColorRGBA.Green, 0f, 0.15f)));
-						node.attachChild(geom);
-						
-						return true;
-					}
-				});
-			}
+			permanentIndicator(spt);
 		}
 		
 	}
@@ -462,7 +463,7 @@ public class ContextMenuI {
 	 * @param cm
 	 */
 	@SuppressWarnings("unchecked")
-	private void showContextMenu(Vector2f v2fMouseCursorPos, String strContextMenuTitle, ContextMenu cm) {
+	private void showContextMenu(Vector2f v2fMouseCursorPos, String strContextMenuTitle, ContextMenu<?> cm) {
 		cntrContextOptions.clearChildren();
 		
 		int i=0;
@@ -476,12 +477,16 @@ public class ContextMenuI {
 			
 			// popup hint help
 			PopupHintHelpListenerI.i().resetPopupHelp(btnChoice); //clear
-			ContextCallX cxHU = btnChoice.getHintUpdater();
+			HintUpdater cxHU = btnChoice.getHintUpdater();
 			if(cxHU!=null){
 				cxHU.setPopupHintHelp(null);
 				if(cxHU.call()){
-					cm.setSingleChoice(btnChoice);
-//					btnChoice.getBackground().set
+					if(cm.isSingleChoiceMode()){
+						cm.setSingleChoice(btnChoice);
+						GeomIndicator gi = IndicatorI.i().createIndicator(ColorRGBA.Yellow);
+						gi.setTarget(btnChoice).setEnabled(true);
+					}
+					
 					PopupHintHelpListenerI.i().setPopupHintHelp(btnChoice, cxHU.getPopupHintHelp());
 				}
 			}
@@ -503,10 +508,6 @@ public class ContextMenuI {
 			v2fMouseCursorPos.getX()-iDisplacement, 
 			v2fMouseCursorPos.getY()+iDisplacement, 
 			0); // z will be fixed by diag hierarchy
-	}
-	
-	public void hideContextMenu() {
-		rzpContextMenu.removeFromParent();
 	}
 	
 	public boolean isTheContextMenu(ResizablePanel hs) {
@@ -550,4 +551,18 @@ public class ContextMenuI {
 	public void setUseContextMenuAvailableIndicators(boolean bUseContextMenuIndicators) {
 		this.bUseContextMenuAvailablePermanentIndicators = bUseContextMenuIndicators;
 	}
+
+//	public void hideContextMenu() {
+//		rzpContextMenu.removeFromParent();
+//		IndicatorI.i().disableAllIndicatorsRecursively(rzpContextMenu);
+//	}
+	
+	@Override	public void resizerUpdatedLogicalStateEvent(float tpf,			ResizablePanel rzpSource) {	}
+	@Override
+	public void removedFromParentEvent(ResizablePanel rzpSource) {
+		IndicatorI.i().destroyAllIndicatorsRecursively(rzpSource);
+//		hideContextMenu();
+	}
+	@Override	public void resizedEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {	}
+	@Override	public void endedResizingEvent(ResizablePanel rzpSource) {	}
 }

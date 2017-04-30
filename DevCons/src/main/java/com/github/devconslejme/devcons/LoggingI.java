@@ -34,8 +34,7 @@ import com.github.devconslejme.devcons.DevConsPluginStateI.EStatPriority;
 import com.github.devconslejme.devcons.DevConsPluginStateI.VarMon;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
-import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.QueueI.CallableX;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -70,7 +69,7 @@ public class LoggingI {
 		 */
 		logEntry("Initializing console.");
 		
-		DevConsPluginStateI.i().createVarMon(EStatPriority.Normal, "WrapAt", LoggingI.class.getSimpleName()+": Wrap at column",new CallableX() {
+		DevConsPluginStateI.i().createVarMon(EStatPriority.Normal, "WrapAt", LoggingI.class.getSimpleName()+": Wrap at column",new CallableXAnon() {
 			@Override
 			public Boolean call() {
 				getValue(VarMon.class).set(""+getWrapAtColumn());

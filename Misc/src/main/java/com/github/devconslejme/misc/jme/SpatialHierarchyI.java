@@ -30,16 +30,16 @@ import java.util.ArrayList;
 
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.QueueI.CallableWeak;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 
 /**
- * TODO rename to SpatialHierarchyI
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class JmeSpatialHierarchyI {
-	public static JmeSpatialHierarchyI i(){return GlobalManagerI.i().get(JmeSpatialHierarchyI.class);}
+public class SpatialHierarchyI {
+	public static SpatialHierarchyI i(){return GlobalManagerI.i().get(SpatialHierarchyI.class);}
 	
 	@SuppressWarnings({ "unchecked" })
 	public <T extends Node> T getParentest(Spatial spt, Class<T> clTypeParentest, boolean bIncludeFirst){
@@ -67,21 +67,35 @@ public class JmeSpatialHierarchyI {
 		return anode;
 	}
 	
-	/**
-	 * TODO rename to SpatialMatcherCallableX
-	 */
-	public static class SimpleClassMatcherCallableX extends CallableX{
+	public static class SpatialMatcherCallableX extends CallableX<SpatialMatcherCallableX>{
+		private Class clFilter;
+		public SpatialMatcherCallableX(Class clFilter) {
+			this.clFilter=clFilter;
+		}
 		@Override
 		public Boolean call() {
-			Class clFilter = getValue(Class.class.getName());
+//			Class clFilter = getValue(Class.class.getName());
 			Spatial spt = getValue(Spatial.class.getName());
-			return (clFilter.isInstance(spt));
+			return clFilter.isInstance(spt);
+		}
+		public Class getClassFilter() {
+			return clFilter;
+		}
+//		public SpatialMatcherCallableX setClassFilter(Class clFilter) {
+//			this.clFilter = clFilter;
+//			return getThis();
+//		}
+		
+		@Override
+		protected SpatialMatcherCallableX getThis() {
+			return this;
 		}
 	}
 	
 	public <T extends Spatial> T getChildRecursiveExactMatch(Spatial sptParentestToChk, Class<T> clFilter){
 		return getChildRecursiveExactMatch(sptParentestToChk, 
-			new SimpleClassMatcherCallableX().putKeyValue(Class.class.getName(), clFilter));
+			new SpatialMatcherCallableX(clFilter));
+//			new SpatialMatcherCallableX().putKeyValue(Class.class.getName(), clFilter));
 	}
 	
 	public <T extends Spatial> T getChildRecursiveExactMatch(Spatial sptParentestToChk, CallableX callMatcher){
@@ -91,25 +105,25 @@ public class JmeSpatialHierarchyI {
 	}
 
 	/**
-	 * 
 	 * @param sptParentestToChk
-	 * @param clTypeFilter if Spatial, will bring all
-	 * @return
-	 */
-	/**
-	 * 
-	 * @param sptParentestToChk
-	 * @param callMatcher can be null, or can retrieve key: Spatial.class.getName()
+	 * @param clFilter if Spatial, will bring all
 	 * @param iMaxDepth max recursion depth, can be null (unlimited) 
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
 	public <T extends Spatial> ArrayList<T> getAllChildrenRecursiveFrom(Spatial sptParentestToChk, Class<T> clFilter, Integer iMaxDepth) {
 		return getAllChildrenRecursiveFrom(sptParentestToChk, iMaxDepth, 
-			new SimpleClassMatcherCallableX().putKeyValue(Class.class.getName(), clFilter));
+			new SpatialMatcherCallableX(clFilter));
+//			new SpatialMatcherCallableX().putKeyValue(Class.class.getName(), clFilter));
 	}
+	/**
+	 * 
+	 * @param sptParentestToChk
+	 * @param iMaxDepth max recursion depth, can be null (unlimited) 
+	 * @param callMatcher can be null, or can retrieve key: Spatial.class.getName()
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
-	public <T extends Spatial> ArrayList<T> getAllChildrenRecursiveFrom(Spatial sptParentestToChk, Integer iMaxDepth, CallableX callMatcher) {
+	public <T extends Spatial> ArrayList<T> getAllChildrenRecursiveFrom(Spatial sptParentestToChk, Integer iMaxDepth, CallableX<? extends CallableWeak<Boolean>> callMatcher) {
 		if(sptParentestToChk==null)throw new DetailedException("null spatial");
 		
 		ArrayList<T> asptList = new ArrayList<T>();

@@ -274,7 +274,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 //			}else{
 //				if (objOwner instanceof Spatial) {
 //					Spatial spt = (Spatial) objOwner;
-					nodeParent=JmeSpatialHierarchyI.i().getParentest(sptOwner,Node.class,false);
+					nodeParent=SpatialHierarchyI.i().getParentest(sptOwner,Node.class,false);
 //				}
 //			}
 			

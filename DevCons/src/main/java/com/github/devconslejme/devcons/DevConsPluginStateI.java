@@ -40,8 +40,10 @@ import org.lwjgl.opengl.Display;
 import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.es.HierarchyComp.EField;
 import com.github.devconslejme.gendiag.ContextMenuI;
-import com.github.devconslejme.gendiag.ContextMenuI.ContextCallX;
+import com.github.devconslejme.gendiag.ContextMenuI.ContextMenuOwnerListenerI;
+import com.github.devconslejme.gendiag.ContextMenuI.HintUpdater;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
+import com.github.devconslejme.gendiag.ContextMenuI.ContextMenuAnon;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
@@ -51,6 +53,7 @@ import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.lemur.ClickToPositionCaratListenerI;
@@ -153,7 +156,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	private Float	fBkpLastNonDefaultBarWidthX;
 	protected Vector3f	v3fDefaultSize;
 	private Vector3f	v3fBkpLastNonDefaultSize;
-	private ContextMenu	cmVarMon;
+	private ContextMenuAnon	cmVarMon;
 	private boolean	bAutoUpdateWrapAt=true;
 	private VersionedReference<Set<Integer>>	vrSelectionChangedToUpdateInputText;
 	
@@ -501,7 +504,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	}
 	
 	private void initVarMonitorContextMenu() {
-		cmVarMon = new ContextMenu(rzpMain);
+		cmVarMon = new ContextMenuAnon(rzpMain);
 //		cmVarMon.setHierarchyParent(rzpMain);
 		
 		Command<Button> cmd = new Command<Button>(){
@@ -532,29 +535,40 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		
 		// prepare the context menu entries
 //		for(EStatPriority e:EStatPriority.values()){
+		cmVarMon.setSingleChoiceMode(true);
 		for(int i=0;i<EStatPriority.values().length;i++){
 			EStatPriority esp = EStatPriority.values()[i];
 			String str=EStatPriority.class.getSimpleName()+":"+esp.s();
-			cmVarMon.addNewEntry(str, cmd, new ContextCallX() {
+			cmVarMon.addNewEntry(str, cmd, new HintUpdater() {
 				@Override
 				public Boolean call() {
 					Button btnSource = (Button)cmVarMon.getContextSource();
 					VarMon vm = hmVarMon.get(btnSource.getText());
-					if(vm.esp.equals(esp)){
+					if(vm!=null && esp.equals(vm.esp)){ 
 						setPopupHintHelp("Current choice");
-						return true;
+						return true; //valid if the text is the key
 					}
 					
-					return false;
+					return false; //invalid if the text does not match a monitoring key
 				}
 			});
 		}
 	}
 	
+//	class CallableX1 extends CallableX<CallableX1>{
+//		@Override
+//		public Boolean call() {
+//			getValue(VarMon.class).set( String.format("%d", lstbxLoggingSection.getVisibleItems()) );
+//			return true;
+//		}
+//	};
+	
 	private void initVarMonValues() {
-		createVarMon(EStatPriority.Bottom, "Slider", "DevCons Logging area Slider Value",new CallableX() {
+		createVarMon(EStatPriority.Bottom, "Slider", "DevCons Logging area Slider Value",new CallableXAnon() {
+//			public void a(){}
 			@Override
 			public Boolean call() {
+//				setDelaySeconds(1).a();
 				getValue(VarMon.class).set(
 					String.format("%.0f/%.0f(%.0f)", 
 						lstbxLoggingSection.getSlider().getModel().getValue(),
@@ -566,7 +580,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			}
 		});
 		
-		createVarMon(EStatPriority.Bottom, "VisibleRows", "DevCons Logging area Visible Rows",new CallableX() {
+		createVarMon(EStatPriority.Bottom, "VisibleRows", "DevCons Logging area Visible Rows",new CallableXAnon() {
 			@Override
 			public Boolean call() {
 				getValue(VarMon.class).set( String.format("%d", lstbxLoggingSection.getVisibleItems()) );
@@ -574,7 +588,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			}
 		});
 		
-		VarMon vmCursorPos = createVarMon(EStatPriority.Normal, "CursorPos", "Mouse Cursor Position on the application",new CallableX() {
+		VarMon vmCursorPos = createVarMon(EStatPriority.Normal, "CursorPos", "Mouse Cursor Position on the application",new CallableXAnon() {
 			@Override
 			public Boolean call() {
 				Vector2f v2fCursor = app.getInputManager().getCursorPosition();
@@ -584,7 +598,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		});
 		vmCursorPos.getUpdateCall().setDelaySeconds(0.25f);
 		
-		createVarMon(EStatPriority.Normal, "AppTime", "Application Elapsed Time from its start time",new CallableX() {
+		createVarMon(EStatPriority.Normal, "AppTime", "Application Elapsed Time from its start time",new CallableXAnon() {
 			@Override
 			public Boolean call() {
 				getValue(VarMon.class).set( String.format("%.3f", app.getTimer().getTimeInSeconds()) );
@@ -738,6 +752,12 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 						if(lstbxVarMonitorBar.getGridPanel().getModel().getRowCount()==0)return false;
 						
 						ContextMenuI.i().applyContextMenuAtListBoxItems(lstbxVarMonitorBar,cmVarMon);
+						for(Panel pnl:MiscLemurI.i().getAllListBoxItems(lstbxVarMonitorBar, false)){
+							Button btn=(Button)pnl;
+							if(btn.getText().startsWith("=")){ //is the value
+								CursorEventControl.removeListenersFromSpatial(btn,ContextMenuOwnerListenerI.i());
+							}
+						}
 						
 						return true;
 					}
@@ -910,7 +930,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 					enqueueUpdateVarMonList();
 				}
 			},
-			new ContextCallX() {
+			new HintUpdater() {
 				@Override
 				public Boolean call() {
 					setPopupHintHelp("("+(bAllowHiddenStats?"show":"hide")+")"); //say the next action on clicking

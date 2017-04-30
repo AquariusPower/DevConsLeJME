@@ -101,6 +101,7 @@ public class ResizablePanel extends Panel {
 		public void removedFromParentEvent(ResizablePanel rzpSource);
 		public void resizedEvent(ResizablePanel rzpSource,Vector3f v3fNewSize);
 		public void endedResizingEvent(ResizablePanel rzpSource);
+//		public void closedEvent(ResizablePanel rzpSource);
 	}
 	private ArrayList<IResizableListener> listeners = new ArrayList<IResizableListener>();
 	

@@ -28,9 +28,8 @@
 package com.github.devconslejme.misc.lemur;
 
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.QueueI.CallableX;
-import com.github.devconslejme.misc.jme.JmeSpatialHierarchyI;
-import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.jme3.font.BitmapText;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -55,7 +54,7 @@ public class ClickToPositionCaratListenerI implements CursorListener{
 	}
 	
 	public void applyRecursivelyAtAllTextFieldsOf(Spatial spt){
-		for(TextField tf:JmeSpatialHierarchyI.i().getAllChildrenRecursiveFrom(spt, TextField.class, null)){
+		for(TextField tf:SpatialHierarchyI.i().getAllChildrenRecursiveFrom(spt, TextField.class, null)){
 			applyAt(tf);
 		}
 	}
@@ -78,8 +77,8 @@ public class ClickToPositionCaratListenerI implements CursorListener{
 		 * 1) retrieve a single BitmapText recursive child from the TextField (TextField.text<TextEntryComponent>.bitmapText<BitmapText>)
 		 * 2) retrieve a single Geometry recursive child with debug name == "cursor" from the TextField
 		 */
-		BitmapText bt = JmeSpatialHierarchyI.i().getChildRecursiveExactMatch(tf,BitmapText.class);
-		Geometry geomCaratCursor = JmeSpatialHierarchyI.i().getChildRecursiveExactMatch(bt,new CallableX() {
+		BitmapText bt = SpatialHierarchyI.i().getChildRecursiveExactMatch(tf,BitmapText.class);
+		Geometry geomCaratCursor = SpatialHierarchyI.i().getChildRecursiveExactMatch(bt,new CallableXAnon() {
 			@Override
 			public Boolean call() {
 				Spatial spt = getValue(Spatial.class.getName()); 

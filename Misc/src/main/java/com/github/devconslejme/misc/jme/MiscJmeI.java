@@ -29,42 +29,65 @@ package com.github.devconslejme.misc.jme;
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
-import java.util.ArrayList;
 
-import com.github.devconslejme.gendiag.ContextMenuI.EUDKey;
-import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.QueueI.CallableWeak;
-import com.github.devconslejme.misc.QueueI.CallableX;
 import com.jme3.app.Application;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.font.BitmapText;
 import com.jme3.font.LineWrapMode;
-import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Mesh.Mode;
-import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.VertexBuffer.Type;
-import com.jme3.scene.shape.Box;
 import com.jme3.util.BufferUtils;
 
 /**
- * DevSelfNote: Misc lib class should not exist. As soon coehsion is possible, do it!
+ * @DevSelfNote Misc lib class should not exist. As soon coehsion is possible, do it!
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class MiscJmeI {
 	public static MiscJmeI i(){return GlobalManagerI.i().get(MiscJmeI.class);}
 	
+	public boolean isInside(Spatial sptWorldBoundLimits, Vector3f v3fChkPos){
+		return isInside(sptWorldBoundLimits, v3fChkPos, false);
+	}
+	public boolean isInside(Spatial sptWorldBoundLimits, Vector3f v3fChkPos, boolean bIgnoreZ){
+		BoundingVolume bv = sptWorldBoundLimits.getWorldBound();
+		if(bv==null)return false; //it is not ready yet
+		
+		if(bIgnoreZ){
+			v3fChkPos=v3fChkPos.clone();
+			v3fChkPos.z=bv.getCenter().z;
+		}
+		
+		return bv.contains(v3fChkPos);
+//		
+//		Vector3f v3f = sptWorldBoundLimits.getWorldTranslation();
+//		if(v3fChkPos.x<v3f.x)return false;
+//		if(v3fChkPos.y<v3f.y)return false;
+//		if(v3fChkPos.z<v3f.z)return false;
+//		
+//		Vector3f v3fSize = getBoundingBoxSize(sptWorldBoundLimits);
+//		if(v3fChkPos.x>(v3f.x+v3fSize.x))return false;
+//		if(v3fChkPos.y>(v3f.y+v3fSize.y))return false;
+//		if(v3fChkPos.z>(v3f.z+v3fSize.z))return false;
+//		
+//		return true;
+	}
+	
 	public Vector3f getBoundingBoxSize(Spatial spt){
 		BoundingVolume bv = spt.getWorldBound();
 		if(bv==null)return null; //it is not ready yet
-		return ((BoundingBox)bv).getExtent(null).mult(2f);
+		
+		if(bv instanceof BoundingBox){
+			return ((BoundingBox)bv).getExtent(null).mult(2f);
+		}
+		return null;
 	}
 	
 	public void recursivelyApplyTextNoWrap(Node nodeParent) {
@@ -131,30 +154,16 @@ public class MiscJmeI {
 	public Vector3f toV3f(Vector2f v2f) {
 		return new Vector3f(v2f.x,v2f.y,0);
 	}
+
+	public Vector3f getWorldCenterPosCopy(Spatial sptTarget) {
+		return sptTarget.getWorldBound().getCenter().clone();
+//		return sptTarget.getLocalTranslation().add(getBoundingBoxSize(sptTarget).mult(0.5f));
+	}
 	
-	public Geometry createIndicator(ColorRGBA color){
-		Geometry geomContextMenuAvailableIndicator = new Geometry("ContextMenuAvailableIndicator",
-				new Box(1,1,3));
-//				new Sphere(4, 7, fRadius));
-		geomContextMenuAvailableIndicator.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
-		
-		QueueI.i().enqueue(new CallableX() {
-					@Override
-					public Boolean call() {
-						if(geomContextMenuAvailableIndicator.getParent()!=null){
-							Spatial spt = UserDataI.i().getUserDataPSH(geomContextMenuAvailableIndicator,EUDKey.FollowContextMenuTarget);
-							geomContextMenuAvailableIndicator.setLocalTranslation(spt.getWorldTranslation());
-							geomContextMenuAvailableIndicator.rotate(0.1f,0.1f,0.1f);
-						}
-						return true;
-					}
-				}
-				.setName("PositionContextMenuAvailableIndicator")
-				.setUserCanPause(true)
-				.setDelaySeconds(0.1f)
-				.enableLoop()
-			);
-		
-		return geomContextMenuAvailableIndicator;
+	public Vector3f randomDirection(){
+		return new Vector3f(
+			FastMath.nextRandomFloat()*2f-1f,
+			FastMath.nextRandomFloat()*2f-1f,
+			FastMath.nextRandomFloat()*2f-1f).normalize();
 	}
 }

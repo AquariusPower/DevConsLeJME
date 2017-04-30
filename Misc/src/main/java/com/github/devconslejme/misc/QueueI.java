@@ -55,9 +55,22 @@ public class QueueI {
 	}
 	
 	/**
-	 * CallableX like in extra, plus 
+	 * this can also be used with anonimous classes like: `new CallableX<CXA>{...`
+	 * but prefer using {@link CallableXAnon}
 	 */
-	public abstract static class CallableX implements CallableWeak<Boolean>{
+	public static abstract class CXA extends CallableX<CXA>{}
+	
+	/**
+	 * use this one for anonymous classes
+	 */
+	public static abstract class CallableXAnon extends CallableX<CallableXAnon>{}
+	
+	/**
+	 * use {@link CallableXAnon} for anonymous classes<br>
+	 * 
+	 * CallableX: "X" like in extra, plus! 
+	 */
+	public static abstract class CallableX<SELF extends CallableX<SELF>> implements CallableWeak<Boolean>{
 		/****************
 		 *  THE ORDER of these vars will be automatically (thru IDE) at the toString()
 		 ************/
@@ -81,43 +94,57 @@ public class QueueI {
 		private static String strLastUId="0";
 //		private boolean bDone;
 		
+//		/**
+//		 * TODO why this was necessary after implementing SELF generics? otherwise it would return Object...
+//		 */
+//		@Override
+//		public abstract Boolean call();
+		
 		/**
 		 * the name is alternatively automatically the enclosing method
 		 * @param strName
 		 * @return
 		 */
-		@SuppressWarnings("unchecked")
-		public <T extends CallableX> T setName(String strName) {
+		public SELF setName(String strName) {
 			this.strName = strName;
-			return (T) this;
+			return getThis();
 		}
-		@SuppressWarnings("unchecked")
-		public <T extends CallableX> T setLoopEnabled(boolean b) {
+		public SELF setLoopEnabled(boolean b) {
 			this.bLoop=b;
-			return (T)this;
-		}
-		@SuppressWarnings("unchecked")
-		public <T extends CallableX> T enableLoop() {
-			this.bLoop=true;
-			return (T) this;
-		}
-		@SuppressWarnings("unchecked")
-		public <T extends CallableX> T killSelf() {
-			disableLoop();
-			return (T)this;
-		}
-		@SuppressWarnings("unchecked")
-		public <T extends CallableX> T disableLoop() {
-			this.bLoop=false;
-			return (T)this;
-		}
-		@SuppressWarnings("unchecked")
-		public <T extends CallableX> T setDelaySeconds(float fDelaySeconds) {
-			this.fDelaySeconds=(fDelaySeconds);
-			updateRunAt();
-			return (T) this;
+			return getThis();
 		}
 		
+		/**
+		 * IMPORTANT
+		 * this must be overriden by sub-classes!
+		 * @return
+		 */
+		@SuppressWarnings("unchecked")
+		protected SELF getThis(){
+			return (SELF)this;
+		}
+		
+		public SELF enableLoop() {
+			this.bLoop=true;
+			return getThis();
+		}
+		public SELF killSelf() {
+			disableLoop();
+			return getThis();
+		}
+		public SELF disableLoop() {
+			this.bLoop=false;
+			return getThis();
+		}
+		public SELF setDelaySeconds(float fDelaySeconds) {
+			this.fDelaySeconds=(fDelaySeconds);
+			updateRunAt();
+			return getThis();
+		}
+		
+		/**
+		 * see {@link CallableX}
+		 */
 		public CallableX(){
 //			this(1,null,0,false);
 //		}
@@ -198,18 +225,16 @@ public class QueueI {
 		public boolean isUserCanKill() {
 			return bUserCanKill;
 		}
-		@SuppressWarnings("unchecked")
-		public <T extends CallableX> T setUserCanKill(boolean bUserCanKill) {
+		public SELF setUserCanKill(boolean bUserCanKill) {
 			this.bUserCanKill = bUserCanKill;
-			return (T) this;
+			return getThis();
 		}
 		public boolean isUserCanPause() {
 			return bUserCanPause;
 		}
-		@SuppressWarnings("unchecked")
-		public <T extends CallableX> T setUserCanPause(boolean bUserCanPause) {
+		public SELF setUserCanPause(boolean bUserCanPause) {
 			this.bUserCanPause = bUserCanPause;
-			return (T) this;
+			return getThis();
 		}
 		public void togglePause() {
 			bPaused=!bPaused;
@@ -217,15 +242,13 @@ public class QueueI {
 		public boolean isPaused() {
 			return bPaused;
 		}
-		@SuppressWarnings("unchecked")
-		synchronized public <T extends CallableX> T putKeyClassValue(Object objVal) {
+		synchronized public SELF putKeyClassValue(Object objVal) {
 			hmKeyValue.put(objVal.getClass().getName(),objVal);
-			return (T) this;
+			return getThis();
 		}
-		@SuppressWarnings("unchecked")
-		synchronized public <T extends CallableX> T putKeyValue(String strKey, Object objVal) {
+		synchronized public SELF putKeyValue(String strKey, Object objVal) {
 			hmKeyValue.put(strKey,objVal);
-			return (T) this;
+			return getThis();
 		}
 		@SuppressWarnings("unchecked")
 		synchronized public <T> T getValue(Class<T> cl) {
@@ -270,15 +293,16 @@ public class QueueI {
 		return lCurrentTime + (long)(fDelaySeconds * lTimeResolution);
 	}
 	
+	@SuppressWarnings("unchecked")
 	public void update(long lCurrentTime, float tpf) {
 		this.lCurrentTime=lCurrentTime;
 		
-		for(CallableX cx:acxList.toArray(new CallableX[]{})){
+		for(CallableX<? extends CallableWeak<Boolean>> cx:acxList.toArray(new CallableX[0])){
 			
 			if(cx.isReady()){
 				if(cx.isPaused())continue;
 				
-				if(cx.call()){
+				if(cx.call()){ 
 //					cx.done();
 					if(cx.isLoop()){
 						cx.updateRunAt();

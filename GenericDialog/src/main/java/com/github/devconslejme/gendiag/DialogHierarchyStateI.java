@@ -42,7 +42,7 @@ import com.github.devconslejme.misc.jme.EffectArrow;
 import com.github.devconslejme.misc.jme.EffectElectricity;
 import com.github.devconslejme.misc.jme.EffectManagerStateI;
 import com.github.devconslejme.misc.jme.IEffect;
-import com.github.devconslejme.misc.jme.JmeSpatialHierarchyI;
+import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
@@ -103,7 +103,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		@Override
 		public Boolean call() {
 			for(Panel pnl:apnlAutoFocus){
-				ResizablePanel rzp = JmeSpatialHierarchyI.i().getParentest(pnl, ResizablePanel.class, true);
+				ResizablePanel rzp = SpatialHierarchyI.i().getParentest(pnl, ResizablePanel.class, true);
 				HierarchyComp hc = DialogHierarchyStateI.i().getHierarchyComp(rzp);
 				if(!hc.isOpened())continue;
 				
@@ -277,7 +277,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 				};
 			};
 			
-			for(Panel pnl:JmeSpatialHierarchyI.i().getAllChildrenRecursiveFrom(rzp, Panel.class, null)){
+			for(Panel pnl:SpatialHierarchyI.i().getAllChildrenRecursiveFrom(rzp, Panel.class, null)){
 				CursorEventControl.addListenersToSpatial(pnl,cl);
 			}
 		}
@@ -344,7 +344,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		Spatial spt = focusState.getFocus();
 		if(spt==null)return;
 		
-		ResizablePanel rzp = JmeSpatialHierarchyI.i().getParentest(spt, ResizablePanel.class, true);
+		ResizablePanel rzp = SpatialHierarchyI.i().getParentest(spt, ResizablePanel.class, true);
 		HierarchyComp hc = getHierarchyComp(rzp);
 		if(hc==null)return;
 		
