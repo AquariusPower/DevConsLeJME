@@ -26,9 +26,35 @@
 */
 package com.github.devconslejme.gendiag;
 
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.simsilica.lemur.Button;
+import com.simsilica.lemur.Command;
+
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class SimpleMaintenanceGenericDialog extends SimpleGenericDialog {
+public abstract class SimpleMaintenanceGenericDialog extends SimpleGenericDialog {
+	@Override
+	protected void initSectionTools() {
+		super.initSectionTools();
+		putToolAction(new ToolAction("Refresh Options", new Command<Button>() {
+			@Override
+			public void execute(Button source) {
+//				System.out.println("refreshing from "+source);
+				updateMaintenanceList();
+			}
+		}));
+		
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				updateMaintenanceList(); //1st time
+				return true;
+			}
+		});
+	}
 	
+	public abstract void updateMaintenanceList();
+
 }

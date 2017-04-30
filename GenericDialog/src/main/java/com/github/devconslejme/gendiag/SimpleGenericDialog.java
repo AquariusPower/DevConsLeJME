@@ -80,6 +80,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private Label	btnInfoText;
 	private ListBox<OptionData>	lstbxOptions;
 	private VersionedList<OptionData>	vlodOptions;
+	private VersionedList<ToolAction>	vlodTools;
 	private LinkedHashMap<String,OptionData> hmOptionsRoot = new LinkedHashMap<String,OptionData>();
 	private TextField	tfInput;
 	private boolean	bReturnJustTheInputTextValue;
@@ -88,9 +89,9 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private boolean	bUpdateListItems = true;
 	private static class SectionIndicator{}
 	private SectionIndicator sectionIndicator = new SectionIndicator();
-	private Function<OptionData, String>	trOptions;
+	private Function<IVisibleText, String>	funcVisibleText;
 	private boolean bToggleExpandedOnce=false;
-	protected Command<? super Button>	cmdOption;
+	private Command<? super Button>	cmdOption;
 //	private VersionedReference<Double>	vrSlider;
 //	private Command<? super Button>	cmdToggleExpand = new Command<Button>() {
 //		@Override
@@ -107,9 +108,9 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 //			bToggleExpandedOnce=true;
 //		}
 //	};
-	private DefaultCellRenderer<OptionData>	crOptions;
+	private DefaultCellRenderer<IVisibleText>	crVisibleText;
 	private VersionedReference<Set<Integer>>	vrSelection;
-	protected boolean	bUpdateOptionSelected;
+	private boolean	bUpdateOptionSelected;
 	private boolean	bCloseOnChoiceMade=true;
 	private Container	cntrInfo;
 	private String	strName;
@@ -125,19 +126,35 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 //	private Button	btnRestoreIniSize;
 //	private Button	btnUpdateDefaultSize;
 	private int	iDiagControlColumnInitIndex;
-	protected String	strUDKeyPosBeforeMaximize = SimpleGenericDialog.class+"/PosBeforeMaximize";
-	protected boolean	bKeepMaximized;
+	private String	strUDKeyPosBeforeMaximize = SimpleGenericDialog.class+"/PosBeforeMaximize";
+	private boolean	bKeepMaximized;
+	private ListBox<ToolAction>	lstbxTools;
 	
-	public static class OptionData{
+	/**
+	 * for some reason, some of the buttons on the listbox will not work with the
+	 * Button.addClickCommands(). To force it to work, I am using together the 
+	 * CursorListener.
+	 */
+	@Workaround @Bugfix
+	private DefaultCursorListener	curlisExtraClickCmd;
+	
+	public static class ToolAction{
+		private String strTextKey;
+		Command<Button> cmdAction;
+		public ToolAction(String strTextKey, Command<Button> cmdAction) {
+			super();
+			this.strTextKey = strTextKey;
+			this.cmdAction = cmdAction;
+		}
+	}
+	
+	public static class OptionData implements IVisibleText{
 		private String strTextKey;
 		private OptionData odParent;
 		private Object objValue;
 		private boolean bExpanded=true;
-		private LinkedHashMap<String,OptionData> hmOptions = new LinkedHashMap<String,OptionData>();
+		private LinkedHashMap<String,OptionData> hmNestedChildSubOptions = new LinkedHashMap<String,OptionData>();
 		
-		public void toggleExpanded(){
-			bExpanded=!bExpanded;
-		}
 		private void setTextKey(String strTextKey) {
 			this.strTextKey = strTextKey;
 		}
@@ -168,7 +185,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			builder.append(", bExpanded=");
 			builder.append(bExpanded);
 			builder.append(", hmOptions=");
-			builder.append(hmOptions);
+			builder.append(hmNestedChildSubOptions);
 			builder.append("]");
 			return builder.toString();
 		}
@@ -178,6 +195,10 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		private void setExpanded(boolean bExpanded) {
 			this.bExpanded = bExpanded;
 		}
+		public void toggleExpanded(){
+			bExpanded=!bExpanded;
+		}
+		@Override
 		public String getVisibleText() {
 			int iDepth=0;
 			OptionData odParent=this;while((odParent=odParent.getSectionParent())!=null)iDepth++;
@@ -185,7 +206,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			String str=strTextKey;
 			
 			if(getValue() instanceof SectionIndicator){
-				str="["+(isExpanded()?"-":"+")+"] "+str+(!isExpanded()?" {"+hmOptions.size()+"}":"");
+				str="["+(isExpanded()?"-":"+")+"] "+str+(!isExpanded()?" {"+hmNestedChildSubOptions.size()+"}":"");
 			}
 			
 			str=" "+str;
@@ -205,17 +226,17 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	}
 	
 	private void buttonClicked(Button btn){
-		bUpdateOptionSelected=true;
 		OptionData od = UserDataI.i().getUserDataPSH(btn, OptionData.class);
-		lstbxOptions.getSelectionModel().setSelection(vlodOptions.indexOf(od));
-//		updateOptionSelected();
-////		tfInput.setText(getSelectedOptionVisibleText());
-//		OptionData od = getSelectedOptionData();
-//		if(SectionIndicator.class.isInstance(od.getValue())){
-//			bToggleExpandedOnce=true;
-//		}else{
-//			tfInput.setText(od.getTextKey());
-//		}
+		if(od!=null){
+			bUpdateOptionSelected=true;
+			lstbxOptions.getSelectionModel().setSelection(vlodOptions.indexOf(od));
+			return;
+		}
+		
+		ToolAction ta = UserDataI.i().getUserDataPSH(btn, ToolAction.class);
+		if(ta!=null){
+			return;
+		}
 	}
 	
 	private Button createInfoButton(String strText,String strHintPopup){
@@ -367,19 +388,66 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	
 	@Override
 	protected void initPreContentsContainer() {
+		funcVisibleText = new Function<IVisibleText, String>() {
+			@Override
+			public String apply(IVisibleText vt) {
+				return vt.getVisibleText();
+			}
+		};
+		
+		curlisExtraClickCmd = new DefaultCursorListener(){
+			@Override
+			protected void click(CursorButtonEvent event, Spatial target, Spatial capture) {
+				buttonClicked((Button)capture);
+			};
+		};
+
+		crVisibleText = new DefaultCellRenderer<IVisibleText>(getDialog().getStyle()){
+			@SuppressWarnings("unchecked")
+			@Override
+			public Panel getView(IVisibleText value, boolean selected, Panel existing) {
+				Button btn = (Button)super.getView(value, selected, existing);
+				
+				if(value instanceof OptionData){
+					btn.addClickCommands(cmdOption);
+				}else
+				if(value instanceof ToolAction){
+					btn.addClickCommands(((ToolAction)value).cmdAction);
+				}
+				
+				CursorEventControl.addListenersToSpatial(btn, curlisExtraClickCmd);
+				
+				UserDataI.i().setUserDataPSH(btn, value);
+				
+				return btn;
+			}
+		};			
+		crVisibleText.setTransform(funcVisibleText);
+		
 		initSectionInfo();
 		initSectionOptions();
 		initSectionInput();
-		initSectionCommands();
+		initSectionTools();
 	}
 	
-	private void initSectionCommands() {
-		ESection es=ESection.Input;
+	protected void initSectionTools() {
+		ESection es=ESection.Tools;
 		if(getSection(es)==null){
+			vlodTools = new VersionedList<ToolAction>();
 			
+			lstbxTools = new ListBox<ToolAction>(vlodTools, getDialog().getStyle());
+			MiscLemurI.i().createLisbBoxVisibleItemsUpdater(lstbxTools);
+			
+			setSection(es,lstbxTools);
 		}
 	}
-
+	
+	public void putToolAction(ToolAction ta){
+		if(!vlodTools.contains(ta)){
+			vlodTools.add(ta);
+		}
+	}
+	
 	private void initSectionInput() {
 		ESection es=ESection.Input;
 		if(getSection(es)==null){
@@ -404,19 +472,17 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			setSection(es,tfInput);
 		}
 	}
-
+	
+	public static interface IVisibleText{
+		String getVisibleText();
+	}
+	
 	private void initSectionOptions() {
 		ESection es=ESection.Options;
 		if(getSection(es)==null){
-			trOptions = new Function<SimpleGenericDialog.OptionData, String>() {
-				@Override
-				public String apply(OptionData input) {
-					return input.getVisibleText();
-				}
-			};
-			
 			vlodOptions = new VersionedList<OptionData>();
 			lstbxOptions = new ListBox<OptionData>(vlodOptions, getDialog().getStyle());
+			MiscLemurI.i().createLisbBoxVisibleItemsUpdater(lstbxOptions);
 			
 			cmdOption = new Command<Button>() {
 				@Override
@@ -425,64 +491,15 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 				}
 			};
 			
-			/**
-			 * for some reason, some of the buttons on the listbox will not work with the
-			 * Button.addClickCommands(). To force it to work, I am using together the 
-			 * CursorListener.
-			 */
-			@Workaround @Bugfix
-			DefaultCursorListener clOption = new DefaultCursorListener(){
-				@Override
-				protected void click(CursorButtonEvent event, Spatial target, Spatial capture) {
-					buttonClicked((Button)capture);
-				};
-			};
-			
-			crOptions = new DefaultCellRenderer<OptionData>(getDialog().getStyle()){
-				@Override
-				public Panel getView(OptionData value, boolean selected, Panel existing) {
-					Button btn = (Button)super.getView(value, selected, existing);
-					btn.addClickCommands(cmdOption);
-					UserDataI.i().setUserDataPSH(btn, value);
-					CursorEventControl.addListenersToSpatial(btn, clOption);
-					return btn;
-				}
-			};			
-			crOptions.setTransform(trOptions);
-			lstbxOptions.setCellRenderer(crOptions);
+			lstbxOptions.setCellRenderer(crVisibleText);
 			
 			vrSelection = lstbxOptions.getSelectionModel().createReference();
 			
-	//		((DefaultCellRenderer<OptionData>)lstbxOptions.getCellRenderer()).setTransform(trOptions);
-	//		lstbxOptions.addClickCommands(new Command<ListBox>(){
-	//			@Override
-	//			public void execute(ListBox source) {
-	//				bToggleExpandedOnce=true;
-	////				tfInput.setText(getSelectedOptionVisibleText());
-	//				OptionData od = getSelectedOptionData();
-	//				if(!SectionIndicator.class.isInstance(od.getValue())){
-	//					tfInput.setText(od.getTextKey());
-	//				}
-	//			}
-	//		});
 			setSection(es,lstbxOptions);
-			lstbxOptions.setVisibleItems(10); //TODO make automatic
-	//		getSection(es).setMinSize(new Vector3f(100,getEntryHeight(),0));
-			
-	//		vrSlider = lstbxOptions.getSlider().getModel().createReference();
-			
-	//		applyListenerToListBoxItems();
+//			lstbxOptions.setVisibleItems(10); //TODO make automatic
 		}
 	}
 
-//	public int getEntryHeight(){
-//		boolean bWasEmpty=vlsOptions.isEmpty();
-//		if(bWasEmpty)vlsOptions.add("W");
-//		int i = MiscLemurI.i().getEntryHeightPixels(lstbxOptions);
-//		if(bWasEmpty)vlsOptions.clear();
-//		return i;
-//	}
-	
 	private Button appendNewDiagControl(String strText, String strHint) {
 		Button btn = createInfoButton(strText,strHint);
 		MiscJmeI.i().addToName(btn, strText, true);
@@ -526,7 +543,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		if(odParent!=null){
 //			OptionData odParent = findSectionRecursively(hmOpt, strSectionParentKey);
 //			DetailedException.assertNotNull(odParent, "the parent section must be set before being referenced/requested/used!", odParent);
-			hmOpt=odParent.hmOptions;
+			hmOpt=odParent.hmNestedChildSubOptions;
 		}
 		
 		OptionData odPrevious = hmOpt.put(strTextOptionKey, od);
@@ -540,7 +557,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		//look for sub-sections
 		for(OptionData od:hmOpt.values()){
 			if(od.getValue() instanceof SectionIndicator){
-				odFound = findSectionRecursively(od.hmOptions,strSectionKey);
+				odFound = findSectionRecursively(od.hmNestedChildSubOptions,strSectionKey);
 				if(odFound!=null)return odFound;
 			}
 		}
@@ -562,7 +579,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			vlodOptions.add(od);
 			if(od.getValue() instanceof SectionIndicator){
 				if(od.isExpanded()){
-					recreateListItemsRecursively(od.hmOptions,++iDepth);
+					recreateListItemsRecursively(od.hmNestedChildSubOptions,++iDepth);
 				}
 			}
 		}

@@ -126,6 +126,8 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 //			getSection(ESection.Info).getContents(), DragParentestPanelListenerI.i());
 		cfgSection(getSection(ESection.Options),BorderLayout.Position.Center,EEdge.Bottom);
 		cfgSection(getSection(ESection.Input),BorderLayout.Position.South,EEdge.Top);
+		
+		cfgSection(getSection(ESection.Tools),BorderLayout.Position.West,EEdge.Right);
 	}
 	
 	private ResizablePanel cfgSection(ResizablePanel rzp, BorderLayout.Position border, EEdge edgeResizable){
@@ -155,7 +157,7 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 		/**
 		 * West with buttons to execute related commands like updating the list of options and anything else!
 		 */
-		Commands,
+		Tools,
 		;
 	}
 	

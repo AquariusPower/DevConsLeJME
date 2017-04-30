@@ -58,9 +58,12 @@ public class TestMaintenanceDialog extends SimpleApplication{
 	}
 	
 	private void initTest() {
-		smd = new SimpleMaintenanceGenericDialog();
-		
-		recursiveAddSpatialsToMaintenance(null,getGuiNode());
+		smd = new SimpleMaintenanceGenericDialog(){
+			@Override
+			public void updateMaintenanceList() {
+				recursiveAddSpatialsToMaintenance(null,getGuiNode());
+			}
+		};
 		
 		DialogHierarchyStateI.i().showDialog(smd.getDialog());
 	}

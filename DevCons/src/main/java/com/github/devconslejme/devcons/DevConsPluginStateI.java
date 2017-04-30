@@ -139,7 +139,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	private Application	app;
 	private ResizablePanel	rzpVarBar;
 	private Button	btnShowVarMon;
-	private boolean	bUpdateNoWrap;
+	private boolean	bRequestUpdateNoWrap;
 	private Button	btnRestoreSize;
 	private VersionedReference<Set<Integer>>	vrSelectionChangedToShowVarHelp;
 //	private VarMon	vmAppTime;
@@ -159,7 +159,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	private ContextMenuAnon	cmVarMon;
 	private boolean	bAutoUpdateWrapAt=true;
 	private VersionedReference<Set<Integer>>	vrSelectionChangedToUpdateInputText;
-	VersionedReference<Vector3f> vrLoggingSectionSize;
+//	VersionedReference<Vector3f> vrLoggingSectionSize;
 	
 	private Comparator<VarMon>	cmprStat = new Comparator<VarMon>() {
 		@Override
@@ -382,37 +382,27 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 
 //		GuiGlobals.getInstance().requestFocus(tfInput);
 		
-		MiscLemurI.i().createLisbBoxVisibleItemsUpdater(lstbxLoggingSection); //TODO complete
-//		QueueI.i().enqueue(new CallableX(){
-//				@Override
-//				public Boolean call() {
-//					if(!vrLoggingSectionSize.update())return true;
-//					
-//					float fHeight = lstbxLoggingSection.getSize().y; //TODO inner container needs some time to be setup by lemur?
-//					
-//					int iLines = (int) (fHeight/MiscLemurI.i().getEntryHeightPixels(lstbxLoggingSection));
-//					iLines--; //to avoid the text being too close to each other
-//					
-//					if(lstbxLoggingSection.getVisibleItems()!=iLines){
-//						lstbxLoggingSection.setVisibleItems(iLines);
-//						lstbxVarMonitorBar.setVisibleItems(iLines);
-//						enqueueUpdateVarMonList();
-////						updateVarMonList();
-//					}
-//					
-//					if(bAutoUpdateWrapAt)updateLoggingWrapAt();
-//					
-//					bUpdateNoWrap=true;
-//					
-//					return true;
-//				}
-//			}
-//			.setName("UpdateVisibleRowsAndWrapAt")
-//			.setDelaySeconds(0.25f)
-//			.enableLoop()
-//		);
+		MiscLemurI.i().createLisbBoxVisibleItemsUpdater(lstbxLoggingSection);
+		MiscLemurI.i().createLisbBoxVisibleItemsUpdater(lstbxVarMonitorBar);
 		
-		bUpdateNoWrap=true;
+		QueueI.i().enqueue(new CallableX(){
+				private VersionedReference<Vector3f> vrv3fLoggingSize = 
+						new VersionedVector3f(lstbxLoggingSection.getSize()).createReference();
+				@Override
+				public Boolean call() {
+					if(!vrv3fLoggingSize.update())return true;
+					
+					if(bAutoUpdateWrapAt)updateLoggingWrapAt();
+					bRequestUpdateNoWrap=true; //apply NoWrap to bitmaptexts also
+					
+					return true;
+				}
+			}
+			.setName("UpdateLogNoWrap")
+			.setDelaySeconds(0.25f)
+			.enableLoop()
+		);
+		bRequestUpdateNoWrap=true;
 		
 //		SimpleDragParentestListenerI.i().applyAt(panelMain);
 		
@@ -631,16 +621,16 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			cntrMain.removeChild(rzpVarBar);
 		}
 		
-		bUpdateNoWrap=true; 
+		bRequestUpdateNoWrap=true; 
 	}
 
 	@Override
 	public void update(float tpf) {
 		super.update(tpf);
 		
-		if(bUpdateNoWrap){
+		if(bRequestUpdateNoWrap){
 			MiscJmeI.i().recursivelyApplyTextNoWrap(rzpMain);
-			bUpdateNoWrap=false;
+			bRequestUpdateNoWrap=false;
 		}
 	}
 	
@@ -765,7 +755,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 					}
 				}.setName("ContextMenuAtListBoxAfterPopulated"));
 				
-				bUpdateNoWrap=true;
+				bRequestUpdateNoWrap=true;
 //				MiscJmeI.i().recursivelyApplyTextNoWrap(lstbxVarMonitorBar);
 				
 //				return true;
@@ -1131,8 +1121,8 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		vrListBoxChangedToAutoScrollToBottom = lstbxLoggingSection.getModel().createReference();
 		vrSliderChangedToSuspendAutoScrollBottom=lstbxLoggingSection.getSlider().getModel().createReference();
 		
-		VersionedVector3f voLoggingSize = new VersionedVector3f(lstbxLoggingSection.getSize());
-		vrLoggingSectionSize = new VersionedReference<Vector3f>(voLoggingSize);
+//		VersionedVector3f voLoggingSize = new VersionedVector3f(lstbxLoggingSection.getSize());
+//		vrLoggingSectionSize = new VersionedReference<Vector3f>(voLoggingSize);
 	}
 //	public static class VersionedVector3f implements VersionedObject<Vector3f>{
 //		private Vector3f	v3fPrevious;
@@ -1429,7 +1419,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		builder.append(", btnShowVarMon=");
 		builder.append(btnShowVarMon);
 		builder.append(", bUpdateNoWrap=");
-		builder.append(bUpdateNoWrap);
+		builder.append(bRequestUpdateNoWrap);
 		builder.append(", btnRestoreSize=");
 		builder.append(btnRestoreSize);
 		builder.append(", vrSelectionChangedToShowVarHelp=");
@@ -1454,8 +1444,6 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		builder.append(v3fBkpLastNonDefaultSize);
 		builder.append(", cmVarMon=");
 		builder.append(cmVarMon);
-		builder.append(", vrLoggingSectionSize=");
-		builder.append(vrLoggingSectionSize);
 		builder.append("]");
 		return builder.toString();
 	}

@@ -247,12 +247,11 @@ public class MiscLemurI {
 	
 	public void createLisbBoxVisibleItemsUpdater(ListBox lstbx){
 		QueueI.i().enqueue(new CallableX(){
-				private VersionedVector3f voLoggingSize = new VersionedVector3f(lstbx.getSize());
-				private VersionedReference<Vector3f> vrLoggingSectionSize = new VersionedReference<Vector3f>(voLoggingSize);
+				private VersionedReference<Vector3f> vrv3f = new VersionedVector3f(lstbx.getSize()).createReference();
 				
 				@Override
 				public Boolean call() {
-					if(!vrLoggingSectionSize.update())return true;
+					if(!vrv3f.update())return true;
 					
 					float fHeight = lstbx.getSize().y; //TODO inner container needs some time to be setup by lemur?
 					
@@ -261,14 +260,12 @@ public class MiscLemurI {
 					
 					if(lstbx.getVisibleItems()!=iLines){
 						lstbx.setVisibleItems(iLines);
-//						lstbxVarMonitorBar.setVisibleItems(iLines);
-//						enqueueUpdateVarMonList();
 					}
 					
 					return true;
 				}
 			}
-			.setName("UpdateVisibleRowsAndWrapAt")
+			.setName("UpdVisRows:"+lstbx.getName())
 			.setDelaySeconds(0.25f)
 			.enableLoop()
 		);
