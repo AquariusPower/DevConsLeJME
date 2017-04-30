@@ -42,8 +42,8 @@ import com.github.devconslejme.misc.jme.EffectArrow;
 import com.github.devconslejme.misc.jme.EffectElectricity;
 import com.github.devconslejme.misc.jme.EffectManagerStateI;
 import com.github.devconslejme.misc.jme.IEffect;
-import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
@@ -265,6 +265,14 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	}
 	
 	public void showDialog(ResizablePanel rzp) {
+//		if(rzp.getLocalTranslation().length()==0){ //not set, center it
+//			MiscLemurI.i().moveToScreenCenterXY(rzp);
+//		}
+		
+//		if(rzp.getPreferredSize().length()==0){ //not set, use default
+//			rzp.setPreferredSize(((BoundingBox)rzp.getWorldBound()).getExtent(null).mult(2f));
+//		}
+		
 		nodeToMonitor.attachChild(rzp);
 		
 		EntityId entid = getVisuals(rzp).getEntityId();
@@ -415,7 +423,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			sys.enableBlockingLayer(vs.getEntityId(),iModalCount>0);
 			
 			// z order
-			Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSize(vs.getDialog());
+			Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSizeCopy(vs.getDialog());
 			if(v3fSize!=null){
 				if(Float.compare(v3fSize.length(),0f)!=0){ //waiting top panel be updated by lemur
 					Vector3f v3fPos = vs.getDialog().getLocalTranslation().clone();
@@ -432,9 +440,10 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 					
 					pnlBlocker.setLocalTranslationXY(v3fPos).setLocalTranslationZ(v3fPos.z);
 					
-					Vector3f v3fBlockerSize = v3fSize.clone();
-					v3fBlockerSize.z=fMinLemurPanelSizeZ;
-					pnlBlocker.setPreferredSize(v3fBlockerSize);//rzp.getPreferredSize());
+//					Vector3f v3fBlockerSize = v3fSize.clone();
+//					v3fBlockerSize.z=fMinLemurPanelSizeZ;
+//					pnlBlocker.setPreferredSizeWH(v3fBlockerSize);//rzp.getPreferredSize());
+					pnlBlocker.setPreferredSizeWH(v3fSize);
 				}
 			}
 			
@@ -459,6 +468,10 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	
 	@Override
 	public void resizerUpdatedLogicalStateEvent(float tpf, ResizablePanel rzpSource) {
+//		if(rzpSource.getSize().length()>0 && rzpSource.getLocalTranslation().length()==0){
+//			MiscLemurI.i().moveToScreenCenterXY(rzpSource);
+//		}
+		
 		Visuals vs = getVisuals(rzpSource);
 //		EntityId entid = vs.getEntityId();
 		updateBlocker(tpf, vs);

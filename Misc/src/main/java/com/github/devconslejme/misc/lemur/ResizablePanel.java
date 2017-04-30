@@ -69,7 +69,7 @@ import com.simsilica.lemur.style.Styles;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class ResizablePanel extends Panel {
+public class ResizablePanel extends PanelBase<ResizablePanel> {
   public static final String ELEMENT_ID = "resizablePanel";
 	private BorderLayout layout;
 	private Panel contents;
@@ -465,6 +465,14 @@ public class ResizablePanel extends Panel {
 	
 	@Override
 	public void updateLogicalState(float tpf) {
+		if(getSize().length()>0 && getLocalTranslation().length()==0){
+			/**
+			 * if it's contents are ready (size),
+			 * and it's location was not set (ZERO)
+			 */
+			MiscLemurI.i().moveToScreenCenterXY(this);
+		}
+		
 		if(bApplyBoundingBoxSize)applyBoundingBoxSizeAfterResizing();
 		
 		int iGrowParentFixCount=0;
@@ -535,16 +543,7 @@ public class ResizablePanel extends Panel {
 	public static final String LAYER_RESIZABLE_BORDERS = "resizableBorders";
 	
 	public ResizablePanel(String strStyle) {
-//		this(100,100,strStyle);
-//	}
-//  public ResizablePanel( Vector3f v3fSize, String strStyle ) {
-//		this(v3fSize.x, v3fSize.y, strStyle);
-//	}
-//	public ResizablePanel( float fWidth, float fHeight, String strStyle ) {
     super(false, new ElementId(ELEMENT_ID), strStyle);
-    
-    float fWidth=100;
-    float fHeight=100;
     
    	setName(getName()+"/"+ResizablePanel.class.getSimpleName());
     
@@ -553,7 +552,11 @@ public class ResizablePanel extends Panel {
     this.layout = new BorderLayout();
     getControl(GuiControl.class).setLayout(layout);
     
-    getControl(GuiControl.class).setPreferredSize(new Vector3f(fWidth, fHeight, 0));
+//    // initial simple size just to not be 0
+//    //TODO initialize based on contents world boundings size when setting the contents or on a logical state update if the size is still length 0
+//    float fWidth=100;
+//    float fHeight=100;
+//    getControl(GuiControl.class).setPreferredSize(new Vector3f(fWidth, fHeight, 0));
     
     // Set our layers
     getControl(GuiControl.class).setLayerOrder(LAYER_INSETS, 
@@ -639,14 +642,14 @@ public class ResizablePanel extends Panel {
 		BoundingVolume bv = getWorldBound();
 		Vector3f v3fBB = ((BoundingBox)bv).getExtent(null).mult(2f);
 
-		Vector3f v3f = getSize().clone();
+		Vector3f v3fSize = getSize().clone();
 //		Vector3f v3f = getPreferredSize().clone();
 //		Vector3f v3fP = getPreferredSize().clone();
 		boolean b=false;
-		if(v3f.x<v3fBB.x){v3f.x=v3fBB.x;b=true;}
-		if(v3f.y<v3fBB.y){v3f.y=v3fBB.y;b=true;}
+		if(v3fSize.x<v3fBB.x){v3fSize.x=v3fBB.x;b=true;}
+		if(v3fSize.y<v3fBB.y){v3fSize.y=v3fBB.y;b=true;}
 		
-		if(b)setPreferredSize(v3f);
+		if(b)setPreferredSize(v3fSize);
 	}
 	
 	@StyleAttribute(value=LAYER_RESIZABLE_BORDERS, lookupDefault=false)
@@ -734,20 +737,20 @@ public class ResizablePanel extends Panel {
 		return v3fMinSize;
 	}
 
+	public int getMouseButtonIndex() {
+		return iMouseButtonIndexToDrag;
+	}
+	
 	@Override
 	public void setSize(Vector3f size) {
-		super.setSize(size);
+		super.setSizeWH(size);
 		bUpdateLogicalStateSuccess=false; //requesting revalidation
 	}
 	
 	@Override
 	public void setPreferredSize(Vector3f size) {
-		super.setPreferredSize(size);
+		super.setPreferredSizeWH(size);
 		bUpdateLogicalStateSuccess=false; //requesting revalidation
-	}
-	
-	public int getMouseButtonIndex() {
-		return iMouseButtonIndexToDrag;
 	}
 	
 	/**
@@ -833,26 +836,4 @@ public class ResizablePanel extends Panel {
 		safeSizeRecursively(EReSizeApplyMode.RestoreDefault, this);
 	}
 	
-	/**
-	 * to help on not messing with Z!!!
-	 * ignores Z from param, reuses self Z
-	 * @param localTranslation
-	 * @return 
-	 */
-	@SuppressWarnings("unchecked")
-	public <T extends ResizablePanel> T setLocalTranslationXY(Vector3f v3f) {
-		super.setLocalTranslation(v3f.x, v3f.y, this.getLocalTranslation().z);
-		return (T)this;
-	}
-	@SuppressWarnings("unchecked")
-	public <T extends ResizablePanel> T setLocalTranslationZ(float fZ) {
-		Vector3f v3f = this.getLocalTranslation();
-		super.setLocalTranslation(v3f.x, v3f.y, fZ);
-		return (T)this;
-	}
-	@Override
-	public void setLocalTranslation(Vector3f v3f) {
-		assert(AssertionsI.i().useAlternativeMethods()); 
-		super.setLocalTranslation(v3f);
-	}
 }

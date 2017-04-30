@@ -49,6 +49,7 @@ public class IndicatorI {
 		private boolean	bEnabled;
 		private Vector3f	v3fBouncingMoveDirection;
 		private Vector3f	v3fLastBouncingValidPos;
+		private boolean bCanBeDestroyed=true;
 
 		public GeomIndicator() {
 			super(GeomIndicator.class.getSimpleName(),new Box(1,1,3));
@@ -103,6 +104,19 @@ public class IndicatorI {
 
 		public Vector3f getLastBouncingValidPos() {
 			return v3fLastBouncingValidPos;
+		}
+		
+		/**
+		 * useful for unique indicators that will be moved around, enabled, disabled and re-targeted
+		 * @return
+		 */
+		public GeomIndicator setDenyDestruction(){
+			bCanBeDestroyed=false;
+			return this;
+		}
+		
+		public boolean isCanBeDestroyed(){
+			return bCanBeDestroyed;
 		}
 	}
 	
@@ -187,7 +201,7 @@ public class IndicatorI {
 	
 	public void destroyIndicator(Spatial spt){
 		GeomIndicator gi = UserDataI.i().getUserDataPSH(spt, GeomIndicator.class);
-		if(gi!=null){
+		if(gi!=null && gi.isCanBeDestroyed()){
 			gi.endMyQueueLoop();
 		}
 	}

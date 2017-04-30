@@ -31,16 +31,21 @@ import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.Application;
+import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
+import com.jme3.font.BitmapFont.Align;
+import com.jme3.font.BitmapFont.VAlign;
+import com.jme3.font.BitmapText;
+import com.jme3.font.Rectangle;
 import com.jme3.input.InputManager;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.debug.Grid;
-import com.jme3.scene.shape.Line;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -53,9 +58,16 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 	private Node	nodeParent;
 	private InputManager	inputman;
 	private int	fSize;
+	private SimpleApplication	sappOpt;
+	private BitmapText	bt;
+	private ColorRGBA	color;
+	private boolean	bRotating=true;
+	private Node	nodeInfo;
+	private Node	nodeHook;
 	
 	public void configure(Node nodeParent){
 		app = GlobalManagerI.i().get(Application.class);
+		sappOpt = GlobalManagerI.i().get(SimpleApplication.class,false);
 		app.getStateManager().attach(this);
 		inputman=app.getInputManager();
 		this.nodeParent=nodeParent;
@@ -64,22 +76,81 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 	@Override
 	public void initialize(AppStateManager stateManager, Application app) {
 		super.initialize(stateManager, app);
+		
+		// cross
 		geom=new Geometry(OrthogonalCursorStateI.class.getSimpleName());
 		fSize=Math.max(Display.getWidth(),Display.getHeight())+10; //a bit more to hide the borders
 		geom.setMesh(new Grid(3,3,fSize));
 //		geom.lookAt(new Vector3f(v2f.x,v2f.y-1000000,0), Vector3f.UNIT_Z.mult(1000));
 		geom.lookAt(new Vector3f(0,-1000000,0), Vector3f.UNIT_Z.mult(1000));
+		color = ColorRGBA.Yellow.clone();
 		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(
-			ColorI.i().colorChangeCopy(ColorRGBA.Yellow, 0f, 0.1f)));
+			ColorI.i().colorChangeCopy(color, 0f, 0.1f)));
 		nodeParent.attachChild(geom);
+		
+		// info
+		bt = MiscJmeI.i().loadDefaultGuiFont().createLabel("");
+		bt.setColor(ColorI.i().colorChangeCopy(color, 0f, 0.3f));
+		bt.setSize(12);
+		nodeInfo=new Node();
+		nodeHook = new Node();
+		nodeHook.attachChild(bt);
+		nodeInfo.attachChild(nodeHook);
+		nodeParent.attachChild(nodeInfo);
 	}
 	
 	@Override
 	public void update(float tpf) {
 		super.update(tpf);
 		if(inputman.isCursorVisible()){
-			Vector2f v2f = inputman.getCursorPosition();
-			geom.setLocalTranslation(v2f.x-fSize, v2f.y+fSize, 1001);
+			Vector2f v2fCursorPos = inputman.getCursorPosition();
+			geom.setLocalTranslation(v2fCursorPos.x-fSize, v2fCursorPos.y+fSize, 1001);
+			
+//			bt.setSize(20);
+			bt.setText(
+				String.format("%s\n%dx%d\n%.1fx%.1f%%",
+					v2fCursorPos.toString(),
+					Display.getWidth(),Display.getHeight(),
+					(v2fCursorPos.x/(float)Display.getWidth ())*100,
+					(v2fCursorPos.y/(float)Display.getHeight())*100
+				)
+			);
+//			bt.setBox(null);
+			Vector3f v3fSize=null;
+			if(bRotating){
+				v3fSize=new Vector3f(200,200,0);
+				bt.setBox(new Rectangle(0, 0, v3fSize.x, v3fSize.y));
+				bt.setAlignment(Align.Center);
+				bt.setVerticalAlignment(VAlign.Center);
+			}else{
+				v3fSize = MiscJmeI.i().getBoundingBoxSizeCopy(bt);
+				bt.setBox(null);
+			}
+			
+			Vector3f v3fPos = new Vector3f();
+			if(bRotating){
+				v3fPos.addLocal(100,0,0);
+				
+				Vector3f v3fRot = new Vector3f(0,0,-0.005f);
+				nodeInfo.rotate(v3fRot.x,v3fRot.y,v3fRot.z);
+				
+				v3fRot.negateLocal(); //invert the rotation to compensate the parent
+				nodeHook.rotate(v3fRot.x,v3fRot.y,v3fRot.z);
+				
+				v3fSize.y*=-1;
+				bt.setLocalTranslation(v3fSize.mult(0.5f).negate()); //the center of the text at the hook spot
+			}else{
+				//resets
+				nodeInfo.setLocalRotation(new Quaternion());
+				nodeHook.setLocalRotation(new Quaternion());
+				bt.setLocalTranslation(new Vector3f());
+				
+//				v3fPos.subtractLocal(v3fSize);
+				v3fSize.x=0;
+				v3fPos.addLocal(v3fSize);
+			}
+			nodeHook.setLocalTranslation(v3fPos);
+			nodeInfo.setLocalTranslation(MiscJmeI.i().toV3f(v2fCursorPos));
 		}
 	}
 	
@@ -93,5 +164,13 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 			geom.removeFromParent();
 		}
 		
+	}
+
+	public boolean isRotating() {
+		return bRotating;
+	}
+
+	public void setRotating(boolean bRotating) {
+		this.bRotating = bRotating;
 	}
 }

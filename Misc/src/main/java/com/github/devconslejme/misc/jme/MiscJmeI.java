@@ -30,10 +30,14 @@ package com.github.devconslejme.misc.jme;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
+import org.lwjgl.opengl.Display;
+
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.jme3.app.Application;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingVolume;
+import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.font.LineWrapMode;
 import com.jme3.math.FastMath;
@@ -80,7 +84,7 @@ public class MiscJmeI {
 //		return true;
 	}
 	
-	public Vector3f getBoundingBoxSize(Spatial spt){
+	public Vector3f getBoundingBoxSizeCopy(Spatial spt){
 		BoundingVolume bv = spt.getWorldBound();
 		if(bv==null)return null; //it is not ready yet
 		
@@ -166,4 +170,9 @@ public class MiscJmeI {
 			FastMath.nextRandomFloat()*2f-1f,
 			FastMath.nextRandomFloat()*2f-1f).normalize();
 	}
+	
+  public BitmapFont loadDefaultGuiFont() {
+    return GlobalManagerI.i().get(Application.class).getAssetManager().loadFont("Interface/Fonts/Default.fnt");
+  }
+
 }

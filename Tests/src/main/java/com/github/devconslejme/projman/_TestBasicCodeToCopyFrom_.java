@@ -24,26 +24,34 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+package com.github.devconslejme.projman;
 
-package com.github.devconslejme.misc;
+import com.jme3.app.SimpleApplication;
+import com.simsilica.lemur.GuiGlobals;
+import com.simsilica.lemur.style.BaseStyles;
 
 /**
- * use as:
- * SomeDevConsClass.someMethodThere(){assert(AssertionsI.i().someMethodHere());}
- * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class AssertionsI {
-	public static AssertionsI i(){return GlobalManagerI.i().get(AssertionsI.class);}
-	
-	/**
-	 * devcons project shall stick to the alternative methods
-	 * @return
-	 */
-	public boolean useAlternativeMethods(int iIncStack){
-		String strPkg = this.getClass().getPackage().getName();
-		strPkg = strPkg.substring(0, strPkg.lastIndexOf(".")-1);
+public class _TestBasicCodeToCopyFrom_ extends SimpleApplication{
+	public static void main(String[] args) {
+		assert(true);
+		_TestBasicCodeToCopyFrom_ test = new _TestBasicCodeToCopyFrom_();
+		test.start();
+	}
+
+	@Override
+	public void simpleInitApp() {
+		GuiGlobals.initialize(this);
+		BaseStyles.loadGlassStyle();
+		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
+		//TODO set this: com.github.devconslejme...PkgCfgI.i().configure(...);
 		
-		return !Thread.currentThread().getStackTrace()[1+iIncStack].getClassName().startsWith(strPkg);
+		initTest();
+	}
+
+	private void initTest() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("method not implemented yet");
 	}
 }

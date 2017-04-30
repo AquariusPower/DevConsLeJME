@@ -151,12 +151,15 @@ public class MiscLemurI {
 	}
 
 	public void maximize(ResizablePanel pnl) {
+		
+	}
+	public void maximize(ResizablePanel pnl, Vector3f v3fPos, Vector3f v3fSize) {
 //		Vector3f v3fPos = pnl.getLocalTranslation(); //do not mess with z!!!
 //		pnl.setLocalTranslation(new Vector3f(0,Display.getHeight(),v3fPos.z));
 		pnl.setLocalTranslationXY(new Vector3f(0,Display.getHeight(),0));
 		
-		Vector3f v3fSize = pnl.getSize(); //do not mess with z!!!
-		pnl.setPreferredSize(new Vector3f(Display.getWidth(),Display.getHeight(),v3fSize.z));
+//		Vector3f v3fSize = pnl.getSize(); //do not mess with z!!!
+		pnl.setPreferredSizeWH(new Vector3f(Display.getWidth(),Display.getHeight(),v3fSize.z));
 	}
 
 	public void changeBackgroundColor(Button btnTitleText, ColorRGBA color) {
@@ -180,4 +183,13 @@ public class MiscLemurI {
 		}
 	}
 	
+	public void moveToScreenCenterXY(PanelBase pnl) {
+		Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSizeCopy(pnl);
+		pnl.setLocalTranslationXY(new Vector3f(
+			Display.getWidth()/2f - v3fSize.x/2f, 
+			Display.getHeight()/2f + v3fSize.y/2f, 
+			0//			pnl.getLocalTranslation().z 
+		));
+//		pnl.getWorldBound().setCenter(new Vector3f(Display.getWidth()/2f,Display.getHeight()/2f,pnl.getLocalTranslation().z));
+	}
 }

@@ -59,10 +59,13 @@ public class GlobalManagerI {
   
   protected HashMap<Class,Object> hmInst = new HashMap<Class,Object>();
   
+  public <T> T get (Class<T> cl){
+  	return get(cl,true);
+  }
   @SuppressWarnings("unchecked")
-	public <T> T get (Class<T> cl){
-    Object obj = hmInst.get (cl);
-    if (obj==null){
+	public <T> T get (Class<T> cl, boolean bCreateNewInstanceIfNull){
+    Object obj = hmInst.get(cl);
+    if (obj==null && bCreateNewInstanceIfNull){
       try {
       	put(cl, ((T)(obj=cl.newInstance())) );
 //				hmInst.put(cl,obj=cl.newInstance ());
