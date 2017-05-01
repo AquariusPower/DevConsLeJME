@@ -29,6 +29,7 @@ package com.github.devconslejme.tests;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.gendiag.SimpleMaintenanceGenericDialog;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.SimpleApplication;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -40,6 +41,7 @@ import com.simsilica.lemur.style.BaseStyles;
 */
 public class TestMaintenanceDialog extends SimpleApplication{
 	private SimpleMaintenanceGenericDialog	smd;
+	private SimpleApplication	sapp;
 	
 	public static void main(String[] args) {
 		assert(true);
@@ -57,12 +59,14 @@ public class TestMaintenanceDialog extends SimpleApplication{
 		initTest();
 	}
 	
-	private void initTest() {
+	public void initTest() {
+		sapp = GlobalManagerI.i().get(SimpleApplication.class);
+		
 		smd = new SimpleMaintenanceGenericDialog(){
 			@Override
 			public void updateMaintenanceList() {
-				recursiveAddSpatialsToMaintenance(null,getGuiNode());
-				recursiveAddSpatialsToMaintenance(null,getRootNode());
+				recursiveAddSpatialsToMaintenance(null,sapp.getGuiNode());
+				recursiveAddSpatialsToMaintenance(null,sapp.getRootNode());
 			}
 		};
 		

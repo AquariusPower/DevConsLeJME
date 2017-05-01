@@ -49,8 +49,11 @@ public class _TestBasicCodeToCopyFrom_ extends SimpleApplication{
 		
 		initTest();
 	}
-
-	private void initTest() {
+	
+	/**
+	 * public so can be called from devcons user cmds
+	 */
+	public void initTest() {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException("method not implemented yet");
 	}

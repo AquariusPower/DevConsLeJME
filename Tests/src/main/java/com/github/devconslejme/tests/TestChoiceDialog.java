@@ -42,9 +42,9 @@ import com.simsilica.lemur.Command;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestGenericDialog extends SimpleApplication {
+public class TestChoiceDialog extends SimpleApplication {
 	public static void main(String[] args) {
-		TestGenericDialog tst = new TestGenericDialog();
+		TestChoiceDialog tst = new TestChoiceDialog();
 		tst.start();
 	}
 
@@ -57,10 +57,14 @@ public class TestGenericDialog extends SimpleApplication {
 //		ConfigureTestsI.i().configure(this, getGuiNode());
 		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode());
 		
+		initTest();
+	}
+	
+	public void initTest() {
 		prepareDialog();
 		prepareButtonThatCallsDiag();
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	private void prepareButtonThatCallsDiag() {
 		ResizablePanel diagParent = DialogHierarchyStateI.i().createDialog("main", null);

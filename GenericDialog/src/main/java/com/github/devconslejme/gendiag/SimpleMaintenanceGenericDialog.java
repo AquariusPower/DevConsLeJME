@@ -32,6 +32,8 @@ import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
 
 /**
+ * TODO move whatever fits at super class to there
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public abstract class SimpleMaintenanceGenericDialog extends SimpleGenericDialog {

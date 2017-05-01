@@ -32,14 +32,13 @@ import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.style.BaseStyles;
 
 /**
- * TODO a generic dialog that opens one child of self, or simultaneously 2 or 3 childs of self, allowing any hierarchy depth
- * TODO that gendiag must also have context menu that also contains sub-contextmenus
+ * TODO a generic dialog that creates 1 or simultaneously 2 or 3 children of self type, allowing any hierarchy depth, prepare one button for each choice of how many children
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestHierarchyGenericDialogFull extends SimpleApplication {
+public class TestMultiChildDialog extends SimpleApplication {
 	public static void main(String[] args) {
-		TestHierarchyGenericDialogFull test = new TestHierarchyGenericDialogFull();
+		TestMultiChildDialog test = new TestMultiChildDialog();
 		test.start();
 	}
 
@@ -52,7 +51,7 @@ public class TestHierarchyGenericDialogFull extends SimpleApplication {
 		initTest();
 	}
 
-	private void initTest() {
+	public void initTest() {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException("method not implemented yet");
 	}

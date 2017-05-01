@@ -74,7 +74,7 @@ import com.simsilica.lemur.list.DefaultCellRenderer;
 
 /**
  * A text based generic dialog.
- * TODO auto list viewable items, see devcons, make misc method
+ * TODO move whatever fits at super class to there
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
@@ -259,6 +259,14 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		bRequestUpdateListItems = true;
 		sectionIndicator = new SectionIndicator();
 		bCloseOnChoiceMade=true;
+		
+		// text info row
+		abtnInfoSection = new ArrayList<Button>();
+		/**
+		 * IMPORTANT: Button works MUCH better than Label when clicking to drag for ex.
+		 * as the label will require aiming at the label's text...
+		 */
+		btnInfoText = createInfoButton("(No Info)",null);
 	}
 	
 	private void buttonClicked(Button btn){
@@ -275,12 +283,16 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		}
 	}
 	
+	/**
+	 * this method is quite simple, can be called at the constructor
+	 * @param strText
+	 * @param strHintPopup
+	 * @return
+	 */
 	private Button createInfoButton(String strText,String strHintPopup){
 		Button btn = new Button(strText,getDialog().getStyle());
 		abtnInfoSection.add(btn);
 		if(strHintPopup!=null)PopupHintHelpListenerI.i().setPopupHintHelp(btn,strHintPopup);
-//		btn.setPreferredSize(new Vector3f(1,1,0.1f));
-//		btn.setSize(new Vector3f(1,1,0.1f));
 		return btn;
 	}
 	
@@ -288,16 +300,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private void initSectionInfo(){
 		ESection es=ESection.Info;
 		if(getSection(es)==null){
-			abtnInfoSection = new ArrayList<Button>();
-			
 			initSectionInfoTitle();
-			
-			// text info row
-			/**
-			 * IMPORTANT: Button works MUCH better than Label when clicking to drag for ex.
-			 * as the label will require aiming at the label's text...
-			 */
-			btnInfoText = createInfoButton("(No Info)",null);
 			
 			// cfg all buttons
 			for(Button btn:abtnInfoSection){
@@ -323,12 +326,14 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 					if(bKeepMaximized){							/**							 * restore							 */
 						getDialog().restoreDefaultSafeSize();
 						
-						Vector3f v3fPosBM = (Vector3f)getDialog().getUserData(strUDKeyPosBeforeMaximize);
-						getDialog().setLocalTranslationXY(v3fPosBM);
+						Vector3f v3fPosBeforeMaximize = (Vector3f)getDialog().getUserData(strUDKeyPosBeforeMaximize);
+						getDialog().setLocalTranslationXY(v3fPosBeforeMaximize);
 						
 						bKeepMaximized=false;
 					}else{							/**							 * maximize							 */
-						getDialog().setUserData(strUDKeyPosBeforeMaximize,getDialog().getLocalTranslation());
+						getDialog().applyCurrentSafeSizeAsDefault();
+						
+						getDialog().setUserData(strUDKeyPosBeforeMaximize,getDialog().getLocalTranslation().clone());
 						
 						bKeepMaximized=true;
 					}
@@ -412,7 +417,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 //					int i = Integer.parseInt(getContextButtonOwner().getText());
 					int i = (int)getContextButtonOwner().getValue(); //TODO why?!?!? at other places I dont have to cast to Button!?!??!?!?!?!?!
 					if(ResizablePanel.getResizableBorderSizeDefault()==i){
-						setPopupHintHelp("current choice");
+//						setPopupHintHelp("current choice");
 						return true;
 					}
 					return false;

@@ -47,21 +47,18 @@ import com.simsilica.lemur.event.MouseEventControl;
 public class TestHierarchyResizablePanel extends SimpleApplication {
 	public static void main(String[] args) {
 		TestHierarchyResizablePanel tst = new TestHierarchyResizablePanel();
-//		AppSettings as = new AppSettings(true);
 		tst.setPauseOnLostFocus(false); //good for outside monitoring
-//		tst.setSettings(as);
 		tst.start();
 	}
 	
 	@Override
 	public void simpleInitApp() {
-//		GuiGlobals.initialize(this);
-//		BaseStyles.loadGlassStyle();
-//		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
-		
-//		ConfigureTestsI.i().configure(this, getGuiNode());
 		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode());
 		
+		initTest();
+	}
+	
+	public void initTest() {
 		createParentChild(100);
 		
 		boolean bMore=true;

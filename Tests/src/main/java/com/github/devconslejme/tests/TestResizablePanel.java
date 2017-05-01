@@ -28,17 +28,12 @@
 package com.github.devconslejme.tests;
 
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.MainThreadI;
-import com.github.devconslejme.misc.jme.QueueStateI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
-import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
-import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
-import com.simsilica.lemur.style.BaseStyles;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -48,6 +43,8 @@ public class TestResizablePanel extends SimpleApplication {
 		TestResizablePanel tst = new TestResizablePanel();
 		tst.start();
 	}
+
+	private SimpleApplication	sapp;
 	
 	@Override
 	public void simpleInitApp() {
@@ -57,6 +54,12 @@ public class TestResizablePanel extends SimpleApplication {
 //		
 //		ConfigureTestsI.i().configure(this, getGuiNode());
 		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(this, getGuiNode());
+		
+		initTest();
+	}
+	
+	public void initTest() {
+		sapp = GlobalManagerI.i().get(SimpleApplication.class);
 		
 		int i=300;
 		test(new Vector3f(100,i+100,10));
@@ -68,7 +71,7 @@ public class TestResizablePanel extends SimpleApplication {
 		ResizablePanel rzp = new ResizablePanel(null);
 		rzp.setPreferredSize(new Vector3f(300,200,0));
 		rzp.setLocalTranslationXY(pos); //above DevCons
-		getGuiNode().attachChild(rzp);
+		sapp.getGuiNode().attachChild(rzp); //will not use the dialog hierarchy!
 		
 		HoverHighlightEffectI.i().applyAt(rzp, (QuadBackgroundComponent)rzp.getResizableBorder());
 		

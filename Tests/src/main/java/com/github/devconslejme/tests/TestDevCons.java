@@ -79,8 +79,21 @@ public class TestDevCons extends SimpleApplication{
 		 */
 		initOptionalExtras();
 		initOptionalOtherStuff();
+		initOptionalIntegreteAllOtherTests(); 
 	}
 	
+	/**
+	 * so thru devcons user commands can instantiate the other tests
+	 */
+	private void initOptionalIntegreteAllOtherTests() {
+		GlobalManagerI.i().put(TestContextMenu.class, new TestContextMenu());
+		GlobalManagerI.i().put(TestChoiceDialog.class, new TestChoiceDialog());
+		GlobalManagerI.i().put(TestMultiChildDialog.class, new TestMultiChildDialog());
+		GlobalManagerI.i().put(TestHierarchyResizablePanel.class, new TestHierarchyResizablePanel());
+		GlobalManagerI.i().put(TestMaintenanceDialog.class, new TestMaintenanceDialog());
+		GlobalManagerI.i().put(TestResizablePanel.class, new TestResizablePanel());
+	}
+
 	private void initOptionalExtras() {
 		//// SingleAppInstance
 		GlobalManagerI.i().get(SingleAppInstance.class).configureRequiredAtApplicationInitialization(null);

@@ -537,7 +537,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 					Button btnSource = cmVarMon.getContextSource();
 					VarMon vm = hmVarMon.get(btnSource.getText());
 					if(vm!=null && esp.equals(vm.esp)){ 
-						setPopupHintHelp("Current choice");
+//						setPopupHintHelp("Current choice");
 						return true; //valid if the text is the key
 					}
 					

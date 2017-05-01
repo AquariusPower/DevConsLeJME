@@ -58,7 +58,7 @@ public class TestContextMenu extends SimpleApplication{
 	}
 
 	@SuppressWarnings("unchecked")
-	private void initTest() {
+	public void initTest() {
 		ResizablePanel rzp = DialogHierarchyStateI.i().createDialog(TestContextMenu.class.getSimpleName(), null);
 		rzp.setContents(new Button("context click me"));
 		DialogHierarchyStateI.i().showDialog(rzp);

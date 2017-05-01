@@ -30,6 +30,7 @@ package com.github.devconslejme.misc.jme;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.Application;
+import com.jme3.app.SimpleApplication;
 import com.jme3.scene.Node;
 
 
@@ -45,6 +46,9 @@ public class PkgCfgI {
 		com.github.devconslejme.misc.PkgCfgI.i().configure();
 		
 		GlobalManagerI.i().put(Application.class, app);  //first!
+		if(app instanceof SimpleApplication){
+			GlobalManagerI.i().put(SimpleApplication.class, (SimpleApplication)app);
+		}
 		EffectManagerStateI.i().configure();
 		SimulationTimeStateI.i().configure();
 		QueueStateI.i().configure();

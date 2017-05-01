@@ -211,7 +211,7 @@ public class ContextMenuI implements IResizableListener{
 		/**
 		 * @param strTextKey
 		 * @param cmd necessary because that is the whole point of it
-		 * @param hu Each choice can have an exclusive {@link HintUpdater} that will use {@link HintUpdater#setPopupHintHelp(String)}
+		 * @param hu Each choice can have an exclusive {@link HintUpdater} that may use {@link HintUpdater#setPopupHintHelp(String)} (for the single choice mode, there is an automatic popup hint for that)
 		 * @return
 		 */
 		@SuppressWarnings("unchecked")
@@ -533,6 +533,7 @@ public class ContextMenuI implements IResizableListener{
 				cxHU.setPopupHintHelp(null);
 				if(cxHU.call()){
 					if(cm.isSingleChoiceMode()){
+						if(cxHU.getPopupHintHelp()==null)cxHU.setPopupHintHelp("currently chosen");
 						cm.setSingleChoice(cbChoice);
 						GeomIndicator gi = IndicatorI.i().createIndicator(ColorRGBA.Yellow);
 						gi.setTarget(cbChoice).setEnabled(true);
