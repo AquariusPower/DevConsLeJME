@@ -30,11 +30,9 @@ package com.github.devconslejme.gendiag;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.Map.Entry;
 import java.util.Set;
 
-import javax.crypto.SecretKey;
-
+import com.github.devconslejme.gendiag.ContextMenuI.ContextButton;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.HintUpdater;
 import com.github.devconslejme.misc.Annotations.Bugfix;
@@ -109,7 +107,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private Button	btnMaximizeRestore;
 	private Button	btnClose;
 	private ArrayList<Button>	abtnInfoSection;
-	private Command<? super Button>	cmdInfoSectionButtons;
+	private Command<? super Button>	cmdInfoSectionTitleButtons;
 	private Container	cntrDiagControls;
 	private int	iDiagControlColumnInitIndex;
 	private boolean	bKeepMaximized;
@@ -121,6 +119,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	 */
 	@Workaround @Bugfix
 	private DefaultCursorListener	curlisExtraClickCmd;
+	private ContextMenu	cmIST;
+	private ContextMenu	cmSubBorderSize;
 	
 	private static class SectionIndicator{}
 	
@@ -150,11 +150,11 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		private OptionData odParent;
 		private Object objValue;
 		private boolean bExpanded;
-		private LinkedHashMap<String,OptionData> hmNestedChildSubOptions;
+		private LinkedHashMap<String,OptionData> hmNestedChildrenSubOptions;
 		
 		public OptionData(){
 			bExpanded=true;
-			hmNestedChildSubOptions = new LinkedHashMap<String,OptionData>();
+			hmNestedChildrenSubOptions = new LinkedHashMap<String,OptionData>();
 		}
 		
 		protected OptionData setTextKey(String strTextKey) {
@@ -190,7 +190,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			builder.append(", bExpanded=");
 			builder.append(bExpanded);
 			builder.append(", hmOptions=");
-			builder.append(hmNestedChildSubOptions);
+			builder.append(hmNestedChildrenSubOptions);
 			builder.append("]");
 			return builder.toString();
 		}
@@ -205,6 +205,22 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			bExpanded=!bExpanded;
 			return bExpanded;
 		}
+		/**
+		 * 
+		 * @param aodStore will be created if null
+		 * @return
+		 */
+		public ArrayList<OptionData> getAllChildrenRecursively(ArrayList<OptionData> aodStore){
+			if(aodStore==null)aodStore = new ArrayList<OptionData>();
+			for(OptionData odChild:hmNestedChildrenSubOptions.values()){
+				aodStore.add(odChild);
+				odChild.getAllChildrenRecursively(aodStore);
+//				if(odChild.hmNestedChildrenSubOptions.size()>0){
+//					getAllChildrenRecursively(aodStore);
+//				}
+			}
+			return aodStore;
+		}
 		@Override
 		public String getVisibleText() {
 			int iDepth=0;
@@ -213,7 +229,15 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			String str=strTextKey;
 			
 			if(getValue() instanceof SectionIndicator){
-				str="["+(isExpanded()?"-":"+")+"] "+str+(!isExpanded()?" {"+hmNestedChildSubOptions.size()+"}":"");
+				str="["+(isExpanded()?"-":"+")+"] "
+					+str
+					+(
+//						!isExpanded()
+//						? 
+								" {"+hmNestedChildrenSubOptions.size()+"/"+getAllChildrenRecursively(null).size()+"}"
+//						: ""
+					)
+				;
 			}
 			
 			str=" "+str;
@@ -266,117 +290,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		if(getSection(es)==null){
 			abtnInfoSection = new ArrayList<Button>();
 			
-			cmdInfoSectionButtons = new Command<Button>() {
-				private String	strUDKeyPosBeforeMaximize = SimpleGenericDialog.class+"/PosBeforeMaximize";
-				@Override
-				public void execute(Button source) {
-					if(source==btnMaximizeRestore){ //toggle
-//						if(MiscLemurI.i().isMaximized(getDialog())){
-						if(bKeepMaximized){
-							/**
-							 * restore
-							 */
-							getDialog().restoreDefaultSafeSize();
-							
-							Vector3f v3fPosBM = (Vector3f)getDialog().getUserData(strUDKeyPosBeforeMaximize);
-//							v3fPosBM.z=getDialog().getLocalTranslation().z; //do not mess with z!!!
-							getDialog().setLocalTranslationXY(v3fPosBM);
-							
-							bKeepMaximized=false;
-						}else{
-							/**
-							 * maximize
-							 */
-							getDialog().setUserData(strUDKeyPosBeforeMaximize,getDialog().getLocalTranslation());
-//							MiscLemurI.i().maximize(getDialog());
-							
-							bKeepMaximized=true;
-						}
-					}else
-//					if(source==btnRestoreIniSize){
-//						getDialog().restoreDefaultSafeSize();
-//					}else
-//					if(source==btnUpdateDefaultSize){
-//						getDialog().applyCurrentSafeSizeAsDefault();
-//					}else
-					if(source==btnClose){
-						getDialog().close();
-					}else
-					{
-						MessagesI.i().warnMsg(SimpleGenericDialog.this, "cmd not supported yet", source);
-					}
-				}
-			};
-			
-			strTitle="(no title)";
-			
-			// title row
-			cntrDiagControls = new Container();
-			iDiagControlColumnInitIndex=0;
-//			cntrDiagControls.addChild(btnRestoreIniSize = createInfoButton("r","Restore to default/initial size"), iDiagControlColumnInitIndex++);
-//			cntrDiagControls.addChild(btnUpdateDefaultSize = createInfoButton("u","Update default size to current"), iDiagControlColumnInitIndex++);
-//			cntrDiagControls.addChild(btnMinimize = createInfoButton("-","Minimize"), iDiagControlColumnInitIndex++);
-//			cntrDiagControls.addChild(btnMaximizeRestore = createInfoButton("M","Maximize/Restore"), iDiagControlColumnInitIndex++);
-//			cntrDiagControls.addChild(btnClose = createInfoButton("X","Close"), iDiagControlColumnInitIndex++);
-//			btnRestoreIniSize=appendNewDiagControl("r","Restore to default/initial size");
-//			btnUpdateDefaultSize=appendNewDiagControl("u","Update default size to current");
-			btnMinimize=appendNewDiagControl("-","Minimize");
-			btnMaximizeRestore=appendNewDiagControl("M","Maximize/Restore");
-			btnClose=appendNewDiagControl("X","Close");
-			MiscLemurI.i().changeBackgroundColor(btnClose, ColorI.i().colorChangeCopy(ColorRGBA.Red,0f,0.25f), true); //TODO use a lemur style instead
-			
-			// title row put it all
-			cntrTitle = new Container(new BorderLayout());
-			
-			ContextMenu cm = new ContextMenu(getDialog());
-			cm.addNewEntry("Restore to default/initial size", new Command<Button>() {@Override public void execute(Button source) {
-				getDialog().restoreDefaultSafeSize(); }}, null);
-			cm.addNewEntry("Update default size to current", new Command<Button>() {@Override public void execute(Button source) {
-				getDialog().applyCurrentSafeSizeAsDefault(); }}, null);
-			cm.addNewEntry("Toggle Info Visibility", 
-				new Command<Button>() {@Override public void execute(Button source) {
-					if(btnInfoText.getParent()!=null){
-						cntrInfo.removeChild(btnInfoText);
-					}else{
-						cntrInfo.addChild(btnInfoText, BorderLayout.Position.Center);
-					}
-				}},
-				new HintUpdater() {
-					@Override
-					public Boolean call() {
-						setPopupHintHelp(btnInfoText.getParent()==null?"show":"hide"); //inverted to show next action on click
-						return true;
-					}
-				}
-			);
-			ContextMenu cmSubBorderSize = cm.createSubMenu("global resizable border size");
-			Command<Button> cmdBorderSize = new Command<Button>() {
-				@Override
-				public void execute(Button source) {
-					int i = Integer.parseInt(source.getText());
-					ResizablePanel.setResizableBorderSizeDefault(i);
-					getDialog().setResizableBorderSize(i,i);
-				}
-			};
-			cmSubBorderSize.addNewEntry("1", cmdBorderSize, null);
-			cmSubBorderSize.addNewEntry("2", cmdBorderSize, null);
-			cmSubBorderSize.addNewEntry("3", cmdBorderSize, null);
-			cmSubBorderSize.addNewEntry("4", cmdBorderSize, null);
-			cmSubBorderSize.addNewEntry("5", cmdBorderSize, null);
-			cmSubBorderSize.addNewEntry("6", cmdBorderSize, null);
-			cmSubBorderSize.addNewEntry("7", cmdBorderSize, null);
-			cmSubBorderSize.addNewEntry("8", cmdBorderSize, null);
-			cmSubBorderSize.addNewEntry("9", cmdBorderSize, null);
-			cmSubBorderSize.addNewEntry("10", cmdBorderSize, null);
-			
-			btnTitleText = createInfoButton(strTitle,null);
-			MiscLemurI.i().changeBackgroundColor(btnTitleText, ColorI.i().colorChangeCopy(ColorRGBA.Blue,0f,0.25f), true); //TODO use a lemur style instead
-			DragParentestPanelListenerI.i().applyAt(btnTitleText);
-			ContextMenuI.i().applyContextMenuAt(btnTitleText, cm);
-			
-//			cntrTitle.setPreferredSize(new Vector3f(1,1,0.1f));
-			cntrTitle.addChild(btnTitleText, BorderLayout.Position.Center);
-			cntrTitle.addChild(cntrDiagControls, BorderLayout.Position.East);
+			initSectionInfoTitle();
 			
 			// text info row
 			/**
@@ -387,7 +301,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			
 			// cfg all buttons
 			for(Button btn:abtnInfoSection){
-				btn.addClickCommands(cmdInfoSectionButtons);
+				btn.addClickCommands(cmdInfoSectionTitleButtons);
 			}
 			
 			// info section
@@ -399,8 +313,115 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		}
 	}
 	
-	@Override
-	protected void initPreContentsContainer() {
+	private void initSectionInfoTitle() {
+
+		cmdInfoSectionTitleButtons = new Command<Button>() {
+			private String	strUDKeyPosBeforeMaximize = SimpleGenericDialog.class+"/PosBeforeMaximize";
+			@Override
+			public void execute(Button source) {
+				if(source==btnMaximizeRestore){ //toggle
+					if(bKeepMaximized){							/**							 * restore							 */
+						getDialog().restoreDefaultSafeSize();
+						
+						Vector3f v3fPosBM = (Vector3f)getDialog().getUserData(strUDKeyPosBeforeMaximize);
+						getDialog().setLocalTranslationXY(v3fPosBM);
+						
+						bKeepMaximized=false;
+					}else{							/**							 * maximize							 */
+						getDialog().setUserData(strUDKeyPosBeforeMaximize,getDialog().getLocalTranslation());
+						
+						bKeepMaximized=true;
+					}
+				}else
+				if(source==btnClose){
+					getDialog().close();
+				}else
+				{
+					MessagesI.i().warnMsg(SimpleGenericDialog.this, "cmd not supported yet", source);
+				}
+			}
+		};
+		
+		strTitle="(no title)";
+		
+		// title row
+		cntrDiagControls = new Container();
+		iDiagControlColumnInitIndex=0;
+		btnMinimize=appendNewDiagControl("-","Minimize");
+		btnMaximizeRestore=appendNewDiagControl("M","Maximize/Restore");
+		btnClose=appendNewDiagControl("X","Close");
+		MiscLemurI.i().changeBackgroundColor(btnClose, ColorI.i().colorChangeCopy(ColorRGBA.Red,0f,0.25f), true); //TODO use a lemur style instead
+		
+		// title row put it all
+		cntrTitle = new Container(new BorderLayout());
+		
+		initInfoSectionTitleContextMenu();
+		
+		btnTitleText = createInfoButton(strTitle,null);
+		MiscLemurI.i().changeBackgroundColor(btnTitleText, ColorI.i().colorChangeCopy(ColorRGBA.Blue,0f,0.25f), true); //TODO use a lemur style instead
+		DragParentestPanelListenerI.i().applyAt(btnTitleText);
+		ContextMenuI.i().applyContextMenuAt(btnTitleText, cmIST);
+		
+//		cntrTitle.setPreferredSize(new Vector3f(1,1,0.1f));
+		cntrTitle.addChild(btnTitleText, BorderLayout.Position.Center);
+		cntrTitle.addChild(cntrDiagControls, BorderLayout.Position.East);
+		
+	}
+
+	@SuppressWarnings("unchecked")
+	private void initInfoSectionTitleContextMenu() {
+		cmIST = new ContextMenu(getDialog());
+		cmIST.addNewEntry("Restore to default/initial size", new Command<Button>() {@Override public void execute(Button source) {
+			getDialog().restoreDefaultSafeSize(); }}, null);
+		cmIST.addNewEntry("Update default size to current", new Command<Button>() {@Override public void execute(Button source) {
+			getDialog().applyCurrentSafeSizeAsDefault(); }}, null);
+		cmIST.addNewEntry("Toggle Info Visibility", 
+			new Command<Button>() {@Override public void execute(Button source) {
+				if(btnInfoText.getParent()!=null){
+					cntrInfo.removeChild(btnInfoText);
+				}else{
+					cntrInfo.addChild(btnInfoText, BorderLayout.Position.Center);
+				}
+			}},
+			new HintUpdater() {
+				@Override
+				public Boolean call() {
+					setPopupHintHelp(btnInfoText.getParent()==null?"show":"hide"); //inverted to show next action on click
+					return true;
+				}
+			}
+		);
+		
+		cmSubBorderSize = cmIST.createSubMenu("global resizable border size");
+		cmSubBorderSize.setSingleChoiceMode(true);
+		Command<Button> cmdBorderSize = new Command<Button>() {
+			@Override
+			public void execute(Button source) {
+				int i = Integer.parseInt(source.getText());
+				ResizablePanel.setResizableBorderSizeDefault(i);
+				getDialog().setResizableBorderSize(i,i);
+			}
+		};
+		
+		for(int i=1;i<=10;i++){
+			cmSubBorderSize.addNewEntry(""+i, cmdBorderSize, new HintUpdater() {
+				@Override
+				public Boolean call() {
+//					Button btn = (Button)cmSubBorderSize.getContextSource(); //TODO why?!?!? at other places I dont have to cast to Button!?!??!?!?!?!?!
+//					int i = Integer.parseInt(btn.getText());
+//					int i = Integer.parseInt(getContextButtonOwner().getText());
+					int i = (int)getContextButtonOwner().getValue(); //TODO why?!?!? at other places I dont have to cast to Button!?!??!?!?!?!?!
+					if(ResizablePanel.getResizableBorderSizeDefault()==i){
+						setPopupHintHelp("current choice");
+						return true;
+					}
+					return false;
+				}
+			}).setValue(i);
+		}
+	}
+
+	private void initBase(){
 		funcVisibleText = new Function<IVisibleText, String>() {
 			@Override
 			public String apply(IVisibleText vt) {
@@ -436,25 +457,18 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			}
 		};			
 		crVisibleText.setTransform(funcVisibleText);
-		
-//		QueueI.i().enqueue(new CallableXAnon() {
-//			@Override
-//			public Boolean call() {
-//				for(OptionData od:hmOptionsRoot.values().toArray(new OptionData[0])){
-//					if(od instanceof OptionDataDummy){
-//						hmOptionsRoot.remove(od.getTextKey());
-//						requestUpdateListItems();//recreateListItems();
-//					}
-//				}
-//				
-//				return true;
-//			}
-//		}.enableLoop().setDelaySeconds(1f).setName("ClearDummyOption"));
+	}
+	
+	@Override
+	protected void initContentsContainer() {
+		initBase();
 		
 		initSectionInfo();
 		initSectionOptions();
 		initSectionInput();
 		initSectionTools();
+		
+		super.initContentsContainer();
 	}
 	
 	protected void initSectionTools() {
@@ -572,7 +586,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		if(odParent!=null){
 //			OptionData odParent = findSectionRecursively(hmOpt, strSectionParentKey);
 //			DetailedException.assertNotNull(odParent, "the parent section must be set before being referenced/requested/used!", odParent);
-			hmOpt=odParent.hmNestedChildSubOptions;
+			hmOpt=odParent.hmNestedChildrenSubOptions;
 		}
 		
 		OptionData odPrevious = hmOpt.put(strTextOptionKey, od);
@@ -586,7 +600,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		//look for sub-sections
 		for(OptionData od:hmOpt.values()){
 			if(od.getValue() instanceof SectionIndicator){
-				odFound = findSectionRecursively(od.hmNestedChildSubOptions,strSectionKey);
+				odFound = findSectionRecursively(od.hmNestedChildrenSubOptions,strSectionKey);
 				if(odFound!=null)return odFound;
 			}
 		}
@@ -609,7 +623,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			vlodOptions.add(od);
 			if(od.getValue() instanceof SectionIndicator){
 				if(od.isExpanded()){
-					recreateListItemsRecursively(od.hmNestedChildSubOptions,++iDepth);
+					recreateListItemsRecursively(od.hmNestedChildrenSubOptions,++iDepth);
 				}
 			}
 		}
@@ -743,7 +757,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private void setExpandedAllRecursively(OptionData od, boolean b) {
 		od.setExpanded(b);
 		if(od.getValue() instanceof SectionIndicator){
-			for(OptionData odChild:od.hmNestedChildSubOptions.values()){
+			for(OptionData odChild:od.hmNestedChildrenSubOptions.values()){
 				setExpandedAllRecursively(odChild,b);
 			}
 		}

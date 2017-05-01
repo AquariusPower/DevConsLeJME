@@ -35,6 +35,7 @@ import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.es.HierarchyComp;
 import com.github.devconslejme.es.HierarchyComp.EField;
 import com.github.devconslejme.misc.Annotations.ToDo;
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchy;
 import com.github.devconslejme.misc.JavaLangI;
@@ -183,36 +184,18 @@ public class ContextMenuI implements IResizableListener{
 			return getThis();
 		}
 		
-		public Panel getContextSource(){
-			return pnlSource;
+		@SuppressWarnings("unchecked")
+		public <T extends Panel> T getContextSource(){
+			return (T)pnlSource;
 		}
 		
-//		@SuppressWarnings("unused")
-//		@ToDo
 		public ContextMenu createSubMenu(String strTextKey){
 			ContextMenu cmSub = new ContextMenu(this.rzpContextMenu);
 			
 			ContextButton cb = addNewEntry(
 				"[+] "+strTextKey, 
-				new Command<Button>() {
-					@Override
-					public void execute(Button source) {
-//						ResizablePanel rzp = SpatialHierarchyI.i().getParentest(source, ResizablePanel.class, false);
-//	//					cmSub.setHierarchyParent(rzp);
-//						
-//						/*
-//						Vector3f v3f = source.getWorldTranslation().clone();
-//						v3f.x+=source.getSize().x;
-//						v3f.y-=source.getSize().y/2f;
-//						*/
-//						Vector2f v2f = GlobalManagerI.i().get(Application.class).getInputManager().getCursorPosition();
-//						
-//						ContextMenuI.i().showContextMenu(
-//							v2f, //MiscJmeI.i().toV2f(v3f),
-//							source.getText(), 
-//							cmSub);
-					}
-				},
+				/** a dummy cmd is necessary, there is already an expand toggler elsewhere */
+				new Command<Button>(){@Override public void execute(Button source){}},
 				null
 			);
 			cb.setSubContextMenu(true);
@@ -226,21 +209,21 @@ public class ContextMenuI implements IResizableListener{
 		}
 		
 		/**
-		 * Each choice can have an UserData hint updater.
-		 * That updater must set a hint help.
-		 * 
 		 * @param strTextKey
-		 * @param cmd
-		 * @param cxHintUpdater
+		 * @param cmd necessary because that is the whole point of it
+		 * @param hu Each choice can have an exclusive {@link HintUpdater} that will use {@link HintUpdater#setPopupHintHelp(String)}
 		 * @return
 		 */
 		@SuppressWarnings("unchecked")
-		public ContextButton addNewEntry(String strTextKey, Command<Button> cmd, HintUpdater cxHintUpdater){
+		public ContextButton addNewEntry(String strTextKey, Command<Button> cmd, HintUpdater hu){
 			assert(cmd!=null);
 			ContextButton cb = new ContextButton(strTextKey);
 			cb.addClickCommands(cmd);
 //			if(cxHintUpdater!=null)UserDataI.i().setUserDataPSH(btn, EContext.HintUpdater, cxHintUpdater);
-			cb.setHintUpdater(cxHintUpdater);
+			if(hu!=null){
+				cb.setHintUpdater(hu);
+				hu.setContextButtonOwner(cb);
+			}
 			hmContextOptions.put(strTextKey, cb);
 			return cb;
 		}
@@ -249,7 +232,7 @@ public class ContextMenuI implements IResizableListener{
 			return rzpDialogHierarchyParent;
 		}
 
-		public SELF setSingleChoice(ContextButton btnChoice) {
+		private SELF setSingleChoice(ContextButton btnChoice) {
 			this.btnChoice = btnChoice;
 			return getThis();
 		}
@@ -310,9 +293,12 @@ public class ContextMenuI implements IResizableListener{
 	
 	/**
 	 * see {@link ContextMenuI#showContextMenu(Vector2f, String, ContextMenu)}<br>
-	 * use {@link #setPopupHintHelp(String)}
+	 * use {@link #setPopupHintHelp(String)}<br>
+	 * {@link ContextButton} 1 <-> 1 {@link HintUpdater}<br>
 	 */
 	public static abstract class HintUpdater extends CallableX<HintUpdater>{
+		private ContextButton	cb;
+
 		public void setPopupHintHelp(String str){
 			putKeyValue(EContext.PopupHintHelp.getUId(),str);
 //			this.setLoopEnabled(true).setPopupHintHelp(""); //tst dummy
@@ -322,21 +308,32 @@ public class ContextMenuI implements IResizableListener{
 			return getValue(EContext.PopupHintHelp.getUId());
 		}
 		
+		private void setContextButtonOwner(ContextButton cb){
+			DetailedException.assertNotAlreadySet(this.cb, cb, 
+				"the "+this.getClass().getSimpleName()+" is exclusive to a single "+cb.getClass().getSimpleName(),
+				this);
+			this.cb=cb;
+		}
+		
+		public ContextButton getContextButtonOwner(){
+			return this.cb;
+		}
+		
 		@Override
 		protected HintUpdater getThis() {
 			return this;
 		}
 	}
 	
-	private static class ContextButton<SELF extends ContextButton<SELF>> extends Button{
+	public static class ContextButton<SELF extends ContextButton<SELF>> extends Button{
 		private HintUpdater	cxHintUpdater;
 		private boolean	bSubContextMenu;
 
-		public ContextButton(String s) {
+		private ContextButton(String s) {
 			super(s);
 		}
 		
-		public SELF setSubContextMenu(boolean bSubContextMenu){
+		private SELF setSubContextMenu(boolean bSubContextMenu){
 			this.bSubContextMenu=bSubContextMenu;
 			return getThis();
 		}
@@ -345,7 +342,7 @@ public class ContextMenuI implements IResizableListener{
 			return bSubContextMenu;
 		}
 		
-		public SELF setHintUpdater(HintUpdater cxHintUpdater) {
+		private SELF setHintUpdater(HintUpdater cxHintUpdater) {
 			this.cxHintUpdater = cxHintUpdater;
 			return getThis();
 		}
@@ -359,8 +356,18 @@ public class ContextMenuI implements IResizableListener{
 			return (SELF)this;
 		}
 
-		public HintUpdater getHintUpdater() {
+		private HintUpdater getHintUpdater() {
 			return cxHintUpdater;
+		}
+		
+		private Object val;
+		public <T> T getValue() {
+			return (T)val;
+		}
+
+		public SELF setValue(Object val) {
+			this.val=val;
+			return getThis();
 		}
 	}
 	
@@ -515,27 +522,27 @@ public class ContextMenuI implements IResizableListener{
 		assert(cm.hmContextOptions.size()>0);
 		
 		for(Entry<String, ContextButton> entry : (cm.hmContextOptions).entrySet()){
-			ContextButton btnChoice = entry.getValue();
+			ContextButton cbChoice = entry.getValue();
 			
-			btnChoice.addClickCommands(cm.cmdCloseOnClick);
+			cbChoice.addClickCommands(cm.cmdCloseOnClick);
 			
 			// popup hint help
-			PopupHintHelpListenerI.i().resetPopupHelp(btnChoice); //clear
-			HintUpdater cxHU = btnChoice.getHintUpdater();
+			PopupHintHelpListenerI.i().resetPopupHelp(cbChoice); //clear
+			HintUpdater cxHU = cbChoice.getHintUpdater();
 			if(cxHU!=null){
 				cxHU.setPopupHintHelp(null);
 				if(cxHU.call()){
 					if(cm.isSingleChoiceMode()){
-						cm.setSingleChoice(btnChoice);
+						cm.setSingleChoice(cbChoice);
 						GeomIndicator gi = IndicatorI.i().createIndicator(ColorRGBA.Yellow);
-						gi.setTarget(btnChoice).setEnabled(true);
+						gi.setTarget(cbChoice).setEnabled(true);
 					}
 					
-					PopupHintHelpListenerI.i().setPopupHintHelp(btnChoice, cxHU.getPopupHintHelp());
+					PopupHintHelpListenerI.i().setPopupHintHelp(cbChoice, cxHU.getPopupHintHelp());
 				}
 			}
 			
-			cm.cntrContextOptions.addChild(btnChoice, i++, 0);
+			cm.cntrContextOptions.addChild(cbChoice, i++, 0);
 		}
 		
 		DialogHierarchyStateI.i().showDialogAsModal(cm.getDialogHierarchyParent(), cm.rzpContextMenu);

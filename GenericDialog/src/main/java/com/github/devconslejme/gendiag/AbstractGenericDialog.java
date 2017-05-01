@@ -30,6 +30,8 @@ package com.github.devconslejme.gendiag;
 import java.util.HashMap;
 
 import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
@@ -40,7 +42,6 @@ import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Container;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.BorderLayout;
-import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.focus.DefaultFocusTraversalControl;
 import com.simsilica.lemur.focus.FocusTraversal;
 
@@ -74,11 +75,18 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 		
 		rzpDialog.addResizableListener(this);
 		
-		initPreContentsContainer();
-		initContentsContainer();
+//		initPreContentsContainer();
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				initContentsContainer();
+				return true;
+			}
+		});
+		
 	}
 	
-	protected abstract void initPreContentsContainer();
+//	protected abstract void initPreContentsContainer();
 	
 	private class BorderLayoutFT extends BorderLayout implements FocusTraversal{
 		DefaultFocusTraversalControl dftc = new DefaultFocusTraversalControl();
@@ -109,7 +117,7 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 	};
 	private BorderLayoutFT bl;
 	
-	private void initContentsContainer() {
+	protected void initContentsContainer() {
 		DetailedException.assertNotNull(bl, this);
 		
 		DragParentestPanelListenerI.i().applyAt(rzpDialog);

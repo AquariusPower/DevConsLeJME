@@ -511,7 +511,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 				}
 				
 				if(e!=null){
-					Button btn = (Button)cmVarMon.getContextSource();
+					Button btn = cmVarMon.getContextSource();
 					VarMon vm = hmVarMon.get(btn.getText());
 					if(vm!=null)vm.set(e);
 				}else{
@@ -534,7 +534,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			cmVarMon.addNewEntry(str, cmd, new HintUpdater() {
 				@Override
 				public Boolean call() {
-					Button btnSource = (Button)cmVarMon.getContextSource();
+					Button btnSource = cmVarMon.getContextSource();
 					VarMon vm = hmVarMon.get(btnSource.getText());
 					if(vm!=null && esp.equals(vm.esp)){ 
 						setPopupHintHelp("Current choice");

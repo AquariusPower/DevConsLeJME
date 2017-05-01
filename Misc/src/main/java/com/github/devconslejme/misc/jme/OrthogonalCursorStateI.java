@@ -27,13 +27,10 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.github.devconslejme.misc.jme;
 
-import java.util.Formatter;
-
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.StringI;
-import com.google.common.collect.Table;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
@@ -65,15 +62,26 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 	private SimpleApplication	sappOpt;
 	private BitmapText	bt;
 	private ColorRGBA	color;
-	private boolean	bRotating=true;
-	private boolean	bRotateOnlyIfMouseMoves=true;
+	private boolean	bRotating;
+	private boolean	bRotateOnlyIfMouseMoves;
 	private Node	nodeInfo;
 	private Node	nodeHook;
-	private float	fAboveLemurCursorRayCast = 1001; //TODO dynamically collect this value
-	private float	fRotateSpeed=1f;
-	private float	fDistanceToCursor=100;
-	private Vector2f v2fCursorPosPrevious = new Vector2f();
-	private float	fGoodReadableRotateSpeedZ = -0.0025f;
+	private float	fAboveLemurCursorRayCast;
+	private float	fRotateSpeed;
+	private float	fDistanceToCursor;
+	private Vector2f v2fCursorPosPrevious;
+	private float	fGoodReadableRotateSpeedZ;
+	private Vector2f	v2fCursorPos;
+	private boolean	bShowCursorInfo;
+	
+	public OrthogonalCursorStateI() {
+		bRotateOnlyIfMouseMoves=true;
+		fAboveLemurCursorRayCast = 1001; //TODO dynamically collect this value
+		fRotateSpeed=1f;
+		fDistanceToCursor=100;
+		v2fCursorPosPrevious = new Vector2f();
+		fGoodReadableRotateSpeedZ = -0.0025f;
+	}
 	
 	public void configure(Node nodeParent){
 		app = GlobalManagerI.i().get(Application.class);
@@ -109,18 +117,8 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 		nodeParent.attachChild(nodeInfo);
 	}
 	
-	@Override
-	public void update(float tpf) {
-		super.update(tpf);
-		if(inputman.isCursorVisible()){
-			Vector2f v2fCursorPos = inputman.getCursorPosition();
-			geom.setLocalTranslation(v2fCursorPos.x-fSize, v2fCursorPos.y+fSize, fAboveLemurCursorRayCast );
-			
-//			new Formatter().;
-//			Table<R, C, V>
-			
-//			bt.setSize(20);
-			String str=StringI.i().createTable(3,
+	private void updateCursorInfo(){
+		String str=StringI.i().createTable(3,
 				"xy", String.format("%.0f",v2fCursorPos.x), String.format("%.0f",v2fCursorPos.y),
 				"max", ""+Display.getWidth(), ""+Display.getHeight(),
 				"diff", ""+(Display.getWidth()-(int)v2fCursorPos.x), ""+(Display.getHeight()-(int)v2fCursorPos.y),
@@ -129,22 +127,6 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 			);
 			
 			bt.setText(str);
-//				String.format(
-////						"xy=%.0fx%.0f\n"
-////								+"max=%dx%d\n"
-////								+"dif=%dx%d\n"
-////								+"%%=%.1fx%.1f",
-//					 " xy\t%.0f\t%.0f\n"
-//					+"max\t%d\t%d\n"
-//					+"dif\t%d\t%d\n"
-//					+" %%\t%.1f\t%.1f",
-//					v2fCursorPos.x,v2fCursorPos.y, //xy
-//					Display.getWidth(),Display.getHeight(), //max
-//					Display.getWidth()-(int)v2fCursorPos.x, Display.getHeight()-(int)v2fCursorPos.y, //dif
-//					(v2fCursorPos.x/(float)Display.getWidth ())*100, (v2fCursorPos.y/(float)Display.getHeight())*100 //perc
-//				)
-//			);
-//			bt.setBox(null);
 			Vector3f v3fSize=null;
 			if(bRotating){
 				v3fSize=new Vector3f(200,200,0);
@@ -192,6 +174,16 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 			}
 			nodeHook.setLocalTranslation(v3fPos);
 			nodeInfo.setLocalTranslation(MiscJmeI.i().toV3f(v2fCursorPos,fAboveLemurCursorRayCast));
+	}
+	
+	@Override
+	public void update(float tpf) {
+		super.update(tpf);
+		if(inputman.isCursorVisible()){
+			v2fCursorPos = inputman.getCursorPosition();
+			geom.setLocalTranslation(v2fCursorPos.x-fSize, v2fCursorPos.y+fSize, fAboveLemurCursorRayCast );
+			
+			if(isShowCursorInfo())updateCursorInfo();
 			
 			v2fCursorPosPrevious.set(v2fCursorPos);
 		}
@@ -247,5 +239,13 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 
 	public void setRotateOnlyIfMouseMoves(boolean bRotateOnlyIfMouseMoves) {
 		this.bRotateOnlyIfMouseMoves = bRotateOnlyIfMouseMoves;
+	}
+
+	public boolean isShowCursorInfo() {
+		return bShowCursorInfo;
+	}
+
+	public void setShowCursorInfo(boolean bShowCursorInfo) {
+		this.bShowCursorInfo = bShowCursorInfo;
 	}
 }
