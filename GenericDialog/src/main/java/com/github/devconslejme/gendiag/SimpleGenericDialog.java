@@ -451,6 +451,12 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		}
 	}
 	
+	private static class CellParts{
+		Button btnNesting;
+		Button btnItemText;
+		Panel pnlCfg;
+	}
+	
 	private void initBase(){
 		curlisExtraClickCmd = new DefaultCursorListener(){
 			@Override
@@ -463,6 +469,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			@SuppressWarnings("unchecked")
 			@Override
 			public Panel getView(IVisibleText value, boolean selected, Panel existing) {
+//				existing=null;
 				Panel pnlRet = null;
 				
 				Button btnItemText = null;
@@ -472,37 +479,43 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 				if(value instanceof OptionData){
 					OptionData od = (OptionData)value;
 					
-					String strUDKItemText=this.getClass().getName()+".strUDKItemText";
+//					String strUDKItemText=this.getClass().getName()+".strUDKItemText";
 					Container cntr=null;
+        	CellParts cp = null;
 	        if( existing == null ) {
-	        	btnItemText = new Button(valueToString(value), getElement(), getStyle());
+	        	cp = new CellParts();
 	        	
 						cntr=new Container(new BorderLayout(), getDialog().getStyle());
-	        	UserDataI.i().setUserDataPSH(cntr, strUDKItemText, btnItemText);
-						UserDataI.i().setUserDataPSH(cntr, value);
-						String strNesting = "["+(od.isExpanded()?"-":"+")+"]";
-//						String strNesting = od.isExpanded()?"-":"+";
-						if(od.hmNestedChildrenSubOptions.size()==0)strNesting=" ";
-						Button btnNesting = new Button(strNesting, getDialog().getStyle());
-						btnNesting.setInsets(new Insets3f(0, getNestingStepDistance()*od.getNestingDepth(), 0, 0));
-						UserDataI.i().setUserDataPSH(btnNesting, value);
-						cntr.addChild(btnNesting, Position.West);
+	        	UserDataI.i().setUserDataPSH(cntr, cp);
+	        	
+						cp.btnNesting = new Button("", getDialog().getStyle());
+						cntr.addChild(cp.btnNesting, Position.West);
 						
-						btnItemText.addClickCommands(cmdOption);
-						UserDataI.i().setUserDataPSH(btnItemText, value);
-						cntr.addChild(btnItemText, Position.Center);
-						
-						if(isEnableItemConfigurator()){
-							Panel pnlCfg = createConfigurator(od);
-							UserDataI.i().setUserDataPSH(pnlCfg, value);
-							cntr.addChild(pnlCfg, Position.East);
-						}
+	        	btnItemText = cp.btnItemText = new Button("", getElement(), getStyle());
+						cp.btnItemText.addClickCommands(cmdOption);
+						cntr.addChild(cp.btnItemText, Position.Center);
 		      } else {
 		      	cntr = (Container)existing;
-		      	btnItemText = UserDataI.i().getUserDataPSH(cntr, strUDKItemText);
-		      	btnItemText.setText(valueToString(value));
+		      	cp = UserDataI.i().getUserDataPSH(cntr, CellParts.class);
+		      	btnItemText = cp.btnItemText;
 		      }
+	        
+					if(isEnableItemConfigurator()){ //each item may have a different kind of configurator
+						cp.pnlCfg = createConfigurator(od,cp.pnlCfg); 
+						cntr.addChild(cp.pnlCfg, Position.East);
+					}
+	        
+	      	cp.btnItemText.setText(valueToString(value));
+	        
+					String strNesting = "["+(od.isExpanded()?"-":"+")+"]";
+					if(od.hmNestedChildrenSubOptions.size()==0)strNesting=" ";
+					cp.btnNesting.setText(strNesting);
+					cp.btnNesting.setInsets(new Insets3f(0, getNestingStepDistance()*od.getNestingDepth(), 0, 0));
 					
+//					UserDataI.i().setUserDataPSH(cntr, value);
+//					UserDataI.i().setUserDataPSH(cp.btnNesting, value);
+//					UserDataI.i().setUserDataPSH(cp.pnlCfg, value);
+
 					pnlRet=cntr;
 				}else
 				if(value instanceof ToolAction){
@@ -515,13 +528,11 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	        
 					ToolAction ta = (ToolAction)value;
 					btnItemText.addClickCommands(ta.cmdAction);
-					UserDataI.i().setUserDataPSH(btnItemText, value);
 					pnlRet=btnItemText;
 				}
 				
 				CursorEventControl.addListenersToSpatial(btnItemText, curlisExtraClickCmd);
-				
-//				UserDataI.i().setUserDataPSH(pnlRet, value);
+				UserDataI.i().setUserDataPSH(btnItemText, value);
 				
 				return pnlRet;
 			}
@@ -542,7 +553,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	}
 
 	@SuppressWarnings("unchecked")
-	protected Panel createConfigurator(OptionData od) {
+	protected Panel createConfigurator(OptionData od, Panel pnlCfgExisting) {
 		Command<? super Button> cmd = od.getCmdCfg();
 		if(cmd!=null){
 			Button btnCfg = new Button("Cfg",getDialog().getStyle());
