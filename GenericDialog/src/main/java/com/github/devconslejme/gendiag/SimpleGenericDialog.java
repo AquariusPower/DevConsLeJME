@@ -66,6 +66,7 @@ import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.component.BorderLayout.Position;
 import com.simsilica.lemur.component.TextEntryComponent;
+import com.simsilica.lemur.core.GuiLayout;
 import com.simsilica.lemur.core.VersionedList;
 import com.simsilica.lemur.core.VersionedReference;
 import com.simsilica.lemur.event.CursorButtonEvent;
@@ -74,6 +75,7 @@ import com.simsilica.lemur.event.DefaultCursorListener;
 import com.simsilica.lemur.event.KeyAction;
 import com.simsilica.lemur.event.KeyActionListener;
 import com.simsilica.lemur.list.DefaultCellRenderer;
+import com.simsilica.lemur.style.ElementId;
 
 
 /**
@@ -295,14 +297,17 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	}
 	
 	private void buttonClicked(Button btn){
-		OptionData od = UserDataI.i().getUserDataPSH(btn, OptionData.class);
+		ButtonCell btnc = (ButtonCell)btn;
+//		OptionData od = UserDataI.i().getUserDataPSH(btn, OptionData.class);
+		OptionData od = btnc.od;
 		if(od!=null){
 			bRequestUpdateOptionSelected=true;
 			lstbxOptions.getSelectionModel().setSelection(vlodOptions.indexOf(od));
 			return;
 		}
 		
-		ToolAction ta = UserDataI.i().getUserDataPSH(btn, ToolAction.class);
+//		ToolAction ta = UserDataI.i().getUserDataPSH(btn, ToolAction.class);
+		ToolAction ta = btnc.ta;
 		if(ta!=null){
 			return;
 		}
@@ -453,8 +458,23 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	
 	private static class CellParts{
 		Button btnNesting;
-		Button btnItemText;
+		ButtonCell btnItemText;
 		Panel pnlCfg;
+	}
+	
+	private static class ButtonCell extends Button{
+		public ToolAction	ta;
+		public OptionData	od;
+		public ButtonCell(String s, ElementId elementId, String style) {
+			super(s, elementId, style);
+		}
+	}
+	
+	private static class ContainerCell extends Container{
+		CellParts cp;
+		public ContainerCell(GuiLayout layout, String style) {
+			super(layout, style);
+		}
 	}
 	
 	private void initBase(){
@@ -469,48 +489,46 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			@SuppressWarnings("unchecked")
 			@Override
 			public Panel getView(IVisibleText value, boolean selected, Panel existing) {
-//				existing=null;
 				Panel pnlRet = null;
 				
-				Button btnItemText = null;
-//				Button btnItemText = (Button)super.getView(value, selected, existing);
-//				Button btnItemText = (Button)super.getView(value, selected, null); //exiting null will always create (slow?)
+				ButtonCell btnItemText = null;
 				
 				if(value instanceof OptionData){
-					OptionData od = (OptionData)value;
+//					OptionData od = (OptionData)value;
 					
-//					String strUDKItemText=this.getClass().getName()+".strUDKItemText";
-					Container cntr=null;
-        	CellParts cp = null;
+					ContainerCell cntr=null;
 	        if( existing == null ) {
-	        	cp = new CellParts();
+						cntr=new ContainerCell(new BorderLayout(), getDialog().getStyle());
+						cntr.cp = new CellParts();
+	        	cntr.cp.btnItemText = btnItemText = new ButtonCell("", getElement(), getStyle());
+//	        	UserDataI.i().setUserDataPSH(cntr, cntr.cp);
 	        	
-						cntr=new Container(new BorderLayout(), getDialog().getStyle());
-	        	UserDataI.i().setUserDataPSH(cntr, cp);
-	        	
-						cp.btnNesting = new Button("", getDialog().getStyle());
-						cntr.addChild(cp.btnNesting, Position.West);
+	        	cntr.cp.btnNesting = new Button("", getDialog().getStyle());
+						cntr.addChild(cntr.cp.btnNesting, Position.West);
 						
-	        	btnItemText = cp.btnItemText = new Button("", getElement(), getStyle());
-						cp.btnItemText.addClickCommands(cmdOption);
-						cntr.addChild(cp.btnItemText, Position.Center);
+	        	cntr.cp.btnItemText.addClickCommands(cmdOption);
+						cntr.addChild(cntr.cp.btnItemText, Position.Center);
 		      } else {
-		      	cntr = (Container)existing;
-		      	cp = UserDataI.i().getUserDataPSH(cntr, CellParts.class);
-		      	btnItemText = cp.btnItemText;
+		      	cntr = (ContainerCell)existing;
+//		      	cntr.cp = UserDataI.i().getUserDataPSH(cntr, CellParts.class);
+		      	btnItemText = cntr.cp.btnItemText;
 		      }
 	        
+					cntr.cp.btnItemText.od=(OptionData)value;
+					
 					if(isEnableItemConfigurator()){ //each item may have a different kind of configurator
-						cp.pnlCfg = createConfigurator(od,cp.pnlCfg); 
-						cntr.addChild(cp.pnlCfg, Position.East);
+						cntr.cp.pnlCfg = createConfigurator(cntr.cp.btnItemText.od, cntr.cp.pnlCfg); 
+						cntr.addChild(cntr.cp.pnlCfg, Position.East);
 					}
 	        
-	      	cp.btnItemText.setText(valueToString(value));
+					cntr.cp.btnItemText.setText(valueToString(value));
 	        
-					String strNesting = "["+(od.isExpanded()?"-":"+")+"]";
-					if(od.hmNestedChildrenSubOptions.size()==0)strNesting=" ";
-					cp.btnNesting.setText(strNesting);
-					cp.btnNesting.setInsets(new Insets3f(0, getNestingStepDistance()*od.getNestingDepth(), 0, 0));
+					String strNesting = "["+(cntr.cp.btnItemText.od.isExpanded()?"-":"+")+"]";
+					if(cntr.cp.btnItemText.od.hmNestedChildrenSubOptions.size()==0)strNesting=" ";
+					cntr.cp.btnNesting.setText(strNesting);
+					cntr.cp.btnNesting.setInsets(new Insets3f(0, 
+						getNestingStepDistance()*cntr.cp.btnItemText.od.getNestingDepth(), 
+						0, 0));
 					
 //					UserDataI.i().setUserDataPSH(cntr, value);
 //					UserDataI.i().setUserDataPSH(cp.btnNesting, value);
@@ -520,19 +538,19 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 				}else
 				if(value instanceof ToolAction){
 	        if( existing == null ) {
-	        	btnItemText = new Button(valueToString(value), getElement(), getStyle());
+	        	btnItemText = new ButtonCell(valueToString(value), getElement(), getStyle());
 		      } else {
-		      	btnItemText = (Button)existing;
+		      	btnItemText = (ButtonCell)existing;
 		      	btnItemText.setText(valueToString(value));
 		      }
 	        
-					ToolAction ta = (ToolAction)value;
-					btnItemText.addClickCommands(ta.cmdAction);
+	        btnItemText.ta = (ToolAction)value;
+					btnItemText.addClickCommands(btnItemText.ta.cmdAction);
 					pnlRet=btnItemText;
 				}
 				
 				CursorEventControl.addListenersToSpatial(btnItemText, curlisExtraClickCmd);
-				UserDataI.i().setUserDataPSH(btnItemText, value);
+//				UserDataI.i().setUserDataPSH(btnItemText, value);
 				
 				return pnlRet;
 			}
