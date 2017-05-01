@@ -83,7 +83,7 @@ public class ReportI {
 		
 		for(int i=0;i<aobj.length;i++){
 			Object obj = aobj[i];
-			strPrepend+="["+i+"]"; //hierarchy sub-item
+			strPrepend+="["+i+"] "; //hierarchy sub-item, the space after it looks good and helps if it is a StackTraceElement to be clickable on Eclipse IDE
 			
 			// obj
 			if(!JavaLangI.i().isSomeArrayType(obj)){

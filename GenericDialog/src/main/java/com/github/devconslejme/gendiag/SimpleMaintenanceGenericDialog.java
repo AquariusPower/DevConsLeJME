@@ -35,24 +35,50 @@ import com.simsilica.lemur.Command;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public abstract class SimpleMaintenanceGenericDialog extends SimpleGenericDialog {
+	public SimpleMaintenanceGenericDialog(){
+		super();
+		setCloseOnChoiceMade(false);
+	}
+	
 	@Override
 	protected void initSectionTools() {
 		super.initSectionTools();
 		putToolAction(new ToolAction("Refresh Options", new Command<Button>() {
 			@Override
 			public void execute(Button source) {
-//				System.out.println("refreshing from "+source);
-				updateMaintenanceList();
+				updateMaintenanceListFull();
+			}
+		}));
+		
+		putToolAction(new ToolAction("Collapse All", new Command<Button>() {
+			@Override
+			public void execute(Button source) {
+				setExpandedAll(false);
+				requestUpdateListItems();//recreateListItems();
+			}
+		}));
+		
+		putToolAction(new ToolAction("Expand All", new Command<Button>() {
+			@Override
+			public void execute(Button source) {
+				setExpandedAll(true);
+				requestUpdateListItems();//recreateListItems();
 			}
 		}));
 		
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
-				updateMaintenanceList(); //1st time
+				updateMaintenanceListFull(); //1st time
 				return true;
 			}
 		});
+	}
+	
+	public void updateMaintenanceListFull(){
+		clearOptions();
+		updateMaintenanceList();
+		requestUpdateListItems();//recreateListItems();
 	}
 	
 	public abstract void updateMaintenanceList();

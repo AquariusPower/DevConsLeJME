@@ -33,11 +33,15 @@ import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.crypto.SecretKey;
+
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.HintUpdater;
 import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
@@ -80,38 +84,22 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private Label	btnInfoText;
 	private ListBox<OptionData>	lstbxOptions;
 	private VersionedList<OptionData>	vlodOptions;
+	/** a list of options can never be empty or the dialog will make no sense at all */
+	private LinkedHashMap<String,OptionData> hmOptionsRoot;
 	private VersionedList<ToolAction>	vlodTools;
-	private LinkedHashMap<String,OptionData> hmOptionsRoot = new LinkedHashMap<String,OptionData>();
 	private TextField	tfInput;
 	private boolean	bReturnJustTheInputTextValue;
-	private boolean	bUserSubmitedInputValue;
+	private boolean	bRequestUserSubmitedInputValueApply;
 	private KeyActionListener	kal;
-	private boolean	bUpdateListItems = true;
-	private static class SectionIndicator{}
-	private SectionIndicator sectionIndicator = new SectionIndicator();
+	private boolean	bRequestUpdateListItems;
+	private SectionIndicator sectionIndicator;
 	private Function<IVisibleText, String>	funcVisibleText;
-	private boolean bToggleExpandedOnce=false;
+	private boolean bRequestSelectedToggleExpandedOnce;
 	private Command<? super Button>	cmdOption;
-//	private VersionedReference<Double>	vrSlider;
-//	private Command<? super Button>	cmdToggleExpand = new Command<Button>() {
-//		@Override
-//		public void execute(Button source) {
-//			/**
-//			 * the click will select it
-//			 */
-//			bToggleExpandedOnce=true;
-//		}
-//	};
-//	private CursorListener	clToggleExpand = new DefaultCursorListener(){
-//		@Override
-//		protected void click(CursorButtonEvent event, Spatial target, Spatial capture) {
-//			bToggleExpandedOnce=true;
-//		}
-//	};
 	private DefaultCellRenderer<IVisibleText>	crVisibleText;
 	private VersionedReference<Set<Integer>>	vrSelection;
-	private boolean	bUpdateOptionSelected;
-	private boolean	bCloseOnChoiceMade=true;
+	private boolean	bRequestUpdateOptionSelected;
+	private boolean	bCloseOnChoiceMade;
 	private Container	cntrInfo;
 	private String	strName;
 	private String	strTitle;
@@ -123,13 +111,9 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private ArrayList<Button>	abtnInfoSection;
 	private Command<? super Button>	cmdInfoSectionButtons;
 	private Container	cntrDiagControls;
-//	private Button	btnRestoreIniSize;
-//	private Button	btnUpdateDefaultSize;
 	private int	iDiagControlColumnInitIndex;
-	private String	strUDKeyPosBeforeMaximize = SimpleGenericDialog.class+"/PosBeforeMaximize";
 	private boolean	bKeepMaximized;
 	private ListBox<ToolAction>	lstbxTools;
-	
 	/**
 	 * for some reason, some of the buttons on the listbox will not work with the
 	 * Button.addClickCommands(). To force it to work, I am using together the 
@@ -138,7 +122,9 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	@Workaround @Bugfix
 	private DefaultCursorListener	curlisExtraClickCmd;
 	
-	public static class ToolAction{
+	private static class SectionIndicator{}
+	
+	public static class ToolAction implements IVisibleText{
 		private String strTextKey;
 		Command<Button> cmdAction;
 		public ToolAction(String strTextKey, Command<Button> cmdAction) {
@@ -146,23 +132,42 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			this.strTextKey = strTextKey;
 			this.cmdAction = cmdAction;
 		}
+		
+		@Override
+		public String getVisibleText() {
+			return strTextKey;
+		}
+	}
+	
+	public static class OptionDataDummy extends OptionData{
+		public OptionDataDummy(){
+			setTextKey("(TempDummy)"+OptionDataDummy.class.getName());
+		}
 	}
 	
 	public static class OptionData implements IVisibleText{
 		private String strTextKey;
 		private OptionData odParent;
 		private Object objValue;
-		private boolean bExpanded=true;
-		private LinkedHashMap<String,OptionData> hmNestedChildSubOptions = new LinkedHashMap<String,OptionData>();
+		private boolean bExpanded;
+		private LinkedHashMap<String,OptionData> hmNestedChildSubOptions;
 		
-		private void setTextKey(String strTextKey) {
+		public OptionData(){
+			bExpanded=true;
+			hmNestedChildSubOptions = new LinkedHashMap<String,OptionData>();
+		}
+		
+		protected OptionData setTextKey(String strTextKey) {
 			this.strTextKey = strTextKey;
+			return this; 
 		}
-		private void setSectionParent(OptionData odParent) {
+		private OptionData setSectionParent(OptionData odParent) {
 			this.odParent = odParent;
+			return this; 
 		}
-		private void setValue(Object objValue) {
+		private OptionData setValue(Object objValue) {
 			this.objValue = objValue;
+			return this; 
 		}
 		public String getTextKey() {
 			return strTextKey;
@@ -192,11 +197,13 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		public boolean isExpanded() {
 			return bExpanded;
 		}
-		private void setExpanded(boolean bExpanded) {
+		private OptionData setExpanded(boolean bExpanded) {
 			this.bExpanded = bExpanded;
+			return this; 
 		}
-		public void toggleExpanded(){
+		public boolean toggleExpanded(){
 			bExpanded=!bExpanded;
+			return bExpanded;
 		}
 		@Override
 		public String getVisibleText() {
@@ -223,12 +230,17 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 
 	public SimpleGenericDialog() {
 		this(DialogHierarchyStateI.i().createDialog(SimpleGenericDialog.class.getSimpleName(), null));
+		
+		hmOptionsRoot = new LinkedHashMap<String,OptionData>();
+		bRequestUpdateListItems = true;
+		sectionIndicator = new SectionIndicator();
+		bCloseOnChoiceMade=true;
 	}
 	
 	private void buttonClicked(Button btn){
 		OptionData od = UserDataI.i().getUserDataPSH(btn, OptionData.class);
 		if(od!=null){
-			bUpdateOptionSelected=true;
+			bRequestUpdateOptionSelected=true;
 			lstbxOptions.getSelectionModel().setSelection(vlodOptions.indexOf(od));
 			return;
 		}
@@ -255,6 +267,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			abtnInfoSection = new ArrayList<Button>();
 			
 			cmdInfoSectionButtons = new Command<Button>() {
+				private String	strUDKeyPosBeforeMaximize = SimpleGenericDialog.class+"/PosBeforeMaximize";
 				@Override
 				public void execute(Button source) {
 					if(source==btnMaximizeRestore){ //toggle
@@ -424,6 +437,20 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		};			
 		crVisibleText.setTransform(funcVisibleText);
 		
+//		QueueI.i().enqueue(new CallableXAnon() {
+//			@Override
+//			public Boolean call() {
+//				for(OptionData od:hmOptionsRoot.values().toArray(new OptionData[0])){
+//					if(od instanceof OptionDataDummy){
+//						hmOptionsRoot.remove(od.getTextKey());
+//						requestUpdateListItems();//recreateListItems();
+//					}
+//				}
+//				
+//				return true;
+//			}
+//		}.enableLoop().setDelaySeconds(1f).setName("ClearDummyOption"));
+		
 		initSectionInfo();
 		initSectionOptions();
 		initSectionInput();
@@ -436,7 +463,9 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			vlodTools = new VersionedList<ToolAction>();
 			
 			lstbxTools = new ListBox<ToolAction>(vlodTools, getDialog().getStyle());
-			MiscLemurI.i().createLisbBoxVisibleItemsUpdater(lstbxTools);
+			MiscLemurI.i().createListBoxVisibleItemsUpdater(lstbxTools);
+			
+			lstbxTools.setCellRenderer(crVisibleText);
 			
 			setSection(es,lstbxTools);
 		}
@@ -457,7 +486,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 					switch(key.getKeyCode()){
 						case KeyInput.KEY_RETURN:
 						case KeyInput.KEY_NUMPADENTER:
-							bUserSubmitedInputValue=true;
+							bRequestUserSubmitedInputValueApply=true;
 							break;
 					}
 				}
@@ -482,7 +511,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		if(getSection(es)==null){
 			vlodOptions = new VersionedList<OptionData>();
 			lstbxOptions = new ListBox<OptionData>(vlodOptions, getDialog().getStyle());
-			MiscLemurI.i().createLisbBoxVisibleItemsUpdater(lstbxOptions);
+			MiscLemurI.i().createListBoxVisibleItemsUpdater(lstbxOptions);
 			
 			cmdOption = new Command<Button>() {
 				@Override
@@ -571,8 +600,9 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	}
 	
 	private void recreateListItemsRecursively(HashMap<String, OptionData> hmOpt, int iDepth){
-		for(Entry<String, OptionData> entry:hmOpt.entrySet()){
-			OptionData od = entry.getValue();
+		for(OptionData od:hmOpt.values()){
+//		for(Entry<String, OptionData> entry:hmOpt.entrySet()){
+//			OptionData od = entry.getValue();
 //			String strTextKey = od.getTextKey();
 //			vlsOptions.remove(strTextKey); //to be like replace
 //			strTextKey=Strings.padStart(" "+strTextKey, strTextKey.length()+iDepth, '>');
@@ -594,6 +624,15 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	}
 	
 	public Integer getSelectedOptionIndex(){
+		Integer i = lstbxOptions.getSelectionModel().getSelection();
+		if(i==null)return null;
+		
+		if(i>=vlodOptions.size()){
+			i = vlodOptions.size()-1;
+			lstbxOptions.getSelectionModel().setSelection(i);
+			return i;
+		}
+		
 		return lstbxOptions.getSelectionModel().getSelection();
 	}
 	
@@ -606,52 +645,44 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	}
 	
 	public Object getSelectedOptionValue(){
-		Object obj = vlodOptions.get(getSelectedOptionIndex()).getValue();
+		int i=getSelectedOptionIndex();
+		Object obj = vlodOptions.get(i).getValue();
 		if(obj instanceof SectionIndicator)return null;
 		return obj;
-//		return hmOptionsRoot.get(getSelectedOptionText()).getValue();
 	}
 	
-//	private void applyListenerToListBoxItems(){
-//		for(Panel pnl:MiscLemurI.i().getAllListBoxItems(lstbxOptions)){
-//			Button btn=(Button)pnl;
-//			CursorEventControl.addListenersToSpatial(btn, clToggleExpand);
-//		}
-//	}
+	public void requestUpdateListItems(){
+		bRequestUpdateListItems=true;
+	}
 	
 	public void update(float tpf) {
 		if(bKeepMaximized){
 			MiscLemurI.i().maximize(getDialog());
 		}
 		
-		if(bToggleExpandedOnce){
+		if(bRequestSelectedToggleExpandedOnce){
 			getSelectedOptionData().toggleExpanded();
-			
-//			applyListenerToListBoxItems();
-			
-			bUpdateListItems = true;
-			
-			bToggleExpandedOnce=false;
+			bRequestUpdateListItems = true;
+			bRequestSelectedToggleExpandedOnce=false;
 		}
 		
-		if(bUpdateListItems){
+		if(bRequestUpdateListItems){
 			recreateListItems();
-			bUpdateListItems=false;
+			bRequestUpdateListItems=false;
 		}
 		
 		/**
 		 * the selection seems to only change after a mouse cursor click
 		 */
-//		if(vrSelection.update() || bUpdateOptionSelected){
-		if(bUpdateOptionSelected){
+		if(bRequestUpdateOptionSelected){
 			updateOptionSelected();
-			bUpdateOptionSelected=false;
+			bRequestUpdateOptionSelected=false;
 		}
 		
 		if(bReturnJustTheInputTextValue){
-			if(bUserSubmitedInputValue){
+			if(bRequestUserSubmitedInputValueApply){
 				setChosenValue(getInputText());
-				bUserSubmitedInputValue=false;
+				bRequestUserSubmitedInputValueApply=false;
 			}
 		}else{ // set as soon an option is selected
 			Integer i=getSelectedOptionIndex();
@@ -661,7 +692,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		}
 		
 		if(isOptionSelected()){
-			if(bCloseOnChoiceMade){
+			if(isCloseOnChoiceMade()){
 				getDialog().close();
 			}
 		}
@@ -670,7 +701,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private void updateOptionSelected() {
 		OptionData od = getSelectedOptionData();
 		if(SectionIndicator.class.isInstance(od.getValue())){
-			bToggleExpandedOnce=true;
+			bRequestSelectedToggleExpandedOnce=true;
 		}else{
 			tfInput.setText(od.getTextKey());
 		}
@@ -703,8 +734,70 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		update(tpf);
 	}
 
-	public void setCloseOnChoiceMade(boolean bCloseOnSelect) {
-		this.bCloseOnChoiceMade=bCloseOnSelect;
+	public void setExpandedAll(boolean b){
+		for(OptionData od:hmOptionsRoot.values()){
+			setExpandedAllRecursively(od,b);
+		}
+	}
+	
+	private void setExpandedAllRecursively(OptionData od, boolean b) {
+		od.setExpanded(b);
+		if(od.getValue() instanceof SectionIndicator){
+			for(OptionData odChild:od.hmNestedChildSubOptions.values()){
+				setExpandedAllRecursively(odChild,b);
+			}
+		}
 	}
 
+	protected void clearOptions(){
+		hmOptionsRoot.clear();
+		
+		OptionDataDummy odd = (OptionDataDummy) new OptionDataDummy().setTextKey("(Dummy)");
+		put(null, odd.getTextKey(), odd); //it cant remain empty
+		
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				if(hmOptionsRoot.remove(odd.getTextKey())==null)return false; //retry
+//				for(OptionData od:hmOptionsRoot.values().toArray(new OptionData[0])){
+//					if(od instanceof OptionDataDummy){
+//						hmOptionsRoot.remove(od.getTextKey());
+//						requestUpdateListItems();//recreateListItems();
+//					}
+//				}
+				
+				return true;
+			}
+		}.setName("ClearDummyOption"));//.enableLoop().setDelaySeconds(1f));
+//		QueueI.i().enqueue(new CallableXAnon() {
+//			@Override
+//			public Boolean call() {
+//				if(
+//						!hmOptionsRoot.containsKey(odd)
+//						&&
+//						!vlodOptions.contains(odd)
+//				){
+//					return true;
+//				}
+//				
+////				if(vlodOptions.size()>1)vlodOptions.remove(odDummy);
+//				if(hmOptionsRoot.size()>1){
+//					hmOptionsRoot.remove(odd);
+//					vlodOptions.remove(odd);
+//					requestUpdateListItems();//recreateListItems();
+//					return true;
+//				}
+//				
+//				return false; //retry
+//			}
+//		});//.enableLoop().setDelaySeconds(3f));
+	}
+
+	public boolean isCloseOnChoiceMade() {
+		return bCloseOnChoiceMade;
+	}
+
+	public void setCloseOnChoiceMade(boolean bCloseOnChoiceMade) {
+		this.bCloseOnChoiceMade = bCloseOnChoiceMade;
+	}
 }

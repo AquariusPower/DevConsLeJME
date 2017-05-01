@@ -155,16 +155,14 @@ public class MiscLemurI {
 			;
 	}
 
-	public void maximize(ResizablePanel pnl) {
-		
+	public void maximize(PanelBase pnl) {
+		maximize(pnl, 
+			new Vector3f(0,Display.getHeight(),0), 
+			new Vector3f(Display.getWidth(),Display.getHeight(),0));
 	}
-	public void maximize(ResizablePanel pnl, Vector3f v3fPos, Vector3f v3fSize) {
-//		Vector3f v3fPos = pnl.getLocalTranslation(); //do not mess with z!!!
-//		pnl.setLocalTranslation(new Vector3f(0,Display.getHeight(),v3fPos.z));
-		pnl.setLocalTranslationXY(new Vector3f(0,Display.getHeight(),0));
-		
-//		Vector3f v3fSize = pnl.getSize(); //do not mess with z!!!
-		pnl.setPreferredSizeWH(new Vector3f(Display.getWidth(),Display.getHeight(),v3fSize.z));
+	public void maximize(PanelBase pnl, Vector3f v3fPosXY, Vector3f v3fSizeWH) {
+		pnl.setLocalTranslationXY(v3fPosXY);
+		pnl.setPreferredSizeWH(v3fSizeWH);
 	}
 
 	public void changeBackgroundColor(Button btnTitleText, ColorRGBA color) {
@@ -245,13 +243,14 @@ public class MiscLemurI {
 		}
 	}
 	
-	public void createLisbBoxVisibleItemsUpdater(ListBox lstbx){
+	public void createListBoxVisibleItemsUpdater(ListBox lstbx){
 		QueueI.i().enqueue(new CallableX(){
 				private VersionedReference<Vector3f> vrv3f = new VersionedVector3f(lstbx.getSize()).createReference();
 				
 				@Override
 				public Boolean call() {
 					if(!vrv3f.update())return true;
+					if(lstbx.getModel().size()==0)return true; //is empty
 					
 					float fHeight = lstbx.getSize().y; //TODO inner container needs some time to be setup by lemur?
 					

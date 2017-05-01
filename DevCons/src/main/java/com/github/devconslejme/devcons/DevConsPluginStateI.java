@@ -382,8 +382,8 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 
 //		GuiGlobals.getInstance().requestFocus(tfInput);
 		
-		MiscLemurI.i().createLisbBoxVisibleItemsUpdater(lstbxLoggingSection);
-		MiscLemurI.i().createLisbBoxVisibleItemsUpdater(lstbxVarMonitorBar);
+		MiscLemurI.i().createListBoxVisibleItemsUpdater(lstbxLoggingSection);
+		MiscLemurI.i().createListBoxVisibleItemsUpdater(lstbxVarMonitorBar);
 		
 		QueueI.i().enqueue(new CallableX(){
 				private VersionedReference<Vector3f> vrv3fLoggingSize = 

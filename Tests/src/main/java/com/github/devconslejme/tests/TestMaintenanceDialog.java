@@ -62,6 +62,7 @@ public class TestMaintenanceDialog extends SimpleApplication{
 			@Override
 			public void updateMaintenanceList() {
 				recursiveAddSpatialsToMaintenance(null,getGuiNode());
+				recursiveAddSpatialsToMaintenance(null,getRootNode());
 			}
 		};
 		
@@ -87,7 +88,7 @@ public class TestMaintenanceDialog extends SimpleApplication{
 		 * will look like a child, but is actually a self reference to be further
 		 * used.
 		 */
-		smd.putOption(odParent, strKey, null);
+		smd.putOption(odParent, strKey, spt);
 		
 		if(spt instanceof Node){
 			Node node = (Node)spt;

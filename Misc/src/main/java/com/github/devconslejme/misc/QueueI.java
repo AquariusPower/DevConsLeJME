@@ -49,7 +49,7 @@ public class QueueI {
 		 * without exception thrown, the debug will stop in the exact place where the exception
 		 * happens inside a call (finally!!)
 		 * 
-		 * @return true if succeeded and the queue can be discarded, false if failed and it must be retried.
+		 * @return true if succeeded and the queue can be discarded or repeat delay applied. false if failed and it must be retried (even if loop mode, will be imediately without delay)
 		 */
 		@Override V call();
 	}
