@@ -50,8 +50,8 @@ public class JavadocI {
 		private String strLastFullHelp;
 		private Method m;
 		private Object obj;
-		private Class clDeclaring;
-		private Class clConcrete;
+//		private Class clDeclaring;
+//		private Class clConcrete;
 		private boolean bStatic;
 		private int iNonUserTypeableParamsCount;
 		
@@ -65,13 +65,16 @@ public class JavadocI {
 			return iNonUserTypeableParamsCount;
 		}
 		public Class getDeclaring() {
-			return clDeclaring;
+//			return clDeclaring;
+			return m.getDeclaringClass();
 		}
 		public Class getConcrete() {
-			return clConcrete;
+//			return clConcrete;
+			return obj.getClass();
 		}
 		private void setMethod(Method m) {
 			this.m = m;
+//			this.clDeclaring=m.getDeclaringClass();
 		}
 		private void setStatic(boolean bStatic) {
 			this.bStatic = bStatic;
@@ -79,12 +82,12 @@ public class JavadocI {
 		private void setNonUserTypeableParamsCount(int iNonUserTypeableParamsCount) {
 			this.iNonUserTypeableParamsCount = iNonUserTypeableParamsCount;
 		}
-		private void setDeclaring(Class clDeclaring) {
-			this.clDeclaring = clDeclaring;
-		}
-		private void setConcrete(Class clConcrete) {
-			this.clConcrete = clConcrete;
-		}
+//		private void setDeclaring(Class clDeclaring) {
+//			this.clDeclaring = clDeclaring;
+//		}
+//		private void setConcrete(Class clConcrete) {
+//			this.clConcrete = clConcrete;
+//		}
 		
 		public Class getMethodReturnType(){
 			return m.getReturnType();
@@ -94,8 +97,8 @@ public class JavadocI {
 			
 			String strFull="";
 			
-			String strConcrete=(bUseSimpleNames?clConcrete.getSimpleName():clConcrete.getName());
-			String strDecl		=(bUseSimpleNames?clDeclaring.getSimpleName():clDeclaring.getName());
+			String strConcrete=(bUseSimpleNames?getConcrete().getSimpleName():getConcrete().getName());
+			String strDecl		=(bUseSimpleNames?getDeclaring().getSimpleName():getDeclaring().getName());
 			strFull+=(bOverrideWithConcrete?strConcrete:strDecl)+".";
 			
 			strFull+=getMethodHelp(bUseSimpleNames);
@@ -124,7 +127,7 @@ public class JavadocI {
 			try {
 				// the html file
 				String strURI=JavadocI.i().getJavadocFolder();
-				strURI+=clDeclaring.getName().replace(".","/");
+				strURI+=getDeclaring().getName().replace(".","/");
 				strURI+=".html";
 				
 				uri = new File(strURI).toURI();
@@ -163,6 +166,7 @@ public class JavadocI {
 		}
 		private void setObject(Object obj) {
 			this.obj=obj;
+//			this.clConcrete=obj.getClass();
 		}
 		public Object getObject(){
 			return obj;
@@ -176,10 +180,6 @@ public class JavadocI {
 			builder.append(m);
 			builder.append(", obj=");
 			builder.append(obj);
-			builder.append(", clDeclaring=");
-			builder.append(clDeclaring);
-			builder.append(", clConcrete=");
-			builder.append(clConcrete);
 			builder.append(", bStatic=");
 			builder.append(bStatic);
 			builder.append(", iNonUserTypeableParamsCount=");
@@ -204,10 +204,10 @@ public class JavadocI {
 		
 		for(Method m:obj.getClass().getMethods()){
 			MethodHelp mh = new MethodHelp();
-			mh.setConcrete(obj.getClass());
 			mh.setObject(obj);
-			mh.setDeclaring(m.getDeclaringClass());
 			mh.setMethod(m);
+//			mh.setConcrete(obj.getClass());
+//			mh.setDeclaring(m.getDeclaringClass());
 			mh.setStatic(Modifier.isStatic(m.getModifiers()));
 			
 			int i=0;

@@ -37,6 +37,13 @@ import com.jme3.scene.Spatial;
 
 
 /**
+ * Do not use UserData with Spatials you instance.
+ * It is much better to extend the required class and add clearly recognizable fields on it.
+ * The UserData is mainly to apply at outside Spatials that will easify extra functionalities without
+ * having to deal with HashMaps.
+ * 
+ * TODO track all userdata usages (from this class and from JME direct methods) on this project, to review and improve/clarify the code.
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class UserDataI {
