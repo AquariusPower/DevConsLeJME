@@ -28,8 +28,12 @@
 package com.github.devconslejme.gendiag;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Set;
 
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
@@ -296,6 +300,10 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		btnInfoText = createInfoButton("(No Info)",null);
 	}
 	
+	/**
+	 * TODO this may be called twice as a workaround, how to avoid it?
+	 * @param btn
+	 */
 	private void buttonClicked(Button btn){
 		ButtonCell btnc = (ButtonCell)btn;
 //		OptionData od = UserDataI.i().getUserDataPSH(btn, OptionData.class);
@@ -487,70 +495,73 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		
 		crVisibleText = new DefaultCellRenderer<IVisibleText>(getDialog().getStyle()){
 			@SuppressWarnings("unchecked")
+			private Panel getView(OptionData od, boolean selected, Panel existing) {
+				ContainerCell cntr=null;
+        if( existing == null ) {
+					cntr=new ContainerCell(new BorderLayout(), getDialog().getStyle());
+					cntr.cp = new CellParts();
+        	cntr.cp.btnItemText = new ButtonCell("", getElement(), getStyle());
+  				CursorEventControl.addListenersToSpatial(cntr.cp.btnItemText, curlisExtraClickCmd);
+        	
+        	cntr.cp.btnNesting = new Button("", getDialog().getStyle());
+					cntr.addChild(cntr.cp.btnNesting, Position.West);
+					
+        	cntr.cp.btnItemText.addClickCommands(cmdOption);
+					cntr.addChild(cntr.cp.btnItemText, Position.Center);
+	      } else {
+	      	cntr = (ContainerCell)existing;
+	      }
+        
+        // ALWAYS update the value!
+				cntr.cp.btnItemText.od=od;
+				
+				//each item may have a different kind of configurator from button text to a different visual (like a slider etc)
+				if(isEnableItemConfigurator()){ 
+					cntr.cp.pnlCfg = createConfigurator(cntr.cp.btnItemText.od, cntr.cp.pnlCfg); 
+					cntr.addChild(cntr.cp.pnlCfg, Position.East);
+				}
+        
+				// update the text based on the value
+				cntr.cp.btnItemText.setText(valueToString(od));
+        
+				// update the nesting visuals
+				String strNesting = "["+(cntr.cp.btnItemText.od.isExpanded()?"-":"+")+"]";
+				if(cntr.cp.btnItemText.od.hmNestedChildrenSubOptions.size()==0)strNesting=" ";
+				cntr.cp.btnNesting.setText(strNesting);
+				cntr.cp.btnNesting.setInsets(new Insets3f(0, 
+					getNestingStepDistance()*cntr.cp.btnItemText.od.getNestingDepth(), 
+					0, 0));
+				
+				return cntr;
+			}
+			
+			@SuppressWarnings({ "unchecked"})
+			private Panel getView(ToolAction ta, boolean selected, Panel existing) {
+				ButtonCell btnItemText = null;
+				
+        if( existing == null ) {
+        	btnItemText = new ButtonCell(valueToString(ta), getElement(), getStyle());
+	      } else {
+	      	btnItemText = (ButtonCell)existing;
+	      	btnItemText.setText(valueToString(ta));
+	      }
+        
+        btnItemText.ta = ta;
+				btnItemText.addClickCommands(btnItemText.ta.cmdAction);
+				
+				return btnItemText;
+			}
+			
 			@Override
 			public Panel getView(IVisibleText value, boolean selected, Panel existing) {
 				Panel pnlRet = null;
 				
-				ButtonCell btnItemText = null;
-				
 				if(value instanceof OptionData){
-//					OptionData od = (OptionData)value;
-					
-					ContainerCell cntr=null;
-	        if( existing == null ) {
-						cntr=new ContainerCell(new BorderLayout(), getDialog().getStyle());
-						cntr.cp = new CellParts();
-	        	cntr.cp.btnItemText = btnItemText = new ButtonCell("", getElement(), getStyle());
-//	        	UserDataI.i().setUserDataPSH(cntr, cntr.cp);
-	        	
-	        	cntr.cp.btnNesting = new Button("", getDialog().getStyle());
-						cntr.addChild(cntr.cp.btnNesting, Position.West);
-						
-	        	cntr.cp.btnItemText.addClickCommands(cmdOption);
-						cntr.addChild(cntr.cp.btnItemText, Position.Center);
-		      } else {
-		      	cntr = (ContainerCell)existing;
-//		      	cntr.cp = UserDataI.i().getUserDataPSH(cntr, CellParts.class);
-		      	btnItemText = cntr.cp.btnItemText;
-		      }
-	        
-					cntr.cp.btnItemText.od=(OptionData)value;
-					
-					if(isEnableItemConfigurator()){ //each item may have a different kind of configurator
-						cntr.cp.pnlCfg = createConfigurator(cntr.cp.btnItemText.od, cntr.cp.pnlCfg); 
-						cntr.addChild(cntr.cp.pnlCfg, Position.East);
-					}
-	        
-					cntr.cp.btnItemText.setText(valueToString(value));
-	        
-					String strNesting = "["+(cntr.cp.btnItemText.od.isExpanded()?"-":"+")+"]";
-					if(cntr.cp.btnItemText.od.hmNestedChildrenSubOptions.size()==0)strNesting=" ";
-					cntr.cp.btnNesting.setText(strNesting);
-					cntr.cp.btnNesting.setInsets(new Insets3f(0, 
-						getNestingStepDistance()*cntr.cp.btnItemText.od.getNestingDepth(), 
-						0, 0));
-					
-//					UserDataI.i().setUserDataPSH(cntr, value);
-//					UserDataI.i().setUserDataPSH(cp.btnNesting, value);
-//					UserDataI.i().setUserDataPSH(cp.pnlCfg, value);
-
-					pnlRet=cntr;
+					pnlRet = getView((OptionData)value, selected, existing);
 				}else
 				if(value instanceof ToolAction){
-	        if( existing == null ) {
-	        	btnItemText = new ButtonCell(valueToString(value), getElement(), getStyle());
-		      } else {
-		      	btnItemText = (ButtonCell)existing;
-		      	btnItemText.setText(valueToString(value));
-		      }
-	        
-	        btnItemText.ta = (ToolAction)value;
-					btnItemText.addClickCommands(btnItemText.ta.cmdAction);
-					pnlRet=btnItemText;
+					pnlRet = getView((ToolAction)value, selected, existing);
 				}
-				
-				CursorEventControl.addListenersToSpatial(btnItemText, curlisExtraClickCmd);
-//				UserDataI.i().setUserDataPSH(btnItemText, value);
 				
 				return pnlRet;
 			}
@@ -744,13 +755,18 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		recreateListItemsRecursively(hmOptionsRoot,0);
 	}
 	
+	private Comparator<OptionData>	sort = new Comparator<SimpleGenericDialog.OptionData>() {
+		@Override
+		public int compare(OptionData o1, OptionData o2) {
+			return Integer.compare(o1.hmNestedChildrenSubOptions.size(), o2.hmNestedChildrenSubOptions.size());
+		}
+	};
+	
 	private void recreateListItemsRecursively(HashMap<String, OptionData> hmOpt, int iDepth){
-		for(OptionData od:hmOpt.values()){
-//		for(Entry<String, OptionData> entry:hmOpt.entrySet()){
-//			OptionData od = entry.getValue();
-//			String strTextKey = od.getTextKey();
-//			vlsOptions.remove(strTextKey); //to be like replace
-//			strTextKey=Strings.padStart(" "+strTextKey, strTextKey.length()+iDepth, '>');
+//		ArrayList<OptionData> aod = new ArrayList<OptionData>(hmOpt.values());
+		List<OptionData> aod = Arrays.asList(hmOpt.values().toArray(new OptionData[0]));
+		Collections.sort(aod, sort);
+		for(OptionData od:aod){
 			vlodOptions.add(od);
 			if(od.getValue() instanceof SectionIndicator){
 				if(od.isExpanded()){
@@ -758,14 +774,6 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 				}
 			}
 		}
-		
-//		for(Panel pnl:MiscLemurI.i().getAllListBoxItems(lstbxOptions)){
-//			Button btn=(Button)pnl;
-//			CursorEventControl.addListenersToSpatial(btn, clToggleExpand);
-////			btn.addClickCommands(cmdToggleExpand);
-////			UserDataI.i().setUserDataPSH(btn, obj)
-////			btn.
-//		}
 	}
 	
 	public Integer getSelectedOptionIndex(){
