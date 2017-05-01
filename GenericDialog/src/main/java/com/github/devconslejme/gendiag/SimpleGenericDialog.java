@@ -470,34 +470,38 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 //				Button btnItemText = (Button)super.getView(value, selected, null); //exiting null will always create (slow?)
 				
 				if(value instanceof OptionData){
-//	        if( existing == null ) {
-	        	btnItemText = new Button(valueToString(value), getElement(), getStyle());
-//		      } else {
-//		      	btnItemText = (Button)existing;
-//		      	btnItemText.setText(valueToString(value));
-//		      }
-					
 					OptionData od = (OptionData)value;
 					
-					Container cntr=new Container(new BorderLayout(), getDialog().getStyle());
-					UserDataI.i().setUserDataPSH(cntr, value);
-					String strNesting = "["+(od.isExpanded()?"-":"+")+"]";
-//					String strNesting = od.isExpanded()?"-":"+";
-					if(od.hmNestedChildrenSubOptions.size()==0)strNesting=" ";
-					Button btnNesting = new Button(strNesting, getDialog().getStyle());
-					btnNesting.setInsets(new Insets3f(0, getNestingStepDistance()*od.getNestingDepth(), 0, 0));
-					UserDataI.i().setUserDataPSH(btnNesting, value);
-					cntr.addChild(btnNesting, Position.West);
-					
-					btnItemText.addClickCommands(cmdOption);
-					UserDataI.i().setUserDataPSH(btnItemText, value);
-					cntr.addChild(btnItemText, Position.Center);
-					
-					if(isEnableItemConfigurator()){
-						Panel pnlCfg = createConfigurator(od);
-						UserDataI.i().setUserDataPSH(pnlCfg, value);
-						cntr.addChild(pnlCfg, Position.East);
-					}
+					String strUDKItemText=this.getClass().getName()+".strUDKItemText";
+					Container cntr=null;
+	        if( existing == null ) {
+	        	btnItemText = new Button(valueToString(value), getElement(), getStyle());
+	        	
+						cntr=new Container(new BorderLayout(), getDialog().getStyle());
+	        	UserDataI.i().setUserDataPSH(cntr, strUDKItemText, btnItemText);
+						UserDataI.i().setUserDataPSH(cntr, value);
+						String strNesting = "["+(od.isExpanded()?"-":"+")+"]";
+//						String strNesting = od.isExpanded()?"-":"+";
+						if(od.hmNestedChildrenSubOptions.size()==0)strNesting=" ";
+						Button btnNesting = new Button(strNesting, getDialog().getStyle());
+						btnNesting.setInsets(new Insets3f(0, getNestingStepDistance()*od.getNestingDepth(), 0, 0));
+						UserDataI.i().setUserDataPSH(btnNesting, value);
+						cntr.addChild(btnNesting, Position.West);
+						
+						btnItemText.addClickCommands(cmdOption);
+						UserDataI.i().setUserDataPSH(btnItemText, value);
+						cntr.addChild(btnItemText, Position.Center);
+						
+						if(isEnableItemConfigurator()){
+							Panel pnlCfg = createConfigurator(od);
+							UserDataI.i().setUserDataPSH(pnlCfg, value);
+							cntr.addChild(pnlCfg, Position.East);
+						}
+		      } else {
+		      	cntr = (Container)existing;
+		      	btnItemText = UserDataI.i().getUserDataPSH(cntr, strUDKItemText);
+		      	btnItemText.setText(valueToString(value));
+		      }
 					
 					pnlRet=cntr;
 				}else
@@ -749,7 +753,12 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	}
 	
 	public OptionData getSelectedOptionData(){
-		return vlodOptions.get(getSelectedOptionIndex());
+		Integer i = getSelectedOptionIndex();
+		if(i==null){
+			MessagesI.i().warnMsg(this, "nothing selected");
+			return null;
+		}
+		return vlodOptions.get(i);
 	}
 	
 	public String getSelectedOptionVisibleText(){
@@ -773,7 +782,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		}
 		
 		if(bRequestSelectedToggleExpandedOnce){
-			getSelectedOptionData().toggleExpanded();
+			OptionData od = getSelectedOptionData();
+			if(od!=null)od.toggleExpanded();
 			bRequestUpdateListItems = true;
 			bRequestSelectedToggleExpandedOnce=false;
 		}
@@ -812,6 +822,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	
 	private void updateOptionSelected() {
 		OptionData od = getSelectedOptionData();
+		if(od==null)return;
+		
 		if(SectionIndicator.class.isInstance(od.getValue())){
 			bRequestSelectedToggleExpandedOnce=true;
 		}else{
