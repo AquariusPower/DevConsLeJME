@@ -77,24 +77,12 @@ public class TestDevCons extends SimpleApplication{
 		 * to remove JS auto global access to some class/object, ex.: 
 		JavaScriptI.i().addForbidClassAccessJS(TestDevCons.class);
 		 */
-		initOptionalExtras();
-		initOptionalOtherStuff();
-		initOptionalIntegreteAllOtherTests(); 
+		_initOptionalExtras();
+		_initOptionalOtherStuff();
+		_initOptionalIntegreteAllOtherTests(); 
 	}
 	
-	/**
-	 * so thru devcons user commands can instantiate the other tests
-	 */
-	private void initOptionalIntegreteAllOtherTests() {
-		GlobalManagerI.i().put(TestContextMenu.class, new TestContextMenu());
-		GlobalManagerI.i().put(TestChoiceDialog.class, new TestChoiceDialog());
-		GlobalManagerI.i().put(TestMultiChildDialog.class, new TestMultiChildDialog());
-		GlobalManagerI.i().put(TestHierarchyResizablePanel.class, new TestHierarchyResizablePanel());
-		GlobalManagerI.i().put(TestMaintenanceDialog.class, new TestMaintenanceDialog());
-		GlobalManagerI.i().put(TestResizablePanel.class, new TestResizablePanel());
-	}
-
-	private void initOptionalExtras() {
+	private void _initOptionalExtras() {
 		//// SingleAppInstance
 		GlobalManagerI.i().get(SingleAppInstance.class).configureRequiredAtApplicationInitialization(null);
 		GlobalManagerI.i().get(SingleAppInstance.class).addCheckProblemsCall(
@@ -116,7 +104,7 @@ public class TestDevCons extends SimpleApplication{
 		});
 	}
 
-	private void initOptionalOtherStuff() {
+	private void _initOptionalOtherStuff() {
 		//// Debug Track Problems
 		DebugTrackProblemsJME.i().configure(getGuiNode(), getRootNode());
 		CheckProblemsI.i().addProblemsChecker(DebugTrackProblemsJME.i());
@@ -133,6 +121,18 @@ public class TestDevCons extends SimpleApplication{
 	}
 
 	/**
+	 * so thru devcons user commands can instantiate the other tests
+	 */
+	private void _initOptionalIntegreteAllOtherTests() {
+		GlobalManagerI.i().put(TestContextMenu.class, new TestContextMenu());
+		GlobalManagerI.i().put(TestChoiceDialog.class, new TestChoiceDialog());
+		GlobalManagerI.i().put(TestMultiChildDialog.class, new TestMultiChildDialog());
+		GlobalManagerI.i().put(TestHierarchyResizablePanel.class, new TestHierarchyResizablePanel());
+		GlobalManagerI.i().put(TestMaintenanceDialog.class, new TestMaintenanceDialog());
+		GlobalManagerI.i().put(TestResizablePanel.class, new TestResizablePanel());
+	}
+	
+	/**
 	 * Linux only: raise application window as easy workaround to make strict focus policy painless
 	 */
 	@Workaround
@@ -147,6 +147,6 @@ public class TestDevCons extends SimpleApplication{
 	@Override
 	public void handleError(String errMsg, Throwable t) {
 		GlobalManagerI.i().get(SingleAppInstance.class).setExitRequestCause(t);
-//		super.handleError(errMsg, t);
+		//TODO should continue to?: super.handleError(errMsg,t);
 	}
 }

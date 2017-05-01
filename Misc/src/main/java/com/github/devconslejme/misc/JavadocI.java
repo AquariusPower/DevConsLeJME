@@ -28,12 +28,10 @@
 package com.github.devconslejme.misc;
 
 import java.awt.Desktop;
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 
 
@@ -44,150 +42,6 @@ public class JavadocI {
 	public static JavadocI i(){return GlobalManagerI.i().get(JavadocI.class);}
 	
 	private String	strJavadocFolder = "javadoc/";
-	
-	public static class MethodHelp{
-		/** mainly to help on debug */
-		private String strLastFullHelp;
-		private Method m;
-		private Object obj;
-//		private Class clDeclaring;
-//		private Class clConcrete;
-		private boolean bStatic;
-		private int iNonUserTypeableParamsCount;
-		
-		public Method getMethod() {
-			return m;
-		}
-		public boolean isStatic() {
-			return bStatic;
-		}
-		public int getNonUserTypeableParamsCount() {
-			return iNonUserTypeableParamsCount;
-		}
-		public Class getDeclaring() {
-//			return clDeclaring;
-			return m.getDeclaringClass();
-		}
-		public Class getConcrete() {
-//			return clConcrete;
-			return obj.getClass();
-		}
-		private void setMethod(Method m) {
-			this.m = m;
-//			this.clDeclaring=m.getDeclaringClass();
-		}
-		private void setStatic(boolean bStatic) {
-			this.bStatic = bStatic;
-		}
-		private void setNonUserTypeableParamsCount(int iNonUserTypeableParamsCount) {
-			this.iNonUserTypeableParamsCount = iNonUserTypeableParamsCount;
-		}
-//		private void setDeclaring(Class clDeclaring) {
-//			this.clDeclaring = clDeclaring;
-//		}
-//		private void setConcrete(Class clConcrete) {
-//			this.clConcrete = clConcrete;
-//		}
-		
-		public Class getMethodReturnType(){
-			return m.getReturnType();
-		}
-		
-		public String getFullHelp(boolean bUseSimpleNames, boolean bOverrideWithConcrete){
-			
-			String strFull="";
-			
-			String strConcrete=(bUseSimpleNames?getConcrete().getSimpleName():getConcrete().getName());
-			String strDecl		=(bUseSimpleNames?getDeclaring().getSimpleName():getDeclaring().getName());
-			strFull+=(bOverrideWithConcrete?strConcrete:strDecl)+".";
-			
-			strFull+=getMethodHelp(bUseSimpleNames);
-			
-			/**
-			 * as a comment that is compatible with java scripting 
-			 */
-			strFull+=" //";
-			
-			Class clRet = getMethodReturnType();
-			strFull+=(bUseSimpleNames?clRet.getSimpleName():clRet.getName());
-			
-			if(bStatic)strFull+=" <STATIC>";
-			
-			if(bOverrideWithConcrete)strFull+=" <"+strDecl+">";
-			
-			if(getNonUserTypeableParamsCount()>0)strFull+=" <UserCannotType="+getNonUserTypeableParamsCount()+">";
-			
-			this.strLastFullHelp=strFull.trim();
-			
-			return strLastFullHelp;
-		}
-		
-		public URI getAsJavadocURI(){
-			URI uri=null;
-			try {
-				// the html file
-				String strURI=JavadocI.i().getJavadocFolder();
-				strURI+=getDeclaring().getName().replace(".","/");
-				strURI+=".html";
-				
-				uri = new File(strURI).toURI();
-				
-				// the method anchor
-				String strParamTypes="";
-				for(Class clPT:m.getParameterTypes()){
-					if(!strParamTypes.isEmpty())strParamTypes+="-"; //in between
-					strParamTypes+=clPT.getName(); //primitives has no dots (only wrappers does)
-				}
-				strURI=uri.toString()+"#"+m.getName()+"-"+strParamTypes+"-";
-				
-				uri=new URI(strURI);
-			} catch (URISyntaxException e) {
-				throw new DetailedException(e,uri);
-			}
-			
-			return uri;
-		}
-		
-		public String getMethodHelp(boolean bUseSimpleParamNames){
-			String strM = "";
-			
-			
-			strM+=m.getName();
-			
-			strM+="(";
-			String strP="";
-			for(Class<?> p:m.getParameterTypes()){
-				if(!strP.isEmpty())strP+=",";
-				strP+=bUseSimpleParamNames?p.getSimpleName():p.getName();
-			}
-			strM+=strP+")";
-			
-			return strM;
-		}
-		private void setObject(Object obj) {
-			this.obj=obj;
-//			this.clConcrete=obj.getClass();
-		}
-		public Object getObject(){
-			return obj;
-		}
-		@Override
-		public String toString() {
-			StringBuilder builder = new StringBuilder();
-			builder.append("MethodHelp [strLastFullHelp=");
-			builder.append(strLastFullHelp);
-			builder.append(", m=");
-			builder.append(m);
-			builder.append(", obj=");
-			builder.append(obj);
-			builder.append(", bStatic=");
-			builder.append(bStatic);
-			builder.append(", iNonUserTypeableParamsCount=");
-			builder.append(iNonUserTypeableParamsCount);
-			builder.append("]");
-			return builder.toString();
-		}
-	}
 	
 	public void browseJavadoc(MethodHelp mh) {
 		URI uri = mh.getAsJavadocURI();

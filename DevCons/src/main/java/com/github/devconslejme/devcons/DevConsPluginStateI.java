@@ -154,12 +154,15 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	private VersionedStatus vlstrVarMonitorEntries = new VersionedStatus();
 	//private Vector3f	v3fBkpLastNonDefaultBarSize;
 	private Float	fBkpLastNonDefaultBarWidthX;
-	protected Vector3f	v3fDefaultSize;
+	private  Vector3f	v3fDefaultSize;
 	private Vector3f	v3fBkpLastNonDefaultSize;
 	private ContextMenuAnon	cmVarMon;
 	private boolean	bAutoUpdateWrapAt=true;
 	private VersionedReference<Set<Integer>>	vrSelectionChangedToUpdateInputText;
 //	VersionedReference<Vector3f> vrLoggingSectionSize;
+	private boolean bAllowHiddenStats=true; //TODO shouldnt it init as false? :)
+	private HashMap<String,Button>	hmButtons = new HashMap<String,Button>();
+	private CallableXAnon cxRecreateButtons;
 	
 	private Comparator<VarMon>	cmprStat = new Comparator<VarMon>() {
 		@Override
@@ -879,15 +882,6 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		LoggingI.i().logExceptionEntry(new UnsupportedOperationException("method not implemented yet"), null);
 	}
 	
-	boolean bAllowHiddenStats=true; //TODO shouldnt it init as false? :)
-//	Command<Button> cmdToggleHiddenStats = new Command<Button>(){
-//		@Override
-//		public void execute(Button source) {
-//			bAllowHiddenStats=!bAllowHiddenStats;
-//			enqueueUpdateVarMonList();
-//		}
-//	};
-	
 	@SuppressWarnings("unchecked")
 	private void initStatusSection() {
 		cntrStatus = new Container(getStyle());
@@ -895,12 +889,9 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 //		MiscLemurI.i().applySimpleDragParentestListener(cntrStatus);
 		
 		// buttons
-		ArrayList<Panel> apnl = new ArrayList<Panel>();
-		int iButtonIndex=0;
-		
 		btnRestoreSize = new Button("DefaultPosSize",getStyle());
 		PopupHintHelpListenerI.i().setPopupHintHelp(btnRestoreSize, "Restore DevCons defaults Size and Position");
-		apnl.add(btnRestoreSize);
+		hmButtons.put(btnRestoreSize.getText(),btnRestoreSize);
 		
 		btnShowVarMon = new Button("VarMonBar:Toggle",getStyle());
 		PopupHintHelpListenerI.i().setPopupHintHelp(btnShowVarMon, "Show Variables Monitor Bar");
@@ -917,47 +908,85 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			new HintUpdater() {
 				@Override
 				public Boolean call() {
-					setPopupHintHelp("("+(bAllowHiddenStats?"show":"hide")+")"); //say the next action on clicking
+					setPopupHintHelp("(click to "+(bAllowHiddenStats?"show":"hide")+")"); //say the next action on clicking
 					return true;
 				}
 			}
 		);
 		ContextMenuI.i().applyContextMenuAt(btnShowVarMon,cm);
-		apnl.add(btnShowVarMon);
+		hmButtons.put(btnShowVarMon.getText(),btnShowVarMon);
 		
 		btnClipboardShow = new Button("Clipboard:Show",getStyle());
 		PopupHintHelpListenerI.i().setPopupHintHelp(btnClipboardShow, "Show Clipboard Contents");
-		apnl.add(btnClipboardShow);
+		hmButtons.put(btnClipboardShow.getText(),btnClipboardShow);
 		
 		lblTitle = new Label(strBaseTitle ,getStyle());
 //		SimpleDragParentestListenerI.i().applyAt(lblStats);
 		lblTitle.setColor(new ColorRGBA(1,1,0.5f,1));
 		lblTitle.setTextHAlignment(HAlignment.Right);
-		apnl.add(lblTitle);
+		hmButtons.put(lblTitle.getText(),btnClipboardShow);
 //		cntrStatus.addChild(lblStats,0,0);
 		
 		btnclk = new ButtonClickListener();
-		for(Panel pnl:apnl){
-			if (pnl instanceof Button) {
-				Button btn = (Button) pnl;
-				btn.setTextHAlignment(HAlignment.Center);
-				CursorEventControl.addListenersToSpatial(btn, btnclk);
-//				btn.addClickCommands(btnclk);
-			}
-			DragParentestPanelListenerI.i().applyAt(pnl);
-//			else
-//			if (pnl instanceof Label) {
-//				Label lbl = (Label)pnl;
-//				lbl.setTextHAlignment(HAlignment.Left);
-//			}
-//			MiscJmeI.i().recursivelyApplyTextNoWrap(pnl);
-//			pnl.setPreferredSize(new Vector3f(10,10,0));
-			cntrStatus.addChild(pnl,0,iButtonIndex++);
-		}
 		
-//		initStatusValues();
-		
+		requestRecreateButtons();
 	}
+	
+	private static class ButtonWithCmd extends Button{
+		public ButtonWithCmd(String s, String style) {
+			super(s, style);
+		}
+
+		Command<? super Button> cmd;
+	}
+	
+	public void putButton(String strTextKey, String strPopupHelp, Command<? super Button> cmd){
+		ButtonWithCmd btnc = new ButtonWithCmd(strTextKey,getStyle());
+		btnc.cmd=cmd;
+		hmButtons.put(btnc.getText(),btnc);
+		requestRecreateButtons();
+	}
+	
+	public void requestRecreateButtons() {
+		if(cxRecreateButtons==null)cxRecreateButtons = new CallableXAnon() {
+				@Override
+				public Boolean call() {
+//					recreateButtons();
+					
+					int iButtonIndex=0;
+					cntrStatus.clearChildren();
+					for(Button btn:hmButtons.values()){
+//						if (pnl instanceof Button) {
+//							Button btn = (Button) pnl;
+							btn.setTextHAlignment(HAlignment.Center);
+							CursorEventControl.addListenersToSpatial(btn, btnclk);
+//						}
+						DragParentestPanelListenerI.i().applyAt(btn);
+						cntrStatus.addChild(btn,0,iButtonIndex++);
+					}
+					
+					return true;
+				}
+			};
+		QueueI.i().enqueue(cxRecreateButtons);
+	}
+	
+//	/**
+//	 * prefer using {@link #requestRecreateButtons()}
+//	 */
+//	private void recreateButtons(){
+//		int iButtonIndex=0;
+//		cntrStatus.clearChildren();
+//		for(Button btn:hmButtons.values()){
+////			if (pnl instanceof Button) {
+////				Button btn = (Button) pnl;
+//				btn.setTextHAlignment(HAlignment.Center);
+//				CursorEventControl.addListenersToSpatial(btn, btnclk);
+////			}
+//			DragParentestPanelListenerI.i().applyAt(btn);
+//			cntrStatus.addChild(btn,0,iButtonIndex++);
+//		}
+//	}
 	
 	private class ButtonClickListener extends DefaultCursorListener{
 		@Override

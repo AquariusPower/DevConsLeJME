@@ -29,8 +29,11 @@ package com.github.devconslejme.gendiag;
 import java.lang.reflect.Method;
 
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
+import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.JavaLangI;
+import com.github.devconslejme.misc.MethodHelp;
+import com.simsilica.lemur.Button;
+import com.simsilica.lemur.Command;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -41,13 +44,8 @@ public class GlobalsManagerDialogI {
 	private SimpleMaintenanceGenericDialog	smd;
 	private boolean	bShowInherited;
 	
-	public GlobalsManagerDialogI(){
-		
-	}
-	
-	public void configure(){
-		
-	}
+	public GlobalsManagerDialogI(){}
+	//public void configure(){}
 	
 	public void init(){
 		smd = new SimpleMaintenanceGenericDialog() {
@@ -57,26 +55,34 @@ public class GlobalsManagerDialogI {
 			}
 		};
 		
+		smd.putToolAction(new ToolAction("Toggle Inherited Methods", new Command<Button>() {
+			@Override
+			public void execute(Button source) {
+				bShowInherited=!bShowInherited;
+			}
+		}));
+		
 		DialogHierarchyStateI.i().showDialog(smd.getDialog());
 	}
 	
-	private static class MethodInfo{
-		Object o;
-		Method m;
-		public MethodInfo(Object o, Method m) {
-			super();
-			this.o = o;
-			this.m = m;
-		}
-		
-	}
+//	private static class MethodInfo{
+//		Object o;
+//		Method m;
+//		public MethodInfo(Object o, Method m) {
+//			super();
+//			this.o = o;
+//			this.m = m;
+//		}
+//		
+//	}
 	
 	protected void prepareGlobalsForMaintenance() {
 		for(Object o:GlobalManagerI.i().getListCopy()){
 			OptionData odGlobal = smd.putSection(null, o.getClass().getSimpleName()+"("+o.getClass().getPackage().getName()+")");
 			Method[] am = isShowInherited() ? o.getClass().getMethods() : o.getClass().getDeclaredMethods();
 			for(Method m:am){
-				smd.putOption(odGlobal, JavaLangI.i().m.get, new MethodInfo(o,m));
+				MethodHelp mh = new MethodHelp().setObject(o).setMethod(m);
+				smd.putOption(odGlobal, mh.getMethodHelp(true), mh);
 			}
 		}
 	}

@@ -50,7 +50,8 @@ public abstract class SimpleMaintenanceGenericDialog extends SimpleGenericDialog
 		putToolAction(new ToolAction("Refresh Options", new Command<Button>() {
 			@Override
 			public void execute(Button source) {
-				updateMaintenanceListFull();
+//				updateMaintenanceListFull();
+				requestUpdateListItems();
 			}
 		}));
 		
@@ -70,21 +71,60 @@ public abstract class SimpleMaintenanceGenericDialog extends SimpleGenericDialog
 			}
 		}));
 		
+		requestUpdateListItems(); //1st time
+	}
+	
+//	public void requestUpdateMaintenanceListFull(){
+//		QueueI.i().enqueue(new CallableXAnon() {
+//			@Override
+//			public Boolean call() {
+////				updateMaintenanceListFull();
+//				
+//				SimpleMaintenanceGenericDialog.super.clearOptions();
+//				updateMaintenanceList();
+//				SimpleMaintenanceGenericDialog.super.requestUpdateListItems();//recreateListItems();
+//				
+//				return true;
+//			}
+//		});
+//	}
+	
+//	/**
+//	 * prefer calling {@link #requestUpdateMaintenanceListFull()}
+//	 */
+//	protected void updateMaintenanceListFull(){
+//		clearOptions();
+//		updateMaintenanceList();
+//		requestUpdateListItems();//recreateListItems();
+//	}
+	
+//	/**
+//	 * prefer calling {@link #requestUpdateMaintenanceListFull()}
+//	 */
+//	/**
+//	 * same as {@link #requestUpdateMaintenanceListFull()}
+//	 */
+	@Override
+	public void requestUpdateListItems() {
+//		super.requestUpdateListItems();
+//		requestUpdateMaintenanceListFull();
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
-				updateMaintenanceListFull(); //1st time
+//				updateMaintenanceListFull();
+				
+				SimpleMaintenanceGenericDialog.super.clearOptions();
+				updateMaintenanceList();
+				SimpleMaintenanceGenericDialog.super.requestUpdateListItems();//recreateListItems();
+				
 				return true;
 			}
 		});
 	}
 	
-	public void updateMaintenanceListFull(){
-		clearOptions();
-		updateMaintenanceList();
-		requestUpdateListItems();//recreateListItems();
-	}
-	
+	/**
+	 * prefer calling {@link #requestUpdateListItems()}
+	 */
 	public abstract void updateMaintenanceList();
 	
 	@Override
