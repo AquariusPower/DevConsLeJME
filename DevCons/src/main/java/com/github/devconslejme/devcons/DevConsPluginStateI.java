@@ -701,13 +701,8 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		QueueI.i().enqueue(new CallableX() {
 			@Override
 			public Boolean call() {
-//				if(!updateVarMonList())return false; //1st valid update
-//				private boolean updateVarMonList() {
-//				if(lstbxLoggingSection==null)return false;
-				
 				ArrayList<VarMon> astList = new ArrayList<VarMon>(hmVarMon.values());
 				Collections.sort(astList,cmprStat);
-//				String str="";
 				vlstrVarMonitorEntries.clear();
 				String strAddToTitle="";
 				labelLoop:for(VarMon vm:astList){
@@ -723,25 +718,24 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 					}
 					
 					updateVarMonValueAtList(vm,true);
-//					str+=st;
-//					vlstrVarMonitorEntries.add(st.strKey);
-//					vlstrVarMonitorEntries.add("="+st.strValue);
-//					vlstrVarMonitorEntries.put();
 				}
 				
 				if(!strAddToTitle.isEmpty())lblTitle.setText(strBaseTitle+":"+strAddToTitle);
 				
-//				lblStats.setText(str);
-//				lstbxVarMonitorBar.setVisibleItems(lstbxLoggingSection.getVisibleItems());
-				
 				vrSelectionChangedToShowVarHelp = lstbxVarMonitorBar.getSelectionModel().createReference();
 
-//				lstbxVarMonitorBar.getGridPanel().getCell(0, 0);
-				
 				QueueI.i().enqueue(new CallableX() {
 					@Override
 					public Boolean call() {
 						if(lstbxVarMonitorBar.getGridPanel().getModel().getRowCount()==0)return false;
+						
+						/**
+						 * correct amount of shown items must be ready
+						 */
+						int iShown = lstbxVarMonitorBar.getVisibleItems();
+						if(vlstrVarMonitorEntries.size()<iShown)iShown = vlstrVarMonitorEntries.size();
+						if(lstbxVarMonitorBar.getGridPanel().getModel().getRowCount()!=iShown)return false;
+//						if(MiscLemurI.i().getAllListBoxItems(lstbxVarMonitorBar,false).size()!=iShown)return false;
 						
 						ContextMenuI.i().applyContextMenuAtListBoxItems(lstbxVarMonitorBar,cmVarMon);
 						for(Panel pnl:MiscLemurI.i().getAllListBoxItems(lstbxVarMonitorBar, false)){
@@ -756,10 +750,6 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 				}.setName("ContextMenuAtListBoxAfterPopulated"));
 				
 				bRequestUpdateNoWrap=true;
-//				MiscJmeI.i().recursivelyApplyTextNoWrap(lstbxVarMonitorBar);
-				
-//				return true;
-//			}
 				return true;
 			}
 		}); 
@@ -771,6 +761,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		
 		if(enabled){
 			DialogHierarchyStateI.i().showDialog(rzpMain);
+			enqueueUpdateVarMonList();
 //			nodeParent.attachChild(hrpMain);
 		}else{
 			rzpMain.close();
@@ -897,6 +888,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 //		}
 //	};
 	
+	@SuppressWarnings("unchecked")
 	private void initStatusSection() {
 		cntrStatus = new Container(getStyle());
 		cntrMain.addChild(cntrStatus, BorderLayout.Position.North);

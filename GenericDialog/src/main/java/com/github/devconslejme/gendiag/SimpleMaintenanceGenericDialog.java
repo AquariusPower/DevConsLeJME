@@ -33,6 +33,8 @@ import com.simsilica.lemur.Command;
 
 /**
  * TODO move whatever fits at super class to there
+ * TODO cell renderer to add entry hierarchy on the left (this can go to super class)
+ * TODO cell renderer to add cfg buttons on the right
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
@@ -84,5 +86,9 @@ public abstract class SimpleMaintenanceGenericDialog extends SimpleGenericDialog
 	}
 	
 	public abstract void updateMaintenanceList();
-
+	
+	@Override
+	protected boolean isEnableItemConfigurator() {
+		return true;
+	}
 }

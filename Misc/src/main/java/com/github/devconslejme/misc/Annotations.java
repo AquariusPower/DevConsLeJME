@@ -27,6 +27,8 @@
 package com.github.devconslejme.misc;
 
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
@@ -102,4 +104,50 @@ public class Annotations{
 			ElementType.TYPE_USE
 		})
 	public static @interface CouldBeAGenericUtilMisc {}
+	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.FIELD})
+	public static @interface FloatLimits {
+		/** description */
+		String desc() default "";
+		float min();
+		float max();
+	}
+	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.FIELD})
+	public static @interface DoubleLimits {
+		/** description */
+		String desc() default "";
+		double min();
+		double max();
+	}
+	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.FIELD})
+	public static @interface IntLimits {
+		/** description */
+		String desc() default "";
+		int min();
+		int max();
+	}
+	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.FIELD})
+	public static @interface LongLimits {
+		/** description */
+		String desc() default "";
+		long min();
+		long max();
+	}
+	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.FIELD})
+	public static @interface StringLimits {
+		/** description */
+		String desc() default "";
+		int min() default 0;
+		int max();
+	}
+	
 }

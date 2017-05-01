@@ -25,7 +25,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.misc;
+package com.github.devconslejme.deprecatedreminder;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -37,8 +37,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 
+import com.github.devconslejme.misc.JavadocI;
+
 /**
- * Deprecated: looking for ways "to access" the javadoc dinamically.
+ * Deprecated: see {@link JavadocI}
  * 
  * Use alternatively to JavaDocs, to provide easy help for javascripts. 
  * 

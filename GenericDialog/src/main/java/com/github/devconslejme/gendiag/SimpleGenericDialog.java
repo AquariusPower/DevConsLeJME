@@ -32,11 +32,13 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
-import com.github.devconslejme.gendiag.ContextMenuI.ContextButton;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.HintUpdater;
 import com.github.devconslejme.misc.Annotations.Bugfix;
+import com.github.devconslejme.misc.Annotations.FloatLimits;
+import com.github.devconslejme.misc.Annotations.ToDo;
 import com.github.devconslejme.misc.Annotations.Workaround;
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
@@ -56,11 +58,13 @@ import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
 import com.simsilica.lemur.Container;
+import com.simsilica.lemur.Insets3f;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.BorderLayout;
+import com.simsilica.lemur.component.BorderLayout.Position;
 import com.simsilica.lemur.component.TextEntryComponent;
 import com.simsilica.lemur.core.VersionedList;
 import com.simsilica.lemur.core.VersionedReference;
@@ -111,6 +115,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private Container	cntrDiagControls;
 	private int	iDiagControlColumnInitIndex;
 	private boolean	bKeepMaximized;
+//@FloatLimits(min=-1f,max=1f) float f;
 	private ListBox<ToolAction>	lstbxTools;
 	/**
 	 * for some reason, some of the buttons on the listbox will not work with the
@@ -121,6 +126,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private DefaultCursorListener	curlisExtraClickCmd;
 	private ContextMenu	cmIST;
 	private ContextMenu	cmSubBorderSize;
+	private int	iNestingStepDistance=10;
 	
 	private static class SectionIndicator{}
 	
@@ -141,7 +147,9 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	
 	public static class OptionDataDummy extends OptionData{
 		public OptionDataDummy(){
-			setTextKey("(TempDummy)"+OptionDataDummy.class.getName());
+			String str="(TempDummy)";
+			setTextKey(str+OptionDataDummy.class.getName());
+			setValue(str);
 		}
 	}
 	
@@ -151,6 +159,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		private Object objValue;
 		private boolean bExpanded;
 		private LinkedHashMap<String,OptionData> hmNestedChildrenSubOptions;
+		private Command<? super Button>	cmdCfg;
 		
 		public OptionData(){
 			bExpanded=true;
@@ -161,12 +170,12 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			this.strTextKey = strTextKey;
 			return this; 
 		}
-		private OptionData setSectionParent(OptionData odParent) {
-			this.odParent = odParent;
+		protected OptionData setValue(Object objValue) {
+			this.objValue = objValue;
 			return this; 
 		}
-		private OptionData setValue(Object objValue) {
-			this.objValue = objValue;
+		private OptionData setSectionParent(OptionData odParent) {
+			this.odParent = odParent;
 			return this; 
 		}
 		public String getTextKey() {
@@ -223,27 +232,43 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		}
 		@Override
 		public String getVisibleText() {
-			int iDepth=0;
-			OptionData odParent=this;while((odParent=odParent.getSectionParent())!=null)iDepth++;
+			int iDepth=getNestingDepth();
 			
 			String str=strTextKey;
 			
 			if(getValue() instanceof SectionIndicator){
-				str="["+(isExpanded()?"-":"+")+"] "
+//				str="["+(isExpanded()?"-":"+")+"] "
+				str=""
 					+str
 					+(
 //						!isExpanded()
 //						? 
-								" {"+hmNestedChildrenSubOptions.size()+"/"+getAllChildrenRecursively(null).size()+"}"
+								" {p"+iDepth+",c"+hmNestedChildrenSubOptions.size()+",ac"+getAllChildrenRecursively(null).size()+"}"
 //						: ""
 					)
 				;
 			}
 			
-			str=" "+str;
-			str=Strings.padStart(str, str.length()+iDepth, '>');
+//			str=" "+str;
+//			str=Strings.padStart(str, str.length()+iDepth, '>');
 			
 			return str;
+		}
+
+		public Command<? super Button> getCmdCfg() {
+			return cmdCfg;
+		}
+
+		public void setCmdCfg(Command<? super Button> cmdCfg) {
+			DetailedException.assertNotAlreadySet(this.cmdCfg, cmdCfg, this);
+			this.cmdCfg = cmdCfg;
+		}
+
+		public int getNestingDepth() {
+			int iDepth=0;
+			OptionData odParent=this;
+			while((odParent=odParent.getSectionParent())!=null)iDepth++;
+			return iDepth;
 		}
 	}
 	
@@ -425,8 +450,79 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			}).setValue(i);
 		}
 	}
-
+	
 	private void initBase(){
+		curlisExtraClickCmd = new DefaultCursorListener(){
+			@Override
+			protected void click(CursorButtonEvent event, Spatial target, Spatial capture) {
+				buttonClicked((Button)capture);
+			};
+		};
+		
+		crVisibleText = new DefaultCellRenderer<IVisibleText>(getDialog().getStyle()){
+			@SuppressWarnings("unchecked")
+			@Override
+			public Panel getView(IVisibleText value, boolean selected, Panel existing) {
+				Panel pnlRet = null;
+				
+				Button btnItemText = null;
+//				Button btnItemText = (Button)super.getView(value, selected, existing);
+//				Button btnItemText = (Button)super.getView(value, selected, null); //exiting null will always create (slow?)
+				
+				if(value instanceof OptionData){
+//	        if( existing == null ) {
+	        	btnItemText = new Button(valueToString(value), getElement(), getStyle());
+//		      } else {
+//		      	btnItemText = (Button)existing;
+//		      	btnItemText.setText(valueToString(value));
+//		      }
+					
+					OptionData od = (OptionData)value;
+					
+					Container cntr=new Container(new BorderLayout(), getDialog().getStyle());
+					UserDataI.i().setUserDataPSH(cntr, value);
+					String strNesting = "["+(od.isExpanded()?"-":"+")+"]";
+//					String strNesting = od.isExpanded()?"-":"+";
+					if(od.hmNestedChildrenSubOptions.size()==0)strNesting=" ";
+					Button btnNesting = new Button(strNesting, getDialog().getStyle());
+					btnNesting.setInsets(new Insets3f(0, getNestingStepDistance()*od.getNestingDepth(), 0, 0));
+					UserDataI.i().setUserDataPSH(btnNesting, value);
+					cntr.addChild(btnNesting, Position.West);
+					
+					btnItemText.addClickCommands(cmdOption);
+					UserDataI.i().setUserDataPSH(btnItemText, value);
+					cntr.addChild(btnItemText, Position.Center);
+					
+					if(isEnableItemConfigurator()){
+						Panel pnlCfg = createConfigurator(od);
+						UserDataI.i().setUserDataPSH(pnlCfg, value);
+						cntr.addChild(pnlCfg, Position.East);
+					}
+					
+					pnlRet=cntr;
+				}else
+				if(value instanceof ToolAction){
+	        if( existing == null ) {
+	        	btnItemText = new Button(valueToString(value), getElement(), getStyle());
+		      } else {
+		      	btnItemText = (Button)existing;
+		      	btnItemText.setText(valueToString(value));
+		      }
+	        
+					ToolAction ta = (ToolAction)value;
+					btnItemText.addClickCommands(ta.cmdAction);
+					UserDataI.i().setUserDataPSH(btnItemText, value);
+					pnlRet=btnItemText;
+				}
+				
+				CursorEventControl.addListenersToSpatial(btnItemText, curlisExtraClickCmd);
+				
+//				UserDataI.i().setUserDataPSH(pnlRet, value);
+				
+				return pnlRet;
+			}
+		};
+		
 		funcVisibleText = new Function<IVisibleText, String>() {
 			@Override
 			public String apply(IVisibleText vt) {
@@ -434,36 +530,33 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			}
 		};
 		
-		curlisExtraClickCmd = new DefaultCursorListener(){
-			@Override
-			protected void click(CursorButtonEvent event, Spatial target, Spatial capture) {
-				buttonClicked((Button)capture);
-			};
-		};
-
-		crVisibleText = new DefaultCellRenderer<IVisibleText>(getDialog().getStyle()){
-			@SuppressWarnings("unchecked")
-			@Override
-			public Panel getView(IVisibleText value, boolean selected, Panel existing) {
-				Button btn = (Button)super.getView(value, selected, existing);
-				
-				if(value instanceof OptionData){
-					btn.addClickCommands(cmdOption);
-				}else
-				if(value instanceof ToolAction){
-					btn.addClickCommands(((ToolAction)value).cmdAction);
-				}
-				
-				CursorEventControl.addListenersToSpatial(btn, curlisExtraClickCmd);
-				
-				UserDataI.i().setUserDataPSH(btn, value);
-				
-				return btn;
-			}
-		};			
 		crVisibleText.setTransform(funcVisibleText);
 	}
 	
+	protected boolean isEnableItemConfigurator() {
+		return false;
+	}
+
+	@SuppressWarnings("unchecked")
+	protected Panel createConfigurator(OptionData od) {
+		Command<? super Button> cmd = od.getCmdCfg();
+		if(cmd!=null){
+			Button btnCfg = new Button("Cfg",getDialog().getStyle());
+			btnCfg.addClickCommands(cmd);
+			return btnCfg;
+		}
+		
+		return createAutomaticConfigurator(od);
+	}
+	
+	@ToDo
+	private Panel createAutomaticConfigurator(OptionData od) {
+		//TODO using limits annotations, allow sliders and TextField input on the very same listbox
+		//TODO using reflection, look for matching getters and setters (and is...) to create a new child dialog to enable such optoins
+		String str=od.getValue().toString();
+		return new Button(str.substring(0, Math.min(10, str.length())), getDialog().getStyle());
+	}
+
 	@Override
 	protected void initContentsContainer() {
 		initBase();
@@ -818,5 +911,14 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 
 	public void setCloseOnChoiceMade(boolean bCloseOnChoiceMade) {
 		this.bCloseOnChoiceMade = bCloseOnChoiceMade;
+	}
+
+	public int getNestingStepDistance() {
+		return iNestingStepDistance;
+	}
+
+	public void setNestingStepDistance(int iNestingStepDistance) {
+		if(iNestingStepDistance<1)iNestingStepDistance=1;
+		this.iNestingStepDistance = iNestingStepDistance;
 	}
 }
