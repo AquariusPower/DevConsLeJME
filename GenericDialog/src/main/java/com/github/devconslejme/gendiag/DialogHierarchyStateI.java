@@ -632,6 +632,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 
 	public void setInBetweenGapDistZ(float fInBetweenGapDistZ) {
 		this.fInBetweenGapDistZ = fInBetweenGapDistZ;
+		if(this.fInBetweenGapDistZ<1f)this.fInBetweenGapDistZ=1f;
 	}
 	
 	

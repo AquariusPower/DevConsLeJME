@@ -43,6 +43,8 @@ import com.github.devconslejme.gendiag.ContextMenuI.HintUpdater;
 import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.ToDo;
 import com.github.devconslejme.misc.Annotations.Workaround;
+import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.MethodHelp;
@@ -55,6 +57,7 @@ import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.google.common.base.Function;
+import com.jme3.app.Application;
 import com.jme3.input.KeyInput;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
@@ -70,7 +73,6 @@ import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.component.BorderLayout.Position;
 import com.simsilica.lemur.component.TextEntryComponent;
-import com.simsilica.lemur.core.GuiLayout;
 import com.simsilica.lemur.core.VersionedList;
 import com.simsilica.lemur.core.VersionedReference;
 import com.simsilica.lemur.event.CursorButtonEvent;
@@ -78,6 +80,7 @@ import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.DefaultCursorListener;
 import com.simsilica.lemur.event.KeyAction;
 import com.simsilica.lemur.event.KeyActionListener;
+import com.simsilica.lemur.focus.FocusManagerState;
 import com.simsilica.lemur.list.DefaultCellRenderer;
 import com.simsilica.lemur.style.ElementId;
 
@@ -613,8 +616,13 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	protected Panel createConfigurator(OptionData od, Panel pnlCfgExisting) {
 		Container cntr = new Container(getDialog().getStyle());
 		
-		CmdCfg[] acc = od.getCmdCfgList();
 		int i=0;
+		Panel pnl = createAutomaticConfigurators(od);
+		if(pnl!=null){
+			cntr.addChild(pnl,i++);
+		}
+		
+		CmdCfg[] acc = od.getCmdCfgList();
 		for(CmdCfg cc:acc){
 //		Command<? super Button> cmd = od.getCmdCfgList();
 //		if(cmd!=null){
@@ -627,11 +635,6 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		
 //		if(acc.length>0)return cntr;
 		
-		Panel pnl = createAutomaticConfigurators(od);
-		if(pnl!=null){
-			cntr.addChild(pnl,i++);
-		}
-				
 		if(i==0){ //nothing was added to container
 			Button btn = new Button("...", getDialog().getStyle());
 			PopupHintHelpListenerI.i().setPopupHintHelp(btn, "configuration not available");
@@ -643,7 +646,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	
 	private class ContainerEdit extends Container{
 		public ContainerEdit() {
-			super(new BorderLayout(), getDialog().getStyle());
+//			super(new BorderLayout(), getDialog().getStyle());
+			super(getDialog().getStyle());
 		}
 		Button btn;
 		TextField tf;
@@ -664,42 +668,77 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			Object objVal;
 			String strButtonHintHelp=null;
 			try {
-				objVal = mGetter.invoke(mh.getConcreteObjectInstance()); //collect value from getter method
-				ce.btn = new Button(""+objVal, getDialog().getStyle()); //show value
-				
-				ce.addChild(ce.btn, 0);
-				
-				Method mSetter = JavaLangI.i().getSetterFor(mGetter);//mh.getConcreteObjectInstance(), m.getName());
-				
+				/**
+				 * to be a bean, must have getter and setter,
+				 * if there is only a getter, it may not be a bean!!!
+				 * and may execute code that will create some problem.
+				 */
+				Method mSetter = JavaLangI.i().getBeanSetterFor(mGetter);//mh.getConcreteObjectInstance(), m.getName());
 				if(mSetter!=null){
+					objVal = mGetter.invoke(mh.getConcreteObjectInstance()); //collect value from getter method
+					ce.btn = new Button(""+objVal, getDialog().getStyle()); //show value
+					ce.addChild(ce.btn, 0);
+					
 					strButtonHintHelp="click to change value";
 					ce.tf = new TextField(ce.btn.getText(), ce.btn.getStyle());
+					Vector3f v3fSize = ce.tf.getSize().clone();
+					if(v3fSize.x<50)v3fSize.x=50;
+					ce.tf.setPreferredSize(v3fSize);
+					
 					ce.btn.addClickCommands(new Command<Button>(){
 						@Override
 						public void execute(Button source) {
-							if(source==ce.btn){ //<- redundant check..
+//							if(source==ce.btn){ //<- redundant check..
 								ce.addChild(ce.tf, 0); //will replace the button
-							}
+								ce.tf.setText(ce.btn.getText());
+								GlobalManagerI.i().get(Application.class).getStateManager().getState(FocusManagerState.class)
+									.setFocus(ce.tf);
+//							}
 						}});
-	//				if(od.getCmdCfgList().length>1){
-	//					MessagesI.i().warnMsg(this, "should have only one command, using 1st", od.getCmdCfgList(), od, m);
-	//				}
-	//				
-	//				if(od.getCmdCfgList().length>0){
-	//					btn.addClickCommands(od.getCmdCfgList()[0]);
-	//					strHintHelp="click to change value";
-	//				}else{
-	//					strHintHelp="WARN: no command will be called to set the new value";
-	//				}
+					
+					ce.tf.getActionMap().put(
+						new KeyAction(KeyInput.KEY_RETURN),
+						new KeyActionListener() {
+							@Override public void keyAction(TextEntryComponent source, KeyAction key) {
+								boolean b=JavaLangI.i().setBeanValueAt(
+									mh.getConcreteObjectInstance(), 
+									mSetter, 
+									mGetter.getReturnType(), 
+									ce.tf.getText());
+								
+								if(!b){
+									MessagesI.i().warnMsg(this, "failed to change value", mSetter, mGetter, ce.tf.getText(), mh);
+								}
+//									ce.btn.setText(ce.tf.getText()); //TODO should actually be a possibly validated by the setter/getter
+									try {
+										// retrieves value possibly validated by the setter/getter
+										ce.btn.setText(""+mGetter.invoke(mh.getConcreteObjectInstance()));
+									} catch (IllegalAccessException | IllegalArgumentException| InvocationTargetException e) {
+										throw new DetailedException(e, "value get should not have failed this second time", mGetter, mSetter, mh, od);
+									}
+									
+									ce.addChild(ce.btn, 0); //will replace the textfield
+//								}
+							}
+						}
+					);
+					
+					ce.btn.setColor(ColorI.i().colorChangeCopy(ColorRGBA.Green, 0.35f));
+//				}else{
+//					strButtonHintHelp="WARN: no command will be called to bean set the new value";
+////					ce.btn.setHighlightColor(ColorRGBA.Red);
+//					ce.btn.setColor(ColorI.i().colorChangeCopy(ColorRGBA.Red, 0.35f));
 				}
 				
 			} catch (IllegalAccessException | IllegalArgumentException| InvocationTargetException e) {
 				strButtonHintHelp="ERROR: failed to invoke the method '"+mGetter+"' to get the value";
-				MessagesI.i().warnMsg(this,strButtonHintHelp,od.getCmdCfgList(), od, mGetter);
+				MessagesI.i().warnMsg(this,strButtonHintHelp,od.getCmdCfgList(), od, mGetter, e);
 				ce.btn = new Button("(FAIL)", getDialog().getStyle());
 			}
 			
-			PopupHintHelpListenerI.i().setPopupHintHelp(ce.btn, strButtonHintHelp);
+			if(ce.btn!=null && strButtonHintHelp!=null){
+				PopupHintHelpListenerI.i().setPopupHintHelp(ce.btn, strButtonHintHelp);
+			}
 		}
 		
 		return ce;
@@ -884,17 +923,49 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		recreateListItemsRecursively(hmOptionsRoot,0);
 	}
 	
-	private Comparator<OptionData>	sort = new Comparator<SimpleGenericDialog.OptionData>() {
+	/**
+	 * TODO useless right?
+	 */
+	private Comparator<OptionData>	sortByChildAmount = new Comparator<SimpleGenericDialog.OptionData>() {
 		@Override
 		public int compare(OptionData o1, OptionData o2) {
 			return Integer.compare(o1.hmNestedChildrenSubOptions.size(), o2.hmNestedChildrenSubOptions.size());
 		}
 	};
 	
+	private Comparator<OptionData>	sortAtoZ = new Comparator<SimpleGenericDialog.OptionData>() {
+		@Override
+		public int compare(OptionData o1, OptionData o2) {
+			return o1.getTextKey().compareToIgnoreCase(o2.getTextKey());
+		}
+	};
+	
+	private boolean	bSortAlphabetically=true;
+	
 	private void recreateListItemsRecursively(HashMap<String, OptionData> hmOpt, int iDepth){
 //		ArrayList<OptionData> aod = new ArrayList<OptionData>(hmOpt.values());
 		List<OptionData> aod = Arrays.asList(hmOpt.values().toArray(new OptionData[0]));
-		Collections.sort(aod, sort);
+		
+		if(isSortAlphabetically()){
+			ArrayList<OptionData> aodChildLess = new ArrayList<OptionData>();
+			ArrayList<OptionData> aodHasChildren = new ArrayList<OptionData>();
+			for(OptionData od:aod){
+				if(od.getStoredValue() instanceof SectionIndicator){
+					aodHasChildren.add(od);
+				}else{
+					aodChildLess.add(od);
+				}
+			}
+			Collections.sort(aodChildLess, sortAtoZ);
+			Collections.sort(aodHasChildren, sortAtoZ);
+			ArrayList<OptionData> aodAll = new ArrayList<OptionData>();
+			aodAll.addAll(aodChildLess); //childless above
+			aodAll.addAll(aodHasChildren);
+			aod = aodAll;//.toArray(new OptionData[0]);
+		}else{
+			Collections.sort(aod, sortByChildAmount); //this will just put child-less above and keep insert order
+		}
+		
 		for(OptionData od:aod){
 			vlodOptions.add(od);
 			if(od.getStoredValue() instanceof SectionIndicator){
@@ -1075,5 +1146,13 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	public void setNestingStepDistance(int iNestingStepDistance) {
 		if(iNestingStepDistance<1)iNestingStepDistance=1;
 		this.iNestingStepDistance = iNestingStepDistance;
+	}
+
+	public boolean isSortAlphabetically() {
+		return bSortAlphabetically;
+	}
+
+	public void setSortAlphabetically(boolean bSortByChildAmount) {
+		this.bSortAlphabetically = bSortByChildAmount;
 	}
 }

@@ -39,7 +39,7 @@ import com.google.common.base.Strings;
 public class StringI {
 	public static StringI i(){return GlobalManagerI.i().get(StringI.class);}
 	
-	private String	strLastUid;
+	private String	strLastUid="0";
 	
 	public static enum EStringMatchMode{
 		Exact,

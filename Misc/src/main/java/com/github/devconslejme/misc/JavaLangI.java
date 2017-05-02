@@ -27,6 +27,7 @@
 
 package com.github.devconslejme.misc;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -281,8 +282,10 @@ public class JavaLangI {
 	public boolean isCanUserTypeIt(Class cl){
 		if(String.class.isAssignableFrom(cl))return true;
 		
+		if(Enum.class.isAssignableFrom(cl))return true; //enums are essentially a convertion from string or int
+		
 		if(cl.isPrimitive())return true;
-		if(Primitives.isWrapperType(cl))return true; //last as is probably "slower"
+		if(Primitives.isWrapperType(cl))return true; //TODO last as is possibly "slower"?
 		
 		return false;
 	}
@@ -302,17 +305,35 @@ public class JavaLangI {
 	 * @param mGetter
 	 * @return
 	 */
-	public Method getSetterFor(Method mGetter) {
+	public Method getBeanSetterFor(Method mGetter) {
 		try {
 			String strBaseName = null;
 			if(mGetter.getName().startsWith("is"))strBaseName=mGetter.getName().substring(2);
 			if(mGetter.getName().startsWith("get"))strBaseName=mGetter.getName().substring(3);
 			
-			return mGetter.getDeclaringClass().getMethod("get"+strBaseName, mGetter.getReturnType());
+			return mGetter.getDeclaringClass().getMethod("set"+strBaseName, mGetter.getReturnType());
 		} catch (NoSuchMethodException | SecurityException e) {
-			e.printStackTrace();
+			MessagesI.i().warnMsg(this, e.getMessage(), mGetter, e);
 		}
 		
 		return null;
+	}
+	/**
+	 * 
+	 * @param objInstance
+	 * @param mSetter
+	 * @param clType
+	 * @param strValue
+	 * @return true on success
+	 */
+	public boolean setBeanValueAt(Object objInstance, Method mSetter, Class clType, String strValue) {
+		try {
+			mSetter.invoke(objInstance, ESimpleType.forClass(clType).parse(strValue)); //TODO returns anything useful?
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+			MessagesI.i().warnMsg(this, ex.getMessage(), mSetter, clType, strValue, objInstance, ex);
+			return false;
+		}
+		
+		return true;
 	}
 }

@@ -28,6 +28,10 @@ package com.github.devconslejme.gendiag;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import com.github.devconslejme.gendiag.SimpleGenericDialog.CmdCfg;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
@@ -50,6 +54,12 @@ public class GlobalsManagerDialogI {
 	private SimpleMaintenanceGenericDialog	smd;
 	private boolean	bShowInherited;
 	private boolean	bShowPackagesPrepended;
+//	private Comparator<Object>	cmprAtoZ = new Comparator<Object>() {
+//		@Override
+//		public int compare(Object o1, Object o2) {
+//			return o1.getClass().;
+//		}
+//	};
 	
 	public GlobalsManagerDialogI(){}
 	
@@ -108,22 +118,40 @@ public class GlobalsManagerDialogI {
 //		
 //	}
 	
+	private TreeMap<String,Object> hmSortedGlobals = new TreeMap<String,Object>(String.CASE_INSENSITIVE_ORDER);
+	
 	protected void prepareGlobalsForMaintenance() {
+		hmSortedGlobals.clear();
 		for(Object o:GlobalManagerI.i().getListCopy()){
-			String str = o.getClass().getSimpleName();
+			String strKey = o.getClass().getSimpleName();
 			String strPkg = o.getClass().getPackage().getName();
 			if(bShowPackagesPrepended){
-				str=strPkg+"."+str;
+				strKey=strPkg+"."+strKey;
 			}else{
-				str+=" <"+strPkg+"> ";
+				strKey+=" <"+strPkg+"> ";
 			}
 			
-			OptionData odGlobal = smd.putSection(null,str);
-			Method[] am = isShowInherited() ? o.getClass().getMethods() : o.getClass().getDeclaredMethods();
+			hmSortedGlobals.put(strKey, o);
+		}
+		
+//		ArrayList<Object> aobjList = GlobalManagerI.i().getListCopy();
+//		Collections.sort(aobjList,cmprAtoZ);
+		
+//		for(Object o:aobjList){
+		for(Entry<String, Object> entry:hmSortedGlobals.entrySet()){
+//			String str = entry.getKey();
+//			System.out.println(entry.getKey());
+			
+			OptionData odGlobal = smd.putSection(null,entry.getKey());
+			
+			Method[] am = isShowInherited() ? 
+				entry.getValue().getClass().getMethods() : 
+				entry.getValue().getClass().getDeclaredMethods();
+				
 			for(Method m:am){
 				if(!Modifier.isPublic(m.getModifiers()))continue; //skip non public
 				
-				MethodHelp mh = new MethodHelp().setObject(o).setMethod(m);
+				MethodHelp mh = new MethodHelp().setObject(entry.getValue()).setMethod(m);
 				
 				OptionData od = smd.putOption(odGlobal,	mh.getFullHelp(true, false),	mh);
 				

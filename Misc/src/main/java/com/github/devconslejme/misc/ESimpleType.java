@@ -28,25 +28,47 @@
 package com.github.devconslejme.misc;
 
 /**
+ * if the user can type it, it is simple
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public enum ESavableSimpleType{ //String is not primitive, but still simple
-	Boolean,
-	Int,
-	Long,
-	Float,
-	Double,
-	String,
+public enum ESimpleType{ //String is not primitive, but still simple
+	Boolean(Boolean.class),
+	Int(Integer.class),
+	Long(Long.class),
+	Float(Float.class),
+	Double(Double.class),
+	String(String.class),
 	;
 	
-	public static ESavableSimpleType forClass(Class clValue) throws UnsupportedOperationException{ //@STATIC_OK
-		ESavableSimpleType e = null;
-		if(clValue==Float.class		|| clValue==float.class		){e=ESavableSimpleType.Float;}else
-		if(clValue==Double.class	|| clValue==double.class	){e=ESavableSimpleType.Double;}else
-		if(clValue==Integer.class	|| clValue==int.class			){e=ESavableSimpleType.Int;}else
-		if(clValue==Long.class		|| clValue==long.class		){e=ESavableSimpleType.Long;}else
-		if(clValue==Boolean.class	|| clValue==boolean.class	){e=ESavableSimpleType.Boolean;}else
-		if(clValue==String.class														){e=ESavableSimpleType.String;}else
+	private Class	cl;
+
+	ESimpleType(Class cl){
+		this.cl=cl;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <T> T parse(String strValue){
+		Object ret = null;
+		switch(this){
+			case Boolean: ret=java.lang.Boolean.parseBoolean(strValue); break;
+			case Double: ret=java.lang.Double.parseDouble(strValue); break;
+			case Float: ret=java.lang.Float.parseFloat(strValue); break;
+			case Int: ret=java.lang.Integer.parseInt(strValue); break;
+			case Long: ret=java.lang.Long.parseLong(strValue); break;
+			case String: ret=(strValue); break;
+		}
+		return (T)ret;
+	}
+	
+	public static ESimpleType forClass(Class clValue) throws UnsupportedOperationException{ //@STATIC_OK
+		ESimpleType e = null;
+		if(clValue==Float.class		|| clValue==float.class		){e=ESimpleType.Float;}else
+		if(clValue==Double.class	|| clValue==double.class	){e=ESimpleType.Double;}else
+		if(clValue==Integer.class	|| clValue==int.class			){e=ESimpleType.Int;}else
+		if(clValue==Long.class		|| clValue==long.class		){e=ESimpleType.Long;}else
+		if(clValue==Boolean.class	|| clValue==boolean.class	){e=ESimpleType.Boolean;}else
+		if(clValue==String.class														){e=ESimpleType.String;}else
 		{
 			throw new UnsupportedOperationException("unsupported value class type "+clValue.getName());
 		}

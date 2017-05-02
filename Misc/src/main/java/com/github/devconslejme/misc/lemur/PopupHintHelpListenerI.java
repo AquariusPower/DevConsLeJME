@@ -27,6 +27,8 @@
 
 package com.github.devconslejme.misc.lemur;
 
+import org.lwjgl.opengl.Display;
+
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
@@ -96,11 +98,24 @@ public class PopupHintHelpListenerI implements CursorListener{
 			
 			float fDistFromCursor=10f;
 			float fZAboveAll=1001; //TODO even above lemur mouse cursor's picker raycast?
-			cntrPopupHelp.setLocalTranslation(
-				v2fMousePos.x-v3fSize.x/2, 
-				v2fMousePos.y+v3fSize.y+fDistFromCursor, 
-				fZAboveAll
-			);
+			
+			float fX = v2fMousePos.x-v3fSize.x/2;
+			if(fX<0){
+				fX=0;
+			}else{
+				float fDiff = (fX+cntrPopupHelp.getSize().x) - Display.getWidth();
+				if(fDiff>0)fX-=fDiff;
+			}
+//			if(fX+cntrPopupHelp.getSize().x > Display.getWidth()){}
+			
+			float fY = v2fMousePos.y+v3fSize.y+fDistFromCursor;
+			if(fY>Display.getHeight()){
+				fY=Display.getHeight();
+			}else{
+				if( (fY - cntrPopupHelp.getSize().y) < 0 )fY=cntrPopupHelp.getSize().y;
+			}
+			
+			cntrPopupHelp.setLocalTranslation(fX,fY,fZAboveAll);
 			
 			//TODO position always fully inside app screen limits!!!
 			
