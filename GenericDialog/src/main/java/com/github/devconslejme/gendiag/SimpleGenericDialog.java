@@ -145,73 +145,98 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	public static class ToolAction implements IVisibleText{
 		private String strTextKey;
 		CmdBtnTA cmdAction;
+		private String	strVisibleText;
 		
 		public abstract static class CmdBtnTA implements Command<Button>{
-//			private Button	btn;
-			
-			private String	strForStatusFalse;
-			private String	strForStatusTrue;
-//			private boolean	bAutoUpdateText;
-			private Boolean	bStatusAutoUpdateText;
+			private Integer	iStatusAutoUpdateText;
 			public String	strTextKey;
+			private String[]	astrStatus;
+			private String	strVisibleTextBtn;
 
 			public CmdBtnTA(){}
 			
 			/**
 			 * 
-			 * @param bInitStatus not wrapper, as the intent is auto update text
+			 * @param iInitStatus not nullable, as the intent is auto update text
 			 * @param strForStatusTrue
 			 * @param strForStatusFalse
 			 */
-			public CmdBtnTA(boolean bInitStatus, String strForStatusTrue, String strForStatusFalse){
-				this.strForStatusTrue = strForStatusTrue;
-				this.strForStatusFalse = strForStatusFalse;
-//				this.bAutoUpdateText=true;
-				this.bStatusAutoUpdateText=bInitStatus;
+			public CmdBtnTA(int iInitStatus, String... astrStatus){//String strForStatusTrue, String strForStatusFalse){
+				setStatusArray(astrStatus);
+				this.iStatusAutoUpdateText=iInitStatus;
+				updateTextWork(null);
 			}
 			
 			@Deprecated
 			@Override
 			public void execute(Button source) {
-//				this.btn=source;
 				updateStatus(executeTA(source));
 				updateTextWork(source);
 			}
 			
-//			public Button getSource(){return btn;}
-			
-			private void updateTextWork(Button source) {
-				if(bStatusAutoUpdateText!=null){
-					updateText(source, bStatusAutoUpdateText, strForStatusTrue, strForStatusFalse);
+			/**
+			 * 
+			 * @param source if null, and auto update mode, will just auto store on a field
+			 */
+			private String updateTextWork(Button source) {
+				if(iStatusAutoUpdateText!=null){
+					return updateText(source, iStatusAutoUpdateText, getStatusArray());//strForStatusTrue, strForStatusFalse);
 				}else{
-					updateText(source);
+					return updateText(source);
 				}
 			}
-			public abstract Boolean executeTA(Button btn);
+			protected abstract Integer executeTA(Button btn);
 			
-			protected void updateText(Button btn){}
+			protected String updateText(Button btn){return "";}
 			
-			protected void updateStatus(Boolean b){
-				if(b!=null)this.bStatusAutoUpdateText=b;
+			protected void updateStatus(Integer i){
+				if(i!=null)this.iStatusAutoUpdateText=i;
 			}
 			
-			protected void updateText(Button btn, boolean bStatus, String strForTrue, String strForFalse) {
-//				btn.setText(btn.getText().split(":")[0]+": "+
-//						(bStatus?strForTrue:strForFalse) ); //next action
-				btn.setText(strTextKey+": "+(bStatus?strForTrue:strForFalse)); //next action
+			protected String updateText(Button btn, int iStatus, String... astrStatus){//String strForTrue, String strForFalse) {
+				strVisibleTextBtn=(strTextKey+": "+getStatusText(iStatus+1)); //next action
+				
+				if(btn!=null){
+					btn.setText(strVisibleTextBtn);
+					PopupHintHelpListenerI.i().setPopupHintHelp(btn, "Current: "+getStatusText(iStatus));
+				}
+				
+				return strVisibleTextBtn;
+			}
+
+			private String getStatusText(int i) {
+				return astrStatus[i>=astrStatus.length?i=0:i];
+			}
+
+			protected String[] getStatusArray() {
+				return astrStatus;
+			}
+
+			protected void setStatusArray(String[] astrStatus) {
+				this.astrStatus = astrStatus;
 			}
 		}
 		
 		public ToolAction(String strTextKey, CmdBtnTA cmdAction) {
 			super();
+			
 			this.strTextKey = strTextKey;
-			cmdAction.strTextKey=strTextKey;
+			
 			this.cmdAction = cmdAction;
+			this.cmdAction.strTextKey=strTextKey;
 		}
 		
 		@Override
 		public String getVisibleText() {
+//			return strTextKey;
+//			return cmdAction.strVisibleTextBtn;
+			if(cmdAction.iStatusAutoUpdateText!=null){
+				cmdAction.updateTextWork(null);
+				return cmdAction.strVisibleTextBtn;
+			}
+			
 			return strTextKey;
+//			return strVisibleText;
 		}
 	}
 	

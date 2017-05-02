@@ -76,48 +76,27 @@ public class GlobalsManagerDialogI {
 					};
 				}
 				
-				if(!smd.isInitialized())return false;
+				if(!smd.isInitialized())return false; //prior to new actions below
 				
-				smd.putToolAction(new ToolAction("Methods from", new CmdBtnTA(bShowInherited,"concrete","inherited too") {
-					@Override
-					public Boolean executeTA(Button source) {
-//						updateStatus(bShowInherited=!bShowInherited);
+				smd.putToolAction(new ToolAction("Methods from", new CmdBtnTA(bShowInherited?0:1,"concrete","inherited too") {
+					@Override	public Integer executeTA(Button source) {
 						smd.requestUpdateListItems();
-//						PopupHintHelpListenerI.i().setPopupHintHelp(source, 
-//								bShowInherited?"only of concrete class":"show all inherited too"); //next action
-						return bShowInherited=!bShowInherited;
+						return (bShowInherited=!bShowInherited)?0:1;
 					}
 				}));
 				
-				smd.putToolAction(new ToolAction("Pkg info", new CmdBtnTA(bShowPackagesPrepended,"after","prepend") {
-					@Override
-					public Boolean executeTA(Button source) {
-//						updateStatus(bShowPackagesPrepended=!bShowPackagesPrepended);
+				smd.putToolAction(new ToolAction("Pkg info", new CmdBtnTA(bShowPackagesPrepended?0:1,"after","prepend") {
+					@Override	public Integer executeTA(Button source) {
 						smd.requestUpdateListItems();
-//						PopupHintHelpListenerI.i().setPopupHintHelp(source, 
-//								bShowPackagesPrepended?"put after":"prepend"); //next action
-						return bShowPackagesPrepended=!bShowPackagesPrepended;
+						return (bShowPackagesPrepended=!bShowPackagesPrepended)?0:1;
 					}
 				}));
 				
-				smd.putToolAction(new ToolAction("Method Kind", new CmdBtnTA(bShowOnlyEditableBeans,"all","only beans") {
-					@Override
-					public Boolean executeTA(Button btn) {
-//						updateStatus(bShowOnlyEditableBeans=!bShowOnlyEditableBeans);
+				smd.putToolAction(new ToolAction("Method kind", new CmdBtnTA(bShowOnlyEditableBeans?0:1,"all","only beans") {
+					@Override	public Integer executeTA(Button btn) {
 						smd.requestUpdateListItems();
-						
-//						updateText();
-						
-//						PopupHintHelpListenerI.i().setPopupHintHelp(source, 
-//							bShowOnlyEditableBeans?"show all":"show only beans"); //next action
-						return bShowOnlyEditableBeans=!bShowOnlyEditableBeans;
+						return (bShowOnlyEditableBeans=!bShowOnlyEditableBeans)?0:1;
 					}
-
-//					@Override
-//					protected void updateText(Button btn) {
-//						btn.setText(btn.getText().split(":")[0]+": "+
-//								(bShowOnlyEditableBeans?"all":"only beans") ); //next action
-//					}
 				}));
 				
 				return true;

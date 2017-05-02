@@ -51,15 +51,15 @@ public abstract class SimpleMaintenanceGenericDialog extends SimpleGenericDialog
 	@Override
 	protected void initSectionTools() {
 		super.initSectionTools();
-		putToolAction(new ToolAction("Refresh Options", new CmdBtnTA() {@Override	public Boolean executeTA(Button btn) {
+		putToolAction(new ToolAction("Refresh Options", new CmdBtnTA() {@Override	public Integer executeTA(Button btn) {
 				requestUpdateListItems();			return null;}}));
 		
 		/**
 		 * two buttons because user may have shrinked or expanded sub sections
 		 */
-		putToolAction(new ToolAction("Collapse All", new CmdBtnTA() {@Override public Boolean executeTA(Button source) {
+		putToolAction(new ToolAction("Collapse All", new CmdBtnTA() {@Override public Integer executeTA(Button source) {
 				collapseAll();		return null;}})); 
-		putToolAction(new ToolAction("Expand All", new CmdBtnTA() {@Override	public Boolean executeTA(Button source) {
+		putToolAction(new ToolAction("Expand All", new CmdBtnTA() {@Override	public Integer executeTA(Button source) {
 				expandAll();		return null;}}));
 		
 		requestUpdateListItems(); //1st time
