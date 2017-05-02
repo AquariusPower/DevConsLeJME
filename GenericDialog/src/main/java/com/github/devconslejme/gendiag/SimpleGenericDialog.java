@@ -46,6 +46,7 @@ import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.JavaLangI;
+import com.github.devconslejme.misc.JavaLangI.LinkedHashMapX;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.MethodHelp;
 import com.github.devconslejme.misc.QueueI;
@@ -96,7 +97,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private ListBox<OptionData>	lstbxOptions;
 	private VersionedList<OptionData>	vlodOptions;
 	/** a list of options can never be empty or the dialog will make no sense at all */
-	private LinkedHashMap<String,OptionData> hmOptionsRoot;
+	private LinkedHashMapX<String,OptionData> hmOptionsRoot;
 	private VersionedList<ToolAction>	vlodTools;
 	private TextField	tfInput;
 	private boolean	bReturnJustTheInputTextValue;
@@ -167,12 +168,13 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		private OptionData odParent;
 		private Object objStoredValue;
 		private boolean bExpanded;
-		private LinkedHashMap<String,OptionData> hmNestedChildrenSubOptions;
+		private LinkedHashMapX<String,OptionData> hmNestedChildrenSubOptions;
 		private ArrayList<CmdCfg> acmdcfgList = new ArrayList<CmdCfg>();
+		private boolean	bHasBean;
 		
 		public OptionData(){
 			bExpanded=true;
-			hmNestedChildrenSubOptions = new LinkedHashMap<String,OptionData>();
+			hmNestedChildrenSubOptions = new LinkedHashMapX<String,OptionData>();
 		}
 		
 		protected OptionData setTextKey(String strTextKey) {
@@ -184,6 +186,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			return this; 
 		}
 		private OptionData setSectionParent(OptionData odParent) {
+			assert(odParent==null || SectionIndicator.class.isInstance(odParent.getStoredValue()));
 			this.odParent = odParent;
 			return this; 
 		}
@@ -191,6 +194,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			return strTextKey;
 		}
 		public OptionData getSectionParent() {
+			assert(odParent==null || SectionIndicator.class.isInstance(odParent.getStoredValue()));
 			return odParent;
 		}
 		public Object getStoredValue() {
@@ -279,6 +283,17 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			while((odParent=odParent.getSectionParent())!=null)iDepth++;
 			return iDepth;
 		}
+
+		/**
+		 * if this one is a getter and has a setter
+		 */
+		public void setHasBean() {
+			bHasBean=true;
+		}
+		public boolean isHasBean() {
+			return bHasBean;
+		}
+		
 	}
 	
 	public static abstract class CmdCfg implements Command<Button>{
@@ -289,6 +304,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 //		}
 		
 		private String	strText;
+		private String	strHintHelp;
 
 		public String getText() {
 			return strText;
@@ -299,9 +315,14 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			return this;
 		}
 
-//		public boolean isIsTheApplyUserCustomValueCommand() {
-//			return bIsTheApplyUserCustomValueCommand;
-//		}
+		public CmdCfg setHintHelp(String string) {
+			this.strHintHelp=string;
+			return this;
+		}
+
+		public String getHintHelp() {
+			return strHintHelp;
+		}
 
 	}
 	
@@ -313,7 +334,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	public SimpleGenericDialog() {
 		this(DialogHierarchyStateI.i().createDialog(SimpleGenericDialog.class.getSimpleName(), null));
 		
-		hmOptionsRoot = new LinkedHashMap<String,OptionData>();
+		hmOptionsRoot = new LinkedHashMapX<String,OptionData>();
 		bRequestUpdateListItems = true;
 		sectionIndicator = new SectionIndicator();
 		bCloseOnChoiceMade=true;
@@ -628,6 +649,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 //		if(cmd!=null){
 			Button btnCfg = new Button(cc.getText(), getDialog().getStyle());
 			btnCfg.addClickCommands(cc);
+			if(cc.getHintHelp()!=null)PopupHintHelpListenerI.i().setPopupHintHelp(btnCfg, cc.getHintHelp());
 			cntr.addChild(btnCfg, i++);
 //			return btnCfg;
 //		}
@@ -649,95 +671,106 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 //			super(new BorderLayout(), getDialog().getStyle());
 			super(getDialog().getStyle());
 		}
-		Button btn;
-		TextField tf;
+		public TextField getTf() {
+			return tf;
+		}
+		public void setTf(TextField tf) {
+			this.tf = grantMinWidth(tf);
+		}
+		public Button getBtn() {
+			return btn;
+		}
+		public void setBtn(Button btn) {
+			this.btn = grantMinWidth(btn);
+		}
+		@SuppressWarnings("unchecked")
+		private <T> T grantMinWidth(Panel pnl){
+			float fMinWidth=50;
+			pnl.updateLogicalState(0); //this will pre-calculate the required good size 
+			Vector3f v3fSize = pnl.getSize().clone();
+			if(v3fSize.x<fMinWidth)v3fSize.x=fMinWidth;
+			pnl.setPreferredSize(v3fSize);
+			return (T)pnl;
+		}
+		private Button btn;
+		private TextField tf;
 	}
 	
 	@SuppressWarnings("unchecked")
 	private Panel createConfiguratorMethodHelp(OptionData od, MethodHelp mh){
 		Method mGetter = mh.getMethod();
-		String mName = mGetter.getName();
+//		String mName = mGetter.getName();
 		ContainerEdit ce = new ContainerEdit();
-		if(
-				(mName.startsWith("get") || mName.startsWith("is"))
-				&&
-				JavaLangI.i().isCanUserTypeIt(mGetter.getReturnType())
-				&&
-				mGetter.getParameterCount()==0
-		){
+		if( JavaLangI.i().isBeanGetter(mGetter) ) {
 			Object objVal;
 			String strButtonHintHelp=null;
 			try {
-				/**
-				 * to be a bean, must have getter and setter,
-				 * if there is only a getter, it may not be a bean!!!
-				 * and may execute code that will create some problem.
-				 */
 				Method mSetter = JavaLangI.i().getBeanSetterFor(mGetter);//mh.getConcreteObjectInstance(), m.getName());
-				if(mSetter!=null){
-					objVal = mGetter.invoke(mh.getConcreteObjectInstance()); //collect value from getter method
-					ce.btn = new Button(""+objVal, getDialog().getStyle()); //show value
-					ce.addChild(ce.btn, 0);
-					
-					strButtonHintHelp="click to change value";
-					ce.tf = new TextField(ce.btn.getText(), ce.btn.getStyle());
-					Vector3f v3fSize = ce.tf.getSize().clone();
-					if(v3fSize.x<50)v3fSize.x=50;
-					ce.tf.setPreferredSize(v3fSize);
-					
-					ce.btn.addClickCommands(new Command<Button>(){
-						@Override
-						public void execute(Button source) {
+				
+				od.setHasBean(); //first thing, so if it fails below the problem will be clearly visible
+				
+				objVal = mGetter.invoke(mh.getConcreteObjectInstance()); //collect value from getter method
+				ce.setBtn(new Button(""+objVal, getDialog().getStyle())); //show value
+				ce.addChild(ce.getBtn(), 0);
+				
+				strButtonHintHelp="click to change value";
+				ce.setTf(new TextField(ce.getBtn().getText(), ce.getBtn().getStyle()));
+				
+				ce.getBtn().addClickCommands(new Command<Button>(){
+					@Override
+					public void execute(Button source) {
 //							if(source==ce.btn){ //<- redundant check..
-								ce.addChild(ce.tf, 0); //will replace the button
-								ce.tf.setText(ce.btn.getText());
-								GlobalManagerI.i().get(Application.class).getStateManager().getState(FocusManagerState.class)
-									.setFocus(ce.tf);
+							ce.addChild(ce.getTf(), 0); //will replace the button
+							ce.getTf().setText(ce.getBtn().getText());
+							GlobalManagerI.i().get(Application.class).getStateManager().getState(FocusManagerState.class)
+								.setFocus(ce.getTf());
 //							}
-						}});
-					
-					ce.tf.getActionMap().put(
-						new KeyAction(KeyInput.KEY_RETURN),
-						new KeyActionListener() {
-							@Override public void keyAction(TextEntryComponent source, KeyAction key) {
-								boolean b=JavaLangI.i().setBeanValueAt(
-									mh.getConcreteObjectInstance(), 
-									mSetter, 
-									mGetter.getReturnType(), 
-									ce.tf.getText());
-								
-								if(!b){
-									MessagesI.i().warnMsg(this, "failed to change value", mSetter, mGetter, ce.tf.getText(), mh);
-								}
-//									ce.btn.setText(ce.tf.getText()); //TODO should actually be a possibly validated by the setter/getter
-									try {
-										// retrieves value possibly validated by the setter/getter
-										ce.btn.setText(""+mGetter.invoke(mh.getConcreteObjectInstance()));
-									} catch (IllegalAccessException | IllegalArgumentException| InvocationTargetException e) {
-										throw new DetailedException(e, "value get should not have failed this second time", mGetter, mSetter, mh, od);
-									}
-									
-									ce.addChild(ce.btn, 0); //will replace the textfield
-//								}
+					}});
+				
+				ce.getTf().getActionMap().put(
+					new KeyAction(KeyInput.KEY_RETURN),
+					new KeyActionListener() {
+						@Override public void keyAction(TextEntryComponent source, KeyAction key) {
+							boolean b=JavaLangI.i().setBeanValueAt(
+								mh.getConcreteObjectInstance(), 
+								mSetter, 
+								mGetter.getReturnType(), 
+								ce.getTf().getText());
+							
+							if(!b){
+								MessagesI.i().warnMsg(this, "failed to change value", mSetter, mGetter, ce.getTf().getText(), mh);
 							}
+//									ce.btn.setText(ce.tf.getText()); //TODO should actually be a possibly validated by the setter/getter
+								try {
+									// retrieves value possibly validated by the setter/getter
+									ce.getBtn().setText(""+mGetter.invoke(mh.getConcreteObjectInstance()));
+								} catch (IllegalAccessException | IllegalArgumentException| InvocationTargetException e) {
+									throw new DetailedException(e, "value get should not have failed this second time", mGetter, mSetter, mh, od);
+								}
+								
+								ce.addChild(ce.getBtn(), 0); //will replace the textfield
+//								}
 						}
-					);
-					
-					ce.btn.setColor(ColorI.i().colorChangeCopy(ColorRGBA.Green, 0.35f));
+					}
+				);
+				
+				ce.getBtn().setColor(ColorI.i().colorChangeCopy(ColorRGBA.Green, 0.35f));
 //				}else{
 //					strButtonHintHelp="WARN: no command will be called to bean set the new value";
 ////					ce.btn.setHighlightColor(ColorRGBA.Red);
 //					ce.btn.setColor(ColorI.i().colorChangeCopy(ColorRGBA.Red, 0.35f));
-				}
+				
+//					od.setHasBean(); //last thing, so if it fails for any reason will not set this.
+//				}
 				
 			} catch (IllegalAccessException | IllegalArgumentException| InvocationTargetException e) {
 				strButtonHintHelp="ERROR: failed to invoke the method '"+mGetter+"' to get the value";
 				MessagesI.i().warnMsg(this,strButtonHintHelp,od.getCmdCfgList(), od, mGetter, e);
-				ce.btn = new Button("(FAIL)", getDialog().getStyle());
+				ce.setBtn(new Button("(FAIL)", getDialog().getStyle()));
 			}
 			
-			if(ce.btn!=null && strButtonHintHelp!=null){
-				PopupHintHelpListenerI.i().setPopupHintHelp(ce.btn, strButtonHintHelp);
+			if(ce.getBtn()!=null && strButtonHintHelp!=null){
+				PopupHintHelpListenerI.i().setPopupHintHelp(ce.getBtn(), strButtonHintHelp);
 			}
 		}
 		
@@ -752,8 +785,6 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	 * @param od
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
-	@ToDo
 	private Panel createAutomaticConfigurators(OptionData od) {
 		if (od.getStoredValue() instanceof MethodHelp) {
 			return createConfiguratorMethodHelp(od, (MethodHelp)od.getStoredValue());
@@ -863,8 +894,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	
 	public OptionData putSection(OptionData odParent, String strNewSectionKey){
 		OptionData od = new OptionData();
-		od.setSectionParent(odParent);
-		od.setTextKey(strNewSectionKey);
+//		od.setSectionParent(odParent);
+//		od.setTextKey(strNewSectionKey);
 		od.setStoredValue(sectionIndicator);
 		
 		put(odParent,strNewSectionKey,od);
@@ -882,8 +913,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	 */
 	public OptionData putOption(OptionData odParent, String strTextOptionKey, Object objStoredValue){
 		OptionData od = new OptionData();
-		od.setSectionParent(odParent);
-		od.setTextKey(strTextOptionKey);
+//		od.setSectionParent(odParent);
+//		od.setTextKey(strTextOptionKey);
 		od.setStoredValue(objStoredValue);
 		
 		put(odParent,strTextOptionKey,od);
@@ -891,18 +922,105 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		return od;
 	}
 	
-	private void put(OptionData odParent, String strTextOptionKey, OptionData od){
+	public int remove(OptionData odToRemove) {
+		return doSomethingRecursively(odToRemove, new Function<OptionData, Boolean>() {
+			@Override
+			public Boolean apply(OptionData odToCompare) {
+				if(odToRemove.equals(odToCompare)){
+					LinkedHashMapX<String, OptionData> hmOpt = hmOptionsRoot;
+					if(odToCompare.getSectionParent()!=null){
+						hmOpt=odToCompare.getSectionParent().hmNestedChildrenSubOptions;
+					}
+					
+//					hmOpt.remove(odToRemove.getTextKey()); //TODO enable
+					hmOpt.removeX(odToRemove.getTextKey());
+//					hmOptionsRoot.containsKey(odToRemove);
+					vlodOptions.remove(odToRemove);
+					return true;
+				}
+				return false;
+			}
+		});
+	}
+	
+	/**
+	 * 
+	 * @param odParent
+	 * @param funcDoSomething
+	 * @return how many matched and the apply did anything useful
+	 */
+	private int doSomethingRecursively(OptionData odParent, Function<OptionData,Boolean> funcDoSomething) {
+		int iCount=0;
+		if(funcDoSomething.apply(odParent))iCount++;
+		if(odParent.getStoredValue() instanceof SectionIndicator){
+			for(OptionData odChild:odParent.hmNestedChildrenSubOptions.values()){
+				iCount+=doSomethingRecursively(odChild,funcDoSomething);
+			}
+		}
+		return iCount;
+	}
+	
+	private int setExpandedAllRecursively(OptionData odParent, boolean bExpand) {
+		int iCount=0;
+//		if(odParent==null){
+//			for(OptionData odChild:hmOptionsRoot.values()){
+//				iCount+=setExpandedAllRecursively(odChild, b);
+//			}
+//		}else{
+			iCount+=doSomethingRecursively(odParent, new Function<OptionData, Boolean>() {
+				@Override
+				public Boolean apply(OptionData odToModify) {
+					if(!SectionIndicator.class.isInstance(odToModify.getStoredValue()))return false;
+					
+					if(odToModify.isExpanded()!=bExpand){
+						odToModify.setExpanded(bExpand);
+						return true;
+					}
+					
+					return false;
+				}
+			});
+//		}
+		
+		return iCount;
+	}
+//	private void setExpandedAllRecursively(OptionData od, boolean b) {
+//		od.setExpanded(b);
+//		if(od.getStoredValue() instanceof SectionIndicator){
+//			for(OptionData odChild:od.hmNestedChildrenSubOptions.values()){
+//				setExpandedAllRecursively(odChild,b);
+//			}
+//		}
+//	}
+	
+	private void put(OptionData odParent, String strTextKey, OptionData od){
+		od.setSectionParent(odParent);
+		od.setTextKey(strTextKey);
+		
 		HashMap<String,OptionData> hmOpt = hmOptionsRoot;
 		if(odParent!=null){
+			assert(SectionIndicator.class.isInstance(odParent.getStoredValue()));
+//			if(!SectionIndicator.class.isInstance(odParent.getStoredValue())){
+//				throw new DetailedException("parent section not properly configured", odParent, strTextKey, od, this);
+//			}
 //			OptionData odParent = findSectionRecursively(hmOpt, strSectionParentKey);
 //			DetailedException.assertNotNull(odParent, "the parent section must be set before being referenced/requested/used!", odParent);
 			hmOpt=odParent.hmNestedChildrenSubOptions;
 		}
 		
-		OptionData odPrevious = hmOpt.put(strTextOptionKey, od);
+		OptionData odPrevious = hmOpt.put(strTextKey, od);
 		if(odPrevious!=null)MessagesI.i().warnMsg(this, "option was already set", odPrevious.toString(), od.toString());
 	}
 	
+	public OptionData findSectionRecursively(OptionData odParent, String strSectionKey){
+		assert(SectionIndicator.class.isInstance(odParent.getStoredValue()));
+//		if(!SectionIndicator.class.isInstance(odParent.getStoredValue()))return null;
+		
+		LinkedHashMap<String,OptionData> hmOpt = odParent==null?hmOptionsRoot:odParent.hmNestedChildrenSubOptions;
+		if(hmOpt==null)return null;
+		
+		return findSectionRecursively(hmOpt, strSectionKey);
+	}
 	private OptionData findSectionRecursively(HashMap<String,OptionData> hmOpt, String strSectionKey){
 		OptionData odFound= hmOpt.get(strSectionKey);
 		if(odFound!=null)return odFound;
@@ -1095,21 +1213,14 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		update(tpf);
 	}
 
-	public void setExpandedAll(boolean b){
+	public int setExpandedAll(boolean bExpand){
+		int iCount=0;
 		for(OptionData od:hmOptionsRoot.values()){
-			setExpandedAllRecursively(od,b);
+			iCount+=setExpandedAllRecursively(od,bExpand);
 		}
+		return iCount;
 	}
 	
-	private void setExpandedAllRecursively(OptionData od, boolean b) {
-		od.setExpanded(b);
-		if(od.getStoredValue() instanceof SectionIndicator){
-			for(OptionData odChild:od.hmNestedChildrenSubOptions.values()){
-				setExpandedAllRecursively(odChild,b);
-			}
-		}
-	}
-
 	protected void clearOptions(){
 		hmOptionsRoot.clear();
 		vlodOptions.clear();
@@ -1120,7 +1231,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
-				if(hmOptionsRoot.containsKey(odd.getTextKey())){
+				if(hmOptionsRoot.containsKey(odd.getTextKey()) || vlodOptions.contains(odd)){
 					hmOptionsRoot.remove(odd.getTextKey());
 					vlodOptions.remove(odd);
 					return false; //look for more

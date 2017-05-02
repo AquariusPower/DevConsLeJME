@@ -26,6 +26,8 @@
 */
 package com.github.devconslejme.gendiag;
 
+import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.simsilica.lemur.Button;
@@ -100,13 +102,14 @@ public abstract class SimpleMaintenanceGenericDialog extends SimpleGenericDialog
 	}
 
 	private void collapseAll() {
-		setExpandedAll(false);
+		int i=setExpandedAll(false);MessagesI.i().debugInfo(this, "collapsed", i);
 		SimpleMaintenanceGenericDialog.super.requestUpdateListItems();
 		bLastRequestWasCollapsed=true;
 	}
 	private void expandAll() {
-		setExpandedAll(true);
+		int i=setExpandedAll(true);MessagesI.i().debugInfo(this, "expanded", i);
 		SimpleMaintenanceGenericDialog.super.requestUpdateListItems();
 		bLastRequestWasCollapsed=false;
 	}
+
 }

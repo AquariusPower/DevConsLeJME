@@ -33,10 +33,12 @@ import java.util.Collections;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import com.github.devconslejme.devcons.ClipboardI;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.CmdCfg;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.JavadocI;
 import com.github.devconslejme.misc.MethodHelp;
 import com.github.devconslejme.misc.QueueI;
@@ -54,6 +56,7 @@ public class GlobalsManagerDialogI {
 	private SimpleMaintenanceGenericDialog	smd;
 	private boolean	bShowInherited;
 	private boolean	bShowPackagesPrepended;
+	private boolean	bShowOnlyEditableBeans = true;
 //	private Comparator<Object>	cmprAtoZ = new Comparator<Object>() {
 //		@Override
 //		public int compare(Object o1, Object o2) {
@@ -94,7 +97,17 @@ public class GlobalsManagerDialogI {
 						bShowPackagesPrepended=!bShowPackagesPrepended;
 						smd.requestUpdateListItems();
 						PopupHintHelpListenerI.i().setPopupHintHelp(source, 
-							bShowPackagesPrepended?"put after":"prepend"); //next action
+								bShowPackagesPrepended?"put after":"prepend"); //next action
+					}
+				}));
+				
+				smd.putToolAction(new ToolAction("Toggle show only editable beans", new Command<Button>() {
+					@Override
+					public void execute(Button source) {
+						bShowOnlyEditableBeans=!bShowOnlyEditableBeans;
+						smd.requestUpdateListItems();
+						PopupHintHelpListenerI.i().setPopupHintHelp(source, 
+							bShowOnlyEditableBeans?"show all":"show only beans"); //next action
 					}
 				}));
 				
@@ -147,9 +160,11 @@ public class GlobalsManagerDialogI {
 			Method[] am = isShowInherited() ? 
 				entry.getValue().getClass().getMethods() : 
 				entry.getValue().getClass().getDeclaredMethods();
-				
+			
+			int iValidCount=0;
 			for(Method m:am){
 				if(!Modifier.isPublic(m.getModifiers()))continue; //skip non public
+				if(bShowOnlyEditableBeans && !JavaLangI.i().isBeanGetter(m))continue;
 				
 				MethodHelp mh = new MethodHelp().setObject(entry.getValue()).setMethod(m);
 				
@@ -158,7 +173,15 @@ public class GlobalsManagerDialogI {
 				od.addCmdCfg(new CmdCfg() {@Override	public void execute(Button source) {
 						JavadocI.i().browseJavadoc(mh);
 					}}.setText("JavaDoc"));
+				
+				od.addCmdCfg(new CmdCfg() {@Override	public void execute(Button source) {
+						ClipboardI.i().copyToClipboard(mh.getFullHelp(true, true));
+					}}.setText("Cp").setHintHelp("copy to clipboard"));
+				
+				iValidCount++;
 			}
+			
+			if(iValidCount==0)smd.remove(odGlobal);
 		}
 	}
 
@@ -168,6 +191,14 @@ public class GlobalsManagerDialogI {
 
 	public void setShowInherited(boolean bShowInherited) {
 		this.bShowInherited = bShowInherited;
+	}
+
+	public boolean isShowOnlyEditableBeans() {
+		return bShowOnlyEditableBeans;
+	}
+
+	public void setShowOnlyEditableBeans(boolean bShowOnlyEditableBeans) {
+		this.bShowOnlyEditableBeans = bShowOnlyEditableBeans;
 	}
 	
 }

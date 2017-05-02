@@ -31,6 +31,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -335,5 +336,60 @@ public class JavaLangI {
 		}
 		
 		return true;
+	}
+	
+	/**
+	 * to be a bean, must have getter and setter,
+	 * if there is only a getter, it may not be a bean!!!
+	 * and calling the "pseudo-getter" may execute code that will create some problem.
+	 * @param m
+	 * @return
+	 */
+	public boolean isBeanGetter(Method m){
+		return 				
+			(m.getName().startsWith("get") || m.getName().startsWith("is"))
+			&&
+			JavaLangI.i().isCanUserTypeIt(m.getReturnType())
+			&&
+			m.getParameterCount()==0
+			&&
+			getBeanSetterFor(m)!=null
+		;
+	}
+	
+	/**
+	 * ensures types constraints 
+	 * only valid if neither K nor V are Object type
+	 * and K differs from V type on the concrete class type
+	 * TODO complete with the missing overridable constraint related methods...
+	 */
+	@SuppressWarnings("unchecked")
+	public static class LinkedHashMapX<K,V> extends LinkedHashMap<K,V>{
+		@Override
+		public V put(K key, V value) {
+			assert(key.getClass()!=Object.class);
+			assert(value.getClass()!=Object.class);
+			assert(key.getClass()!=value.getClass());
+			return super.put(key, value);
+		}
+		
+		@Deprecated
+		@Override
+		public boolean containsKey(Object key) {
+			return super.containsKey((K)key);
+		}
+		public boolean containsKeyX(K key) {
+			return super.containsKey(key);
+		}
+		
+		@Deprecated
+		@Override
+		public V remove(Object key) {
+			return super.remove((K)key);
+		}
+		public V removeX(K key) {
+			return super.remove(key);
+		}
+		
 	}
 }
