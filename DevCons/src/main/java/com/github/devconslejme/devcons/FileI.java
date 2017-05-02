@@ -36,18 +36,31 @@ import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.google.common.io.Files;
+import com.jme3.app.Application;
+import com.jme3.system.JmeSystem;
+import com.jme3.system.JmeSystem.StorageFolderType;
 
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class FileI {
-	private File	flBasePath;
+//	private File	flBasePath;
+	private File	flStorageFolder;
+	private Application	app;
 
 	public static FileI i(){return GlobalManagerI.i().get(FileI.class);}
 	
-	public void configure(File flBasePath){
-		setBasePath(flBasePath);
+//	public void configure(File flBasePath){
+	public void configure(){
+		app = GlobalManagerI.i().get(Application.class);
+//		setBasePath(flBasePath);
+		flStorageFolder = new File(
+				JmeSystem.getStorageFolder(StorageFolderType.Internal),
+				app.getClass().getPackage().getName().replace(".",File.separator) //package of Application class
+					+File.separator+app.getClass().getSimpleName() //Application class
+					+File.separator+DevConsPluginStateI.class.getSimpleName() //DevCons plugin
+			);
 	}
 	
 	public void appendLine(File fl, String str){
@@ -69,10 +82,10 @@ public class FileI {
 		return null;
 	}
 
-	public void setBasePath(File flBasePath) {
-		DetailedException.assertNotAlreadySet(this.flBasePath, flBasePath, this);
-		this.flBasePath = flBasePath;
-	}
+//	public void setBasePath(File flBasePath) {
+//		DetailedException.assertNotAlreadySet(this.flBasePath, flBasePath, this);
+//		this.flBasePath = flBasePath;
+//	}
 	
 	/**
 	 * in the base application user data path
@@ -81,9 +94,9 @@ public class FileI {
 	 */
 	public File createNewFileHandler(String strFile,boolean bFileCanExist){
 //		DetailedException.assertIsTrue("base path", this.flBasePath, flBasePath, this);
-		if(flBasePath==null)MessagesI.i().warnMsg(this, "base path not set", strFile);
+//		if(flBasePath==null)MessagesI.i().warnMsg(this, "base path not set", strFile);
 		
-		File fl= new File(flBasePath, strFile);
+		File fl= new File(flStorageFolder, strFile);
 		if(fl.exists() && !bFileCanExist){
 			throw new DetailedException("file already exists",fl);
 		}
@@ -91,6 +104,10 @@ public class FileI {
 		return fl;
 	}
 	
+	public File getStorageFolder() {
+		return flStorageFolder;
+	}
+
 	public File createNewFile(Object objForConcreteClassSimpleName,String strExt,boolean bFileCanExist){
 		return createNewFileHandler(objForConcreteClassSimpleName.getClass().getSimpleName()+"."+strExt, bFileCanExist);
 	}

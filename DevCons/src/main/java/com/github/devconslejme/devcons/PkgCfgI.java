@@ -47,8 +47,9 @@ public class PkgCfgI {
 		DetailedException.assertIsFalse("configured", bConfigured, this);
 		com.github.devconslejme.gendiag.PkgCfgI.i().configure(app,nodeParent);
 		
+		FileI.i().configure();
 		DevConsPluginStateI.i().configure(nodeParent);
-		FileI.i().configure(DevConsPluginStateI.i().getStorageFolder());
+//		FileI.i().configure(DevConsPluginStateI.i().getStorageFolder());
 		
 		initNonStandard();
 		

@@ -248,5 +248,9 @@ public class DetailedException extends NullPointerException{
 		if(obj==null)throw new DetailedException("is null",obj,aobj);
 		return obj;
 	}
+
+	public static void assertIsInitialized(boolean bInitializedIndicator, Object... aobjMoreObjectsForDebugInfo) {
+		assertIsTrue("initialized", bInitializedIndicator, aobjMoreObjectsForDebugInfo);
+	}
 }
 

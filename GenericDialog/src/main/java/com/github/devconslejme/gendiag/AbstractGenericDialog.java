@@ -116,6 +116,7 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 		
 	};
 	private BorderLayoutFT bl;
+	private boolean	bInitialized;
 	
 	protected void initContentsContainer() {
 		DetailedException.assertNotNull(bl, this);
@@ -136,6 +137,8 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 		cfgSection(getSection(ESection.Input),BorderLayout.Position.South,EEdge.Top);
 		
 		cfgSection(getSection(ESection.Tools),BorderLayout.Position.West,EEdge.Right);
+		
+		bInitialized=true;
 	}
 	
 	private ResizablePanel cfgSection(ResizablePanel rzp, BorderLayout.Position border, EEdge edgeResizable){
@@ -208,5 +211,9 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 	@Override	public void resizedEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {	}
 	@Override	public void endedResizingEvent(ResizablePanel rzpSource) {	}
 	@Override	public void resizerUpdatedLogicalStateEvent(float tpf,ResizablePanel rzp) {	}
-	
+
+	public boolean isInitialized() {
+		return bInitialized;
+	}
+
 }

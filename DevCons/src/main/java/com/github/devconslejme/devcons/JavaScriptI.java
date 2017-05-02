@@ -94,7 +94,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	enum EBaseCommand{
 		clear("clears the console log (not the log file)"),
 		echo("print some text on the console log"),
-		exec("[file] runs a script file, mainly at "+DevConsPluginStateI.i().getStorageFolder()),
+		exec("[file] runs a script file, mainly at "+FileI.i().getStorageFolder()),
 		help("[filter]"),
 		javadoc("[filter]"),
 		history("[filter] show commands history"),

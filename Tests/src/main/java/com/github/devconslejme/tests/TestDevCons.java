@@ -29,13 +29,17 @@ package com.github.devconslejme.tests;
 
 import com.github.devconslejme.debug.DebugTrackProblemsJME;
 import com.github.devconslejme.debug.UnsafeDebugHacksI;
+import com.github.devconslejme.devcons.DevConsPluginStateI;
 import com.github.devconslejme.extras.DynamicFPSLimiter;
 import com.github.devconslejme.extras.OSCmd;
 import com.github.devconslejme.extras.SingleAppInstance;
 import com.github.devconslejme.extras.SingleAppInstance.CallChkProblemsAbs;
+import com.github.devconslejme.gendiag.GlobalsManagerDialogI;
+import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.CheckProblemsI;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.Annotations.Workaround;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
@@ -43,6 +47,8 @@ import com.jme3.system.AppSettings;
 import com.jme3.system.JmeSystem;
 import com.jme3.system.JmeSystem.StorageFolderType;
 import com.jme3.system.lwjgl.LwjglAbstractDisplay;
+import com.simsilica.lemur.Button;
+import com.simsilica.lemur.Command;
 
 /**
  * its {@link GlobalManagerI} global will be auto set as {@link Application} thru the package configuration.
@@ -77,12 +83,12 @@ public class TestDevCons extends SimpleApplication{
 		 * to remove JS auto global access to some class/object, ex.: 
 		JavaScriptI.i().addForbidClassAccessJS(TestDevCons.class);
 		 */
-		_initOptionalExtras();
-		_initOptionalOtherStuff();
-		_initOptionalIntegreteAllOtherTests(); 
+		opt_initOptionalExtras();
+		opt_initOptionalOtherStuff();
+		opt_initOptionalIntegrateAllOtherTests(); 
 	}
 	
-	private void _initOptionalExtras() {
+	private void opt_initOptionalExtras() {
 		//// SingleAppInstance
 		GlobalManagerI.i().get(SingleAppInstance.class).configureRequiredAtApplicationInitialization(null);
 		GlobalManagerI.i().get(SingleAppInstance.class).addCheckProblemsCall(
@@ -102,9 +108,27 @@ public class TestDevCons extends SimpleApplication{
 				GlobalManagerI.i().get(DynamicFPSLimiter.class).update(tpf);
 			}
 		});
+		
+		//// Globals manager dialog
+		GlobalsManagerDialogI.i().configure();
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				if(!DevConsPluginStateI.i().isInitialized())return false;
+				
+				DevConsPluginStateI.i().putButton("GlobalsManager", "open global instances manager", new Command<Button>() {
+					@Override
+					public void execute(Button source) {
+						GlobalsManagerDialogI.i().show();
+					}
+				});
+				
+				return true;
+			}
+		});
 	}
 
-	private void _initOptionalOtherStuff() {
+	private void opt_initOptionalOtherStuff() {
 		//// Debug Track Problems
 		DebugTrackProblemsJME.i().configure(getGuiNode(), getRootNode());
 		CheckProblemsI.i().addProblemsChecker(DebugTrackProblemsJME.i());
@@ -123,7 +147,7 @@ public class TestDevCons extends SimpleApplication{
 	/**
 	 * so thru devcons user commands can instantiate the other tests
 	 */
-	private void _initOptionalIntegreteAllOtherTests() {
+	private void opt_initOptionalIntegrateAllOtherTests() {
 		GlobalManagerI.i().put(TestContextMenu.class, new TestContextMenu());
 		GlobalManagerI.i().put(TestChoiceDialog.class, new TestChoiceDialog());
 		GlobalManagerI.i().put(TestMultiChildDialog.class, new TestMultiChildDialog());
@@ -147,6 +171,6 @@ public class TestDevCons extends SimpleApplication{
 	@Override
 	public void handleError(String errMsg, Throwable t) {
 		GlobalManagerI.i().get(SingleAppInstance.class).setExitRequestCause(t);
-		//super.handleError(errMsg,t); //TODO should continue to?:
+		super.handleError(errMsg,t); //seems ok after the above
 	}
 }

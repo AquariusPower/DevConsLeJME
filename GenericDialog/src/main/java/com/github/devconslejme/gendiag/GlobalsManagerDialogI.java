@@ -32,6 +32,8 @@ import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MethodHelp;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
 
@@ -45,23 +47,35 @@ public class GlobalsManagerDialogI {
 	private boolean	bShowInherited;
 	
 	public GlobalsManagerDialogI(){}
-	//public void configure(){}
 	
-	public void init(){
-		smd = new SimpleMaintenanceGenericDialog() {
+	public void configure(){
+		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
-			public void updateMaintenanceList() {
-				prepareGlobalsForMaintenance();
+			public Boolean call() {
+				if(smd==null){
+					smd = new SimpleMaintenanceGenericDialog() {
+						@Override
+						public void updateMaintenanceList() {
+							prepareGlobalsForMaintenance();
+						}
+					};
+				}
+				
+				if(!smd.isInitialized())return false;
+				
+				smd.putToolAction(new ToolAction("Toggle Inherited Methods", new Command<Button>() {
+					@Override
+					public void execute(Button source) {
+						bShowInherited=!bShowInherited;
+					}
+				}));
+				
+				return true;
 			}
-		};
-		
-		smd.putToolAction(new ToolAction("Toggle Inherited Methods", new Command<Button>() {
-			@Override
-			public void execute(Button source) {
-				bShowInherited=!bShowInherited;
-			}
-		}));
-		
+		});
+	}
+	
+	public void show(){
 		DialogHierarchyStateI.i().showDialog(smd.getDialog());
 	}
 	

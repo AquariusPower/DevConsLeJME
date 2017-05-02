@@ -56,7 +56,8 @@ public class MessagesI {
 	 * {@link FileI} also depends on this class, so this initializer is necessary
 	 */
 	public void initializeLogFile(){
-		if(flLog==null)flLog=FileI.i().createNewFile(this,"log",true);
+		flLog=FileI.i().createNewFile(this,"log",true);
+		flLog.delete();
 		bLog=true;
 	}
 	

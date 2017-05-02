@@ -27,7 +27,6 @@
 
 package com.github.devconslejme.devcons;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -40,10 +39,10 @@ import org.lwjgl.opengl.Display;
 import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.es.HierarchyComp.EField;
 import com.github.devconslejme.gendiag.ContextMenuI;
-import com.github.devconslejme.gendiag.ContextMenuI.ContextMenuOwnerListenerI;
-import com.github.devconslejme.gendiag.ContextMenuI.HintUpdater;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenuAnon;
+import com.github.devconslejme.gendiag.ContextMenuI.ContextMenuOwnerListenerI;
+import com.github.devconslejme.gendiag.ContextMenuI.HintUpdater;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
@@ -77,15 +76,12 @@ import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.system.JmeSystem;
-import com.jme3.system.JmeSystem.StorageFolderType;
 import com.simsilica.es.EntityId;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
 import com.simsilica.lemur.Container;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.HAlignment;
-import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.TextField;
@@ -122,13 +118,13 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	private BitmapFont	font;
 	private ColorRGBA	colorConsoleStyleBackground;
 	private Container	cntrStatus;
-	private Label	lblTitle;
+	private Button	btnTitle;
 	private Button	btnClipboardShow;
 	private ButtonClickListener	btnclk;
 	private TextField	tfInput;
 	private int	iKeyCodeToggleConsole = KeyInput.KEY_F10;
 	private String	strInputMappingToggleDeveloperConsole = "ToggleDeveloperConsole";
-	private File	flStorageFolder;
+//	private File	flStorageFolder;
 	private HashMap<String,VarMon> hmVarMon = new HashMap<String,VarMon>();
 	private ListBox<String> lstbxVarMonitorBar = new ListBox<String>();
 	private CallableXScrollTo cxScrollTo;
@@ -142,24 +138,18 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	private boolean	bRequestUpdateNoWrap;
 	private Button	btnRestoreSize;
 	private VersionedReference<Set<Integer>>	vrSelectionChangedToShowVarHelp;
-//	private VarMon	vmAppTime;
-//	private VarMon	vmCursorPos;
-//	private VarMon	vmVisibleRows;
-//	private VarMon	vmSlider;
 	private String	strBaseTitle = "DevCons";
 	private Vector3f	v3fDefaultPos = new Vector3f(0, getWindowSize().y-20, 0);
 	private Vector3f	v3fBkpLastNonDefaultPos;
 	private Vector3f	v3fDefaultBarSize = new Vector3f(100,100,0);
 	private float	fDistToToggleRestorePosSize = 5f;
 	private VersionedStatus vlstrVarMonitorEntries = new VersionedStatus();
-	//private Vector3f	v3fBkpLastNonDefaultBarSize;
 	private Float	fBkpLastNonDefaultBarWidthX;
 	private  Vector3f	v3fDefaultSize;
 	private Vector3f	v3fBkpLastNonDefaultSize;
 	private ContextMenuAnon	cmVarMon;
 	private boolean	bAutoUpdateWrapAt=true;
 	private VersionedReference<Set<Integer>>	vrSelectionChangedToUpdateInputText;
-//	VersionedReference<Vector3f> vrLoggingSectionSize;
 	private boolean bAllowHiddenStats=true; //TODO shouldnt it init as false? :)
 	private HashMap<String,Button>	hmButtons = new HashMap<String,Button>();
 	private CallableXAnon cxRecreateButtons;
@@ -302,12 +292,12 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		
 		app.getStateManager().attach(this);
 		
-		flStorageFolder = new File(
-			JmeSystem.getStorageFolder(StorageFolderType.Internal),
-			app.getClass().getPackage().getName().replace(".",File.separator) //package of Application class
-				+File.separator+app.getClass().getSimpleName() //Application class
-				+File.separator+DevConsPluginStateI.class.getSimpleName() //DevCons plugin
-		);
+//		flStorageFolder = new File(
+//			JmeSystem.getStorageFolder(StorageFolderType.Internal),
+//			app.getClass().getPackage().getName().replace(".",File.separator) //package of Application class
+//				+File.separator+app.getClass().getSimpleName() //Application class
+//				+File.separator+DevConsPluginStateI.class.getSimpleName() //DevCons plugin
+//		);
 		
 		JavaScriptI.i().configure(); //before all others
 		LoggingI.i().configure();
@@ -439,7 +429,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 				fBkpLastNonDefaultBarWidthX = fCurrentBarWidthX;
 				v3fBkpLastNonDefaultSize = rzpMain.getSize().clone();
 			}
-			LoggingI.i().logEntry("DevCons: restoring default pos size");
+			LoggingI.i().logEntry(strBaseTitle+": restoring default pos size");
 		}else{
 			if(v3fBkpLastNonDefaultPos!=null){
 				rzpMain.setLocalTranslationXY(v3fBkpLastNonDefaultPos);
@@ -450,7 +440,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			if(fBkpLastNonDefaultBarWidthX!=null){
 				rzpVarBar.getPreferredSize().x=fBkpLastNonDefaultBarWidthX;
 			}
-			LoggingI.i().logEntry("DevCons: applying last non-default pos size");
+			LoggingI.i().logEntry(strBaseTitle+": applying last non-default pos size");
 		}
 		
 //		updateLoggingWrapAt();
@@ -559,7 +549,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 //	};
 	
 	private void initVarMonValues() {
-		createVarMon(EStatPriority.Bottom, "Slider", "DevCons Logging area Slider Value",new CallableXAnon() {
+		createVarMon(EStatPriority.Bottom, "Slider", strBaseTitle+" Logging area Slider Value",new CallableXAnon() {
 //			public void a(){}
 			@Override
 			public Boolean call() {
@@ -575,7 +565,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			}
 		});
 		
-		createVarMon(EStatPriority.Bottom, "VisibleRows", "DevCons Logging area Visible Rows",new CallableXAnon() {
+		createVarMon(EStatPriority.Bottom, "VisibleRows", strBaseTitle+" Logging area Visible Rows",new CallableXAnon() {
 			@Override
 			public Boolean call() {
 				getValue(VarMon.class).set( String.format("%d", lstbxLoggingSection.getVisibleItems()) );
@@ -723,7 +713,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 					updateVarMonValueAtList(vm,true);
 				}
 				
-				if(!strAddToTitle.isEmpty())lblTitle.setText(strBaseTitle+":"+strAddToTitle);
+				if(!strAddToTitle.isEmpty())btnTitle.setText(strBaseTitle+":"+strAddToTitle);
 				
 				vrSelectionChangedToShowVarHelp = lstbxVarMonitorBar.getSelectionModel().createReference();
 
@@ -920,11 +910,11 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		PopupHintHelpListenerI.i().setPopupHintHelp(btnClipboardShow, "Show Clipboard Contents");
 		hmButtons.put(btnClipboardShow.getText(),btnClipboardShow);
 		
-		lblTitle = new Label(strBaseTitle ,getStyle());
+		btnTitle = new Button(strBaseTitle ,getStyle());
 //		SimpleDragParentestListenerI.i().applyAt(lblStats);
-		lblTitle.setColor(new ColorRGBA(1,1,0.5f,1));
-		lblTitle.setTextHAlignment(HAlignment.Right);
-		hmButtons.put(lblTitle.getText(),btnClipboardShow);
+		btnTitle.setColor(new ColorRGBA(1,1,0.5f,1));
+		btnTitle.setTextHAlignment(HAlignment.Right);
+		hmButtons.put(btnTitle.getText(),btnTitle);
 //		cntrStatus.addChild(lblStats,0,0);
 		
 		btnclk = new ButtonClickListener();
@@ -932,19 +922,33 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		requestRecreateButtons();
 	}
 	
-	private static class ButtonWithCmd extends Button{
-		public ButtonWithCmd(String s, String style) {
+	public static class ButtonWithCmd extends Button{
+		private ButtonWithCmd(String s, String style) {
 			super(s, style);
 		}
 
-		Command<? super Button> cmd;
+		public Command<? super Button> getCmd() {
+			return cmd;
+		}
+
+		private void setCmd(Command<? super Button> cmd) {
+			DetailedException.assertNotAlreadySet(this.cmd, cmd, this);
+			this.cmd = cmd;
+		}
+
+		private Command<? super Button> cmd;
 	}
 	
-	public void putButton(String strTextKey, String strPopupHelp, Command<? super Button> cmd){
+	public ButtonWithCmd putButton(String strTextKey, String strPopupHelp, Command<? super Button> cmd){
+		DetailedException.assertIsInitialized(isInitialized(), this, strTextKey, strPopupHelp, cmd);
+		
 		ButtonWithCmd btnc = new ButtonWithCmd(strTextKey,getStyle());
-		btnc.cmd=cmd;
+		PopupHintHelpListenerI.i().setPopupHintHelp(btnc, strPopupHelp);
+		btnc.setCmd(cmd);
 		hmButtons.put(btnc.getText(),btnc);
 		requestRecreateButtons();
+		
+		return btnc;
 	}
 	
 	public void requestRecreateButtons() {
@@ -955,7 +959,10 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 					
 					int iButtonIndex=0;
 					cntrStatus.clearChildren();
-					for(Button btn:hmButtons.values()){
+					ArrayList<Button> abtn = new ArrayList<Button>(hmButtons.values());
+					abtn.remove(btnTitle);
+					abtn.add(btnTitle); //last
+					for(Button btn:abtn){
 //						if (pnl instanceof Button) {
 //							Button btn = (Button) pnl;
 							btn.setTextHAlignment(HAlignment.Center);
@@ -1004,7 +1011,16 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			if(capture.equals(btnRestoreSize)){
 				toggleDefaultPosSize(false);
 			}else{
-				MessagesI.i().warnMsg(this, "missing event mapping for "+capture, target);
+				if (capture instanceof ButtonWithCmd) {
+					ButtonWithCmd btnc = (ButtonWithCmd) capture;
+					if(btnc.cmd!=null){
+						btnc.cmd.equals(btnc);
+					}else{
+						MessagesI.i().warnMsg(this, "missing event mapping for "+capture, target);
+					}
+				}else{
+					MessagesI.i().warnMsg(this, "missing event mapping for "+capture, target);
+				}
 			}
 		}
 		
@@ -1117,7 +1133,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	}
 	
 	private void initMainContainer() {
-		rzpMain = DialogHierarchyStateI.i().createDialog(DevConsPluginStateI.class.getSimpleName(), strStyle);
+		rzpMain = DialogHierarchyStateI.i().createDialog(DevConsPluginStateI.class.getSimpleName(), getStyle());
 		EntityId entid = DialogHierarchyStateI.i().getEntityId(rzpMain); //DialogHierarchySystemI.i().createEntity(ContextMenuI.class.getSimpleName());
 		DialogHierarchySystemI.i().setHierarchyComp(entid, EField.eHierarchyType, EHierarchy.Top);
 		rzpMain.setApplyContentsBoundingBoxSize(false);
@@ -1219,11 +1235,11 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 						v3fDefaultSize=rzpMain.getSize().clone();
 						return true;
 					}
-				}.setName("DevCons: updates default size"));
+				}.setName(strBaseTitle+": updates default size"));
 				
 				return true;
 			}
-		}.setName("DevCons: request new size"));
+		}.setName(strBaseTitle+": request new size"));
 		
 	}
 	
@@ -1283,9 +1299,9 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		tfInput.setText(str);
 	}
 
-	public File getStorageFolder() {
-		return flStorageFolder;
-	}
+//	public File getStorageFolder() {
+//		return flStorageFolder;
+//	}
 
 	public void insertAtInputTextCaratPos(String str, Integer iDeleteBeforeIt) {
 		if(iDeleteBeforeIt!=null){
@@ -1402,7 +1418,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		builder.append(", cntrStatus=");
 		builder.append(cntrStatus);
 		builder.append(", lblTitle=");
-		builder.append(lblTitle);
+		builder.append(btnTitle);
 		builder.append(", btnClipboardShow=");
 		builder.append(btnClipboardShow);
 		builder.append(", btnclk=");
@@ -1413,8 +1429,6 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		builder.append(iKeyCodeToggleConsole);
 		builder.append(", strInputMappingToggleDeveloperConsole=");
 		builder.append(strInputMappingToggleDeveloperConsole);
-		builder.append(", flStorageFolder=");
-		builder.append(flStorageFolder);
 		builder.append(", hmVarMon=");
 		builder.append(hmVarMon);
 		builder.append(", lstbxVarMonitorBar=");

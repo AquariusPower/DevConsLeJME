@@ -136,7 +136,8 @@ public class DebugTrackProblemsJME implements ICheckProblems{
 					if(lTimePrev != SimulationTimeI.i().getNanoTime()){ 
 						geom.setLocalTranslation(FastMath.nextRandomFloat(),0,0);
 						
-						System.out.print(geom.getMesh().getClass().getSimpleName()+"/"+geom.getLocalTranslation());
+//						System.out.print(geom.getMesh().getClass().getSimpleName()+"/"+geom.getLocalTranslation());
+						MessagesI.i().output(false, System.err, "CreatingTestProblem:", this , geom.getMesh().getClass().getSimpleName()+"/"+geom.getLocalTranslation());
 						
 //						lTimePrev = app.getTimer().getTime();
 						lTimePrev = SimulationTimeI.i().getNanoTime();
