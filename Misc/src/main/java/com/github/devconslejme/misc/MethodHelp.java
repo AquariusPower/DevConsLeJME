@@ -51,7 +51,7 @@ public class MethodHelp{
 		return bStatic==null?false:bStatic;
 	}
 	public int getNonUserTypeableParamsCount() {
-		return iNonUserTypeableParamsCount;
+		return iNonUserTypeableParamsCount==null ? 0 : iNonUserTypeableParamsCount;
 	}
 	public Class getDeclaring() {
 //		return clDeclaring;

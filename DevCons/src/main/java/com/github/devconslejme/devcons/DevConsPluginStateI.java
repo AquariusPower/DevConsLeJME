@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -118,9 +119,9 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	private BitmapFont	font;
 	private ColorRGBA	colorConsoleStyleBackground;
 	private Container	cntrStatus;
-	private Button	btnTitle;
-	private Button	btnClipboardShow;
-	private ButtonClickListener	btnclk;
+	private ButtonWithCmd btnTitle;
+//	private ButtonWithCmd btnClipboardShow;
+	private ButtonClickListener	bclk;
 	private TextField	tfInput;
 	private int	iKeyCodeToggleConsole = KeyInput.KEY_F10;
 	private String	strInputMappingToggleDeveloperConsole = "ToggleDeveloperConsole";
@@ -134,9 +135,9 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	private ResizablePanel	rzpMain;
 	private Application	app;
 	private ResizablePanel	rzpVarBar;
-	private Button	btnShowVarMon;
+//	private Button	btnShowVarMon;
 	private boolean	bRequestUpdateNoWrap;
-	private Button	btnRestoreSize;
+//	private Button	btnRestoreSize;
 	private VersionedReference<Set<Integer>>	vrSelectionChangedToShowVarHelp;
 	private String	strBaseTitle = "DevCons";
 	private Vector3f	v3fDefaultPos = new Vector3f(0, getWindowSize().y-20, 0);
@@ -151,7 +152,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	private boolean	bAutoUpdateWrapAt=true;
 	private VersionedReference<Set<Integer>>	vrSelectionChangedToUpdateInputText;
 	private boolean bAllowHiddenStats=true; //TODO shouldnt it init as false? :)
-	private HashMap<String,Button>	hmButtons = new HashMap<String,Button>();
+	private LinkedHashMap<String,Button>	hmButtons = new LinkedHashMap<String,Button>();
 	private CallableXAnon cxRecreateButtons;
 	
 	private Comparator<VarMon>	cmprStat = new Comparator<VarMon>() {
@@ -872,6 +873,17 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		LoggingI.i().logExceptionEntry(new UnsupportedOperationException("method not implemented yet"), null);
 	}
 	
+	public static abstract class CallButtonPostCfg extends CallableX<CallButtonPostCfg>{
+		private ButtonWithCmd	btnc;
+
+		private void setButton(ButtonWithCmd btnc) {
+			this.btnc=btnc;
+		}
+		public ButtonWithCmd getButton() {
+			return btnc;
+		}
+	}
+	
 	@SuppressWarnings("unchecked")
 	private void initStatusSection() {
 		cntrStatus = new Container(getStyle());
@@ -879,45 +891,89 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 //		MiscLemurI.i().applySimpleDragParentestListener(cntrStatus);
 		
 		// buttons
-		btnRestoreSize = new Button("DefaultPosSize",getStyle());
-		PopupHintHelpListenerI.i().setPopupHintHelp(btnRestoreSize, "Restore DevCons defaults Size and Position");
-		hmButtons.put(btnRestoreSize.getText(),btnRestoreSize);
-		
-		btnShowVarMon = new Button("VarMonBar:Toggle",getStyle());
-		PopupHintHelpListenerI.i().setPopupHintHelp(btnShowVarMon, "Show Variables Monitor Bar");
-		ContextMenu cm = new ContextMenu(rzpMain);
-		cm.addNewEntry(
-			"ToggleHiddenStats", 
-			new Command<Button>(){
+		putButtonLater("DefaultPosSize", "Restore DevCons defaults Size and Position", new Command<Button>() {
 				@Override
 				public void execute(Button source) {
-					bAllowHiddenStats=!bAllowHiddenStats;
-					enqueueUpdateVarMonList();
+					toggleDefaultPosSize(false);
 				}
-			},
-			new HintUpdater() {
+			}, 
+			null
+		);
+//		btnRestoreSize = new Button("DefaultPosSize",getStyle());
+//		PopupHintHelpListenerI.i().setPopupHintHelp(btnRestoreSize, "Restore DevCons defaults Size and Position");
+//		hmButtons.put(btnRestoreSize.getText(),btnRestoreSize);
+		
+		putButtonLater("VarMonBar:Toggle", "Show Variables Monitor Bar", 
+			new Command<Button>() {
+				@Override
+				public void execute(Button source) {
+					toggleVarMonitorBar(null);
+				}
+			}, 
+			new CallButtonPostCfg() {
 				@Override
 				public Boolean call() {
-					setPopupHintHelp("(click to "+(bAllowHiddenStats?"show":"hide")+")"); //say the next action on clicking
+					ContextMenu cm = new ContextMenu(rzpMain);
+					cm.addNewEntry(
+						"ToggleHiddenStats", 
+						new Command<Button>(){
+							@Override
+							public void execute(Button source) {
+								bAllowHiddenStats=!bAllowHiddenStats;
+								enqueueUpdateVarMonList();
+							}
+						},
+						new HintUpdater() {
+							@Override
+							public Boolean call() {
+								setPopupHintHelp("(click to "+(bAllowHiddenStats?"show":"hide")+")"); //say the next action on clicking
+								return true;
+							}
+						}
+					);
+					ContextMenuI.i().applyContextMenuAt(getButton(),cm);
+					
 					return true;
 				}
 			}
 		);
-		ContextMenuI.i().applyContextMenuAt(btnShowVarMon,cm);
-		hmButtons.put(btnShowVarMon.getText(),btnShowVarMon);
+//		btnShowVarMon = new Button("VarMonBar:Toggle",getStyle());
+//		PopupHintHelpListenerI.i().setPopupHintHelp(btnShowVarMon, "Show Variables Monitor Bar");
+//		ContextMenu cm = new ContextMenu(rzpMain);
+//		cm.addNewEntry(
+//			"ToggleHiddenStats", 
+//			new Command<Button>(){
+//				@Override
+//				public void execute(Button source) {
+//					bAllowHiddenStats=!bAllowHiddenStats;
+//					enqueueUpdateVarMonList();
+//				}
+//			},
+//			new HintUpdater() {
+//				@Override
+//				public Boolean call() {
+//					setPopupHintHelp("(click to "+(bAllowHiddenStats?"show":"hide")+")"); //say the next action on clicking
+//					return true;
+//				}
+//			}
+//		);
+//		ContextMenuI.i().applyContextMenuAt(btnShowVarMon,cm);
+//		hmButtons.put(btnShowVarMon.getText(),btnShowVarMon);
 		
-		btnClipboardShow = new Button("Clipboard:Show",getStyle());
-		PopupHintHelpListenerI.i().setPopupHintHelp(btnClipboardShow, "Show Clipboard Contents");
-		hmButtons.put(btnClipboardShow.getText(),btnClipboardShow);
+		putButtonLater("Clipboard:Show", "Show Clipboard Contents", new Command<Button>(){@Override	public void execute(Button source) {
+			ClipboardI.i().showClipboard();	}},null);
+//		btnClipboardShow = new Button("Clipboard:Show",getStyle());
+//		PopupHintHelpListenerI.i().setPopupHintHelp(btnClipboardShow, "Show Clipboard Contents");
+//		hmButtons.put(btnClipboardShow.getText(),btnClipboardShow);
 		
-		btnTitle = new Button(strBaseTitle ,getStyle());
+		btnTitle = new ButtonWithCmd(strBaseTitle ,getStyle());
 //		SimpleDragParentestListenerI.i().applyAt(lblStats);
 		btnTitle.setColor(new ColorRGBA(1,1,0.5f,1));
 		btnTitle.setTextHAlignment(HAlignment.Right);
 		hmButtons.put(btnTitle.getText(),btnTitle);
 //		cntrStatus.addChild(lblStats,0,0);
 		
-		btnclk = new ButtonClickListener();
+		bclk = new ButtonClickListener();
 		
 		requestRecreateButtons();
 	}
@@ -939,6 +995,30 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		private Command<? super Button> cmd;
 	}
 	
+	/**
+	 * uses queue
+	 * @param strTextKey
+	 * @param strPopupHelp
+	 * @param cmd
+	 */
+	public void putButtonLater(String strTextKey, String strPopupHelp, Command<? super Button> cmd, CallButtonPostCfg cbpc){
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				if(!isInitialized())return false;
+				
+				ButtonWithCmd btnc = putButton(strTextKey, strPopupHelp, cmd);
+				
+				if(cbpc!=null){
+					cbpc.setButton(btnc);
+					QueueI.i().enqueue(cbpc);
+				}
+				
+				return true;
+			}
+		});
+	}
+	
 	public ButtonWithCmd putButton(String strTextKey, String strPopupHelp, Command<? super Button> cmd){
 		DetailedException.assertIsInitialized(isInitialized(), this, strTextKey, strPopupHelp, cmd);
 		
@@ -957,16 +1037,18 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 				public Boolean call() {
 //					recreateButtons();
 					
-					int iButtonIndex=0;
 					cntrStatus.clearChildren();
+					
 					ArrayList<Button> abtn = new ArrayList<Button>(hmButtons.values());
 					abtn.remove(btnTitle);
 					abtn.add(btnTitle); //last
+					
+					int iButtonIndex=0;
 					for(Button btn:abtn){
 //						if (pnl instanceof Button) {
 //							Button btn = (Button) pnl;
 							btn.setTextHAlignment(HAlignment.Center);
-							CursorEventControl.addListenersToSpatial(btn, btnclk);
+							CursorEventControl.addListenersToSpatial(btn, bclk);
 //						}
 						DragParentestPanelListenerI.i().applyAt(btn);
 						cntrStatus.addChild(btn,0,iButtonIndex++);
@@ -975,6 +1057,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 					return true;
 				}
 			};
+		
 		QueueI.i().enqueue(cxRecreateButtons);
 	}
 	
@@ -1002,26 +1085,26 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			
 			if(event.getButtonIndex()!=0)return;
 			
-			if(capture.equals(btnClipboardShow)){
-				ClipboardI.i().showClipboard();
-			}else
-			if(capture.equals(btnShowVarMon)){
-				toggleVarMonitorBar(null);
-			}else
-			if(capture.equals(btnRestoreSize)){
-				toggleDefaultPosSize(false);
-			}else{
-				if (capture instanceof ButtonWithCmd) {
+//			if(capture.equals(btnClipboardShow)){
+//				ClipboardI.i().showClipboard();
+//			}else
+//			if(capture.equals(btnShowVarMon)){
+//				toggleVarMonitorBar(null);
+//			}else
+//			if(capture.equals(btnRestoreSize)){
+//				toggleDefaultPosSize(false);
+//			}else{
+//				if (capture instanceof ButtonWithCmd) {
 					ButtonWithCmd btnc = (ButtonWithCmd) capture;
 					if(btnc.cmd!=null){
-						btnc.cmd.equals(btnc);
+						btnc.cmd.execute(btnc);
 					}else{
 						MessagesI.i().warnMsg(this, "missing event mapping for "+capture, target);
 					}
-				}else{
-					MessagesI.i().warnMsg(this, "missing event mapping for "+capture, target);
-				}
-			}
+//				}else{
+//					MessagesI.i().warnMsg(this, "missing event mapping for "+capture, target);
+//				}
+//			}
 		}
 		
 //		@Override
@@ -1419,10 +1502,6 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		builder.append(cntrStatus);
 		builder.append(", lblTitle=");
 		builder.append(btnTitle);
-		builder.append(", btnClipboardShow=");
-		builder.append(btnClipboardShow);
-		builder.append(", btnclk=");
-		builder.append(btnclk);
 		builder.append(", tfInput=");
 		builder.append(tfInput);
 		builder.append(", iKeyCodeToggleConsole=");
@@ -1451,12 +1530,8 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		builder.append(app);
 		builder.append(", rzpVarBar=");
 		builder.append(rzpVarBar);
-		builder.append(", btnShowVarMon=");
-		builder.append(btnShowVarMon);
 		builder.append(", bUpdateNoWrap=");
 		builder.append(bRequestUpdateNoWrap);
-		builder.append(", btnRestoreSize=");
-		builder.append(btnRestoreSize);
 		builder.append(", vrSelectionChangedToShowVarHelp=");
 		builder.append(vrSelectionChangedToShowVarHelp);
 		builder.append(", strBaseTitle=");

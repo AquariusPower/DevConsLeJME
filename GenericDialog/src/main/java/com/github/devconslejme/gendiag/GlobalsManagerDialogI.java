@@ -96,7 +96,11 @@ public class GlobalsManagerDialogI {
 			Method[] am = isShowInherited() ? o.getClass().getMethods() : o.getClass().getDeclaredMethods();
 			for(Method m:am){
 				MethodHelp mh = new MethodHelp().setObject(o).setMethod(m);
-				smd.putOption(odGlobal, mh.getMethodHelp(true), mh);
+				smd.putOption(
+					odGlobal, 
+//					isShowInherited() ? mh.getFullHelp(true, false) : mh.getMethodHelp(true), 
+					mh.getFullHelp(true, false), 
+					mh);
 			}
 		}
 	}

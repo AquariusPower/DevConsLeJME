@@ -111,21 +111,30 @@ public class TestDevCons extends SimpleApplication{
 		
 		//// Globals manager dialog
 		GlobalsManagerDialogI.i().configure();
-		QueueI.i().enqueue(new CallableXAnon() {
-			@Override
-			public Boolean call() {
-				if(!DevConsPluginStateI.i().isInitialized())return false;
-				
-				DevConsPluginStateI.i().putButton("GlobalsManager", "open global instances manager", new Command<Button>() {
-					@Override
-					public void execute(Button source) {
-						GlobalsManagerDialogI.i().show();
-					}
-				});
-				
-				return true;
-			}
-		});
+		DevConsPluginStateI.i().putButtonLater("GlobalsManager", "open global instances manager", 
+			new Command<Button>() {
+				@Override
+				public void execute(Button source) {
+					GlobalsManagerDialogI.i().show();
+				}
+			},
+			null
+		);
+//		QueueI.i().enqueue(new CallableXAnon() {
+//			@Override
+//			public Boolean call() {
+//				if(!DevConsPluginStateI.i().isInitialized())return false;
+//				
+//				DevConsPluginStateI.i().putButton("GlobalsManager", "open global instances manager", new Command<Button>() {
+//					@Override
+//					public void execute(Button source) {
+//						GlobalsManagerDialogI.i().show();
+//					}
+//				});
+//				
+//				return true;
+//			}
+//		});
 	}
 
 	private void opt_initOptionalOtherStuff() {
