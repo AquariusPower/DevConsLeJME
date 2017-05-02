@@ -90,6 +90,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 //	private boolean	bEnabledGrowParentestFixAttemptLimit=false;
 	private HashMap<EEdge,Edge> hmEdge = new HashMap<EEdge,Edge>();
 	private Panel pnlParentest = null;
+	private boolean bEnableResizing=true;
 	
 //	public static interface IResizableListener {
 //		//public static class VersionedVector3f extends Vector3f implements VersionedObject{}; //???
@@ -157,6 +158,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		getEdge(EEdge.BottomRight).setFrom(getEdge(EEdge.Bottom),getEdge(EEdge.Right)	);
 		getEdge(EEdge.BottomLeft)	.setFrom(getEdge(EEdge.Bottom),getEdge(EEdge.Left)	);
 	}
+	
 	public void setAllEdgesEnabled(boolean bEnabled){
 		for(Edge edge:hmEdge.values()){
 			edge.setEnabled(bEnabled);
@@ -602,6 +604,8 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 			if(event.getButtonIndex()!=rzp.iMouseButtonIndexToDrag)return;
 			
 			if(event.isPressed()){
+				if(!rzp.isEnableResizing())return; //prevent only from starting resizing, so will have a clean ending
+				
 				rzp.v3fDragFromPrevious=(new Vector3f(event.getX(),event.getY(),0));
 				event.setConsumed(); //acknoledges event absorption
 			}else{
@@ -867,6 +871,12 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 	
 	public void restoreDefaultSafeSize() {
 		MiscLemurI.i().safeSizeRecursively(EReSizeApplyMode.RestoreDefault, this);
+	}
+	public boolean isEnableResizing() {
+		return bEnableResizing;
+	}
+	public void setEnableResizing(boolean bEnableResizing) {
+		this.bEnableResizing = bEnableResizing;
 	}
 	
 }

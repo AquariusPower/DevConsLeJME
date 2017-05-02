@@ -41,7 +41,6 @@ import java.util.Set;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.HintUpdater;
 import com.github.devconslejme.misc.Annotations.Bugfix;
-import com.github.devconslejme.misc.Annotations.ToDo;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.ESimpleType;
@@ -138,6 +137,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private ContextMenu	cmIST;
 	private ContextMenu	cmSubBorderSize;
 	private int	iNestingStepDistance=10;
+	private FocusManagerState	focusman;
+	protected boolean	bLockPosSize;
 	
 	private static class SectionIndicator{}
 	
@@ -463,10 +464,26 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	@SuppressWarnings("unchecked")
 	private void initInfoSectionTitleContextMenu() {
 		cmIST = new ContextMenu(getDialog());
+		
 		cmIST.addNewEntry("Restore to default/initial size", new Command<Button>() {@Override public void execute(Button source) {
 			getDialog().restoreDefaultSafeSize(); }}, null);
+		
 		cmIST.addNewEntry("Update default size to current", new Command<Button>() {@Override public void execute(Button source) {
 			getDialog().applyCurrentSafeSizeAsDefault(); }}, null);
+		
+		cmIST.addNewEntry("Toggle lock pos/size", new Command<Button>() {@Override public void execute(Button source) {
+			bLockPosSize=!bLockPosSize;
+			if(bLockPosSize){
+				DragParentestPanelListenerI.i().setEnabledAt(btnTitleText,false);
+				DragParentestPanelListenerI.i().setEnabledAt(getDialog(),false);
+				getDialog().setEnableResizing(false);
+			}else{
+				DragParentestPanelListenerI.i().setEnabledAt(btnTitleText,true);
+				DragParentestPanelListenerI.i().setEnabledAt(getDialog(),true);
+				getDialog().setEnableResizing(true);
+			}
+		}}, null);
+		
 		cmIST.addNewEntry("Toggle Info Visibility", 
 			new Command<Button>() {@Override public void execute(Button source) {
 				if(btnInfoText.getParent()!=null){
@@ -538,6 +555,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	}
 	
 	private void initBase(){
+		focusman = GlobalManagerI.i().get(Application.class).getStateManager().getState(FocusManagerState.class);
+		
 		curlisExtraClickCmd = new DefaultCursorListener(){
 			@Override
 			protected void click(CursorButtonEvent event, Spatial target, Spatial capture) {
@@ -672,13 +691,13 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 //			super(new BorderLayout(), getDialog().getStyle());
 			super(getDialog().getStyle());
 		}
-		public TextField getTf() {
+		public TextField getTFInput() {
 			return tf;
 		}
 		public void setTf(TextField tf) {
 			this.tf = grantMinWidth(tf);
 		}
-		public Button getBtn() {
+		public Button getBtnShowVal() {
 			return btn;
 		}
 		public void setBtn(Button btn) {
@@ -711,10 +730,10 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 				
 				Object objVal = mGetter.invoke(mh.getConcreteObjectInstance()); //collect value from getter method
 				ce.setBtn(new Button(""+objVal, getDialog().getStyle())); //show value
-				ce.addChild(ce.getBtn(), 0);
+				ce.addChild(ce.getBtnShowVal(), 0);
 				
 				strButtonHintHelp=ESimpleType.Boolean.is(etypeGetterRet)?"click to toggle":"click to change value";
-				ce.setTf(new TextField(ce.getBtn().getText(), ce.getBtn().getStyle()));
+				ce.setTf(new TextField(ce.getBtnShowVal().getText(), ce.getBtnShowVal().getStyle()));
 				
 				Function funcApplyEditedValue = new Function() {
 					@Override
@@ -723,18 +742,18 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 							mh.getConcreteObjectInstance(), 
 							mSetter, 
 							mGetter.getReturnType(), 
-							ce.getTf().getText());
+							ce.getTFInput().getText());
 						
-						if(!b)MessagesI.i().warnMsg(this, "failed to change value", mSetter, mGetter, ce.getTf().getText(), mh);
+						if(!b)MessagesI.i().warnMsg(this, "failed to change value", mSetter, mGetter, ce.getTFInput().getText(), mh);
 						
 						try {
 							// retrieves value possibly validated by the setter/getter
-							ce.getBtn().setText(""+mGetter.invoke(mh.getConcreteObjectInstance()));
+							ce.getBtnShowVal().setText(""+mGetter.invoke(mh.getConcreteObjectInstance()));
 						} catch (IllegalAccessException | IllegalArgumentException| InvocationTargetException e) {
 							throw new DetailedException(e, "value get should not have failed this second time", mGetter, mSetter, mh, od);
 						}
 						
-						ce.addChild(ce.getBtn(), 0); //will replace the textfield
+						ce.addChild(ce.getBtnShowVal(), 0); //will replace the textfield
 							
 						return null;
 					}
@@ -745,24 +764,23 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 						funcApplyEditedValue.apply(null);
 					}
 				};
-				ce.getTf().getActionMap().put(new KeyAction(KeyInput.KEY_RETURN), kalApplyEditedValue);
+				ce.getTFInput().getActionMap().put(new KeyAction(KeyInput.KEY_RETURN), kalApplyEditedValue);
 				
-				ce.getBtn().addClickCommands(new Command<Button>(){
+				ce.getBtnShowVal().addClickCommands(new Command<Button>(){
 					@Override
 					public void execute(Button source) {
 						if(ESimpleType.Boolean.is(etypeGetterRet)){
 							boolean b=ESimpleType.Boolean.parse(source.getText());
-							ce.getTf().setText(""+!b); //auto set edited as a toggle
+							ce.getTFInput().setText(""+!b); //auto set edited as a toggle
 							funcApplyEditedValue.apply(null);
 						}else{
-							ce.addChild(ce.getTf(), 0); //will replace the button
-							ce.getTf().setText(ce.getBtn().getText());
-							GlobalManagerI.i().get(Application.class).getStateManager().getState(FocusManagerState.class)
-								.setFocus(ce.getTf());
+							ce.addChild(ce.getTFInput(), 0); //will replace the button
+							ce.getTFInput().setText(ce.getBtnShowVal().getText());
+							focusman.setFocus(ce.getTFInput());
 						}
 					}});
 				
-				ce.getBtn().setColor(ColorI.i().colorChangeCopy(ColorRGBA.Green, 0.35f));
+				ce.getBtnShowVal().setColor(ColorI.i().colorChangeCopy(ColorRGBA.Green, 0.35f));
 				
 			} catch (IllegalAccessException | IllegalArgumentException| InvocationTargetException ex) {
 				strButtonHintHelp="ERROR: failed to invoke the method '"+mGetter+"' to get the value";
@@ -770,8 +788,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 				ce.setBtn(new Button("(FAIL)", getDialog().getStyle()));
 			}
 			
-			if(ce.getBtn()!=null && strButtonHintHelp!=null){
-				PopupHintHelpListenerI.i().setPopupHintHelp(ce.getBtn(), strButtonHintHelp);
+			if(ce.getBtnShowVal()!=null && strButtonHintHelp!=null){
+				PopupHintHelpListenerI.i().setPopupHintHelp(ce.getBtnShowVal(), strButtonHintHelp);
 			}
 		}
 		

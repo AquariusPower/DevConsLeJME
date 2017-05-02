@@ -34,10 +34,12 @@ import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
+import com.github.devconslejme.misc.jme.UserDataI.IUDKey;
 import com.github.devconslejme.misc.lemur.ResizablePanel.ResizerCursorListener;
 import com.jme3.app.Application;
 import com.jme3.math.Vector3f;
@@ -81,25 +83,44 @@ public class DragParentestPanelListenerI implements CursorListener{
 	public void cursorButtonEvent(CursorButtonEvent event, Spatial target, Spatial capture) {
 //		if(event.isConsumed())return;
 		if(capture==null)return; //TODO rare condition, how to simulate it? click ouside at nothing and release over a panel?
+//		DragInfo di = UserDataI.i().getUserDataPSH(capture, DragInfo.class);
+//		if(di==null){
+//			MessagesI.i().warnMsg(this, "captured has no info?", capture, target, event);
+//			return;
+//		}
 		
 		int iButtonClickOk=0;
 		if(capture.getControl(CursorEventControl.class).getMouseListener(ResizerCursorListener.class)!=null){
 			/**
-			 * the resizable will be preferred over the dragging for button 0,
+			 * the resizing will be preferred over the dragging for button 0 at the resizable border,
 			 * so accept only button 2 to move the parentest (mainly thru the resizable border) 
 			 */
 			iButtonClickOk=2;
 		}
 		
+//		DragInfo di = UserDataI.i().getUserDataPSH(capture, DragInfo.class);
+//		if(event.getButtonIndex()==iButtonClickOk && di.bEnableDrag){
 		if(event.getButtonIndex()==iButtonClickOk){
-			bDragging=event.isPressed();
-			if(bDragging){
+			if(event.isPressed()){
+				DragInfo di = UserDataI.i().getUserDataPSH(capture, DragInfo.class);
+				if(di==null){
+					MessagesI.i().warnMsg(this, "captured has no info?", capture, target, event);
+					return;
+				}
+//				DragInfo di = UserDataI.i().getUserDataPSH(capture, DragInfo.class);
+				if(!di.bEnableDrag)return; //prevent only starting to have a clean ending
+				
+				bDragging=true;
+//				DragInfo di = UserDataI.i().getUserDataPSH(capture, DragInfo.class);
+//				if(di==null || !di.bEnableDrag)return; //prevent only starting to have a clean ending
+//				if(!di.bEnableDrag)return; //prevent only starting to have a clean ending
+				
 //				if(focusman.getFocus()==capture){
 //					focusman.setFocus(null);
 //				}
 				
 				//find parentest 
-				Panel pnlParentest = (Panel)capture.getUserData(getUserDataIdFor(EDrag.ApplyDragAt));
+				Panel pnlParentest = di.pnlApplyDragAt; //capture.getUserData(JavaLangI.i().enumUId(EDrag.ApplyDragAt));
 				if(pnlParentest==null)pnlParentest = SpatialHierarchyI.i().getParentest(capture, Panel.class, true);
 				
 				// base dist calc
@@ -112,6 +133,8 @@ public class DragParentestPanelListenerI implements CursorListener{
 				
 				absorbClickCommands(capture);
 			}else{
+				bDragging=false;
+				
 				pnlParentestBeingDragged=null;
 				
 				// just click, not dragging
@@ -121,6 +144,46 @@ public class DragParentestPanelListenerI implements CursorListener{
 		}
 	}
 	
+	@Override
+	public void cursorMoved(CursorMotionEvent event, Spatial target,				Spatial capture) {
+		if(capture==null)return; //TODO happens when clicking nowhere and dragging to some spatial?
+//		DragInfo di = UserDataI.i().getUserDataPSH(capture, DragInfo.class);
+//		if(di==null){
+//			MessagesI.i().warnMsg(this, "captured has no info?", capture, target, event);
+//			return;
+//		}
+		
+		if(!bDragging)return; //((Panel)capture).getPreferredSize() ((Panel)capture).getSize()
+//		DragInfo di = UserDataI.i().getUserDataPSH(capture, DragInfo.class);
+//		if(!di.bEnableDrag) return;
+		
+		if(v3fInitialCurPos==null)return;
+		
+		Vector3f v3fCurPos = MiscLemurI.i().getCursorPosCopy(event);
+		if(!bIsReallyDragging && v3fInitialCurPos.distance(v3fCurPos)<3f)return;
+		
+		bIsReallyDragging=true;
+		
+		// find parentest
+		DragInfo di = UserDataI.i().getUserDataPSH(capture, DragInfo.class);
+		if(di==null){
+			MessagesI.i().warnMsg(this, "captured has no info?", capture, target, event);
+			return;
+		}
+//		DragInfo di = UserDataI.i().getUserDataPSH(capture, DragInfo.class);
+		ResizablePanel pnlParentest = (ResizablePanel)di.pnlApplyDragAt;//capture.getUserData(JavaLangI.i().enumUId(EDrag.ApplyDragAt));
+		if(pnlParentest==null)pnlParentest = SpatialHierarchyI.i().getParentest(capture, ResizablePanel.class, true);
+		
+		// position parentest
+		Vector3f v3f = v3fCurPos.add(v3fDistToCursor);
+//			v3f.z=pnlParentest.getLocalTranslation().z; //DO NOT MESS WITH Z!!!!
+		pnlParentest.setLocalTranslationXY(v3f);
+		
+		pnlParentestBeingDragged = pnlParentest;
+		
+		event.setConsumed();
+	}
+
 	@Bugfix
 	@SuppressWarnings("unchecked")
 	private void absorbClickCommands(Spatial capture) {
@@ -182,30 +245,6 @@ public class DragParentestPanelListenerI implements CursorListener{
 		return pnlParentestBeingDragged;
 	}
 	
-//	private void highlightBackground(Spatial spt, boolean bHighLight){
-//		if(spt instanceof Panel){
-//			Panel pnl = (Panel)spt;
-//			GuiComponent gc = pnl.getBackground();
-//			if (gc instanceof QuadBackgroundComponent) {
-//				QuadBackgroundComponent qbc = (QuadBackgroundComponent) gc;
-//				ColorRGBA color = qbc.getColor().clone();
-//				
-//				String strId = getUserDataIdFor(EDrag.ColorHighlight);
-//				ColorRGBA colorStored = (ColorRGBA)spt.getUserData(strId);
-//				if(colorStored==null){
-//					colorStored=color.clone();
-//					spt.setUserData(strId, colorStored);
-//				}
-//				
-//				if(bHighLight){
-//					qbc.setColor(ColorI.i().neglightColor(color));
-//				}else{
-//					qbc.setColor(colorStored);
-//				}
-//			}
-//		}
-//	}
-	
 	@Override
 	public void cursorEntered(CursorMotionEvent event, Spatial target,				Spatial capture) {
 //		highlightBackground(target,true);
@@ -216,31 +255,10 @@ public class DragParentestPanelListenerI implements CursorListener{
 //		highlightBackground(target,false);
 	}
 	
-	@Override
-	public void cursorMoved(CursorMotionEvent event, Spatial target,				Spatial capture) {
-		if(bDragging){ //((Panel)capture).getPreferredSize() ((Panel)capture).getSize()
-			Vector3f v3fCurPos = MiscLemurI.i().getCursorPosCopy(event);
-			if(!bIsReallyDragging && v3fInitialCurPos.distance(v3fCurPos)<3f)return;
-			
-			bIsReallyDragging=true;
-			
-			// find parentest
-			ResizablePanel pnlParentest = (ResizablePanel)capture.getUserData(getUserDataIdFor(EDrag.ApplyDragAt));
-			if(pnlParentest==null)pnlParentest = SpatialHierarchyI.i().getParentest(capture, ResizablePanel.class, true);
-			
-			// position parentest
-			Vector3f v3f = v3fCurPos.add(v3fDistToCursor);
-//			v3f.z=pnlParentest.getLocalTranslation().z; //DO NOT MESS WITH Z!!!!
-			pnlParentest.setLocalTranslationXY(v3f);
-			
-			pnlParentestBeingDragged = pnlParentest;
-			
-			event.setConsumed();
-		}
-	}
 
 	public void applyAt(Panel pnl) {
 		applyAt(pnl,null);
+		
 		if(isHightlightToo()){
 			GuiComponent gc = pnl.getBackground();
 			if (gc instanceof QuadBackgroundComponent) {
@@ -294,23 +312,53 @@ public class DragParentestPanelListenerI implements CursorListener{
 	public void applyAt(Panel pnl, Panel pnlApplyDragAt) {
 		mouseListenerConflictDenier(pnl);
 		
+		DragInfo di = new DragInfo();
+		UserDataI.i().setUserDataPSH(pnl,di);
+		
 		CursorEventControl.addListenersToSpatial(pnl, this);
+		
 		if(pnlApplyDragAt!=null){
-			pnl.setUserData(getUserDataIdFor(EDrag.ApplyDragAt), pnlApplyDragAt);
-			pnlApplyDragAt.setUserData(getUserDataIdFor(EDrag.ApplyingDragFrom), pnl);
+//			pnl.setUserData(JavaLangI.i().enumUId(EDrag.ApplyDragAt), pnlApplyDragAt);
+			di.pnlApplyDragAt=pnlApplyDragAt;
+			
+//			pnlApplyDragAt.setUserData(JavaLangI.i().enumUId(EDrag.ApplyingDragFrom), pnl);
+			DragInfo diOther = new DragInfo();
+			diOther.pnlApplyingDragFrom=pnl;
+			UserDataI.i().setUserDataPSH(pnlApplyDragAt,diOther);
 		}
 	}
 	
-	private static enum EDrag{
-		ApplyDragAt, 
-		ApplyingDragFrom, 
-//		ColorHighlight,
-		;
+	private static class DragInfo{
+		Panel pnlApplyDragAt;
+		Panel pnlApplyingDragFrom;
+		boolean bEnableDrag=true;
 	}
 	
-	private String getUserDataIdFor(EDrag e){
-		return DragParentestPanelListenerI.class.getName()+"/"+e;
-	}
+//	private static enum EDrag implements IUDKey{
+//		ApplyDragAt(Spatial.class), 
+//		ApplyingDragFrom(Spatial.class),
+//		bEnableDrag(Boolean.class),
+////		ColorHighlight,
+//		;
+//		
+//		EDrag(Class cl){
+//			this.cl=cl;
+//		}
+//		
+//		private Class cl;
+//		
+//		@Override
+//		public String getUId(){return JavaLangI.i().enumUId(this);}
+//
+//		@Override
+//		public Class getType() {
+//			return cl;
+//		}
+//	}
+	
+//	private String getUserDataIdFor(EDrag e){
+//		return DragParentestPanelListenerI.class.getName()+"/"+e;
+//	}
 
 	public boolean isHightlightToo() {
 		return bHightlightToo;
@@ -328,5 +376,9 @@ public class DragParentestPanelListenerI implements CursorListener{
 	@Bugfix
 	public void setDelegateClickCommandsDisabled() {
 		this.bDelegateClickCommands = false;
+	}
+
+	public void setEnabledAt(Spatial sptAt, boolean b) {
+		UserDataI.i().getUserDataPSH(sptAt, DragInfo.class).bEnableDrag=b;
 	}
 }
