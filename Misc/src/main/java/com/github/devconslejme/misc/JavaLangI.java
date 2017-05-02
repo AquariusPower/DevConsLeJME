@@ -329,7 +329,7 @@ public class JavaLangI {
 	 */
 	public boolean setBeanValueAt(Object objInstance, Method mSetter, Class clType, String strValue) {
 		try {
-			mSetter.invoke(objInstance, ESimpleType.forClass(clType).parse(strValue)); //TODO returns anything useful?
+			mSetter.invoke(objInstance, ESimpleType.forClass(clType,true).parse(strValue)); //TODO returns anything useful?
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
 			MessagesI.i().warnMsg(this, ex.getMessage(), mSetter, clType, strValue, objInstance, ex);
 			return false;

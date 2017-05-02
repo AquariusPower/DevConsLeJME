@@ -44,6 +44,7 @@ import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.ToDo;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.ESimpleType;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.JavaLangI.LinkedHashMapX;
@@ -102,7 +103,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private TextField	tfInput;
 	private boolean	bReturnJustTheInputTextValue;
 	private boolean	bRequestUserSubmitedInputValueApply;
-	private KeyActionListener	kal;
+	private KeyActionListener	kalSectionInput;
 	private boolean	bRequestUpdateListItems;
 	private SectionIndicator sectionIndicator;
 	private Function<IVisibleText, String>	funcVisibleText;
@@ -699,73 +700,73 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	@SuppressWarnings("unchecked")
 	private Panel createConfiguratorMethodHelp(OptionData od, MethodHelp mh){
 		Method mGetter = mh.getMethod();
-//		String mName = mGetter.getName();
 		ContainerEdit ce = new ContainerEdit();
-		if( JavaLangI.i().isBeanGetter(mGetter) ) {
-			Object objVal;
+		ESimpleType etypeGetterRet=ESimpleType.forClass(mGetter.getReturnType(),false);
+		if( JavaLangI.i().isBeanGetter(mGetter) && etypeGetterRet!=null ) {
 			String strButtonHintHelp=null;
 			try {
 				Method mSetter = JavaLangI.i().getBeanSetterFor(mGetter);//mh.getConcreteObjectInstance(), m.getName());
 				
 				od.setHasBean(); //first thing, so if it fails below the problem will be clearly visible
 				
-				objVal = mGetter.invoke(mh.getConcreteObjectInstance()); //collect value from getter method
+				Object objVal = mGetter.invoke(mh.getConcreteObjectInstance()); //collect value from getter method
 				ce.setBtn(new Button(""+objVal, getDialog().getStyle())); //show value
 				ce.addChild(ce.getBtn(), 0);
 				
-				strButtonHintHelp="click to change value";
+				strButtonHintHelp=ESimpleType.Boolean.is(etypeGetterRet)?"click to toggle":"click to change value";
 				ce.setTf(new TextField(ce.getBtn().getText(), ce.getBtn().getStyle()));
+				
+				Function funcApplyEditedValue = new Function() {
+					@Override
+					public Object apply(Object input) {
+						boolean b=JavaLangI.i().setBeanValueAt(
+							mh.getConcreteObjectInstance(), 
+							mSetter, 
+							mGetter.getReturnType(), 
+							ce.getTf().getText());
+						
+						if(!b)MessagesI.i().warnMsg(this, "failed to change value", mSetter, mGetter, ce.getTf().getText(), mh);
+						
+						try {
+							// retrieves value possibly validated by the setter/getter
+							ce.getBtn().setText(""+mGetter.invoke(mh.getConcreteObjectInstance()));
+						} catch (IllegalAccessException | IllegalArgumentException| InvocationTargetException e) {
+							throw new DetailedException(e, "value get should not have failed this second time", mGetter, mSetter, mh, od);
+						}
+						
+						ce.addChild(ce.getBtn(), 0); //will replace the textfield
+							
+						return null;
+					}
+				};
+				
+				KeyActionListener kalApplyEditedValue = new KeyActionListener() {
+					@Override public void keyAction(TextEntryComponent source, KeyAction key) {
+						funcApplyEditedValue.apply(null);
+					}
+				};
+				ce.getTf().getActionMap().put(new KeyAction(KeyInput.KEY_RETURN), kalApplyEditedValue);
 				
 				ce.getBtn().addClickCommands(new Command<Button>(){
 					@Override
 					public void execute(Button source) {
-//							if(source==ce.btn){ //<- redundant check..
+						if(ESimpleType.Boolean.is(etypeGetterRet)){
+							boolean b=ESimpleType.Boolean.parse(source.getText());
+							ce.getTf().setText(""+!b); //auto set edited as a toggle
+							funcApplyEditedValue.apply(null);
+						}else{
 							ce.addChild(ce.getTf(), 0); //will replace the button
 							ce.getTf().setText(ce.getBtn().getText());
 							GlobalManagerI.i().get(Application.class).getStateManager().getState(FocusManagerState.class)
 								.setFocus(ce.getTf());
-//							}
+						}
 					}});
 				
-				ce.getTf().getActionMap().put(
-					new KeyAction(KeyInput.KEY_RETURN),
-					new KeyActionListener() {
-						@Override public void keyAction(TextEntryComponent source, KeyAction key) {
-							boolean b=JavaLangI.i().setBeanValueAt(
-								mh.getConcreteObjectInstance(), 
-								mSetter, 
-								mGetter.getReturnType(), 
-								ce.getTf().getText());
-							
-							if(!b){
-								MessagesI.i().warnMsg(this, "failed to change value", mSetter, mGetter, ce.getTf().getText(), mh);
-							}
-//									ce.btn.setText(ce.tf.getText()); //TODO should actually be a possibly validated by the setter/getter
-								try {
-									// retrieves value possibly validated by the setter/getter
-									ce.getBtn().setText(""+mGetter.invoke(mh.getConcreteObjectInstance()));
-								} catch (IllegalAccessException | IllegalArgumentException| InvocationTargetException e) {
-									throw new DetailedException(e, "value get should not have failed this second time", mGetter, mSetter, mh, od);
-								}
-								
-								ce.addChild(ce.getBtn(), 0); //will replace the textfield
-//								}
-						}
-					}
-				);
-				
 				ce.getBtn().setColor(ColorI.i().colorChangeCopy(ColorRGBA.Green, 0.35f));
-//				}else{
-//					strButtonHintHelp="WARN: no command will be called to bean set the new value";
-////					ce.btn.setHighlightColor(ColorRGBA.Red);
-//					ce.btn.setColor(ColorI.i().colorChangeCopy(ColorRGBA.Red, 0.35f));
 				
-//					od.setHasBean(); //last thing, so if it fails for any reason will not set this.
-//				}
-				
-			} catch (IllegalAccessException | IllegalArgumentException| InvocationTargetException e) {
+			} catch (IllegalAccessException | IllegalArgumentException| InvocationTargetException ex) {
 				strButtonHintHelp="ERROR: failed to invoke the method '"+mGetter+"' to get the value";
-				MessagesI.i().warnMsg(this,strButtonHintHelp,od.getCmdCfgList(), od, mGetter, e);
+				MessagesI.i().warnMsg(this,strButtonHintHelp,od.getCmdCfgList(), od, mGetter, ex);
 				ce.setBtn(new Button("(FAIL)", getDialog().getStyle()));
 			}
 			
@@ -832,7 +833,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private void initSectionInput() {
 		ESection es=ESection.Input;
 		if(getSection(es)==null){
-			kal = new KeyActionListener() {
+			kalSectionInput = new KeyActionListener() {
 				@Override
 				public void keyAction(TextEntryComponent source, KeyAction key) {
 					switch(key.getKeyCode()){
@@ -846,8 +847,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			
 			tfInput = new TextField("", getDialog().getStyle());
 			
-			tfInput.getActionMap().put(new KeyAction(KeyInput.KEY_NUMPADENTER),kal); 
-			tfInput.getActionMap().put(new KeyAction(KeyInput.KEY_RETURN),kal);
+			tfInput.getActionMap().put(new KeyAction(KeyInput.KEY_NUMPADENTER),kalSectionInput); 
+			tfInput.getActionMap().put(new KeyAction(KeyInput.KEY_RETURN),kalSectionInput);
 			//tfInput.getActionMap().entrySet()
 			
 			setSection(es,tfInput);

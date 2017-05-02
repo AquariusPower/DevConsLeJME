@@ -47,6 +47,14 @@ public enum ESimpleType{ //String is not primitive, but still simple
 		this.cl=cl;
 	}
 	
+	public Class getType(){
+		return cl;
+	}
+	
+	public boolean is(ESimpleType e){
+		return (this==e);
+	}
+	
 	@SuppressWarnings("unchecked")
 	public <T> T parse(String strValue){
 		Object ret = null;
@@ -61,7 +69,7 @@ public enum ESimpleType{ //String is not primitive, but still simple
 		return (T)ret;
 	}
 	
-	public static ESimpleType forClass(Class clValue) throws UnsupportedOperationException{ //@STATIC_OK
+	public static ESimpleType forClass(Class clValue,boolean bMustMatch) throws UnsupportedOperationException{ //@STATIC_OK
 		ESimpleType e = null;
 		if(clValue==Float.class		|| clValue==float.class		){e=ESimpleType.Float;}else
 		if(clValue==Double.class	|| clValue==double.class	){e=ESimpleType.Double;}else
@@ -70,7 +78,11 @@ public enum ESimpleType{ //String is not primitive, but still simple
 		if(clValue==Boolean.class	|| clValue==boolean.class	){e=ESimpleType.Boolean;}else
 		if(clValue==String.class														){e=ESimpleType.String;}else
 		{
-			throw new UnsupportedOperationException("unsupported value class type "+clValue.getName());
+			if(bMustMatch){
+				throw new DetailedException("unsupported value class type ", clValue, bMustMatch);
+			}else{
+				MessagesI.i().warnMsg(ESimpleType.class, "unsupported value class type", clValue, bMustMatch);
+			}
 		}
 		
 		return e;

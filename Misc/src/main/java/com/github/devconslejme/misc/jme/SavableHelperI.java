@@ -367,7 +367,7 @@ public class SavableHelperI {
 	
 	private Object read(ISavableFieldAccess isfa, InputCapsule ic, Class clField, String strName, Field fld, Object objValDef, ArrayList<Object> aobjDbg) throws IllegalArgumentException, IllegalAccessException, IOException {
 		Object valRead = null;
-		switch(ESimpleType.forClass(clField)){
+		switch(ESimpleType.forClass(clField,true)){
 			case Boolean:	valRead=ic.readBoolean(strName, (boolean)objValDef);break;
 			case Double:	valRead=ic.readDouble	(strName, (double)objValDef);	break;
 			case Float:		valRead=ic.readFloat	(strName, (float)objValDef);	break;
@@ -398,7 +398,7 @@ public class SavableHelperI {
 	 * To grant it will be saved, the default just needs to differ from the actual valid value.
 	 */
 	private <T> T changeVal(ISavableFieldAccess isfa, Class<T> clValue, Object objValue, Object valueDefault){
-		switch(ESimpleType.forClass(clValue)){
+		switch(ESimpleType.forClass(clValue,true)){
 			case Boolean:	if(valueDefault==null)valueDefault=!((boolean)objValue);	break;
 			case Double:	if(valueDefault==null)valueDefault=Double.NaN;						break;
 			case Float:		if(valueDefault==null)valueDefault=Float.NaN;							break;
@@ -461,7 +461,7 @@ public class SavableHelperI {
 	private void write(ISavableFieldAccess isfa, OutputCapsule oc, String strName, Object val, Object valDef, ArrayList<Object> aobjDbg) throws IOException {
 		Class<?> clValue = val.getClass();
 		
-		switch(ESimpleType.forClass(clValue)){
+		switch(ESimpleType.forClass(clValue,true)){
 			case Boolean:	oc.write((boolean)val,	strName, changeVal(isfa,boolean.class,	val, valDef));break;
 			case Double:	oc.write((double)val,		strName, changeVal(isfa,double.class,	val, valDef));break;
 			case Float:		oc.write((float)val,		strName, changeVal(isfa,float.class,		val, valDef));break;
@@ -476,7 +476,7 @@ public class SavableHelperI {
 			Field fld = entry.getKey();
 			try {
 	//			allowFieldAccess(fld);
-				switch(ESimpleType.forClass(fld.getType())){
+				switch(ESimpleType.forClass(fld.getType(),true)){
 					case Boolean:
 					case Double:
 					case Float:

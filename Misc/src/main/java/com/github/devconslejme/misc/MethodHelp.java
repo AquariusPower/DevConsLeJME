@@ -133,6 +133,7 @@ public class MethodHelp{
 				if(!strParamTypes.isEmpty())strParamTypes+="-"; //in between
 				strParamTypes+=clPT.getName(); //primitives has no dots (only wrappers does)
 			}
+			strParamTypes=strParamTypes.replace("$", "."); //inner classes fix
 			strURI=uri.toString()+"#"+m.getName()+"-"+strParamTypes+"-";
 			
 			uri=new URI(strURI);
