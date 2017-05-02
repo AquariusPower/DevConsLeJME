@@ -27,6 +27,7 @@
 
 package com.github.devconslejme.misc;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
@@ -278,7 +279,7 @@ public class JavaLangI {
 		return isCanUserTypeIt(obj.getClass());
 	}
 	public boolean isCanUserTypeIt(Class cl){
-		if(String.class==cl)return true;
+		if(String.class.isAssignableFrom(cl))return true;
 		
 		if(cl.isPrimitive())return true;
 		if(Primitives.isWrapperType(cl))return true; //last as is probably "slower"
@@ -293,5 +294,25 @@ public class JavaLangI {
 	 */
 	public String enumUId(Enum e) {
 		return e.getClass().getName()+"."+e.toString();
+	}
+
+//	public Method getSetterFor(Object objInstanced, String strGetterMethodName) {
+	/**
+	 * like bean
+	 * @param mGetter
+	 * @return
+	 */
+	public Method getSetterFor(Method mGetter) {
+		try {
+			String strBaseName = null;
+			if(mGetter.getName().startsWith("is"))strBaseName=mGetter.getName().substring(2);
+			if(mGetter.getName().startsWith("get"))strBaseName=mGetter.getName().substring(3);
+			
+			return mGetter.getDeclaringClass().getMethod("get"+strBaseName, mGetter.getReturnType());
+		} catch (NoSuchMethodException | SecurityException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 }

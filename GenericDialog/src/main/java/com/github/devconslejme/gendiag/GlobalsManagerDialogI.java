@@ -27,10 +27,13 @@
 package com.github.devconslejme.gendiag;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
+import com.github.devconslejme.gendiag.SimpleGenericDialog.CmdCfg;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.JavadocI;
 import com.github.devconslejme.misc.MethodHelp;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
@@ -118,12 +121,15 @@ public class GlobalsManagerDialogI {
 			OptionData odGlobal = smd.putSection(null,str);
 			Method[] am = isShowInherited() ? o.getClass().getMethods() : o.getClass().getDeclaredMethods();
 			for(Method m:am){
+				if(!Modifier.isPublic(m.getModifiers()))continue; //skip non public
+				
 				MethodHelp mh = new MethodHelp().setObject(o).setMethod(m);
-				smd.putOption(
-					odGlobal, 
-//					isShowInherited() ? mh.getFullHelp(true, false) : mh.getMethodHelp(true), 
-					mh.getFullHelp(true, false), 
-					mh);
+				
+				OptionData od = smd.putOption(odGlobal,	mh.getFullHelp(true, false),	mh);
+				
+				od.addCmdCfg(new CmdCfg() {@Override	public void execute(Button source) {
+						JavadocI.i().browseJavadoc(mh);
+					}}.setText("JavaDoc"));
 			}
 		}
 	}

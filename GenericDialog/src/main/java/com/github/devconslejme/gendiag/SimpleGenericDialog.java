@@ -27,6 +27,8 @@
 
 package com.github.devconslejme.gendiag;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,22 +41,20 @@ import java.util.Set;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.HintUpdater;
 import com.github.devconslejme.misc.Annotations.Bugfix;
-import com.github.devconslejme.misc.Annotations.FloatLimits;
 import com.github.devconslejme.misc.Annotations.ToDo;
 import com.github.devconslejme.misc.Annotations.Workaround;
-import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.MethodHelp;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
-import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.google.common.base.Function;
-import com.google.common.base.Strings;
 import com.jme3.input.KeyInput;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
@@ -155,17 +155,17 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		public OptionDataDummy(){
 			String str="(TempDummy)";
 			setTextKey(str+OptionDataDummy.class.getName());
-			setValue(str);
+			setStoredValue(str);
 		}
 	}
 	
 	public static class OptionData implements IVisibleText{
 		private String strTextKey;
 		private OptionData odParent;
-		private Object objValue;
+		private Object objStoredValue;
 		private boolean bExpanded;
 		private LinkedHashMap<String,OptionData> hmNestedChildrenSubOptions;
-		private Command<? super Button>	cmdCfg;
+		private ArrayList<CmdCfg> acmdcfgList = new ArrayList<CmdCfg>();
 		
 		public OptionData(){
 			bExpanded=true;
@@ -176,8 +176,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			this.strTextKey = strTextKey;
 			return this; 
 		}
-		protected OptionData setValue(Object objValue) {
-			this.objValue = objValue;
+		protected OptionData setStoredValue(Object objValue) {
+			this.objStoredValue = objValue;
 			return this; 
 		}
 		private OptionData setSectionParent(OptionData odParent) {
@@ -190,8 +190,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		public OptionData getSectionParent() {
 			return odParent;
 		}
-		public Object getValue() {
-			return objValue;
+		public Object getStoredValue() {
+			return objStoredValue;
 		}
 		@Override
 		public String toString() {
@@ -201,7 +201,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			builder.append(", odParent=");
 			builder.append(odParent==null?null:odParent.getTextKey()); //!!!!!!!!!!!!!!! CUSTOM !!!!!!!!!!!!!!
 			builder.append(", objValue=");
-			builder.append(objValue);
+			builder.append(objStoredValue);
 			builder.append(", bExpanded=");
 			builder.append(bExpanded);
 			builder.append(", hmOptions=");
@@ -242,7 +242,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			
 			String str=strTextKey;
 			
-			if(getValue() instanceof SectionIndicator){
+			if(getStoredValue() instanceof SectionIndicator){
 //				str="["+(isExpanded()?"-":"+")+"] "
 				str=""
 					+str
@@ -261,13 +261,13 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			return str;
 		}
 
-		public Command<? super Button> getCmdCfg() {
-			return cmdCfg;
+		public CmdCfg[] getCmdCfgList() {
+			return acmdcfgList.toArray(new CmdCfg[0]);
 		}
 
-		public void setCmdCfg(Command<? super Button> cmdCfg) {
-			DetailedException.assertNotAlreadySet(this.cmdCfg, cmdCfg, this);
-			this.cmdCfg = cmdCfg;
+		public void addCmdCfg(CmdCfg cc) {
+//			DetailedException.assertNotAlreadySet(this.cmdCfg, cmdCfg, this);
+			this.acmdcfgList.add(cc);
 		}
 
 		public int getNestingDepth() {
@@ -276,6 +276,30 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			while((odParent=odParent.getSectionParent())!=null)iDepth++;
 			return iDepth;
 		}
+	}
+	
+	public static abstract class CmdCfg implements Command<Button>{
+//		private boolean	bIsTheApplyUserCustomValueCommand;
+//		public CmdCfg(boolean bIsTheApplyUserCustomValueCommand){
+//			this.bIsTheApplyUserCustomValueCommand = bIsTheApplyUserCustomValueCommand;
+//			
+//		}
+		
+		private String	strText;
+
+		public String getText() {
+			return strText;
+		}
+
+		public CmdCfg setText(String strText) {
+			this.strText = strText;
+			return this;
+		}
+
+//		public boolean isIsTheApplyUserCustomValueCommand() {
+//			return bIsTheApplyUserCustomValueCommand;
+//		}
+
 	}
 	
 	public SimpleGenericDialog(ResizablePanel rzpOwner) {
@@ -478,11 +502,14 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		}
 	}
 	
-	private static class ContainerCell extends Container{
+	private class ContainerCell extends Container{
 		CellParts cp;
-		public ContainerCell(GuiLayout layout, String style) {
-			super(layout, style);
+		public ContainerCell() {
+			super(new BorderLayout(), getDialog().getStyle());
 		}
+//		public ContainerCell(GuiLayout layout, String style) {
+//			super(layout, style);
+//		}
 	}
 	
 	private void initBase(){
@@ -498,7 +525,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			private Panel getView(OptionData od, boolean selected, Panel existing) {
 				ContainerCell cntr=null;
         if( existing == null ) {
-					cntr=new ContainerCell(new BorderLayout(), getDialog().getStyle());
+//        	cntr=new ContainerCell(new BorderLayout(), getDialog().getStyle());
+					cntr=new ContainerCell();
 					cntr.cp = new CellParts();
         	cntr.cp.btnItemText = new ButtonCell("", getElement(), getStyle());
   				CursorEventControl.addListenersToSpatial(cntr.cp.btnItemText, curlisExtraClickCmd);
@@ -515,15 +543,6 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
         // ALWAYS update the value!
 				cntr.cp.btnItemText.od=od;
 				
-				//each item may have a different kind of configurator from button text to a different visual (like a slider etc)
-				if(isEnableItemConfigurator()){ 
-					cntr.cp.pnlCfg = createConfigurator(cntr.cp.btnItemText.od, cntr.cp.pnlCfg); 
-					cntr.addChild(cntr.cp.pnlCfg, Position.East);
-				}
-        
-				// update the text based on the value
-				cntr.cp.btnItemText.setText(valueToString(od));
-        
 				// update the nesting visuals
 				String strNesting = "["+(cntr.cp.btnItemText.od.isExpanded()?"-":"+")+"]";
 				if(cntr.cp.btnItemText.od.hmNestedChildrenSubOptions.size()==0)strNesting=" ";
@@ -531,6 +550,15 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 				cntr.cp.btnNesting.setInsets(new Insets3f(0, 
 					getNestingStepDistance()*cntr.cp.btnItemText.od.getNestingDepth(), 
 					0, 0));
+				
+				// update the text based on the value
+				cntr.cp.btnItemText.setText(valueToString(od));
+				
+				// CONFIGURATOR: each item may have a different kind of configurator from button text to a different visual (like a slider etc)
+				if(isEnableItemConfigurator()){ 
+					cntr.cp.pnlCfg = createConfigurator(cntr.cp.btnItemText.od, cntr.cp.pnlCfg); 
+					cntr.addChild(cntr.cp.pnlCfg, Position.East);
+				}
 				
 				return cntr;
 			}
@@ -583,22 +611,120 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 
 	@SuppressWarnings("unchecked")
 	protected Panel createConfigurator(OptionData od, Panel pnlCfgExisting) {
-		Command<? super Button> cmd = od.getCmdCfg();
-		if(cmd!=null){
-			Button btnCfg = new Button("Cfg",getDialog().getStyle());
-			btnCfg.addClickCommands(cmd);
-			return btnCfg;
+		Container cntr = new Container(getDialog().getStyle());
+		
+		CmdCfg[] acc = od.getCmdCfgList();
+		int i=0;
+		for(CmdCfg cc:acc){
+//		Command<? super Button> cmd = od.getCmdCfgList();
+//		if(cmd!=null){
+			Button btnCfg = new Button(cc.getText(), getDialog().getStyle());
+			btnCfg.addClickCommands(cc);
+			cntr.addChild(btnCfg, i++);
+//			return btnCfg;
+//		}
 		}
 		
-		return createAutomaticConfigurator(od);
+//		if(acc.length>0)return cntr;
+		
+		Panel pnl = createAutomaticConfigurators(od);
+		if(pnl!=null){
+			cntr.addChild(pnl,i++);
+		}
+				
+		if(i==0){ //nothing was added to container
+			Button btn = new Button("...", getDialog().getStyle());
+			PopupHintHelpListenerI.i().setPopupHintHelp(btn, "configuration not available");
+			return btn;
+		}
+		
+		return cntr;
 	}
 	
+	private class ContainerEdit extends Container{
+		public ContainerEdit() {
+			super(new BorderLayout(), getDialog().getStyle());
+		}
+		Button btn;
+		TextField tf;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private Panel createConfiguratorMethodHelp(OptionData od, MethodHelp mh){
+		Method mGetter = mh.getMethod();
+		String mName = mGetter.getName();
+		ContainerEdit ce = new ContainerEdit();
+		if(
+				(mName.startsWith("get") || mName.startsWith("is"))
+				&&
+				JavaLangI.i().isCanUserTypeIt(mGetter.getReturnType())
+				&&
+				mGetter.getParameterCount()==0
+		){
+			Object objVal;
+			String strButtonHintHelp=null;
+			try {
+				objVal = mGetter.invoke(mh.getConcreteObjectInstance()); //collect value from getter method
+				ce.btn = new Button(""+objVal, getDialog().getStyle()); //show value
+				
+				ce.addChild(ce.btn, 0);
+				
+				Method mSetter = JavaLangI.i().getSetterFor(mGetter);//mh.getConcreteObjectInstance(), m.getName());
+				
+				if(mSetter!=null){
+					strButtonHintHelp="click to change value";
+					ce.tf = new TextField(ce.btn.getText(), ce.btn.getStyle());
+					ce.btn.addClickCommands(new Command<Button>(){
+						@Override
+						public void execute(Button source) {
+							if(source==ce.btn){ //<- redundant check..
+								ce.addChild(ce.tf, 0); //will replace the button
+							}
+						}});
+	//				if(od.getCmdCfgList().length>1){
+	//					MessagesI.i().warnMsg(this, "should have only one command, using 1st", od.getCmdCfgList(), od, m);
+	//				}
+	//				
+	//				if(od.getCmdCfgList().length>0){
+	//					btn.addClickCommands(od.getCmdCfgList()[0]);
+	//					strHintHelp="click to change value";
+	//				}else{
+	//					strHintHelp="WARN: no command will be called to set the new value";
+	//				}
+				}
+				
+			} catch (IllegalAccessException | IllegalArgumentException| InvocationTargetException e) {
+				strButtonHintHelp="ERROR: failed to invoke the method '"+mGetter+"' to get the value";
+				MessagesI.i().warnMsg(this,strButtonHintHelp,od.getCmdCfgList(), od, mGetter);
+				ce.btn = new Button("(FAIL)", getDialog().getStyle());
+			}
+			
+			PopupHintHelpListenerI.i().setPopupHintHelp(ce.btn, strButtonHintHelp);
+		}
+		
+		return ce;
+	}
+	
+	/**
+	 * mainly for primitives, allowing sliders too
+	 * TODO but.. how to set it back after changed? a holder? lemur one?
+		TODO using limits annotations, allow sliders and TextField input on the very same listbox
+		TODO using reflection, look for matching getters and setters (and is...) to create a new child dialog to enable such optoins
+	 * @param od
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
 	@ToDo
-	private Panel createAutomaticConfigurator(OptionData od) {
-		//TODO using limits annotations, allow sliders and TextField input on the very same listbox
-		//TODO using reflection, look for matching getters and setters (and is...) to create a new child dialog to enable such optoins
-		String str=od.getValue().toString();
-		return new Button(str.substring(0, Math.min(10, str.length())), getDialog().getStyle());
+	private Panel createAutomaticConfigurators(OptionData od) {
+		if (od.getStoredValue() instanceof MethodHelp) {
+			return createConfiguratorMethodHelp(od, (MethodHelp)od.getStoredValue());
+		}
+		
+//		if(!JavaLangI.i().isCanUserTypeIt(od.getStoredValue()))return null;
+//		
+//		String str=od.getStoredValue().toString();
+//		return new Button(str.substring(0, Math.min(10, str.length())), getDialog().getStyle());
+		return null;
 	}
 
 	@Override
@@ -700,7 +826,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		OptionData od = new OptionData();
 		od.setSectionParent(odParent);
 		od.setTextKey(strNewSectionKey);
-		od.setValue(sectionIndicator);
+		od.setStoredValue(sectionIndicator);
 		
 		put(odParent,strNewSectionKey,od);
 //		hmOptionsRoot.put(strNewSectionKey, od);
@@ -712,15 +838,18 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	 * 
 	 * @param strSectionParentKey if null, will be root/topmost on the hierarchy
 	 * @param strTextOptionKey also is the displayed unique text per section
-	 * @param objValue
+	 * @param objStoredValue
+	 * @return 
 	 */
-	public void putOption(OptionData odParent, String strTextOptionKey, Object objValue){
+	public OptionData putOption(OptionData odParent, String strTextOptionKey, Object objStoredValue){
 		OptionData od = new OptionData();
 		od.setSectionParent(odParent);
 		od.setTextKey(strTextOptionKey);
-		od.setValue(objValue);
+		od.setStoredValue(objStoredValue);
 		
 		put(odParent,strTextOptionKey,od);
+		
+		return od;
 	}
 	
 	private void put(OptionData odParent, String strTextOptionKey, OptionData od){
@@ -741,7 +870,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		
 		//look for sub-sections
 		for(OptionData od:hmOpt.values()){
-			if(od.getValue() instanceof SectionIndicator){
+			if(od.getStoredValue() instanceof SectionIndicator){
 				odFound = findSectionRecursively(od.hmNestedChildrenSubOptions,strSectionKey);
 				if(odFound!=null)return odFound;
 			}
@@ -768,7 +897,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		Collections.sort(aod, sort);
 		for(OptionData od:aod){
 			vlodOptions.add(od);
-			if(od.getValue() instanceof SectionIndicator){
+			if(od.getStoredValue() instanceof SectionIndicator){
 				if(od.isExpanded()){
 					recreateListItemsRecursively(od.hmNestedChildrenSubOptions,++iDepth);
 				}
@@ -804,7 +933,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	
 	public Object getSelectedOptionValue(){
 		int i=getSelectedOptionIndex();
-		Object obj = vlodOptions.get(i).getValue();
+		Object obj = vlodOptions.get(i).getStoredValue();
 		if(obj instanceof SectionIndicator)return null;
 		return obj;
 	}
@@ -861,7 +990,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		OptionData od = getSelectedOptionData();
 		if(od==null)return;
 		
-		if(SectionIndicator.class.isInstance(od.getValue())){
+		if(SectionIndicator.class.isInstance(od.getStoredValue())){
 			bRequestSelectedToggleExpandedOnce=true;
 		}else{
 			tfInput.setText(od.getTextKey());
@@ -903,7 +1032,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	
 	private void setExpandedAllRecursively(OptionData od, boolean b) {
 		od.setExpanded(b);
-		if(od.getValue() instanceof SectionIndicator){
+		if(od.getStoredValue() instanceof SectionIndicator){
 			for(OptionData odChild:od.hmNestedChildrenSubOptions.values()){
 				setExpandedAllRecursively(odChild,b);
 			}

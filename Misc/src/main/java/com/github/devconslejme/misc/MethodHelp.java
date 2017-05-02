@@ -165,7 +165,7 @@ public class MethodHelp{
 //		this.clConcrete=obj.getClass();
 		return this;
 	}
-	public Object getObject(){
+	public Object getConcreteObjectInstance(){
 		return obj;
 	}
 	@Override

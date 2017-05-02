@@ -30,23 +30,23 @@ package com.github.devconslejme.misc;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public enum EType{
+public enum ESavableSimpleType{ //String is not primitive, but still simple
+	Boolean,
 	Int,
 	Long,
 	Float,
 	Double,
 	String,
-	Boolean,
 	;
 	
-	public static EType forClass(Class clValue) throws UnsupportedOperationException{ //@STATIC_OK
-		EType e = null;
-		if(clValue==Float.class		|| clValue==float.class		){e=EType.Float;}else
-		if(clValue==Double.class	|| clValue==double.class	){e=EType.Double;}else
-		if(clValue==Integer.class	|| clValue==int.class			){e=EType.Int;}else
-		if(clValue==Long.class		|| clValue==long.class		){e=EType.Long;}else
-		if(clValue==Boolean.class	|| clValue==boolean.class	){e=EType.Boolean;}else
-		if(clValue==String.class														){e=EType.String;}else
+	public static ESavableSimpleType forClass(Class clValue) throws UnsupportedOperationException{ //@STATIC_OK
+		ESavableSimpleType e = null;
+		if(clValue==Float.class		|| clValue==float.class		){e=ESavableSimpleType.Float;}else
+		if(clValue==Double.class	|| clValue==double.class	){e=ESavableSimpleType.Double;}else
+		if(clValue==Integer.class	|| clValue==int.class			){e=ESavableSimpleType.Int;}else
+		if(clValue==Long.class		|| clValue==long.class		){e=ESavableSimpleType.Long;}else
+		if(clValue==Boolean.class	|| clValue==boolean.class	){e=ESavableSimpleType.Boolean;}else
+		if(clValue==String.class														){e=ESavableSimpleType.String;}else
 		{
 			throw new UnsupportedOperationException("unsupported value class type "+clValue.getName());
 		}

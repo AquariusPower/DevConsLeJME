@@ -30,6 +30,8 @@ package com.github.devconslejme.misc.lemur;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -40,7 +42,6 @@ import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Insets3f;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
-import com.simsilica.lemur.component.TbtQuadBackgroundComponent;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.CursorListener;
@@ -64,6 +65,7 @@ public class PopupHintHelpListenerI implements CursorListener{
 	private String	strPopupHelp;
 	private Node	nodeGui;
 	private Container	cntrPopupHelp;
+	private int iWrapAt=30;
 
 	@Override
 	public void cursorButtonEvent(CursorButtonEvent event, Spatial target,			Spatial capture) {
@@ -100,6 +102,8 @@ public class PopupHintHelpListenerI implements CursorListener{
 				fZAboveAll
 			);
 			
+			//TODO position always fully inside app screen limits!!!
+			
 			if(cntrPopupHelp.getParent()==null)nodeGui.attachChild(cntrPopupHelp);
 		}else{
 //			if(lblPopupHelp!=null){
@@ -117,6 +121,13 @@ public class PopupHintHelpListenerI implements CursorListener{
 		UserDataI.i().setUserDataPSH(spt, EPopup.strPopupHelpUserData.uId(), null);
 	}
 	public void setPopupHintHelp(Spatial spt, String strHelp){
+		if(strHelp.length()>iWrapAt){
+			Iterable<String> astr = Splitter
+					.fixedLength(iWrapAt)
+					.split(strHelp);
+			strHelp = Joiner.on("\n").join(astr);
+		}
+
 		UserDataI.i().setUserDataPSH(spt, EPopup.strPopupHelpUserData.uId(), strHelp);
 		CursorEventControl.addListenersToSpatial(spt, this);
 //		spt.setUserData(EUserDataMiscJme.strPopupHelp.s(), strHelp);
@@ -145,6 +156,14 @@ public class PopupHintHelpListenerI implements CursorListener{
 		cntrPopupHelp.addChild(lblPopupHelp, 0);
 		MiscJmeI.i().addToName(cntrPopupHelp, PopupHintHelpListenerI.class.getSimpleName(), true);
 //		((TbtQuadBackgroundComponent)cntrPopupHelp.getBackground()).setColor(ColorRGBA.Cyan);
+	}
+
+	public int getWrapAt() {
+		return iWrapAt;
+	}
+
+	public void setWrapAt(int iWrapAt) {
+		this.iWrapAt = iWrapAt;
 	}
 	
 }
