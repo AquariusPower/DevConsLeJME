@@ -912,46 +912,23 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 
 	protected void clearOptions(){
 		hmOptionsRoot.clear();
+		vlodOptions.clear();
 		
-		OptionDataDummy odd = (OptionDataDummy) new OptionDataDummy().setTextKey("(Dummy)");
-		put(null, odd.getTextKey(), odd); //it cant remain empty
+		OptionDataDummy odd = new OptionDataDummy();
+		put(null, odd.getTextKey(), odd); //the list cant remain empty
 		
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
-				if(hmOptionsRoot.remove(odd.getTextKey())==null)return false; //retry
-//				for(OptionData od:hmOptionsRoot.values().toArray(new OptionData[0])){
-//					if(od instanceof OptionDataDummy){
-//						hmOptionsRoot.remove(od.getTextKey());
-//						requestUpdateListItems();//recreateListItems();
-//					}
-//				}
-				
+				if(hmOptionsRoot.containsKey(odd.getTextKey())){
+					hmOptionsRoot.remove(odd.getTextKey());
+					vlodOptions.remove(odd);
+					return false; //look for more
+				}
+//				if(hmOptionsRoot.remove(odd.getTextKey())==null)return false; //retry
 				return true;
 			}
-		}.setName("ClearDummyOption"));//.enableLoop().setDelaySeconds(1f));
-//		QueueI.i().enqueue(new CallableXAnon() {
-//			@Override
-//			public Boolean call() {
-//				if(
-//						!hmOptionsRoot.containsKey(odd)
-//						&&
-//						!vlodOptions.contains(odd)
-//				){
-//					return true;
-//				}
-//				
-////				if(vlodOptions.size()>1)vlodOptions.remove(odDummy);
-//				if(hmOptionsRoot.size()>1){
-//					hmOptionsRoot.remove(odd);
-//					vlodOptions.remove(odd);
-//					requestUpdateListItems();//recreateListItems();
-//					return true;
-//				}
-//				
-//				return false; //retry
-//			}
-//		});//.enableLoop().setDelaySeconds(3f));
+		}.setName("ClearDummyOption"));
 	}
 
 	public boolean isCloseOnChoiceMade() {

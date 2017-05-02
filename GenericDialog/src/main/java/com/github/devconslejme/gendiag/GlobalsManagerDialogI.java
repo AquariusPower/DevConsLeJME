@@ -34,6 +34,7 @@ import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MethodHelp;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
 
@@ -45,6 +46,7 @@ public class GlobalsManagerDialogI {
 
 	private SimpleMaintenanceGenericDialog	smd;
 	private boolean	bShowInherited;
+	private boolean	bShowPackagesPrepended;
 	
 	public GlobalsManagerDialogI(){}
 	
@@ -67,6 +69,19 @@ public class GlobalsManagerDialogI {
 					@Override
 					public void execute(Button source) {
 						bShowInherited=!bShowInherited;
+						smd.requestUpdateListItems();
+						PopupHintHelpListenerI.i().setPopupHintHelp(source, 
+								bShowInherited?"only of concrete class":"show all inherited too"); //next action
+					}
+				}));
+				
+				smd.putToolAction(new ToolAction("Toggle packages prepended", new Command<Button>() {
+					@Override
+					public void execute(Button source) {
+						bShowPackagesPrepended=!bShowPackagesPrepended;
+						smd.requestUpdateListItems();
+						PopupHintHelpListenerI.i().setPopupHintHelp(source, 
+							bShowPackagesPrepended?"put after":"prepend"); //next action
 					}
 				}));
 				
@@ -92,7 +107,15 @@ public class GlobalsManagerDialogI {
 	
 	protected void prepareGlobalsForMaintenance() {
 		for(Object o:GlobalManagerI.i().getListCopy()){
-			OptionData odGlobal = smd.putSection(null, o.getClass().getSimpleName()+"("+o.getClass().getPackage().getName()+")");
+			String str = o.getClass().getSimpleName();
+			String strPkg = o.getClass().getPackage().getName();
+			if(bShowPackagesPrepended){
+				str=strPkg+"."+str;
+			}else{
+				str+=" <"+strPkg+"> ";
+			}
+			
+			OptionData odGlobal = smd.putSection(null,str);
 			Method[] am = isShowInherited() ? o.getClass().getMethods() : o.getClass().getDeclaredMethods();
 			for(Method m:am){
 				MethodHelp mh = new MethodHelp().setObject(o).setMethod(m);

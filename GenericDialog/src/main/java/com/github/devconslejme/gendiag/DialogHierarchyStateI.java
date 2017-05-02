@@ -121,6 +121,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	}.setName("FocusAtDevConsInput").setDelaySeconds(0.25f).enableLoop();
 	private ArrayList<Panel>	apnlAutoFocus = new ArrayList<Panel>();
 	private VersionedReference<Integer>	vriResizableBorderSize;
+	private boolean	bRequestRetryZOrder;
 	
 	public static class BlockerListener extends DefaultCursorListener{
 		@Override
@@ -356,6 +357,11 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		updateDragLinkToParentEffect();
 		
 		updateVolatileModalAutoClose();
+		
+		if(bRequestRetryZOrder){
+			QueueI.i().enqueue(cxZOrder);
+			bRequestRetryZOrder=false;
+		}
 	}
 	
 	/**
@@ -567,6 +573,9 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	
 	private void updateZOrder(EntityId entid){
 		ResizablePanel rzp = getOpenDialog(entid);
+		
+		if(!rzp.isUpdateLogicalStateSuccess())bRequestRetryZOrder=true;
+		
 		rzp.setLocalTranslationZ(fCurrentOrderPosZ);
 //		Vector3f v3f = rzp.getLocalTranslation().clone();
 //		v3f.z=fCurrentOrderPosZ;
@@ -601,7 +610,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		
 		QueueI.i().enqueue(cxZOrder);
 	}
-	public void setFocus(EntityId entid, boolean bRecursive){
+	private void setFocus(EntityId entid, boolean bRecursive){
 		ResizablePanel rzp = getOpenDialog(entid);
 		GuiGlobals.getInstance().requestFocus(rzp);
 		sys.updateLastFocusAppTimeNano(entid, app.getTimer().getTime());

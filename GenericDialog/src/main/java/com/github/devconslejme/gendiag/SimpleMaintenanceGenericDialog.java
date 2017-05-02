@@ -44,78 +44,45 @@ public abstract class SimpleMaintenanceGenericDialog extends SimpleGenericDialog
 		setCloseOnChoiceMade(false);
 	}
 	
+	private boolean bLastRequestWasCollapsed=false;
+	
 	@Override
 	protected void initSectionTools() {
 		super.initSectionTools();
 		putToolAction(new ToolAction("Refresh Options", new Command<Button>() {
 			@Override
 			public void execute(Button source) {
-//				updateMaintenanceListFull();
 				requestUpdateListItems();
 			}
 		}));
 		
-		putToolAction(new ToolAction("Collapse All", new Command<Button>() {
-			@Override
-			public void execute(Button source) {
-				setExpandedAll(false);
-				requestUpdateListItems();//recreateListItems();
-			}
-		}));
+		putToolAction(new ToolAction("Collapse All", new Command<Button>() {@Override public void execute(Button source) {
+				collapseAll();	}}));
 		
-		putToolAction(new ToolAction("Expand All", new Command<Button>() {
-			@Override
-			public void execute(Button source) {
-				setExpandedAll(true);
-				requestUpdateListItems();//recreateListItems();
-			}
-		}));
+		putToolAction(new ToolAction("Expand All", new Command<Button>() {@Override	public void execute(Button source) {
+				expandAll();	}}));
 		
 		requestUpdateListItems(); //1st time
 	}
 	
-//	public void requestUpdateMaintenanceListFull(){
-//		QueueI.i().enqueue(new CallableXAnon() {
-//			@Override
-//			public Boolean call() {
-////				updateMaintenanceListFull();
-//				
-//				SimpleMaintenanceGenericDialog.super.clearOptions();
-//				updateMaintenanceList();
-//				SimpleMaintenanceGenericDialog.super.requestUpdateListItems();//recreateListItems();
-//				
-//				return true;
-//			}
-//		});
-//	}
-	
-//	/**
-//	 * prefer calling {@link #requestUpdateMaintenanceListFull()}
-//	 */
-//	protected void updateMaintenanceListFull(){
-//		clearOptions();
-//		updateMaintenanceList();
-//		requestUpdateListItems();//recreateListItems();
-//	}
-	
-//	/**
-//	 * prefer calling {@link #requestUpdateMaintenanceListFull()}
-//	 */
-//	/**
-//	 * same as {@link #requestUpdateMaintenanceListFull()}
-//	 */
 	@Override
 	public void requestUpdateListItems() {
-//		super.requestUpdateListItems();
-//		requestUpdateMaintenanceListFull();
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
-//				updateMaintenanceListFull();
-				
 				SimpleMaintenanceGenericDialog.super.clearOptions();
 				updateMaintenanceList();
-				SimpleMaintenanceGenericDialog.super.requestUpdateListItems();//recreateListItems();
+				SimpleMaintenanceGenericDialog.super.requestUpdateListItems();
+				
+				if(bLastRequestWasCollapsed){
+					QueueI.i().enqueue(new CallableXAnon() {
+						@Override
+						public Boolean call() {
+							collapseAll();
+							return true;
+						}
+					});
+				}
 				
 				return true;
 			}
@@ -130,5 +97,16 @@ public abstract class SimpleMaintenanceGenericDialog extends SimpleGenericDialog
 	@Override
 	protected boolean isEnableItemConfigurator() {
 		return true;
+	}
+
+	private void collapseAll() {
+		setExpandedAll(false);
+		SimpleMaintenanceGenericDialog.super.requestUpdateListItems();
+		bLastRequestWasCollapsed=true;
+	}
+	private void expandAll() {
+		setExpandedAll(true);
+		SimpleMaintenanceGenericDialog.super.requestUpdateListItems();
+		bLastRequestWasCollapsed=false;
 	}
 }
