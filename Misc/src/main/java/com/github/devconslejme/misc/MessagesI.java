@@ -27,11 +27,13 @@
 
 package com.github.devconslejme.misc;
 
+import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import com.github.devconslejme.devcons.FileI;
 import com.github.devconslejme.misc.ReportI.IReport;
 
 
@@ -47,6 +49,16 @@ public class MessagesI {
 	private HashMap<String,ReviewableMsg> hmMsgs = new HashMap<String,ReviewableMsg>();
 	private StringBuilder	sbStack;
 	private int	iSummaryReportLineLength = 100;
+	private File	flLog;
+	private boolean	bLog;
+	
+	/**
+	 * {@link FileI} also depends on this class, so this initializer is necessary
+	 */
+	public void initializeLogFile(){
+		if(flLog==null)flLog=FileI.i().createNewFile(this,"log",true);
+		bLog=true;
+	}
 	
 	/**
 	 * for things that will break non crucial functionalities
@@ -97,6 +109,10 @@ public class MessagesI {
 
 //		(bStderr ? (System.err) : (System.out)).println(strOutput);
 		if(ps!=null)ps.println(strOutput);
+		if(isLog()){
+//			if(flLog==null)flLog=FileI.i().createNewFile(this,"log",true);
+			FileI.i().appendLine(flLog,strOutput);
+		}
 //			strMsgType+"["+objSource.getClass().getSimpleName()+"]: "+str		); 
 		
 //		if(bStderr){
@@ -199,5 +215,13 @@ public class MessagesI {
 
 	public void setSummaryReportLineLength(int iSummaryReportLineLength) {
 		this.iSummaryReportLineLength = iSummaryReportLineLength;
+	}
+
+	public boolean isLog() {
+		return bLog;
+	}
+
+	public void setLog(boolean bLog) {
+		this.bLog = bLog;
 	}
 }

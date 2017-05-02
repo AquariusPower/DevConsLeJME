@@ -284,6 +284,13 @@ public class QueueI {
 			}
 		}
 	}
+	/**
+	 * just to let the IDE help me...
+	 * @param cx
+	 */
+	public void enqueue(CallableXAnon cx){
+		enqueue((CallableX)cx);
+	}
 	
 	private boolean isReady(long lRunAt){
 		return lRunAt <= lCurrentTime;

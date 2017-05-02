@@ -147,6 +147,6 @@ public class TestDevCons extends SimpleApplication{
 	@Override
 	public void handleError(String errMsg, Throwable t) {
 		GlobalManagerI.i().get(SingleAppInstance.class).setExitRequestCause(t);
-		//TODO should continue to?: super.handleError(errMsg,t);
+		//super.handleError(errMsg,t); //TODO should continue to?:
 	}
 }

@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+	Copyright (c) 2016-2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 	
 	All rights reserved.
 
@@ -24,42 +24,38 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+package com.github.devconslejme.misc;
 
-package com.github.devconslejme.devcons;
-
-import com.github.devconslejme.misc.Annotations.NonStandard;
-import com.github.devconslejme.misc.DetailedException;
-import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.MessagesI;
-import com.jme3.app.Application;
-import com.jme3.scene.Node;
-
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PkgCfgI {
-	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
+public class ThreadX extends Thread{
+	public static abstract class RunnableX implements Runnable{
+		public void sleep(int iMilis) {
+			try {Thread.sleep(iMilis);} catch (InterruptedException e) {e.printStackTrace();}
+		}
+	}
+	
+	private RunnableX	r;
 
-	private boolean	bConfigured;
-	
-	public void configure(Application app, Node nodeParent){
-		DetailedException.assertIsFalse("configured", bConfigured, this);
-		com.github.devconslejme.gendiag.PkgCfgI.i().configure(app,nodeParent);
+	public ThreadX(RunnableX r) {
+		super(r);
 		
-		DevConsPluginStateI.i().configure(nodeParent);
-		FileI.i().configure(DevConsPluginStateI.i().getStorageFolder());
+		this.r=r;
 		
-		initNonStandard();
-		
-		bConfigured=true;
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+//				ThreadX.this.setName(ThreadX.class.getSimpleName());
+				ThreadX.this.setName(
+					r.getClass().getEnclosingMethod().getName()+"("+
+						r.getClass().getEnclosingClass().getSimpleName()+")"
+				);
+				return true;
+			}
+		});
 	}
 	
-	@NonStandard
-	private void initNonStandard(){
-		/**
-		 * this special configuration will start appending log to a file
-		 */
-		MessagesI.i().initializeLogFile();
-	}
 }

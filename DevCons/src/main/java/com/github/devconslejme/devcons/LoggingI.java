@@ -59,7 +59,8 @@ public class LoggingI {
 //	private VarMon	stWrapAt;
 	
 	public void configure() {
-		flLog = new File(DevConsPluginStateI.i().getStorageFolder(), LoggingI.class.getSimpleName()+".log");
+//		flLog = new File(DevConsPluginStateI.i().getStorageFolder(), LoggingI.class.getSimpleName()+".log");
+		flLog = FileI.i().createNewFile(this,"log",true);
 		flLog.delete();
 		
 		vlstrLogEntries = new VersionedList<String>();

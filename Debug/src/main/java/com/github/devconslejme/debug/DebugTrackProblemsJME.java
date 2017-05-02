@@ -32,8 +32,13 @@ import java.util.Arrays;
 import com.github.devconslejme.misc.CheckProblemsI.ICheckProblems;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.SimulationTimeI;
+import com.github.devconslejme.misc.ThreadX;
+import com.github.devconslejme.misc.ThreadX.RunnableX;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
+import com.jme3.app.Application;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.scene.Geometry;
@@ -42,14 +47,13 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Sphere;
 
 /**
- * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
- *
  */
 public class DebugTrackProblemsJME implements ICheckProblems{
 	public static DebugTrackProblemsJME i(){return GlobalManagerI.i().get(DebugTrackProblemsJME.class);}
 
 	private ArrayList<Node>	anodeList = new ArrayList<Node>();
+	private Application	app;
 	
 	@Override
 	public int checkProblems(Throwable thr){
@@ -58,6 +62,7 @@ public class DebugTrackProblemsJME implements ICheckProblems{
 	
 	public void configure(Node... anode){
 		this.anodeList.addAll(Arrays.asList(anode));
+		app = GlobalManagerI.i().get(Application.class);
 	}
 	
 	private ArrayList<Spatial> checkForSpatialsImproperlyModified(Throwable thr, boolean bDumpMessage){
@@ -78,7 +83,8 @@ public class DebugTrackProblemsJME implements ICheckProblems{
 						str+=node.getName()+"/";
 					}
 				}
-				System.err.println(DebugTrackProblemsJME.class.getSimpleName()+":SpatialProblem:"+str);
+				
+				MessagesI.i().output(true, System.err, "CriticalError", this, DebugTrackProblemsJME.class.getSimpleName()+":SpatialProblem:"+str, asptList);
 			}
 		}
 		
@@ -104,25 +110,41 @@ public class DebugTrackProblemsJME implements ICheckProblems{
 		return asptIn;
 	}
 	
-	public void testSimulateTheProblem(){
+	/**
+	 * test modify spatial from another thread problem
+	 */
+	public void tstModSpt(){
 		Geometry geom = new Geometry();
 		geom.setName(DebugTrackProblemsJME.class.getSimpleName()+":TestModifySpatialProblem");
 //		geom.setMesh(new Line(Vector3f.UNIT_XYZ.mult(100),Vector3f.UNIT_XYZ.mult(100)));
-		geom.setMesh(new Sphere(10,10,100));
-		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(ColorRGBA.White));
+		geom.setMesh(new Sphere(10,10,25));
+		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(ColorRGBA.Red));
 		anodeList.get(0).attachChild(geom);
 		
-		Thread thread = new Thread(new Runnable() {
+		ThreadX thread = new ThreadX(new RunnableX() {
 			@Override
 			public void run() {
+//				long lTimePrev=app.getTimer().getTime();
+				long lTimePrev=SimulationTimeI.i().getNanoTime();
 				while(true){
-					geom.setLocalTranslation(FastMath.nextRandomFloat(),0,0);
-					try {
-						Thread.sleep(10);
-						System.out.println(geom.getMesh().getClass()+","+geom.getLocalTranslation());
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+					/**
+					 * only do it if the main thread is being updated
+					 * without this limitation, it will cause internal prloblems at Eclipse IDE luna...
+					 * and create loads of useless log output entries... 
+					 */
+//					if(lTimePrev != app.getTimer().getTime()){ //only do it if the main thread is being updated
+					if(lTimePrev != SimulationTimeI.i().getNanoTime()){ 
+						geom.setLocalTranslation(FastMath.nextRandomFloat(),0,0);
+						
+						System.out.print(geom.getMesh().getClass().getSimpleName()+"/"+geom.getLocalTranslation());
+						
+//						lTimePrev = app.getTimer().getTime();
+						lTimePrev = SimulationTimeI.i().getNanoTime();
+					}else{
+						int i=0;i++;int i2=i; //to put breakpoint
 					}
+					
+					sleep(10);
 				}
 			}
 		});

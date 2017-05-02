@@ -32,7 +32,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.MessagesI;
 import com.google.common.io.Files;
 
 
@@ -40,7 +42,13 @@ import com.google.common.io.Files;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class FileI {
+	private File	flBasePath;
+
 	public static FileI i(){return GlobalManagerI.i().get(FileI.class);}
+	
+	public void configure(File flBasePath){
+		setBasePath(flBasePath);
+	}
 	
 	public void appendLine(File fl, String str){
 		try {
@@ -61,4 +69,29 @@ public class FileI {
 		return null;
 	}
 
+	public void setBasePath(File flBasePath) {
+		DetailedException.assertNotAlreadySet(this.flBasePath, flBasePath, this);
+		this.flBasePath = flBasePath;
+	}
+	
+	/**
+	 * in the base application user data path
+	 * @param strFile
+	 * @return
+	 */
+	public File createNewFileHandler(String strFile,boolean bFileCanExist){
+//		DetailedException.assertIsTrue("base path", this.flBasePath, flBasePath, this);
+		if(flBasePath==null)MessagesI.i().warnMsg(this, "base path not set", strFile);
+		
+		File fl= new File(flBasePath, strFile);
+		if(fl.exists() && !bFileCanExist){
+			throw new DetailedException("file already exists",fl);
+		}
+		
+		return fl;
+	}
+	
+	public File createNewFile(Object objForConcreteClassSimpleName,String strExt,boolean bFileCanExist){
+		return createNewFileHandler(objForConcreteClassSimpleName.getClass().getSimpleName()+"."+strExt, bFileCanExist);
+	}
 }

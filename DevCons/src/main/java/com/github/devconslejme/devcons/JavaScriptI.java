@@ -429,10 +429,10 @@ public class JavaScriptI implements IGlobalAddListener {
 		
 		File flJS = null;
 		try {
-			flJS = new File(strFile); //some absolute location
+			flJS = new File(strFile); //first try to find it at some absolute location
 			if(!flJS.exists()){ 
-				//relative to storage
-				flJS = new File(DevConsPluginStateI.i().getStorageFolder(),strFile);
+				//now try relatively to default storage path
+				flJS = FileI.i().createNewFileHandler(strFile,true);// new File(DevConsPluginStateI.i().getStorageFolder(),strFile);
 			}
 			
 			if(!flJS.exists()){
@@ -608,7 +608,7 @@ public class JavaScriptI implements IGlobalAddListener {
 
 	public void init() {
 		// restore cmd history
-		flCmdHistory = new File(DevConsPluginStateI.i().getStorageFolder(),"CommandsHistory.log");
+		flCmdHistory = FileI.i().createNewFileHandler("CommandsHistory.log", true); //new File(DevConsPluginStateI.i().getStorageFolder(),"CommandsHistory.log");
 		astrCmdHistory.add(""); //just to avoid empty list when adding new cmd to it
 		if(flCmdHistory.exists()){
 			for(String str:FileI.i().readAllLines(flCmdHistory)){
@@ -618,7 +618,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		}
 		
 		// load user init cmds
-		flUserInit = new File(DevConsPluginStateI.i().getStorageFolder(),"UserInit.cfg");
+		flUserInit = FileI.i().createNewFileHandler("UserInit.cfg", true); //new File(DevConsPluginStateI.i().getStorageFolder(),"UserInit.cfg");
 		if(flUserInit.exists()){
 			for(String str:getUserInit()){
 				astrUserInit.add(str);
