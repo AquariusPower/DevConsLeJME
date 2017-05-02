@@ -26,7 +26,7 @@
 */
 package com.github.devconslejme.gendiag;
 
-import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
+import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction.CmdBtnTA;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
@@ -51,18 +51,16 @@ public abstract class SimpleMaintenanceGenericDialog extends SimpleGenericDialog
 	@Override
 	protected void initSectionTools() {
 		super.initSectionTools();
-		putToolAction(new ToolAction("Refresh Options", new Command<Button>() {
-			@Override
-			public void execute(Button source) {
-				requestUpdateListItems();
-			}
-		}));
+		putToolAction(new ToolAction("Refresh Options", new CmdBtnTA() {@Override	public Boolean executeTA(Button btn) {
+				requestUpdateListItems();			return null;}}));
 		
-		putToolAction(new ToolAction("Collapse All", new Command<Button>() {@Override public void execute(Button source) {
-				collapseAll();	}}));
-		
-		putToolAction(new ToolAction("Expand All", new Command<Button>() {@Override	public void execute(Button source) {
-				expandAll();	}}));
+		/**
+		 * two buttons because user may have shrinked or expanded sub sections
+		 */
+		putToolAction(new ToolAction("Collapse All", new CmdBtnTA() {@Override public Boolean executeTA(Button source) {
+				collapseAll();		return null;}})); 
+		putToolAction(new ToolAction("Expand All", new CmdBtnTA() {@Override	public Boolean executeTA(Button source) {
+				expandAll();		return null;}}));
 		
 		requestUpdateListItems(); //1st time
 	}

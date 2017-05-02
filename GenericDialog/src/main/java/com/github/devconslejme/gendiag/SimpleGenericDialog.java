@@ -144,10 +144,68 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	
 	public static class ToolAction implements IVisibleText{
 		private String strTextKey;
-		Command<Button> cmdAction;
-		public ToolAction(String strTextKey, Command<Button> cmdAction) {
+		CmdBtnTA cmdAction;
+		
+		public abstract static class CmdBtnTA implements Command<Button>{
+//			private Button	btn;
+			
+			private String	strForStatusFalse;
+			private String	strForStatusTrue;
+//			private boolean	bAutoUpdateText;
+			private Boolean	bStatusAutoUpdateText;
+			public String	strTextKey;
+
+			public CmdBtnTA(){}
+			
+			/**
+			 * 
+			 * @param bInitStatus not wrapper, as the intent is auto update text
+			 * @param strForStatusTrue
+			 * @param strForStatusFalse
+			 */
+			public CmdBtnTA(boolean bInitStatus, String strForStatusTrue, String strForStatusFalse){
+				this.strForStatusTrue = strForStatusTrue;
+				this.strForStatusFalse = strForStatusFalse;
+//				this.bAutoUpdateText=true;
+				this.bStatusAutoUpdateText=bInitStatus;
+			}
+			
+			@Deprecated
+			@Override
+			public void execute(Button source) {
+//				this.btn=source;
+				updateStatus(executeTA(source));
+				updateTextWork(source);
+			}
+			
+//			public Button getSource(){return btn;}
+			
+			private void updateTextWork(Button source) {
+				if(bStatusAutoUpdateText!=null){
+					updateText(source, bStatusAutoUpdateText, strForStatusTrue, strForStatusFalse);
+				}else{
+					updateText(source);
+				}
+			}
+			public abstract Boolean executeTA(Button btn);
+			
+			protected void updateText(Button btn){}
+			
+			protected void updateStatus(Boolean b){
+				if(b!=null)this.bStatusAutoUpdateText=b;
+			}
+			
+			protected void updateText(Button btn, boolean bStatus, String strForTrue, String strForFalse) {
+//				btn.setText(btn.getText().split(":")[0]+": "+
+//						(bStatus?strForTrue:strForFalse) ); //next action
+				btn.setText(strTextKey+": "+(bStatus?strForTrue:strForFalse)); //next action
+			}
+		}
+		
+		public ToolAction(String strTextKey, CmdBtnTA cmdAction) {
 			super();
 			this.strTextKey = strTextKey;
+			cmdAction.strTextKey=strTextKey;
 			this.cmdAction = cmdAction;
 		}
 		

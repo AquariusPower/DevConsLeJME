@@ -28,8 +28,6 @@ package com.github.devconslejme.gendiag;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
@@ -37,15 +35,14 @@ import com.github.devconslejme.devcons.ClipboardI;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.CmdCfg;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction;
+import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction.CmdBtnTA;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.JavadocI;
 import com.github.devconslejme.misc.MethodHelp;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
-import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
 import com.simsilica.lemur.Button;
-import com.simsilica.lemur.Command;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -81,34 +78,46 @@ public class GlobalsManagerDialogI {
 				
 				if(!smd.isInitialized())return false;
 				
-				smd.putToolAction(new ToolAction("Toggle Inherited Methods", new Command<Button>() {
+				smd.putToolAction(new ToolAction("Methods from", new CmdBtnTA(bShowInherited,"concrete","inherited too") {
 					@Override
-					public void execute(Button source) {
-						bShowInherited=!bShowInherited;
+					public Boolean executeTA(Button source) {
+//						updateStatus(bShowInherited=!bShowInherited);
 						smd.requestUpdateListItems();
-						PopupHintHelpListenerI.i().setPopupHintHelp(source, 
-								bShowInherited?"only of concrete class":"show all inherited too"); //next action
+//						PopupHintHelpListenerI.i().setPopupHintHelp(source, 
+//								bShowInherited?"only of concrete class":"show all inherited too"); //next action
+						return bShowInherited=!bShowInherited;
 					}
 				}));
 				
-				smd.putToolAction(new ToolAction("Toggle packages prepended", new Command<Button>() {
+				smd.putToolAction(new ToolAction("Pkg info", new CmdBtnTA(bShowPackagesPrepended,"after","prepend") {
 					@Override
-					public void execute(Button source) {
-						bShowPackagesPrepended=!bShowPackagesPrepended;
+					public Boolean executeTA(Button source) {
+//						updateStatus(bShowPackagesPrepended=!bShowPackagesPrepended);
 						smd.requestUpdateListItems();
-						PopupHintHelpListenerI.i().setPopupHintHelp(source, 
-								bShowPackagesPrepended?"put after":"prepend"); //next action
+//						PopupHintHelpListenerI.i().setPopupHintHelp(source, 
+//								bShowPackagesPrepended?"put after":"prepend"); //next action
+						return bShowPackagesPrepended=!bShowPackagesPrepended;
 					}
 				}));
 				
-				smd.putToolAction(new ToolAction("Toggle show only editable beans", new Command<Button>() {
+				smd.putToolAction(new ToolAction("Method Kind", new CmdBtnTA(bShowOnlyEditableBeans,"all","only beans") {
 					@Override
-					public void execute(Button source) {
-						bShowOnlyEditableBeans=!bShowOnlyEditableBeans;
+					public Boolean executeTA(Button btn) {
+//						updateStatus(bShowOnlyEditableBeans=!bShowOnlyEditableBeans);
 						smd.requestUpdateListItems();
-						PopupHintHelpListenerI.i().setPopupHintHelp(source, 
-							bShowOnlyEditableBeans?"show all":"show only beans"); //next action
+						
+//						updateText();
+						
+//						PopupHintHelpListenerI.i().setPopupHintHelp(source, 
+//							bShowOnlyEditableBeans?"show all":"show only beans"); //next action
+						return bShowOnlyEditableBeans=!bShowOnlyEditableBeans;
 					}
+
+//					@Override
+//					protected void updateText(Button btn) {
+//						btn.setText(btn.getText().split(":")[0]+": "+
+//								(bShowOnlyEditableBeans?"all":"only beans") ); //next action
+//					}
 				}));
 				
 				return true;
