@@ -473,6 +473,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 //		ToolAction ta = UserDataI.i().getUserDataPSH(btn, ToolAction.class);
 		ToolAction ta = btnc.ta;
 		if(ta!=null){
+			//TODO does nothing???
 			return;
 		}
 	}
