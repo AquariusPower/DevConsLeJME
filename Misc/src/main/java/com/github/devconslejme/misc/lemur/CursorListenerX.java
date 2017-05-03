@@ -49,8 +49,10 @@ public abstract class CursorListenerX implements CursorListener{
 			this.sptPrepareToWorkWith = capture;
 		}else{
 			if(sptPrepareToWorkWith!=null && sptPrepareToWorkWith==capture){
-				if(click(event, target, capture)){
-					event.setConsumed();
+				if(!DragParentestPanelListenerI.i().isDragOverridingButtonUpClickEvent(event)){
+					if(click(event, target, capture)){
+						event.setConsumed();
+					}
 				}
 			}
 			

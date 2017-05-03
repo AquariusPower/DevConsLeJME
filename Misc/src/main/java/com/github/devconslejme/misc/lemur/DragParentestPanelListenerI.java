@@ -66,6 +66,8 @@ public class DragParentestPanelListenerI implements CursorListener{
 	private Vector3f	v3fInitialDragPos;
 	private Vector3f	v3fInitialCurPos;
 	private boolean	bIsReallyDragging;
+	private CursorButtonEvent	eventButtonDown;
+	private CursorButtonEvent	eventButtonUp;
 	
 	public void configure(){
 		focusman = GlobalManagerI.i().get(Application.class).getStateManager().getState(FocusManagerState.class);
@@ -94,6 +96,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 //		if(event.getButtonIndex()==iButtonClickOk && di.bEnableDrag){
 		if(event.getButtonIndex()==iButtonClickOk){
 			if(event.isPressed()){
+				eventButtonDown = event;
 				DragInfo di = UserDataI.i().getUserDataPSH(capture, DragInfo.class);
 				if(di==null){
 					MessagesI.i().warnMsg(this, "captured has no info?", capture, target, event);
@@ -125,6 +128,8 @@ public class DragParentestPanelListenerI implements CursorListener{
 				
 //				ClickCommandAbsorptionI.i().absorbClickCommands(capture);
 			}else{
+				eventButtonUp = event;
+				
 				bDragging=false;
 				
 				pnlParentestBeingDragged=null;
@@ -136,6 +141,10 @@ public class DragParentestPanelListenerI implements CursorListener{
 			
 //			event.setConsumed();
 		}
+	}
+	
+	public boolean isDragOverridingButtonUpClickEvent(CursorButtonEvent eventButtonUpExternal){
+		return bIsReallyDragging;
 	}
 	
 	@Override
