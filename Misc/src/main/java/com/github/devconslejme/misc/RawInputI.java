@@ -24,39 +24,21 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+package com.github.devconslejme.misc;
 
-package com.github.devconslejme.misc.lemur;
-
-import com.github.devconslejme.misc.DetailedException;
-import com.github.devconslejme.misc.GlobalManagerI;
-import com.jme3.app.Application;
-import com.jme3.scene.Node;
-import com.simsilica.lemur.GuiGlobals;
-import com.simsilica.lemur.style.BaseStyles;
+import org.lwjgl.input.Mouse;
 
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PkgCfgI {
-	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
+public class RawInputI {
+	public static RawInputI i(){return GlobalManagerI.i().get(RawInputI.class);}
 	
-	private boolean	bConfigured;
-	
-	public void configure(Application app, Node nodeParent){
-		DetailedException.assertIsFalse("configured", bConfigured, this);
-		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app,nodeParent);
-		
-		// lermur inits
-		if(GuiGlobals.getInstance()==null)GuiGlobals.initialize(app); //GuiGlobals.initialize(app);
-		BaseStyles.loadGlassStyle();
-		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS); //this can be set again later
-		
-		// after lemur inits
-		PopupHintHelpListenerI.i().configure(nodeParent);
-		DragParentestPanelListenerI.i().configure(nodeParent);
-		
-		bConfigured=true;
+	public boolean isMouseCursorPressedButtons(){
+		for(int i=0;i<9;i++){
+			if(Mouse.isButtonDown(i))return true;
+		}
+    return false;
 	}
-	
 }
