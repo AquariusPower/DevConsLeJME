@@ -56,6 +56,8 @@ public class StringI {
 		 */
 		Fuzzy,
 		;
+		
+		public String s(){return toString();}
 	}
 
 	public boolean contains(String strToCheck, String strMatch, EStringMatchMode eMode, boolean bIgnoreCase){

@@ -34,6 +34,7 @@ import java.util.Map.Entry;
 import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.es.HierarchyComp;
 import com.github.devconslejme.es.HierarchyComp.EField;
+import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.misc.Annotations.ToDo;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
@@ -42,6 +43,7 @@ import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
+import com.github.devconslejme.misc.StringI.EStringMatchMode;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.IndicatorI;
 import com.github.devconslejme.misc.jme.IndicatorI.GeomIndicator;
@@ -295,6 +297,7 @@ public class ContextMenuI implements IResizableListener{
 	 * see {@link ContextMenuI#showContextMenu(Vector2f, String, ContextMenu)}<br>
 	 * use {@link #setPopupHintHelp(String)}<br>
 	 * {@link ContextButton} 1 <-> 1 {@link HintUpdater}<br>
+	 * use {@link #getContextButtonLinked()}.{@link ContextButton#getValue()}
 	 */
 	public static abstract class HintUpdater extends CallableX<HintUpdater>{
 		private ContextButton	cb;
@@ -315,7 +318,11 @@ public class ContextMenuI implements IResizableListener{
 			this.cb=cb;
 		}
 		
-		public ContextButton getContextButtonOwner(){
+		/**
+		 * 
+		 * @return the context button for this {@link HintUpdater}
+		 */
+		public ContextButton getContextButtonLinked(){
 			return this.cb;
 		}
 		
@@ -361,6 +368,7 @@ public class ContextMenuI implements IResizableListener{
 		}
 		
 		private Object val;
+		@SuppressWarnings("unchecked")
 		public <T> T getValue() {
 			return (T)val;
 		}
@@ -603,4 +611,21 @@ public class ContextMenuI implements IResizableListener{
 	}
 	@Override	public void resizedEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {	}
 	@Override	public void endedResizingEvent(ResizablePanel rzpSource) {	}
+
+	@SuppressWarnings("unchecked")
+	public ContextMenu createRegexOptContextMenu(ResizablePanel rzp, Command<Button> cmd) {
+		ContextMenu cm=new ContextMenu(rzp);
+		HintUpdater hu = new HintUpdater() {
+			@Override
+			public Boolean call() {
+				int i = (int)getContextButtonLinked().getValue(); //TODO why?!?!? at other places I dont have to cast to Button!?!??!?!?!?!?!
+				return null;
+			}
+		};
+		
+		for(EStringMatchMode e:EStringMatchMode.values()){
+			cm.addNewEntry(e.s(), cmd, hu);
+		}
+		return cm;
+	}
 }

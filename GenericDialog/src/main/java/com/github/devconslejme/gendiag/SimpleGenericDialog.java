@@ -40,6 +40,7 @@ import java.util.Set;
 
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.HintUpdater;
+import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction;
 import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
@@ -150,6 +151,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		private String[]	astrStatus;
 		private String	strVisibleTextBtn;
 		private Integer	iInitStatus;
+		private ContextMenu	cm;
 		
 		public abstract static class CmdBtnTA implements Command<Button>{
 			private ToolAction ta;
@@ -166,14 +168,11 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		}
 		
 		public ToolAction(String strTextKey, CmdBtnTA cmdAction) {
-			this(strTextKey,cmdAction,null);
-		}
-		
-		public ToolAction(String strTextKey, CmdBtnTA cmdAction, Integer iInitStatus, String... astrStatus) {
-			super();
-			
 			this.strTextKey = strTextKey;
 			this.cmdAction = cmdAction;
+		}
+		
+		public ToolAction setMultiStatusMode(Integer iInitStatus, String... astrStatus) {
 			this.iInitStatus = iInitStatus;
 			this.astrStatus = astrStatus;
 			
@@ -181,6 +180,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			setStatusArray(astrStatus);
 			this.iStatusAutoUpdateText=iInitStatus;
 			updateTextWork(null);
+			
+			return this;
 		}
 		
 		/**
@@ -237,6 +238,11 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			
 			return strTextKey;
 //			return strVisibleText;
+		}
+
+		public ToolAction setContextMenu(ContextMenu cm) {
+			this.cm=cm;
+			return this;
 		}
 	}
 	
@@ -602,7 +608,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 //					Button btn = (Button)cmSubBorderSize.getContextSource(); //TODO why?!?!? at other places I dont have to cast to Button!?!??!?!?!?!?!
 //					int i = Integer.parseInt(btn.getText());
 //					int i = Integer.parseInt(getContextButtonOwner().getText());
-					int i = (int)getContextButtonOwner().getValue(); //TODO why?!?!? at other places I dont have to cast to Button!?!??!?!?!?!?!
+					int i = (int)getContextButtonLinked().getValue(); //TODO why?!?!? at other places I dont have to cast to Button!?!??!?!?!?!?!
 					if(ResizablePanel.getResizableBorderSizeDefault()==i){
 //						setPopupHintHelp("current choice");
 						return true;

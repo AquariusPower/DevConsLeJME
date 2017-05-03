@@ -32,6 +32,7 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import com.github.devconslejme.devcons.ClipboardI;
+import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.CmdCfg;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction;
@@ -41,10 +42,11 @@ import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.JavadocI;
 import com.github.devconslejme.misc.MethodHelp;
 import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.StringI.EStringMatchMode;
 import com.simsilica.lemur.Button;
+import com.simsilica.lemur.Command;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -86,28 +88,36 @@ public class GlobalsManagerDialogI {
 						smd.requestUpdateListItems();
 						return (bShowInherited=!bShowInherited)?0:1;
 					}
-				},bShowInherited?0:1,"concrete","inherited too"));
+				}).setMultiStatusMode(bShowInherited?0:1,"concrete","inherited too"));
 				
 				smd.putToolAction(new ToolAction("Pkg info", new CmdBtnTA() {
 					@Override	public Integer executeTA(Button source) {
 						smd.requestUpdateListItems();
 						return (bShowPackagesPrepended=!bShowPackagesPrepended)?0:1;
 					}
-				},bShowPackagesPrepended?0:1,"after","prepend"));
+				}).setMultiStatusMode(bShowPackagesPrepended?0:1,"after","prepend"));
 				
 				smd.putToolAction(new ToolAction("Method kind", new CmdBtnTA() {
 					@Override	public Integer executeTA(Button btn) {
 						smd.requestUpdateListItems();
 						return (bShowOnlyEditableBeans=!bShowOnlyEditableBeans)?0:1;
 					}
-				},bShowOnlyEditableBeans?0:1,"all","only beans"));
+				}).setMultiStatusMode(bShowOnlyEditableBeans?0:1,"all","only beans"));
 				
 				smd.putToolAction(new ToolAction("Regex filter", new CmdBtnTA() {
-					@Override	public Integer executeTA(Button btn) {
-						smd.requestUpdateListItems();
-						return (bRegexFilter=!bRegexFilter)?0:1;
-					}
-				},bRegexFilter?0:1,"enabled","disabled"));
+						@Override	public Integer executeTA(Button btn) {
+							smd.requestUpdateListItems();
+							return (bRegexFilter=!bRegexFilter)?0:1;
+						}
+					}).setMultiStatusMode(bRegexFilter?0:1,"enabled","disabled")
+						.setContextMenu(ContextMenuI.i().createRegexOptContextMenu(smd.getDialog(), new Command<Button>() {
+							@Override
+							public void execute(Button source) {
+								// TODO Auto-generated method stub
+								throw new UnsupportedOperationException("method not implemented yet");
+							}
+						}))
+				);
 				
 				return true;
 			}
