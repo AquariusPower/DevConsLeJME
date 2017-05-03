@@ -50,9 +50,11 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
+import com.simsilica.lemur.GridPanel;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.Panel;
@@ -274,6 +276,19 @@ public class MiscLemurI {
 			.setDelaySeconds(0.25f)
 			.enableLoop()
 		);
+	}
+
+	public boolean isListBoxItem(Spatial capture) {
+//		if(GridPanel.class.isInstance(capture.getParent())){
+//			GridPanel gp=(GridPanel)capture;
+//			if(ListBox.class.isInstance(gp.getParent())){
+//				return true;
+//			}
+//		}
+		for(Node node:SpatialHierarchyI.i().getAllParents(capture)){
+			if(ListBox.class.isInstance(node))return true;
+		}
+		return false;
 	}
 	
 }

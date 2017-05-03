@@ -123,7 +123,8 @@ public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 				CmdBtnTA cmdbta = new CmdBtnTA() {
 					@Override	public Integer executeTA(Button btn) {
 						diagMaint.requestUpdateListItems();
-						return (bRegexFilter=!bRegexFilter)?0:1;
+//						return (bRegexFilter=!bRegexFilter)?0:1;
+						return (bRegexFilter=!bRegexFilter)?1:0;
 					}
 				};
 				ToolAction ta = new ToolAction("User filter",cmdbta)

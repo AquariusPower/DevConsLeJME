@@ -41,7 +41,7 @@ import java.util.Set;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextButton;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
-import com.github.devconslejme.gendiag.ContextMenuI.HintUpdaterPerContextButton;
+import com.github.devconslejme.gendiag.ContextMenuI.HintUpdaterPerCtxtBtn;
 import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
@@ -168,6 +168,11 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 				ta.updateTextWork(source);
 			}
 			
+			/**
+			 * 
+			 * @param btn
+			 * @return this value will also auto update the status text
+			 */
 			protected abstract Integer executeTA(Button btn);
 			
 		}
@@ -600,7 +605,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 					cntrInfo.addChild(btnInfoText, BorderLayout.Position.Center);
 				}
 			}},
-			new HintUpdaterPerContextButton() {
+			new HintUpdaterPerCtxtBtn() {
 				@Override
 				public Boolean call() {
 					setPopupHintHelp(btnInfoText.getParent()==null?"show":"hide"); //inverted to show next action on click
@@ -622,7 +627,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		};
 		
 		for(int i=1;i<=10;i++){
-			cmSubBorderSize.addNewEntry(""+i, i, cmdBorderSize, new HintUpdaterPerContextButton() {@Override	public Boolean call() {
+			cmSubBorderSize.addNewEntry(""+i, i, cmdBorderSize, new HintUpdaterPerCtxtBtn() {@Override	public Boolean call() {
 				return ResizablePanel.getResizableBorderSizeDefault()==(int)getStoredValueFromContextButton();
 			}});
 		}

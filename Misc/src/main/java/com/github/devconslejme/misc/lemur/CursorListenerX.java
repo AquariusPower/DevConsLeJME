@@ -26,6 +26,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.github.devconslejme.misc.lemur;
 
+import com.github.devconslejme.misc.Annotations.Workaround;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorListener;
@@ -38,11 +39,41 @@ import com.simsilica.lemur.event.CursorMotionEvent;
 public abstract class CursorListenerX implements CursorListener{
 
 	private Spatial	sptPrepareToWorkWith;
+	private CursorButtonEvent	eventNewForListBoxItem;
+	private CursorButtonEvent	eventOverriden;
 
 	protected abstract boolean click(CursorButtonEvent event, Spatial target,				Spatial capture);
 	
+	/**
+	 * as ListBox always consume the event, a fresh non consumed clone will be created,
+	 * so further clicks on the listbox item thru this listener will still work. 
+	 * @param event
+	 * @param capture
+	 * @return
+	 */
+	@Workaround
+	private CursorButtonEvent refreshesEventForListBoxItem(CursorButtonEvent event,Spatial capture){
+		if(event.isConsumed() && MiscLemurI.i().isListBoxItem(capture)){ 
+			if(eventOverriden!=event){
+				eventOverriden = event;
+				
+				/**
+				 * create a non consumed clone
+				 */
+				eventNewForListBoxItem = new CursorButtonEvent(
+					event.getButtonIndex(), event.isPressed(), event.getViewPort(), event.getTarget(), 
+					event.getX(), event.getY(), event.getCollision());
+			}
+			
+			event = eventNewForListBoxItem;
+		}
+		
+		return event;
+	}
+	
 	@Override
 	public void cursorButtonEvent(CursorButtonEvent event, Spatial target,			Spatial capture) {
+		event = refreshesEventForListBoxItem(event,capture);
 		if(event.isConsumed())return;
 		
 		if(event.isPressed()){

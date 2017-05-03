@@ -130,17 +130,23 @@ public class DragParentestPanelListenerI implements CursorListener{
 			}else{
 				eventButtonUp = event;
 				
-				bDragging=false;
-				
-				pnlParentestBeingDragged=null;
-				
 				// just click, not dragging
 //				if(!bIsReallyDragging)ClickCommandAbsorptionI.i().delegateClickCommands(capture);
 				if(bIsReallyDragging)event.setConsumed();
+				
+				resetDrag();
 			}
 			
 //			event.setConsumed();
+		}else{
+			resetDrag();
 		}
+	}
+	
+	private void resetDrag(){
+		bDragging=false;
+		pnlParentestBeingDragged=null;
+		bIsReallyDragging=false;
 	}
 	
 	public boolean isDragOverridingButtonUpClickEvent(CursorButtonEvent eventButtonUpExternal){

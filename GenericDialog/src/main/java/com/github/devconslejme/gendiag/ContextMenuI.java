@@ -228,16 +228,16 @@ public class ContextMenuI implements IResizableListener{
 		public ContextButton addNewEntry(String strTextKey, ApplyContextChoiceCmd cmd){
 			return addNewEntry(strTextKey, null, cmd, null);
 		}
-		public ContextButton addNewEntry(String strTextKey, ApplyContextChoiceCmd cmd, HintUpdaterPerContextButton hu){
+		public ContextButton addNewEntry(String strTextKey, ApplyContextChoiceCmd cmd, HintUpdaterPerCtxtBtn hu){
 			return addNewEntry(strTextKey, null, cmd, hu);
 		}
 		/**
 		 * @param strTextKey
 		 * @param cmd necessary because that is the whole point of it
-		 * @param hu Each choice can have an exclusive {@link HintUpdaterPerContextButton} that may use {@link HintUpdaterPerContextButton#setPopupHintHelp(String)} (for the single choice mode, there is an automatic popup hint for that)
+		 * @param hu Each choice can have an exclusive {@link HintUpdaterPerCtxtBtn} that may use {@link HintUpdaterPerCtxtBtn#setPopupHintHelp(String)} (for the single choice mode, there is an automatic popup hint for that)
 		 * @return
 		 */
-		public ContextButton addNewEntry(String strTextKey, Object objStoreContextItemValue, ApplyContextChoiceCmd cmd, HintUpdaterPerContextButton hu){
+		public ContextButton addNewEntry(String strTextKey, Object objStoreContextItemValue, ApplyContextChoiceCmd cmd, HintUpdaterPerCtxtBtn hu){
 			assert(cmd!=null);
 			ContextButton cb = new ContextButton(strTextKey);
 			ClickCommandAbsorptionI.i().absorbClickCommands(cb);
@@ -327,14 +327,14 @@ public class ContextMenuI implements IResizableListener{
 	}
 	
 	/**
-	 * {@link ContextButton} 1 to 1 {@link HintUpdaterPerContextButton}<br>
+	 * {@link ContextButton} 1 to 1 {@link HintUpdaterPerCtxtBtn}<br>
 	 * <br>
 	 * see {@link ContextMenuI#showContextMenu(Vector2f, String, ContextMenu)}<br>
 	 * <br>
 	 * use {@link #setPopupHintHelp(String)} to apply a custom value, otherwise default will be used<br>
 	 * use {@link #getStoredValueFromContextButton()} to compare the context source value with linked contextmenu value<br>
 	 */
-	public static abstract class HintUpdaterPerContextButton extends CallableX<HintUpdaterPerContextButton>{
+	public static abstract class HintUpdaterPerCtxtBtn extends CallableX<HintUpdaterPerCtxtBtn>{
 		private ContextButton	cbParent;
 
 		public void setPopupHintHelp(String str){
@@ -360,20 +360,20 @@ public class ContextMenuI implements IResizableListener{
 		
 		/**
 		 * 
-		 * @return the context button for this {@link HintUpdaterPerContextButton}
+		 * @return the context button for this {@link HintUpdaterPerCtxtBtn}
 		 */
 		public ContextButton getContextButtonParent(){
 			return this.cbParent;
 		}
 		
 		@Override
-		protected HintUpdaterPerContextButton getThis() {
+		protected HintUpdaterPerCtxtBtn getThis() {
 			return this;
 		}
 	}
 	
 	public static class ContextButton<SELF extends ContextButton<SELF>> extends Button{
-		private HintUpdaterPerContextButton	cxHintUpdater;
+		private HintUpdaterPerCtxtBtn	cxHintUpdater;
 		private boolean	bSubContextMenu;
 		private Object val;
 //		private Command<ContextButton>	cmd;
@@ -399,7 +399,7 @@ public class ContextMenuI implements IResizableListener{
 			return bSubContextMenu;
 		}
 		
-		private SELF setHintUpdater(HintUpdaterPerContextButton cxHintUpdater) {
+		private SELF setHintUpdater(HintUpdaterPerCtxtBtn cxHintUpdater) {
 			this.cxHintUpdater = cxHintUpdater;
 			return getThis();
 		}
@@ -413,7 +413,7 @@ public class ContextMenuI implements IResizableListener{
 			return (SELF)this;
 		}
 
-		private HintUpdaterPerContextButton getHintUpdater() {
+		private HintUpdaterPerCtxtBtn getHintUpdater() {
 			return cxHintUpdater;
 		}
 		
@@ -470,9 +470,33 @@ public class ContextMenuI implements IResizableListener{
 	public static class ContextMenuSourceCursorListenerX extends CursorListenerX{
 //		public static ContextMenuOwnerListenerI i(){return GlobalManagerI.i().get(ContextMenuOwnerListenerI.class);}
 		
+//		private CursorButtonEvent	eventNewForListBoxItem;
+//		private CursorButtonEvent	eventOverriden;
+
+//		@Override
+//		public void cursorButtonEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
+////			if(event.isConsumed() && MiscLemurI.i().isListBoxItem(capture)){ //ListBox always consume the event
+//////				event.clone();
+////				if(eventOverriden!=event){
+////					eventOverriden = event;
+////					
+////					/**
+////					 * create a non consumed clone
+////					 */
+////					eventNewForListBoxItem = new CursorButtonEvent(
+////						event.getButtonIndex(), event.isPressed(), event.getViewPort(), event.getTarget(), 
+////						event.getX(), event.getY(), event.getCollision());
+////				}
+////				
+////				event = eventNewForListBoxItem;
+////			}
+//			
+//			super.cursorButtonEvent(event, target, capture);
+//		}
+		
 		@Override
 		protected boolean click(CursorButtonEvent event, Spatial target,				Spatial capture) {
-			if(event.getButtonIndex()!=1)return false; //right mouse button
+			if(event.getButtonIndex()!=1)return false; //only right mouse button
 			
 			Button btn = (Button)capture;
 			
@@ -587,7 +611,7 @@ public class ContextMenuI implements IResizableListener{
 	}
 	
 	/**
-	 * the popup hint help will only be set if {@link HintUpdaterPerContextButton#call()} succeeds 
+	 * the popup hint help will only be set if {@link HintUpdaterPerCtxtBtn#call()} succeeds 
 	 * 
 	 * @param v2fMouseCursorPos
 	 * @param strContextMenuTitle
@@ -611,7 +635,7 @@ public class ContextMenuI implements IResizableListener{
 			
 			// popup hint help
 			PopupHintHelpListenerI.i().resetPopupHelp(cbChoice); //clear
-			HintUpdaterPerContextButton cxHU = cbChoice.getHintUpdater();
+			HintUpdaterPerCtxtBtn cxHU = cbChoice.getHintUpdater();
 			if(cxHU!=null){
 				cxHU.setPopupHintHelp(null);
 				if(cxHU.call()){
@@ -698,7 +722,7 @@ public class ContextMenuI implements IResizableListener{
 		
 		cm.setSingleChoiceMode(true);
 		for(EStringMatchMode eToBeStored:EStringMatchMode.values()){
-			HintUpdaterPerContextButton hu = new HintUpdaterPerContextButton() {
+			HintUpdaterPerCtxtBtn hu = new HintUpdaterPerCtxtBtn() {
 				@Override
 				public Boolean call() {
 //					throw new UnsupportedOperationException("method not implemented yet");

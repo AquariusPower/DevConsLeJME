@@ -65,6 +65,8 @@ public class StringI {
 	}
 
 	public boolean contains(String strToCheck, String strMatch, EStringMatchMode eMode, boolean bIgnoreCase){
+		if(strMatch.isEmpty())return true; //empty matches everything
+		
 		if(bIgnoreCase){ 
 			strToCheck=strToCheck.toLowerCase();
 			strMatch=strMatch.toLowerCase();

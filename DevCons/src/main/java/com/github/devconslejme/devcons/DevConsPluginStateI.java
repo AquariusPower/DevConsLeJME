@@ -44,7 +44,7 @@ import com.github.devconslejme.gendiag.ContextMenuI.ContextButton;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenuAnon;
-import com.github.devconslejme.gendiag.ContextMenuI.HintUpdaterPerContextButton;
+import com.github.devconslejme.gendiag.ContextMenuI.HintUpdaterPerCtxtBtn;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
@@ -525,7 +525,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		for(int i=0;i<EStatPriority.values().length;i++){
 			EStatPriority esp = EStatPriority.values()[i];
 			String str=EStatPriority.class.getSimpleName()+":"+esp.s();
-			cmVarMon.addNewEntry(str, esp, cmd, new HintUpdaterPerContextButton() {
+			cmVarMon.addNewEntry(str, esp, cmd, new HintUpdaterPerCtxtBtn() {
 				@Override
 				public Boolean call() {
 					Button btnSource = cmVarMon.getContextSource();
@@ -924,7 +924,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 								enqueueUpdateVarMonList();
 							}
 						},
-						new HintUpdaterPerContextButton() {
+						new HintUpdaterPerCtxtBtn() {
 							@Override
 							public Boolean call() {
 								setPopupHintHelp("(click to "+(bAllowHiddenStats?"show":"hide")+")"); //say the next action on clicking
