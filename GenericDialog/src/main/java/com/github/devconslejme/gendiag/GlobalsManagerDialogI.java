@@ -32,7 +32,8 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import com.github.devconslejme.devcons.ClipboardI;
-import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
+import com.github.devconslejme.gendiag.ContextMenuI.ContextButton;
+import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.CmdCfg;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction;
@@ -46,7 +47,6 @@ import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.StringI.EStringMatchMode;
 import com.simsilica.lemur.Button;
-import com.simsilica.lemur.Command;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -104,20 +104,25 @@ public class GlobalsManagerDialogI {
 					}
 				}).setMultiStatusMode(bShowOnlyEditableBeans?0:1,"all","only beans"));
 				
-				smd.putToolAction(new ToolAction("Regex filter", new CmdBtnTA() {
-						@Override	public Integer executeTA(Button btn) {
-							smd.requestUpdateListItems();
-							return (bRegexFilter=!bRegexFilter)?0:1;
-						}
-					}).setMultiStatusMode(bRegexFilter?0:1,"enabled","disabled")
-						.setContextMenu(ContextMenuI.i().createRegexOptContextMenu(smd.getDialog(), new Command<Button>() {
-							@Override
-							public void execute(Button source) {
-								// TODO Auto-generated method stub
-								throw new UnsupportedOperationException("method not implemented yet");
-							}
-						}))
-				);
+				// user filter
+				ApplyContextChoiceCmd cmd = new ApplyContextChoiceCmd() {
+					@Override
+					public void executeContextCommand(ContextButton cbSource) {
+						eStringMatchMode = (EStringMatchMode) cbSource.getStoredValue();
+					}
+				};
+				CmdBtnTA cmdbta = new CmdBtnTA() {
+					@Override	public Integer executeTA(Button btn) {
+						smd.requestUpdateListItems();
+						return (bRegexFilter=!bRegexFilter)?0:1;
+					}
+				};
+				ToolAction ta = new ToolAction("User filter",cmdbta)
+					.setMultiStatusMode(bRegexFilter?0:1,"enabled","disabled")
+					.setContextMenu(ContextMenuI.i().createStringRegexOptContextMenu(
+						smd.getDialog(), eStringMatchMode, cmd) 
+					);
+				smd.putToolAction(ta);
 				
 				return true;
 			}
@@ -140,8 +145,8 @@ public class GlobalsManagerDialogI {
 //	}
 	
 	private TreeMap<String,Object> hmSortedGlobals = new TreeMap<String,Object>(String.CASE_INSENSITIVE_ORDER);
-	private EStringMatchMode	eStringMatchMode;
-	private boolean	bMatchIgnoreCase;
+	private EStringMatchMode	eStringMatchMode = EStringMatchMode.Contains;
+	private boolean	bMatchIgnoreCase = true;
 	
 	protected void prepareGlobalsForMaintenance() {
 		hmSortedGlobals.clear();

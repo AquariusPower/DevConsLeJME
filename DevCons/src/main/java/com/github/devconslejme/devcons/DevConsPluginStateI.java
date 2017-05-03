@@ -40,10 +40,12 @@ import org.lwjgl.opengl.Display;
 import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.es.HierarchyComp.EField;
 import com.github.devconslejme.gendiag.ContextMenuI;
+import com.github.devconslejme.gendiag.ContextMenuI.ContextButton;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
+import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenuAnon;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenuOwnerListenerI;
-import com.github.devconslejme.gendiag.ContextMenuI.HintUpdater;
+import com.github.devconslejme.gendiag.ContextMenuI.HintUpdaterPerContextButton;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
@@ -158,7 +160,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	private Comparator<VarMon>	cmprStat = new Comparator<VarMon>() {
 		@Override
 		public int compare(VarMon o1, VarMon o2) {
-			int i = o1.esp.compareTo(o2.esp);
+			int i = o1.eStatPriority.compareTo(o2.eStatPriority);
 			if(i==0) i = o1.strKey.compareTo(o2.strKey);
 			return i;
 		}
@@ -234,7 +236,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	}
 	
 	public static class VarMon{
-		private EStatPriority esp;
+		private EStatPriority eStatPriority=EStatPriority.Normal;
 		private String strKey;
 		private String strValue;
 		private String strHelp;
@@ -247,7 +249,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			DevConsPluginStateI.i().updateVarMonValueAtList(this,false);
 		}
 		public void set(EStatPriority esp) {
-			this.esp = esp;
+			this.eStatPriority = esp;
 		}
 		public void set(EStatPriority esp, String strKey, String strHelp, String strValue,CallableX cx) {
 			this.strKey = strKey;
@@ -493,9 +495,8 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		cmVarMon = new ContextMenuAnon(rzpMain);
 //		cmVarMon.setHierarchyParent(rzpMain);
 		
-		Command<Button> cmd = new Command<Button>(){
-			@Override
-			public void execute(Button btnSourcePriorityChoice) {
+		ApplyContextChoiceCmd cmd = new ApplyContextChoiceCmd() {
+			@Override public void executeContextCommand(ContextButton btnSourcePriorityChoice) {
 				EStatPriority e = null;
 				
 				String str = btnSourcePriorityChoice.getText();
@@ -525,17 +526,20 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		for(int i=0;i<EStatPriority.values().length;i++){
 			EStatPriority esp = EStatPriority.values()[i];
 			String str=EStatPriority.class.getSimpleName()+":"+esp.s();
-			cmVarMon.addNewEntry(str, cmd, new HintUpdater() {
+			cmVarMon.addNewEntry(str, esp, cmd, new HintUpdaterPerContextButton() {
 				@Override
 				public Boolean call() {
 					Button btnSource = cmVarMon.getContextSource();
 					VarMon vm = hmVarMon.get(btnSource.getText());
-					if(vm!=null && esp.equals(vm.esp)){ 
-//						setPopupHintHelp("Current choice");
-						return true; //valid if the text is the key
-					}
-					
-					return false; //invalid if the text does not match a monitoring key
+////					if(vm!=null && esp.equals(vm.esp)){ 
+////					if(vm!=null && getStoredValueFromContextButton().equals(vm.eStatPriority)){ 
+//					if(vm!=null && vm.eStatPriority.equals(getStoredValueFromContextButton())){ 
+////						setPopupHintHelp("Current choice");
+//						return true; //valid if the text is the key
+//					}
+//					
+//					return false; //invalid if the text does not match a monitoring key
+					return (vm!=null && vm.eStatPriority.equals(getStoredValueFromContextButton())); 
 				}
 			});
 		}
@@ -700,7 +704,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 				vlstrVarMonitorEntries.clear();
 				String strAddToTitle="";
 				labelLoop:for(VarMon vm:astList){
-					switch(vm.esp){
+					switch(vm.eStatPriority){
 						case Hidden:
 							if(bAllowHiddenStats){
 								continue labelLoop; //skips current from being added
@@ -916,14 +920,12 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 					ContextMenu cm = new ContextMenu(rzpMain);
 					cm.addNewEntry(
 						"ToggleHiddenStats", 
-						new Command<Button>(){
-							@Override
-							public void execute(Button source) {
+						new ApplyContextChoiceCmd() {@Override public void executeContextCommand(ContextButton source) {
 								bAllowHiddenStats=!bAllowHiddenStats;
 								enqueueUpdateVarMonList();
 							}
 						},
-						new HintUpdater() {
+						new HintUpdaterPerContextButton() {
 							@Override
 							public Boolean call() {
 								setPopupHintHelp("(click to "+(bAllowHiddenStats?"show":"hide")+")"); //say the next action on clicking

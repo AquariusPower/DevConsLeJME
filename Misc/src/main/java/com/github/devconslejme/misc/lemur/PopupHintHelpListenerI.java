@@ -30,6 +30,8 @@ package com.github.devconslejme.misc.lemur;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.google.common.base.Joiner;
@@ -68,6 +70,8 @@ public class PopupHintHelpListenerI implements CursorListener{
 	private Node	nodeGui;
 	private Container	cntrPopupHelp;
 	private int iWrapAt=30;
+	private Vector2f	v2fMousePosLast;
+	private Spatial	sptLastPopupHelpValidTarget;
 
 	@Override
 	public void cursorButtonEvent(CursorButtonEvent event, Spatial target,			Spatial capture) {
@@ -75,12 +79,24 @@ public class PopupHintHelpListenerI implements CursorListener{
 
 	@Override
 	public void cursorEntered(CursorMotionEvent event, Spatial target,			Spatial capture) {
+		updatePopupHelpText(target);
+	}
+
+	private void updatePopupHelpText(Spatial target) {
+		if(target==null)target=sptLastPopupHelpValidTarget;
+		
+		if(target==null)return;
+		
 		strPopupHelp = getPopupHelp(target);
+		if(strPopupHelp!=null){
+			this.sptLastPopupHelpValidTarget = target;
+		}
 	}
 
 	@Override
 	public void cursorExited(CursorMotionEvent event, Spatial target,			Spatial capture) {
 		strPopupHelp=null;
+		sptLastPopupHelpValidTarget=null;
 		updatePopupHelp(event.getLocation());
 	}
 
@@ -90,6 +106,12 @@ public class PopupHintHelpListenerI implements CursorListener{
 	}
 	
 	private void updatePopupHelp(Vector2f v2fMousePos){
+//		if(v2fMousePos==null){
+//			v2fMousePos=this.v2fMousePosLast;
+//		}else{
+//			this.v2fMousePosLast=v2fMousePos;
+//		}
+		
 		if(strPopupHelp!=null){
 			lblPopupHelp.setText(strPopupHelp);
 			lblPopupHelp.setInsets(new Insets3f(3, 3, 3, 3));
@@ -171,6 +193,15 @@ public class PopupHintHelpListenerI implements CursorListener{
 		cntrPopupHelp.addChild(lblPopupHelp, 0);
 		MiscJmeI.i().addToName(cntrPopupHelp, PopupHintHelpListenerI.class.getSimpleName(), true);
 //		((TbtQuadBackgroundComponent)cntrPopupHelp.getBackground()).setColor(ColorRGBA.Cyan);
+		
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				updatePopupHelpText(null);
+//				updatePopupHelp(null);
+				return true;
+			}
+		}.setDelaySeconds(1).enableLoop());
 	}
 
 	public int getWrapAt() {

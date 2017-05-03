@@ -38,9 +38,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
+import com.github.devconslejme.gendiag.ContextMenuI.ContextButton;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
-import com.github.devconslejme.gendiag.ContextMenuI.HintUpdater;
-import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction;
+import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
+import com.github.devconslejme.gendiag.ContextMenuI.HintUpdaterPerContextButton;
 import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
@@ -146,11 +147,11 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	public static class ToolAction implements IVisibleText{
 		private String strTextKey;
 		private CmdBtnTA cmdAction;
-		private String	strVisibleText;
+//		private String	strVisibleText;
 		private Integer	iStatusAutoUpdateText;
 		private String[]	astrStatus;
 		private String	strVisibleTextBtn;
-		private Integer	iInitStatus;
+//		private Integer	iInitStatus;
 		private ContextMenu	cm;
 		
 		public abstract static class CmdBtnTA implements Command<Button>{
@@ -169,14 +170,15 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		
 		public ToolAction(String strTextKey, CmdBtnTA cmdAction) {
 			this.strTextKey = strTextKey;
+			
 			this.cmdAction = cmdAction;
+			this.cmdAction.ta=this;
 		}
 		
 		public ToolAction setMultiStatusMode(Integer iInitStatus, String... astrStatus) {
-			this.iInitStatus = iInitStatus;
+//			this.iInitStatus = iInitStatus;
 			this.astrStatus = astrStatus;
 			
-			this.cmdAction.ta=this;
 			setStatusArray(astrStatus);
 			this.iStatusAutoUpdateText=iInitStatus;
 			updateTextWork(null);
@@ -207,10 +209,14 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			
 			if(btn!=null){
 				btn.setText(strVisibleTextBtn);
-				PopupHintHelpListenerI.i().setPopupHintHelp(btn, "Current: "+getStatusText(iStatus-1));
+				updateHintHelp(btn,iStatus);
 			}
 			
 			return strVisibleTextBtn;
+		}
+
+		private void updateHintHelp(Button btn, int iStatus) {
+			PopupHintHelpListenerI.i().setPopupHintHelp(btn, "Current: "+getStatusText(iStatus-1));
 		}
 
 		private String getStatusText(int i) {
@@ -244,6 +250,11 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			this.cm=cm;
 			return this;
 		}
+
+		public ContextMenu getContextMenu() {
+			return cm;
+		}
+		
 	}
 	
 	public static class OptionDataDummy extends OptionData{
@@ -550,17 +561,16 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		
 	}
 
-	@SuppressWarnings("unchecked")
 	private void initInfoSectionTitleContextMenu() {
 		cmIST = new ContextMenu(getDialog());
 		
-		cmIST.addNewEntry("Restore to default/initial size", new Command<Button>() {@Override public void execute(Button source) {
-			getDialog().restoreDefaultSafeSize(); }}, null);
+		cmIST.addNewEntry("Restore to default/initial size", new ApplyContextChoiceCmd() {@Override public void executeContextCommand(ContextButton source) {
+			getDialog().restoreDefaultSafeSize(); }});
 		
-		cmIST.addNewEntry("Update default size to current", new Command<Button>() {@Override public void execute(Button source) {
-			getDialog().applyCurrentSafeSizeAsDefault(); }}, null);
+		cmIST.addNewEntry("Update default size to current", new ApplyContextChoiceCmd() {@Override public void executeContextCommand(ContextButton source) {
+			getDialog().applyCurrentSafeSizeAsDefault(); }});
 		
-		cmIST.addNewEntry("Toggle lock pos/size", new Command<Button>() {@Override public void execute(Button source) {
+		cmIST.addNewEntry("Toggle lock pos/size", new ApplyContextChoiceCmd() {@Override public void executeContextCommand(ContextButton source) {
 			bLockPosSize=!bLockPosSize;
 			if(bLockPosSize){
 				DragParentestPanelListenerI.i().setEnabledAt(btnTitleText,false);
@@ -571,17 +581,17 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 				DragParentestPanelListenerI.i().setEnabledAt(getDialog(),true);
 				getDialog().setEnableResizing(true);
 			}
-		}}, null);
+		}});
 		
 		cmIST.addNewEntry("Toggle Info Visibility", 
-			new Command<Button>() {@Override public void execute(Button source) {
+			new ApplyContextChoiceCmd() {@Override public void executeContextCommand(ContextButton source) {
 				if(btnInfoText.getParent()!=null){
 					cntrInfo.removeChild(btnInfoText);
 				}else{
 					cntrInfo.addChild(btnInfoText, BorderLayout.Position.Center);
 				}
 			}},
-			new HintUpdater() {
+			new HintUpdaterPerContextButton() {
 				@Override
 				public Boolean call() {
 					setPopupHintHelp(btnInfoText.getParent()==null?"show":"hide"); //inverted to show next action on click
@@ -592,30 +602,20 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		
 		cmSubBorderSize = cmIST.createSubMenu("global resizable border size");
 		cmSubBorderSize.setSingleChoiceMode(true);
-		Command<Button> cmdBorderSize = new Command<Button>() {
+		ApplyContextChoiceCmd cmdBorderSize = new ApplyContextChoiceCmd() {
 			@Override
-			public void execute(Button source) {
+			public void executeContextCommand(ContextButton source) {
 				int i = Integer.parseInt(source.getText());
+//				int i = getStoredValueFromContextButton();
 				ResizablePanel.setResizableBorderSizeDefault(i);
 				getDialog().setResizableBorderSize(i,i);
 			}
 		};
 		
 		for(int i=1;i<=10;i++){
-			cmSubBorderSize.addNewEntry(""+i, cmdBorderSize, new HintUpdater() {
-				@Override
-				public Boolean call() {
-//					Button btn = (Button)cmSubBorderSize.getContextSource(); //TODO why?!?!? at other places I dont have to cast to Button!?!??!?!?!?!?!
-//					int i = Integer.parseInt(btn.getText());
-//					int i = Integer.parseInt(getContextButtonOwner().getText());
-					int i = (int)getContextButtonLinked().getValue(); //TODO why?!?!? at other places I dont have to cast to Button!?!??!?!?!?!?!
-					if(ResizablePanel.getResizableBorderSizeDefault()==i){
-//						setPopupHintHelp("current choice");
-						return true;
-					}
-					return false;
-				}
-			}).setValue(i);
+			cmSubBorderSize.addNewEntry(""+i, i, cmdBorderSize, new HintUpdaterPerContextButton() {@Override	public Boolean call() {
+				return ResizablePanel.getResizableBorderSizeDefault()==(int)getStoredValueFromContextButton();
+			}});
 		}
 	}
 	
@@ -702,6 +702,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 				
         if( existing == null ) {
         	btnItemText = new ButtonCell(valueToString(ta), getElement(), getStyle());
+        	if(ta.getContextMenu()!=null)ContextMenuI.i().applyContextMenuAt(btnItemText, ta.getContextMenu());
 	      } else {
 	      	btnItemText = (ButtonCell)existing;
 	      	btnItemText.setText(valueToString(ta));

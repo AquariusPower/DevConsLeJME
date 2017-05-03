@@ -27,13 +27,13 @@
 package com.github.devconslejme.tests;
 
 import com.github.devconslejme.gendiag.ContextMenuI;
+import com.github.devconslejme.gendiag.ContextMenuI.ContextButton;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
+import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
-import com.github.devconslejme.misc.Annotations.ToDo;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.jme3.app.SimpleApplication;
 import com.simsilica.lemur.Button;
-import com.simsilica.lemur.Command;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.style.BaseStyles;
 
@@ -63,25 +63,23 @@ public class TestContextMenu extends SimpleApplication{
 		rzp.setContents(new Button("context click me"));
 		DialogHierarchyStateI.i().showDialog(rzp);
 		
-		Command<Button> cmd = new Command<Button>() {
-			@Override
-			public void execute(Button source) {
-				System.out.println("test");
-			}};
+		ApplyContextChoiceCmd cmd = new ApplyContextChoiceCmd() {@Override public void executeContextCommand(ContextButton source) {
+			System.out.println("test");
+		}};
 		
 		ContextMenu cm = new ContextMenu(rzp);
-		cm.addNewEntry("tst", cmd, null);
-		cm.addNewEntry("tst2", cmd, null);
-		cm.addNewEntry("tst3", cmd, null);
+		cm.addNewEntry("tst", cmd);
+		cm.addNewEntry("tst2", cmd);
+		cm.addNewEntry("tst3", cmd);
 			ContextMenu cmSub1 = cm.createSubMenu("sub1");
-			cmSub1.addNewEntry("tst5", cmd, null);
-			cmSub1.addNewEntry("tst6", cmd, null);
+			cmSub1.addNewEntry("tst5", cmd);
+			cmSub1.addNewEntry("tst6", cmd);
 				ContextMenu cmSub3 = cmSub1.createSubMenu("sub3");
-				cmSub3.addNewEntry("tst8", cmd, null);
-				cmSub3.addNewEntry("tst9", cmd, null);
+				cmSub3.addNewEntry("tst8", cmd);
+				cmSub3.addNewEntry("tst9", cmd);
 			ContextMenu cmSub2 = cm.createSubMenu("sub2");
-			cmSub2.addNewEntry("tst7", cmd, null);
-		cm.addNewEntry("tst4", cmd, null);
+			cmSub2.addNewEntry("tst7", cmd);
+		cm.addNewEntry("tst4", cmd);
 		
 		ContextMenuI.i().applyContextMenuAt(rzp.getContents(), cm);
 	}

@@ -34,8 +34,7 @@ import java.util.Map.Entry;
 import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.es.HierarchyComp;
 import com.github.devconslejme.es.HierarchyComp.EField;
-import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
-import com.github.devconslejme.misc.Annotations.ToDo;
+import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchy;
@@ -48,7 +47,6 @@ import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.IndicatorI;
 import com.github.devconslejme.misc.jme.IndicatorI.GeomIndicator;
 import com.github.devconslejme.misc.jme.MiscJmeI;
-import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.jme.UserDataI.IUDKey;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
@@ -56,7 +54,6 @@ import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.github.devconslejme.misc.lemur.ResizablePanel.IResizableListener;
-import com.jme3.app.Application;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
@@ -177,7 +174,7 @@ public class ContextMenuI implements IResizableListener{
 		}.setDelaySeconds(1f).enableLoop();
 		
 		/**
-		 * to be set only when clicking from the listener here
+		 * will be set only when clicking, from {@link ContextMenuOwnerListenerI}
 		 * @param pnlSource
 		 * @return 
 		 */
@@ -186,6 +183,10 @@ public class ContextMenuI implements IResizableListener{
 			return getThis();
 		}
 		
+		/**
+		 * see {@link #setContextSource(Panel)}
+		 * @return
+		 */
 		@SuppressWarnings("unchecked")
 		public <T extends Panel> T getContextSource(){
 			return (T)pnlSource;
@@ -197,8 +198,7 @@ public class ContextMenuI implements IResizableListener{
 			ContextButton cb = addNewEntry(
 				"[+] "+strTextKey, 
 				/** a dummy cmd is necessary, there is already an expand toggler elsewhere */
-				new Command<Button>(){@Override public void execute(Button source){}},
-				null
+				new ApplyContextChoiceCmd(){@Override public void executeContextCommand(ContextButton source){}}
 			);
 			cb.setSubContextMenu(true);
 			
@@ -211,13 +211,32 @@ public class ContextMenuI implements IResizableListener{
 		}
 		
 		/**
+		 * this is the only way I found to let {@link Button#addClickCommands(Command...)} to compile... no casting possible.
+		 */
+		public static abstract class ApplyContextChoiceCmd implements Command<Button>{
+			@Deprecated
+			@Override
+			public void execute(Button source) {
+				assert(ContextButton.class.isInstance(source));
+				executeContextCommand((ContextButton)source);
+			}
+			public abstract void executeContextCommand(ContextButton cbSource);
+		}
+		
+		public ContextButton addNewEntry(String strTextKey, ApplyContextChoiceCmd cmd){
+			return addNewEntry(strTextKey, null, cmd, null);
+		}
+		public ContextButton addNewEntry(String strTextKey, ApplyContextChoiceCmd cmd, HintUpdaterPerContextButton hu){
+			return addNewEntry(strTextKey, null, cmd, hu);
+		}
+		/**
 		 * @param strTextKey
 		 * @param cmd necessary because that is the whole point of it
-		 * @param hu Each choice can have an exclusive {@link HintUpdater} that may use {@link HintUpdater#setPopupHintHelp(String)} (for the single choice mode, there is an automatic popup hint for that)
+		 * @param hu Each choice can have an exclusive {@link HintUpdaterPerContextButton} that may use {@link HintUpdaterPerContextButton#setPopupHintHelp(String)} (for the single choice mode, there is an automatic popup hint for that)
 		 * @return
 		 */
 		@SuppressWarnings("unchecked")
-		public ContextButton addNewEntry(String strTextKey, Command<Button> cmd, HintUpdater hu){
+		public ContextButton addNewEntry(String strTextKey, Object objStoreContextItemValue, ApplyContextChoiceCmd cmd, HintUpdaterPerContextButton hu){
 			assert(cmd!=null);
 			ContextButton cb = new ContextButton(strTextKey);
 			cb.addClickCommands(cmd);
@@ -227,6 +246,7 @@ public class ContextMenuI implements IResizableListener{
 				hu.setContextButtonOwner(cb);
 			}
 			hmContextOptions.put(strTextKey, cb);
+			cb.setStoredValue(objStoreContextItemValue);
 			return cb;
 		}
 
@@ -294,12 +314,14 @@ public class ContextMenuI implements IResizableListener{
 	}
 	
 	/**
+	 * {@link ContextButton} 1 <-> 1 {@link HintUpdaterPerContextButton}<br>
+	 * <br>
 	 * see {@link ContextMenuI#showContextMenu(Vector2f, String, ContextMenu)}<br>
-	 * use {@link #setPopupHintHelp(String)}<br>
-	 * {@link ContextButton} 1 <-> 1 {@link HintUpdater}<br>
-	 * use {@link #getContextButtonLinked()}.{@link ContextButton#getValue()}
+	 * <br>
+	 * use {@link #setPopupHintHelp(String)} to apply a custom value, otherwise default will be used<br>
+	 * use {@link #getStoredValueFromContextButton()} to compare the context source value with linked contextmenu value<br>
 	 */
-	public static abstract class HintUpdater extends CallableX<HintUpdater>{
+	public static abstract class HintUpdaterPerContextButton extends CallableX<HintUpdaterPerContextButton>{
 		private ContextButton	cb;
 
 		public void setPopupHintHelp(String str){
@@ -318,27 +340,40 @@ public class ContextMenuI implements IResizableListener{
 			this.cb=cb;
 		}
 		
+		@SuppressWarnings("unchecked")
+		public <T> T getStoredValueFromContextButton(){
+			return (T)cb.getStoredValue();
+		}
+		
 		/**
 		 * 
-		 * @return the context button for this {@link HintUpdater}
+		 * @return the context button for this {@link HintUpdaterPerContextButton}
 		 */
 		public ContextButton getContextButtonLinked(){
 			return this.cb;
 		}
 		
 		@Override
-		protected HintUpdater getThis() {
+		protected HintUpdaterPerContextButton getThis() {
 			return this;
 		}
 	}
 	
 	public static class ContextButton<SELF extends ContextButton<SELF>> extends Button{
-		private HintUpdater	cxHintUpdater;
+		private HintUpdaterPerContextButton	cxHintUpdater;
 		private boolean	bSubContextMenu;
+		private Object val;
+//		private Command<ContextButton>	cmd;
 
 		private ContextButton(String s) {
 			super(s);
 		}
+		
+//		@Deprecated
+//		@Override
+//		public void addClickCommands(Command<? super Button>... commands) {
+//			throw new DeprecationException("method not implemented yet");
+//		}
 		
 		private SELF setSubContextMenu(boolean bSubContextMenu){
 			this.bSubContextMenu=bSubContextMenu;
@@ -349,7 +384,7 @@ public class ContextMenuI implements IResizableListener{
 			return bSubContextMenu;
 		}
 		
-		private SELF setHintUpdater(HintUpdater cxHintUpdater) {
+		private SELF setHintUpdater(HintUpdaterPerContextButton cxHintUpdater) {
 			this.cxHintUpdater = cxHintUpdater;
 			return getThis();
 		}
@@ -363,17 +398,16 @@ public class ContextMenuI implements IResizableListener{
 			return (SELF)this;
 		}
 
-		private HintUpdater getHintUpdater() {
+		private HintUpdaterPerContextButton getHintUpdater() {
 			return cxHintUpdater;
 		}
 		
-		private Object val;
 		@SuppressWarnings("unchecked")
-		public <T> T getValue() {
+		public <T> T getStoredValue() {
 			return (T)val;
 		}
 
-		public SELF setValue(Object val) {
+		public SELF setStoredValue(Object val) {
 			this.val=val;
 			return getThis();
 		}
@@ -512,7 +546,7 @@ public class ContextMenuI implements IResizableListener{
 	}
 	
 	/**
-	 * the popup hint help will only be set if {@link HintUpdater#call()} succeeds 
+	 * the popup hint help will only be set if {@link HintUpdaterPerContextButton#call()} succeeds 
 	 * 
 	 * @param v2fMouseCursorPos
 	 * @param strContextMenuTitle
@@ -536,7 +570,7 @@ public class ContextMenuI implements IResizableListener{
 			
 			// popup hint help
 			PopupHintHelpListenerI.i().resetPopupHelp(cbChoice); //clear
-			HintUpdater cxHU = cbChoice.getHintUpdater();
+			HintUpdaterPerContextButton cxHU = cbChoice.getHintUpdater();
 			if(cxHU!=null){
 				cxHU.setPopupHintHelp(null);
 				if(cxHU.call()){
@@ -612,20 +646,46 @@ public class ContextMenuI implements IResizableListener{
 	@Override	public void resizedEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {	}
 	@Override	public void endedResizingEvent(ResizablePanel rzpSource) {	}
 
-	@SuppressWarnings("unchecked")
-	public ContextMenu createRegexOptContextMenu(ResizablePanel rzp, Command<Button> cmd) {
-		ContextMenu cm=new ContextMenu(rzp);
-		HintUpdater hu = new HintUpdater() {
-			@Override
-			public Boolean call() {
-				int i = (int)getContextButtonLinked().getValue(); //TODO why?!?!? at other places I dont have to cast to Button!?!??!?!?!?!?!
-				return null;
-			}
-		};
+	public ContextMenu createStringRegexOptContextMenu(
+		ResizablePanel rzpDialogHierarchyParent, 
+		EStringMatchMode eCurrentValue, 
+		ApplyContextChoiceCmd cmd
+	) {
+		ContextMenu cm=new ContextMenu(rzpDialogHierarchyParent);
 		
-		for(EStringMatchMode e:EStringMatchMode.values()){
-			cm.addNewEntry(e.s(), cmd, hu);
+		cm.setSingleChoiceMode(true);
+		for(EStringMatchMode eToBeStored:EStringMatchMode.values()){
+			HintUpdaterPerContextButton hu = new HintUpdaterPerContextButton() {
+				@Override
+				public Boolean call() {
+//					throw new UnsupportedOperationException("method not implemented yet");
+//					cm.getContextSource();
+					EStringMatchMode eStored = getStoredValueFromContextButton();
+//					return getContextButtonLinked().getText().equals(e.s());
+					return eCurrentValue.equals(eStored);
+				}
+			};
+			
+			cm.addNewEntry(eToBeStored.s(), eToBeStored, cmd, hu);
 		}
+		
 		return cm;
 	}
+	
+//  private void tstTmp( Command<? super Button>... commands ) {}
+//  private void tstTmp2( Command<? super Button> command ) {}
+//	private static class Tst extends Button{		public Tst(String s) {			super(s);		}	}
+//	public static abstract class CmdTst implements Command<Button>{
+//		@Deprecated
+//		@Override
+//		public void execute(Button source) {
+//			executeContextCommand((ContextButton)source);
+//		}
+//		public abstract void executeContextCommand(ContextButton source);
+//	}
+//	private void test(){
+//		tstTmp2(new CmdTst());
+//		tstTmp2(new Command<Tst>(){			@Override			public void execute(Tst source) {	throw new UnsupportedOperationException("method not implemented yet");			}});
+//		Button btn;btn.addClickCommands(new Command<Tst>(){			@Override			public void execute(Tst source) {				throw new UnsupportedOperationException("method not implemented yet");			}});
+//	}
 }
