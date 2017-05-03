@@ -123,16 +123,18 @@ public class DragParentestPanelListenerI implements CursorListener{
 				
 				bIsReallyDragging=false;
 				
-				ClickCommandAbsorptionI.i().absorbClickCommands(capture);
+//				ClickCommandAbsorptionI.i().absorbClickCommands(capture);
 			}else{
 				bDragging=false;
 				
 				pnlParentestBeingDragged=null;
 				
 				// just click, not dragging
-				if(!bIsReallyDragging)ClickCommandAbsorptionI.i().delegateClickCommands(capture);
+//				if(!bIsReallyDragging)ClickCommandAbsorptionI.i().delegateClickCommands(capture);
+				if(bIsReallyDragging)event.setConsumed();
 			}
-			event.setConsumed();
+			
+//			event.setConsumed();
 		}
 	}
 	
@@ -265,6 +267,8 @@ public class DragParentestPanelListenerI implements CursorListener{
 	}
 	
 	/**
+	 * Keeping this here as a reference to re-understand and create some test case may be
+	 * 
 	 * this is a limitation or may be a bug on lemur:
 	 * https://github.com/jMonkeyEngine-Contributions/Lemur/issues/50
 	 * so as may be fixed in the future, this method may be disabled/removed one day.
@@ -272,6 +276,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 	 */
 	@Bugfix
 	@Workaround
+	@Deprecated
 	private void mouseListenerConflictDenier(Panel pnl){
 		if(false){
 			MouseEventControl mec = pnl.getControl(MouseEventControl.class);
@@ -305,6 +310,8 @@ public class DragParentestPanelListenerI implements CursorListener{
 	 */
 	public void applyAt(Panel pnl, Panel pnlApplyDragAt) {
 		mouseListenerConflictDenier(pnl);
+		
+		ClickCommandAbsorptionI.i().absorbClickCommands(pnl);
 		
 		DragInfo di = new DragInfo();
 		UserDataI.i().setUserDataPSH(pnl,di);

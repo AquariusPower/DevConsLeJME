@@ -38,11 +38,15 @@ import com.github.devconslejme.misc.jme.UserDataI.IUDKey;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
+import com.simsilica.lemur.event.CursorButtonEvent;
+import com.simsilica.lemur.event.CursorEventControl;
+import com.simsilica.lemur.event.CursorListener;
+import com.simsilica.lemur.event.CursorMotionEvent;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class ClickCommandAbsorptionI {
+public class ClickCommandAbsorptionI implements CursorListener{
 	public static ClickCommandAbsorptionI i(){return GlobalManagerI.i().get(ClickCommandAbsorptionI.class);}
 	
 	private boolean	bDelegateClickCommands=true;
@@ -53,11 +57,12 @@ public class ClickCommandAbsorptionI {
 	 */
 	@Workaround
 	@Bugfix
-	public void delegateClickCommands(Spatial capture) {
-		if(!isDelegateClickCommands())return;
+	private int delegateClickCommands(Spatial capture) {
+		if(!isDelegateClickCommands())return 0;
 		
 //		if(focusman.getFocus()!=capture)return; //the ignored click commands bug happens only when the Button has focus
 		
+		int iExecutedClickCmds=0;
 		if (capture instanceof Button) {
 			Button btn = (Button) capture;
 			ArrayList<Command<? super Button>> clickCommandsStored = 
@@ -68,10 +73,12 @@ public class ClickCommandAbsorptionI {
 			if(clickCommandsStored!=null){
 				for(Command<? super Button> a:clickCommandsStored){
 					a.execute(btn);
+					iExecutedClickCmds++;
 				}
 			}
 		}
 		
+		return iExecutedClickCmds;
 	}
 	
 	@Workaround
@@ -94,9 +101,11 @@ public class ClickCommandAbsorptionI {
 				if(clickCommandsStored==null){
 					clickCommandsStored=new ArrayList<Command<? super Button>>();
 					UserDataI.i().setUserDataPSH(btn, EUDClickCmds.ClickCommands.getUId(), clickCommandsStored);
+					CursorEventControl.addListenersToSpatial(btn, this);
 				}
 				clickCommandsStored.addAll(clickCommands);
 			}
+			
 		}
 	}
 
@@ -125,4 +134,26 @@ public class ClickCommandAbsorptionI {
 	public void setDelegateClickCommandsDisabled() {
 		this.bDelegateClickCommands = false;
 	}
+
+	@Override
+	public void cursorButtonEvent(CursorButtonEvent event, Spatial target,			Spatial capture) {
+		if(event.isConsumed())return; // ex.: by drag parentest listener
+		if(event.getButtonIndex()!=0)return; //left mouse button
+		if(!event.isPressed()){ //button up
+			if(delegateClickCommands(capture)>0)event.setConsumed();
+		}
+	}
+
+	@Override
+	public void cursorEntered(CursorMotionEvent event, Spatial target,			Spatial capture) {
+	}
+
+	@Override
+	public void cursorExited(CursorMotionEvent event, Spatial target,			Spatial capture) {
+	}
+
+	@Override
+	public void cursorMoved(CursorMotionEvent event, Spatial target,			Spatial capture) {
+	}
+
 }

@@ -122,6 +122,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	private ArrayList<Panel>	apnlAutoFocus = new ArrayList<Panel>();
 	private VersionedReference<Integer>	vriResizableBorderSize;
 	private boolean	bRequestRetryZOrder;
+	private boolean	bLogZOrderDebugInfo;
 	
 	public static class BlockerListener extends DefaultCursorListener{
 		@Override
@@ -586,7 +587,9 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		BoundingBox bb = (BoundingBox)getOpenDialog(entid).getWorldBound();
 		if(bb!=null){ //only if it is ready
 			float fHeight = bb.getZExtent()*2f;
-			MessagesI.i().debugInfo(this, "DiagHierarchyZOrder:"+rzp.getName()+","+entid+","+fCurrentOrderPosZ+","+fHeight);
+			if(isLogZOrderDebugInfo()){
+				MessagesI.i().debugInfo(this, "DiagHierarchyZOrder:"+rzp.getName()+","+entid+","+fCurrentOrderPosZ+","+fHeight);
+			}
 			
 			sys.setHierarchyComp(entid, EField.fBoundingHeightZ, fHeight);
 			
@@ -638,6 +641,14 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	
 	public void addRequestAutoFocus(Panel pnl) {
 		if(!apnlAutoFocus.contains(pnl))apnlAutoFocus.add(pnl);
+	}
+
+	public boolean isLogZOrderDebugInfo() {
+		return bLogZOrderDebugInfo;
+	}
+
+	public void setLogZOrderDebugInfo(boolean bLogZOrderDebugInfo) {
+		this.bLogZOrderDebugInfo = bLogZOrderDebugInfo;
 	}
 
 //	public String getReport(ResizablePanel rzp) {

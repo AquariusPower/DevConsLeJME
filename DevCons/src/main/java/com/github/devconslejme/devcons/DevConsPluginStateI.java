@@ -933,7 +933,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 							}
 						}
 					);
-					ContextMenuI.i().applyContextMenuAt(getButton(),cm);
+					ContextMenuI.i().applyContextMenuAtSource(getButton(),cm);
 					
 					return true;
 				}

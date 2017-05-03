@@ -55,6 +55,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.lemur.ClickCommandAbsorptionI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
@@ -558,7 +559,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		btnTitleText = createInfoButton(strTitle,null);
 		MiscLemurI.i().changeBackgroundColor(btnTitleText, ColorI.i().colorChangeCopy(ColorRGBA.Blue,0f,0.25f), true); //TODO use a lemur style instead
 		DragParentestPanelListenerI.i().applyAt(btnTitleText);
-		ContextMenuI.i().applyContextMenuAt(btnTitleText, cmIST);
+		ContextMenuI.i().applyContextMenuAtSource(btnTitleText, cmIST);
 		
 //		cntrTitle.setPreferredSize(new Vector3f(1,1,0.1f));
 		cntrTitle.addChild(btnTitleText, BorderLayout.Position.Center);
@@ -636,6 +637,12 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		public ButtonCell(String s, ElementId elementId, String style) {
 			super(s, elementId, style);
 		}
+		
+		@Override
+		public void addClickCommands(Command<? super Button>... commands) {
+			super.addClickCommands(commands);
+			ClickCommandAbsorptionI.i().absorbClickCommands(this);
+		}
 	}
 	
 	private class ContainerCell extends Container{
@@ -707,7 +714,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 				
         if( existing == null ) {
         	btnItemText = new ButtonCell(valueToString(ta), getElement(), getStyle());
-        	if(ta.getContextMenu()!=null)ContextMenuI.i().applyContextMenuAt(btnItemText, ta.getContextMenu());
+        	if(ta.getContextMenu()!=null)ContextMenuI.i().applyContextMenuAtSource(btnItemText, ta.getContextMenu());
 	      } else {
 	      	btnItemText = (ButtonCell)existing;
 	      	btnItemText.setText(valueToString(ta));

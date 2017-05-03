@@ -49,6 +49,7 @@ import com.github.devconslejme.misc.jme.IndicatorI.GeomIndicator;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.jme.UserDataI.IUDKey;
+import com.github.devconslejme.misc.lemur.ClickCommandAbsorptionI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
@@ -203,7 +204,7 @@ public class ContextMenuI implements IResizableListener{
 			);
 			cb.setSubContextMenu(true);
 			
-			ContextMenuI.i().applyContextMenuAt(cb, cmSub);
+			ContextMenuI.i().applyContextMenuAtSource(cb, cmSub);
 			
 //			if(true)throw new UnsupportedOperationException(
 //				"TODO: this requires the context menu to not be limited to 1");
@@ -239,6 +240,7 @@ public class ContextMenuI implements IResizableListener{
 		public ContextButton addNewEntry(String strTextKey, Object objStoreContextItemValue, ApplyContextChoiceCmd cmd, HintUpdaterPerContextButton hu){
 			assert(cmd!=null);
 			ContextButton cb = new ContextButton(strTextKey);
+			ClickCommandAbsorptionI.i().absorbClickCommands(cb);
 			cb.cmParent=this;
 			ContextMenuI.i().applyContextButtonListener(cb,cmd); //cb.addClickCommands(cmd); //TODO use a context cursor listener...
 //			if(cxHintUpdater!=null)UserDataI.i().setUserDataPSH(btn, EContext.HintUpdater, cxHintUpdater);
@@ -533,7 +535,7 @@ public class ContextMenuI implements IResizableListener{
 //		ArrayList<Panel> apnl = MiscJmeI.i().getAllChildrenRecursiveFrom(lstbx.getGridPanel(), Panel.class, null);
 		ArrayList<Panel> apnl = MiscLemurI.i().getAllListBoxItems(lstbx,false);
 		for(Panel pnl:apnl){
-			applyContextMenuAt(pnl, cm);
+			applyContextMenuAtSource(pnl, cm);
 		}
 	}
 	
@@ -568,8 +570,9 @@ public class ContextMenuI implements IResizableListener{
 	 * @param sptContextClick
 	 * @param cm
 	 */
-	public void applyContextMenuAt(Spatial sptContextClick, ContextMenu cm){
+	public void applyContextMenuAtSource(Spatial sptContextClick, ContextMenu cm){
 		UserDataI.i().setUserDataPSH(sptContextClick, cm);
+		ClickCommandAbsorptionI.i().absorbClickCommands(sptContextClick);
 		CursorEventControl.addListenersToSpatial(sptContextClick, ContextMenuOwnerListenerI.i());
 		
 		if(bUseContextMenuAvailablePermanentIndicators){

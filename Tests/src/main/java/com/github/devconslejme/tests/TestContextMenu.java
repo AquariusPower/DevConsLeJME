@@ -81,6 +81,6 @@ public class TestContextMenu extends SimpleApplication{
 			cmSub2.addNewEntry("tst7", cmd);
 		cm.addNewEntry("tst4", cmd);
 		
-		ContextMenuI.i().applyContextMenuAt(rzp.getContents(), cm);
+		ContextMenuI.i().applyContextMenuAtSource(rzp.getContents(), cm);
 	}
 }

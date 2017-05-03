@@ -106,7 +106,8 @@ public class MessagesI {
 		//TODO log4j?
 		Class cl = Class.class.isInstance(objSource)?(Class)objSource:objSource.getClass(); //can be from a static method
 		String strOutput = ReportI.i().prepareReport(
-				strMsgType+"["+cl.getSimpleName()+"]: "+strMsg, 
+				"["+TimeConvertI.i().getRealTimeFormatted()+"]"
+				+strMsgType+"["+cl.getSimpleName()+"]: "+strMsg, 
 				aobj);
 
 //		(bStderr ? (System.err) : (System.out)).println(strOutput);
