@@ -76,6 +76,7 @@ import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.component.BorderLayout.Position;
 import com.simsilica.lemur.component.TextEntryComponent;
+import com.simsilica.lemur.core.VersionedHolder;
 import com.simsilica.lemur.core.VersionedList;
 import com.simsilica.lemur.core.VersionedReference;
 import com.simsilica.lemur.event.CursorButtonEvent;
@@ -126,6 +127,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private Command<? super Button>	cmdInfoSectionTitleButtons;
 	private Container	cntrDiagControls;
 	private int	iDiagControlColumnInitIndex;
+	private VersionedHolder<String> vhInputTextSubmitted = new VersionedHolder<>();
+	VersionedReference<String> vrInputTextSubmittedApplyAsTypedTextChoice = vhInputTextSubmitted.createReference();
 	private boolean	bKeepMaximized;
 //@FloatLimits(min=-1f,max=1f) float f;
 	private ListBox<ToolAction>	lstbxTools;
@@ -192,31 +195,33 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		 */
 		private String updateTextWork(Button source) {
 			if(iStatusAutoUpdateText!=null){
-				return updateText(source, iStatusAutoUpdateText, getStatusArray());//strForStatusTrue, strForStatusFalse);
+				return updateTextAuto(source);
 			}else{
-				return updateText(source);
+				return updateTextCustom(source);
 			}
 		}
 		
-		protected String updateText(Button btn){return "";}
+		protected String updateTextCustom(Button btn){return "";}
 		
 		protected void updateStatus(Integer i){
 			if(i!=null)this.iStatusAutoUpdateText=i;
 		}
 		
-		protected String updateText(Button btn, int iStatus, String... astrStatus){//String strForTrue, String strForFalse) {
-			strVisibleTextBtn=(strTextKey+": "+getStatusText(iStatus));
+		protected String updateTextAuto(Button btn){
+			strVisibleTextBtn=(strTextKey+": "+getStatusText(iStatusAutoUpdateText));
 			
 			if(btn!=null){
 				btn.setText(strVisibleTextBtn);
-				updateHintHelp(btn,iStatus);
+				updateHintHelp(btn);
 			}
 			
 			return strVisibleTextBtn;
 		}
 
-		private void updateHintHelp(Button btn, int iStatus) {
-			PopupHintHelpListenerI.i().setPopupHintHelp(btn, "Current: "+getStatusText(iStatus-1));
+		private void updateHintHelp(Button btn) {
+			if(iStatusAutoUpdateText!=null){
+				PopupHintHelpListenerI.i().setPopupHintHelp(btn, "Current: "+getStatusText(iStatusAutoUpdateText-1));
+			}
 		}
 
 		private String getStatusText(int i) {
@@ -708,6 +713,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	      	btnItemText.setText(valueToString(ta));
 	      }
         
+        ta.updateHintHelp(btnItemText);
+        
         btnItemText.ta = ta;
 				btnItemText.addClickCommands(btnItemText.ta.cmdAction);
 				
@@ -937,6 +944,16 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			vlodTools.add(ta);
 		}
 		return ta;
+	}
+	
+	public static interface IUserTextInputSubmited{
+		void receiveSubmitedUserInputTextEvent(String str);
+	}
+	
+	private ArrayList<IUserTextInputSubmited> aUserTxtSubmitListeners = new  ArrayList<IUserTextInputSubmited> ();
+	
+	public void addUserInputTextSubmittedListener(IUserTextInputSubmited listener){
+		if(!aUserTxtSubmitListeners.contains(listener))aUserTxtSubmitListeners.add(listener);
 	}
 	
 	private void initSectionInput() {
@@ -1266,10 +1283,19 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			bRequestUpdateOptionSelected=false;
 		}
 		
+		if(bRequestUserSubmitedInputValueApply){
+			vhInputTextSubmitted.setObject(getInputText());
+			for(IUserTextInputSubmited l:aUserTxtSubmitListeners){
+				l.receiveSubmitedUserInputTextEvent(getInputText());
+			}
+			bRequestUserSubmitedInputValueApply=false;
+		}
+		
 		if(bReturnJustTheInputTextValue){
-			if(bRequestUserSubmitedInputValueApply){
+//			if(bRequestUserSubmitedInputValueApply){
+			if(vrInputTextSubmittedApplyAsTypedTextChoice.update()){
 				setChosenValue(getInputText());
-				bRequestUserSubmitedInputValueApply=false;
+//				bRequestUserSubmitedInputValueApply=false;
 			}
 		}else{ // set as soon an option is selected
 			Integer i=getSelectedOptionIndex();
@@ -1375,5 +1401,9 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 
 	public void setSortAlphabetically(boolean bSortByChildAmount) {
 		this.bSortAlphabetically = bSortByChildAmount;
+	}
+	
+	public VersionedReference<String> createInputTextSubmitedVersionedReference(){
+		return vhInputTextSubmitted.createReference();
 	}
 }

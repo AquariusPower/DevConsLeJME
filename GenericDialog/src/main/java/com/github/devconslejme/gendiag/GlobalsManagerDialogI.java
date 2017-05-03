@@ -33,8 +33,10 @@ import java.util.TreeMap;
 
 import com.github.devconslejme.devcons.ClipboardI;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextButton;
+import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.CmdCfg;
+import com.github.devconslejme.gendiag.SimpleGenericDialog.IUserTextInputSubmited;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction.CmdBtnTA;
@@ -47,14 +49,15 @@ import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.StringI.EStringMatchMode;
 import com.simsilica.lemur.Button;
+import com.simsilica.lemur.core.VersionedReference;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class GlobalsManagerDialogI {
+public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 	public static GlobalsManagerDialogI i(){return GlobalManagerI.i().get(GlobalsManagerDialogI.class);}
 
-	private SimpleMaintenanceGenericDialog	smd;
+	private SimpleMaintenanceGenericDialog	diagMaint;
 	private boolean	bShowInherited;
 	private boolean	bShowPackagesPrepended;
 	private boolean	bShowOnlyEditableBeans = true;
@@ -70,36 +73,40 @@ public class GlobalsManagerDialogI {
 	
 	public void configure(){
 		QueueI.i().enqueue(new CallableXAnon() {
+			private VersionedReference<String>	vfNewInputTextFilterSubmitted;
+
 			@Override
 			public Boolean call() {
-				if(smd==null){
-					smd = new SimpleMaintenanceGenericDialog() {
+				if(diagMaint==null){
+					diagMaint = new SimpleMaintenanceGenericDialog() {
 						@Override
 						public void updateMaintenanceList() {
-							prepareGlobalsForMaintenance();
+							recreateGlobalsListForMaintenance();
 						}
 					};
 				}
 				
-				if(!smd.isInitialized())return false; //prior to new actions below
+				if(!diagMaint.isInitialized())return false; //prior to new actions below
 				
-				smd.putToolAction(new ToolAction("Methods from", new CmdBtnTA() {
+				diagMaint.addUserInputTextSubmittedListener(GlobalsManagerDialogI.this);
+				
+				diagMaint.putToolAction(new ToolAction("Methods from", new CmdBtnTA() {
 					@Override	public Integer executeTA(Button source) {
-						smd.requestUpdateListItems();
+						diagMaint.requestUpdateListItems();
 						return (bShowInherited=!bShowInherited)?0:1;
 					}
 				}).setMultiStatusMode(bShowInherited?0:1,"concrete","inherited too"));
 				
-				smd.putToolAction(new ToolAction("Pkg info", new CmdBtnTA() {
+				diagMaint.putToolAction(new ToolAction("Pkg info", new CmdBtnTA() {
 					@Override	public Integer executeTA(Button source) {
-						smd.requestUpdateListItems();
+						diagMaint.requestUpdateListItems();
 						return (bShowPackagesPrepended=!bShowPackagesPrepended)?0:1;
 					}
 				}).setMultiStatusMode(bShowPackagesPrepended?0:1,"after","prepend"));
 				
-				smd.putToolAction(new ToolAction("Method kind", new CmdBtnTA() {
+				diagMaint.putToolAction(new ToolAction("Method kind", new CmdBtnTA() {
 					@Override	public Integer executeTA(Button btn) {
-						smd.requestUpdateListItems();
+						diagMaint.requestUpdateListItems();
 						return (bShowOnlyEditableBeans=!bShowOnlyEditableBeans)?0:1;
 					}
 				}).setMultiStatusMode(bShowOnlyEditableBeans?0:1,"all","only beans"));
@@ -111,18 +118,20 @@ public class GlobalsManagerDialogI {
 						eStringMatchMode = (EStringMatchMode) cbSource.getStoredValue();
 					}
 				};
+				ContextMenu cm = ContextMenuI.i().createStringRegexOptContextMenu(
+						diagMaint.getDialog(), eStringMatchMode, cmd);
 				CmdBtnTA cmdbta = new CmdBtnTA() {
 					@Override	public Integer executeTA(Button btn) {
-						smd.requestUpdateListItems();
+						diagMaint.requestUpdateListItems();
 						return (bRegexFilter=!bRegexFilter)?0:1;
 					}
 				};
 				ToolAction ta = new ToolAction("User filter",cmdbta)
 					.setMultiStatusMode(bRegexFilter?0:1,"enabled","disabled")
-					.setContextMenu(ContextMenuI.i().createStringRegexOptContextMenu(
-						smd.getDialog(), eStringMatchMode, cmd) 
-					);
-				smd.putToolAction(ta);
+					.setContextMenu(cm);
+				diagMaint.putToolAction(ta);
+				
+				vfNewInputTextFilterSubmitted = diagMaint.createInputTextSubmitedVersionedReference();
 				
 				return true;
 			}
@@ -130,7 +139,7 @@ public class GlobalsManagerDialogI {
 	}
 	
 	public void show(){
-		DialogHierarchyStateI.i().showDialog(smd.getDialog());
+		DialogHierarchyStateI.i().showDialog(diagMaint.getDialog());
 	}
 	
 //	private static class MethodInfo{
@@ -147,8 +156,9 @@ public class GlobalsManagerDialogI {
 	private TreeMap<String,Object> hmSortedGlobals = new TreeMap<String,Object>(String.CASE_INSENSITIVE_ORDER);
 	private EStringMatchMode	eStringMatchMode = EStringMatchMode.Contains;
 	private boolean	bMatchIgnoreCase = true;
+	private String	strUserInputTextFilter="";
 	
-	protected void prepareGlobalsForMaintenance() {
+	protected void recreateGlobalsListForMaintenance() {
 		hmSortedGlobals.clear();
 		for(Object o:GlobalManagerI.i().getListCopy()){
 			String strKey = o.getClass().getSimpleName();
@@ -170,7 +180,7 @@ public class GlobalsManagerDialogI {
 //			String str = entry.getKey();
 //			System.out.println(entry.getKey());
 			
-			OptionData odGlobal = smd.putSection(null,entry.getKey());
+			OptionData odGlobal = diagMaint.putSection(null,entry.getKey());
 			
 			Method[] am = isShowInherited() ? 
 				entry.getValue().getClass().getMethods() : 
@@ -189,10 +199,10 @@ public class GlobalsManagerDialogI {
 						bRegexFilter
 						&& 
 						!StringI.i().contains(
-							strTextKey, smd.getInputText(), getEStringMatchMode(), isMatchIgnoreCase())
+							strTextKey, getUserInputTextFilter(), getEStringMatchMode(), isMatchIgnoreCase())
 				)continue;
 				
-				OptionData od = smd.putOption(odGlobal,	strTextKey, mh);
+				OptionData od = diagMaint.putOption(odGlobal,	strTextKey, mh);
 				
 				od.addCmdCfg(new CmdCfg() {@Override	public void execute(Button source) {
 						JavadocI.i().browseJavadoc(mh);
@@ -205,7 +215,7 @@ public class GlobalsManagerDialogI {
 				iValidCount++;
 			}
 			
-			if(iValidCount==0)smd.remove(odGlobal);
+			if(iValidCount==0)diagMaint.remove(odGlobal);
 		}
 	}
 
@@ -239,6 +249,20 @@ public class GlobalsManagerDialogI {
 
 	public void setMatchIgnoreCase(boolean bMatchIgnoreCase) {
 		this.bMatchIgnoreCase = bMatchIgnoreCase;
+	}
+
+	@Override
+	public void receiveSubmitedUserInputTextEvent(String str) {
+		this.setUserInputTextFilter(str);
+		diagMaint.requestUpdateListItems();
+	}
+
+	public String getUserInputTextFilter() {
+		return strUserInputTextFilter;
+	}
+
+	public void setUserInputTextFilter(String strUserInputTextFilter) {
+		this.strUserInputTextFilter = strUserInputTextFilter;
 	}
 	
 }

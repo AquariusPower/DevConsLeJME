@@ -27,25 +27,18 @@
 
 package com.github.devconslejme.misc.lemur;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
-import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
-import com.github.devconslejme.misc.jme.UserDataI.IUDKey;
 import com.github.devconslejme.misc.lemur.ResizablePanel.ResizerCursorListener;
 import com.jme3.app.Application;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Button;
-import com.simsilica.lemur.Command;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
@@ -70,7 +63,6 @@ public class DragParentestPanelListenerI implements CursorListener{
 	private Vector3f	v3fDistToCursor;
 	private Panel	pnlParentestBeingDragged;
 	private FocusManagerState	focusman;
-	private boolean	bDelegateClickCommands=true;
 	private Vector3f	v3fInitialDragPos;
 	private Vector3f	v3fInitialCurPos;
 	private boolean	bIsReallyDragging;
@@ -131,14 +123,14 @@ public class DragParentestPanelListenerI implements CursorListener{
 				
 				bIsReallyDragging=false;
 				
-				absorbClickCommands(capture);
+				ClickCommandAbsorptionI.i().absorbClickCommands(capture);
 			}else{
 				bDragging=false;
 				
 				pnlParentestBeingDragged=null;
 				
 				// just click, not dragging
-				if(!bIsReallyDragging)delegateClickCommands(capture);
+				if(!bIsReallyDragging)ClickCommandAbsorptionI.i().delegateClickCommands(capture);
 			}
 			event.setConsumed();
 		}
@@ -184,62 +176,64 @@ public class DragParentestPanelListenerI implements CursorListener{
 		event.setConsumed();
 	}
 
-	@Bugfix
-	@SuppressWarnings("unchecked")
-	private void absorbClickCommands(Spatial capture) {
-		if(!isDelegateClickCommands())return;
-		
-		if (capture instanceof Button) {
-			Button btn = (Button) capture;
-			List<Command<? super Button>> clickCommands = btn.getClickCommands();
-			if(clickCommands==null)return; 
-			
-			if(clickCommands.size()>0){
-				clickCommands = new ArrayList<Command<? super Button>>(clickCommands); //copy b4 clearing
-				btn.removeClickCommands(clickCommands.toArray(new Command[0]));
-				
-				ArrayList<Command<? super Button>> clickCommandsStored = 
-					UserDataI.i().getUserDataPSH(btn, EUserData.ClickCommands.s());
-				if(clickCommandsStored==null){
-					clickCommandsStored=new ArrayList<Command<? super Button>>();
-					UserDataI.i().setUserDataPSH(btn, EUserData.ClickCommands.s(), clickCommandsStored);
-				}
-				clickCommandsStored.addAll(clickCommands);
-			}
-		}
-	}
-
-	private static enum EUserData{
-		ClickCommands,
-		;
-		public String s(){return toString();}
-	}
+//	@Workaround
+//	@Bugfix
+//	@SuppressWarnings("unchecked")
+//	private void absorbClickCommands(Spatial capture) {
+//		if(!isDelegateClickCommands())return;
+//		
+//		if (capture instanceof Button) {
+//			Button btn = (Button) capture;
+//			List<Command<? super Button>> clickCommands = btn.getClickCommands();
+//			if(clickCommands==null)return; 
+//			
+//			if(clickCommands.size()>0){
+//				clickCommands = new ArrayList<Command<? super Button>>(clickCommands); //copy b4 clearing
+//				btn.removeClickCommands(clickCommands.toArray(new Command[0]));
+//				
+//				ArrayList<Command<? super Button>> clickCommandsStored = 
+//					UserDataI.i().getUserDataPSH(btn, EUserData.ClickCommands.s());
+//				if(clickCommandsStored==null){
+//					clickCommandsStored=new ArrayList<Command<? super Button>>();
+//					UserDataI.i().setUserDataPSH(btn, EUserData.ClickCommands.s(), clickCommandsStored);
+//				}
+//				clickCommandsStored.addAll(clickCommands);
+//			}
+//		}
+//	}
+//
+//	private static enum EUserData{
+//		ClickCommands,
+//		;
+//		public String s(){return toString();}
+//	}
 	
-	/**
-	 * In case Button click commands are not working when the button has focus.
-	 * @param capture
-	 */
-	@Bugfix
-	private void delegateClickCommands(Spatial capture) {
-		if(!isDelegateClickCommands())return;
-		
-//		if(focusman.getFocus()!=capture)return; //the ignored click commands bug happens only when the Button has focus
-		
-		if (capture instanceof Button) {
-			Button btn = (Button) capture;
-			ArrayList<Command<? super Button>> clickCommandsStored = 
-				UserDataI.i().getUserDataPSH(btn, EUserData.ClickCommands.s());
-//				List<Command<? super Button>> clickCommands = btn.getClickCommands();
-//				if(clickCommands!=null){
-//					for(Command<? super Button> a:clickCommands){
-			if(clickCommandsStored!=null){
-				for(Command<? super Button> a:clickCommandsStored){
-					a.execute(btn);
-				}
-			}
-		}
-		
-	}
+//	/**
+//	 * In case Button click commands are not working when the button has focus.
+//	 * @param capture
+//	 */
+//	@Workaround
+//	@Bugfix
+//	private void delegateClickCommands(Spatial capture) {
+//		if(!isDelegateClickCommands())return;
+//		
+////		if(focusman.getFocus()!=capture)return; //the ignored click commands bug happens only when the Button has focus
+//		
+//		if (capture instanceof Button) {
+//			Button btn = (Button) capture;
+//			ArrayList<Command<? super Button>> clickCommandsStored = 
+//				UserDataI.i().getUserDataPSH(btn, EUserData.ClickCommands.s());
+////				List<Command<? super Button>> clickCommands = btn.getClickCommands();
+////				if(clickCommands!=null){
+////					for(Command<? super Button> a:clickCommands){
+//			if(clickCommandsStored!=null){
+//				for(Command<? super Button> a:clickCommandsStored){
+//					a.execute(btn);
+//				}
+//			}
+//		}
+//		
+//	}
 
 	public Panel getParentestBeingDragged(){
 		return pnlParentestBeingDragged;
@@ -368,16 +362,6 @@ public class DragParentestPanelListenerI implements CursorListener{
 		this.bHightlightToo = bHightlightToo;
 	}
 	
-	@Bugfix
-	public boolean isDelegateClickCommands() {
-		return bDelegateClickCommands;
-	}
-	
-	@Bugfix
-	public void setDelegateClickCommandsDisabled() {
-		this.bDelegateClickCommands = false;
-	}
-
 	public void setEnabledAt(Spatial sptAt, boolean b) {
 		UserDataI.i().getUserDataPSH(sptAt, DragInfo.class).bEnableDrag=b;
 	}

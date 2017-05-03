@@ -58,6 +58,10 @@ public class StringI {
 		;
 		
 		public String s(){return toString();}
+		
+//		public EStringMatchMode[] valuesSortByName(){
+//			a values()
+//		}
 	}
 
 	public boolean contains(String strToCheck, String strMatch, EStringMatchMode eMode, boolean bIgnoreCase){

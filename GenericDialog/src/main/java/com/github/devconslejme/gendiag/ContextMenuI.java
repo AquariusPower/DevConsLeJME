@@ -172,6 +172,7 @@ public class ContextMenuI implements IResizableListener{
 				return true;
 			}
 		}.setDelaySeconds(1f).enableLoop();
+		private Object	objCurrentContextSourceStoredValue;
 		
 		/**
 		 * will be set only when clicking, from {@link ContextMenuOwnerListenerI}
@@ -235,21 +236,21 @@ public class ContextMenuI implements IResizableListener{
 		 * @param hu Each choice can have an exclusive {@link HintUpdaterPerContextButton} that may use {@link HintUpdaterPerContextButton#setPopupHintHelp(String)} (for the single choice mode, there is an automatic popup hint for that)
 		 * @return
 		 */
-		@SuppressWarnings("unchecked")
 		public ContextButton addNewEntry(String strTextKey, Object objStoreContextItemValue, ApplyContextChoiceCmd cmd, HintUpdaterPerContextButton hu){
 			assert(cmd!=null);
 			ContextButton cb = new ContextButton(strTextKey);
-			cb.addClickCommands(cmd);
+			cb.cmParent=this;
+			ContextMenuI.i().applyContextButtonListener(cb,cmd); //cb.addClickCommands(cmd); //TODO use a context cursor listener...
 //			if(cxHintUpdater!=null)UserDataI.i().setUserDataPSH(btn, EContext.HintUpdater, cxHintUpdater);
 			if(hu!=null){
 				cb.setHintUpdater(hu);
-				hu.setContextButtonOwner(cb);
+				hu.setContextButtonParent(cb);
 			}
 			hmContextOptions.put(strTextKey, cb);
 			cb.setStoredValue(objStoreContextItemValue);
 			return cb;
 		}
-
+		
 		public ResizablePanel getDialogHierarchyParent() {
 			return rzpDialogHierarchyParent;
 		}
@@ -279,6 +280,16 @@ public class ContextMenuI implements IResizableListener{
 
 		public boolean isSingleChoiceMode() {
 			return bSingleChoiceMode;
+		}
+
+		public SELF setCurrentContextSourceStoredValue(Object obj) {
+			this.objCurrentContextSourceStoredValue=obj;
+			return getThis();
+		}
+
+		@SuppressWarnings("unchecked")
+		public <T> T getCurrentContextSourceStoredValue() {
+			return (T)objCurrentContextSourceStoredValue;
 		}
 		
 //		public ContextMenu setHierarchyParent(ResizablePanel hrpParent) {
@@ -314,7 +325,7 @@ public class ContextMenuI implements IResizableListener{
 	}
 	
 	/**
-	 * {@link ContextButton} 1 <-> 1 {@link HintUpdaterPerContextButton}<br>
+	 * {@link ContextButton} 1 to 1 {@link HintUpdaterPerContextButton}<br>
 	 * <br>
 	 * see {@link ContextMenuI#showContextMenu(Vector2f, String, ContextMenu)}<br>
 	 * <br>
@@ -322,7 +333,7 @@ public class ContextMenuI implements IResizableListener{
 	 * use {@link #getStoredValueFromContextButton()} to compare the context source value with linked contextmenu value<br>
 	 */
 	public static abstract class HintUpdaterPerContextButton extends CallableX<HintUpdaterPerContextButton>{
-		private ContextButton	cb;
+		private ContextButton	cbParent;
 
 		public void setPopupHintHelp(String str){
 			putKeyValue(EContext.PopupHintHelp.getUId(),str);
@@ -333,24 +344,24 @@ public class ContextMenuI implements IResizableListener{
 			return getValue(EContext.PopupHintHelp.getUId());
 		}
 		
-		private void setContextButtonOwner(ContextButton cb){
-			DetailedException.assertNotAlreadySet(this.cb, cb, 
+		private void setContextButtonParent(ContextButton cb){
+			DetailedException.assertNotAlreadySet(this.cbParent, cb, 
 				"the "+this.getClass().getSimpleName()+" is exclusive to a single "+cb.getClass().getSimpleName(),
 				this);
-			this.cb=cb;
+			this.cbParent=cb;
 		}
 		
 		@SuppressWarnings("unchecked")
 		public <T> T getStoredValueFromContextButton(){
-			return (T)cb.getStoredValue();
+			return (T)cbParent.getStoredValue();
 		}
 		
 		/**
 		 * 
 		 * @return the context button for this {@link HintUpdaterPerContextButton}
 		 */
-		public ContextButton getContextButtonLinked(){
-			return this.cb;
+		public ContextButton getContextButtonParent(){
+			return this.cbParent;
 		}
 		
 		@Override
@@ -364,6 +375,8 @@ public class ContextMenuI implements IResizableListener{
 		private boolean	bSubContextMenu;
 		private Object val;
 //		private Command<ContextButton>	cmd;
+		private ApplyContextChoiceCmd	cmd;
+		private ContextMenu	cmParent;
 
 		private ContextButton(String s) {
 			super(s);
@@ -411,6 +424,18 @@ public class ContextMenuI implements IResizableListener{
 			this.val=val;
 			return getThis();
 		}
+
+		public void setContextCommand(ApplyContextChoiceCmd cmd) {
+			this.cmd=cmd;
+		}
+
+		public void executeContextCommand() {
+			cmd.executeContextCommand(this);
+		}
+
+		public ContextMenu getContextMenuParent() {
+			return cmParent;
+		}
 	}
 	
 //	private class ContextMenuListenerI extends DefaultCursorListener{
@@ -421,6 +446,24 @@ public class ContextMenuI implements IResizableListener{
 //		}
 //	}
 	
+	public static class ContextMenuChoiceMadeListenerI extends DefaultCursorListener{
+		public static ContextMenuOwnerListenerI i(){return GlobalManagerI.i().get(ContextMenuOwnerListenerI.class);}
+		
+		@Override
+		protected void click(CursorButtonEvent event, Spatial target,				Spatial capture) {
+			super.click(event, target, capture);
+			
+			if(event.getButtonIndex()!=0)return; //left mouse button
+			
+			ContextButton btn = (ContextButton)capture;
+			btn.executeContextCommand();
+			btn.getContextMenuParent().setCurrentContextSourceStoredValue(btn.getStoredValue());
+			
+			event.setConsumed();
+		}
+		
+	}
+	
 	public static class ContextMenuOwnerListenerI extends DefaultCursorListener{
 		public static ContextMenuOwnerListenerI i(){return GlobalManagerI.i().get(ContextMenuOwnerListenerI.class);}
 		
@@ -429,8 +472,6 @@ public class ContextMenuI implements IResizableListener{
 			super.click(event, target, capture);
 			
 			if(event.getButtonIndex()!=1)return; //right mouse button
-//			if(!Panel.class.isInstance(capture))return;
-//			if(!Button.class.isInstance(capture))return;
 			
 			Button btn = (Button)capture;
 			
@@ -445,20 +486,12 @@ public class ContextMenuI implements IResizableListener{
 		@Override
 		public void cursorEntered(CursorMotionEvent event, Spatial target, Spatial capture) {
 			super.cursorEntered(event, target, capture);
-//			Spatial spt = target==null?capture:target;
-			
-//			System.out.println("Enter="+((Button)spt).getText());
-//			if(target==null)return;
-			
-//			if(!ContextMenuI.i().giContextMenuAvailableIndicator.isEnabled()){
 			ContextMenuI.i().giContextMenuAvailableIndicator.setEnabled(true).setTarget(target);
 		}
 		
 		@Override
 		public void cursorExited(CursorMotionEvent event, Spatial target,Spatial capture) {
 			super.cursorExited(event, target, capture);
-//			System.out.println("Exit="+((Button)target).getText());
-			
 			ContextMenuI.i().giContextMenuAvailableIndicator.setEnabled(false);
 		}
 	}
@@ -542,7 +575,11 @@ public class ContextMenuI implements IResizableListener{
 		if(bUseContextMenuAvailablePermanentIndicators){
 			permanentIndicator(sptContextClick);
 		}
-		
+	}
+	
+	private void applyContextButtonListener(ContextButton btn, ApplyContextChoiceCmd cmd){
+		btn.setContextCommand(cmd);
+		CursorEventControl.addListenersToSpatial(btn, ContextMenuChoiceMadeListenerI.i());
 	}
 	
 	/**
@@ -653,6 +690,8 @@ public class ContextMenuI implements IResizableListener{
 	) {
 		ContextMenu cm=new ContextMenu(rzpDialogHierarchyParent);
 		
+		cm.setCurrentContextSourceStoredValue(eCurrentValue);
+		
 		cm.setSingleChoiceMode(true);
 		for(EStringMatchMode eToBeStored:EStringMatchMode.values()){
 			HintUpdaterPerContextButton hu = new HintUpdaterPerContextButton() {
@@ -662,7 +701,7 @@ public class ContextMenuI implements IResizableListener{
 //					cm.getContextSource();
 					EStringMatchMode eStored = getStoredValueFromContextButton();
 //					return getContextButtonLinked().getText().equals(e.s());
-					return eCurrentValue.equals(eStored);
+					return cm.getCurrentContextSourceStoredValue().equals(eStored);
 				}
 			};
 			
