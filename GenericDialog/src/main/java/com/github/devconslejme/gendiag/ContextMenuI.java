@@ -468,32 +468,6 @@ public class ContextMenuI implements IResizableListener{
 	ContextChoiceMadeCursorListenerX contextChoiceMadeListener = new ContextChoiceMadeCursorListenerX();
 	
 	public static class ContextMenuSourceCursorListenerX extends CursorListenerX{
-//		public static ContextMenuOwnerListenerI i(){return GlobalManagerI.i().get(ContextMenuOwnerListenerI.class);}
-		
-//		private CursorButtonEvent	eventNewForListBoxItem;
-//		private CursorButtonEvent	eventOverriden;
-
-//		@Override
-//		public void cursorButtonEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
-////			if(event.isConsumed() && MiscLemurI.i().isListBoxItem(capture)){ //ListBox always consume the event
-//////				event.clone();
-////				if(eventOverriden!=event){
-////					eventOverriden = event;
-////					
-////					/**
-////					 * create a non consumed clone
-////					 */
-////					eventNewForListBoxItem = new CursorButtonEvent(
-////						event.getButtonIndex(), event.isPressed(), event.getViewPort(), event.getTarget(), 
-////						event.getX(), event.getY(), event.getCollision());
-////				}
-////				
-////				event = eventNewForListBoxItem;
-////			}
-//			
-//			super.cursorButtonEvent(event, target, capture);
-//		}
-		
 		@Override
 		protected boolean click(CursorButtonEvent event, Spatial target,				Spatial capture) {
 			if(event.getButtonIndex()!=1)return false; //only right mouse button

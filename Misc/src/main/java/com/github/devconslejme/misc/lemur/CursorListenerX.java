@@ -27,6 +27,10 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.github.devconslejme.misc.lemur;
 
 import com.github.devconslejme.misc.Annotations.Workaround;
+import com.github.devconslejme.misc.jme.EffectElectricity;
+import com.github.devconslejme.misc.jme.EffectManagerStateI;
+import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorListener;
@@ -41,7 +45,14 @@ public abstract class CursorListenerX implements CursorListener{
 	private Spatial	sptPrepareToWorkWith;
 	private CursorButtonEvent	eventNewForListBoxItem;
 	private CursorButtonEvent	eventOverriden;
-
+	private Vector3f	v3fPressedPos;
+	private EffectElectricity	efDisplaced = new EffectElectricity();
+	
+	public CursorListenerX() {
+		EffectManagerStateI.i().add(efDisplaced);
+		efDisplaced.setFollowToMouse(true);
+	}
+	
 	protected abstract boolean click(CursorButtonEvent event, Spatial target,				Spatial capture);
 	
 	/**
@@ -77,7 +88,10 @@ public abstract class CursorListenerX implements CursorListener{
 		if(event.isConsumed())return;
 		
 		if(event.isPressed()){
-			this.sptPrepareToWorkWith = capture;
+			sptPrepareToWorkWith = capture;
+			v3fPressedPos = MiscJmeI.i().toV3f(event.getLocation());
+			efDisplaced.setFollowFromTarget(sptPrepareToWorkWith,null);
+			efDisplaced.setPlay(true);
 		}else{
 			if(sptPrepareToWorkWith!=null && sptPrepareToWorkWith==capture){
 				if(!DragParentestPanelListenerI.i().isDragOverridingButtonUpClickEvent(event)){
@@ -87,7 +101,9 @@ public abstract class CursorListenerX implements CursorListener{
 				}
 			}
 			
-			this.sptPrepareToWorkWith=null;
+			sptPrepareToWorkWith=null;
+			v3fPressedPos=null;
+			efDisplaced.setPlay(true);
 		}
 	}
 
@@ -101,6 +117,9 @@ public abstract class CursorListenerX implements CursorListener{
 
 	@Override
 	public void cursorMoved(CursorMotionEvent event, Spatial target,			Spatial capture) {
+		if(v3fPressedPos==null){
+			efDisplaced.setPlay(false);
+		}
 	}
 	
 }

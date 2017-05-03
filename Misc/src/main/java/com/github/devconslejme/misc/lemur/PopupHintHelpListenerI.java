@@ -119,7 +119,7 @@ public class PopupHintHelpListenerI implements CursorListener{
 			Vector3f v3fSize = lblPopupHelp.getSize();
 			
 			float fDistFromCursor=10f;
-			float fZAboveAll=1001; //TODO even above lemur mouse cursor's picker raycast?
+			float fZAboveAll=MiscJmeI.i().getAboveAllAtGuiNode(); 
 			
 			float fX = v2fMousePos.x-v3fSize.x/2;
 			if(fX<0){

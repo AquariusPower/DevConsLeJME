@@ -35,10 +35,9 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 
 /**
- * 
+ * TODO fix several wrongly named methods that may be duplicating or messing functionalities...
+ *  
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
- *
- * @param <THIS>
  */
 public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffect<THIS>{
 	private Vector3f	v3fFrom;
@@ -97,7 +96,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 		Vector3f v3fTargetSpot = v3fTo==null?null:v3fTo.clone();
 		if(bToMouse){
 			v3fTargetSpot=MiscJmeI.i().getMouseCursorPosition();
-			v3fTargetSpot.z=v3fTo.z;
+			v3fTargetSpot.z=v3fTo==null?MiscJmeI.i().getAboveAllAtGuiNode():v3fTo.z;
 		}else
 		if(sptFollowTo!=null){
 			//TODO if sptFollow is a node, add a node to it and apply displacement to let rotations etc apply

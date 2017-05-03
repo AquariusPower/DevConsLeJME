@@ -69,6 +69,14 @@ public class DragParentestPanelListenerI implements CursorListener{
 	private CursorButtonEvent	eventButtonDown;
 	private CursorButtonEvent	eventButtonUp;
 	
+	public static class MouseDragEffectCursorListenerX extends CursorListenerX{
+		@Override
+		protected boolean click(CursorButtonEvent event, Spatial target,				Spatial capture) {
+			return false;
+		}
+		
+	}
+	
 	public void configure(){
 		focusman = GlobalManagerI.i().get(Application.class).getStateManager().getState(FocusManagerState.class);
 	}

@@ -184,4 +184,10 @@ public class MiscJmeI {
   public BitmapFont loadFont(String strPath) {
   	return GlobalManagerI.i().get(Application.class).getAssetManager().loadFont(strPath);
   }
+  
+  public float getAboveAllAtGuiNode(){
+  	//TODO is it even above lemur mouse cursor's picker raycast?
+  	//TODO dynamically collect/set this value
+  	return 1001; //lemur seems to ray cast from 1000 to 0
+  }
 }
