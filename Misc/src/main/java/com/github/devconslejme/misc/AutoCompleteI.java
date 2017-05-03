@@ -123,7 +123,7 @@ public class AutoCompleteI {
 							break;
 						case 2:
 							if(bAllowFuzzyFallBack){
-								if(StringI.i().containsFuzzyMatch(strFull, strPart, EStringMatchMode.Fuzzy, true)){
+								if(StringI.i().contains(strFull, strPart, EStringMatchMode.Fuzzy, true)){
 									astrPossibleMatches.add(strFull);
 									bUsingFuzzy=true;
 								}

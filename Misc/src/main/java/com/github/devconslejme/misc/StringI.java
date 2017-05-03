@@ -58,7 +58,7 @@ public class StringI {
 		;
 	}
 
-	public boolean containsFuzzyMatch(String strToCheck, String strMatch, EStringMatchMode eMode, boolean bIgnoreCase){
+	public boolean contains(String strToCheck, String strMatch, EStringMatchMode eMode, boolean bIgnoreCase){
 		if(bIgnoreCase){ 
 			strToCheck=strToCheck.toLowerCase();
 			strMatch=strMatch.toLowerCase();

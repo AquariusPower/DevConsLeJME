@@ -41,7 +41,9 @@ import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.JavadocI;
 import com.github.devconslejme.misc.MethodHelp;
 import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.StringI.EStringMatchMode;
 import com.simsilica.lemur.Button;
 
 /**
@@ -54,6 +56,7 @@ public class GlobalsManagerDialogI {
 	private boolean	bShowInherited;
 	private boolean	bShowPackagesPrepended;
 	private boolean	bShowOnlyEditableBeans = true;
+	private boolean	bRegexFilter=true;
 //	private Comparator<Object>	cmprAtoZ = new Comparator<Object>() {
 //		@Override
 //		public int compare(Object o1, Object o2) {
@@ -78,26 +81,33 @@ public class GlobalsManagerDialogI {
 				
 				if(!smd.isInitialized())return false; //prior to new actions below
 				
-				smd.putToolAction(new ToolAction("Methods from", new CmdBtnTA(bShowInherited?0:1,"concrete","inherited too") {
+				smd.putToolAction(new ToolAction("Methods from", new CmdBtnTA() {
 					@Override	public Integer executeTA(Button source) {
 						smd.requestUpdateListItems();
 						return (bShowInherited=!bShowInherited)?0:1;
 					}
-				}));
+				},bShowInherited?0:1,"concrete","inherited too"));
 				
-				smd.putToolAction(new ToolAction("Pkg info", new CmdBtnTA(bShowPackagesPrepended?0:1,"after","prepend") {
+				smd.putToolAction(new ToolAction("Pkg info", new CmdBtnTA() {
 					@Override	public Integer executeTA(Button source) {
 						smd.requestUpdateListItems();
 						return (bShowPackagesPrepended=!bShowPackagesPrepended)?0:1;
 					}
-				}));
+				},bShowPackagesPrepended?0:1,"after","prepend"));
 				
-				smd.putToolAction(new ToolAction("Method kind", new CmdBtnTA(bShowOnlyEditableBeans?0:1,"all","only beans") {
+				smd.putToolAction(new ToolAction("Method kind", new CmdBtnTA() {
 					@Override	public Integer executeTA(Button btn) {
 						smd.requestUpdateListItems();
 						return (bShowOnlyEditableBeans=!bShowOnlyEditableBeans)?0:1;
 					}
-				}));
+				},bShowOnlyEditableBeans?0:1,"all","only beans"));
+				
+				smd.putToolAction(new ToolAction("Regex filter", new CmdBtnTA() {
+					@Override	public Integer executeTA(Button btn) {
+						smd.requestUpdateListItems();
+						return (bRegexFilter=!bRegexFilter)?0:1;
+					}
+				},bRegexFilter?0:1,"enabled","disabled"));
 				
 				return true;
 			}
@@ -120,6 +130,8 @@ public class GlobalsManagerDialogI {
 //	}
 	
 	private TreeMap<String,Object> hmSortedGlobals = new TreeMap<String,Object>(String.CASE_INSENSITIVE_ORDER);
+	private EStringMatchMode	eStringMatchMode;
+	private boolean	bMatchIgnoreCase;
 	
 	protected void prepareGlobalsForMaintenance() {
 		hmSortedGlobals.clear();
@@ -156,7 +168,16 @@ public class GlobalsManagerDialogI {
 				
 				MethodHelp mh = new MethodHelp().setObject(entry.getValue()).setMethod(m);
 				
-				OptionData od = smd.putOption(odGlobal,	mh.getFullHelp(true, false),	mh);
+				String strTextKey = mh.getFullHelp(true, false);
+//				if(bRegexFilter && !strTextKey.matches(smd.getInputText()))continue;
+				if(
+						bRegexFilter
+						&& 
+						!StringI.i().contains(
+							strTextKey, smd.getInputText(), getEStringMatchMode(), isMatchIgnoreCase())
+				)continue;
+				
+				OptionData od = smd.putOption(odGlobal,	strTextKey, mh);
 				
 				od.addCmdCfg(new CmdCfg() {@Override	public void execute(Button source) {
 						JavadocI.i().browseJavadoc(mh);
@@ -187,6 +208,22 @@ public class GlobalsManagerDialogI {
 
 	public void setShowOnlyEditableBeans(boolean bShowOnlyEditableBeans) {
 		this.bShowOnlyEditableBeans = bShowOnlyEditableBeans;
+	}
+
+	public EStringMatchMode getEStringMatchMode() {
+		return eStringMatchMode;
+	}
+
+	public void setEStringMatchMode(EStringMatchMode eStringMatchMode) {
+		this.eStringMatchMode = eStringMatchMode;
+	}
+
+	public boolean isMatchIgnoreCase() {
+		return bMatchIgnoreCase;
+	}
+
+	public void setMatchIgnoreCase(boolean bMatchIgnoreCase) {
+		this.bMatchIgnoreCase = bMatchIgnoreCase;
 	}
 	
 }

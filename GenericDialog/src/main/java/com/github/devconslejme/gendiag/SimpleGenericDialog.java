@@ -144,95 +144,95 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	
 	public static class ToolAction implements IVisibleText{
 		private String strTextKey;
-		CmdBtnTA cmdAction;
+		private CmdBtnTA cmdAction;
 		private String	strVisibleText;
+		private Integer	iStatusAutoUpdateText;
+		private String[]	astrStatus;
+		private String	strVisibleTextBtn;
+		private Integer	iInitStatus;
 		
 		public abstract static class CmdBtnTA implements Command<Button>{
-			private Integer	iStatusAutoUpdateText;
-			public String	strTextKey;
-			private String[]	astrStatus;
-			private String	strVisibleTextBtn;
-
-			public CmdBtnTA(){}
-			
-			/**
-			 * 
-			 * @param iInitStatus not nullable, as the intent is auto update text
-			 * @param strForStatusTrue
-			 * @param strForStatusFalse
-			 */
-			public CmdBtnTA(int iInitStatus, String... astrStatus){//String strForStatusTrue, String strForStatusFalse){
-				setStatusArray(astrStatus);
-				this.iStatusAutoUpdateText=iInitStatus;
-				updateTextWork(null);
-			}
+			private ToolAction ta;
 			
 			@Deprecated
 			@Override
 			public void execute(Button source) {
-				updateStatus(executeTA(source));
-				updateTextWork(source);
+				ta.updateStatus(executeTA(source));
+				ta.updateTextWork(source);
 			}
 			
-			/**
-			 * 
-			 * @param source if null, and auto update mode, will just auto store on a field
-			 */
-			private String updateTextWork(Button source) {
-				if(iStatusAutoUpdateText!=null){
-					return updateText(source, iStatusAutoUpdateText, getStatusArray());//strForStatusTrue, strForStatusFalse);
-				}else{
-					return updateText(source);
-				}
-			}
 			protected abstract Integer executeTA(Button btn);
 			
-			protected String updateText(Button btn){return "";}
-			
-			protected void updateStatus(Integer i){
-				if(i!=null)this.iStatusAutoUpdateText=i;
-			}
-			
-			protected String updateText(Button btn, int iStatus, String... astrStatus){//String strForTrue, String strForFalse) {
-				strVisibleTextBtn=(strTextKey+": "+getStatusText(iStatus+1)); //next action
-				
-				if(btn!=null){
-					btn.setText(strVisibleTextBtn);
-					PopupHintHelpListenerI.i().setPopupHintHelp(btn, "Current: "+getStatusText(iStatus));
-				}
-				
-				return strVisibleTextBtn;
-			}
-
-			private String getStatusText(int i) {
-				return astrStatus[i>=astrStatus.length?i=0:i];
-			}
-
-			protected String[] getStatusArray() {
-				return astrStatus;
-			}
-
-			protected void setStatusArray(String[] astrStatus) {
-				this.astrStatus = astrStatus;
-			}
 		}
 		
 		public ToolAction(String strTextKey, CmdBtnTA cmdAction) {
+			this(strTextKey,cmdAction,null);
+		}
+		
+		public ToolAction(String strTextKey, CmdBtnTA cmdAction, Integer iInitStatus, String... astrStatus) {
 			super();
 			
 			this.strTextKey = strTextKey;
-			
 			this.cmdAction = cmdAction;
-			this.cmdAction.strTextKey=strTextKey;
+			this.iInitStatus = iInitStatus;
+			this.astrStatus = astrStatus;
+			
+			this.cmdAction.ta=this;
+			setStatusArray(astrStatus);
+			this.iStatusAutoUpdateText=iInitStatus;
+			updateTextWork(null);
+		}
+		
+		/**
+		 * 
+		 * @param source if null, and auto update mode, will just auto store on a field
+		 */
+		private String updateTextWork(Button source) {
+			if(iStatusAutoUpdateText!=null){
+				return updateText(source, iStatusAutoUpdateText, getStatusArray());//strForStatusTrue, strForStatusFalse);
+			}else{
+				return updateText(source);
+			}
+		}
+		
+		protected String updateText(Button btn){return "";}
+		
+		protected void updateStatus(Integer i){
+			if(i!=null)this.iStatusAutoUpdateText=i;
+		}
+		
+		protected String updateText(Button btn, int iStatus, String... astrStatus){//String strForTrue, String strForFalse) {
+			strVisibleTextBtn=(strTextKey+": "+getStatusText(iStatus));
+			
+			if(btn!=null){
+				btn.setText(strVisibleTextBtn);
+				PopupHintHelpListenerI.i().setPopupHintHelp(btn, "Current: "+getStatusText(iStatus-1));
+			}
+			
+			return strVisibleTextBtn;
+		}
+
+		private String getStatusText(int i) {
+			i=i>=astrStatus.length?i=0:i;
+			i=i<0?astrStatus.length-1:i;
+			return astrStatus[i];
+		}
+
+		protected String[] getStatusArray() {
+			return astrStatus;
+		}
+
+		protected void setStatusArray(String[] astrStatus) {
+			this.astrStatus = astrStatus;
 		}
 		
 		@Override
 		public String getVisibleText() {
 //			return strTextKey;
 //			return cmdAction.strVisibleTextBtn;
-			if(cmdAction.iStatusAutoUpdateText!=null){
-				cmdAction.updateTextWork(null);
-				return cmdAction.strVisibleTextBtn;
+			if(iStatusAutoUpdateText!=null){
+				updateTextWork(null);
+				return strVisibleTextBtn;
 			}
 			
 			return strTextKey;
@@ -925,10 +925,11 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		}
 	}
 	
-	public void putToolAction(ToolAction ta){
+	public ToolAction putToolAction(ToolAction ta){
 		if(!vlodTools.contains(ta)){
 			vlodTools.add(ta);
 		}
+		return ta;
 	}
 	
 	private void initSectionInput() {
