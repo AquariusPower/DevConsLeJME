@@ -27,14 +27,8 @@
 
 package com.github.devconslejme.devcons;
 
-import java.awt.Toolkit;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.io.IOException;
-
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.JavaLangI;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -42,52 +36,26 @@ import com.github.devconslejme.misc.GlobalManagerI;
 public class ClipboardI {
 	public static ClipboardI i(){return GlobalManagerI.i().get(ClipboardI.class);}	
 	
-	public String copyToClipboard(String str) {
-		if(str==null)return null;
-		
-		StringSelection ss = new StringSelection(str);
-		Toolkit.getDefaultToolkit().getSystemClipboard()
-			.setContents(ss, ss);
-		
-		return str;
-	}
-
 	/**
 	 * this is heavy...
 	 * @param bEscapeNL good to have single line result
 	 * @return
 	 */
 	public String pasteFromClipboard(boolean bEscapeNL) {
-		String str = readFromClipboard(bEscapeNL);
+		String str = JavaLangI.i().readFromClipboard(bEscapeNL);
 		if(str!=null)DevConsPluginStateI.i().insertAtInputTextCaratPos(str,null);
 		return str;
 	}
 	
-	public String readFromClipboard(boolean bEscapeNL){
-		try{
-			Transferable tfbl = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
-			String str = (String) tfbl.getTransferData(DataFlavor.stringFlavor);
-			if(bEscapeNL){
-				str=str.replace("\n", "\\n");
-			}
-			
-			return str;
-		} catch (UnsupportedFlavorException | IOException e) {
-			LoggingI.i().logExceptionEntry(e,null);
-		}
-		
-		return null;
-	}
-	
 	public String cutSelectedLogEntryToClipboard() {
-		String str = copyToClipboard(LoggingI.i().getSelectedEntry());
+		String str = JavaLangI.i().copyToClipboard(LoggingI.i().getSelectedEntry());
 		LoggingI.i().deleteLogEntry(DevConsPluginStateI.i().getSelectedIndex());
 		return str;
 	}
 
 	public void showClipboard() {
 		LoggingI.i().logMarker("Clipboard Contents: begin");
-		LoggingI.i().logEntry(ClipboardI.i().readFromClipboard(false));
+		LoggingI.i().logEntry(JavaLangI.i().readFromClipboard(false));
 		LoggingI.i().logMarker("Clipboard Contents: end");
 		DevConsPluginStateI.i().scrollKeepAtBottom();
 	}

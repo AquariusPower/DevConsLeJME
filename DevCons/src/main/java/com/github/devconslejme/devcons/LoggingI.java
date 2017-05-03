@@ -32,6 +32,7 @@ import java.io.PrintStream;
 
 import com.github.devconslejme.devcons.DevConsPluginStateI.EStatPriority;
 import com.github.devconslejme.devcons.DevConsPluginStateI.VarMon;
+import com.github.devconslejme.misc.FileI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;

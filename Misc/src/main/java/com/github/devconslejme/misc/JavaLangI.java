@@ -27,6 +27,12 @@
 
 package com.github.devconslejme.misc;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -391,5 +397,32 @@ public class JavaLangI {
 			return super.remove(key);
 		}
 		
+	}
+
+	public String copyToClipboard(String str) {
+		if(str==null)return null;
+		
+		StringSelection ss = new StringSelection(str);
+		Toolkit.getDefaultToolkit().getSystemClipboard()
+			.setContents(ss, ss);
+		
+		return str;
+	}
+
+	public String readFromClipboard(boolean bEscapeNL){
+		try{
+			Transferable tfbl = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
+			String str = (String) tfbl.getTransferData(DataFlavor.stringFlavor);
+			if(bEscapeNL){
+				str=str.replace("\n", "\\n");
+			}
+			
+			return str;
+		} catch (UnsupportedFlavorException | IOException e) {
+			MessagesI.i().warnMsg(this, e.getMessage(), bEscapeNL, e);
+//			LoggingI.i().logExceptionEntry(e,null);
+		}
+		
+		return null;
 	}
 }

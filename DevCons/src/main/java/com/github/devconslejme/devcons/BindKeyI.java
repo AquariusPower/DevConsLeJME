@@ -30,7 +30,7 @@ package com.github.devconslejme.devcons;
 import java.util.ArrayList;
 
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.TimeConvertI;
+import com.github.devconslejme.misc.JavaLangI;
 import com.jme3.input.KeyInput;
 import com.simsilica.lemur.component.TextEntryComponent;
 import com.simsilica.lemur.event.KeyAction;
@@ -73,7 +73,7 @@ public class BindKeyI {
 				
 				switch(key.getKeyCode()){
 					case KeyInput.KEY_C: 
-						if(bControl)ClipboardI.i().copyToClipboard(LoggingI.i().getSelectedEntry());
+						if(bControl)JavaLangI.i().copyToClipboard(LoggingI.i().getSelectedEntry());
 						break;
 					case KeyInput.KEY_ESCAPE: 
 						DevConsPluginStateI.i().closeConsole();

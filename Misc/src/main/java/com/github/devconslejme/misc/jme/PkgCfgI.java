@@ -32,6 +32,8 @@ import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.scene.Node;
+import com.jme3.system.JmeSystem;
+import com.jme3.system.JmeSystem.StorageFolderType;
 
 
 /**
@@ -43,7 +45,7 @@ public class PkgCfgI {
 	private boolean	bConfigured;
 	public void configure(Application app,Node nodeParent){
 		DetailedException.assertIsFalse("configured", bConfigured, this);
-		com.github.devconslejme.misc.PkgCfgI.i().configure();
+		com.github.devconslejme.misc.PkgCfgI.i().configure(JmeSystem.getStorageFolder(StorageFolderType.Internal), app.getClass());
 		
 		GlobalManagerI.i().put(Application.class, app);  //first!
 		if(app instanceof SimpleApplication){

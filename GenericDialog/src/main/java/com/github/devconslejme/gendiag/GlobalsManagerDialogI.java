@@ -209,7 +209,7 @@ public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 					}}.setText("JavaDoc"));
 				
 				od.addCmdCfg(new CmdCfg() {@Override	public void execute(Button source) {
-						ClipboardI.i().copyToClipboard(mh.getFullHelp(true, true));
+						JavaLangI.i().copyToClipboard(mh.getFullHelp(true, true));
 					}}.setText("Cp").setHintHelp("copy to clipboard"));
 				
 				iValidCount++;

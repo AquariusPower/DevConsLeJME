@@ -25,18 +25,15 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.devcons;
+package com.github.devconslejme.misc;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import com.github.devconslejme.misc.DetailedException;
-import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.devcons.DevConsPluginStateI;
 import com.google.common.io.Files;
-import com.jme3.app.Application;
 import com.jme3.system.JmeSystem;
 import com.jme3.system.JmeSystem.StorageFolderType;
 
@@ -47,18 +44,18 @@ import com.jme3.system.JmeSystem.StorageFolderType;
 public class FileI {
 //	private File	flBasePath;
 	private File	flStorageFolder;
-	private Application	app;
+//	private Application	app;
 
 	public static FileI i(){return GlobalManagerI.i().get(FileI.class);}
 	
 //	public void configure(File flBasePath){
-	public void configure(){
-		app = GlobalManagerI.i().get(Application.class);
+	public void configure(File flAppBaseUserDataFolder, Class clAppMainClass){
+//		app = GlobalManagerI.i().get(Application.class);
 //		setBasePath(flBasePath);
 		flStorageFolder = new File(
-				JmeSystem.getStorageFolder(StorageFolderType.Internal),
-				app.getClass().getPackage().getName().replace(".",File.separator) //package of Application class
-					+File.separator+app.getClass().getSimpleName() //Application class
+				flAppBaseUserDataFolder, //JmeSystem.getStorageFolder(StorageFolderType.Internal),
+				clAppMainClass.getPackage().getName().replace(".",File.separator) //package of Application class
+					+File.separator+clAppMainClass.getSimpleName() //Application class
 					+File.separator+DevConsPluginStateI.class.getSimpleName() //DevCons plugin
 			);
 	}
@@ -68,7 +65,8 @@ public class FileI {
 			if(!fl.exists())fl.getParentFile().mkdirs();
 			Files.append(str+"\n", fl, StandardCharsets.UTF_8);
 		} catch (IOException e) {
-			LoggingI.i().logExceptionEntry(e, null, true); //also prevents recursiveness
+//			LoggingI.i().logExceptionEntry(e, null, true); //also prevents recursiveness
+			MessagesI.i().warnMsg(this, e.getMessage(), fl, str, e);
 		}
 	}
 
@@ -76,7 +74,8 @@ public class FileI {
 		try {
 			return Files.readLines(fl, StandardCharsets.UTF_8);
 		} catch (IOException e) {
-			LoggingI.i().logExceptionEntry(e, null, true); //also prevents recursiveness
+//			LoggingI.i().logExceptionEntry(e, null, true); //also prevents recursiveness
+			MessagesI.i().warnMsg(this, e.getMessage(), fl, e);
 		}
 		
 		return null;
