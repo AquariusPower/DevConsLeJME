@@ -50,6 +50,7 @@ import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.jme.UserDataI.IUDKey;
 import com.github.devconslejme.misc.lemur.ClickCommandAbsorptionI;
+import com.github.devconslejme.misc.lemur.CursorListenerX;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
@@ -75,7 +76,6 @@ import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.CursorMotionEvent;
-import com.simsilica.lemur.event.DefaultCursorListener;
 
 /**
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -176,7 +176,7 @@ public class ContextMenuI implements IResizableListener{
 		private Object	objCurrentContextSourceStoredValue;
 		
 		/**
-		 * will be set only when clicking, from {@link ContextMenuOwnerListenerI}
+		 * will be set only when clicking, from {@link ContextMenuSourceCursorListenerX}
 		 * @param pnlSource
 		 * @return 
 		 */
@@ -448,41 +448,41 @@ public class ContextMenuI implements IResizableListener{
 //		}
 //	}
 	
-	public static class ContextMenuChoiceMadeListenerI extends DefaultCursorListener{
-		public static ContextMenuOwnerListenerI i(){return GlobalManagerI.i().get(ContextMenuOwnerListenerI.class);}
+	public static class ContextChoiceMadeCursorListenerX extends CursorListenerX{
+//		public static ContextMenuOwnerListenerI i(){return GlobalManagerI.i().get(ContextMenuOwnerListenerI.class);}
 		
 		@Override
-		protected void click(CursorButtonEvent event, Spatial target,				Spatial capture) {
-			super.click(event, target, capture);
+		protected boolean click(CursorButtonEvent event, Spatial target,				Spatial capture) {
+//			super.click(event, target, capture);
 			
-			if(event.getButtonIndex()!=0)return; //left mouse button
+			if(event.getButtonIndex()!=0)return false; //left mouse button
 			
 			ContextButton btn = (ContextButton)capture;
-			btn.executeContextCommand();
+			btn.executeContextCommand(); //shall set the context value at the context source 
 			btn.getContextMenuParent().setCurrentContextSourceStoredValue(btn.getStoredValue());
 			
-			event.setConsumed();
+			return true;
 		}
-		
+
 	}
+	ContextChoiceMadeCursorListenerX contextChoiceMadeListener = new ContextChoiceMadeCursorListenerX();
 	
-	public static class ContextMenuOwnerListenerI extends DefaultCursorListener{
-		public static ContextMenuOwnerListenerI i(){return GlobalManagerI.i().get(ContextMenuOwnerListenerI.class);}
+	public static class ContextMenuSourceCursorListenerX extends CursorListenerX{
+//		public static ContextMenuOwnerListenerI i(){return GlobalManagerI.i().get(ContextMenuOwnerListenerI.class);}
 		
 		@Override
-		protected void click(CursorButtonEvent event, Spatial target,				Spatial capture) {
-			super.click(event, target, capture);
-			
-			if(event.getButtonIndex()!=1)return; //right mouse button
+		protected boolean click(CursorButtonEvent event, Spatial target,				Spatial capture) {
+			if(event.getButtonIndex()!=1)return false; //right mouse button
 			
 			Button btn = (Button)capture;
 			
 			ContextMenu cm = UserDataI.i().getUserDataPSH(btn, ContextMenu.class);
-			
 			if(cm!=null){
 				ContextMenuI.i().showContextMenu(event.getLocation(), btn.getText(), cm.setContextSource(btn));
-				event.setConsumed();
+				return true;
 			}
+			
+			return false;
 		}
 		
 		@Override
@@ -497,6 +497,7 @@ public class ContextMenuI implements IResizableListener{
 			ContextMenuI.i().giContextMenuAvailableIndicator.setEnabled(false);
 		}
 	}
+	ContextMenuSourceCursorListenerX contextMenuSourceCursorListenerX = new ContextMenuSourceCursorListenerX();
 	
 	public void configure(){//Node nodeParent) {
 //		strStyle = GuiGlobals.getInstance().getStyles().getDefaultStyle();
@@ -573,7 +574,7 @@ public class ContextMenuI implements IResizableListener{
 	public void applyContextMenuAtSource(Spatial sptContextClick, ContextMenu cm){
 		UserDataI.i().setUserDataPSH(sptContextClick, cm);
 		ClickCommandAbsorptionI.i().absorbClickCommands(sptContextClick);
-		CursorEventControl.addListenersToSpatial(sptContextClick, ContextMenuOwnerListenerI.i());
+		CursorEventControl.addListenersToSpatial(sptContextClick, contextMenuSourceCursorListenerX);
 		
 		if(bUseContextMenuAvailablePermanentIndicators){
 			permanentIndicator(sptContextClick);
@@ -582,7 +583,7 @@ public class ContextMenuI implements IResizableListener{
 	
 	private void applyContextButtonListener(ContextButton btn, ApplyContextChoiceCmd cmd){
 		btn.setContextCommand(cmd);
-		CursorEventControl.addListenersToSpatial(btn, ContextMenuChoiceMadeListenerI.i());
+		CursorEventControl.addListenersToSpatial(btn, contextChoiceMadeListener);
 	}
 	
 	/**
@@ -712,6 +713,10 @@ public class ContextMenuI implements IResizableListener{
 		}
 		
 		return cm;
+	}
+
+	public void removeContextMenuOf(Button btn) {
+		CursorEventControl.removeListenersFromSpatial(btn,contextMenuSourceCursorListenerX);
 	}
 	
 //  private void tstTmp( Command<? super Button>... commands ) {}

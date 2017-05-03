@@ -56,6 +56,7 @@ import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.lemur.ClickCommandAbsorptionI;
+import com.github.devconslejme.misc.lemur.CursorListenerX;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
@@ -82,7 +83,6 @@ import com.simsilica.lemur.core.VersionedList;
 import com.simsilica.lemur.core.VersionedReference;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
-import com.simsilica.lemur.event.DefaultCursorListener;
 import com.simsilica.lemur.event.KeyAction;
 import com.simsilica.lemur.event.KeyActionListener;
 import com.simsilica.lemur.focus.FocusManagerState;
@@ -139,7 +139,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	 * CursorListener.
 	 */
 	@Workaround @Bugfix
-	private DefaultCursorListener	curlisExtraClickCmd;
+	private CursorListenerX	curlisExtraClickCmd;
 	private ContextMenu	cmIST;
 	private ContextMenu	cmSubBorderSize;
 	private int	iNestingStepDistance=10;
@@ -460,22 +460,24 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	 * TODO this may be called twice as a workaround, how to avoid it?
 	 * @param btn
 	 */
-	private void buttonClicked(Button btn){
-		ButtonCell btnc = (ButtonCell)btn;
+	private boolean buttonClicked(ButtonCell btn){
+//		ButtonCell btnc = (ButtonCell)btn;
 //		OptionData od = UserDataI.i().getUserDataPSH(btn, OptionData.class);
-		OptionData od = btnc.od;
+		OptionData od = btn.od;
 		if(od!=null){
 			bRequestUpdateOptionSelected=true;
 			lstbxOptions.getSelectionModel().setSelection(vlodOptions.indexOf(od));
-			return;
+			return true;
 		}
 		
 //		ToolAction ta = UserDataI.i().getUserDataPSH(btn, ToolAction.class);
-		ToolAction ta = btnc.ta;
+		ToolAction ta = btn.ta;
 		if(ta!=null){
 			//TODO does nothing???
-			return;
+			return true;
 		}
+		
+		return false;
 	}
 	
 	/**
@@ -659,10 +661,10 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private void initBase(){
 		focusman = GlobalManagerI.i().get(Application.class).getStateManager().getState(FocusManagerState.class);
 		
-		curlisExtraClickCmd = new DefaultCursorListener(){
+		curlisExtraClickCmd = new CursorListenerX(){
 			@Override
-			protected void click(CursorButtonEvent event, Spatial target, Spatial capture) {
-				buttonClicked((Button)capture);
+			protected boolean click(CursorButtonEvent event, Spatial target, Spatial capture) {
+				return buttonClicked((ButtonCell)capture);
 			};
 		};
 		
@@ -1003,7 +1005,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			cmdOption = new Command<Button>() {
 				@Override
 				public void execute(Button source) {
-					buttonClicked(source);
+					buttonClicked((ButtonCell)source);
 				}
 			};
 			

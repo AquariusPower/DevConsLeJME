@@ -45,6 +45,7 @@ import com.github.devconslejme.misc.jme.IEffect;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.UserDataI;
+import com.github.devconslejme.misc.lemur.CursorListenerX;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
@@ -65,7 +66,6 @@ import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.core.VersionedReference;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
-import com.simsilica.lemur.event.DefaultCursorListener;
 import com.simsilica.lemur.focus.FocusManagerState;
 
 
@@ -83,7 +83,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	private FocusManagerState	focusState;
 	private IEffect	ieffParentToChildLink = new EffectArrow();
 	private IEffect	ieffLinkedDragEffect = new EffectElectricity().setColor(ColorI.i().colorChangeCopy(ColorRGBA.Blue, 0f, 0.5f));
-	private BlockerListener blockerListener = new BlockerListener();
+	private BlockerCursorListenerX blockerListener = new BlockerCursorListenerX();
 	private ColorRGBA	colorBlocker = ColorI.i().colorChangeCopy(ColorRGBA.Red, 0f, 0.15f);
 	private DialogHierarchySystemI sys = DialogHierarchySystemI.i();
 	private ResizablePanel	rzpCurrentlyBeingResized;
@@ -124,17 +124,22 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	private boolean	bRequestRetryZOrder;
 	private boolean	bLogZOrderDebugInfo;
 	
-	public static class BlockerListener extends DefaultCursorListener{
+	public static class BlockerCursorListenerX extends CursorListenerX{
 		@Override
-		protected void click(CursorButtonEvent event, Spatial target, 	Spatial capture) {
-			super.click(event, target, capture);
+		protected boolean click(CursorButtonEvent event, Spatial target, 	Spatial capture) {
+			/**
+			 * all buttons will be accepted to raise the dialog
+			 */
+//			super.click(event, target, capture);
 			
 			Visuals vs = DialogHierarchyStateI.i().getVisuals(capture);
 			HierarchyComp hc = DialogHierarchySystemI.i().getHierarchyComp(vs.getEntityId());
 			if(hc.isBlocked()){
 				DialogHierarchyStateI.i().setFocusRecursively(vs.getEntityId());
-				event.setConsumed();
+//				return true;
 			}
+			
+			return false; //do not consume this click, it is just a focus raiser, the blocker may have some functionality one day..
 		}
 	}
 	
@@ -288,15 +293,16 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		EntityId entid = getVisuals(rzp).getEntityId();
 		
 		if(sys.getHierarchyComp(entid).getLastFocusTime()==-1){ //1st time only
-			DefaultCursorListener cl = new DefaultCursorListener(){
+			CursorListenerX clSimpleFocusRaiser = new CursorListenerX(){
 				@Override
-				protected void click(CursorButtonEvent event, Spatial target, Spatial capture) {
+				protected boolean click(CursorButtonEvent event, Spatial target, Spatial capture) {
 					setFocusRecursively(entid);
-				};
+					return false; //never consume this click!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				}
 			};
 			
 			for(Panel pnl:SpatialHierarchyI.i().getAllChildrenRecursiveFrom(rzp, Panel.class, null)){
-				CursorEventControl.addListenersToSpatial(pnl,cl);
+				CursorEventControl.addListenersToSpatial(pnl,clSimpleFocusRaiser);
 			}
 		}
 		

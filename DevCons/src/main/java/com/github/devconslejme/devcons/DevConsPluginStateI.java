@@ -44,7 +44,6 @@ import com.github.devconslejme.gendiag.ContextMenuI.ContextButton;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenuAnon;
-import com.github.devconslejme.gendiag.ContextMenuI.ContextMenuOwnerListenerI;
 import com.github.devconslejme.gendiag.ContextMenuI.HintUpdaterPerContextButton;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.misc.Annotations.Workaround;
@@ -59,6 +58,7 @@ import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.lemur.ClickToPositionCaratListenerI;
+import com.github.devconslejme.misc.lemur.CursorListenerX;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
@@ -95,7 +95,6 @@ import com.simsilica.lemur.core.VersionedList;
 import com.simsilica.lemur.core.VersionedReference;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
-import com.simsilica.lemur.event.DefaultCursorListener;
 import com.simsilica.lemur.event.KeyAction;
 import com.simsilica.lemur.event.KeyActionListener;
 import com.simsilica.lemur.style.Attributes;
@@ -121,9 +120,9 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	private BitmapFont	font;
 	private ColorRGBA	colorConsoleStyleBackground;
 	private Container	cntrStatus;
-	private ButtonWithCmd btnTitle;
+	private BtnConsoleAction btnTitle;
 //	private ButtonWithCmd btnClipboardShow;
-	private ButtonClickListener	bclk;
+	private BtnConsoleActionCursorListenerX	bclk;
 	private TextField	tfInput;
 	private int	iKeyCodeToggleConsole = KeyInput.KEY_F10;
 	private String	strInputMappingToggleDeveloperConsole = "ToggleDeveloperConsole";
@@ -739,7 +738,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 						for(Panel pnl:MiscLemurI.i().getAllListBoxItems(lstbxVarMonitorBar, false)){
 							Button btn=(Button)pnl;
 							if(btn.getText().startsWith("=")){ //is the value
-								CursorEventControl.removeListenersFromSpatial(btn,ContextMenuOwnerListenerI.i());
+								ContextMenuI.i().removeContextMenuOf(btn);
 							}
 						}
 						
@@ -878,12 +877,12 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	}
 	
 	public static abstract class CallButtonPostCfg extends CallableX<CallButtonPostCfg>{
-		private ButtonWithCmd	btnc;
+		private BtnConsoleAction	btnc;
 
-		private void setButton(ButtonWithCmd btnc) {
+		private void setButton(BtnConsoleAction btnc) {
 			this.btnc=btnc;
 		}
-		public ButtonWithCmd getButton() {
+		public BtnConsoleAction getButton() {
 			return btnc;
 		}
 	}
@@ -968,20 +967,20 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 //		PopupHintHelpListenerI.i().setPopupHintHelp(btnClipboardShow, "Show Clipboard Contents");
 //		hmButtons.put(btnClipboardShow.getText(),btnClipboardShow);
 		
-		btnTitle = new ButtonWithCmd(strBaseTitle ,getStyle());
+		btnTitle = new BtnConsoleAction(strBaseTitle ,getStyle());
 //		SimpleDragParentestListenerI.i().applyAt(lblStats);
 		btnTitle.setColor(new ColorRGBA(1,1,0.5f,1));
 		btnTitle.setTextHAlignment(HAlignment.Right);
 		hmButtons.put(btnTitle.getText(),btnTitle);
 //		cntrStatus.addChild(lblStats,0,0);
 		
-		bclk = new ButtonClickListener();
+		bclk = new BtnConsoleActionCursorListenerX();
 		
 		requestRecreateButtons();
 	}
 	
-	public static class ButtonWithCmd extends Button{
-		private ButtonWithCmd(String s, String style) {
+	public static class BtnConsoleAction extends Button{
+		private BtnConsoleAction(String s, String style) {
 			super(s, style);
 		}
 
@@ -1009,7 +1008,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			public Boolean call() {
 				if(!isInitialized())return false;
 				
-				ButtonWithCmd btnc = putButton(strTextKey, strPopupHelp, cmd);
+				BtnConsoleAction btnc = putButton(strTextKey, strPopupHelp, cmd);
 				
 				if(cbpc!=null){
 					cbpc.setButton(btnc);
@@ -1021,10 +1020,10 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		});
 	}
 	
-	public ButtonWithCmd putButton(String strTextKey, String strPopupHelp, Command<? super Button> cmd){
+	public BtnConsoleAction putButton(String strTextKey, String strPopupHelp, Command<? super Button> cmd){
 		DetailedException.assertIsInitialized(isInitialized(), this, strTextKey, strPopupHelp, cmd);
 		
-		ButtonWithCmd btnc = new ButtonWithCmd(strTextKey,getStyle());
+		BtnConsoleAction btnc = new BtnConsoleAction(strTextKey,getStyle());
 		PopupHintHelpListenerI.i().setPopupHintHelp(btnc, strPopupHelp);
 		btnc.setCmd(cmd);
 		hmButtons.put(btnc.getText(),btnc);
@@ -1080,74 +1079,22 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 //		}
 //	}
 	
-	private class ButtonClickListener extends DefaultCursorListener{
+	private class BtnConsoleActionCursorListenerX extends CursorListenerX{
 		@Override
-		protected void click(CursorButtonEvent event, Spatial target,				Spatial capture) {
-			super.click(event, target, capture);
+		protected boolean click(CursorButtonEvent event, Spatial target,				Spatial capture) {
+			if(event.getButtonIndex()!=0)return false; //only left clicks allowed
 			
-			if(event.getButtonIndex()!=0)return;
+			BtnConsoleAction btn = (BtnConsoleAction) capture;
+			if(btn.cmd!=null){
+				btn.cmd.execute(btn);
+				return true;
+			}else{
+				MessagesI.i().warnMsg(this, "missing command for", capture, target);
+			}
 			
-//			if(capture.equals(btnClipboardShow)){
-//				ClipboardI.i().showClipboard();
-//			}else
-//			if(capture.equals(btnShowVarMon)){
-//				toggleVarMonitorBar(null);
-//			}else
-//			if(capture.equals(btnRestoreSize)){
-//				toggleDefaultPosSize(false);
-//			}else{
-//				if (capture instanceof ButtonWithCmd) {
-					ButtonWithCmd btnc = (ButtonWithCmd) capture;
-					if(btnc.cmd!=null){
-						btnc.cmd.execute(btnc);
-					}else{
-						MessagesI.i().warnMsg(this, "missing event mapping for "+capture, target);
-					}
-//				}else{
-//					MessagesI.i().warnMsg(this, "missing event mapping for "+capture, target);
-//				}
-//			}
+			return false;
 		}
-		
-//		@Override
-//		public void cursorButtonEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
-////			if(event.isConsumed())return;
-//			
-//			if(event.getButtonIndex()==0){
-//				if(!event.isPressed()){
-//					if(capture.equals(btnClipboardShow)){
-//						ClipboardI.i().showClipboard();
-//					}else
-//					if(capture.equals(btnShowVarMon)){
-//						toggleVarMonitorBar(null);
-//					}else
-//					if(capture.equals(btnRestoreSize)){
-//						applyDefaultPosSize();
-//					}else{
-//						MessagesI.i().warnMsg(this, "missing event mapping for "+capture, target);
-//					}
-//				}
-//				
-//				event.setConsumed();
-//			}
-//		}
-
 	}
-	
-//	private class ButtonClick implements Command<Button>{
-//		@Override
-//		public void execute(Button source) {
-//			if(source.equals(btnClipboardShow)){
-//				ClipboardI.i().showClipboard();
-//			}else
-//			if(source.equals(btnShowVarMon)){
-//				toggleVarMonitorBar(null);
-//			}else
-//			if(source.equals(btnRestoreSize)){
-//				applyDefaultPosSize();
-//			}
-//		}
-//	}
 	
 	public static enum EAttribute{
 		/** elemet text color */
