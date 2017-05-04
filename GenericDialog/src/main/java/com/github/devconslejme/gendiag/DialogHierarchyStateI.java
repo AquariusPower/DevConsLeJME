@@ -343,7 +343,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			effLink
 				.setFollowFromTarget(rzpParent, null)
 				.setFollowToTarget(rzpChild, null)
-				.useFollowToPosZ()
+				.setUseFollowToPosZ()
 				.setPlay(true)
 				;
 			
@@ -413,7 +413,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 						.setOwner(pnl)
 						.setFollowFromTarget(rzpParent, null)
 						.setFollowToTarget(pnl, null)
-						.useFollowToPosZ()
+						.setUseFollowToPosZ()
 						.setPlay(true)
 						;
 				}

@@ -56,6 +56,7 @@ public class PkgCfgI {
 		// after first
 		DebugVisualsI.i().configure();
 		MiscJmeI.i().configure();
+		MouseCUrsorI.i().configure();
 		EffectManagerStateI.i().configure();
 		SimulationTimeStateI.i().configure();
 		QueueStateI.i().configure();

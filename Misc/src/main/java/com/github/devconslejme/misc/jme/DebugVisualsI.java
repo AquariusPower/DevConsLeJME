@@ -59,7 +59,7 @@ public class DebugVisualsI {
 	
 	public ArrowGeometry createArrowFollowing(Node nodeBase, Spatial sptFrom, Spatial sptTo, ColorRGBA color){
 		ArrowGeometry ga = createArrow(color);
-		MiscJmeI.i().addToName(ga, DebugVisualsI.class.getSimpleName(), true);
+//		MiscJmeI.i().addToName(ga, DebugVisualsI.class.getSimpleName(), true);
 		
 		ga.setFromToCenterMode(EFollowMode.Edge, EFollowMode.Edge);
 		
@@ -283,7 +283,7 @@ public class DebugVisualsI {
 	
 	public ArrowGeometry createArrow(ColorRGBA color){
 		ArrowGeometry geom = new ArrowGeometry();
-		MiscJmeI.i().addToName(geom, ShapeFactoryI.class.getSimpleName(), true);
+		MiscJmeI.i().addToName(geom, DebugVisualsI.class.getSimpleName(), true);
 		geom.setMesh(new Arrow(new Vector3f(0,0,1f))); //its size will be controled by z scale
 		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
 		return geom;

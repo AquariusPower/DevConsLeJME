@@ -35,6 +35,7 @@ import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.RawInputI;
+import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.EffectElectricity;
 import com.github.devconslejme.misc.jme.EffectManagerStateI;
 import com.github.devconslejme.misc.jme.IndicatorI;
@@ -95,8 +96,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 			EffectManagerStateI.i().add(efDisplaced);
 			efDisplaced.setFollowToMouse(true);
 			efDisplaced.setNodeParent(nodeGui);
-			ColorRGBA color = ColorRGBA.Cyan.clone();//ColorI.i().colorChangeCopy(ColorRGBA.Cyan, 0f, 0.5f);
-			efDisplaced.setColor(color);
+			efDisplaced.setColor(ColorI.i().colorChangeCopy(ColorRGBA.Cyan, 0f, 0.25f));
 //			indicatorFrom = IndicatorI.i().createIndicator(ColorI.i().colorChangeCopy(ColorRGBA.Green, 0f, 0.5f));
 			indicatorFrom = IndicatorI.i().createIndicator(ColorRGBA.Blue)
 				.setDenyDestruction()

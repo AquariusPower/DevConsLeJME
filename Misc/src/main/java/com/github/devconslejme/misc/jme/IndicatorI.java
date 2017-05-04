@@ -32,7 +32,7 @@ import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
-import com.github.devconslejme.misc.jme.ShapeFactoryI.ArrowGeometry;
+import com.github.devconslejme.misc.jme.DebugVisualsI.ArrowGeometry;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
@@ -70,13 +70,30 @@ public class IndicatorI {
 		private Vector3f	v3fRotateSpeed = Vector3f.UNIT_XYZ.clone().mult(0.1f);
 		private long	lStartNano;
 		private boolean bScalingUp = true;
-		public ArrowGeometry	garrowDbg;
+		private ArrowGeometry	garrowDbg;
+		private EffectElectricity	efTractor = new EffectElectricity();
 
 		public GeomIndicator() {
 			super(GeomIndicator.class.getSimpleName(),new Box(1,1,3));
 			aeModeList.add(EIndicatorMode.Rotating);
 			aeModeList.add(EIndicatorMode.MoveBouncing);
 			lStartNano = System.nanoTime();
+			
+			EffectManagerStateI.i().add(efTractor);
+//			efTractor.setFollowToMouse(true);
+			efTractor.setNodeParent(IndicatorI.i().nodeGui);
+			efTractor.setColor(ColorI.i().colorChangeCopy(ColorRGBA.Cyan,0f,0.25f));
+//			efTractor.setFollowFromTarget(this,null);
+			efTractor.setZOverride(MiscJmeI.i().getZAboveAllAtGuiNode());
+			efTractor.setOverrideThickness(1);
+			
+			setLocalTranslation(MouseCUrsorI.i().getPos()); //initial pos
+		}
+		
+		@Override
+		public boolean removeFromParent() {
+			efTractor.setPlay(false);
+			return super.removeFromParent();
 		}
 		
 		public void setPositionRelativeToTarget(Vector3f v3f){
@@ -308,6 +325,7 @@ public class IndicatorI {
 		if(MiscJmeI.i().isInside(sptTarget, v3fPosNew, true)){
 			gi.setLocalTranslation(v3fPosNew);
 			gi.setLastBouncingValidPos(gi.getLocalTranslation());
+			gi.efTractor.setPlay(false);
 		}else{
 			if(gi.getLastBouncingValidPos()!=null && MiscJmeI.i().isInside(sptTarget, gi.getLastBouncingValidPos(), true)){
 				// restore last valid pos
@@ -328,6 +346,10 @@ public class IndicatorI {
 						gi.setLocalTranslation(
 							gi.getLocalTranslation().clone().interpolateLocal(
 								sptTarget.getWorldBound().getCenter(), 20f*fTPF));
+//						gi.efTractor.setFollowToTarget(sptTarget, null);
+//						gi.efTractor.setV3fTo(sptTarget.getWorldBound().getCenter());
+						gi.efTractor.setFromTo(gi.getLocalTranslation(), sptTarget.getWorldBound().getCenter());
+						gi.efTractor.setPlay(true);
 					}
 				}
 				gi.setLastBouncingValidPos(gi.getLocalTranslation()); 
@@ -340,6 +362,9 @@ public class IndicatorI {
 	
 	public void destroyIndicator(GeomIndicator gi){
 		gi.endMyQueueLoop();
+//		gi.efTractor.setAsDiscarded();
+//		gi.efTractor.setPlay(false);
+//		gi.efTractor=null;
 	}
 	public void destroyAllIndicatorsAt(Spatial spt){
 		GeomIndicatorsData data = getGeomIndicatorsDataFrom(spt);
@@ -350,7 +375,7 @@ public class IndicatorI {
 		
 		for(GeomIndicator gi:data.agi){
 			if(gi.isCanBeDestroyed()){
-				gi.endMyQueueLoop();
+				destroyIndicator(gi);
 			}
 		}
 	}

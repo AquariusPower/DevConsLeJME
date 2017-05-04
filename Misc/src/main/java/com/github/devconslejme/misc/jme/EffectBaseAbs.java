@@ -63,6 +63,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 	private boolean	bSimplyWaitParentIfNull=true;
 	private boolean	bWaitParentBeSet=false;
 	private boolean	bUseFollowToPosZ = false;
+	private Float	fZAboveAllAtGuiNode;
 	
 	public EffectBaseAbs(Spatial sptOwner){
 		this();
@@ -88,6 +89,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 			v3fTargetSpot.z = getLocationTo().z;
 		}
 		
+		if(fZAboveAllAtGuiNode!=null)v3fTargetSpot.z = fZAboveAllAtGuiNode; //last thing
 		return v3fTargetSpot;
 	}
 	
@@ -102,6 +104,8 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 			//TODO if sptFollow is a node, add a node to it and apply displacement to let rotations etc apply
 			v3fTargetSpot=sptFollowTo.getWorldTranslation().add(v3fFollowToDisplacement);
 		}
+		
+		if(fZAboveAllAtGuiNode!=null)v3fTargetSpot.z = fZAboveAllAtGuiNode; //last thing
 		return v3fTargetSpot;
 	}
 
@@ -192,14 +196,19 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 	}
 	
 	@Override
-	public THIS useFollowToPosZ() {
+	public THIS setUseFollowToPosZ() {
 		bUseFollowToPosZ=true;
 		return getThis();
 	}
-	
 	@Override
 	public boolean isUseFollowToPosZ() {
 		return bUseFollowToPosZ;
+	}
+	
+	@Override
+	public THIS setZOverride(float fZAboveAllAtGuiNode) {
+		this.fZAboveAllAtGuiNode=fZAboveAllAtGuiNode;
+		return getThis();
 	}
 	
 	@Override
@@ -230,9 +239,9 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 	
 	@Override
 	public THIS setPlay(boolean b) {
-		assertNotDiscarded();
 		this.bPlay=b;
 		if(!this.bPlay){
+			assertNotDiscarded();
 			if(geom!=null)geom.removeFromParent();
 		}
 		return getThis();

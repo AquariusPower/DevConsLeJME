@@ -28,6 +28,8 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 
+import com.github.devconslejme.misc.Annotations.Bean;
+import com.github.devconslejme.misc.Annotations.MiscGenericMigrateOneDay;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.SimulationTimeI;
 import com.jme3.math.FastMath;
@@ -54,6 +56,7 @@ public class EffectElectricity extends EffectBaseAbs<EffectElectricity>{
 	private int	iParts;
 	private int	iPartMaxDots = 100;
 	private ArrayList<Vector3f>	av3fList  = new ArrayList<Vector3f>() {};
+	private Integer	iOverrideThickness=null;
 	
 	@Override
 	public EffectElectricity getThis(){return this;}
@@ -71,15 +74,26 @@ public class EffectElectricity extends EffectBaseAbs<EffectElectricity>{
 		getGeom().getMaterial().getAdditionalRenderState().setLineWidth(getThickNess());
 	}
 	
-	public long getThickNess(){
+	public EffectElectricity setOverrideThickness(int i){
+		this.iOverrideThickness=i;
+		return getThis();
+	}
+	
+	public int getThickNess(){
+		if(iOverrideThickness!=null)return iOverrideThickness;
+		
+		/**
+		 * all in longs to avoid loads of castings...
+		 */
 		long lRemainMilis = getiHoldUntilMilis() - SimulationTimeI.i().getMillis();
 		long lMaxThickness = 8;
 		long lThicknessStepMilis = getiMaxHoldMilis()/lMaxThickness;
 		long lCurrentThickness = lRemainMilis/lThicknessStepMilis;
 //		return FastMath.nextRandomFloat()*4+1;
-		return lCurrentThickness>=1 ? lCurrentThickness : 1;
+		return (int)(lCurrentThickness>=1 ? lCurrentThickness : 1);
 	}
 	
+	@MiscGenericMigrateOneDay
 	public ArrayList<Vector3f> recreatePath() {
 		assertNotDiscarded();
 		Vector3f v3fTargetSpot=getLocationTo();
@@ -184,5 +198,5 @@ public class EffectElectricity extends EffectBaseAbs<EffectElectricity>{
 		eff.fAmplitudePerc=this.fAmplitudePerc;
 		return eff;
 	}
-	
+
 }

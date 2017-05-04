@@ -120,7 +120,7 @@ public class Annotations{
 			ElementType.TYPE_PARAMETER,
 			ElementType.TYPE_USE
 		})
-	public static @interface CouldBeAGenericUtilMisc {}
+	public static @interface MiscGenericMigrateOneDay {}
 	
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = {ElementType.FIELD})
