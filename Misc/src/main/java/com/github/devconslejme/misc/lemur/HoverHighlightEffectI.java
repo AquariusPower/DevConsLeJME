@@ -115,7 +115,7 @@ public class HoverHighlightEffectI {
 	private DummyEffect	efDummy;
 	public void applyAt(Panel pnlToThisElement, QuadBackgroundComponent qbcTargetToBeHighlighted){
 		MouseEventControl.addListenersToSpatial(pnlToThisElement, hml);
-		UserDataI.i().setUserDataPSH(pnlToThisElement, EEffectIds.UserDataHighLightTarget.s(), qbcTargetToBeHighlighted);
+		UserDataI.i().setUserDataPSHSafely(pnlToThisElement, EEffectIds.UserDataHighLightTarget.s(), qbcTargetToBeHighlighted);
 //		pnl.setUserData(EEffectIds.UserDataHighLightTarget.s(), qbc);
 		efDummy = setupSimpleEffect(pnlToThisElement, EEffectIds.EffectActivateHighLight, efHighLightBkg, efDummy);
 		pnlToThisElement.addEffect(EEffectIds.EffectDeactivateHighLight.s(),efDummy);

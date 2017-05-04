@@ -27,6 +27,13 @@
 
 package com.github.devconslejme.misc;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
+
 /**
  * use as:
  * SomeDevConsClass.someMethodThere(){assert(AssertionsI.i().someMethodHere());}
@@ -46,4 +53,70 @@ public class AssertionsI {
 		
 		return !Thread.currentThread().getStackTrace()[1+iIncStack].getClassName().startsWith(strPkg);
 	}
+	
+	private boolean	bAllEveryFrame;
+	private CallableXAnon	cx;
+	public void configure(){
+		cx=(new CallableXAnon() {
+			private Iterator<Entry<Object, Object>>	it;
+
+			@Override
+			public Boolean call() {
+				if(isAllEveryFrame()){
+					assertAllRemainUnmodified(false);
+				}else{
+					if(it==null)it = hmAssert.entrySet().iterator();
+					if(it.hasNext()){
+						assertEntry(it.next()); //default is one per frame
+					}else{
+						it=null; //to restart
+					}
+				}
+				return true;
+			}
+		}.enableLoop());
+		
+		QueueI.i().enqueue(cx);
+	}
+	
+	public void setCheckDelay(float f){
+		cx.setDelaySeconds(f);
+	}
+	
+	private HashMap<Object,Object> hmAssert = new HashMap<Object,Object>();
+	public <T> void putAssertRemainUnmodified(T objThatShouldNotChangeItsFieldValues, T objCopyOrCloneWithCurrentFieldsValues){
+		assert(hmAssert.get(objThatShouldNotChangeItsFieldValues)==null);
+		hmAssert.put(objThatShouldNotChangeItsFieldValues, objCopyOrCloneWithCurrentFieldsValues);
+		assertObjects(objThatShouldNotChangeItsFieldValues, objCopyOrCloneWithCurrentFieldsValues);
+	}
+	private void assertObjects(Object obj, Object objClone){
+		if(!obj.equals(objClone)){
+			throw new DetailedException("object changed", obj, objClone);
+		}
+	}
+	private void assertEntry(Entry<Object, Object> entry){
+		assertObjects(entry.getKey(), entry.getValue());
+//		if(!entry.getKey().equals(entry.getValue())){
+//			throw new DetailedException("object changed", entry.getKey(), entry.getValue());
+//		}
+	}
+	public void assertAllRemainUnmodified(boolean bLogAllOk){
+		for(Entry<Object, Object> entry:hmAssert.entrySet()){
+			if(bLogAllOk){
+				MessagesI.i().output(false, System.out, "Assert", this, 
+					entry.getKey().getClass().getSimpleName()+": Original="+entry.getValue()+", Current="+entry.getKey());
+			}
+			
+			assertEntry(entry);
+		}
+	}
+
+	public boolean isAllEveryFrame() {
+		return bAllEveryFrame;
+	}
+
+	public void setAllEveryFrame(boolean bAllEveryFrame) {
+		this.bAllEveryFrame = bAllEveryFrame;
+	}
+	
 }

@@ -90,6 +90,8 @@ public class QueueI {
 		private boolean	bAnonymousClass;
 		
 		private boolean bRunImediatelyOnce = false;
+
+		private float	fTPF;
 		
 		private static String strLastUId="0";
 //		private boolean bDone;
@@ -114,6 +116,14 @@ public class QueueI {
 			return getThis();
 		}
 		
+		public float getTPF() {
+			return fTPF;
+		}
+		private SELF setTPF(float fTPF) {
+			this.fTPF = fTPF;
+			return getThis();
+		}
+		
 		/**
 		 * IMPORTANT
 		 * this must be overriden by sub-classes!
@@ -128,10 +138,16 @@ public class QueueI {
 			this.bLoop=true;
 			return getThis();
 		}
+		
+		/**
+		 * like killing a pid in linux
+		 * @return
+		 */
 		public SELF killSelf() {
 			disableLoop();
 			return getThis();
 		}
+		
 		public SELF disableLoop() {
 			this.bLoop=false;
 			return getThis();
@@ -287,9 +303,11 @@ public class QueueI {
 	/**
 	 * just to let the IDE help me...
 	 * @param cx
+	 * @return 
 	 */
-	public void enqueue(CallableXAnon cx){
+	public CallableXAnon enqueue(CallableXAnon cx){
 		enqueue((CallableX)cx);
+		return cx;
 	}
 	
 	private boolean isReady(long lRunAt){
@@ -301,7 +319,7 @@ public class QueueI {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void update(long lCurrentTime, float tpf) {
+	public void update(long lCurrentTime, float fTPF) {
 		this.lCurrentTime=lCurrentTime;
 		
 		for(CallableX<? extends CallableWeak<Boolean>> cx:acxList.toArray(new CallableX[0])){
@@ -309,6 +327,7 @@ public class QueueI {
 			if(cx.isReady()){
 				if(cx.isPaused())continue;
 				
+				cx.setTPF(fTPF);
 				if(cx.call()){ 
 //					cx.done();
 					if(cx.isLoop()){

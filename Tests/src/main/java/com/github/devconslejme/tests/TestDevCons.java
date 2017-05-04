@@ -42,6 +42,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
+import com.jme3.app.StatsAppState;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.system.AppSettings;
 import com.jme3.system.JmeSystem;
@@ -77,6 +78,13 @@ public class TestDevCons extends SimpleApplication{
 	@Override
 	public void simpleInitApp() {
 		com.github.devconslejme.devcons.PkgCfgI.i().configure(this,getGuiNode());
+		
+		// disable some mappings to let the console manage it.
+		getInputManager().deleteMapping(SimpleApplication.INPUT_MAPPING_CAMERA_POS); //TODO there is no super code for it?
+		getInputManager().deleteMapping(SimpleApplication.INPUT_MAPPING_MEMORY); //TODO there is no super code for it?
+		getInputManager().deleteMapping(SimpleApplication.INPUT_MAPPING_HIDE_STATS);
+		getInputManager().deleteMapping(SimpleApplication.INPUT_MAPPING_EXIT); //this is important to let ESC be used for more things
+		stateManager.getState(StatsAppState.class).setDisplayStatView(false);
 		
 		// below are not required
 		/**

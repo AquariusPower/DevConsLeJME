@@ -167,4 +167,9 @@ public class Annotations{
 		int max();
 	}
 	
+	/**
+	 *	to indicate it is a getter or a setter of a bean 
+	 */
+	@Target(value = {ElementType.METHOD})
+	public static @interface Bean{}
 }

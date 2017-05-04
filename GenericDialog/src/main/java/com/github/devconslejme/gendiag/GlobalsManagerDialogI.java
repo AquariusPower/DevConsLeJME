@@ -128,7 +128,7 @@ public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 					}
 				};
 				ToolAction ta = new ToolAction("User filter",cmdbta)
-					.setMultiStatusMode(bRegexFilter?0:1,"enabled","disabled")
+					.setMultiStatusMode(bRegexFilter?0:1,"enable","disable")
 					.setContextMenu(cm);
 				diagMaint.putToolAction(ta);
 				

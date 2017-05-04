@@ -100,7 +100,7 @@ public class ClickCommandAbsorptionI implements CursorListener{
 					UserDataI.i().getUserDataPSH(btn, EUDClickCmds.ClickCommands.getUId());
 				if(clickCommandsStored==null){
 					clickCommandsStored=new ArrayList<Command<? super Button>>();
-					UserDataI.i().setUserDataPSH(btn, EUDClickCmds.ClickCommands.getUId(), clickCommandsStored);
+					UserDataI.i().setUserDataPSHSafely(btn, EUDClickCmds.ClickCommands.getUId(), clickCommandsStored);
 					CursorEventControl.addListenersToSpatial(btn, this);
 				}
 				clickCommandsStored.addAll(clickCommands);

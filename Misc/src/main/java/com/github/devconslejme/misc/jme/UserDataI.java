@@ -27,6 +27,8 @@
 
 package com.github.devconslejme.misc.jme;
 
+import javax.annotation.concurrent.ThreadSafe;
+
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.JavaLangI;
@@ -42,6 +44,9 @@ import com.jme3.scene.Spatial;
  * The UserData is mainly to apply at outside Spatials that will easify extra functionalities without
  * having to deal with HashMaps.
  * 
+ * IMPORTANT: Also, better wrap these methods into anothers that are easy to give maintenance, 
+ * based on enums, so it will not be confusing when using them...
+ * 
  * TODO track all userdata usages (from this class and from JME direct methods) on this project, to review and improve/clarify the code.
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -51,12 +56,12 @@ public class UserDataI {
 	
 	/**
 	 * all super classes of the object will be the keys
-	 * see {@link #setUserDataPSH(Spatial, String, Object)}
+	 * see {@link #setUserDataPSHSafely(Spatial, String, Object)}
 	 */
-	public <T extends Spatial> boolean setUserDataPSH(T spt, Object obj) {
+	public <T extends Spatial> boolean setUserDataPSHSafely(T spt, Object obj) {
 		boolean b=false;
 		for(Class<?> cl:JavaLangI.i().getSuperClassesOf(obj,true)){
-			b=setUserDataPSH(spt, cl.getName(), obj);
+			b=setUserDataPSHSafely(spt, cl.getName(), obj);
 		}
 		return b;
 	}
@@ -67,7 +72,7 @@ public class UserDataI {
 	 * @param obj each key will be one super class of it
 	 * @return if was set now or will be at the main thread 
 	 */
-	public <T extends Spatial> boolean setUserDataPSH(T spt, String strKey, Object obj) {
+	public <T extends Spatial> boolean setUserDataPSHSafely(T spt, String strKey, Object obj) {
 		CallableX cx = new CallableX() {
 			@SuppressWarnings("unchecked")
 			@Override
@@ -107,7 +112,7 @@ public class UserDataI {
 		R ret = getUserDataPSH(spt, cl);
 		if(ret==null && bCreateIfNull){
 			try {
-				setUserDataPSH(spt, ret=cl.newInstance());
+				setUserDataPSHSafely(spt, ret=cl.newInstance());
 			} catch (InstantiationException | IllegalAccessException e) {
 				throw new DetailedException(e,spt,cl,bCreateIfNull);
 			}
@@ -154,6 +159,6 @@ public class UserDataI {
 		if(obj!=null && !eKey.getType().isAssignableFrom(obj.getClass())){
 			throw new DetailedException("incompatible types",obj.getClass(),eKey,eKey.getType(),spt);
 		}
-		return setUserDataPSH(spt, eKey.getUId(), obj);
+		return setUserDataPSHSafely(spt, eKey.getUId(), obj);
 	}
 }

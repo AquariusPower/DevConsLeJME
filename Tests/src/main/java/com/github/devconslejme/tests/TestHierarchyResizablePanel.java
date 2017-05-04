@@ -131,7 +131,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		
 		String strBaseText=strName+"/"+strInfo;
 		Button btn = new Button(strBaseText);
-		UserDataI.i().setUserDataPSH(btn, EUserData.keyBaseText.s(), strBaseText);
+		UserDataI.i().setUserDataPSHSafely(btn, EUserData.keyBaseText.s(), strBaseText);
 		rzp.setContents(btn);
 //		btn.setInsets(new Insets3f(10, 0, 0, 0));
 //		DragParentestPanelListenerI.i().applyAt(rzp);

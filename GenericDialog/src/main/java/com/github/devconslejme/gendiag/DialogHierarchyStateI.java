@@ -255,8 +255,8 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		vs.setEntityId(entid);
 		vs.setDiag(rzp);
 		vs.setBlocker(pnlBlocker);
-		UserDataI.i().setUserDataPSH(rzp, vs);
-		UserDataI.i().setUserDataPSH(pnlBlocker, vs);
+		UserDataI.i().setUserDataPSHSafely(rzp, vs);
+		UserDataI.i().setUserDataPSHSafely(pnlBlocker, vs);
 		
 		arzpAllCreatedDialogs.add(rzp);
 		

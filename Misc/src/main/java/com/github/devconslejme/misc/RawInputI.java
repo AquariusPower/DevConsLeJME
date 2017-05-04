@@ -35,10 +35,11 @@ import org.lwjgl.input.Mouse;
 public class RawInputI {
 	public static RawInputI i(){return GlobalManagerI.i().get(RawInputI.class);}
 	
-	public boolean isMouseCursorPressedButtons(){
+	public int isMouseCursorPressedButtons(){
+		int i2=0;
 		for(int i=0;i<9;i++){
-			if(Mouse.isButtonDown(i))return true;
+			if(Mouse.isButtonDown(i))i2++;
 		}
-    return false;
+    return i2;
 	}
 }

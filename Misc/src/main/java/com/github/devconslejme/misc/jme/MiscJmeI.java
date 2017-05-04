@@ -30,19 +30,21 @@ package com.github.devconslejme.misc.jme;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
-import org.lwjgl.opengl.Display;
-
+import com.github.devconslejme.misc.AssertionsI;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.lemur.ResizablePanel;
+import com.github.devconslejme.misc.Annotations.ToDo;
 import com.jme3.app.Application;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingVolume;
+import com.jme3.collision.CollisionResults;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.font.LineWrapMode;
 import com.jme3.math.FastMath;
+import com.jme3.math.Ray;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Mesh.Mode;
 import com.jme3.scene.Node;
@@ -56,6 +58,16 @@ import com.jme3.util.BufferUtils;
  */
 public class MiscJmeI {
 	public static MiscJmeI i(){return GlobalManagerI.i().get(MiscJmeI.class);}
+
+	private float	fAboveAllAtGuiNode=10;
+	
+	public void configure(){
+		AssertionsI.i().putAssertRemainUnmodified(Vector3f.UNIT_XYZ, Vector3f.UNIT_XYZ.clone());
+		AssertionsI.i().putAssertRemainUnmodified(Vector3f.UNIT_X, Vector3f.UNIT_X.clone());
+		AssertionsI.i().putAssertRemainUnmodified(Vector3f.UNIT_Y, Vector3f.UNIT_Y.clone());
+		AssertionsI.i().putAssertRemainUnmodified(Vector3f.UNIT_Z, Vector3f.UNIT_Z.clone());
+		AssertionsI.i().putAssertRemainUnmodified(Vector3f.NAN, Vector3f.NAN.clone());
+	}
 	
 	public boolean isInside(Spatial sptWorldBoundLimits, Vector3f v3fChkPos){
 		return isInside(sptWorldBoundLimits, v3fChkPos, false);
@@ -185,9 +197,51 @@ public class MiscJmeI {
   	return GlobalManagerI.i().get(Application.class).getAssetManager().loadFont(strPath);
   }
   
-  public float getAboveAllAtGuiNode(){
-  	//TODO is it even above lemur mouse cursor's picker raycast?
-  	//TODO dynamically collect/set this value
-  	return 1001; //lemur seems to ray cast from 1000 to 0
+  public void setAboveAllAtGuiNode(float f){
+  	this.fAboveAllAtGuiNode=f;
   }
+  public float getZAboveAllAtGuiNode(){
+  	return fAboveAllAtGuiNode; 
+  }
+
+  
+  /**
+   * This mode prefer hitting the corners.
+   * TODO Too much work to complete this, another day? dunno..
+   * @param nodeBound
+   * @param v3f
+   * @return
+   */
+  @ToDo
+  @Deprecated //just to avoid using it, it is actually incomplete...
+  public Vector3f getNearestCornerSpotInside(Node nodeBound, Vector3f v3f) {
+		BoundingBox bb = (BoundingBox)nodeBound.getWorldBound();
+  	if(bb.intersects(v3f))return v3f;
+  	
+    boolean bX = FastMath.abs(bb.getCenter().x - v3f.x) <= bb.getXExtent();
+    boolean bY = FastMath.abs(bb.getCenter().y - v3f.y) <= bb.getYExtent();
+    boolean bZ = FastMath.abs(bb.getCenter().z - v3f.z) <= bb.getZExtent();
+    
+    if(bY&&bZ&&!bX)v3f.x = bb.getCenter().x + (v3f.x>bb.getCenter().x?1:-1)*bb.getXExtent();
+    //TODO
+    
+//  	if(
+//  			v3f.x < bb.getCenter().x - bb.getXExtent()
+//  	){
+//  	}
+  	
+    throw new UnsupportedOperationException("incomplete method");
+//		return v3f;
+  }
+  
+	public Vector3f getNearestSpotInside(Node nodeBound, Vector3f v3fRayCastOrigin) {
+		BoundingBox bb = (BoundingBox)nodeBound.getWorldBound();
+		Ray ray = new Ray(v3fRayCastOrigin, bb.getCenter().subtract(v3fRayCastOrigin).normalize());
+		CollisionResults results = new CollisionResults();
+		if(bb.collideWith(ray, results)>0){ //wont work if use the collideWith() of the node!!!
+			return results.getClosestCollision().getContactPoint();
+		}
+		
+		return v3fRayCastOrigin;
+	}
 }

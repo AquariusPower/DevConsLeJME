@@ -26,16 +26,19 @@
 */
 package com.github.devconslejme.misc.jme;
 
+import java.util.ArrayList;
+
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.QueueI.CallableX;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.jme.ShapeFactoryI.ArrowGeometry;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
-import com.simsilica.lemur.Panel;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -43,32 +46,80 @@ import com.simsilica.lemur.Panel;
 public class IndicatorI {
 	public static IndicatorI i(){return GlobalManagerI.i().get(IndicatorI.class);}
 	
+	boolean bCenterIfOutside = false;
+	private boolean	bInstantMove;
+	private Node	nodeGui;
+	
+	public void configure(Node nodeGui){
+		this.nodeGui=nodeGui;
+	}
+	
+	public static class GeomIndicatorsData{
+		ArrayList<GeomIndicator> agi = new ArrayList<GeomIndicator>();
+	}
+	
 	public static class GeomIndicator extends Geometry{
-		private Spatial	spt;
+		private Node	sptTarget;
 		private boolean	bQueueLoop = true;
 		private boolean	bEnabled;
 		private Vector3f	v3fBouncingMoveDirection;
 		private Vector3f	v3fLastBouncingValidPos;
 		private boolean bCanBeDestroyed=true;
+		private ArrayList<EIndicatorMode>	aeModeList = new ArrayList<>();
+		private Vector3f	v3fRelative = new Vector3f();
+		private Vector3f	v3fRotateSpeed = Vector3f.UNIT_XYZ.clone().mult(0.1f);
+		private long	lStartNano;
+		private boolean bScalingUp = true;
+		public ArrowGeometry	garrowDbg;
 
 		public GeomIndicator() {
 			super(GeomIndicator.class.getSimpleName(),new Box(1,1,3));
+			aeModeList.add(EIndicatorMode.Rotating);
+			aeModeList.add(EIndicatorMode.MoveBouncing);
+			lStartNano = System.nanoTime();
 		}
-
-		public GeomIndicator setTarget(Spatial spt){
-			this.spt = spt;
+		
+		public void setPositionRelativeToTarget(Vector3f v3f){
+			this.v3fRelative=v3f.clone();
+		}
+		
+		public GeomIndicator setTargetAndEnable(Node spt){
+			this.sptTarget = spt;
 			
-			GeomIndicator giExisting = UserDataI.i().getUserDataPSH(spt, GeomIndicator.class);
-			if(giExisting!=this){
-				IndicatorI.i().destroyIndicator(spt);
-				UserDataI.i().setUserDataPSH(spt, this);
+			GeomIndicatorsData data = IndicatorI.i().getGeomIndicatorsDataFrom(spt);
+			
+			if(data==null){
+				data = IndicatorI.i().createNewGeomIndicatorsDataAt(spt);
+//				UserDataI.i().setUserDataPSH(spt, new GeomIndicatorsData());
 			}
+			
+			if(!data.agi.contains(this)){
+				data.agi.add(this);
+			}
+			
+			if(aeModeList.contains(EIndicatorMode.OnlyMe)){
+				//remove others
+				for(GeomIndicator giOther:data.agi){
+					if(giOther==this)continue;
+					IndicatorI.i().destroyIndicator(giOther);
+				}
+			}else
+			if(aeModeList.contains(EIndicatorMode.OnlyUs)){
+				//remove others
+				for(GeomIndicator giOther:data.agi){
+					if(giOther==this)continue;
+					if(giOther.aeModeList.contains(EIndicatorMode.OnlyUs))continue;
+					IndicatorI.i().destroyIndicator(giOther);
+				}
+			}
+			
+			setEnabled(true);
 			
 			return this;
 		}
 		
-		public Spatial getTarget(){
-			return spt;
+		public Node getTarget(){
+			return sptTarget;
 		}
 		
 		public void endMyQueueLoop(){
@@ -118,42 +169,85 @@ public class IndicatorI {
 		public boolean isCanBeDestroyed(){
 			return bCanBeDestroyed;
 		}
+		
+		public void removeModes(EIndicatorMode... ae){
+			for(EIndicatorMode e:ae)aeModeList.remove(e);
+		}
+		public GeomIndicator addModes(EIndicatorMode... ae){
+			for(EIndicatorMode e:ae){
+				if(!aeModeList.contains(e)){
+					aeModeList.add(e);
+				}
+			}
+			
+			return this;
+		}
+
+		public Vector3f getRotateSpeed() {
+			return v3fRotateSpeed;
+		}
+
+		public GeomIndicator setRotateSpeed(float fXYZ) {
+			this.v3fRotateSpeed.set(fXYZ,fXYZ,fXYZ);
+			return this;
+		}
+		public GeomIndicator setRotateSpeed(Vector3f v3fRotateSpeed) {
+			this.v3fRotateSpeed.set(v3fRotateSpeed);
+			return this;
+		}
+
+		public void updatePulseScale(float fTPF) {
+//			long lDiff = System.nanoTime()-lStartNano;
+			float fMinScale = 0.75f;
+			float fMaxScale = 2.5f;
+			float fStep=0.5f*fTPF;
+			float fScale = getLocalScale().x; //all 3 are the same
+			if(fScale<1f && !bScalingUp)fStep/=2f; //slower shrinking to look good
+			fScale += bScalingUp ? fStep : -fStep;
+			if(fScale>fMaxScale){fScale=fMaxScale;bScalingUp=false;}
+			if(fScale<fMinScale){fScale=fMinScale;bScalingUp=true;}
+			setLocalScale(fScale);
+		}
+		
+	}
+	
+	private GeomIndicatorsData createNewGeomIndicatorsDataAt(Spatial spt){
+		GeomIndicatorsData data=new GeomIndicatorsData();
+		UserDataI.i().setUserDataPSHSafely(spt, data);
+		return data;
+	}
+	private GeomIndicatorsData getGeomIndicatorsDataFrom(Spatial spt){
+		return UserDataI.i().getUserDataPSH(spt, GeomIndicatorsData.class);
+	}
+	
+	public static enum EIndicatorMode{
+		PulseScaling,
+		
+		MoveBouncing,
+		
+		Rotating,
+		
+		/** will remove other indicators from the target and leave only the ones with this mode */
+		OnlyUs,
+		
+		/** will remove all other indicators from the target and leave only the last one using this mode */
+		OnlyMe,
+		;
 	}
 	
 //	private HashMap<Spatial,GeomIndicator> hmTargetIndicators = new HashMap<Spatial,GeomIndicator>();
 	
-	private boolean bBouncing=false;
+//	private boolean bBouncing=false;
 	
 	
 	public GeomIndicator createIndicator(ColorRGBA color){
 		GeomIndicator gi = new GeomIndicator();
 		gi.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
 		
-		QueueI.i().enqueue(new CallableX() {
+		QueueI.i().enqueue(new CallableXAnon() {
 					@Override
 					public Boolean call() {
-						if(gi.isEnabled()){
-							if(gi.getParent()==null){
-								SpatialHierarchyI.i().getParentest(gi.getTarget(),Node.class,false)
-									.attachChild(gi);
-							}
-							
-							if(isBouncing()){
-								bouncingUpdateMove(gi);
-							}else{
-								gi.setLocalTranslation(gi.getTarget().getWorldTranslation());
-							}
-							
-							gi.rotate(0.1f,0.1f,0.1f);
-						}else{
-							gi.removeFromParent();
-						}
-						
-						if(!gi.isQueueLoop()){
-							disableLoop();
-							gi.removeFromParent();
-						}
-						
+						if(!update(getTPF(),gi))disableLoop();
 						return true;
 					}
 				}
@@ -166,8 +260,40 @@ public class IndicatorI {
 		return gi;
 	}
 
-	protected void bouncingUpdateMove(GeomIndicator gi) {
-		Spatial sptTarget = gi.getTarget();
+	private boolean update(float fTPF,GeomIndicator gi) {
+		if(gi.isEnabled()){
+			if(gi.getParent()==null){
+				SpatialHierarchyI.i().getParentest(gi.getTarget(), Node.class, true)
+					.attachChild(gi);
+			}
+			
+			if(gi.aeModeList.contains(EIndicatorMode.MoveBouncing)){
+				bouncingUpdateMove(fTPF,gi);
+			}else{
+				gi.setLocalTranslation(gi.getTarget().getWorldTranslation().add(gi.v3fRelative));
+			}
+			
+			if(gi.aeModeList.contains(EIndicatorMode.Rotating)){
+				gi.rotate(gi.getRotateSpeed().x,gi.getRotateSpeed().y,gi.getRotateSpeed().z);
+			}
+			
+			if(gi.aeModeList.contains(EIndicatorMode.PulseScaling)){
+				gi.updatePulseScale(fTPF);
+			}
+		}else{
+			gi.removeFromParent();
+		}
+		
+		if(!gi.isQueueLoop()){
+			gi.removeFromParent();
+			return false;
+		}
+		
+		return true;
+	}
+	
+	protected void bouncingUpdateMove(float fTPF,GeomIndicator gi) {
+		Node sptTarget = gi.getTarget();
 		Vector3f v3fPosNew = gi.getLocalTranslation().clone();
 //		Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSize(sptTarget);
 		
@@ -183,45 +309,74 @@ public class IndicatorI {
 			gi.setLocalTranslation(v3fPosNew);
 			gi.setLastBouncingValidPos(gi.getLocalTranslation());
 		}else{
-//			Vector3f v3fCenter = MiscJmeI.i().getCenterPos(sptTarget);
 			if(gi.getLastBouncingValidPos()!=null && MiscJmeI.i().isInside(sptTarget, gi.getLastBouncingValidPos(), true)){
 				// restore last valid pos
 				gi.setLocalTranslation(gi.getLastBouncingValidPos());
 			}else{ //reset to initial valid pos
-				gi.setLocalTranslation(MiscJmeI.i().getWorldCenterPosCopy(sptTarget));
-				gi.setLastBouncingValidPos(gi.getLocalTranslation());
+				if(bCenterIfOutside){
+					gi.setLocalTranslation(MiscJmeI.i().getWorldCenterPosCopy(sptTarget));
+				}else{
+					if(isInstantMove()){
+						//teleports it
+						gi.setLocalTranslation(MiscJmeI.i().getNearestSpotInside(sptTarget,gi.getLocalTranslation()));
+//						if(gi.garrowDbg==null){
+//							gi.garrowDbg = DebugVisualsI.i().createArrowFollowing(nodeGui, gi, sptTarget, ColorRGBA.Yellow)
+//								.setOverrideZ(MiscJmeI.i().getZAboveAllAtGuiNode());
+//						}
+					}else{
+						//move towards target
+						gi.setLocalTranslation(
+							gi.getLocalTranslation().clone().interpolateLocal(
+								sptTarget.getWorldBound().getCenter(), 20f*fTPF));
+					}
+				}
+				gi.setLastBouncingValidPos(gi.getLocalTranslation()); 
 			}
-//			gi.restoreLastValidPos();
-//			gi.setLocalTranslation(sptTarget.getWorldTranslation());
 			
 			// new direction
 			gi.setBouncingMoveDirection(MiscJmeI.i().randomDirection());
 		}
 	}
 	
-	public void destroyIndicator(Spatial spt){
-		GeomIndicator gi = UserDataI.i().getUserDataPSH(spt, GeomIndicator.class);
-		if(gi!=null && gi.isCanBeDestroyed()){
-			gi.endMyQueueLoop();
+	public void destroyIndicator(GeomIndicator gi){
+		gi.endMyQueueLoop();
+	}
+	public void destroyAllIndicatorsAt(Spatial spt){
+		GeomIndicatorsData data = getGeomIndicatorsDataFrom(spt);
+		if(data==null){
+			MessagesI.i().warnMsg(this, "no indicator data at", spt);
+			return;
+		}
+		
+		for(GeomIndicator gi:data.agi){
+			if(gi.isCanBeDestroyed()){
+				gi.endMyQueueLoop();
+			}
 		}
 	}
 	
 	public void destroyAllIndicatorsRecursively(Spatial spt) {
 		if(spt instanceof Node){
 			for(Spatial sptChild:SpatialHierarchyI.i().getAllChildrenRecursiveFrom(spt, Spatial.class, null)){
-				destroyIndicator(sptChild);
+				destroyAllIndicatorsAt(sptChild);
 			}
 		}else{
-			destroyIndicator(spt);
+			destroyAllIndicatorsAt(spt);
 		}
 	}
-
-	public boolean isBouncing() {
-		return bBouncing;
+	public boolean isInstantMove() {
+		return bInstantMove;
+	}
+	public void setInstantMove(boolean bInstantMove) {
+		this.bInstantMove = bInstantMove;
 	}
 
-	public void setBouncing(boolean bBouncing) {
-		this.bBouncing = bBouncing;
-	}
+//	public boolean isBouncing() {
+//		return bBouncing;
+//	}
+//
+//	public void setBouncing(boolean bBouncing) {
+//		this.bBouncing = bBouncing;
+//	}
 	
 }

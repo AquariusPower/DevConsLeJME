@@ -27,8 +27,6 @@
 
 package com.github.devconslejme.misc.lemur;
 
-import org.lwjgl.input.Mouse;
-
 import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
@@ -39,12 +37,16 @@ import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.RawInputI;
 import com.github.devconslejme.misc.jme.EffectElectricity;
 import com.github.devconslejme.misc.jme.EffectManagerStateI;
+import com.github.devconslejme.misc.jme.IndicatorI;
+import com.github.devconslejme.misc.jme.IndicatorI.EIndicatorMode;
+import com.github.devconslejme.misc.jme.IndicatorI.GeomIndicator;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.ResizablePanel.ResizerCursorListener;
 import com.jme3.app.Application;
 import com.jme3.input.InputManager;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -80,16 +82,29 @@ public class DragParentestPanelListenerI implements CursorListener{
 	private CursorButtonEvent	eventButtonUp;
 	private Node	nodeGui;
 	
-	public static class MouseDragEffect{
+	private static class MouseDragEffect{
 		private Application	app;
 		private InputManager	inputman;
 		private Vector3f	v3fPressedPos;
 		private EffectElectricity	efDisplaced = new EffectElectricity();
+		private GeomIndicator	indicatorFrom;
+		private Node	nodeGui;
 
 		public MouseDragEffect(Node nodeGui) {
+			this.nodeGui=nodeGui;
 			EffectManagerStateI.i().add(efDisplaced);
 			efDisplaced.setFollowToMouse(true);
 			efDisplaced.setNodeParent(nodeGui);
+			ColorRGBA color = ColorRGBA.Cyan.clone();//ColorI.i().colorChangeCopy(ColorRGBA.Cyan, 0f, 0.5f);
+			efDisplaced.setColor(color);
+//			indicatorFrom = IndicatorI.i().createIndicator(ColorI.i().colorChangeCopy(ColorRGBA.Green, 0f, 0.5f));
+			indicatorFrom = IndicatorI.i().createIndicator(ColorRGBA.Blue)
+				.setDenyDestruction()
+				.setTargetAndEnable(nodeGui)
+				.setEnabled(false)
+				.setRotateSpeed(0.5f);
+			indicatorFrom.addModes(EIndicatorMode.PulseScaling);
+			indicatorFrom.removeModes(EIndicatorMode.MoveBouncing);
 			
 			app = GlobalManagerI.i().get(Application.class);
 			inputman = app.getInputManager();
@@ -105,55 +120,24 @@ public class DragParentestPanelListenerI implements CursorListener{
 		}
 		
 		private void updateMouseEffect() {
-			if(RawInputI.i().isMouseCursorPressedButtons()){
+			if(RawInputI.i().isMouseCursorPressedButtons()>0){
 				if(v3fPressedPos==null){
 					v3fPressedPos = MiscJmeI.i().toV3f(inputman.getCursorPosition());
-					v3fPressedPos.z=MiscJmeI.i().getAboveAllAtGuiNode();
+					v3fPressedPos.z=MiscJmeI.i().getZAboveAllAtGuiNode();
 					efDisplaced.setV3fFrom(v3fPressedPos);
 					efDisplaced.setPlay(true);
+					indicatorFrom.setPositionRelativeToTarget(v3fPressedPos);
+					indicatorFrom.setEnabled(true);
+//					nodeGui.attachChild(indicatorFrom);
 				}
 			}else{
 				v3fPressedPos=null;
+				indicatorFrom.setEnabled(false);
 				efDisplaced.setPlay(false);
 			}
 		}
 		
-//		private boolean isMouseCursorPressedButtons(){
-//			for(int i=0;i<9;i++){
-//				if(Mouse.isButtonDown(i))return true;
-//			}
-//      return false;
-//		}
 	}
-//	public static class MouseDragEffectCursorListenerX extends CursorListenerX{
-//		private Vector3f	v3fPressedPos;
-//		private EffectElectricity	efDisplaced = new EffectElectricity();
-//		
-//		public MouseDragEffectCursorListenerX() {
-//			EffectManagerStateI.i().add(efDisplaced);
-//			efDisplaced.setFollowToMouse(true);
-//		}
-//		
-//		@Override
-//		public void cursorButtonEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
-//			if(event.isPressed()){
-//				v3fPressedPos = MiscJmeI.i().toV3f(event.getLocation());
-//				efDisplaced.setFollowFromTarget(sptPrepareToWorkWith,null);
-//				efDisplaced.setPlay(true);
-//			}else{
-//				v3fPressedPos=null;
-//				efDisplaced.setPlay(true);
-//			}
-//			
-//			super.cursorButtonEvent(event, target, capture);
-//		}
-//		
-//		@Override
-//		protected boolean click(CursorButtonEvent event, Spatial target,				Spatial capture) {
-//			return false;
-//		}
-//		
-//	}
 	
 	public void configure(Node nodeGui){
 		this.nodeGui=nodeGui;
@@ -417,7 +401,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 		ClickCommandAbsorptionI.i().absorbClickCommands(pnl);
 		
 		DragInfo di = new DragInfo();
-		UserDataI.i().setUserDataPSH(pnl,di);
+		UserDataI.i().setUserDataPSHSafely(pnl,di);
 		
 		CursorEventControl.addListenersToSpatial(pnl, this);
 		
@@ -428,7 +412,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 //			pnlApplyDragAt.setUserData(JavaLangI.i().enumUId(EDrag.ApplyingDragFrom), pnl);
 			DragInfo diOther = new DragInfo();
 			diOther.pnlApplyingDragFrom=pnl;
-			UserDataI.i().setUserDataPSH(pnlApplyDragAt,diOther);
+			UserDataI.i().setUserDataPSHSafely(pnlApplyDragAt,diOther);
 		}
 	}
 	

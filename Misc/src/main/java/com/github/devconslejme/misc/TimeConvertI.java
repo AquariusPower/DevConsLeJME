@@ -125,6 +125,9 @@ public class TimeConvertI {
 //		System.out.println(XMLDecoder.createHandler(null,null,null));
 		return dateFormat.format(dateRealTime);
 	}
+//	public float calcProportional(float fMaxValueForOneSecond, float fSecondsFraction) {
+//		return 0;
+//	}
 
 	//public double convertDelayNanoToSeconds(long lDelayNano){
 	//	return (double)((double)lDelayNano/(double)lNano); //TODO is that?

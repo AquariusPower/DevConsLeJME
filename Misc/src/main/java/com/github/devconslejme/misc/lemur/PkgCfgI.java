@@ -29,9 +29,13 @@ package com.github.devconslejme.misc.lemur;
 
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.app.Application;
+import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
 import com.simsilica.lemur.GuiGlobals;
+import com.simsilica.lemur.event.PickEventSession;
+import com.simsilica.lemur.event.PickEventSession.RootEntry;
 import com.simsilica.lemur.style.BaseStyles;
 
 
@@ -56,7 +60,16 @@ public class PkgCfgI {
 		PopupHintHelpListenerI.i().configure(nodeParent);
 		DragParentestPanelListenerI.i().configure(nodeParent);
 		
+		initNonStandard();
+		
 		bConfigured=true;
+	}
+
+	/**
+	 * above all at gui node is hardcoded at {@link PickEventSession#getPickRay(RootEntry,Vector2f)}
+	 */
+	private void initNonStandard() {
+		MiscJmeI.i().setAboveAllAtGuiNode(1001);
 	}
 	
 }

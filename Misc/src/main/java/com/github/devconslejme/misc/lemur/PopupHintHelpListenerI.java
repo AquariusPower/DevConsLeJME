@@ -119,7 +119,7 @@ public class PopupHintHelpListenerI implements CursorListener{
 			Vector3f v3fSize = lblPopupHelp.getSize();
 			
 			float fDistFromCursor=10f;
-			float fZAboveAll=MiscJmeI.i().getAboveAllAtGuiNode(); 
+			float fZAboveAll=MiscJmeI.i().getZAboveAllAtGuiNode(); 
 			
 			float fX = v2fMousePos.x-v3fSize.x/2;
 			if(fX<0){
@@ -155,7 +155,7 @@ public class PopupHintHelpListenerI implements CursorListener{
 		return UserDataI.i().getUserDataPSH(spt, EPopup.strPopupHelpUserData.uId());
 	}
 	public void resetPopupHelp(Spatial spt){
-		UserDataI.i().setUserDataPSH(spt, EPopup.strPopupHelpUserData.uId(), null);
+		UserDataI.i().setUserDataPSHSafely(spt, EPopup.strPopupHelpUserData.uId(), null);
 	}
 	public void setPopupHintHelp(Spatial spt, String strHelp){
 		if(strHelp.length()>iWrapAt){
@@ -165,7 +165,7 @@ public class PopupHintHelpListenerI implements CursorListener{
 			strHelp = Joiner.on("\n").join(astr);
 		}
 
-		UserDataI.i().setUserDataPSH(spt, EPopup.strPopupHelpUserData.uId(), strHelp);
+		UserDataI.i().setUserDataPSHSafely(spt, EPopup.strPopupHelpUserData.uId(), strHelp);
 		CursorEventControl.addListenersToSpatial(spt, this);
 //		spt.setUserData(EUserDataMiscJme.strPopupHelp.s(), strHelp);
 	}

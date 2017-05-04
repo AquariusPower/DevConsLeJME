@@ -27,6 +27,7 @@
 
 package com.github.devconslejme.misc.jme;
 
+import com.github.devconslejme.misc.AssertionsI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.Application;
@@ -51,10 +52,16 @@ public class PkgCfgI {
 		if(app instanceof SimpleApplication){
 			GlobalManagerI.i().put(SimpleApplication.class, (SimpleApplication)app);
 		}
+		
+		// after first
+		DebugVisualsI.i().configure();
+		MiscJmeI.i().configure();
 		EffectManagerStateI.i().configure();
 		SimulationTimeStateI.i().configure();
 		QueueStateI.i().configure();
 		OrthogonalCursorStateI.i().configure(nodeParent);
+		AssertionsI.i().configure();
+		IndicatorI.i().configure(nodeParent);
 		
 		bConfigured=true;
 	}

@@ -76,7 +76,7 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 	
 	public OrthogonalCursorStateI() {
 		bRotateOnlyIfMouseMoves=true;
-		fAboveLemurCursorRayCast = MiscJmeI.i().getAboveAllAtGuiNode(); 
+		fAboveLemurCursorRayCast = MiscJmeI.i().getZAboveAllAtGuiNode(); 
 		fRotateSpeed=1f;
 		fDistanceToCursor=100;
 		v2fCursorPosPrevious = new Vector2f();

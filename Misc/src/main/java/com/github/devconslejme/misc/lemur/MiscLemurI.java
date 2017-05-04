@@ -290,5 +290,9 @@ public class MiscLemurI {
 		}
 		return false;
 	}
+
+	public Vector3f toV3f(Vector2f v2fTo) {
+		return new Vector3f(v2fTo.x,v2fTo.y,MiscJmeI.i().getZAboveAllAtGuiNode());
+	}
 	
 }

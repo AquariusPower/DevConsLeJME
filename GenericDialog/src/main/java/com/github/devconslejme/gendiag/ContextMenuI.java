@@ -486,7 +486,7 @@ public class ContextMenuI implements IResizableListener{
 		@Override
 		public void cursorEntered(CursorMotionEvent event, Spatial target, Spatial capture) {
 			super.cursorEntered(event, target, capture);
-			ContextMenuI.i().giContextMenuAvailableIndicator.setEnabled(true).setTarget(target);
+			ContextMenuI.i().giContextMenuAvailableIndicator.setEnabled(true).setTargetAndEnable((Node)target);
 		}
 		
 		@Override
@@ -570,7 +570,7 @@ public class ContextMenuI implements IResizableListener{
 	 * @param cm
 	 */
 	public void applyContextMenuAtSource(Spatial sptContextClick, ContextMenu cm){
-		UserDataI.i().setUserDataPSH(sptContextClick, cm);
+		UserDataI.i().setUserDataPSHSafely(sptContextClick, cm);
 		ClickCommandAbsorptionI.i().absorbClickCommands(sptContextClick);
 		CursorEventControl.addListenersToSpatial(sptContextClick, contextMenuSourceCursorListenerX);
 		
@@ -616,8 +616,8 @@ public class ContextMenuI implements IResizableListener{
 					if(cm.isSingleChoiceMode()){
 						if(cxHU.getPopupHintHelp()==null)cxHU.setPopupHintHelp("currently chosen");
 						cm.setSingleChoice(cbChoice);
-						GeomIndicator gi = IndicatorI.i().createIndicator(ColorRGBA.Yellow);
-						gi.setTarget(cbChoice).setEnabled(true);
+						GeomIndicator gi = IndicatorI.i().createIndicator(ColorRGBA.Yellow)
+							.setTargetAndEnable(cbChoice);
 					}
 					
 					PopupHintHelpListenerI.i().setPopupHintHelp(cbChoice, cxHU.getPopupHintHelp());
