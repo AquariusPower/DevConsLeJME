@@ -53,7 +53,7 @@ public class HierarchySorterI {
 	
 	public static interface IHierarchy{
 		public <T extends IHierarchy> T getHierarchyParent();
-		public EHierarchyType getHierarchyPriority();
+		public EHierarchyType getHierarchyType();
 		public long getLastActivationNanoTime();
 	}
 	
@@ -84,7 +84,7 @@ public class HierarchySorterI {
 		ArrayList<T> ahBottom = new ArrayList<T>();
 		for(IHierarchy ih:ahMainList.toArray(new IHierarchy[0])){
 			if(ih.getHierarchyParent()==null){
-				switch (ih.getHierarchyPriority()) {
+				switch (ih.getHierarchyType()) {
 					case Top:
 						ahTop.add((T)ih);
 						break;

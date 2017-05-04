@@ -27,6 +27,8 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.github.devconslejme.es;
 
+import java.util.ArrayList;
+
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.simsilica.es.EntityComponent;
 import com.simsilica.es.EntityId;
@@ -37,143 +39,218 @@ import com.simsilica.es.PersistentComponent;
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
 public class HierarchyComp implements EntityComponent, PersistentComponent{
+	private CompBean bean;
+	
 	/**
-	 *	hierarchy parameters/fields
+	 * why make it too simple if it can be harmlessly a bit complex? :)
 	 */
-	public static enum EHiParm{
-		fBlockerZ(Float.class),
-		bBlocked(Boolean.class), //#syncTo
-		fBoundingHeightZ(Float.class), 
-		strDebugName(String.class),
-		fDialogZ(Float.class),
-		bHierarchyModal(Boolean.class),
-		eidHierarchyParent(EntityId.class),
-		eHierarchyType(EHierarchyType.class),
-//		bInitHierarchy(Boolean.class),
-//		bInitVisuals(Boolean.class),
-		lLastFocusTime(Long.class),
-		bOpened(Boolean.class),
-		bShowLinksFromChilds(Boolean.class),
-		bVolatileModal(Boolean.class),
-		;
-		Class cl;
-		EHiParm(Class cl){this.cl=cl;}
+	public static class CompBean{
+		/** to apply Setter's Calls At Parent's bean */
+		private CompBean beanTarget;
+		private ArrayList<Runnable> arSetterCalls=new ArrayList<Runnable>();
+		/** add set call */
+		private void add(Runnable r){arSetterCalls.add(r);}
+		
+		////////// fields
+		private float fBlockerZ;
+		private boolean bBlocked;
+		private float fBoundingHeightZ;
+		private String strDebugName;
+		private float fDialogZ;
+		private boolean	bHierarchyModal;
+		private EntityId eidHierarchyParent;
+		private EHierarchyType	eHierarchyType;
+		private long lLastFocusTime;
+		private boolean bOpened;
+		private boolean bShowLinksFromChilds;
+		private boolean bVolatileModal;
+		
+		public CompBean(){
+			fBlockerZ=0f;
+			bBlocked=false; //#syncFrom bBlocking
+			fBoundingHeightZ=0f;
+			strDebugName="";
+			fDialogZ=0f;
+			bHierarchyModal=false;
+			eidHierarchyParent=null;
+			eHierarchyType=EHierarchyType.Normal;
+			lLastFocusTime=-1;
+			bOpened=false;
+			bShowLinksFromChilds=true;
+			bVolatileModal=false;
+		}
+		
+		private void copyFrom(CompBean copyFrom){
+			this.fBlockerZ=copyFrom.fBlockerZ;
+			this.bBlocked=copyFrom.bBlocked;
+			this.fBoundingHeightZ=copyFrom.fBoundingHeightZ;
+			this.strDebugName=copyFrom.strDebugName;
+			this.fDialogZ=copyFrom.fDialogZ;
+			this.bHierarchyModal=copyFrom.bHierarchyModal;
+			this.eidHierarchyParent=copyFrom.eidHierarchyParent;
+			this.eHierarchyType=copyFrom.eHierarchyType;
+			this.lLastFocusTime=copyFrom.lLastFocusTime;
+			this.bOpened=copyFrom.bOpened;
+			this.bShowLinksFromChilds=copyFrom.bShowLinksFromChilds;
+			this.bVolatileModal=copyFrom.bVolatileModal;
+		}
+		
+		///////////////// Getters
+		public float getBlockerZ() {
+			return fBlockerZ;
+		}
+		public boolean isBlocked() {
+			return bBlocked;
+		}
+		public float getBoundingHeightZ() {
+			return fBoundingHeightZ;
+		}
+		public String getDebugName() {
+			return strDebugName;
+		}
+		public float getDialogZ() {
+			return fDialogZ;
+		}
+		public boolean isHierarchyModal() {
+			return bHierarchyModal;
+		}
+		public EntityId getHierarchyParent() {
+			return eidHierarchyParent;
+		}
+		public EHierarchyType getHierarchyType() {
+			return eHierarchyType;
+		}
+		public long getLastFocusTime() {
+			return lLastFocusTime;
+		}
+		public boolean isOpened() {
+			return bOpened;
+		}
+		public boolean isShowLinksFromChilds() {
+			return bShowLinksFromChilds;
+		}
+		public boolean isVolatileModal() {
+			return bVolatileModal;
+		}
+		
+		////////////////// Monsterified Setters furtherly quickly macro formatted thru Wine+Notepad++ !
+		public CompBean setBlockerZ(float fBlockerZ){add(new Runnable(){@Override public void run(){
+			beanTarget.fBlockerZ = fBlockerZ;}});return this;
+		}
+
+		public CompBean setBlocked(boolean bBlocked){add(new Runnable(){@Override public void run(){
+			beanTarget.bBlocked=bBlocked;}});return this;
+		}
+
+		public CompBean setBoundingHeightZ(float fBoundingHeightZ){add(new Runnable(){@Override public void run(){
+			beanTarget.fBoundingHeightZ = fBoundingHeightZ;}});return this;
+		}
+
+		public CompBean setDebugName(String strDebugName){add(new Runnable(){@Override public void run(){
+			beanTarget.strDebugName = strDebugName;}});return this;
+		}
+
+		public CompBean setDialogZ(float fDialogZ){add(new Runnable(){@Override public void run(){
+			beanTarget.fDialogZ = fDialogZ;}});return this;
+		}
+
+		public CompBean setHierarchyModal(boolean bHierarchyModal){add(new Runnable(){@Override public void run(){
+			beanTarget.bHierarchyModal = bHierarchyModal;}});return this;
+		}
+
+		public CompBean setHierarchyParent(EntityId eidHierarchyParent){add(new Runnable(){@Override public void run(){
+			beanTarget.eidHierarchyParent = eidHierarchyParent;}});return this;
+		}
+
+		public CompBean setHierarchyType(EHierarchyType eHierarchyType){add(new Runnable(){@Override public void run(){
+			beanTarget.eHierarchyType = eHierarchyType;}});return this;
+		}
+
+		public CompBean setLastFocusTime(long lLastFocusTime){add(new Runnable(){@Override public void run(){
+			beanTarget.lLastFocusTime = lLastFocusTime;}});return this;
+		}
+
+		public CompBean setOpened(boolean bOpened){add(new Runnable(){@Override public void run(){
+			beanTarget.bOpened = bOpened;}});return this;
+		}
+
+		public CompBean setShowLinksFromChilds(boolean bShowLinksFromChilds){add(new Runnable(){@Override public void run(){
+			beanTarget.bShowLinksFromChilds = bShowLinksFromChilds;}});return this;
+		}
+
+		public CompBean setVolatileModal(boolean bVolatileModal){add(new Runnable(){@Override public void run(){
+			beanTarget.bVolatileModal = bVolatileModal;}});return this;
+		}
+		
 	}
 	
-	private float fBlockerZ=0f;
-	private boolean bBlocked=false; //#syncFrom bBlocking
-	private float fBoundingHeightZ=0f;
-	private String strDebugName="";
-	private float fDialogZ=0f;
-	private boolean	bHierarchyModal=false;
-	private EntityId eidHierarchyParent=null;
-	private EHierarchyType	eHierarchyType=EHierarchyType.Normal;
-//	private boolean	bInitHierarchy=false;
-//	private boolean	bInitVisuals=false;
-	private long lLastFocusTime=-1;
-	private boolean bOpened=false;
-	private boolean bShowLinksFromChilds=true;
-	private boolean bVolatileModal=false;
+	//////////////// delegate getters
+	public float getBlockerZ() {
+		return bean.getBlockerZ();
+	}
+
+	public boolean isBlocked() {
+		return bean.isBlocked();
+	}
+
+	public float getBoundingHeightZ() {
+		return bean.getBoundingHeightZ();
+	}
+
+	public String getDebugName() {
+		return bean.getDebugName();
+	}
+
+	public float getDialogZ() {
+		return bean.getDialogZ();
+	}
+
+	public boolean isHierarchyModal() {
+		return bean.isHierarchyModal();
+	}
+
+	public EntityId getHierarchyParent() {
+		return bean.getHierarchyParent();
+	}
+
+	public EHierarchyType getHierarchyType() {
+		return bean.getHierarchyType();
+	}
+
+	public long getLastFocusTime() {
+		return bean.getLastFocusTime();
+	}
+
+	public boolean isOpened() {
+		return bean.isOpened();
+	}
+
+	public boolean isShowLinksFromChilds() {
+		return bean.isShowLinksFromChilds();
+	}
 	
-	public float getBlockerZ() {return fBlockerZ;}
-	public boolean isBlocked() {return bBlocked;}
-	public float getBoundingHeightZ() {return fBoundingHeightZ;}
-	public String getDebugName(){return strDebugName;}
-	public float getDialogZ() {return fDialogZ;}
-	public boolean isHierarchyModal() {return bHierarchyModal;}
-	public EntityId getHierarchyParent() {return eidHierarchyParent;}
-	public EHierarchyType getHierarchyPriority() {return eHierarchyType;}
-//	public boolean isInitHierarchy() {return bInitHierarchy;}
-//	public boolean isInitVisuals() {return bInitVisuals;}
-	public long getLastFocusTime() {return lLastFocusTime;}
-	public boolean isOpened() {return bOpened;}
-	public boolean isShowLinksFromChilds() {return bShowLinksFromChilds;}
-	public boolean isVolatileModal() {return bVolatileModal;}
+	public boolean isVolatileModal() {
+		return bean.isVolatileModal();
+	}
 	
-//	public HierarchyComp(Object... aobjFieldsAndValues){
-//		this(null,aobjFieldsAndValues);
-//	}
 	/**
-	 * 
-	 * @param copyFrom
-	 * @param aobjFieldsAndValues intercalated like: {@link EHiParm},Value,{@link EHiParm},Value,...
+	 * The "one constructor to rule them all".
+	 * @param copyFrom can be null
+	 * @param beanNewValues can be null
 	 */
-	public HierarchyComp(HierarchyComp copyFrom, Object... aobjFieldsAndValues){
-		if(copyFrom!=null)copyFrom(copyFrom); //initialize
+	public HierarchyComp(HierarchyComp copyFrom, CompBean beanNewValues){
+		bean = new CompBean();
 		
-		EHiParm e = null;
-		Object objValue = null;
-		for(Object obj:aobjFieldsAndValues){
-			if(e!=null){objValue=obj;}
-			else
-			if (obj instanceof EHiParm){e = (EHiParm) obj; continue;}
-			
-			switch (e) {
-//			case fBlockerZ:						this.fBlockerZ=e.cl.cast(objValue);break;
-				case fBlockerZ:						this.fBlockerZ=(Float)objValue;break;
-				case bBlocked:						this.bBlocked=(Boolean)objValue;break;
-				case fBoundingHeightZ:		this.fBoundingHeightZ=(Float)objValue;break;
-				case strDebugName:				this.strDebugName=(String)objValue;break;
-				case fDialogZ:						this.fDialogZ=(Float)objValue;break;
-//				case bInitHierarchy:			this.bInitHierarchy=(Boolean)objValue;break;
-//				case bInitVisuals:			this.bInitVisuals=(Boolean)objValue;break;
-				case bHierarchyModal:			this.bHierarchyModal=(Boolean)objValue;break;
-				case eidHierarchyParent:	this.eidHierarchyParent=(EntityId)objValue;break;
-				case eHierarchyType:			this.eHierarchyType=(EHierarchyType)objValue;break;
-				case lLastFocusTime:			this.lLastFocusTime=(Long)objValue;break;
-				case bOpened:							this.bOpened=(Boolean)objValue;break;
-				case bShowLinksFromChilds:this.bShowLinksFromChilds=(Boolean)objValue;break;
-				case bVolatileModal:			this.bVolatileModal=(Boolean)objValue;break;
-			}
-			
-			e = null;
+		if(copyFrom!=null)bean.copyFrom(copyFrom.bean); //initialize with original component
+		
+		if(beanNewValues!=null){
+			beanNewValues.beanTarget=this.bean;
+			for(Runnable r:beanNewValues.arSetterCalls)r.run();
 		}
 	}
 	
-	private void copyFrom(HierarchyComp copyFrom) {
-		this.fBlockerZ=copyFrom.fBlockerZ;
-		this.bBlocked=copyFrom.bBlocked;
-		this.fBoundingHeightZ=copyFrom.fBoundingHeightZ;
-		this.strDebugName=copyFrom.strDebugName;
-		this.fDialogZ=copyFrom.fDialogZ;
-//		this.bInitHierarchy=copyFrom.bInitHierarchy;
-//		this.bInitVisuals=copyFrom.bInitVisuals;
-		this.bHierarchyModal=copyFrom.bHierarchyModal;
-		this.eidHierarchyParent=copyFrom.eidHierarchyParent;
-		this.eHierarchyType=copyFrom.eHierarchyType;
-		this.lLastFocusTime=copyFrom.lLastFocusTime;
-		this.bOpened=copyFrom.bOpened;
-		this.bShowLinksFromChilds=copyFrom.bShowLinksFromChilds;
-		this.bVolatileModal=copyFrom.bVolatileModal;
-	}
 	@Override
-	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("HierarchyComp [fBlockerZ=");
-		builder.append(fBlockerZ);
-		builder.append(", bBlocked=");
-		builder.append(bBlocked);
-		builder.append(", fBoundingHeightZ=");
-		builder.append(fBoundingHeightZ);
-		builder.append(", strDebugName=");
-		builder.append(strDebugName);
-		builder.append(", bHierarchyModal=");
-		builder.append(bHierarchyModal);
-		builder.append(", eidHierarchyParent=");
-		builder.append(eidHierarchyParent);
-		builder.append(", eHierarchyType=");
-		builder.append(eHierarchyType);
-		builder.append(", lLastFocusTime=");
-		builder.append(lLastFocusTime);
-		builder.append(", bOpened=");
-		builder.append(bOpened);
-		builder.append(", bShowLinksFromChilds=");
-		builder.append(bShowLinksFromChilds);
-		builder.append(", fDialogZ=");
-		builder.append(fDialogZ);
-		builder.append("]");
-		return builder.toString();
+	public HierarchyComp clone(){
+		return new HierarchyComp(this,null);
 	}
-	
-	
 }

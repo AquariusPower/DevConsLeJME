@@ -29,7 +29,7 @@ package com.github.devconslejme.es;
 
 import java.util.ArrayList;
 
-import com.github.devconslejme.es.HierarchyComp.EHiParm;
+import com.github.devconslejme.es.HierarchyComp.CompBean;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI;
@@ -81,8 +81,8 @@ public class DialogHierarchySystemI {
 		}
 
 		@Override
-		public EHierarchyType getHierarchyPriority() {
-			return hc.getHierarchyPriority();
+		public EHierarchyType getHierarchyType() {
+			return hc.getHierarchyType();
 		}
 
 		@Override
@@ -105,11 +105,10 @@ public class DialogHierarchySystemI {
 	public EntityId createEntity(String strName){
 	  EntityId entid = ed.createEntity(); //to attach components to
 	  
-	  ed.setComponent(entid, new HierarchyComp(null)); //first time component creation
+	  ed.setComponent(entid, new HierarchyComp(null,null)); //first time component creation
 	  
 	  setHierarchyComp(entid, 
-//	  	EField.bInitVisuals,false,
-	  	EHiParm.strDebugName,strName
+	  	new CompBean().setDebugName(strName)
 	  );
 	  
 	  ed.setComponent(entid, new Name(strName));
@@ -138,10 +137,10 @@ public class DialogHierarchySystemI {
 	 * @param aobj see {@link HierarchyComp#HierarchyComp(HierarchyComp, Object...)} 
 	 * @return
 	 */
-	public void setHierarchyComp(EntityId entid, Object... aobj) {
+	public void setHierarchyComp(EntityId entid, CompBean bean) {
 		Entity ent = getEntity(entid);
 		HierarchyComp hc = ent.get(HierarchyComp.class);
-		ent.set(hc = new HierarchyComp(hc, aobj));
+		ent.set(hc = new HierarchyComp(hc, bean));
 	}
 
 	public HierarchyComp getHierarchyComp(long lId) {
@@ -167,7 +166,7 @@ public class DialogHierarchySystemI {
 	}
 
 	public void enableBlockingLayer(EntityId entid, boolean bEnable){
-		setHierarchyComp(entid, EHiParm.bBlocked, bEnable);
+		setHierarchyComp(entid, new CompBean().setBlocked(bEnable));
 	}
 	
 	/**
@@ -257,7 +256,7 @@ public class DialogHierarchySystemI {
 			entidToUpdate=getParentest(entid);
 		}
 		
-		setHierarchyComp(entidToUpdate, EHiParm.lLastFocusTime, lTime);
+		setHierarchyComp(entidToUpdate, new CompBean().setLastFocusTime(lTime));
 		
 		return entidToUpdate;
 	}

@@ -28,11 +28,10 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.github.devconslejme.gendiag;
 
 import java.util.ArrayList;
-import java.util.Collection;
 
 import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.es.HierarchyComp;
-import com.github.devconslejme.es.HierarchyComp.EHiParm;
+import com.github.devconslejme.es.HierarchyComp.CompBean;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
@@ -244,7 +243,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 				cntrMinimized=new Container();
 				minimizedDiags.setContents(cntrMinimized);
 				sys.setHierarchyComp(getEntityId(minimizedDiags), 
-					EHiParm.eHierarchyType, EHierarchyType.Top);
+					new CompBean().setHierarchyType(EHierarchyType.Top));
 				return true;
 			}
 		});
@@ -326,9 +325,9 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			}
 		}
 		
-		sys.setHierarchyComp(entid, 
-			EHiParm.bOpened, true,
-			EHiParm.lLastFocusTime, app.getTimer().getTime()
+		sys.setHierarchyComp(entid,new CompBean()
+			.setOpened(true)
+			.setLastFocusTime(app.getTimer().getTime())
 		);
 		
 		setFocusRecursively(entid);
@@ -343,9 +342,9 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	private void showDialogAs(boolean bModal, ResizablePanel rzpParent, ResizablePanel rzpChild) {
 		if(!rzpParent.isOpened())throw new DetailedException("parent not open",rzpParent,rzpChild);
 		
-		sys.setHierarchyComp(getVisuals(rzpChild).getEntityId(), 
-			EHiParm.eidHierarchyParent, getVisuals(rzpParent).getEntityId(),
-			EHiParm.bHierarchyModal, bModal
+		sys.setHierarchyComp(getVisuals(rzpChild).getEntityId(),new CompBean()
+			.setHierarchyParent(getVisuals(rzpParent).getEntityId())
+			.setHierarchyModal(bModal)
 		);
 		
 		showDialog(rzpChild);
@@ -619,7 +618,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		
 		updateBlocker(null, vs);
 		
-		sys.setHierarchyComp(vs.getEntityId(), EHiParm.bOpened, false);
+		sys.setHierarchyComp(vs.getEntityId(), new CompBean().setOpened(false));
 		
 		if(vs.getEffLinkToParent()!=null)vs.getEffLinkToParent().setAsDiscarded();
 	}
@@ -633,7 +632,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 //		Vector3f v3f = rzp.getLocalTranslation().clone();
 //		v3f.z=fCurrentOrderPosZ;
 //		rzp.setLocalTranslation(v3f);
-		sys.setHierarchyComp(entid, EHiParm.fDialogZ, fCurrentOrderPosZ);
+		sys.setHierarchyComp(entid, new CompBean().setDialogZ(fCurrentOrderPosZ));
 		
 		// prepare next
 		BoundingBox bb = (BoundingBox)getOpenDialog(entid).getWorldBound();
@@ -643,7 +642,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 				MessagesI.i().debugInfo(this, "DiagHierarchyZOrder:"+rzp.getName()+","+entid+","+fCurrentOrderPosZ+","+fHeight);
 			}
 			
-			sys.setHierarchyComp(entid, EHiParm.fBoundingHeightZ, fHeight);
+			sys.setHierarchyComp(entid, new CompBean().setBoundingHeightZ(fHeight));
 			
 			// now updates it
 			fCurrentOrderPosZ += fHeight +fInBetweenGapDistZ;

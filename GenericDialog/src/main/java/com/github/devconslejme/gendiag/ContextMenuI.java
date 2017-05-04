@@ -33,7 +33,7 @@ import java.util.Map.Entry;
 
 import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.es.HierarchyComp;
-import com.github.devconslejme.es.HierarchyComp.EHiParm;
+import com.github.devconslejme.es.HierarchyComp.CompBean;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
@@ -135,9 +135,9 @@ public class ContextMenuI implements IResizableListener{
 			
 			MiscJmeI.i().addToName(rzpContextMenu, ContextMenuI.class.getSimpleName(), true);
 			
-			DialogHierarchySystemI.i().setHierarchyComp(entid, 
-				EHiParm.eHierarchyType, EHierarchyType.Top,
-				EHiParm.bVolatileModal, true
+			DialogHierarchySystemI.i().setHierarchyComp(entid, new CompBean()
+				.setHierarchyType(EHierarchyType.Top)
+				.setVolatileModal(true)
 			);
 			
 			rzpContextMenu.setAllEdgesEnabled(false); //it is here for the hierarchy (not the resizing)
