@@ -27,7 +27,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.github.devconslejme.es;
 
-import com.github.devconslejme.misc.HierarchySorterI.EHierarchy;
+import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.simsilica.es.EntityComponent;
 import com.simsilica.es.EntityId;
 import com.simsilica.es.PersistentComponent;
@@ -37,7 +37,10 @@ import com.simsilica.es.PersistentComponent;
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
 public class HierarchyComp implements EntityComponent, PersistentComponent{
-	public static enum EField{
+	/**
+	 *	hierarchy parameters/fields
+	 */
+	public static enum EHiParm{
 		fBlockerZ(Float.class),
 		bBlocked(Boolean.class), //#syncTo
 		fBoundingHeightZ(Float.class), 
@@ -45,7 +48,7 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 		fDialogZ(Float.class),
 		bHierarchyModal(Boolean.class),
 		eidHierarchyParent(EntityId.class),
-		eHierarchyType(EHierarchy.class),
+		eHierarchyType(EHierarchyType.class),
 //		bInitHierarchy(Boolean.class),
 //		bInitVisuals(Boolean.class),
 		lLastFocusTime(Long.class),
@@ -54,7 +57,7 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 		bVolatileModal(Boolean.class),
 		;
 		Class cl;
-		EField(Class cl){this.cl=cl;}
+		EHiParm(Class cl){this.cl=cl;}
 	}
 	
 	private float fBlockerZ=0f;
@@ -64,7 +67,7 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 	private float fDialogZ=0f;
 	private boolean	bHierarchyModal=false;
 	private EntityId eidHierarchyParent=null;
-	private EHierarchy	eHierarchyType=EHierarchy.Normal;
+	private EHierarchyType	eHierarchyType=EHierarchyType.Normal;
 //	private boolean	bInitHierarchy=false;
 //	private boolean	bInitVisuals=false;
 	private long lLastFocusTime=-1;
@@ -79,7 +82,7 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 	public float getDialogZ() {return fDialogZ;}
 	public boolean isHierarchyModal() {return bHierarchyModal;}
 	public EntityId getHierarchyParent() {return eidHierarchyParent;}
-	public EHierarchy getHierarchyPriority() {return eHierarchyType;}
+	public EHierarchyType getHierarchyPriority() {return eHierarchyType;}
 //	public boolean isInitHierarchy() {return bInitHierarchy;}
 //	public boolean isInitVisuals() {return bInitVisuals;}
 	public long getLastFocusTime() {return lLastFocusTime;}
@@ -90,15 +93,20 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 //	public HierarchyComp(Object... aobjFieldsAndValues){
 //		this(null,aobjFieldsAndValues);
 //	}
+	/**
+	 * 
+	 * @param copyFrom
+	 * @param aobjFieldsAndValues intercalated like: {@link EHiParm},Value,{@link EHiParm},Value,...
+	 */
 	public HierarchyComp(HierarchyComp copyFrom, Object... aobjFieldsAndValues){
 		if(copyFrom!=null)copyFrom(copyFrom); //initialize
 		
-		EField e = null;
+		EHiParm e = null;
 		Object objValue = null;
 		for(Object obj:aobjFieldsAndValues){
 			if(e!=null){objValue=obj;}
 			else
-			if (obj instanceof EField){e = (EField) obj; continue;}
+			if (obj instanceof EHiParm){e = (EHiParm) obj; continue;}
 			
 			switch (e) {
 //			case fBlockerZ:						this.fBlockerZ=e.cl.cast(objValue);break;
@@ -111,7 +119,7 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 //				case bInitVisuals:			this.bInitVisuals=(Boolean)objValue;break;
 				case bHierarchyModal:			this.bHierarchyModal=(Boolean)objValue;break;
 				case eidHierarchyParent:	this.eidHierarchyParent=(EntityId)objValue;break;
-				case eHierarchyType:			this.eHierarchyType=(EHierarchy)objValue;break;
+				case eHierarchyType:			this.eHierarchyType=(EHierarchyType)objValue;break;
 				case lLastFocusTime:			this.lLastFocusTime=(Long)objValue;break;
 				case bOpened:							this.bOpened=(Boolean)objValue;break;
 				case bShowLinksFromChilds:this.bShowLinksFromChilds=(Boolean)objValue;break;

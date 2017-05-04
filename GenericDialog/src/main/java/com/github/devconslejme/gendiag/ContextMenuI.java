@@ -33,11 +33,11 @@ import java.util.Map.Entry;
 
 import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.es.HierarchyComp;
-import com.github.devconslejme.es.HierarchyComp.EField;
+import com.github.devconslejme.es.HierarchyComp.EHiParm;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.HierarchySorterI.EHierarchy;
+import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
@@ -69,10 +69,10 @@ import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
 import com.simsilica.lemur.Container;
 import com.simsilica.lemur.GuiGlobals;
-import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
+import com.simsilica.lemur.component.TbtQuadBackgroundComponent;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.CursorMotionEvent;
@@ -104,7 +104,7 @@ public class ContextMenuI implements IResizableListener{
 		private String	strStyle;
 		private Container	cntrContextOptions;
 		private EntityId	entid;
-		private Label	lbl;
+		private Button	btnTitle;
 		
 		private Command<Button>	cmdCloseOnClick = new Command<Button>() {
 			@Override
@@ -136,8 +136,8 @@ public class ContextMenuI implements IResizableListener{
 			MiscJmeI.i().addToName(rzpContextMenu, ContextMenuI.class.getSimpleName(), true);
 			
 			DialogHierarchySystemI.i().setHierarchyComp(entid, 
-				EField.eHierarchyType, EHierarchy.Top,
-				EField.bVolatileModal, true
+				EHiParm.eHierarchyType, EHierarchyType.Top,
+				EHiParm.bVolatileModal, true
 			);
 			
 			rzpContextMenu.setAllEdgesEnabled(false); //it is here for the hierarchy (not the resizing)
@@ -147,7 +147,8 @@ public class ContextMenuI implements IResizableListener{
 			rzpContextMenu.setBackground(new QuadBackgroundComponent(
 				ColorI.i().colorChangeCopy(ColorRGBA.Cyan, -0.5f, 0.75f)));
 			
-			lbl = new Label("");
+			btnTitle = new Button("");
+			((TbtQuadBackgroundComponent)btnTitle.getBackground()).setColor(ColorRGBA.Blue);
 			
 //			CursorEventControl.addListenersToSpatial(rzpContextMenu, new ContextMenuListenerI());
 			
@@ -167,7 +168,7 @@ public class ContextMenuI implements IResizableListener{
 				if(hc.getLastFocusTime()==-1)return true;
 				
 				String str = hc.toString().replace(",", "\n");
-				PopupHintHelpListenerI.i().setPopupHintHelp(lbl, str);
+				PopupHintHelpListenerI.i().setPopupHintHelp(btnTitle, str);
 				MessagesI.i().debugInfo(this, str);
 				
 				return true;
@@ -596,9 +597,9 @@ public class ContextMenuI implements IResizableListener{
 		cm.cntrContextOptions.clearChildren();
 		
 		int i=0;
-		cm.lbl.setText("Context:"+strContextMenuTitle);
-		DragParentestPanelListenerI.i().applyAt(cm.lbl);
-		cm.cntrContextOptions.addChild(cm.lbl, i++, 0);
+		cm.btnTitle.setText("Context:"+strContextMenuTitle);
+		DragParentestPanelListenerI.i().applyAt(cm.btnTitle);
+		cm.cntrContextOptions.addChild(cm.btnTitle, i++, 0);
 		
 		assert(cm.hmContextOptions.size()>0);
 		

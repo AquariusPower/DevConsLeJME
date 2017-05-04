@@ -36,7 +36,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.RawInputI;
 import com.github.devconslejme.misc.jme.ColorI;
-import com.github.devconslejme.misc.jme.EffectElectricity;
+import com.github.devconslejme.misc.jme.EffectArrow;
 import com.github.devconslejme.misc.jme.EffectManagerStateI;
 import com.github.devconslejme.misc.jme.IndicatorI;
 import com.github.devconslejme.misc.jme.IndicatorI.EIndicatorMode;
@@ -87,7 +87,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 		private Application	app;
 		private InputManager	inputman;
 		private Vector3f	v3fPressedPos;
-		private EffectElectricity	efDisplaced = new EffectElectricity();
+		private EffectArrow	efDisplaced = new EffectArrow();//new EffectElectricity();
 		private GeomIndicator	indicatorFrom;
 		private Node	nodeGui;
 
@@ -96,9 +96,10 @@ public class DragParentestPanelListenerI implements CursorListener{
 			EffectManagerStateI.i().add(efDisplaced);
 			efDisplaced.setFollowToMouse(true);
 			efDisplaced.setNodeParent(nodeGui);
-			efDisplaced.setColor(ColorI.i().colorChangeCopy(ColorRGBA.Cyan, 0f, 0.25f));
+			ColorRGBA color = ColorI.i().colorChangeCopy(ColorRGBA.Blue, 0f, 1f);
+			efDisplaced.setColor(color);
 //			indicatorFrom = IndicatorI.i().createIndicator(ColorI.i().colorChangeCopy(ColorRGBA.Green, 0f, 0.5f));
-			indicatorFrom = IndicatorI.i().createIndicator(ColorRGBA.Blue)
+			indicatorFrom = IndicatorI.i().createIndicator(color)
 				.setDenyDestruction()
 				.setTargetAndEnable(nodeGui)
 				.setEnabled(false)

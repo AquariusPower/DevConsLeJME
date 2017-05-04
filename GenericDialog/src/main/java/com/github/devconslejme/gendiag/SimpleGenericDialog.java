@@ -118,7 +118,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private boolean	bCloseOnChoiceMade;
 	private Container	cntrInfo;
 	private String	strName;
-	private String	strTitle;
+//	private String	strTitle;
 	private Button	btnTitleText;
 	private Container	cntrTitle;
 	private Button	btnMinimize;
@@ -543,29 +543,34 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 				if(source==btnClose){
 					getDialog().close();
 				}else
+				if(source==btnMinimize){
+					DialogHierarchyStateI.i().minimize(SimpleGenericDialog.this);
+				}else
 				{
 					MessagesI.i().warnMsg(SimpleGenericDialog.this, "cmd not supported yet", source);
 				}
 			}
 		};
 		
-		strTitle="(no title)";
+//		strTitle="(no title)";
 		
 		// title row
 		cntrDiagControls = new Container();
 		iDiagControlColumnInitIndex=0;
-		btnMinimize=appendNewDiagControl("-","Minimize");
-		btnMaximizeRestore=appendNewDiagControl("M","Maximize/Restore");
+		btnMinimize=appendNewDiagControl("_","Minimize");
+		btnMaximizeRestore=appendNewDiagControl("[ ]","Maximize/Restore");
 		btnClose=appendNewDiagControl("X","Close");
-		MiscLemurI.i().changeBackgroundColor(btnClose, ColorI.i().colorChangeCopy(ColorRGBA.Red,0f,0.25f), true); //TODO use a lemur style instead
+//		MiscLemurI.i().changeBackgroundColor(btnClose, ColorI.i().colorChangeCopy(ColorRGBA.Red,0f,0.25f), true); //TODO use a lemur style instead
+		MiscLemurI.i().changeBackgroundColor(btnClose, ColorRGBA.Red, true); //TODO use a lemur style instead
 		
 		// title row put it all
 		cntrTitle = new Container(new BorderLayout());
 		
 		initInfoSectionTitleContextMenu();
 		
-		btnTitleText = createInfoButton(strTitle,null);
-		MiscLemurI.i().changeBackgroundColor(btnTitleText, ColorI.i().colorChangeCopy(ColorRGBA.Blue,0f,0.25f), true); //TODO use a lemur style instead
+		btnTitleText = createInfoButton("(no title)",null);
+//		MiscLemurI.i().changeBackgroundColor(btnTitleText, ColorI.i().colorChangeCopy(ColorRGBA.Blue,0f,0.25f), true); //TODO use a lemur style instead
+		MiscLemurI.i().changeBackgroundColor(btnTitleText, ColorRGBA.Blue, true); //TODO use a lemur style instead
 		DragParentestPanelListenerI.i().applyAt(btnTitleText);
 		ContextMenuI.i().applyContextMenuAtSource(btnTitleText, cmIST);
 		
@@ -1420,5 +1425,21 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	
 	public VersionedReference<String> createInputTextSubmitedVersionedReference(){
 		return vhInputTextSubmitted.createReference();
+	}
+	
+	@Override
+	public String getTitle() {
+		return btnTitleText.getText();
+	}
+	
+	public void setTitle(String str){
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				if(btnTitleText==null)return false;
+				btnTitleText.setText(str);
+				return true;
+			}
+		});
 	}
 }

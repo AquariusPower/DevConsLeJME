@@ -43,7 +43,7 @@ import java.util.Comparator;
 public class HierarchySorterI {
 	public static HierarchySorterI i(){return GlobalManagerI.i().get(HierarchySorterI.class);}
 	
-	public static enum EHierarchy{
+	public static enum EHierarchyType{
 		Top, //DevCons, alerts and thin panels
 		Normal, //default
 		Bottom, //background anything
@@ -53,7 +53,7 @@ public class HierarchySorterI {
 	
 	public static interface IHierarchy{
 		public <T extends IHierarchy> T getHierarchyParent();
-		public EHierarchy getHierarchyPriority();
+		public EHierarchyType getHierarchyPriority();
 		public long getLastActivationNanoTime();
 	}
 	

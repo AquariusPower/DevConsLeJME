@@ -38,7 +38,7 @@ import java.util.Set;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.es.DialogHierarchySystemI;
-import com.github.devconslejme.es.HierarchyComp.EField;
+import com.github.devconslejme.es.HierarchyComp.EHiParm;
 import com.github.devconslejme.gendiag.ContextMenuI;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextButton;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
@@ -49,7 +49,7 @@ import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.HierarchySorterI.EHierarchy;
+import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
@@ -1167,7 +1167,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	private void initMainContainer() {
 		rzpMain = DialogHierarchyStateI.i().createDialog(DevConsPluginStateI.class.getSimpleName(), getStyle());
 		EntityId entid = DialogHierarchyStateI.i().getEntityId(rzpMain); //DialogHierarchySystemI.i().createEntity(ContextMenuI.class.getSimpleName());
-		DialogHierarchySystemI.i().setHierarchyComp(entid, EField.eHierarchyType, EHierarchy.Top);
+		DialogHierarchySystemI.i().setHierarchyComp(entid, EHiParm.eHierarchyType, EHierarchyType.Top);
 		rzpMain.setApplyContentsBoundingBoxSize(false);
 //		rzpMain.addResizableListener(this);
 		

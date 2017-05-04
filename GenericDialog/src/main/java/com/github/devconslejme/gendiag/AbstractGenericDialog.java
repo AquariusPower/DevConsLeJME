@@ -216,4 +216,9 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 		return bInitialized;
 	}
 
+	public void close() {
+		getDialog().close();
+	}
+	
+	public abstract String getTitle();
 }

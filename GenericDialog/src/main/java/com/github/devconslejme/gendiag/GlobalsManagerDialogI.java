@@ -85,6 +85,7 @@ public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 						}
 					};
 				}
+				diagMaint.setTitle(GlobalsManagerDialogI.class.getSimpleName());
 				
 				if(!diagMaint.isInitialized())return false; //prior to new actions below
 				

@@ -69,6 +69,7 @@ public class TestMaintenanceDialog extends SimpleApplication{
 				recursiveAddSpatialsToMaintenance(null,sapp.getRootNode());
 			}
 		};
+		smd.setTitle(TestMaintenanceDialog.class.getSimpleName());
 		
 		DialogHierarchyStateI.i().showDialog(smd.getDialog());
 	}

@@ -70,8 +70,10 @@ public class IndicatorI {
 		private Vector3f	v3fRotateSpeed = Vector3f.UNIT_XYZ.clone().mult(0.1f);
 		private long	lStartNano;
 		private boolean bScalingUp = true;
+		private boolean bEnableTractorEffect = false;
 		private ArrowGeometry	garrowDbg;
 		private EffectElectricity	efTractor = new EffectElectricity();
+		
 
 		public GeomIndicator() {
 			super(GeomIndicator.class.getSimpleName(),new Box(1,1,3));
@@ -217,7 +219,7 @@ public class IndicatorI {
 //			long lDiff = System.nanoTime()-lStartNano;
 			float fMinScale = 0.75f;
 			float fMaxScale = 2.5f;
-			float fStep=0.5f*fTPF;
+			float fStep=10f*fTPF;
 			float fScale = getLocalScale().x; //all 3 are the same
 			if(fScale<1f && !bScalingUp)fStep/=2f; //slower shrinking to look good
 			fScale += bScalingUp ? fStep : -fStep;
@@ -270,7 +272,7 @@ public class IndicatorI {
 				}
 				.setName("IndicatorFollowTarget")
 				.setUserCanPause(true)
-				.setDelaySeconds(0.1f)
+				.setDelaySeconds(1f/20f)
 				.enableLoop()
 			);
 		
@@ -348,8 +350,10 @@ public class IndicatorI {
 								sptTarget.getWorldBound().getCenter(), 20f*fTPF));
 //						gi.efTractor.setFollowToTarget(sptTarget, null);
 //						gi.efTractor.setV3fTo(sptTarget.getWorldBound().getCenter());
-						gi.efTractor.setFromTo(gi.getLocalTranslation(), sptTarget.getWorldBound().getCenter());
-						gi.efTractor.setPlay(true);
+						if(gi.bEnableTractorEffect){
+							gi.efTractor.setFromTo(gi.getLocalTranslation(), sptTarget.getWorldBound().getCenter());
+							gi.efTractor.setPlay(true);
+						}
 					}
 				}
 				gi.setLastBouncingValidPos(gi.getLocalTranslation()); 

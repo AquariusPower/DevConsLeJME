@@ -28,22 +28,17 @@
 package com.github.devconslejme.misc.lemur;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import org.lwjgl.opengl.Display;
 
-import com.github.devconslejme.misc.Annotations.Bugfix;
-import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.UserDataI;
-import com.github.devconslejme.misc.jme.UserDataI.IUDKey;
 import com.jme3.app.Application;
 import com.jme3.font.BitmapText;
 import com.jme3.math.ColorRGBA;
@@ -53,13 +48,12 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Button;
-import com.simsilica.lemur.Command;
-import com.simsilica.lemur.GridPanel;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
+import com.simsilica.lemur.component.TbtQuadBackgroundComponent;
 import com.simsilica.lemur.component.TextComponent;
 import com.simsilica.lemur.component.TextEntryComponent;
 import com.simsilica.lemur.core.GuiComponent;
@@ -178,21 +172,36 @@ public class MiscLemurI {
 	}
 	public void changeBackgroundColor(Button btnTitleText, ColorRGBA color, boolean bForceNewBackground) {
 		GuiComponent gc = btnTitleText.getBackground();
-		QuadBackgroundComponent qbg =null;
 		if(gc instanceof QuadBackgroundComponent){
-			qbg = (QuadBackgroundComponent)gc;
-		}
-		
-		if(qbg!=null){
-			qbg.setColor(color);
+			((QuadBackgroundComponent)gc).setColor(color);
+		}else
+		if(gc instanceof TbtQuadBackgroundComponent){
+			((TbtQuadBackgroundComponent)gc).setColor(color);
 		}else{
 			if(bForceNewBackground){
 				btnTitleText.setBackground(new QuadBackgroundComponent(color));
 			}else{
-				MessagesI.i().warnMsg(this, "background type should be", QuadBackgroundComponent.class, gc, btnTitleText, color);
+				MessagesI.i().warnMsg(this, "while not overriding, background type should be", QuadBackgroundComponent.class, TbtQuadBackgroundComponent.class, gc, btnTitleText, color);
 			}
 		}
 	}
+//	public void changeBackgroundColor(Button btnTitleText, ColorRGBA color, boolean bForceNewBackground) {
+//		GuiComponent gc = btnTitleText.getBackground();
+//		QuadBackgroundComponent qbg =null;
+//		if(gc instanceof QuadBackgroundComponent){
+//			qbg = (QuadBackgroundComponent)gc;
+//		}
+//		
+//		if(qbg!=null){
+//			qbg.setColor(color);
+//		}else{
+//			if(bForceNewBackground){
+//				btnTitleText.setBackground(new QuadBackgroundComponent(color));
+//			}else{
+//				MessagesI.i().warnMsg(this, "background type should be", QuadBackgroundComponent.class, gc, btnTitleText, color);
+//			}
+//		}
+//	}
 	
 	public void moveToScreenCenterXY(PanelBase pnl) {
 		Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSizeCopy(pnl);

@@ -29,11 +29,11 @@ package com.github.devconslejme.es;
 
 import java.util.ArrayList;
 
-import com.github.devconslejme.es.HierarchyComp.EField;
+import com.github.devconslejme.es.HierarchyComp.EHiParm;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI;
-import com.github.devconslejme.misc.HierarchySorterI.EHierarchy;
+import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.github.devconslejme.misc.HierarchySorterI.IHierarchy;
 import com.simsilica.es.Entity;
 import com.simsilica.es.EntityId;
@@ -81,7 +81,7 @@ public class DialogHierarchySystemI {
 		}
 
 		@Override
-		public EHierarchy getHierarchyPriority() {
+		public EHierarchyType getHierarchyPriority() {
 			return hc.getHierarchyPriority();
 		}
 
@@ -109,7 +109,7 @@ public class DialogHierarchySystemI {
 	  
 	  setHierarchyComp(entid, 
 //	  	EField.bInitVisuals,false,
-	  	EField.strDebugName,strName
+	  	EHiParm.strDebugName,strName
 	  );
 	  
 	  ed.setComponent(entid, new Name(strName));
@@ -167,7 +167,7 @@ public class DialogHierarchySystemI {
 	}
 
 	public void enableBlockingLayer(EntityId entid, boolean bEnable){
-		setHierarchyComp(entid, EField.bBlocked, bEnable);
+		setHierarchyComp(entid, EHiParm.bBlocked, bEnable);
 	}
 	
 	/**
@@ -257,7 +257,7 @@ public class DialogHierarchySystemI {
 			entidToUpdate=getParentest(entid);
 		}
 		
-		setHierarchyComp(entidToUpdate, EField.lLastFocusTime, lTime);
+		setHierarchyComp(entidToUpdate, EHiParm.lLastFocusTime, lTime);
 		
 		return entidToUpdate;
 	}
