@@ -51,7 +51,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 	private long	iHoldUntilMilis;
 	private Vector3f	v3fHoldPreviousFrom=new Vector3f();
 	private Vector3f	v3fHoldPreviousTo=new Vector3f();
-	private int	iMaxHoldMilis = 1000;
+//	private int	iMaxHoldMilis = 1000;
 	
 	private ColorRGBA	colorRefDefault=ColorI.i().colorChangeCopy(ColorRGBA.Cyan, 0f, 0.5f);
 	private ColorRGBA	colorRefBase;
@@ -109,61 +109,61 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 		return v3fTargetSpot;
 	}
 
-	public Vector3f getV3fFrom() {
-		return v3fFrom;
-	}
-
-	public void setV3fFrom(Vector3f v3fFrom) {
+//	public Vector3f getV3fFrom() {
+//		return v3fFrom;
+//	}
+//
+	public void setFrom(Vector3f v3fFrom) {
 		this.v3fFrom = v3fFrom;
 	}
-
-	public Vector3f getV3fTo() {
-		return v3fTo;
-	}
-
-	public void setV3fTo(Vector3f v3fTo) {
-		this.v3fTo = v3fTo;
-	}
-
-	public Vector3f getV3fFollowFromDisplacement() {
-		return v3fFollowFromDisplacement;
-	}
-
-	public void setV3fFollowFromDisplacement(Vector3f v3fFollowFromDisplacement) {
-		this.v3fFollowFromDisplacement = v3fFollowFromDisplacement;
-	}
-
-	public Vector3f getV3fFollowToDisplacement() {
-		return v3fFollowToDisplacement;
-	}
-
-	public void setV3fFollowToDisplacement(Vector3f v3fFollowToDisplacement) {
-		this.v3fFollowToDisplacement = v3fFollowToDisplacement;
-	}
-
-	public Spatial getSptFollowFrom() {
-		return sptFollowFrom;
-	}
-
-	public void setSptFollowFrom(Spatial sptFollowFrom) {
-		this.sptFollowFrom = sptFollowFrom;
-	}
-
-	public Spatial getSptFollowTo() {
-		return sptFollowTo;
-	}
-
-	public void setSptFollowTo(Spatial sptFollowTo) {
-		this.sptFollowTo = sptFollowTo;
-	}
-
-	public boolean isbToMouse() {
-		return bToMouse;
-	}
-
-	public void setbToMouse(boolean bToMouse) {
-		this.bToMouse = bToMouse;
-	}
+//
+//	public Vector3f getV3fTo() {
+//		return v3fTo;
+//	}
+//
+//	public void setV3fTo(Vector3f v3fTo) {
+//		this.v3fTo = v3fTo;
+//	}
+//
+//	public Vector3f getV3fFollowFromDisplacement() {
+//		return v3fFollowFromDisplacement;
+//	}
+//
+//	public void setV3fFollowFromDisplacement(Vector3f v3fFollowFromDisplacement) {
+//		this.v3fFollowFromDisplacement = v3fFollowFromDisplacement;
+//	}
+//
+//	public Vector3f getV3fFollowToDisplacement() {
+//		return v3fFollowToDisplacement;
+//	}
+//
+//	public void setV3fFollowToDisplacement(Vector3f v3fFollowToDisplacement) {
+//		this.v3fFollowToDisplacement = v3fFollowToDisplacement;
+//	}
+//
+//	public Spatial getSptFollowFrom() {
+//		return sptFollowFrom;
+//	}
+//
+//	public void setSptFollowFrom(Spatial sptFollowFrom) {
+//		this.sptFollowFrom = sptFollowFrom;
+//	}
+//
+//	public Spatial getSptFollowTo() {
+//		return sptFollowTo;
+//	}
+//
+//	public void setSptFollowTo(Spatial sptFollowTo) {
+//		this.sptFollowTo = sptFollowTo;
+//	}
+//
+//	public boolean isbToMouse() {
+//		return bToMouse;
+//	}
+//
+//	public void setbToMouse(boolean bToMouse) {
+//		this.bToMouse = bToMouse;
+//	}
 
 	@Override
 	public void assertNotDiscarded(){
@@ -337,45 +337,33 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 		}
 	}
 
-	public long getiHoldUntilMilis() {
-		return iHoldUntilMilis;
-	}
-
-	public void setiHoldUntilMilis(long iHoldUntilMilis) {
-		this.iHoldUntilMilis = iHoldUntilMilis;
-	}
-
-	public Vector3f getV3fHoldPreviousFrom() {
+	public Vector3f getHoldPreviousFrom() {
 		return v3fHoldPreviousFrom;
 	}
 
-	public void setV3fHoldPreviousFrom(Vector3f v3fHoldPreviousFrom) {
+	public void setHoldPreviousFrom(Vector3f v3fHoldPreviousFrom) {
 		this.v3fHoldPreviousFrom = v3fHoldPreviousFrom;
 	}
 
-	public Vector3f getV3fHoldPreviousTo() {
+	public Vector3f getHoldPreviousTo() {
 		return v3fHoldPreviousTo;
 	}
 
-	public void setV3fHoldPreviousTo(Vector3f v3fHoldPreviousTo) {
+	public void setHoldPreviousTo(Vector3f v3fHoldPreviousTo) {
 		this.v3fHoldPreviousTo = v3fHoldPreviousTo;
 	}
 
-	public int getiMaxHoldMilis() {
-		return iMaxHoldMilis;
-	}
+//	public int getMaxHoldMilis() {
+//		return iMaxHoldMilis;
+//	}
+//
+//	public void setMaxHoldMilis(int iMaxHoldMilis) {
+//		this.iMaxHoldMilis = iMaxHoldMilis;
+//	}
 
-	public void setiMaxHoldMilis(int iMaxHoldMilis) {
-		this.iMaxHoldMilis = iMaxHoldMilis;
-	}
-
-	public boolean isbPlay() {
-		return bPlay;
-	}
-
-	public void setbPlay(boolean bPlay) {
-		this.bPlay = bPlay;
-	}
+//	public void setbPlay(boolean bPlay) {
+//		this.bPlay = bPlay;
+//	}
 
 	@Override
 	public Node getNodeParent() {
@@ -393,18 +381,18 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 	@Override
 	public void play(float tpf) {
 		assertNotDiscarded();
-		if(!isbPlay())return;
+		if(!isPlaying())return;
 		
 		if(!getNodeParent().hasChild(getGeom())){
 			getNodeParent().attachChild(this.getGeom());
 		}
 		
-		playWork();
+		playWork(tpf);
 		
 		getGeom().setLocalTranslation(getLocationFrom());
 	}
 
-	protected abstract void playWork();
+	protected abstract void playWork(float tpf);
 	
 	@Override
 	public boolean isDiscarded() {

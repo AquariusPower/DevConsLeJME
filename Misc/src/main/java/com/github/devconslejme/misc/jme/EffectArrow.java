@@ -46,7 +46,7 @@ public class EffectArrow extends EffectBaseAbs<EffectArrow>{
 	}
 	
 	@Override
-	protected void playWork() {
+	protected void playWork(float tpf) {
 		//TODO could just change the Z scale instead of recreating the mesh? would be faster right?
 		((Arrow)getGeom().getMesh()).setArrowExtent(new Vector3f(0,0,getLocationFrom().distance(getLocationTo())));
 //		getGeom().setLocalRotation(getGeom().getLocalRotation().add(new Quaternion(0.1f, 0.1f, 0.1f, 0.1f)));

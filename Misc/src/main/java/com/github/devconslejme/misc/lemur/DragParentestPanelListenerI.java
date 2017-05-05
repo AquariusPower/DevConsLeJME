@@ -125,7 +125,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 				if(v3fPressedPos==null){
 					v3fPressedPos = MiscJmeI.i().toV3f(inputman.getCursorPosition());
 					v3fPressedPos.z=MiscJmeI.i().getZAboveAllAtGuiNode();
-					efDisplaced.setV3fFrom(v3fPressedPos);
+					efDisplaced.setFrom(v3fPressedPos);
 					efDisplaced.setPlay(true);
 					indicatorFrom.setPositionRelativeToTarget(v3fPressedPos);
 					indicatorFrom.setEnabled(true);

@@ -48,7 +48,7 @@ public class EffectLine extends EffectBaseAbs<EffectLine>{
 	}
 	
 	@Override
-	protected void playWork() {
+	protected void playWork(float tpf) {
 		((Line)getGeom().getMesh()).updatePoints(
 			new Vector3f(),
 			new Vector3f(0,0,getLocationFrom().distance(getLocationTo())));
