@@ -38,7 +38,7 @@ import java.util.Set;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.es.DialogHierarchySystemI;
-import com.github.devconslejme.es.HierarchyComp.CompBean;
+import com.github.devconslejme.es.DialogHierarchyComp.DiagCompBean;
 import com.github.devconslejme.gendiag.ContextMenuI;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextButton;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
@@ -1167,7 +1167,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	private void initMainContainer() {
 		rzpMain = DialogHierarchyStateI.i().createDialog(DevConsPluginStateI.class.getSimpleName(), getStyle());
 		EntityId entid = DialogHierarchyStateI.i().getEntityId(rzpMain); //DialogHierarchySystemI.i().createEntity(ContextMenuI.class.getSimpleName());
-		DialogHierarchySystemI.i().setHierarchyComp(entid, new CompBean().setHierarchyType(EHierarchyType.Top));
+		DialogHierarchySystemI.i().setHierarchyComp(entid, new DiagCompBean().setHierarchyType(EHierarchyType.Top));
 		rzpMain.setApplyContentsBoundingBoxSize(false);
 //		rzpMain.addResizableListener(this);
 		

@@ -332,7 +332,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		public boolean isExpanded() {
 			return bExpanded;
 		}
-		private OptionData setExpanded(boolean bExpanded) {
+		protected OptionData setExpanded(boolean bExpanded) {
 			this.bExpanded = bExpanded;
 			return this; 
 		}
@@ -405,6 +405,10 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		}
 		public boolean isHasBean() {
 			return bHasBean;
+		}
+
+		public boolean isSection() {
+			return SectionIndicator.class.isInstance(getStoredValue());
 		}
 		
 	}
@@ -544,7 +548,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 					getDialog().close();
 				}else
 				if(source==btnMinimize){
-					DialogHierarchyStateI.i().minimize(SimpleGenericDialog.this);
+					MinimizedDialogsPanelI.i().minimize(SimpleGenericDialog.this);
 				}else
 				{
 					MessagesI.i().warnMsg(SimpleGenericDialog.this, "cmd not supported yet", source);
@@ -1069,27 +1073,65 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		return od;
 	}
 	
-	public int remove(OptionData odToRemove) {
-		return doSomethingRecursively(odToRemove, new Function<OptionData, Boolean>() {
-			@Override
-			public Boolean apply(OptionData odToCompare) {
-				if(odToRemove.equals(odToCompare)){
-					LinkedHashMapX<String, OptionData> hmOpt = hmOptionsRoot;
-					if(odToCompare.getSectionParent()!=null){
-						hmOpt=odToCompare.getSectionParent().hmNestedChildrenSubOptions;
-					}
-					
-//					hmOpt.remove(odToRemove.getTextKey()); //TODO enable
-					hmOpt.removeX(odToRemove.getTextKey());
-//					hmOptionsRoot.containsKey(odToRemove);
-					vlodOptions.remove(odToRemove);
-					return true;
-				}
-				return false;
-			}
-		});
+	public void remove(OptionData odToRemove) {
+		LinkedHashMapX<String, OptionData> hmOpt = hmOptionsRoot;
+		if(odToRemove.getSectionParent()!=null){
+			hmOpt=odToRemove.getSectionParent().hmNestedChildrenSubOptions;
+		}
+		
+		OptionData odRemoved = hmOpt.removeX(odToRemove.getTextKey());
+		assert odRemoved==odToRemove : new Function<Void,String>(){
+			@Override public String apply(Void input) {
+				OptionData odParent = odRemoved.getSectionParent();
+				if(odParent==null)return null;
+				return odParent.getTextKey();
+			}};
+		vlodOptions.remove(odToRemove);
+//		return doSomethingRecursively(null, new Function<OptionData, Boolean>() {
+//			@Override
+//			public Boolean apply(OptionData odToCompare) {
+//				if(odToRemove.equals(odToCompare)){
+//					LinkedHashMapX<String, OptionData> hmOpt = hmOptionsRoot;
+//					if(odToCompare.getSectionParent()!=null){
+//						hmOpt=odToCompare.getSectionParent().hmNestedChildrenSubOptions;
+//					}
+//					
+//					hmOpt.removeX(odToRemove.getTextKey());
+//					vlodOptions.remove(odToRemove);
+//					return true;
+//				}
+//				return false;
+//			}
+//		});
 	}
+//	public int remove(OptionData odToRemove) {
+//		return doSomethingRecursively(odToRemove, new Function<OptionData, Boolean>() {
+//			@Override
+//			public Boolean apply(OptionData odToCompare) {
+//				if(odToRemove.equals(odToCompare)){
+//					LinkedHashMapX<String, OptionData> hmOpt = hmOptionsRoot;
+//					if(odToCompare.getSectionParent()!=null){
+//						hmOpt=odToCompare.getSectionParent().hmNestedChildrenSubOptions;
+//					}
+//					
+////					hmOpt.remove(odToRemove.getTextKey()); //TODO enable
+//					hmOpt.removeX(odToRemove.getTextKey());
+////					hmOptionsRoot.containsKey(odToRemove);
+//					vlodOptions.remove(odToRemove);
+//					return true;
+//				}
+//				return false;
+//			}
+//		});
+//	}
 	
+	private int doSomethingRecursivelyAtRoot(Function<OptionData,Boolean> funcDoSomething) {
+		int iCount=0;
+		for(OptionData od:hmOptionsRoot.values()){
+			iCount+=doSomethingRecursively(od,funcDoSomething);
+		}
+		return iCount;
+	}
 	/**
 	 * 
 	 * @param odParent
@@ -1107,30 +1149,51 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		return iCount;
 	}
 	
-	private int setExpandedAllRecursively(OptionData odParent, boolean bExpand) {
-		int iCount=0;
-//		if(odParent==null){
-//			for(OptionData odChild:hmOptionsRoot.values()){
-//				iCount+=setExpandedAllRecursively(odChild, b);
-//			}
-//		}else{
-			iCount+=doSomethingRecursively(odParent, new Function<OptionData, Boolean>() {
-				@Override
-				public Boolean apply(OptionData odToModify) {
-					if(!SectionIndicator.class.isInstance(odToModify.getStoredValue()))return false;
-					
-					if(odToModify.isExpanded()!=bExpand){
-						odToModify.setExpanded(bExpand);
-						return true;
-					}
-					
-					return false;
+	public int setExpandedAll(boolean bExpand){
+		return doSomethingRecursivelyAtRoot(new Function<OptionData, Boolean>() {
+			@Override
+			public Boolean apply(OptionData odToModify) {
+				if(!SectionIndicator.class.isInstance(odToModify.getStoredValue()))return false;
+				
+				if(odToModify.isExpanded()!=bExpand){
+					odToModify.setExpanded(bExpand);
+					return true;
 				}
-			});
-//		}
+				
+				return false;
+			}
+		});
 		
-		return iCount;
+//		int iCount=0;
+//		for(OptionData od:hmOptionsRoot.values()){
+//			iCount+=setExpandedAllRecursively(od,bExpand);
+//		}
+//		return iCount;
 	}
+//	private int setExpandedAllRecursively(OptionData odParent, boolean bExpand) {
+//		int iCount=0;
+////		if(odParent==null){
+////			for(OptionData odChild:hmOptionsRoot.values()){
+////				iCount+=setExpandedAllRecursively(odChild, b);
+////			}
+////		}else{
+//			iCount+=doSomethingRecursively(odParent, new Function<OptionData, Boolean>() {
+//				@Override
+//				public Boolean apply(OptionData odToModify) {
+//					if(!SectionIndicator.class.isInstance(odToModify.getStoredValue()))return false;
+//					
+//					if(odToModify.isExpanded()!=bExpand){
+//						odToModify.setExpanded(bExpand);
+//						return true;
+//					}
+//					
+//					return false;
+//				}
+//			});
+////		}
+//		
+//		return iCount;
+//	}
 //	private void setExpandedAllRecursively(OptionData od, boolean b) {
 //		od.setExpanded(b);
 //		if(od.getStoredValue() instanceof SectionIndicator){
@@ -1369,14 +1432,6 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		update(tpf);
 	}
 
-	public int setExpandedAll(boolean bExpand){
-		int iCount=0;
-		for(OptionData od:hmOptionsRoot.values()){
-			iCount+=setExpandedAllRecursively(od,bExpand);
-		}
-		return iCount;
-	}
-	
 	protected void clearOptions(){
 		hmOptionsRoot.clear();
 		vlodOptions.clear();
@@ -1442,4 +1497,20 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			}
 		});
 	}
+	
+	public LinkedHashMapX<String,OptionData> createDataSnapshot(){
+//		ArrayList<OptionData> aodList = new ArrayList<OptionData>();
+		LinkedHashMapX<String,OptionData> hmBackup = new LinkedHashMapX<String,OptionData>();
+		doSomethingRecursivelyAtRoot(new Function<SimpleGenericDialog.OptionData, Boolean>() {
+			@Override
+			public Boolean apply(OptionData od) {
+//				od.getAllChildrenRecursively(aodList);
+				hmBackup.put(od.getTextKey(), od);
+				return true;
+			}
+		});
+//		return aodList;
+		return hmBackup;
+	}
+
 }

@@ -89,7 +89,7 @@ public class PanelBase<SELF extends PanelBase<SELF>> extends Panel {
 	}
 	/**
 	 * ignores z
-	 * @param v3f
+	 * @param v3f use z as Float.NaN if you want to indicate it will be ignored
 	 */
 	public void setPreferredSizeWH(Vector3f v3f) {
 		Vector3f v3fSize = getSize(); //to do not mess with z!!!

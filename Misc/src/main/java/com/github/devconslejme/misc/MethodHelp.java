@@ -92,9 +92,11 @@ public class MethodHelp{
 		
 		String strFull="";
 		
-		String strConcrete=(bUseSimpleNames?getConcrete().getSimpleName():getConcrete().getName());
 		String strDecl		=(bUseSimpleNames?getDeclaring().getSimpleName():getDeclaring().getName());
-		strFull+=(bOverrideWithConcrete?strConcrete:strDecl)+".";
+		strFull+=(bOverrideWithConcrete?
+			(bUseSimpleNames?getConcrete().getSimpleName():getConcrete().getName()):
+			strDecl
+		)+".";
 		
 		strFull+=getMethodHelp(bUseSimpleNames);
 		

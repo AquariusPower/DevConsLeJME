@@ -92,6 +92,10 @@ public class QueueI {
 		private boolean bRunImediatelyOnce = false;
 
 		private float	fTPF;
+
+		private Method	mEnclosing;
+
+		private StackTraceElement	steInstancedWhen;
 		
 		private static String strLastUId="0";
 //		private boolean bDone;
@@ -173,15 +177,22 @@ public class QueueI {
 //		public CallableX(int iStackAdd, String strName, float fDelaySeconds, boolean bLoop){
 			strUId=strLastUId=StringI.i().getNextUniqueId(strLastUId);
 			
+			setEnclosing(this.getClass().getEnclosingMethod());
+			
+			setInstancedWhen(Thread.currentThread().getStackTrace()[2]);
+			
 			// auto name
 			if(strName==null){ // for annonimous class
-				Method m = this.getClass().getEnclosingMethod();
-				if(m!=null)strName=m.getName();
+				if(getEnclosing()!=null)strName=getEnclosing().getName();
 				bAnonymousClass=true;
 			}
 			
 			if(strName==null){
-				strName=this.getClass().getSimpleName();
+				strName = steInstancedWhen.getMethodName();
+			}
+			
+			if(strName==null){
+				strName=this.getClass().getSimpleName(); //TODO never used right?
 			}
 			
 //			this.strName = strName;
@@ -189,6 +200,21 @@ public class QueueI {
 //			this.fDelaySeconds=(fDelaySeconds);
 			
 			updateRunAt();
+		}
+		
+		public String getInfoText(){
+			String strSeparator = ", ";
+			StringBuilder sb = new StringBuilder("");
+			sb.append(getUId()+strSeparator);
+			sb.append(getName()+strSeparator);
+			
+			if(getEnclosing()!=null){
+				MethodHelp mh = new MethodHelp();
+				mh.setMethod(getEnclosing());
+				sb.append(mh.getFullHelp(true,false)+strSeparator);
+			}
+			
+			return sb.toString();
 		}
 		
 		public void updateRunAt() {
@@ -285,6 +311,20 @@ public class QueueI {
 		}
 		public void runImediatelyOnce() {
 			this.bRunImediatelyOnce = true;
+		}
+		public Method getEnclosing() {
+			return mEnclosing;
+		}
+		private SELF setEnclosing(Method mEnclosing) {
+			this.mEnclosing = mEnclosing;
+			return getThis();
+		}
+		public StackTraceElement getInstancedWhen() {
+			return steInstancedWhen;
+		}
+		public SELF setInstancedWhen(StackTraceElement steInstancedWhen) {
+			this.steInstancedWhen = steInstancedWhen;
+			return getThis();
 		}
 		
 	}

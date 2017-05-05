@@ -57,17 +57,16 @@ import com.simsilica.lemur.core.VersionedReference;
 public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 	public static GlobalsManagerDialogI i(){return GlobalManagerI.i().get(GlobalsManagerDialogI.class);}
 
+	private TreeMap<String,Object> hmSortedGlobals = new TreeMap<String,Object>(String.CASE_INSENSITIVE_ORDER);
+	private EStringMatchMode	eStringMatchMode = EStringMatchMode.Contains;
+	private boolean	bMatchIgnoreCase = true;
+	private String	strUserInputTextFilter="";
+	
 	private SimpleMaintenanceGenericDialog	diagMaint;
 	private boolean	bShowInherited;
 	private boolean	bShowPackagesPrepended;
 	private boolean	bShowOnlyEditableBeans = true;
 	private boolean	bRegexFilter=true;
-//	private Comparator<Object>	cmprAtoZ = new Comparator<Object>() {
-//		@Override
-//		public int compare(Object o1, Object o2) {
-//			return o1.getClass().;
-//		}
-//	};
 	
 	public GlobalsManagerDialogI(){}
 	
@@ -144,22 +143,6 @@ public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 		DialogHierarchyStateI.i().showDialog(diagMaint.getDialog());
 	}
 	
-//	private static class MethodInfo{
-//		Object o;
-//		Method m;
-//		public MethodInfo(Object o, Method m) {
-//			super();
-//			this.o = o;
-//			this.m = m;
-//		}
-//		
-//	}
-	
-	private TreeMap<String,Object> hmSortedGlobals = new TreeMap<String,Object>(String.CASE_INSENSITIVE_ORDER);
-	private EStringMatchMode	eStringMatchMode = EStringMatchMode.Contains;
-	private boolean	bMatchIgnoreCase = true;
-	private String	strUserInputTextFilter="";
-	
 	protected void recreateGlobalsListForMaintenance() {
 		hmSortedGlobals.clear();
 		for(Object o:GlobalManagerI.i().getListCopy()){
@@ -174,14 +157,7 @@ public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 			hmSortedGlobals.put(strKey, o);
 		}
 		
-//		ArrayList<Object> aobjList = GlobalManagerI.i().getListCopy();
-//		Collections.sort(aobjList,cmprAtoZ);
-		
-//		for(Object o:aobjList){
 		for(Entry<String, Object> entry:hmSortedGlobals.entrySet()){
-//			String str = entry.getKey();
-//			System.out.println(entry.getKey());
-			
 			OptionData odGlobal = diagMaint.putSection(null,entry.getKey());
 			
 			Method[] am = isShowInherited() ? 

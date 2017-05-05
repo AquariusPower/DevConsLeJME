@@ -26,7 +26,11 @@
 */
 package com.github.devconslejme.gendiag;
 
+import java.util.ArrayList;
+import java.util.Map.Entry;
+
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction.CmdBtnTA;
+import com.github.devconslejme.misc.JavaLangI.LinkedHashMapX;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
@@ -70,9 +74,20 @@ public abstract class SimpleMaintenanceGenericDialog extends SimpleGenericDialog
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
+				LinkedHashMapX<String, OptionData> hmBkp = createDataSnapshot();
+
 				SimpleMaintenanceGenericDialog.super.clearOptions();
 				updateMaintenanceList();
+				
+				LinkedHashMapX<String, OptionData> hmNewList = createDataSnapshot();
+				for(OptionData odNew:hmNewList.values()){
+					if(!odNew.isSection())continue;
+					OptionData odBkp = hmBkp.get(odNew.getTextKey());
+					if(odBkp!=null)odNew.setExpanded(odBkp.isExpanded());
+				}
+				
 				SimpleMaintenanceGenericDialog.super.requestUpdateListItems();
+				
 				
 				if(bLastRequestWasCollapsed){
 					QueueI.i().enqueue(new CallableXAnon() {

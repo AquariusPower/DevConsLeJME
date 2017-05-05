@@ -32,8 +32,8 @@ import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
 import com.github.devconslejme.es.DialogHierarchySystemI;
-import com.github.devconslejme.es.HierarchyComp;
-import com.github.devconslejme.es.HierarchyComp.CompBean;
+import com.github.devconslejme.es.DialogHierarchyComp;
+import com.github.devconslejme.es.DialogHierarchyComp.DiagCompBean;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
@@ -135,7 +135,7 @@ public class ContextMenuI implements IResizableListener{
 			
 			MiscJmeI.i().addToName(rzpContextMenu, ContextMenuI.class.getSimpleName(), true);
 			
-			DialogHierarchySystemI.i().setHierarchyComp(entid, new CompBean()
+			DialogHierarchySystemI.i().setHierarchyComp(entid, new DiagCompBean()
 				.setHierarchyType(EHierarchyType.Top)
 				.setVolatileModal(true)
 			);
@@ -160,7 +160,7 @@ public class ContextMenuI implements IResizableListener{
 		private CallableX	cxDbgInfo = new CallableX() {
 			@Override
 			public Boolean call() {
-				HierarchyComp hc = DialogHierarchyStateI.i().getHierarchyComp(rzpContextMenu);
+				DialogHierarchyComp hc = DialogHierarchyStateI.i().getHierarchyComp(rzpContextMenu);
 				
 				if(!rzpContextMenu.isOpened())return true;
 				

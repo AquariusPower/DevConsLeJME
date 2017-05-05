@@ -35,6 +35,7 @@ import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
@@ -69,6 +70,10 @@ import com.simsilica.lemur.style.ElementId;
  */
 public class MiscLemurI {
 	public static MiscLemurI i(){return GlobalManagerI.i().get(MiscLemurI.class);}
+	
+	/** theoretically, if such offset is ever updated, everywhere on lemur will also be */
+	@Workaround
+	private float	fMinSizeZ = new QuadBackgroundComponent().getZOffset();
 	
 	public Integer getEntryHeightPixels(ListBox lstbx){
 		GridModel<Panel> gm = lstbx.getGridPanel().getModel();
@@ -302,6 +307,13 @@ public class MiscLemurI {
 
 	public Vector3f toV3f(Vector2f v2fTo) {
 		return new Vector3f(v2fTo.x,v2fTo.y,MiscJmeI.i().getZAboveAllAtGuiNode());
+	}
+	
+	/**
+	 * @return
+	 */
+	public float getMinSizeZ() {
+		return fMinSizeZ;
 	}
 	
 }

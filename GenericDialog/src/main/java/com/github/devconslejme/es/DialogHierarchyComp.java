@@ -38,15 +38,15 @@ import com.simsilica.es.PersistentComponent;
 * DevSelfNote: Components: only getters; unmuttable: do not extend, store things that cant be changed or references; TODO confirm if references is a valid unmuttable... or Ids should be used instead?
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
-public class HierarchyComp implements EntityComponent, PersistentComponent{
-	private CompBean bean;
+public class DialogHierarchyComp implements EntityComponent, PersistentComponent{
+	private DiagCompBean bean;
 	
 	/**
 	 * why make it too simple if it can be harmlessly a bit complex? :)
 	 */
-	public static class CompBean{
+	public static class DiagCompBean{
 		/** to apply Setter's Calls At Parent's bean */
-		private CompBean beanTarget;
+		private DiagCompBean beanTarget;
 		private ArrayList<Runnable> arSetterCalls=new ArrayList<Runnable>();
 		/** add set call */
 		private void add(Runnable r){arSetterCalls.add(r);}
@@ -65,7 +65,7 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 		private boolean bShowLinksFromChilds;
 		private boolean bVolatileModal;
 		
-		public CompBean(){
+		public DiagCompBean(){
 			fBlockerZ=0f;
 			bBlocked=false; //#syncFrom bBlocking
 			fBoundingHeightZ=0f;
@@ -80,7 +80,7 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 			bVolatileModal=false;
 		}
 		
-		private void copyFrom(CompBean copyFrom){
+		private void copyFrom(DiagCompBean copyFrom){
 			this.fBlockerZ=copyFrom.fBlockerZ;
 			this.bBlocked=copyFrom.bBlocked;
 			this.fBoundingHeightZ=copyFrom.fBoundingHeightZ;
@@ -134,51 +134,51 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 		}
 		
 		////////////////// Monsterified Setters furtherly quickly macro formatted thru Wine+Notepad++ !
-		public CompBean setBlockerZ(float fBlockerZ){add(new Runnable(){@Override public void run(){
+		public DiagCompBean setBlockerZ(float fBlockerZ){add(new Runnable(){@Override public void run(){
 			beanTarget.fBlockerZ = fBlockerZ;}});return this;
 		}
 
-		public CompBean setBlocked(boolean bBlocked){add(new Runnable(){@Override public void run(){
+		public DiagCompBean setBlocked(boolean bBlocked){add(new Runnable(){@Override public void run(){
 			beanTarget.bBlocked=bBlocked;}});return this;
 		}
 
-		public CompBean setBoundingHeightZ(float fBoundingHeightZ){add(new Runnable(){@Override public void run(){
+		public DiagCompBean setBoundingHeightZ(float fBoundingHeightZ){add(new Runnable(){@Override public void run(){
 			beanTarget.fBoundingHeightZ = fBoundingHeightZ;}});return this;
 		}
 
-		public CompBean setDebugName(String strDebugName){add(new Runnable(){@Override public void run(){
+		public DiagCompBean setDebugName(String strDebugName){add(new Runnable(){@Override public void run(){
 			beanTarget.strDebugName = strDebugName;}});return this;
 		}
 
-		public CompBean setDialogZ(float fDialogZ){add(new Runnable(){@Override public void run(){
+		public DiagCompBean setDialogZ(float fDialogZ){add(new Runnable(){@Override public void run(){
 			beanTarget.fDialogZ = fDialogZ;}});return this;
 		}
 
-		public CompBean setHierarchyModal(boolean bHierarchyModal){add(new Runnable(){@Override public void run(){
+		public DiagCompBean setHierarchyModal(boolean bHierarchyModal){add(new Runnable(){@Override public void run(){
 			beanTarget.bHierarchyModal = bHierarchyModal;}});return this;
 		}
 
-		public CompBean setHierarchyParent(EntityId eidHierarchyParent){add(new Runnable(){@Override public void run(){
+		public DiagCompBean setHierarchyParent(EntityId eidHierarchyParent){add(new Runnable(){@Override public void run(){
 			beanTarget.eidHierarchyParent = eidHierarchyParent;}});return this;
 		}
 
-		public CompBean setHierarchyType(EHierarchyType eHierarchyType){add(new Runnable(){@Override public void run(){
+		public DiagCompBean setHierarchyType(EHierarchyType eHierarchyType){add(new Runnable(){@Override public void run(){
 			beanTarget.eHierarchyType = eHierarchyType;}});return this;
 		}
 
-		public CompBean setLastFocusTime(long lLastFocusTime){add(new Runnable(){@Override public void run(){
+		public DiagCompBean setLastFocusTime(long lLastFocusTime){add(new Runnable(){@Override public void run(){
 			beanTarget.lLastFocusTime = lLastFocusTime;}});return this;
 		}
 
-		public CompBean setOpened(boolean bOpened){add(new Runnable(){@Override public void run(){
+		public DiagCompBean setOpened(boolean bOpened){add(new Runnable(){@Override public void run(){
 			beanTarget.bOpened = bOpened;}});return this;
 		}
 
-		public CompBean setShowLinksFromChilds(boolean bShowLinksFromChilds){add(new Runnable(){@Override public void run(){
+		public DiagCompBean setShowLinksFromChilds(boolean bShowLinksFromChilds){add(new Runnable(){@Override public void run(){
 			beanTarget.bShowLinksFromChilds = bShowLinksFromChilds;}});return this;
 		}
 
-		public CompBean setVolatileModal(boolean bVolatileModal){add(new Runnable(){@Override public void run(){
+		public DiagCompBean setVolatileModal(boolean bVolatileModal){add(new Runnable(){@Override public void run(){
 			beanTarget.bVolatileModal = bVolatileModal;}});return this;
 		}
 		
@@ -238,8 +238,8 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 	 * @param copyFrom can be null
 	 * @param beanNewValues can be null
 	 */
-	public HierarchyComp(HierarchyComp copyFrom, CompBean beanNewValues){
-		bean = new CompBean();
+	public DialogHierarchyComp(DialogHierarchyComp copyFrom, DiagCompBean beanNewValues){
+		bean = new DiagCompBean();
 		
 		if(copyFrom!=null)bean.copyFrom(copyFrom.bean); //initialize with original component
 		
@@ -250,7 +250,7 @@ public class HierarchyComp implements EntityComponent, PersistentComponent{
 	}
 	
 	@Override
-	public HierarchyComp clone(){
-		return new HierarchyComp(this,null);
+	public DialogHierarchyComp clone(){
+		return new DialogHierarchyComp(this,null);
 	}
 }

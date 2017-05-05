@@ -29,7 +29,7 @@ package com.github.devconslejme.es;
 
 import java.util.ArrayList;
 
-import com.github.devconslejme.es.HierarchyComp.CompBean;
+import com.github.devconslejme.es.DialogHierarchyComp.DiagCompBean;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI;
@@ -58,11 +58,11 @@ public class DialogHierarchySystemI {
 	
 	private static class DiagHierarchyWrapper implements IHierarchy{
 		private Entity	ent;
-		private HierarchyComp hc;
+		private DialogHierarchyComp hc;
 
 		public DiagHierarchyWrapper(Entity ent){
 			this.ent=ent;
-			hc = ent.get(HierarchyComp.class);
+			hc = ent.get(DialogHierarchyComp.class);
 		}
 		
 		public Entity getEntity(){
@@ -87,7 +87,7 @@ public class DialogHierarchySystemI {
 
 		@Override
 		public long getLastActivationNanoTime() {
-			return ent.get(HierarchyComp.class).getLastFocusTime();
+			return ent.get(DialogHierarchyComp.class).getLastFocusTime();
 		}
 		
 		@Override
@@ -98,17 +98,17 @@ public class DialogHierarchySystemI {
 	
 	public void configure(){
     ed = new DefaultEntityData(); //holds all components
-		entsetHierarchyQuery = ed.getEntities(HierarchyComp.class); //just to create it empty so new entities will be detected
+		entsetHierarchyQuery = ed.getEntities(DialogHierarchyComp.class); //just to create it empty so new entities will be detected
 		if(entsetHierarchyQuery.size()>0)throw new DetailedException("must begin empty so news and changes can be properly applied",entsetHierarchyQuery,ed);
 	}
 	
 	public EntityId createEntity(String strName){
 	  EntityId entid = ed.createEntity(); //to attach components to
 	  
-	  ed.setComponent(entid, new HierarchyComp(null,null)); //first time component creation
+	  ed.setComponent(entid, new DialogHierarchyComp(null,null)); //first time component creation
 	  
 	  setHierarchyComp(entid, 
-	  	new CompBean().setDebugName(strName)
+	  	new DiagCompBean().setDebugName(strName)
 	  );
 	  
 	  ed.setComponent(entid, new Name(strName));
@@ -134,20 +134,20 @@ public class DialogHierarchySystemI {
 	/**
 	 * 
 	 * @param entid
-	 * @param aobj see {@link HierarchyComp#HierarchyComp(HierarchyComp, Object...)} 
+	 * @param aobj see {@link DialogHierarchyComp#HierarchyComp(DialogHierarchyComp, Object...)} 
 	 * @return
 	 */
-	public void setHierarchyComp(EntityId entid, CompBean bean) {
+	public void setHierarchyComp(EntityId entid, DiagCompBean bean) {
 		Entity ent = getEntity(entid);
-		HierarchyComp hc = ent.get(HierarchyComp.class);
-		ent.set(hc = new HierarchyComp(hc, bean));
+		DialogHierarchyComp hc = ent.get(DialogHierarchyComp.class);
+		ent.set(hc = new DialogHierarchyComp(hc, bean));
 	}
 
-	public HierarchyComp getHierarchyComp(long lId) {
+	public DialogHierarchyComp getHierarchyComp(long lId) {
 		return getHierarchyComp(new EntityId(lId));
 	}
-	public HierarchyComp getHierarchyComp(EntityId entid) {
-		return getEntity(entid).get(HierarchyComp.class);
+	public DialogHierarchyComp getHierarchyComp(EntityId entid) {
+		return getEntity(entid).get(DialogHierarchyComp.class);
 	}
 	
 	/**
@@ -157,16 +157,16 @@ public class DialogHierarchySystemI {
 	 */
 	private Entity getEntity(EntityId entid){
 		Entity ent = entsetHierarchyQuery.getEntity(entid);
-		if(ent==null)ent=ed.getEntity(entid, HierarchyComp.class); //go the slow path if the query is not ready
+		if(ent==null)ent=ed.getEntity(entid, DialogHierarchyComp.class); //go the slow path if the query is not ready
 		return ent;
 	}
 	
 	public boolean isBlocked(EntityId entid){
-		return getEntity(entid).get(HierarchyComp.class).isBlocked();
+		return getEntity(entid).get(DialogHierarchyComp.class).isBlocked();
 	}
 
 	public void enableBlockingLayer(EntityId entid, boolean bEnable){
-		setHierarchyComp(entid, new CompBean().setBlocked(bEnable));
+		setHierarchyComp(entid, new DiagCompBean().setBlocked(bEnable));
 	}
 	
 	/**
@@ -184,7 +184,7 @@ public class DialogHierarchySystemI {
 //		EntitySet entset = ed.getEntities(GuiLink.class,ShownState.class,LastFocusTime.class);
 		
 		for(Entity entChild:entsetHierarchyQuery){
-			HierarchyComp hcChild = entChild.get(HierarchyComp.class);
+			DialogHierarchyComp hcChild = entChild.get(DialogHierarchyComp.class);
 			if(!hcChild.isOpened())continue;
 			
 			boolean bAdd=false;
@@ -256,7 +256,7 @@ public class DialogHierarchySystemI {
 			entidToUpdate=getParentest(entid);
 		}
 		
-		setHierarchyComp(entidToUpdate, new CompBean().setLastFocusTime(lTime));
+		setHierarchyComp(entidToUpdate, new DiagCompBean().setLastFocusTime(lTime));
 		
 		return entidToUpdate;
 	}

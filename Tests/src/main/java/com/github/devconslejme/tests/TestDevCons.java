@@ -35,6 +35,7 @@ import com.github.devconslejme.extras.OSCmd;
 import com.github.devconslejme.extras.SingleAppInstance;
 import com.github.devconslejme.extras.SingleAppInstance.CallChkProblemsAbs;
 import com.github.devconslejme.gendiag.GlobalsManagerDialogI;
+import com.github.devconslejme.gendiag.QueueManagerDialogI;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.CheckProblemsI;
 import com.github.devconslejme.misc.GlobalManagerI;
@@ -117,16 +118,20 @@ public class TestDevCons extends SimpleApplication{
 			}
 		});
 		
+		//// Queue manager dialog
+		QueueManagerDialogI.i().configure();
+		DevConsPluginStateI.i().putButtonLater("QueueManager", "open queued tasks manager", 
+				new Command<Button>() {@Override public void execute(Button source) {
+					QueueManagerDialogI.i().show();
+				}}, null
+			);
+		
 		//// Globals manager dialog
 		GlobalsManagerDialogI.i().configure();
 		DevConsPluginStateI.i().putButtonLater("GlobalsManager", "open global instances manager", 
-			new Command<Button>() {
-				@Override
-				public void execute(Button source) {
-					GlobalsManagerDialogI.i().show();
-				}
-			},
-			null
+			new Command<Button>() {@Override public void execute(Button source) {
+				GlobalsManagerDialogI.i().show();
+			}}, null
 		);
 //		QueueI.i().enqueue(new CallableXAnon() {
 //			@Override

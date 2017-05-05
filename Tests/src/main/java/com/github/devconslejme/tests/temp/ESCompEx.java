@@ -34,6 +34,12 @@ import com.simsilica.es.PersistentComponent;
 /**
  * Component example to have only a single constructor.
  * 
+ * usage example:
+ * new ESCompEx(oldESCompEx, new CompBean()
+ * 	.setBoundingHeightZ(1)
+ * 	.setLastFocusTime(2)
+ * )
+ * 
  * Component: only getters, unmuttable, do not extend;
  * TODO store only things that cant be externally changed neither references?
  * 

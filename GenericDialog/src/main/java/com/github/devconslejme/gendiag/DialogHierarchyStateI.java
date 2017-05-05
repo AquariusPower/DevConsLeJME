@@ -30,8 +30,8 @@ package com.github.devconslejme.gendiag;
 import java.util.ArrayList;
 
 import com.github.devconslejme.es.DialogHierarchySystemI;
-import com.github.devconslejme.es.HierarchyComp;
-import com.github.devconslejme.es.HierarchyComp.CompBean;
+import com.github.devconslejme.es.DialogHierarchyComp;
+import com.github.devconslejme.es.DialogHierarchyComp.DiagCompBean;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
@@ -112,7 +112,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		public Boolean call() {
 			for(Panel pnl:apnlAutoFocus){
 				ResizablePanel rzp = SpatialHierarchyI.i().getParentest(pnl, ResizablePanel.class, true);
-				HierarchyComp hc = DialogHierarchyStateI.i().getHierarchyComp(rzp);
+				DialogHierarchyComp hc = DialogHierarchyStateI.i().getHierarchyComp(rzp);
 				if(!hc.isOpened())continue;
 				
 				if(!hc.isBlocked()){
@@ -128,8 +128,8 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	private VersionedReference<Integer>	vriResizableBorderSize;
 	private boolean	bRequestRetryZOrder;
 	private boolean	bLogZOrderDebugInfo;
-	protected ResizablePanel	minimizedDiags;
-	protected Container	cntrMinimized;
+//	protected ResizablePanel	minimizedDiags;
+//	protected Container	cntrMinimized;
 	
 	public static class BlockerCursorListenerX extends CursorListenerX{
 		@Override
@@ -140,7 +140,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 //			super.click(event, target, capture);
 			
 			Visuals vs = DialogHierarchyStateI.i().getVisuals(capture);
-			HierarchyComp hc = DialogHierarchySystemI.i().getHierarchyComp(vs.getEntityId());
+			DialogHierarchyComp hc = DialogHierarchySystemI.i().getHierarchyComp(vs.getEntityId());
 			if(hc.isBlocked()){
 				DialogHierarchyStateI.i().setFocusRecursively(vs.getEntityId());
 //				return true;
@@ -236,17 +236,17 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		
 		QueueI.i().enqueue(cxAutoFocus);
 		
-		QueueI.i().enqueue(new CallableXAnon() {
-			@Override
-			public Boolean call() {
-				minimizedDiags = createDialog("Minimized dialogs panel", null);
-				cntrMinimized=new Container();
-				minimizedDiags.setContents(cntrMinimized);
-				sys.setHierarchyComp(getEntityId(minimizedDiags), 
-					new CompBean().setHierarchyType(EHierarchyType.Top));
-				return true;
-			}
-		});
+//		QueueI.i().enqueue(new CallableXAnon() {
+//			@Override
+//			public Boolean call() {
+//				minimizedDiags = createDialog("Minimized dialogs panel", null);
+//				cntrMinimized=new Container();
+//				minimizedDiags.setContents(cntrMinimized);
+//				sys.setHierarchyComp(getEntityId(minimizedDiags), 
+//					new CompBean().setHierarchyType(EHierarchyType.Top));
+//				return true;
+//			}
+//		});
 	}
 	
 //	private HashBiMap<Long,Visuals> hmDiag = HashBiMap.create();
@@ -292,7 +292,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		return UserDataI.i().getUserDataPSH(spt,Visuals.class);
 	}
 	
-	public HierarchyComp getHierarchyComp(Spatial spt){
+	public DialogHierarchyComp getHierarchyComp(Spatial spt){
 		Visuals vs = getVisuals(spt);
 		if(vs==null)return null;
 		return sys.getHierarchyComp(vs.getEntityId());
@@ -325,7 +325,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			}
 		}
 		
-		sys.setHierarchyComp(entid,new CompBean()
+		sys.setHierarchyComp(entid,new DiagCompBean()
 			.setOpened(true)
 			.setLastFocusTime(app.getTimer().getTime())
 		);
@@ -342,7 +342,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	private void showDialogAs(boolean bModal, ResizablePanel rzpParent, ResizablePanel rzpChild) {
 		if(!rzpParent.isOpened())throw new DetailedException("parent not open",rzpParent,rzpChild);
 		
-		sys.setHierarchyComp(getVisuals(rzpChild).getEntityId(),new CompBean()
+		sys.setHierarchyComp(getVisuals(rzpChild).getEntityId(),new DiagCompBean()
 			.setHierarchyParent(getVisuals(rzpParent).getEntityId())
 			.setHierarchyModal(bModal)
 		);
@@ -389,12 +389,12 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			bRequestRetryZOrder=false;
 		}
 		
-		int iMinChildren = cntrMinimized.getLayout().getChildren().size();
-		if(minimizedDiags.getParent()==null){
-			if(iMinChildren>0)nodeToMonitor.attachChild(minimizedDiags);
-		}else{
-			if(iMinChildren==0)minimizedDiags.removeFromParent();
-		}
+//		int iMinChildren = cntrMinimized.getLayout().getChildren().size();
+//		if(minimizedDiags.getParent()==null){
+//			if(iMinChildren>0)nodeToMonitor.attachChild(minimizedDiags);
+//		}else{
+//			if(iMinChildren==0)minimizedDiags.removeFromParent();
+//		}
 	}
 	
 	/**
@@ -413,7 +413,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		if(spt==null)return;
 		
 		ResizablePanel rzp = SpatialHierarchyI.i().getParentest(spt, ResizablePanel.class, true);
-		HierarchyComp hc = getHierarchyComp(rzp);
+		DialogHierarchyComp hc = getHierarchyComp(rzp);
 		if(hc==null)return;
 		
 		if(!hc.isVolatileModal())return;
@@ -431,7 +431,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 
 	private void updateDragLinkToParentEffect(){
 		Panel pnl = DragParentestPanelListenerI.i().getParentestBeingDragged();
-		HierarchyComp hc = getHierarchyComp(pnl);
+		DialogHierarchyComp hc = getHierarchyComp(pnl);
 		if(hc!=null){
 			if(!ieffLinkedDragEffect.isPlaying()){ //this also identifies the start of the dragging!
 				EntityId entidParent = hc.getHierarchyParent();
@@ -497,7 +497,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			// how many childs are modal
 			int iModalCount=0;
 			for(Entity entChild:sys.getAllOpenedDialogs(vs.getEntityId())){
-				if(entChild.get(HierarchyComp.class).isHierarchyModal())iModalCount++;
+				if(entChild.get(DialogHierarchyComp.class).isHierarchyModal())iModalCount++;
 			}
 			sys.enableBlockingLayer(vs.getEntityId(),iModalCount>0);
 			
@@ -561,7 +561,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	private void updateDragResizeRelativeParentPos(float tpf, ResizablePanel rzpSource, Visuals vs) {
 		if(!vs.isAllowPositionRelativeToParent())return;
 		
-		HierarchyComp hc = getHierarchyComp(rzpSource);
+		DialogHierarchyComp hc = getHierarchyComp(rzpSource);
 		EntityId entidParent = hc.getHierarchyParent();
 		if(entidParent!=null){
 			if(vs.getPositionRelativeToParent()!=null){
@@ -618,7 +618,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		
 		updateBlocker(null, vs);
 		
-		sys.setHierarchyComp(vs.getEntityId(), new CompBean().setOpened(false));
+		sys.setHierarchyComp(vs.getEntityId(), new DiagCompBean().setOpened(false));
 		
 		if(vs.getEffLinkToParent()!=null)vs.getEffLinkToParent().setAsDiscarded();
 	}
@@ -632,7 +632,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 //		Vector3f v3f = rzp.getLocalTranslation().clone();
 //		v3f.z=fCurrentOrderPosZ;
 //		rzp.setLocalTranslation(v3f);
-		sys.setHierarchyComp(entid, new CompBean().setDialogZ(fCurrentOrderPosZ));
+		sys.setHierarchyComp(entid, new DiagCompBean().setDialogZ(fCurrentOrderPosZ));
 		
 		// prepare next
 		BoundingBox bb = (BoundingBox)getOpenDialog(entid).getWorldBound();
@@ -642,7 +642,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 				MessagesI.i().debugInfo(this, "DiagHierarchyZOrder:"+rzp.getName()+","+entid+","+fCurrentOrderPosZ+","+fHeight);
 			}
 			
-			sys.setHierarchyComp(entid, new CompBean().setBoundingHeightZ(fHeight));
+			sys.setHierarchyComp(entid, new DiagCompBean().setBoundingHeightZ(fHeight));
 			
 			// now updates it
 			fCurrentOrderPosZ += fHeight +fInBetweenGapDistZ;
@@ -702,29 +702,29 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		this.bLogZOrderDebugInfo = bLogZOrderDebugInfo;
 	}
 
-	@SuppressWarnings("unchecked")
-	public void minimize(AbstractGenericDialog sgd) {
-		if(getHierarchyComp(sgd.getDialog()).getHierarchyParent()!=null)return;
-		
-		Button btn = new Button(sgd.getTitle());
-		cntrMinimized.addChild(btn, cntrMinimized.getLayout().getChildren().size());
-		btn.addClickCommands(new Command<Button>() {
-			@Override
-			public void execute(Button source) {
-				showDialog(sgd.getDialog());
-				btn.removeFromParent();
-				
-				//readd remaining
-				ArrayList<Node> children = new ArrayList<Node>(cntrMinimized.getLayout().getChildren()); //remaining
-				cntrMinimized.getLayout().clearChildren();
-//				for(int i=0;i<children.size();i++){
-				int i=0;for(Node child:children){
-					cntrMinimized.addChild(child, i++);
-				}
-			}
-		});
-		sgd.close();
-	}
+//	@SuppressWarnings("unchecked")
+//	public void minimize(AbstractGenericDialog sgd) {
+//		if(getHierarchyComp(sgd.getDialog()).getHierarchyParent()!=null)return;
+//		
+//		Button btn = new Button(sgd.getTitle());
+//		cntrMinimized.addChild(btn, cntrMinimized.getLayout().getChildren().size());
+//		btn.addClickCommands(new Command<Button>() {
+//			@Override
+//			public void execute(Button source) {
+//				showDialog(sgd.getDialog());
+//				btn.removeFromParent();
+//				
+//				//readd remaining
+//				ArrayList<Node> children = new ArrayList<Node>(cntrMinimized.getLayout().getChildren()); //remaining
+//				cntrMinimized.getLayout().clearChildren();
+////				for(int i=0;i<children.size();i++){
+//				int i=0;for(Node child:children){
+//					cntrMinimized.addChild(child, i++);
+//				}
+//			}
+//		});
+//		sgd.close();
+//	}
 
 //	public String getReport(ResizablePanel rzp) {
 //		String str="";

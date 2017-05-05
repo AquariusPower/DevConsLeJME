@@ -47,6 +47,7 @@ public class PkgCfgI {
 		
 		DialogHierarchyStateI.i().configure(nodeParent,0f);
 		ContextMenuI.i().configure();
+		MinimizedDialogsPanelI.i().configure(nodeParent);
 		
 		bConfigured=true;
 	}
