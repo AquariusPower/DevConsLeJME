@@ -85,9 +85,11 @@ public class SimulationTimeI {
 	public void updateAddFrameTime(float fTPF){
 		if(bPaused)return;
 		
-		if(fTPF<=0.0f)throw new DetailedException("cannot update to same or older time", fTPF, lSimulationNano);
+		long lAdd = TimeConvertI.i().secondsToNano(fTPF*fSpeed);
 		
-		this.lSimulationNano+=TimeConvertI.i().secondsToNano(fTPF*fSpeed);
+		if(lAdd<=0)throw new DetailedException("cannot update to same or older time", fTPF, lSimulationNano);
+		
+		this.lSimulationNano+=lAdd;
 	}
 	
 	public void setSpeed(float f){

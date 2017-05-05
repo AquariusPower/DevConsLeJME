@@ -28,11 +28,7 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 
-import com.github.devconslejme.misc.Annotations.Bean;
-import com.github.devconslejme.misc.Annotations.MiscGenericMigrateOneDay;
-import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.SimulationTimeI;
-import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 
 /**
@@ -90,7 +86,8 @@ public class EffectElectricity extends EffectBaseAbs<EffectElectricity>{
 		/**
 		 * all in longs to avoid loads of castings...
 		 */
-		long lRemainMilis = elp.getHoldUntilMilis() - SimulationTimeI.i().getMillis();
+//		long lRemainMilis = elp.getHoldUntilMilis() - SimulationTimeI.i().getMillis();
+		long lRemainMilis = elp.getRemainingMilis();
 		long lMaxThickness = 8;
 		long lThicknessStepMilis = elp.getMaxHoldMilis()/lMaxThickness;
 		long lCurrentThickness = lRemainMilis/lThicknessStepMilis;
@@ -106,8 +103,8 @@ public class EffectElectricity extends EffectBaseAbs<EffectElectricity>{
 				getLocationTo(),
 //				iPartMaxDots,
 //				fPartMinPerc,
-				getHoldPreviousFrom(),
-				getHoldPreviousTo(),
+//				getHoldPreviousFrom(),
+//				getHoldPreviousTo(),
 //				getMaxHoldMilis(),
 				fAmplitudePerc
 //				fDeltaPerc

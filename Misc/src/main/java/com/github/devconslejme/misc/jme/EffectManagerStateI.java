@@ -43,6 +43,8 @@ public class EffectManagerStateI extends AbstractAppState {
 	
 	long lLastUpdateMilis=SimulationTimeI.i().getMillis();
 	ArrayList<IEffect> aEffectList = new ArrayList<IEffect>(){};
+	private float	fAcumulatedTPF;
+	private int	iFPStarget=15;
 	
 	public void configure(){
 		GlobalManagerI.i().get(Application.class).getStateManager().attach(this);
@@ -61,16 +63,26 @@ public class EffectManagerStateI extends AbstractAppState {
 	public void update(float tpf) {
 		super.update(tpf);
 		
-		int iFPStarget=15;
-		if(lLastUpdateMilis+(1000/iFPStarget) < SimulationTimeI.i().getMillis()){
+		fAcumulatedTPF+=tpf;
+		if(lLastUpdateMilis+(1000/getFPStarget()) < SimulationTimeI.i().getMillis()){
 			for(IEffect ie:aEffectList){//.values()){
 				if(!ie.isPlaying())continue;
 				ie.assertConfigIsValidAndFixIt(); //config may change during play
 				if(ie.isWaitingParent())continue;
 //				if(ie.getNodeParent()==null)continue;
-				ie.play(tpf);
+				ie.play(fAcumulatedTPF);
 			}
+			fAcumulatedTPF=0f;
 			lLastUpdateMilis=SimulationTimeI.i().getMillis();
 		}
+	}
+
+	public int getFPStarget() {
+		return iFPStarget;
+	}
+
+	public EffectManagerStateI setFPStarget(int iFPStarget) {
+		this.iFPStarget = iFPStarget;
+		return this;
 	}
 }

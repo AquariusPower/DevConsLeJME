@@ -29,11 +29,12 @@ package com.github.devconslejme.misc.jme;
 import java.util.ArrayList;
 
 import com.github.devconslejme.misc.MessagesI;
-import com.github.devconslejme.misc.SimulationTimeI;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 
 /**
+ * This can be rendered as a simple line to feel like an electricity effect.
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class ElectricalPath {
@@ -44,7 +45,27 @@ public class ElectricalPath {
 	private float	fPartMaxPerc=1.00f;
 	private float fDeltaPerc = fPartMaxPerc-fPartMinPerc;
 	private int	iMaxHoldMilis = 1000;
+	private Vector3f	v3fHoldPreviousFrom=new Vector3f();
+	private Vector3f	v3fHoldPreviousTo=new Vector3f();
+	private long	lTimeMilis;
+	private boolean	bUseRealTime = false;
 	
+	public Vector3f getHoldPreviousFrom() {
+		return v3fHoldPreviousFrom;
+	}
+
+	public void setHoldPreviousFrom(Vector3f v3fHoldPreviousFrom) {
+		this.v3fHoldPreviousFrom = v3fHoldPreviousFrom;
+	}
+
+	public Vector3f getHoldPreviousTo() {
+		return v3fHoldPreviousTo;
+	}
+
+	public void setHoldPreviousTo(Vector3f v3fHoldPreviousTo) {
+		this.v3fHoldPreviousTo = v3fHoldPreviousTo;
+	}
+
 	public int getMaxHoldMilis() {
 		return iMaxHoldMilis;
 	}
@@ -60,16 +81,17 @@ public class ElectricalPath {
 	}
 	
 	public ArrayList<Vector3f> updateElectricalPath(
-			float fTPF,
+			Float fTPF,
 			Vector3f v3fFrom,
 			Vector3f v3fTo,
 //			float fPartMinPerc,
-			Vector3f v3fHoldPreviousFrom,
-			Vector3f v3fHoldPreviousTo,
+//			Vector3f v3fHoldPreviousFrom,
+//			Vector3f v3fHoldPreviousTo,
 //			int iMaxHoldMilis,
 			float fAmplitudePerc
 //			float fDeltaPerc
 	) {
+		updateTime(fTPF);
 		Vector3f v3fTargetSpot=v3fTo;
 		
 		int iPartMaxDotsCurrent = iPartMaxDots;
@@ -86,8 +108,8 @@ public class ElectricalPath {
 		float fMaxMoveDetectDist=0.01f;
 		if(v3fHoldPreviousFrom.distance(v3fFrom) > fMaxMoveDetectDist)bUpdate=true;
 		if(v3fHoldPreviousTo.distance(v3fTo) > fMaxMoveDetectDist)bUpdate=true;
-		if(getHoldUntilMilis() < SimulationTimeI.i().getMillis()){
-			setHoldUntilMilis(SimulationTimeI.i().getMillis() + FastMath.nextRandomInt(250, iMaxHoldMilis ));
+		if(getHoldUntilMilis() < lTimeMilis){
+			setHoldUntilMilis(lTimeMilis + FastMath.nextRandomInt(250, iMaxHoldMilis ));
 			bUpdate=true;
 		}
 		
@@ -158,6 +180,34 @@ public class ElectricalPath {
 			Vector3f v3fNew = v3fNearest.clone().interpolateLocal(v3f, 1.02f);
 			v3f.set(v3fNew);
 		}
+	}
+
+	public long getRemainingMilis() {
+		return lHoldUntilMilis - getTime();
+	}
+	
+//	long lTestTime=System.currentTimeMillis();
+	private void updateTime(float fTPF){
+		if(isUseRealTime()){
+			lTimeMilis = System.currentTimeMillis();
+		}else{
+			lTimeMilis += fTPF*1000;
+		}
+//		lTestTime+=fTPF*1000;
+//		System.err.println("Time="+lTimeMilis+", TstTime="+lTestTime+", Diff="+(lTimeMilis-lTestTime)+", TPF="+((long)fTPF*1000)+", fTPF="+fTPF);
+	}
+	
+	private long getTime() {
+		return lTimeMilis;
+	}
+
+	public boolean isUseRealTime() {
+		return bUseRealTime;
+	}
+
+	public ElectricalPath setUseRealTime(boolean bUseRealTime) {
+		this.bUseRealTime = bUseRealTime;
+		return this;
 	}
 	
 }

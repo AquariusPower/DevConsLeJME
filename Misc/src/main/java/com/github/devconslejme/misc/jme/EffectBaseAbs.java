@@ -49,8 +49,8 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 	private boolean	bToMouse;
 	private boolean	bDiscarded;
 	private long	iHoldUntilMilis;
-	private Vector3f	v3fHoldPreviousFrom=new Vector3f();
-	private Vector3f	v3fHoldPreviousTo=new Vector3f();
+//	private Vector3f	v3fHoldPreviousFrom=new Vector3f();
+//	private Vector3f	v3fHoldPreviousTo=new Vector3f();
 //	private int	iMaxHoldMilis = 1000;
 	
 	private ColorRGBA	colorRefDefault=ColorI.i().colorChangeCopy(ColorRGBA.Cyan, 0f, 0.5f);
@@ -337,22 +337,22 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 		}
 	}
 
-	public Vector3f getHoldPreviousFrom() {
-		return v3fHoldPreviousFrom;
-	}
-
-	public void setHoldPreviousFrom(Vector3f v3fHoldPreviousFrom) {
-		this.v3fHoldPreviousFrom = v3fHoldPreviousFrom;
-	}
-
-	public Vector3f getHoldPreviousTo() {
-		return v3fHoldPreviousTo;
-	}
-
-	public void setHoldPreviousTo(Vector3f v3fHoldPreviousTo) {
-		this.v3fHoldPreviousTo = v3fHoldPreviousTo;
-	}
-
+//	public Vector3f getHoldPreviousFrom() {
+//		return v3fHoldPreviousFrom;
+//	}
+//
+//	public void setHoldPreviousFrom(Vector3f v3fHoldPreviousFrom) {
+//		this.v3fHoldPreviousFrom = v3fHoldPreviousFrom;
+//	}
+//
+//	public Vector3f getHoldPreviousTo() {
+//		return v3fHoldPreviousTo;
+//	}
+//
+//	public void setHoldPreviousTo(Vector3f v3fHoldPreviousTo) {
+//		this.v3fHoldPreviousTo = v3fHoldPreviousTo;
+//	}
+//
 //	public int getMaxHoldMilis() {
 //		return iMaxHoldMilis;
 //	}

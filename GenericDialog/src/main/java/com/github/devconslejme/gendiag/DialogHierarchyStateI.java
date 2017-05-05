@@ -87,7 +87,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	private Node	nodeToMonitor;
 	private FocusManagerState	focusState;
 	private IEffect	ieffParentToChildLink = new EffectArrow();
-	private IEffect	ieffLinkedDragEffect = new EffectElectricity().setColor(ColorI.i().colorChangeCopy(ColorRGBA.Blue, 0f, 0.5f));
+	private IEffect	ieffLinkedDragEffect = new EffectElectricity().setColor(ColorRGBA.Cyan);//ColorI.i().colorChangeCopy(ColorRGBA.Blue, 0f, 0.5f));
 	private BlockerCursorListenerX blockerListener = new BlockerCursorListenerX();
 	private ColorRGBA	colorBlocker = ColorI.i().colorChangeCopy(ColorRGBA.Red, 0f, 0.15f);
 	private DialogHierarchySystemI sys = DialogHierarchySystemI.i();
