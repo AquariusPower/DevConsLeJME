@@ -26,16 +26,12 @@
 */
 package com.github.devconslejme.gendiag;
 
-import java.util.ArrayList;
-import java.util.Map.Entry;
-
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction.CmdBtnTA;
 import com.github.devconslejme.misc.JavaLangI.LinkedHashMapX;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.simsilica.lemur.Button;
-import com.simsilica.lemur.Command;
 
 /**
  * TODO move whatever fits at super class to there
@@ -74,29 +70,42 @@ public abstract class SimpleMaintenanceGenericDialog extends SimpleGenericDialog
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
-				LinkedHashMapX<String, OptionData> hmBkp = createDataSnapshot();
+				LinkedHashMapX<String, OptionData> hmBkp = bLastRequestWasCollapsed ? createOptionDataSnapshot() : null;
 
 				SimpleMaintenanceGenericDialog.super.clearOptions();
 				updateMaintenanceList();
+//				LinkedHashMapX<String, OptionData> hmNewList = createDataSnapshot();
+//				for(OptionData odNew:hmNewList.values()){
+//					if(!odNew.isSection())continue;
+//					OptionData odBkp = hmBkp.get(odNew.getTextKey());
+//					if(odBkp!=null)odNew.setExpanded(odBkp.isExpanded());
+//				}
 				
-				LinkedHashMapX<String, OptionData> hmNewList = createDataSnapshot();
-				for(OptionData odNew:hmNewList.values()){
-					if(!odNew.isSection())continue;
-					OptionData odBkp = hmBkp.get(odNew.getTextKey());
-					if(odBkp!=null)odNew.setExpanded(odBkp.isExpanded());
-				}
-				
-				SimpleMaintenanceGenericDialog.super.requestUpdateListItems();
-				
+//				SimpleMaintenanceGenericDialog.super.requestUpdateListItems();
 				
 				if(bLastRequestWasCollapsed){
 					QueueI.i().enqueue(new CallableXAnon() {
 						@Override
 						public Boolean call() {
 							collapseAll();
+							
+							LinkedHashMapX<String, OptionData> hmNewList = createOptionDataSnapshot();
+							for(OptionData odNew:hmNewList.values()){
+								if(!odNew.isSection())continue;
+								OptionData odBkp = hmBkp.get(odNew.getTextKey());
+								/**
+								 * re-expand only the ones that were previously individually expanded
+								 */
+								if(odBkp!=null && odBkp.isExpanded())odNew.setExpanded(true);
+							}
+							
+							SimpleMaintenanceGenericDialog.super.requestUpdateListItems();
+							
 							return true;
 						}
 					});
+				}else{
+					SimpleMaintenanceGenericDialog.super.requestUpdateListItems();
 				}
 				
 				return true;

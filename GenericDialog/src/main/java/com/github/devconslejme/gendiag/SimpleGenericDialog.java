@@ -299,7 +299,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			return this; 
 		}
 		private OptionData setSectionParent(OptionData odParent) {
-			assert(odParent==null || SectionIndicator.class.isInstance(odParent.getStoredValue()));
+			assert(odParent==null || odParent.isSection());
 			this.odParent = odParent;
 			return this; 
 		}
@@ -307,7 +307,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			return strTextKey;
 		}
 		public OptionData getSectionParent() {
-			assert(odParent==null || SectionIndicator.class.isInstance(odParent.getStoredValue()));
+			assert(odParent==null || odParent.isSection());
 			return odParent;
 		}
 		public Object getStoredValue() {
@@ -337,7 +337,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			return this; 
 		}
 		public boolean toggleExpanded(){
-			bExpanded=!bExpanded;
+			setExpanded(!isExpanded());
+//			bExpanded=!bExpanded;
 			return bExpanded;
 		}
 		/**
@@ -362,7 +363,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			
 			String str=strTextKey;
 			
-			if(getStoredValue() instanceof SectionIndicator){
+			if(isSection()){
 //				str="["+(isExpanded()?"-":"+")+"] "
 				str=""
 					+str
@@ -1079,13 +1080,15 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			hmOpt=odToRemove.getSectionParent().hmNestedChildrenSubOptions;
 		}
 		
-		OptionData odRemoved = hmOpt.removeX(odToRemove.getTextKey());
-		assert odRemoved==odToRemove : new Function<Void,String>(){
-			@Override public String apply(Void input) {
-				OptionData odParent = odRemoved.getSectionParent();
-				if(odParent==null)return null;
-				return odParent.getTextKey();
-			}};
+		OptionData odRemoved = hmOpt.removeX(odToRemove.getTextKey()); //TODO fix this!!
+		assert odRemoved==odToRemove : odRemoved.toString();
+//		OptionData odRemoved = new OptionData().setTextKey("test123");hmOpt.removeX(odToRemove.getTextKey()); //TODO fix this!!
+//		assert odRemoved==odToRemove : new Function<Void,String>(){
+//			@Override public String apply(Void input) {
+//				OptionData odParent = odRemoved.getSectionParent();
+//				if(odParent==null)return "parent is null";
+//				return odParent.getTextKey();
+//			}}.apply(null);
 		vlodOptions.remove(odToRemove);
 //		return doSomethingRecursively(null, new Function<OptionData, Boolean>() {
 //			@Override
@@ -1141,7 +1144,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private int doSomethingRecursively(OptionData odParent, Function<OptionData,Boolean> funcDoSomething) {
 		int iCount=0;
 		if(funcDoSomething.apply(odParent))iCount++;
-		if(odParent.getStoredValue() instanceof SectionIndicator){
+		if(odParent.isSection()){
 			for(OptionData odChild:odParent.hmNestedChildrenSubOptions.values()){
 				iCount+=doSomethingRecursively(odChild,funcDoSomething);
 			}
@@ -1153,7 +1156,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		return doSomethingRecursivelyAtRoot(new Function<OptionData, Boolean>() {
 			@Override
 			public Boolean apply(OptionData odToModify) {
-				if(!SectionIndicator.class.isInstance(odToModify.getStoredValue()))return false;
+				if(!odToModify.isSection())return false;
 				
 				if(odToModify.isExpanded()!=bExpand){
 					odToModify.setExpanded(bExpand);
@@ -1196,7 +1199,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 //	}
 //	private void setExpandedAllRecursively(OptionData od, boolean b) {
 //		od.setExpanded(b);
-//		if(od.getStoredValue() instanceof SectionIndicator){
+//		if(od.isSection()){
 //			for(OptionData odChild:od.hmNestedChildrenSubOptions.values()){
 //				setExpandedAllRecursively(odChild,b);
 //			}
@@ -1209,12 +1212,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		
 		HashMap<String,OptionData> hmOpt = hmOptionsRoot;
 		if(odParent!=null){
-			assert(SectionIndicator.class.isInstance(odParent.getStoredValue()));
-//			if(!SectionIndicator.class.isInstance(odParent.getStoredValue())){
-//				throw new DetailedException("parent section not properly configured", odParent, strTextKey, od, this);
-//			}
-//			OptionData odParent = findSectionRecursively(hmOpt, strSectionParentKey);
-//			DetailedException.assertNotNull(odParent, "the parent section must be set before being referenced/requested/used!", odParent);
+			assert(odParent.isSection());
 			hmOpt=odParent.hmNestedChildrenSubOptions;
 		}
 		
@@ -1223,9 +1221,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	}
 	
 	public OptionData findSectionRecursively(OptionData odParent, String strSectionKey){
-		assert(SectionIndicator.class.isInstance(odParent.getStoredValue()));
-//		if(!SectionIndicator.class.isInstance(odParent.getStoredValue()))return null;
-		
+		assert(odParent.isSection());
 		LinkedHashMap<String,OptionData> hmOpt = odParent==null?hmOptionsRoot:odParent.hmNestedChildrenSubOptions;
 		if(hmOpt==null)return null;
 		
@@ -1237,7 +1233,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		
 		//look for sub-sections
 		for(OptionData od:hmOpt.values()){
-			if(od.getStoredValue() instanceof SectionIndicator){
+			if(od.isSection()){
 				odFound = findSectionRecursively(od.hmNestedChildrenSubOptions,strSectionKey);
 				if(odFound!=null)return odFound;
 			}
@@ -1278,7 +1274,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			ArrayList<OptionData> aodChildLess = new ArrayList<OptionData>();
 			ArrayList<OptionData> aodHasChildren = new ArrayList<OptionData>();
 			for(OptionData od:aod){
-				if(od.getStoredValue() instanceof SectionIndicator){
+				if(od.isSection()){
 					aodHasChildren.add(od);
 				}else{
 					aodChildLess.add(od);
@@ -1296,7 +1292,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		
 		for(OptionData od:aod){
 			vlodOptions.add(od);
-			if(od.getStoredValue() instanceof SectionIndicator){
+			if(od.isSection()){
 				if(od.isExpanded()){
 					recreateListItemsRecursively(od.hmNestedChildrenSubOptions,++iDepth);
 				}
@@ -1332,9 +1328,12 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	
 	public Object getSelectedOptionValue(){
 		int i=getSelectedOptionIndex();
-		Object obj = vlodOptions.get(i).getStoredValue();
-		if(obj instanceof SectionIndicator)return null;
-		return obj;
+		OptionData od = vlodOptions.get(i);
+		if(od.isSection())return null;
+//		Object obj = vlodOptions.get(i).getStoredValue();
+//		if(obj instanceof SectionIndicator)return null;
+//		return obj;
+		return od.getStoredValue();
 	}
 	
 	public void requestUpdateListItems(){
@@ -1398,7 +1397,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		OptionData od = getSelectedOptionData();
 		if(od==null)return;
 		
-		if(SectionIndicator.class.isInstance(od.getStoredValue())){
+		if(od.isSection()){
 			bRequestSelectedToggleExpandedOnce=true;
 		}else{
 			tfInput.setText(od.getTextKey());
@@ -1498,7 +1497,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		});
 	}
 	
-	public LinkedHashMapX<String,OptionData> createDataSnapshot(){
+	public LinkedHashMapX<String,OptionData> createOptionDataSnapshot(){
 //		ArrayList<OptionData> aodList = new ArrayList<OptionData>();
 		LinkedHashMapX<String,OptionData> hmBackup = new LinkedHashMapX<String,OptionData>();
 		doSomethingRecursivelyAtRoot(new Function<SimpleGenericDialog.OptionData, Boolean>() {
