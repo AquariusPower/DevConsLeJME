@@ -551,6 +551,9 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 				if(source==btnMinimize){
 					MinimizedDialogsPanelI.i().minimize(SimpleGenericDialog.this);
 				}else
+				if(source==btnTitleText){
+					//TODO do something one day? double click to maximize/restore?
+				}else
 				{
 					MessagesI.i().warnMsg(SimpleGenericDialog.this, "cmd not supported yet", source);
 				}

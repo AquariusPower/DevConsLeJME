@@ -36,6 +36,10 @@ import java.util.ArrayList;
  */
 public class OSCmd {
 	
+	public Boolean runLinuxCmd(String strCmd){
+		return runOSCommand("linux '"+strCmd+"'");
+	}
+	
 	/**
 	 * Non matching OS cmd will just be ignored/skipped, 
 	 * so several OSs can have their related commands one after another without a problem!
@@ -43,7 +47,7 @@ public class OSCmd {
 	 * @param strLine ex.: "linux 'ls 123'"
 	 * @return
 	 */
-	public boolean runOSCommand(String strLine){
+	public Boolean runOSCommand(String strLine){
 		boolean bOk=true;
 		
 		CommandLineParser ccl = new CommandLineParser(strLine);
@@ -53,7 +57,7 @@ public class OSCmd {
 			/**
 			 * skip message would be just annoying...
 			 */
-			return true; //just skip
+			return null; //just skip
 		}
 		
 		ArrayList<String> astrOSCmd = new ArrayList<String>();

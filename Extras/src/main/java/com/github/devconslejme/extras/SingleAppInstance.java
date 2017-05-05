@@ -355,6 +355,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 	}
 	
 	private void runCheckProblems(){
+		msgOutputTD("Looking for possible problems...");
 		int i=0;
 		for(CallChkProblemsAbs call:acallCheckProblemsList){
 			try {

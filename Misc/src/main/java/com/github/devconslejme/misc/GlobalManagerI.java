@@ -78,7 +78,12 @@ public class GlobalManagerI {
     return (T)obj;
   }
 
-  public <T> void put(Class<T> cl,T obj){
+  @SuppressWarnings("unchecked")
+	public <T> T putConcrete(T obj){
+  	put((Class<T>)obj.getClass(),obj);
+  	return obj;
+  }
+  public <T> T put(Class<T> cl,T obj){
   	Object objAlreadySet=hmInst.get(cl);
     if (objAlreadySet!=null){
       throw new DetailedException("already set: "+cl+", "+objAlreadySet+", "+obj);
@@ -90,6 +95,8 @@ public class GlobalManagerI {
     }
     
 		MessagesI.i().debugInfo(this,"created global instance: "+cl.getName(),obj);
+		
+		return obj;
   }
   
   public ArrayList<Object> getListCopy(){

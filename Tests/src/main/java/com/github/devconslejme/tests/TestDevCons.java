@@ -27,6 +27,8 @@
 
 package com.github.devconslejme.tests;
 
+import java.util.ArrayList;
+
 import com.github.devconslejme.debug.DebugTrackProblemsJME;
 import com.github.devconslejme.debug.UnsafeDebugHacksI;
 import com.github.devconslejme.devcons.DevConsPluginStateI;
@@ -41,6 +43,7 @@ import com.github.devconslejme.misc.CheckProblemsI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.tests.temp.TestVisualizeOtherWindowContents;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
@@ -58,6 +61,8 @@ import com.simsilica.lemur.Command;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class TestDevCons extends SimpleApplication{
+	ArrayList<SimpleApplication> aobjLstUpd = new ArrayList<SimpleApplication>();
+	
 	public static void main(String[] args) {
 		GlobalManagerI.i().get(SingleAppInstance.class).configureOptionalAtMainMethod(
 			JmeSystem.getStorageFolder(StorageFolderType.Internal)); // this is optional
@@ -170,12 +175,21 @@ public class TestDevCons extends SimpleApplication{
 	 * so thru devcons user commands can instantiate the other tests
 	 */
 	private void opt_initOptionalIntegrateAllOtherTests() {
-		GlobalManagerI.i().put(TestContextMenu.class, new TestContextMenu());
-		GlobalManagerI.i().put(TestChoiceDialog.class, new TestChoiceDialog());
-		GlobalManagerI.i().put(TestMultiChildDialog.class, new TestMultiChildDialog());
-		GlobalManagerI.i().put(TestHierarchyResizablePanel.class, new TestHierarchyResizablePanel());
-		GlobalManagerI.i().put(TestMaintenanceDialog.class, new TestMaintenanceDialog());
-		GlobalManagerI.i().put(TestResizablePanel.class, new TestResizablePanel());
+		aobjLstUpd.add(GlobalManagerI.i().putConcrete(new TestContextMenu()));
+		aobjLstUpd.add(GlobalManagerI.i().putConcrete(new TestChoiceDialog()));
+		aobjLstUpd.add(GlobalManagerI.i().putConcrete(new TestMultiChildDialog()));
+		aobjLstUpd.add(GlobalManagerI.i().putConcrete(new TestHierarchyResizablePanel()));
+		aobjLstUpd.add(GlobalManagerI.i().putConcrete(new TestMaintenanceDialog()));
+		aobjLstUpd.add(GlobalManagerI.i().putConcrete(new TestResizablePanel()));
+		aobjLstUpd.add(GlobalManagerI.i().putConcrete(new TestVisualizeOtherWindowContents()));
+	}
+	
+	@Override
+	public void simpleUpdate(float tpf) {
+		super.simpleUpdate(tpf);
+		for(SimpleApplication obj:aobjLstUpd){
+			obj.simpleUpdate(tpf);
+		}
 	}
 	
 	/**
@@ -183,8 +197,8 @@ public class TestDevCons extends SimpleApplication{
 	 */
 	@Workaround
 	private void raiseAppWindowAtLinux() {
-		GlobalManagerI.i().get(OSCmd.class).runOSCommand(
-			"linux 'xdotool windowactivate $(xdotool search --name \"^"+settings.getTitle()+"$\")'");
+		GlobalManagerI.i().get(OSCmd.class).runLinuxCmd(
+			"xdotool windowactivate $(xdotool search --name \"^"+settings.getTitle()+"$\")");
 	}
 
 	/**

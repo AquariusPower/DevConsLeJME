@@ -54,8 +54,8 @@ public class GenerateClassGraphAnalysis {
 		
 		Files.write(str, new File("Tests/src/main/analysis/GraphViz.dot"), StandardCharsets.UTF_8);
 		
-		GlobalManagerI.i().get(OSCmd.class).runOSCommand("linux 'dot -Tsvg "
+		GlobalManagerI.i().get(OSCmd.class).runLinuxCmd("dot -Tsvg "
 			+"< Tests/src/main/analysis/GraphViz.dot "
-			+"> Tests/src/main/analysis/GraphViz.svg'");
+			+"> Tests/src/main/analysis/GraphViz.svg ");
 	}
 }
