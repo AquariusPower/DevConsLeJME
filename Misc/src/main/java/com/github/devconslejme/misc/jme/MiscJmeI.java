@@ -111,9 +111,13 @@ public class MiscJmeI {
 	}
 	
 	public void recursivelyApplyTextNoWrap(Node nodeParent) {
+		LineWrapMode e = LineWrapMode.Clip;//NoWrap;
 		for(Spatial spt:nodeParent.getChildren()){
 			if(spt instanceof BitmapText){
-				((BitmapText)spt).setLineWrapMode(LineWrapMode.NoWrap);
+//				System.err.println("NoWrapAt:"+((BitmapText)spt).getText());//TODO rm
+				if(!((BitmapText)spt).getLineWrapMode().equals(e)){
+					((BitmapText)spt).setLineWrapMode(e);
+				}
 			}
 			if(spt instanceof Node){
 				recursivelyApplyTextNoWrap((Node)spt);

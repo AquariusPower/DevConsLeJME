@@ -613,8 +613,8 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		boolean bVisible = b!=null ? bVisible=b : !cntrMain.hasChild(rzpVarBar);
 		if(bVisible){
 			cntrMain.addChild(rzpVarBar, BorderLayout.Position.West);
+//			cntrMain.addChild(new Button("tstOverride"), BorderLayout.Position.West);
 		}else{
-//			cntrMain.addChild(new Panel(), BorderLayout.Position.West);
 			cntrMain.removeChild(rzpVarBar);
 		}
 		

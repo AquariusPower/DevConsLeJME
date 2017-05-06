@@ -481,7 +481,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		if(getSize().length()>0 && getLocalTranslation().length()==0){
 			/**
 			 * if it's contents are ready (size),
-			 * and it's location was not set (ZERO)
+			 * and it's location was not set (ZERO), also means is outside the screen..
 			 */
 			MiscLemurI.i().moveToScreenCenterXY(this);
 		}
@@ -507,7 +507,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 					MessagesI.i().warnMsg(this,"maximum size reached during grow fix");
 					throw ex;
 				} //prevents endless growth
-				growParentestFixAttempt(iGrowParentFixCount);
+				growParentestFixAttempt(iGrowParentFixCount); //TODO if it begins at max size, try to shrink?
 				iGrowParentFixCount++;
 			}
 		}
