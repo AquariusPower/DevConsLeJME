@@ -28,15 +28,21 @@ package com.github.devconslejme.tests.temp;
 
 import com.github.devconslejme.extras.OSCmd;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
+import com.github.devconslejme.gendiag.GlobalsManagerDialogI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.jme.QueueStateI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.jme3.app.SimpleApplication;
 import com.jme3.asset.AssetNotFoundException;
+import com.jme3.asset.TextureKey;
 import com.jme3.math.Vector3f;
+import com.jme3.ui.Picture;
+import com.simsilica.lemur.Button;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.TextField;
@@ -56,17 +62,21 @@ public class TestVisualizeOtherWindowContents extends SimpleApplication{
 	private OSCmd	oscmd;
 	private Long	lWindowId;
 	private float	fTime;
-	private ResizablePanel	pnl;
+	private ResizablePanel	rzp;
 	private IconComponent	ic;
 	private boolean	bInitialized;
 	protected TextField	tf;
+	protected Picture	pic;
+	private int	iTryMode=1;
+	private Panel	pnl;
+	private SimpleApplication	sapp;
 
 	@Override
 	public void simpleInitApp() {
 		GuiGlobals.initialize(this);
 		BaseStyles.loadGlassStyle();
 		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
-		//TODO com.github.devconslejme.TODO.PkgCfgI.i().configure();
+		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this,getGuiNode());
 		
 		initTest();
 	}
@@ -75,32 +85,106 @@ public class TestVisualizeOtherWindowContents extends SimpleApplication{
 	 * public so can be called from devcons user cmds
 	 */
 	public void initTest() {
+		sapp = GlobalManagerI.i().get(SimpleApplication.class);
+		
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
 				oscmd = new OSCmd();
-				pnl = DialogHierarchyStateI.i().createDialog(this.getClass().getSimpleName(),null);
-				pnl.setContents(new Panel());
-				DialogHierarchyStateI.i().showDialog(pnl);
 				
-				tf = new TextField("TypeWindowIdHere");
-				getGuiNode().attachChild(tf);
-				tf.setLocalTranslation(new Vector3f(300,300,0));
-				tf.setPreferredSize(new Vector3f(300,50,MiscLemurI.i().getMinSizeZ()));
+				init();
 				
 		//		ic=new IconComponent(getFileName());ic.setImageTexture(GuiGlobals.getInstance().loadTexture(getFileName(), false, false));pnl.getContents().setBackground(ic); //TODO rm
 				bInitialized=true;
+				
+				pic = new Picture();
 				
 				return true;
 			}
 		});
 	}
 	
+	private void init(){
+		if(iTryMode==0){
+			rzp = DialogHierarchyStateI.i().createDialog(this.getClass().getSimpleName(),null);
+			MiscJmeI.i().addToName(rzp, this.getClass().getSimpleName(), true);
+			rzp.setContents(new Panel());
+			rzp.setPreferredSizeWH(new Vector3f(100,100,Float.NaN));
+			DialogHierarchyStateI.i().showDialog(rzp);
+			
+			if(false){
+				tf = new TextField("TypeWindowIdHere");
+				sapp.getGuiNode().attachChild(tf);
+				tf.setLocalTranslation(new Vector3f(300,300,0));
+				tf.setPreferredSize(new Vector3f(300,50,MiscLemurI.i().getMinSizeZ()));
+			}
+		}
+		if(iTryMode==1){
+//			Button btn = new Button("oi", BaseStyles.GLASS);
+//			btn.setPreferredSize(new Vector3f(100,100,0.01f));
+//			btn.setLocalTranslation(new Vector3f(100,400,0));
+//			getGuiNode().attachChild(btn);
+			
+			pnl = new Panel(BaseStyles.GLASS);
+			pnl.setPreferredSize(new Vector3f(100,100,0.01f));
+			pnl.setLocalTranslation(new Vector3f(100,300,0));
+			
+			ic = new IconComponent(getFileName());
+			pnl.setBackground(ic);
+			
+			sapp.getGuiNode().attachChild(pnl);
+		}
+	}
+	private boolean applyTexture(){
+		if(iTryMode==0){
+			if(ic==null){
+				try{
+					ic=new IconComponent(getFileName());
+				}catch(AssetNotFoundException ex){
+					MessagesI.i().warnMsg(this, "file not found", getFileName(), ex);
+					return false;
+				}
+				rzp.getContents().setBackground(ic);
+			}
+			ic.setImageTexture(GuiGlobals.getInstance().loadTexture(getFileName(), false, false));
+			/**
+			 * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			 * the above line is probably causing this exception stack whenever trying to open a gendiag !!! :O
+					ListSort<T>.mergeHigh(int, int, int, int) line: 855	
+					ListSort<T>.mergeRuns(int) line: 476	
+					ListSort<T>.mergeCollapse() line: 407	
+					ListSort<T>.sort(T[], Comparator<T>) line: 233	
+					GeometryList.sort() line: 158	
+					RenderQueue.renderGeometryList(GeometryList, RenderManager, Camera, boolean) line: 262	
+					RenderQueue.renderQueue(RenderQueue$Bucket, RenderManager, Camera, boolean) line: 302	
+					RenderManager.renderViewPortQueues(ViewPort, boolean) line: 898	
+					RenderManager.flushQueue(ViewPort) line: 781	
+					RenderManager.renderViewPort(ViewPort, float) line: 1097	
+					RenderManager.render(float, boolean) line: 1153	
+					TestDevCons(SimpleApplication).update() line: 253	
+					LwjglDisplay(LwjglAbstractDisplay).runLoop() line: 151	
+					LwjglDisplay.runLoop() line: 193	
+					LwjglDisplay(LwjglAbstractDisplay).run() line: 232	
+					Thread.run() line: 745	
+			 */
+	//		ic.setIconScale(MiscJmeI.i().toV2f(pnl.getContents().getSize()));
+			ic.setIconScale(0.25f);
+		}
+		if(iTryMode==1){
+//			sapp.getAssetManager().deleteFromCache(new TextureKey(getFileName()));
+//			ic.setImageTexture(GuiGlobals.getInstance().loadTexture(getFileName(), false, false));
+			sapp.getAssetManager().clearCache();
+			pnl.setBackground(new IconComponent(getFileName()));
+		}
+		
+		return true;
+	}
+	
 	@Override
 	public void simpleUpdate(float tpf) {
 		if(!bInitialized)return;
 		
-		try{setWindowId(Long.parseLong(tf.getText()));}catch(NumberFormatException ex){}
+		if(false)try{setWindowId(Long.parseLong(tf.getText()));}catch(NumberFormatException ex){}
 		
 		if(getWindowId()!=null){
 			fTime+=tpf;
@@ -110,38 +194,7 @@ public class TestVisualizeOtherWindowContents extends SimpleApplication{
 					QueueI.i().enqueue(new CallableXAnon() {
 						@Override
 						public Boolean call() {
-							if(ic==null){
-								try{
-									ic=new IconComponent(getFileName());
-								}catch(AssetNotFoundException ex){
-									MessagesI.i().warnMsg(this, "file not found", getFileName(), ex);
-									return false;
-								}
-								pnl.getContents().setBackground(ic);
-							}
-							ic.setImageTexture(GuiGlobals.getInstance().loadTexture(getFileName(), false, false));
-							/**
-							 * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-							 * the above line is causing this exception stack whenever trying to open a gendiag !!! :O
-	ListSort<T>.mergeHigh(int, int, int, int) line: 855	
-	ListSort<T>.mergeRuns(int) line: 476	
-	ListSort<T>.mergeCollapse() line: 407	
-	ListSort<T>.sort(T[], Comparator<T>) line: 233	
-	GeometryList.sort() line: 158	
-	RenderQueue.renderGeometryList(GeometryList, RenderManager, Camera, boolean) line: 262	
-	RenderQueue.renderQueue(RenderQueue$Bucket, RenderManager, Camera, boolean) line: 302	
-	RenderManager.renderViewPortQueues(ViewPort, boolean) line: 898	
-	RenderManager.flushQueue(ViewPort) line: 781	
-	RenderManager.renderViewPort(ViewPort, float) line: 1097	
-	RenderManager.render(float, boolean) line: 1153	
-	TestDevCons(SimpleApplication).update() line: 253	
-	LwjglDisplay(LwjglAbstractDisplay).runLoop() line: 151	
-	LwjglDisplay.runLoop() line: 193	
-	LwjglDisplay(LwjglAbstractDisplay).run() line: 232	
-	Thread.run() line: 745	
-							 */
-							ic.setIconScale(MiscJmeI.i().toV2f(pnl.getContents().getSize()));
-							
+							if(!applyTexture())return false;
 							return true;
 						}
 					});

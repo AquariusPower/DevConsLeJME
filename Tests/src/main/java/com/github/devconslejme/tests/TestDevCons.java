@@ -56,19 +56,60 @@ import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
 
 /**
- * its {@link GlobalManagerI} global will be auto set as {@link Application} thru the package configuration.
+ * this {@link GlobalManagerI} global will be auto set as {@link Application} thru the package configuration.
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class TestDevCons extends SimpleApplication{
-	ArrayList<SimpleApplication> aobjLstUpd = new ArrayList<SimpleApplication>();
-	
 	public static void main(String[] args) {
-		GlobalManagerI.i().get(SingleAppInstance.class).configureOptionalAtMainMethod(
-			JmeSystem.getStorageFolder(StorageFolderType.Internal)); // this is optional
-		
+		if(bEnableOpt)opt_initSingleAppInstanceAtMain();
 		TestDevCons tst = new TestDevCons();
+		if(bEnableOpt)opt_initWindow(tst);
+		tst.start();
+	}
+	
+	@Override
+	public void simpleInitApp() {
+		com.github.devconslejme.devcons.PkgCfgI.i().configure(this,getGuiNode());
 		
+		/**
+		 * to remove {@link JavaScriptI} auto global access to some class/object, ex.: 
+		JavaScriptI.i().addForbidClassAccessJS(TestDevCons.class);
+		 */
+		
+		if(bEnableOpt){
+			opt_disableSomeSimpleAppThings();
+			opt_initOptionalExtras();
+			opt_initOptionalOtherStuff();
+			opt_initOptionalIntegrateAllOtherTests();
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	/******************************************************************************************
+	 * OPTIONALS BELOW
+	 * you can just detele them all.
+	 ******************************************************************************************/
+	
+	/** */
+	ArrayList<SimpleApplication> aoUpdtOptionals = new ArrayList<SimpleApplication>();
+	private static boolean	bEnableOpt = true;
+	
+	private void opt_disableSomeSimpleAppThings() {
+		// disable some mappings to let the console manage it too.
+		getInputManager().deleteMapping(SimpleApplication.INPUT_MAPPING_CAMERA_POS); //TODO there is no super code for it?
+		getInputManager().deleteMapping(SimpleApplication.INPUT_MAPPING_MEMORY); //TODO there is no super code for it?
+		getInputManager().deleteMapping(SimpleApplication.INPUT_MAPPING_HIDE_STATS);
+		getInputManager().deleteMapping(SimpleApplication.INPUT_MAPPING_EXIT); //this is important to let ESC be used for more things
+		stateManager.getState(StatsAppState.class).setDisplayStatView(false);
+	}
+	
+	private static void opt_initWindow(TestDevCons tst) {
 		AppSettings as = new AppSettings(true);
 		as.setTitle(TestDevCons.class.getSimpleName());
 		as.setResolution(1230,690);
@@ -77,29 +118,11 @@ public class TestDevCons extends SimpleApplication{
 		tst.setSettings(as);
 		
 		tst.setShowSettings(false);
-		
-		tst.start();
 	}
 	
-	@Override
-	public void simpleInitApp() {
-		com.github.devconslejme.devcons.PkgCfgI.i().configure(this,getGuiNode());
-		
-		// disable some mappings to let the console manage it.
-		getInputManager().deleteMapping(SimpleApplication.INPUT_MAPPING_CAMERA_POS); //TODO there is no super code for it?
-		getInputManager().deleteMapping(SimpleApplication.INPUT_MAPPING_MEMORY); //TODO there is no super code for it?
-		getInputManager().deleteMapping(SimpleApplication.INPUT_MAPPING_HIDE_STATS);
-		getInputManager().deleteMapping(SimpleApplication.INPUT_MAPPING_EXIT); //this is important to let ESC be used for more things
-		stateManager.getState(StatsAppState.class).setDisplayStatView(false);
-		
-		// below are not required
-		/**
-		 * to remove JS auto global access to some class/object, ex.: 
-		JavaScriptI.i().addForbidClassAccessJS(TestDevCons.class);
-		 */
-		opt_initOptionalExtras();
-		opt_initOptionalOtherStuff();
-		opt_initOptionalIntegrateAllOtherTests(); 
+	private static void opt_initSingleAppInstanceAtMain() {
+		GlobalManagerI.i().get(SingleAppInstance.class).configureOptionalAtMainMethod(
+				JmeSystem.getStorageFolder(StorageFolderType.Internal)); // this is optional
 	}
 	
 	private void opt_initOptionalExtras() {
@@ -138,21 +161,6 @@ public class TestDevCons extends SimpleApplication{
 				GlobalsManagerDialogI.i().show();
 			}}, null
 		);
-//		QueueI.i().enqueue(new CallableXAnon() {
-//			@Override
-//			public Boolean call() {
-//				if(!DevConsPluginStateI.i().isInitialized())return false;
-//				
-//				DevConsPluginStateI.i().putButton("GlobalsManager", "open global instances manager", new Command<Button>() {
-//					@Override
-//					public void execute(Button source) {
-//						GlobalsManagerDialogI.i().show();
-//					}
-//				});
-//				
-//				return true;
-//			}
-//		});
 	}
 
 	private void opt_initOptionalOtherStuff() {
@@ -175,19 +183,18 @@ public class TestDevCons extends SimpleApplication{
 	 * so thru devcons user commands can instantiate the other tests
 	 */
 	private void opt_initOptionalIntegrateAllOtherTests() {
-		aobjLstUpd.add(GlobalManagerI.i().putConcrete(new TestContextMenu()));
-		aobjLstUpd.add(GlobalManagerI.i().putConcrete(new TestChoiceDialog()));
-		aobjLstUpd.add(GlobalManagerI.i().putConcrete(new TestMultiChildDialog()));
-		aobjLstUpd.add(GlobalManagerI.i().putConcrete(new TestHierarchyResizablePanel()));
-		aobjLstUpd.add(GlobalManagerI.i().putConcrete(new TestMaintenanceDialog()));
-		aobjLstUpd.add(GlobalManagerI.i().putConcrete(new TestResizablePanel()));
-		aobjLstUpd.add(GlobalManagerI.i().putConcrete(new TestVisualizeOtherWindowContents()));
+		aoUpdtOptionals.add(GlobalManagerI.i().putConcrete(new TestContextMenu()));
+		aoUpdtOptionals.add(GlobalManagerI.i().putConcrete(new TestChoiceDialog()));
+		aoUpdtOptionals.add(GlobalManagerI.i().putConcrete(new TestMultiChildDialog()));
+		aoUpdtOptionals.add(GlobalManagerI.i().putConcrete(new TestHierarchyResizablePanel()));
+		aoUpdtOptionals.add(GlobalManagerI.i().putConcrete(new TestMaintenanceDialog()));
+		aoUpdtOptionals.add(GlobalManagerI.i().putConcrete(new TestResizablePanel()));
 	}
 	
 	@Override
 	public void simpleUpdate(float tpf) {
 		super.simpleUpdate(tpf);
-		for(SimpleApplication obj:aobjLstUpd){
+		for(SimpleApplication obj:aoUpdtOptionals){
 			obj.simpleUpdate(tpf);
 		}
 	}
