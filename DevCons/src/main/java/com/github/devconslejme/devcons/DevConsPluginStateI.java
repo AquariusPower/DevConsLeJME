@@ -887,11 +887,9 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	private void initStatusSection() {
 		cntrStatus = new Container(getStyle());
 		cntrMain.addChild(cntrStatus, BorderLayout.Position.North);
-//		MiscLemurI.i().applySimpleDragParentestListener(cntrStatus);
 		
 		// buttons
 		putButtonLater("DefaultPosSize", "Restore DevCons defaults Size and Position", new Command<Button>() {
@@ -902,9 +900,6 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			}, 
 			null
 		);
-//		btnRestoreSize = new Button("DefaultPosSize",getStyle());
-//		PopupHintHelpListenerI.i().setPopupHintHelp(btnRestoreSize, "Restore DevCons defaults Size and Position");
-//		hmButtons.put(btnRestoreSize.getText(),btnRestoreSize);
 		
 		putButtonLater("VarMonBar:Toggle", "Show Variables Monitor Bar", 
 			new Command<Button>() {
@@ -938,41 +933,15 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 				}
 			}
 		);
-//		btnShowVarMon = new Button("VarMonBar:Toggle",getStyle());
-//		PopupHintHelpListenerI.i().setPopupHintHelp(btnShowVarMon, "Show Variables Monitor Bar");
-//		ContextMenu cm = new ContextMenu(rzpMain);
-//		cm.addNewEntry(
-//			"ToggleHiddenStats", 
-//			new Command<Button>(){
-//				@Override
-//				public void execute(Button source) {
-//					bAllowHiddenStats=!bAllowHiddenStats;
-//					enqueueUpdateVarMonList();
-//				}
-//			},
-//			new HintUpdater() {
-//				@Override
-//				public Boolean call() {
-//					setPopupHintHelp("(click to "+(bAllowHiddenStats?"show":"hide")+")"); //say the next action on clicking
-//					return true;
-//				}
-//			}
-//		);
-//		ContextMenuI.i().applyContextMenuAt(btnShowVarMon,cm);
-//		hmButtons.put(btnShowVarMon.getText(),btnShowVarMon);
 		
 		putButtonLater("Clipboard:Show", "Show Clipboard Contents", new Command<Button>(){@Override	public void execute(Button source) {
 			ClipboardI.i().showClipboard();	}},null);
-//		btnClipboardShow = new Button("Clipboard:Show",getStyle());
-//		PopupHintHelpListenerI.i().setPopupHintHelp(btnClipboardShow, "Show Clipboard Contents");
-//		hmButtons.put(btnClipboardShow.getText(),btnClipboardShow);
 		
-		btnTitle = new BtnConsoleAction(strBaseTitle ,getStyle());
-//		SimpleDragParentestListenerI.i().applyAt(lblStats);
+		// special "useless" (w/o commands) button
+		btnTitle = new BtnConsoleAction(strBaseTitle,getStyle());
 		btnTitle.setColor(new ColorRGBA(1,1,0.5f,1));
 		btnTitle.setTextHAlignment(HAlignment.Right);
 		hmButtons.put(btnTitle.getText(),btnTitle);
-//		cntrStatus.addChild(lblStats,0,0);
 		
 		bclk = new BtnConsoleActionCursorListenerX();
 		
@@ -1020,11 +989,18 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		});
 	}
 	
-	public BtnConsoleAction putButton(String strTextKey, String strPopupHelp, Command<? super Button> cmd){
+	/**
+	 * 
+	 * @param strTextKey
+	 * @param strPopupHelp can be null
+	 * @param cmd
+	 * @return
+	 */
+	private BtnConsoleAction putButton(String strTextKey, String strPopupHelp, Command<? super Button> cmd){
 		DetailedException.assertIsInitialized(isInitialized(), this, strTextKey, strPopupHelp, cmd);
 		
 		BtnConsoleAction btnc = new BtnConsoleAction(strTextKey,getStyle());
-		PopupHintHelpListenerI.i().setPopupHintHelp(btnc, strPopupHelp);
+		if(strPopupHelp!=null)PopupHintHelpListenerI.i().setPopupHintHelp(btnc, strPopupHelp);
 		btnc.setCmd(cmd);
 		hmButtons.put(btnc.getText(),btnc);
 		requestRecreateButtons();
