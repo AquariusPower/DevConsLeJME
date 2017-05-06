@@ -677,14 +677,14 @@ public class ContextMenuI implements IResizableListener{
 //		IndicatorI.i().disableAllIndicatorsRecursively(rzpContextMenu);
 //	}
 	
-	@Override	public void resizerUpdatedLogicalStateEvent(float tpf,			ResizablePanel rzpSource) {	}
+	@Override	public void resizableUpdatedLogicalStateEvent(float tpf,			ResizablePanel rzpSource) {	}
 	@Override
-	public void removedFromParentEvent(ResizablePanel rzpSource) {
+	public void resizableRemovedFromParentEvent(ResizablePanel rzpSource) {
 		IndicatorI.i().destroyAllIndicatorsRecursively(rzpSource);
 //		hideContextMenu();
 	}
-	@Override	public void resizedEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {	}
-	@Override	public void endedResizingEvent(ResizablePanel rzpSource) {	}
+	@Override	public void resizableStillResizingEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {	}
+	@Override	public void resizableEndedResizingEvent(ResizablePanel rzpSource) {	}
 
 	public ContextMenu createStringRegexOptContextMenu(
 		ResizablePanel rzpDialogHierarchyParent, 

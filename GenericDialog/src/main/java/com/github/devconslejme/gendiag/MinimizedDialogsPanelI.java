@@ -36,8 +36,10 @@ import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
+import com.github.devconslejme.misc.lemur.ResizablePanel.IResizableListener;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.simsilica.lemur.Button;
@@ -47,7 +49,7 @@ import com.simsilica.lemur.Container;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class MinimizedDialogsPanelI {
+public class MinimizedDialogsPanelI implements IResizableListener{
 	public static MinimizedDialogsPanelI i(){return GlobalManagerI.i().get(MinimizedDialogsPanelI.class);}
 	
 	private ResizablePanel	minimizedDiags;
@@ -82,12 +84,15 @@ public class MinimizedDialogsPanelI {
 			@Override
 			public Boolean call() {
 				minimizedDiags = dhs.createDialog("Minimized dialogs panel", null);
-				cntrMinimized=new Container();
-				minimizedDiags.setContents(cntrMinimized);
-				sys.setHierarchyComp(dhs.getEntityId(minimizedDiags), 
-					new DiagCompBean().setHierarchyType(EHierarchyType.Top));
+				minimizedDiags.addResizableListener(MinimizedDialogsPanelI.this);
+				minimizedDiags.setApplyContentsBoundingBoxSize(false);
 				minimizedDiags.setLocalTranslationXY(new Vector3f(0,Display.getHeight(),Float.NaN));
 				minimizedDiags.setPreferredSizeWH(new Vector3f(Display.getWidth(),1,Float.NaN));
+				sys.setHierarchyComp(dhs.getEntityId(minimizedDiags), 
+						new DiagCompBean().setHierarchyType(EHierarchyType.Top));
+				
+				cntrMinimized=new Container();
+				minimizedDiags.setContents(cntrMinimized);
 				
 				bInitialized=true;
 				return true;
@@ -100,24 +105,68 @@ public class MinimizedDialogsPanelI {
 		if(dhs.getHierarchyComp(sgd.getDialog()).getHierarchyParent()!=null)return;
 		
 		Button btn = new Button(sgd.getTitle());
-		cntrMinimized.addChild(btn, cntrMinimized.getLayout().getChildren().size());
+		
+		addMinimized(btn, cntrMinimized.getLayout().getChildren().size());
+//		cntrMinimized.addChild(btn, cntrMinimized.getLayout().getChildren().size());
 		btn.addClickCommands(new Command<Button>() {
 			@Override
 			public void execute(Button source) {
 				DialogHierarchyStateI.i().showDialog(sgd.getDialog());
 				btn.removeFromParent();
 				
-				//read remaining
-				ArrayList<Node> children = new ArrayList<Node>(cntrMinimized.getLayout().getChildren()); //remaining
-				cntrMinimized.getLayout().clearChildren();
-//				for(int i=0;i<children.size();i++){
-				int i=0;for(Node child:children){
-					cntrMinimized.addChild(child, i++);
-				}
+				update();
 			}
+
 		});
 		
 		sgd.close();
 	}
+	
+	private void update() {
+		//read remaining
+		ArrayList<Node> children = new ArrayList<Node>(cntrMinimized.getLayout().getChildren()); //remaining
+		cntrMinimized.getLayout().clearChildren();
+//		Vector3f v3fMaxSize = new Vector3f();
+		int i=0;for(Node child:children){
+			Button btnChild = (Button)child;
+			addMinimized(btnChild, i++);
+			Vector3f v3fPrefSize = btnChild.getPreferredSize();
+//			if(v3fMaxSize.x < v3fPrefSize.x)v3fMaxSize.x=v3fPrefSize.x;
+//			if(v3fMaxSize.y < v3fPrefSize.y)v3fMaxSize.y=v3fPrefSize.y;
+		}
+		
+		Vector3f v3fSize = minimizedDiags.getSize().clone();
+		float f=30; //TODO auto find out the font height
+		if(v3fSize.x<f)v3fSize.x=f;
+		if(v3fSize.y<f)v3fSize.y=f;
+//		if(v3fSize.y < fMaxHeight){
+//			v3fSize.y = fMaxHeight;
+			minimizedDiags.setPreferredSize(v3fSize);
+//		}
+	}
+	
+	private void addMinimized(Node node,int iIndex){
+		Vector3f v3fSize = cntrMinimized.getSize();
+		if(v3fSize.x>=v3fSize.y){
+			cntrMinimized.addChild(node, 0, iIndex);
+		}else{
+			cntrMinimized.addChild(node, iIndex, 0);
+		}
+	}
+
+	@Override
+	public void resizableUpdatedLogicalStateEvent(float tpf,			ResizablePanel rzpSource) {
+	}
+
+	@Override
+	public void resizableRemovedFromParentEvent(ResizablePanel rzpSource) {	}
+
+	@Override
+	public void resizableStillResizingEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {
+		update();
+	}
+
+	@Override
+	public void resizableEndedResizingEvent(ResizablePanel rzpSource) { }
 	
 }

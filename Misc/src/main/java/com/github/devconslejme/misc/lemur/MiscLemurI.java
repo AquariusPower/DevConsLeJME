@@ -233,6 +233,11 @@ public class MiscLemurI {
 	}
 //	private String strUDKeySafeSizeLast=ResizablePanel.class.getName()+"/SafeSize";
 //	private String strUDKeySafeSizeDefault=ResizablePanel.class.getName()+"/SafeSizeDefault";
+	/**
+	 * TODO confirm: this method cannot be called every frame or may mess alignment and line wrap mode on BitmapText
+	 * @param eapply
+	 * @param pnl
+	 */
 	public void safeSizeRecursively(EReSizeApplyMode eapply, Panel pnl) {
 		SafeSize ss = UserDataI.i().getUserDataPSH(pnl, SafeSize.class, true);
 		switch(eapply){

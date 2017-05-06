@@ -89,8 +89,15 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 //	private Integer	iGrowParentestFixAttemptLimit=null;
 //	private boolean	bEnabledGrowParentestFixAttemptLimit=false;
 	private HashMap<EEdge,Edge> hmEdge = new HashMap<EEdge,Edge>();
-	private Panel pnlParentest = null;
+	private ResizablePanel rzpParentest = null;
 	private boolean bEnableResizing=true;
+	private IBorderMargin irb = null;
+	private boolean	bSkipGrowFix;
+	private boolean	bUseSameBorderAtResizable = false;
+	private boolean bUpdateLogicalStateSuccess = false;
+//	private long lConsecutiveSuccessCount=0;
+	private boolean	bApplyBoundingBoxSize = true;
+	private Vector3f	v3fLastSucessSize=null;
 	
 //	public static interface IResizableListener {
 //		//public static class VersionedVector3f extends Vector3f implements VersionedObject{}; //???
@@ -103,10 +110,10 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		/**
 		 * it is meant to provide insta updates whenever changes happen to this panel.
 		 */
-		public void resizerUpdatedLogicalStateEvent(float tpf, ResizablePanel rzpSource);
-		public void removedFromParentEvent(ResizablePanel rzpSource);
-		public void resizedEvent(ResizablePanel rzpSource,Vector3f v3fNewSize);
-		public void endedResizingEvent(ResizablePanel rzpSource);
+		public void resizableUpdatedLogicalStateEvent(float tpf, ResizablePanel rzpSource);
+		public void resizableRemovedFromParentEvent(ResizablePanel rzpSource);
+		public void resizableStillResizingEvent(ResizablePanel rzpSource,Vector3f v3fNewSize);
+		public void resizableEndedResizingEvent(ResizablePanel rzpSource);
 //		public void closedEvent(ResizablePanel rzpSource);
 	}
 	private ArrayList<IResizableListener> listeners = new ArrayList<IResizableListener>();
@@ -114,11 +121,6 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 	public static interface IBorderMargin {
 		public void setMargin(int i);
 	}
-	private IBorderMargin irb = null;
-	private boolean	bSkipGrowFix;
-	private boolean	bUseSameBorderAtResizable = false;
-	private boolean	bUpdateLogicalStateSuccess;
-	private boolean	bApplyBoundingBoxSize = true;
 	
 	public static enum EEdge{
 		// !!!!!!!!!!!!!!THIS ORDER IS IMPORTANT!!!!!!!!!!!!!!
@@ -368,7 +370,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 			if(!v3fNewSize.equals(v3fOldSize)){ 
 //				resizedTo(v3fNewSize);
 				for(IResizableListener iuls:listeners){
-					iuls.resizedEvent(this,v3fNewSize);
+					iuls.resizableStillResizingEvent(this,v3fNewSize);
 				}
 			}
 		}else{
@@ -399,9 +401,9 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 //		
 //		return pnlParentest;
 //	}
-	private Panel getParentest(){
-		if(pnlParentest!=null)return pnlParentest;
-		return SpatialHierarchyI.i().getParentest(this,Panel.class,true);
+	private ResizablePanel getParentest(){
+		if(rzpParentest!=null)return rzpParentest;
+		return SpatialHierarchyI.i().getParentest(this,ResizablePanel.class,true);
 	}
 	
 	/**
@@ -478,6 +480,8 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 	
 	@Override
 	public void updateLogicalState(float tpf) {
+//		if(true){updateLogicalState(tpf);return;}
+		
 		if(getSize().length()>0 && getLocalTranslation().length()==0){
 			/**
 			 * if it's contents are ready (size),
@@ -489,40 +493,63 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		if(bApplyBoundingBoxSize)applyBoundingBoxSizeAfterResizing();
 		
 		int iGrowParentFixCount=0;
+		boolean bFirstSuccessOnChange=false;
+		ResizablePanel rzpParentest = getParentest();
 		while(true){
 			try{
 				super.updateLogicalState(tpf);
+				
+				if(v3fLastSucessSize==null){
+					v3fLastSucessSize=getSize().clone();
+				}else{
+					if(!v3fLastSucessSize.equals(getSize())){
+						v3fLastSucessSize.set(getSize());
+						bFirstSuccessOnChange=true;
+					}
+				}
+//				if(rzpParentest.v3fLastSucessSize==null){
+//					rzpParentest.v3fLastSucessSize=getSize().clone();
+//				}else{
+//					if(!rzpParentest.v3fLastSucessSize.equals(getSize())){
+//						rzpParentest.v3fLastSucessSize.set(getSize());
+//						bFirstSuccessOnChange=true;
+//					}
+//				}
+				
 				bUpdateLogicalStateSuccess=true;
 				break;
 			}catch(IllegalArgumentException ex){
 				bUpdateLogicalStateSuccess=false;
+				
 				if(bSkipGrowFix)throw ex;
 				if(!ex.getMessage().startsWith("Size cannot be negative:")) throw ex;
-//				if(iGrowParentestFixAttemptLimit!=null && i>=iGrowParentestFixAttemptLimit){throw ex;} //prevents endless growth
-//				if(i>=getGrowParentestFixAttemptLimitGlobal()){
-				Panel pnlParentest = getParentest();
-				Vector3f v3fSize = pnlParentest.getSize();
+				Vector3f v3fSize = rzpParentest.getSize();
 				if(v3fSize.x==Display.getWidth() && v3fSize.y==Display.getHeight()){
-					debugRecursiveChildPanelSizes("",getParentest());
-					MessagesI.i().warnMsg(this,"maximum size reached during grow fix");
-					throw ex;
-				} //prevents endless growth
-				growParentestFixAttempt(iGrowParentFixCount); //TODO if it begins at max size, try to shrink?
-				iGrowParentFixCount++;
+					if(v3fLastSucessSize!=null){
+						MiscLemurI.i().safeSizeRecursively(EReSizeApplyMode.Restore,getParentest());
+//						setPreferredSize(v3fLastSucessSize); //restore last
+						v3fLastSucessSize=null; //one try only as something inside may have changed making it completely impossible to work
+					}else{
+						//prevents endless growth
+						debugRecursiveChildPanelSizes("",getParentest());
+						MessagesI.i().warnMsg(this,"maximum size limit reached during grow fix");
+						throw ex;
+					}
+				}else{
+//					v3fLastSucessSize=null;
+					growParentestFixAttempt(iGrowParentFixCount); //TODO if it begins at max size, try to shrink?
+					iGrowParentFixCount++;
+				}
 			}
 		}
 		
-		if(bUpdateLogicalStateSuccess){
+		if(bFirstSuccessOnChange){
 			MiscLemurI.i().safeSizeInitialize(this);
-//			if(getUserData(strUDKeySafeSizeLast)==null){ // 1st/initial safe size will be default
-//				MiscLemurI.i().safeSizeRecursively(EReSizeApplyMode.UpdateDefaultToCurrent,this);
-//			}
-			
 			MiscLemurI.i().safeSizeRecursively(EReSizeApplyMode.Save,getParentest());
-			
-			for(IResizableListener iuls:listeners){
-				iuls.resizerUpdatedLogicalStateEvent(tpf,this);
-			}
+		}
+		
+		for(IResizableListener iuls:listeners){
+			iuls.resizableUpdatedLogicalStateEvent(tpf,this);
 		}
 	}
 	
@@ -613,7 +640,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 				rzp.v3fDragFromPrevious=null;
 				rzp.eeInitialHook=(null);
 				for(IResizableListener iuls:rzp.listeners){
-					iuls.endedResizingEvent(rzp);
+					iuls.resizableEndedResizingEvent(rzp);
 				}
 				event.setConsumed(); //this also prevents sending the event to other than this panel
 			}
@@ -857,7 +884,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		boolean b = super.removeFromParent();
 		if(b){
 			for(IResizableListener iuls:listeners){
-				iuls.removedFromParentEvent(this);
+				iuls.resizableRemovedFromParentEvent(this);
 			}
 		}
 		return b;

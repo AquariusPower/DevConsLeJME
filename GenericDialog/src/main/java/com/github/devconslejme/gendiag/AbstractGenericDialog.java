@@ -207,10 +207,10 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 		return rzpDialog;
 	}
 
-	@Override	public void removedFromParentEvent(ResizablePanel rzpSource) {	}
-	@Override	public void resizedEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {	}
-	@Override	public void endedResizingEvent(ResizablePanel rzpSource) {	}
-	@Override	public void resizerUpdatedLogicalStateEvent(float tpf,ResizablePanel rzp) {	}
+	@Override	public void resizableRemovedFromParentEvent(ResizablePanel rzpSource) {	}
+	@Override	public void resizableStillResizingEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {	}
+	@Override	public void resizableEndedResizingEvent(ResizablePanel rzpSource) {	}
+	@Override	public void resizableUpdatedLogicalStateEvent(float tpf,ResizablePanel rzp) {	}
 
 	public boolean isInitialized() {
 		return bInitialized;

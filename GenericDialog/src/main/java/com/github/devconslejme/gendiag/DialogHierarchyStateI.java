@@ -546,15 +546,9 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	}
 	
 	@Override
-	public void resizerUpdatedLogicalStateEvent(float tpf, ResizablePanel rzpSource) {
-//		if(rzpSource.getSize().length()>0 && rzpSource.getLocalTranslation().length()==0){
-//			MiscLemurI.i().moveToScreenCenterXY(rzpSource);
-//		}
-		
+	public void resizableUpdatedLogicalStateEvent(float tpf, ResizablePanel rzpSource) {
 		Visuals vs = getVisuals(rzpSource);
-//		EntityId entid = vs.getEntityId();
 		updateBlocker(tpf, vs);
-		
 		updateDragResizeRelativeParentPos(tpf, rzpSource, vs);
 	}
 	
@@ -579,15 +573,12 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 						rzpSource.getLocalTranslation().subtract(rzpParent.getLocalTranslation())
 					);
 				}else{
-//					if(vs.isAllowPositionRelativeToParent()){
-						/**
-						 * set position relatively to parent
-						 */
-						Vector3f v3fNewPos = rzpParent.getLocalTranslation().clone();
-						v3fNewPos.addLocal(vs.getPositionRelativeToParent());
-//						v3fNewPos.z=rzpSource.getLocalTranslation().z;
-						rzpSource.setLocalTranslationXY(v3fNewPos);
-//					}
+					/**
+					 * set position relatively to parent
+					 */
+					Vector3f v3fNewPos = rzpParent.getLocalTranslation().clone();
+					v3fNewPos.addLocal(vs.getPositionRelativeToParent());
+					rzpSource.setLocalTranslationXY(v3fNewPos);
 				}
 			}
 		}
@@ -598,7 +589,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	}
 
 	@Override
-	public void resizedEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {
+	public void resizableStillResizingEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {
 		if(rzpCurrentlyBeingResized==null){ //marks it's start!
 			setFocusRecursively(getEntityId(rzpSource));
 		}
@@ -607,12 +598,12 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	}
 
 	@Override
-	public void endedResizingEvent(ResizablePanel rzpSource) {
+	public void resizableEndedResizingEvent(ResizablePanel rzpSource) {
 		rzpCurrentlyBeingResized=null; //user can resize only one at a time 
 	}
 
 	@Override
-	public void removedFromParentEvent(ResizablePanel rzpSource) {
+	public void resizableRemovedFromParentEvent(ResizablePanel rzpSource) {
 //		updateBlocker(null, getVisuals(rzpSource).getEntityId(), rzpSource);
 		Visuals vs = getVisuals(rzpSource);
 		

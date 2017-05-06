@@ -771,7 +771,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		tfInput = new TextField("",getStyle());
 		cntrMain.addChild(tfInput, BorderLayout.Position.South);
 		
-		DragParentestPanelListenerI.i().applyAt(tfInput);
+//		DragParentestPanelListenerI.i().applyAt(tfInput);
 		
 		BindKeyI.i().prepareKeyMappings();
 		
