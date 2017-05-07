@@ -32,6 +32,7 @@ import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.simsilica.lemur.Button;
+import com.simsilica.lemur.Panel;
 
 /**
  * TODO move whatever fits at super class to there
@@ -133,5 +134,20 @@ public abstract class SimpleMaintenanceGenericDialog extends SimpleGenericDialog
 		SimpleMaintenanceGenericDialog.super.requestUpdateListItems();
 		bLastRequestWasCollapsed=false;
 	}
-
+	
+	@Override
+	protected Panel createAutomaticConfigurators(OptionData od) {
+		Panel pnl = super.createAutomaticConfigurators(od);
+		
+		if(pnl==null){ //not user typeable simple type
+//			new SimpleMaintenanceGenericDialog() {
+//				@Override
+//				public void updateMaintenanceList() {
+//					// TODO casi same as globals manager does!!!
+//				}
+//			};
+		}
+		
+		return pnl;
+	}
 }

@@ -929,7 +929,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	 * @param od
 	 * @return
 	 */
-	private Panel createAutomaticConfigurators(OptionData od) {
+	protected Panel createAutomaticConfigurators(OptionData od) {
 		if (od.getStoredValue() instanceof MethodHelp) {
 			return createConfiguratorMethodHelp(od, (MethodHelp)od.getStoredValue());
 		}
