@@ -70,7 +70,7 @@ public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 				
 				diagMaint.setTitle(GlobalsManagerDialogI.class.getSimpleName());
 				
-				diagMaint.setAllowAutoCfgForComplexObjects(false); //will be handled here
+//				diagMaint.setAllowAutoCfgForComplexObjects(false); //will be handled here
 				mdatah = new ConvertMethodsToOptions(diagMaint);
 				
 				diagMaint.addUserInputTextSubmittedListener(GlobalsManagerDialogI.this);

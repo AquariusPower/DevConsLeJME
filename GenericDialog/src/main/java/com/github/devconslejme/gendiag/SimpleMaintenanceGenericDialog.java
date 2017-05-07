@@ -26,19 +26,10 @@
 */
 package com.github.devconslejme.gendiag;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-
-import com.github.devconslejme.gendiag.SimpleGenericDialog.CmdCfg;
-import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction.CmdBtnTA;
 import com.github.devconslejme.misc.JavaLangI.LinkedHashMapX;
-import com.github.devconslejme.misc.JavaLangI;
-import com.github.devconslejme.misc.JavadocI;
 import com.github.devconslejme.misc.MessagesI;
-import com.github.devconslejme.misc.MethodHelp;
 import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Panel;
@@ -162,6 +153,7 @@ public abstract class SimpleMaintenanceGenericDialog extends SimpleGenericDialog
 		String strKey = "CfgObj";
 		if(od.isCmdCfgSet(strKey))return;
 		if(od.getStoredValue()==null)return;
+		if(od instanceof OptionDataDummy)return;
 //		if(od.getStoredValue().getClass().equals(Object.class))return;
 		
 		od.addCmdCfg(new CmdCfg(strKey) {

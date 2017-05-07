@@ -136,7 +136,7 @@ public class MethodHelp{
 				strParamTypes+=clPT.getName(); //primitives has no dots (only wrappers does)
 			}
 			strParamTypes=strParamTypes.replace("$", "."); //inner classes fix
-			strURI=uri.toString()+"#"+m.getName()+"-"+strParamTypes+"-";
+			strURI=uri.toString().replace("$", ".")+"#"+m.getName()+"-"+strParamTypes+"-";
 			
 			uri=new URI(strURI);
 		} catch (URISyntaxException e) {
