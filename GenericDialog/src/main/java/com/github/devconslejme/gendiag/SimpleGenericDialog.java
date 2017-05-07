@@ -29,6 +29,7 @@ package com.github.devconslejme.gendiag;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -48,6 +49,8 @@ import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.ESimpleType;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.JavaLangI;
+import com.github.devconslejme.misc.JavadocI;
+import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.JavaLangI.LinkedHashMapX;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.MethodHelp;
@@ -311,6 +314,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			return odParent;
 		}
 		public Object getStoredValue() {
+			if(isSection())return null;
 			return objStoredValue;
 		}
 		@Override
@@ -385,10 +389,17 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		public CmdCfg[] getCmdCfgList() {
 			return acmdcfgList.toArray(new CmdCfg[0]);
 		}
-
+		
+		public boolean isCmdCfgSet(String strKey){
+			for(CmdCfg ccChk:acmdcfgList){
+				if(ccChk.getTextUniqueKey().equals(strKey))return true; //already set, ignore
+			}
+			return false;
+		}
+		
 		public void addCmdCfg(CmdCfg cc) {
 //			DetailedException.assertNotAlreadySet(this.cmdCfg, cmdCfg, this);
-			this.acmdcfgList.add(cc);
+			if(!isCmdCfgSet(cc.getTextUniqueKey()))acmdcfgList.add(cc);
 		}
 
 		public int getNestingDepth() {
@@ -409,7 +420,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		}
 
 		public boolean isSection() {
-			return SectionIndicator.class.isInstance(getStoredValue());
+			return SectionIndicator.class.isInstance(objStoredValue);
 		}
 		
 	}
@@ -421,17 +432,21 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 //			
 //		}
 		
-		private String	strText;
+		public CmdCfg(String strTextUniqueKey){
+			this.strTextUniqueKey=strTextUniqueKey;
+		}
+		
+		private String	strTextUniqueKey;
 		private String	strHintHelp;
 
-		public String getText() {
-			return strText;
+		public String getTextUniqueKey() {
+			return strTextUniqueKey;
 		}
 
-		public CmdCfg setText(String strText) {
-			this.strText = strText;
-			return this;
-		}
+//		public CmdCfg setText(String strText) {
+//			this.strText = strText;
+//			return this;
+//		}
 
 		public CmdCfg setHintHelp(String string) {
 			this.strHintHelp=string;
@@ -444,13 +459,14 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 
 	}
 	
-	public SimpleGenericDialog(ResizablePanel rzpOwner) {
+	public SimpleGenericDialog(String strTitle, ResizablePanel rzpOwner) {
 		super(rzpOwner);
+		setTitle(strTitle);
 //		configureDefaults();
 	}
 
-	public SimpleGenericDialog() {
-		this(DialogHierarchyStateI.i().createDialog(SimpleGenericDialog.class.getSimpleName(), null));
+	public SimpleGenericDialog(String strTitle) {
+		this(strTitle, DialogHierarchyStateI.i().createDialog(SimpleGenericDialog.class.getSimpleName(), null));
 		
 		hmOptionsRoot = new LinkedHashMapX<String,OptionData>();
 		bRequestUpdateListItems = true;
@@ -783,7 +799,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		Container cntr = new Container(getDialog().getStyle());
 		
 		int i=0;
-		Panel pnl = createAutomaticConfigurators(od);
+		Panel pnl = automaticConfiguratorCreation(od);
 		if(pnl!=null){
 			cntr.addChild(pnl,i++);
 		}
@@ -792,7 +808,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		for(CmdCfg cc:acc){
 //		Command<? super Button> cmd = od.getCmdCfgList();
 //		if(cmd!=null){
-			Button btnCfg = new Button(cc.getText(), getDialog().getStyle());
+			Button btnCfg = new Button(cc.getTextUniqueKey(), getDialog().getStyle());
 			btnCfg.addClickCommands(cc);
 			if(cc.getHintHelp()!=null)PopupHintHelpListenerI.i().setPopupHintHelp(btnCfg, cc.getHintHelp());
 			cntr.addChild(btnCfg, i++);
@@ -929,7 +945,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	 * @param od
 	 * @return
 	 */
-	protected Panel createAutomaticConfigurators(OptionData od) {
+	protected Panel automaticConfiguratorCreation(OptionData od) {
 		if (od.getStoredValue() instanceof MethodHelp) {
 			return createConfiguratorMethodHelp(od, (MethodHelp)od.getStoredValue());
 		}
@@ -1066,13 +1082,13 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	 * @param objStoredValue
 	 * @return 
 	 */
-	public OptionData putOption(OptionData odParent, String strTextOptionKey, Object objStoredValue){
+	public OptionData putOption(OptionData odParentSection, String strTextOptionKey, Object objStoredValue){
 		OptionData od = new OptionData();
 //		od.setSectionParent(odParent);
 //		od.setTextKey(strTextOptionKey);
 		od.setStoredValue(objStoredValue);
 		
-		put(odParent,strTextOptionKey,od);
+		put(odParentSection,strTextOptionKey,od);
 		
 		return od;
 	}
@@ -1514,5 +1530,42 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 //		return aodList;
 		return hmBackup;
 	}
+
+//	public void putCreateOptionAsMethodsOf(OptionData odParentSection, Object objToExtractMethodsFrom) {
+//		Method[] am = isShowInherited() ? 
+//			objToExtractMethodsFrom.getClass().getMethods() : 
+//			objToExtractMethodsFrom.getClass().getDeclaredMethods();
+//			
+//		int iValidCount=0;
+//		for(Method m:am){
+//			if(!Modifier.isPublic(m.getModifiers()))continue; //skip non public
+//			if(bShowOnlyEditableBeans && !JavaLangI.i().isBeanGetter(m))continue;
+//			
+//			MethodHelp mh = new MethodHelp().setObject(objToExtractMethodsFrom).setMethod(m);
+//			
+//			String strTextKey = mh.getFullHelp(true, false);
+////				if(bRegexFilter && !strTextKey.matches(smd.getInputText()))continue;
+//			if(
+//					bRegexFilter
+//					&& 
+//					!StringI.i().contains(
+//						strTextKey, getUserInputTextFilter(), getEStringMatchMode(), isMatchIgnoreCase())
+//			)continue;
+//			
+//			OptionData od = diagMaint.putOption(odParentSection,	strTextKey, mh);
+//			
+//			od.addCmdCfg(new CmdCfg() {@Override	public void execute(Button source) {
+//					JavadocI.i().browseJavadoc(mh);
+//				}}.setText("JavaDoc"));
+//			
+//			od.addCmdCfg(new CmdCfg() {@Override	public void execute(Button source) {
+//					JavaLangI.i().copyToClipboard(mh.getFullHelp(true, true));
+//				}}.setText("Cp").setHintHelp("copy to clipboard"));
+//			
+//			iValidCount++;
+//		}
+//		
+//		return iValidCount;
+//	}
 
 }

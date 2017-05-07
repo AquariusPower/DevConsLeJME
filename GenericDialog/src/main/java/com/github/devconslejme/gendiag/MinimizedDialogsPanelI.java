@@ -58,6 +58,7 @@ public class MinimizedDialogsPanelI implements IResizableListener{
 	private DialogHierarchySystemI	sys;
 	private Node	nodeToMonitor;
 	protected boolean	bInitialized;
+	private float fMinSize=30; //TODO auto find out the current style font height
 	
 	public void configure(Node nodeToMonitor){
 		dhs=DialogHierarchyStateI.i();
@@ -87,7 +88,7 @@ public class MinimizedDialogsPanelI implements IResizableListener{
 				minimizedDiags.addResizableListener(MinimizedDialogsPanelI.this);
 				minimizedDiags.setApplyContentsBoundingBoxSize(false);
 				minimizedDiags.setLocalTranslationXY(new Vector3f(0,Display.getHeight(),Float.NaN));
-				minimizedDiags.setPreferredSizeWH(new Vector3f(Display.getWidth(),1,Float.NaN));
+				minimizedDiags.setPreferredSizeWH(new Vector3f(Display.getWidth(),fMinSize,Float.NaN));
 				sys.setHierarchyComp(dhs.getEntityId(minimizedDiags), 
 						new DiagCompBean().setHierarchyType(EHierarchyType.Top));
 				
@@ -136,9 +137,8 @@ public class MinimizedDialogsPanelI implements IResizableListener{
 		}
 		
 		Vector3f v3fSize = minimizedDiags.getSize().clone();
-		float f=30; //TODO auto find out the font height
-		if(v3fSize.x<f)v3fSize.x=f;
-		if(v3fSize.y<f)v3fSize.y=f;
+		if(v3fSize.x<fMinSize)v3fSize.x=fMinSize;
+		if(v3fSize.y<fMinSize)v3fSize.y=fMinSize;
 //		if(v3fSize.y < fMaxHeight){
 //			v3fSize.y = fMaxHeight;
 			minimizedDiags.setPreferredSize(v3fSize);

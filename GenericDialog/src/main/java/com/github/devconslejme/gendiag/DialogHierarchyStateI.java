@@ -75,8 +75,8 @@ import com.simsilica.lemur.focus.FocusManagerState;
 
 
 /**
-	* @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
-	*/
+ * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+ */
 public class DialogHierarchyStateI extends AbstractAppState implements IResizableListener{
 	public static DialogHierarchyStateI i(){return GlobalManagerI.i().get(DialogHierarchyStateI.class);}
 	

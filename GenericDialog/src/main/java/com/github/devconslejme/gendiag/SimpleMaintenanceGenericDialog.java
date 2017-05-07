@@ -26,10 +26,19 @@
 */
 package com.github.devconslejme.gendiag;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+
+import com.github.devconslejme.gendiag.SimpleGenericDialog.CmdCfg;
+import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction.CmdBtnTA;
 import com.github.devconslejme.misc.JavaLangI.LinkedHashMapX;
+import com.github.devconslejme.misc.JavaLangI;
+import com.github.devconslejme.misc.JavadocI;
 import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.MethodHelp;
 import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Panel;
@@ -42,12 +51,13 @@ import com.simsilica.lemur.Panel;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public abstract class SimpleMaintenanceGenericDialog extends SimpleGenericDialog {
-	public SimpleMaintenanceGenericDialog(){
-		super();
+	public SimpleMaintenanceGenericDialog(String strTitle){
+		super(strTitle);
 		setCloseOnChoiceMade(false);
 	}
 	
 	private boolean bLastRequestWasCollapsed=false;
+	private boolean	bAllowAutoCfgForComplexObjects = true;
 	
 	@Override
 	protected void initSectionTools() {
@@ -136,18 +146,58 @@ public abstract class SimpleMaintenanceGenericDialog extends SimpleGenericDialog
 	}
 	
 	@Override
-	protected Panel createAutomaticConfigurators(OptionData od) {
-		Panel pnl = super.createAutomaticConfigurators(od);
+	protected Panel automaticConfiguratorCreation(OptionData od) {
+		Panel pnl = super.automaticConfiguratorCreation(od);
 		
 		if(pnl==null){ //not user typeable simple type
-//			new SimpleMaintenanceGenericDialog() {
-//				@Override
-//				public void updateMaintenanceList() {
-//					// TODO casi same as globals manager does!!!
-//				}
-//			};
+			if(isAllowAutoCfgForComplexObjects()){
+				automaticConfiguratorCreateAsMethodsOfValue(od);
+			}
 		}
 		
 		return pnl;
 	}
+	
+	protected void automaticConfiguratorCreateAsMethodsOfValue(OptionData od) {
+		String strKey = "CfgObj";
+		if(od.isCmdCfgSet(strKey))return;
+		if(od.getStoredValue()==null)return;
+//		if(od.getStoredValue().getClass().equals(Object.class))return;
+		
+		od.addCmdCfg(new CmdCfg(strKey) {
+				private SimpleMaintenanceGenericDialog	sgdCfgObj;
+				private ConvertMethodsToOptions	optm;
+
+				@Override
+				public void execute(Button source) {
+					if(sgdCfgObj==null){
+						sgdCfgObj = new SimpleMaintenanceGenericDialog(strKey+"/"+od.getStoredValue().getClass().getName()+"/"+od.getStoredValue().hashCode()){
+							@Override
+							public void updateMaintenanceList() {
+								optm.createOptionFromMethods(null, od.getStoredValue());
+							}
+						};
+					}
+					
+					if(optm==null){
+						optm = new ConvertMethodsToOptions(sgdCfgObj);
+//						optm.createOptionFromMethods(null, od.getStoredValue()); //initial fill
+					}
+					
+					DialogHierarchyStateI.i().showDialogAsModal(getDialog(), sgdCfgObj.getDialog());
+				}
+			}//.setText()
+			 .setHintHelp("click to configure this complex object")
+		);
+	}
+
+	public boolean isAllowAutoCfgForComplexObjects() {
+		return bAllowAutoCfgForComplexObjects;
+	}
+
+	protected SimpleMaintenanceGenericDialog setAllowAutoCfgForComplexObjects(boolean bAllowAutoCfgForComplexObjects) {
+		this.bAllowAutoCfgForComplexObjects = bAllowAutoCfgForComplexObjects;
+		return this;
+	}	
+	
 }

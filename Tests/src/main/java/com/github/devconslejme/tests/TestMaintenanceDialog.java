@@ -62,7 +62,7 @@ public class TestMaintenanceDialog extends SimpleApplication{
 	public void initTest() {
 		sapp = GlobalManagerI.i().get(SimpleApplication.class);
 		
-		smd = new SimpleMaintenanceGenericDialog(){
+		smd = new SimpleMaintenanceGenericDialog(TestMaintenanceDialog.class.getSimpleName()){
 			@Override
 			public void updateMaintenanceList() {
 				recursiveAddSpatialsToMaintenance(null,sapp.getGuiNode());

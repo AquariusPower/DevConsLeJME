@@ -53,7 +53,7 @@ public class QueueManagerDialogI implements IUserTextInputSubmited{
 			@Override
 			public Boolean call() {
 				if(diagMaint==null){
-					diagMaint = new SimpleMaintenanceGenericDialog() {
+					diagMaint = new SimpleMaintenanceGenericDialog(QueueManagerDialogI.class.getSimpleName()) {
 						@Override
 						public void updateMaintenanceList() {
 							recreateList();

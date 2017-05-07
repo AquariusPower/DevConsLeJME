@@ -87,7 +87,7 @@ public class TestChoiceDialog extends SimpleApplication {
 	}
 
 	private void prepareDialog() {
-		gdc = new SimpleGenericDialog();
+		gdc = new SimpleGenericDialog(TestChoiceDialog.class.getSimpleName());
 //		gdc = new SimpleGenericDialog(DialogHierarchyStateI.i().createDialog("options", null));
 		gdc.getDialog().setLocalTranslationXY(new Vector3f(100,550,0)).setLocalTranslationZ(10);
 		gdc.getDialog().setPreferredSize(new Vector3f(600,500,0));
