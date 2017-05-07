@@ -85,6 +85,7 @@ import com.simsilica.lemur.Command;
 import com.simsilica.lemur.Container;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.HAlignment;
+import com.simsilica.lemur.Insets3f;
 import com.simsilica.lemur.ListBox;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.TextField;
@@ -474,20 +475,62 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		
 		initVarMonValues();
 		
-		QueueI.i().enqueue(new CallableX() {
-			@Override
-			public Boolean call() {
-				updateVarMonHelp();
-//				updateVarMonList();
+		QueueI.i().enqueue(
+			new CallableX() {@Override public Boolean call() {
+				updateVarMonHelp(); 
 				return true;
-			}
-		}
-		.setName("VarMonHelp")
-		.setDelaySeconds(1f)
-		.enableLoop()
-		.setUserCanPause(true));
+			}}.setName("VarMonHelp")
+				.setDelaySeconds(1f)
+				.enableLoop()
+				.setUserCanPause(true)
+		);
 		
 		initVarMonitorContextMenu();
+		
+		QueueI.i().enqueue(new CallableX() {
+				@Override
+				public Boolean call() {
+					//the row count is the 
+					if(lstbxVarMonitorBar.getGridPanel().getModel().getRowCount()==0)return false;
+					if(vlstrVarMonitorEntries.size()!=lstbxVarMonitorBar.getGridPanel().getModel().getRowCount())return false; //TODO this will never happen right?
+					if(lstbxVarMonitorBar.getVisibleItems()<=0)return false; //should never be < 0 tho, extra care may be?
+					
+					/**
+					 * correct amount of shown items must be ready
+					 * TODO pointless?
+					 */
+					int iShown = lstbxVarMonitorBar.getVisibleItems();
+					if(iShown > vlstrVarMonitorEntries.size()){
+						iShown = vlstrVarMonitorEntries.size();
+					}
+					
+//					int iShown = vlstrVarMonitorEntries.size();
+//					if(vlstrVarMonitorEntries.size() < lstbxVarMonitorBar.getVisibleItems()){
+//						iShown = lstbxVarMonitorBar.getVisibleItems();
+//					}
+//					
+//					int iShown = lstbxVarMonitorBar.getVisibleItems();
+//					if(vlstrVarMonitorEntries.size()<iShown)iShown = vlstrVarMonitorEntries.size();
+//					if(lstbxVarMonitorBar.getGridPanel().getModel().getRowCount()!=iShown)return false;
+	//				if(MiscLemurI.i().getAllListBoxItems(lstbxVarMonitorBar,false).size()!=iShown)return false;
+					
+					if(ContextMenuI.i().applyContextMenuAtListBoxItems(lstbxVarMonitorBar,cmVarMon)>0){
+						// keep only at the var id
+						for(Panel pnl:MiscLemurI.i().getAllListBoxItems(lstbxVarMonitorBar, false)){
+							Button btn=(Button)pnl;
+							if(btn.getText().startsWith("=")){ //remove from the displayed value
+								ContextMenuI.i().removeContextMenuOf(btn);
+							}
+						}
+					}
+					
+					return true;
+				}
+			}.setName("GrantApplyContextMenuAtVarMonListBox")
+			 .enableLoop()
+			 .setDelaySeconds(1f)
+		);
+
 	}
 	
 	private void initVarMonitorContextMenu() {
@@ -520,7 +563,6 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		};
 		
 		// prepare the context menu entries
-//		for(EStatPriority e:EStatPriority.values()){
 		cmVarMon.setSingleChoiceMode(true);
 		for(int i=0;i<EStatPriority.values().length;i++){
 			EStatPriority esp = EStatPriority.values()[i];
@@ -530,34 +572,16 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 				public Boolean call() {
 					Button btnSource = cmVarMon.getContextSource();
 					VarMon vm = hmVarMon.get(btnSource.getText());
-////					if(vm!=null && esp.equals(vm.esp)){ 
-////					if(vm!=null && getStoredValueFromContextButton().equals(vm.eStatPriority)){ 
-//					if(vm!=null && vm.eStatPriority.equals(getStoredValueFromContextButton())){ 
-////						setPopupHintHelp("Current choice");
-//						return true; //valid if the text is the key
-//					}
-//					
-//					return false; //invalid if the text does not match a monitoring key
 					return (vm!=null && vm.eStatPriority.equals(getStoredValueFromContextButton())); 
 				}
 			});
 		}
 	}
 	
-//	class CallableX1 extends CallableX<CallableX1>{
-//		@Override
-//		public Boolean call() {
-//			getValue(VarMon.class).set( String.format("%d", lstbxLoggingSection.getVisibleItems()) );
-//			return true;
-//		}
-//	};
-	
 	private void initVarMonValues() {
 		createVarMon(EStatPriority.Bottom, "Slider", strBaseTitle+" Logging area Slider Value",new CallableXAnon() {
-//			public void a(){}
 			@Override
 			public Boolean call() {
-//				setDelaySeconds(1).a();
 				getValue(VarMon.class).set(
 					String.format("%.0f/%.0f(%.0f)", 
 						lstbxLoggingSection.getSlider().getModel().getValue(),
@@ -721,30 +745,31 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 				
 				vrSelectionChangedToShowVarHelp = lstbxVarMonitorBar.getSelectionModel().createReference();
 
-				QueueI.i().enqueue(new CallableX() {
-					@Override
-					public Boolean call() {
-						if(lstbxVarMonitorBar.getGridPanel().getModel().getRowCount()==0)return false;
-						
-						/**
-						 * correct amount of shown items must be ready
-						 */
-						int iShown = lstbxVarMonitorBar.getVisibleItems();
-						if(vlstrVarMonitorEntries.size()<iShown)iShown = vlstrVarMonitorEntries.size();
-						if(lstbxVarMonitorBar.getGridPanel().getModel().getRowCount()!=iShown)return false;
-//						if(MiscLemurI.i().getAllListBoxItems(lstbxVarMonitorBar,false).size()!=iShown)return false;
-						
-						ContextMenuI.i().applyContextMenuAtListBoxItems(lstbxVarMonitorBar,cmVarMon);
-						for(Panel pnl:MiscLemurI.i().getAllListBoxItems(lstbxVarMonitorBar, false)){
-							Button btn=(Button)pnl;
-							if(btn.getText().startsWith("=")){ //is the value
-								ContextMenuI.i().removeContextMenuOf(btn);
-							}
-						}
-						
-						return true;
-					}
-				}.setName("ContextMenuAtListBoxAfterPopulated"));
+//				QueueI.i().enqueue(new CallableX() {
+//					@Override
+//					public Boolean call() {
+//						if(lstbxVarMonitorBar.getGridPanel().getModel().getRowCount()==0)return false;
+//						
+//						/**
+//						 * correct amount of shown items must be ready
+//						 */
+//						int iShown = lstbxVarMonitorBar.getVisibleItems();
+//						if(vlstrVarMonitorEntries.size()<iShown)iShown = vlstrVarMonitorEntries.size();
+//						if(lstbxVarMonitorBar.getGridPanel().getModel().getRowCount()!=iShown)return false;
+////						if(MiscLemurI.i().getAllListBoxItems(lstbxVarMonitorBar,false).size()!=iShown)return false;
+//						
+//						ContextMenuI.i().applyContextMenuAtListBoxItems(lstbxVarMonitorBar,cmVarMon);
+//						// keep only at the var id
+//						for(Panel pnl:MiscLemurI.i().getAllListBoxItems(lstbxVarMonitorBar, false)){
+//							Button btn=(Button)pnl;
+//							if(btn.getText().startsWith("=")){ //remove from the displayed value
+//								ContextMenuI.i().removeContextMenuOf(btn);
+//							}
+//						}
+//						
+//						return true;
+//					}
+//				}.setName("ContextMenuAtListBoxAfterPopulated"));
 				
 				bRequestUpdateNoWrap=true;
 				return true;
@@ -1000,6 +1025,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		DetailedException.assertIsInitialized(isInitialized(), this, strTextKey, strPopupHelp, cmd);
 		
 		BtnConsoleAction btnc = new BtnConsoleAction(strTextKey,getStyle());
+		btnc.setInsets(new Insets3f(0,0,0,10));
 		if(strPopupHelp!=null)PopupHintHelpListenerI.i().setPopupHintHelp(btnc, strPopupHelp);
 		btnc.setCmd(cmd);
 		hmButtons.put(btnc.getText(),btnc);

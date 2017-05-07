@@ -531,12 +531,16 @@ public class ContextMenuI implements IResizableListener{
 		giContextMenuAvailableIndicator.setDenyDestruction();
 	}
 	
-	public void applyContextMenuAtListBoxItems(ListBox lstbx, ContextMenu cm){
+	public int applyContextMenuAtListBoxItems(ListBox lstbx, ContextMenu cm){
+//		if(!applyContextMenuAtSource(lstbx, cm))return 0; //TODO works?
+		
 //		ArrayList<Panel> apnl = MiscJmeI.i().getAllChildrenRecursiveFrom(lstbx.getGridPanel(), Panel.class, null);
 		ArrayList<Panel> apnl = MiscLemurI.i().getAllListBoxItems(lstbx,false);
+		int i=0;
 		for(Panel pnl:apnl){
-			applyContextMenuAtSource(pnl, cm);
+			if(applyContextMenuAtSource(pnl, cm))i++;
 		}
+		return i;
 	}
 	
 	private void permanentIndicator(Spatial spt){
@@ -569,8 +573,13 @@ public class ContextMenuI implements IResizableListener{
 	 * {@link Spatial} N -> 1 {@link ContextMenu}
 	 * @param sptContextClick
 	 * @param cm
+	 * @return true if was just applied, false if was already applied before and did nothing now
 	 */
-	public void applyContextMenuAtSource(Spatial sptContextClick, ContextMenu cm){
+	public boolean applyContextMenuAtSource(Spatial sptContextClick, ContextMenu cm){
+		if(UserDataI.i().getUserDataPSH(sptContextClick, ContextMenu.class)!=null){
+			return false; //already set
+		}
+		
 		UserDataI.i().setUserDataPSHSafely(sptContextClick, cm);
 		ClickCommandAbsorptionI.i().absorbClickCommands(sptContextClick);
 		CursorEventControl.addListenersToSpatial(sptContextClick, contextMenuSourceCursorListenerX);
@@ -578,6 +587,8 @@ public class ContextMenuI implements IResizableListener{
 		if(bUseContextMenuAvailablePermanentIndicators){
 			permanentIndicator(sptContextClick);
 		}
+		
+		return true;
 	}
 	
 	private void applyContextButtonListener(ContextButton btn, ApplyContextChoiceCmd cmd){
