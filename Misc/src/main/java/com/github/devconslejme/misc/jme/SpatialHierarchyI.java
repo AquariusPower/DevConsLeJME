@@ -69,40 +69,29 @@ public class SpatialHierarchyI {
 		return anode;
 	}
 	
-	public static class SpatialMatcherCallableX extends CallableX<SpatialMatcherCallableX>{
+	public static class FuncSptConcreteClassMatcher implements Function<Spatial,Boolean>{
 		private Class clFilter;
-		public SpatialMatcherCallableX(Class clFilter) {
+		public FuncSptConcreteClassMatcher(Class clFilter) {
 			this.clFilter=clFilter;
-		}
-		@Override
-		public Boolean call() {
-//			Class clFilter = getValue(Class.class.getName());
-			Spatial spt = getValue(Spatial.class.getName());
-			return clFilter.isInstance(spt);
 		}
 		public Class getClassFilter() {
 			return clFilter;
 		}
-//		public SpatialMatcherCallableX setClassFilter(Class clFilter) {
-//			this.clFilter = clFilter;
-//			return getThis();
-//		}
-		
 		@Override
-		protected SpatialMatcherCallableX getThis() {
-			return this;
+		public Boolean apply(Spatial spt) {
+			return clFilter.isInstance(spt);
 		}
 	}
 	
 	public <T extends Spatial> T getChildRecursiveExactMatch(Spatial sptParentestToChk, Class<T> clFilter){
 		return getChildRecursiveExactMatch(sptParentestToChk, 
-			new SpatialMatcherCallableX(clFilter));
+			new FuncSptConcreteClassMatcher(clFilter));
 //			new SpatialMatcherCallableX().putKeyValue(Class.class.getName(), clFilter));
 	}
 	
-	public <T extends Spatial> T getChildRecursiveExactMatch(Spatial sptParentestToChk, CallableX callMatcher){
-		ArrayList<T> asptList = getAllChildrenRecursiveFrom(sptParentestToChk, null, callMatcher);
-		if(asptList.isEmpty() || asptList.size()>1)throw new DetailedException("not exact match",sptParentestToChk,callMatcher,asptList);
+	public <T extends Spatial> T getChildRecursiveExactMatch(Spatial sptParentestToChk, Function<Spatial,Boolean> funcMatcher){
+		ArrayList<T> asptList = getAllChildrenRecursiveFrom(sptParentestToChk, null, funcMatcher);
+		if(asptList.isEmpty() || asptList.size()>1)throw new DetailedException("not exact match",sptParentestToChk,funcMatcher,asptList);
 		return asptList.get(0);
 	}
 
@@ -114,7 +103,7 @@ public class SpatialHierarchyI {
 	 */
 	public <T extends Spatial> ArrayList<T> getAllChildrenRecursiveFrom(Spatial sptParentestToChk, Class<T> clFilter, Integer iMaxDepth) {
 		return getAllChildrenRecursiveFrom(sptParentestToChk, iMaxDepth, 
-			new SpatialMatcherCallableX(clFilter));
+			new FuncSptConcreteClassMatcher(clFilter));
 //			new SpatialMatcherCallableX().putKeyValue(Class.class.getName(), clFilter));
 	}
 	/**
@@ -125,7 +114,7 @@ public class SpatialHierarchyI {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public <T extends Spatial> ArrayList<T> getAllChildrenRecursiveFrom(Spatial sptParentestToChk, Integer iMaxDepth, CallableX<? extends CallableWeak<Boolean>> callMatcher) {
+	public <T extends Spatial> ArrayList<T> getAllChildrenRecursiveFrom(Spatial sptParentestToChk, Integer iMaxDepth, Function<Spatial,Boolean> funcMatcher) {
 		if(sptParentestToChk==null)throw new DetailedException("null spatial");
 		
 		ArrayList<T> asptList = new ArrayList<T>();
@@ -144,8 +133,8 @@ public class SpatialHierarchyI {
 		
 		// add direct children
 		for(Spatial sptChild:nodeParent.getChildren()){
-			if(callMatcher!=null)callMatcher.putKeyValue(Spatial.class.getName(),sptChild);
-			if(callMatcher==null || callMatcher.call()){
+//			if(funcMatcher!=null)funcMatcher.putKeyValue(Spatial.class.getName(),sptChild);
+			if(funcMatcher==null || funcMatcher.apply(sptChild)){
 				asptList.add((T)sptChild);
 			}
 		}
@@ -153,7 +142,7 @@ public class SpatialHierarchyI {
 		// deep search
 		for(Spatial sptChild:nodeParent.getChildren()){
 			if(sptChild instanceof Node){
-				asptList.addAll(getAllChildrenRecursiveFrom(sptChild, iMaxDepth, callMatcher));
+				asptList.addAll(getAllChildrenRecursiveFrom(sptChild, iMaxDepth, funcMatcher));
 			}
 		}
 		

@@ -387,7 +387,13 @@ public class MiscLemurI {
 		
 		Node node = GlobalManagerI.i().get(SimpleApplication.class).getGuiNode();
 		if(strStartAt!=null){
-			SpatialHierarchyI.i().getChildRecursiveExactMatch(node, new CallableX() {
+			node = SpatialHierarchyI.i().getChildRecursiveExactMatch(node, new Function<Spatial,Boolean>() {
+				@Override
+				public Boolean apply(Spatial spt) {
+					if(strStartAt.equals("#"+spt.hashCode()))return true;
+					if(strStartAt.equals(spt.getName()))return true;
+					return false;
+				}
 			});
 		}
 		

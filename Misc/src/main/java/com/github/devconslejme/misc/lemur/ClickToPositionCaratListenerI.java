@@ -27,8 +27,9 @@
 
 package com.github.devconslejme.misc.lemur;
 
+import java.util.function.Function;
+
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.jme3.font.BitmapText;
 import com.jme3.math.Vector2f;
@@ -78,14 +79,22 @@ public class ClickToPositionCaratListenerI implements CursorListener{
 		 * 2) retrieve a single Geometry recursive child with debug name == "cursor" from the TextField
 		 */
 		BitmapText bt = SpatialHierarchyI.i().getChildRecursiveExactMatch(tf,BitmapText.class);
-		Geometry geomCaratCursor = SpatialHierarchyI.i().getChildRecursiveExactMatch(bt,new CallableXAnon() {
-			@Override
-			public Boolean call() {
-				Spatial spt = getValue(Spatial.class.getName()); 
-				if(Geometry.class.isInstance(spt) && spt.getName().equals("cursor"))return true;
-				return false;
-			}
-		});
+		Geometry geomCaratCursor = SpatialHierarchyI.i().getChildRecursiveExactMatch(bt,
+				new Function<Spatial,Boolean>() {
+					@Override
+					public Boolean apply(Spatial spt) {
+						if(Geometry.class.isInstance(spt) && spt.getName().equals("cursor"))return true;
+						return false;
+					}
+				}
+//				new CallableXAnon() {
+//			@Override
+//			public Boolean call() {
+//				Spatial spt = getValue(Spatial.class.getName()); 
+//				if(Geometry.class.isInstance(spt) && spt.getName().equals("cursor"))return true;
+//				return false;
+//			}}
+		);
 		
 		moveCarat(tf, 
 			v2fCursorPos, 

@@ -652,7 +652,8 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			setFocus(entidP, false);
 		}
 		
-		QueueI.i().enqueue(cxZOrder);
+		cxZOrder.runImediatelyOnce();
+//		QueueI.i().enqueue(cxZOrder);
 	}
 	private void setFocus(EntityId entid, boolean bRecursive){
 		ResizablePanel rzp = getOpenDialog(entid);

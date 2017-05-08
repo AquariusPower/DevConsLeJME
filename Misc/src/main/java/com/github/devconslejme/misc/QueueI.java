@@ -66,6 +66,8 @@ public class QueueI {
 	public static abstract class CallableXAnon extends CallableX<CallableXAnon>{}
 	
 	/**
+	 * TODO could this be a guava's Function class? 
+	 * 
 	 * use {@link CallableXAnon} for anonymous classes<br>
 	 * 
 	 * CallableX: "X" like in extra, plus! 
