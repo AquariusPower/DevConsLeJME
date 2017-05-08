@@ -31,8 +31,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-import com.github.devconslejme.devcons.JavaScriptI;
-import com.github.devconslejme.devcons.LoggingI;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextButton;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
@@ -42,6 +40,7 @@ import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction.CmdBtnTA;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.JavadocI;
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.MethodHelp;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.StringI;
@@ -145,11 +144,14 @@ public class ConvertMethodsToOptions {
 					String strInfo=mh.getFullHelp(true, true)+" //"+ConvertMethodsToOptions.class.getSimpleName()+"/"+strKey;
 					od.addCmdCfg(new CmdCfg(strKey) {@Override	public void execute(Button source) {
 						try {
-							LoggingI.i().logEntry("Calling: "+strInfo);
+//							LoggingI.i().logEntry("Calling: "+strInfo);
+							MessagesI.i().output(false, System.out, "CallMethod", this, strInfo);
 							Object objRet = mh.getMethod().invoke(mh.getConcreteObjectInstance());
-							JavaScriptI.i().showRetVal(objRet);
+							MessagesI.i().output(true, System.out, "ReturnValue", this, strInfo, objRet);
+//							JavaScriptI.i().showRetVal(objRet);
 						} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-							LoggingI.i().logExceptionEntry(ex, strInfo);
+							MessagesI.i().warnMsg(this, strInfo, mh);
+//							LoggingI.i().logExceptionEntry(ex, strInfo);
 						}
 					}}.setHintHelp("will call this simple (parameters less) method, which may perform more actions than the obvious one, better find out what it does before using it"));
 				}

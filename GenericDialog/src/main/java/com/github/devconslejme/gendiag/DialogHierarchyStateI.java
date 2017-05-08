@@ -97,33 +97,8 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	private float	fMinLemurPanelSizeZ = 0.01f; //TODO collect this value dinamically from lemur in some way
 	private ColorRGBA	colorInvisible = new ColorRGBA(0,0,0,0);
 	protected float	fCurrentOrderPosZ;
-	private CallableX cxZOrder = new CallableX(){
-		@Override
-		public Boolean call() {
-			fCurrentOrderPosZ = fBeginOrderPosZ;
-			for(Entity ent:sys.getSortedHierarchyDialogs()){
-				updateZOrder(ent.getId());
-			}
-			return true;
-		}
-	}.enableLoop().setDelaySeconds(1f);
-	private CallableX	cxAutoFocus = new CallableX() { //TODO this delay still has a chance of typing something at other input field? like when holding for long a key?
-		@Override
-		public Boolean call() {
-			for(Panel pnl:apnlAutoFocus){
-				ResizablePanel rzp = SpatialHierarchyI.i().getParentest(pnl, ResizablePanel.class, true);
-				DialogHierarchyComp hc = DialogHierarchyStateI.i().getHierarchyComp(rzp);
-				if(!hc.isOpened())continue;
-				
-				if(!hc.isBlocked()){
-					GuiGlobals.getInstance().requestFocus(pnl);
-					return true; //skip others, they cant fight against each other...
-				}
-			}
-			
-			return true;
-		}
-	}.setName("FocusAtDevConsInput").setDelaySeconds(0.25f).enableLoop();
+	private CallableX cxZOrder;
+	private CallableX	cxAutoFocus;
 	private ArrayList<Panel>	apnlAutoFocus = new ArrayList<Panel>();
 	private VersionedReference<Integer>	vriResizableBorderSize;
 	private boolean	bRequestRetryZOrder;
@@ -234,6 +209,37 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		sys.configure();
 //		ed=DialogHierarchySystemI.i().getEntityData();
 		
+		cxZOrder = new CallableX(){
+			@Override
+			public Boolean call() {
+				fCurrentOrderPosZ = fBeginOrderPosZ;
+				for(Entity ent:sys.getSortedHierarchyDialogs()){
+					updateZOrder(ent.getId());
+				}
+				return true;
+			}
+		}.enableLoop()
+		 .setDelaySeconds(1f);
+		QueueI.i().enqueue(cxZOrder);
+		
+		cxAutoFocus = new CallableX() { //TODO this delay still has a chance of typing something at other input field? like when holding for long a key?
+			@Override
+			public Boolean call() {
+				for(Panel pnl:apnlAutoFocus){
+					ResizablePanel rzp = SpatialHierarchyI.i().getParentest(pnl, ResizablePanel.class, true);
+					DialogHierarchyComp hc = DialogHierarchyStateI.i().getHierarchyComp(rzp);
+					if(!hc.isOpened())continue;
+					
+					if(!hc.isBlocked()){
+						GuiGlobals.getInstance().requestFocus(pnl);
+						return true; //skip others, they cant fight against each other...
+					}
+				}
+				
+				return true;
+			}
+		}.setName("FocusAtDevConsInput")
+		 .setDelaySeconds(0.25f).enableLoop();
 		QueueI.i().enqueue(cxAutoFocus);
 		
 //		QueueI.i().enqueue(new CallableXAnon() {
