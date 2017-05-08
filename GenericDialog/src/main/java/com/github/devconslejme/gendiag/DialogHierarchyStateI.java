@@ -97,7 +97,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	private float	fMinLemurPanelSizeZ = 0.01f; //TODO collect this value dinamically from lemur in some way
 	private ColorRGBA	colorInvisible = new ColorRGBA(0,0,0,0);
 	protected float	fCurrentOrderPosZ;
-	private CallableX cxZOrder = new CallableX() {
+	private CallableX cxZOrder = new CallableX(){
 		@Override
 		public Boolean call() {
 			fCurrentOrderPosZ = fBeginOrderPosZ;
@@ -106,7 +106,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			}
 			return true;
 		}
-	};
+	}.enableLoop().setDelaySeconds(1f);
 	private CallableX	cxAutoFocus = new CallableX() { //TODO this delay still has a chance of typing something at other input field? like when holding for long a key?
 		@Override
 		public Boolean call() {
@@ -256,11 +256,13 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		
 		// main dialog panel
 		ResizablePanel rzp = new ResizablePanel(strStyle);
+		MiscJmeI.i().addToName(rzp, strName, true);
 		rzp.addResizableListener(this);
 		HoverHighlightEffectI.i().applyAt(rzp, (QuadBackgroundComponent)rzp.getResizableBorder());
 		
 		// blocker
 		ResizablePanel pnlBlocker = new ResizablePanel(strStyle);
+		MiscJmeI.i().addToName(pnlBlocker, strName+"_Blocker", true);
 //		pnlBlocker.setAllEdgesEnabled(false);
 //		pnlBlocker.setBackground(new QuadBackgroundComponent(colorBlocker));
 		pnlBlocker.setResizableBorder(new QuadBackgroundComponent(colorBlocker));
@@ -620,9 +622,6 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		if(!rzp.isUpdateLogicalStateSuccess())bRequestRetryZOrder=true;
 		
 		rzp.setLocalTranslationZ(fCurrentOrderPosZ);
-//		Vector3f v3f = rzp.getLocalTranslation().clone();
-//		v3f.z=fCurrentOrderPosZ;
-//		rzp.setLocalTranslation(v3f);
 		sys.setHierarchyComp(entid, new DiagCompBean().setDialogZ(fCurrentOrderPosZ));
 		
 		// prepare next

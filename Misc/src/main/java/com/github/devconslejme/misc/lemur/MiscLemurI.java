@@ -28,21 +28,26 @@
 package com.github.devconslejme.misc.lemur;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.function.Function;
 
 import org.lwjgl.opengl.Display;
 
+import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
+import com.github.devconslejme.misc.jme.SpatialHierarchyI.SpatialInfo;
 import com.github.devconslejme.misc.jme.UserDataI;
+import com.google.common.base.Strings;
 import com.jme3.app.Application;
+import com.jme3.app.SimpleApplication;
+import com.jme3.bounding.BoundingBox;
 import com.jme3.font.BitmapText;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -323,20 +328,73 @@ public class MiscLemurI {
 		return fMinSizeZ;
 	}
 	
-	public LinkedHashMap<Spatial,String> debugPanelsZOrderInfo(Node nodeFrom){
-		Function<Spatial,String> funcDo = new Function<Spatial, String>() {
+	/**
+	 * see {@link #debugPanelsZOrderRecursiveInfo(int, boolean, String)}
+	 * @param iMaxDepth
+	 * @param bOnlyPanels
+	 * @param strNameFilter
+	 * @return
+	 */
+	public String debugPanelsZOrderRecursiveInfoStr(int iMaxDepth, boolean bOnlyPanels,String strNameFilter){
+		StringBuilder sb = new StringBuilder("");
+		Collection<SpatialInfo> list = debugPanelsZOrderRecursiveInfo(iMaxDepth, bOnlyPanels, strNameFilter).values();
+		sb.append("Total="+list.size()+"\n");
+		for(SpatialInfo spti:list){
+			sb.append(spti.getCustomValue()+"\n");
+		}
+		return sb.toString();
+	}
+	
+	/**
+	 * 
+	 * @param iMaxDepth if 0 is unlimited
+	 * @param bOnlyPanels
+	 * @param strStartAt can be null. can be a hashcode ex.: "#12345", can be a spatial debug name
+	 * @return
+	 */
+	public LinkedHashMap<Spatial,SpatialInfo> debugPanelsZOrderRecursiveInfo(int iMaxDepth, boolean bOnlyPanels, String strStartAt){
+		Function<SpatialInfo,Boolean> funcDo = new Function<SpatialInfo,Boolean>() {
 			@Override
-			public String apply(Spatial spt) {
-				if(spt instanceof Panel) {
-//					Panel new_name = (Panel) spt;
-					return ""+spt.getWorldTranslation().z;
+			public Boolean apply(SpatialInfo spti) {
+				if(iMaxDepth>0 && spti.getDepth()>iMaxDepth)return false;
+				if(bOnlyPanels && !Panel.class.isInstance(spti.getSpatial()))return false;
+//				if(strNameFilter!=null && !spti.getSpatial().getName().contains(strNameFilter))return false;
+				
+				Class cl = spti.getSpatial().getClass();
+				String str=(Strings.repeat(" ",spti.getDepth())
+					+"#='"+spti.getSpatial().hashCode()+"', "
+					+"Wz="+spti.getSpatial().getWorldTranslation().z+", "
+					+"Bh="+((BoundingBox)spti.getSpatial().getWorldBound()).getZExtent()*2f+", "
+					+"cl='"+cl.getSimpleName()+"', "
+					+"nm='"+spti.getSpatial().getName()+"', "
+				);
+				
+				if(BitmapText.class.isAssignableFrom(cl)){
+					str+="txt='"+((BitmapText)spti.getSpatial()).getText()+"'";
+				}else
+				if(Label.class.isAssignableFrom(cl)){
+					str+="txt='"+((Label)spti.getSpatial()).getText()+"'";
+				}else
+				if(TextField.class.isAssignableFrom(cl)){
+					str+="txt='"+((TextField)spti.getSpatial()).getText()+"'";
 				}
-				return null;
+				
+				spti.setCustomValue(str);
+				
+				return true;
 			}
 		};
+		
+		Node node = GlobalManagerI.i().get(SimpleApplication.class).getGuiNode();
+		if(strStartAt!=null){
+			SpatialHierarchyI.i().getChildRecursiveExactMatch(node, new CallableX() {
+			});
+		}
+		
 		//		ArrayList<String> astrList = new ArrayList<String>();
 //		astrList.add(nodeFrom.getLocalTranslation().z);
 //		return astrList;
-		return SpatialHierarchyI.i().doSomethingRecursively(nodeFrom, funcDo, null);
+//		SimpleApplication sapp = GlobalManagerI.i().get(SimpleApplication.class);
+		return SpatialHierarchyI.i().doSomethingRecursively(node, funcDo, 0, null);
 	}
 }

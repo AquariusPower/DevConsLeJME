@@ -35,6 +35,7 @@ import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.StringI.EStringMatchMode;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.simsilica.lemur.core.VersionedReference;
 
 /**
@@ -62,6 +63,8 @@ public class QueueManagerDialogI implements IUserTextInputSubmited{
 				}
 				diagMaint.setTitle(QueueManagerDialogI.class.getSimpleName());
 				
+//				MiscJmeI.i().addToName(diagMaint.getDialog(), GlobalsManagerDialogI.class.getSimpleName(), true);
+				
 				return true;
 			}
 		}.setName("configure"));
@@ -74,7 +77,7 @@ public class QueueManagerDialogI implements IUserTextInputSubmited{
 		for(CallableX cx:QueueI.i().getQueueCopy()){
 			String strText=cx.getInfoText();
 			if(!StringI.i().contains(strText, strFilter, EStringMatchMode.Contains, true))continue;
-			diagMaint.putOption(cx.isLoop() ? odLoop : odOnce, strText, cx);
+			diagMaint.putOption(cx.isLoopEnabled() ? odLoop : odOnce, strText, cx);
 		}
 	}
 

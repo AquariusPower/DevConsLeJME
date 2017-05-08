@@ -1521,7 +1521,11 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			@Override
 			public Boolean call() {
 				if(btnTitleText==null)return false;
+				
 				btnTitleText.setText(str);
+				
+				MiscJmeI.i().addToName(getDialog(), str, true);
+				
 				return true;
 			}
 		});

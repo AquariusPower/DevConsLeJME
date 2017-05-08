@@ -237,7 +237,7 @@ public class QueueI {
 			return QueueI.i().isReady(lRunAtTime);
 		}
 
-		public boolean isLoop() {
+		public boolean isLoopEnabled() {
 			return bLoop;
 		}
 		
@@ -374,7 +374,7 @@ public class QueueI {
 				cx.setTPF(fTPF);
 				if(cx.call()){ 
 //					cx.done();
-					if(cx.isLoop()){
+					if(cx.isLoopEnabled()){
 						cx.updateRunAt();
 					}else{
 						synchronized(acxList){

@@ -167,6 +167,7 @@ public class SpatialHierarchyI {
 	public static class SpatialInfo{
 		private Spatial spatial;
 		private int iDepth;
+		private Object	objCustom;
 		
 		public Spatial getSpatial() {
 			return spatial;
@@ -183,28 +184,49 @@ public class SpatialHierarchyI {
 			return this;
 		}
 		
+		public SpatialInfo setCustomValue(Object obj) {
+			this.objCustom=obj;
+			return this;
+		}
+		
+		@SuppressWarnings("unchecked")
+		public <T> T getCustomValue(){
+			return (T)objCustom;
+		}
+		
+		@Override
+		public String toString() {
+			return ""+getCustomValue();
+		}
 	}
 	
 	/**
 	 * 
 	 * @param node
 	 * @param funcDo
+	 * @param iCurrentDepth can be 0
 	 * @param hmStore will be created if null
 	 * @return
 	 */
-	public <R> LinkedHashMap<Spatial,R> doSomethingRecursively(Node node, Function<SpatialInfo,R> funcDo, int iDepth, LinkedHashMap<Spatial, R> hmStore){
-		if(hmStore==null)hmStore = new LinkedHashMap<Spatial,R>();
+	public LinkedHashMap<Spatial,SpatialInfo> doSomethingRecursively(
+		Node node, 
+		Function<SpatialInfo,Boolean> funcDo, 
+		int iCurrentDepth, 
+		LinkedHashMap<Spatial,SpatialInfo> hmStore
+	){
+		if(hmStore==null)hmStore = new LinkedHashMap<Spatial,SpatialInfo>();
+		
+		iCurrentDepth++; //starts on 1, the parentest is 0
 		
 		for(Spatial sptChild:node.getChildren()){
 			SpatialInfo spti = new SpatialInfo();
 			spti.setSpatial(sptChild);
-			spti.setDepth(iDepth);
+			spti.setDepth(iCurrentDepth);
 			
-			R ret=funcDo.apply(spti);
-			if(ret!=null)hmStore.put(node,ret);
+			if(funcDo.apply(spti))hmStore.put(sptChild,spti);
 			
 			if(sptChild instanceof Node){
-				doSomethingRecursively((Node)sptChild, funcDo, ++iDepth, hmStore);
+				doSomethingRecursively((Node)sptChild, funcDo, iCurrentDepth, hmStore);
 			}
 		}
 		

@@ -36,6 +36,7 @@ import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction.CmdBtnTA;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.core.VersionedReference;
 
@@ -67,6 +68,8 @@ public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 					};
 				}
 				if(!diagMaint.isInitialized())return false; //prior to new actions below
+				
+//				MiscJmeI.i().addToName(diagMaint.getDialog(), GlobalsManagerDialogI.class.getSimpleName(), true);
 				
 				diagMaint.setTitle(GlobalsManagerDialogI.class.getSimpleName());
 				

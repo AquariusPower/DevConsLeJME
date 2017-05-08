@@ -66,7 +66,7 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 	private boolean	bRotateOnlyIfMouseMoves;
 	private Node	nodeInfo;
 	private Node	nodeHook;
-	private float	fAboveLemurCursorRayCast;
+//	private float	fAboveLemurCursorRayCast;
 	private float	fRotateSpeed;
 	private float	fDistanceToCursor;
 	private Vector2f v2fCursorPosPrevious;
@@ -76,7 +76,7 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 	
 	public OrthogonalCursorStateI() {
 		bRotateOnlyIfMouseMoves=true;
-		fAboveLemurCursorRayCast = MiscJmeI.i().getZAboveAllAtGuiNode(); 
+//		fAboveLemurCursorRayCast = MiscJmeI.i().getZAboveAllAtGuiNode(); 
 		fRotateSpeed=1f;
 		fDistanceToCursor=100;
 		v2fCursorPosPrevious = new Vector2f();
@@ -173,7 +173,7 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 				v3fPos.addLocal(v3fSize);
 			}
 			nodeHook.setLocalTranslation(v3fPos);
-			nodeInfo.setLocalTranslation(MiscJmeI.i().toV3f(v2fCursorPos,fAboveLemurCursorRayCast));
+			nodeInfo.setLocalTranslation(MiscJmeI.i().toV3f(v2fCursorPos, MiscJmeI.i().getZAboveAllAtGuiNode()));
 	}
 	
 	@Override
@@ -181,7 +181,7 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 		super.update(tpf);
 		if(inputman.isCursorVisible()){
 			v2fCursorPos = inputman.getCursorPosition();
-			geom.setLocalTranslation(v2fCursorPos.x-fSize, v2fCursorPos.y+fSize, fAboveLemurCursorRayCast );
+			geom.setLocalTranslation(v2fCursorPos.x-fSize, v2fCursorPos.y+fSize, MiscJmeI.i().getZAboveAllAtGuiNode() );
 			
 			if(isShowCursorInfo())updateCursorInfo();
 			
