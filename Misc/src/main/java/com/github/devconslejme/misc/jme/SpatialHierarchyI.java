@@ -27,6 +27,8 @@
 package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.function.Function;
 
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
@@ -157,4 +159,56 @@ public class SpatialHierarchyI {
 		
 		return asptList;
 	}
+	
+//	public static interface DoSomething{
+//		public boolean doIt(Spatial spt);
+//	}
+	
+	public static class SpatialInfo{
+		private Spatial spatial;
+		private int iDepth;
+		
+		public Spatial getSpatial() {
+			return spatial;
+		}
+		public SpatialInfo setSpatial(Spatial spatial) {
+			this.spatial = spatial;
+			return this;
+		}
+		public int getDepth() {
+			return iDepth;
+		}
+		public SpatialInfo setDepth(int iDepth) {
+			this.iDepth = iDepth;
+			return this;
+		}
+		
+	}
+	
+	/**
+	 * 
+	 * @param node
+	 * @param funcDo
+	 * @param hmStore will be created if null
+	 * @return
+	 */
+	public <R> LinkedHashMap<Spatial,R> doSomethingRecursively(Node node, Function<SpatialInfo,R> funcDo, int iDepth, LinkedHashMap<Spatial, R> hmStore){
+		if(hmStore==null)hmStore = new LinkedHashMap<Spatial,R>();
+		
+		for(Spatial sptChild:node.getChildren()){
+			SpatialInfo spti = new SpatialInfo();
+			spti.setSpatial(sptChild);
+			spti.setDepth(iDepth);
+			
+			R ret=funcDo.apply(spti);
+			if(ret!=null)hmStore.put(node,ret);
+			
+			if(sptChild instanceof Node){
+				doSomethingRecursively((Node)sptChild, funcDo, ++iDepth, hmStore);
+			}
+		}
+		
+		return hmStore;
+	}
+	
 }

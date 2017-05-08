@@ -28,6 +28,8 @@
 package com.github.devconslejme.misc.lemur;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.function.Function;
 
 import org.lwjgl.opengl.Display;
 
@@ -321,4 +323,20 @@ public class MiscLemurI {
 		return fMinSizeZ;
 	}
 	
+	public LinkedHashMap<Spatial,String> debugPanelsZOrderInfo(Node nodeFrom){
+		Function<Spatial,String> funcDo = new Function<Spatial, String>() {
+			@Override
+			public String apply(Spatial spt) {
+				if(spt instanceof Panel) {
+//					Panel new_name = (Panel) spt;
+					return ""+spt.getWorldTranslation().z;
+				}
+				return null;
+			}
+		};
+		//		ArrayList<String> astrList = new ArrayList<String>();
+//		astrList.add(nodeFrom.getLocalTranslation().z);
+//		return astrList;
+		return SpatialHierarchyI.i().doSomethingRecursively(nodeFrom, funcDo, null);
+	}
 }

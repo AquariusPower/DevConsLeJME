@@ -27,9 +27,12 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.github.devconslejme.gendiag;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+import com.github.devconslejme.devcons.JavaScriptI;
+import com.github.devconslejme.devcons.LoggingI;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextButton;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
@@ -119,20 +122,38 @@ public class ConvertMethodsToOptions {
 		int iValidCount=0;
 		for(Method m:am){
 			if(!Modifier.isPublic(m.getModifiers()))continue; //skip non public
-			if(bShowOnlyEditableBeans && !JavaLangI.i().isBeanGetter(m))continue;
+			boolean bBeanGetter = JavaLangI.i().isBeanGetter(m);
+			if(bShowOnlyEditableBeans && !bBeanGetter)continue;
 			
 			MethodHelp mh = new MethodHelp().setObject(objToExtractMethodsFrom).setMethod(m);
 			
 			String strTextKey = mh.getFullHelp(true, false);
 //				if(bRegexFilter && !strTextKey.matches(smd.getInputText()))continue;
 			if(
-					bRegexFilter
-					&& 
-					!StringI.i().contains(
-						strTextKey, getUserInputTextFilter(), getEStringMatchMode(), isMatchIgnoreCase())
+				bRegexFilter
+				&& 
+				!StringI.i().contains(
+					strTextKey, getUserInputTextFilter(), getEStringMatchMode(), isMatchIgnoreCase()
+				)
 			)continue;
 			
 			OptionData od = diag.putOption(odParentSection,	strTextKey, mh);
+			
+			if(!bBeanGetter){
+				if(mh.getMethod().getParameterTypes().length==0){ //only simple calls, otherwise use the devcons
+					String strKey="Call";
+					String strInfo=mh.getFullHelp(true, true)+" //"+ConvertMethodsToOptions.class.getSimpleName()+"/"+strKey;
+					od.addCmdCfg(new CmdCfg(strKey) {@Override	public void execute(Button source) {
+						try {
+							LoggingI.i().logEntry("Calling: "+strInfo);
+							Object objRet = mh.getMethod().invoke(mh.getConcreteObjectInstance());
+							JavaScriptI.i().showRetVal(objRet);
+						} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+							LoggingI.i().logExceptionEntry(ex, strInfo);
+						}
+					}}.setHintHelp("will call this simple (parameters less) method, which may perform more actions than the obvious one, better find out what it does before using it"));
+				}
+			}
 			
 			od.addCmdCfg(new CmdCfg("JavaDoc") {@Override	public void execute(Button source) {
 					JavadocI.i().browseJavadoc(mh);

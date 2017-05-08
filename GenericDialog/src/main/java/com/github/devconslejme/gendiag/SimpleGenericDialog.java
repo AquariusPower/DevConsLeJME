@@ -39,6 +39,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
+import com.github.devconslejme.devcons.LoggingI;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextButton;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
@@ -391,15 +392,24 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		}
 		
 		public boolean isCmdCfgSet(String strKey){
+			return get(strKey)!=null;
+		}
+		
+		public CmdCfg get(String strKey){
 			for(CmdCfg ccChk:acmdcfgList){
-				if(ccChk.getTextUniqueKey().equals(strKey))return true; //already set, ignore
+				if(ccChk.getTextUniqueKey().equals(strKey))return ccChk;
 			}
-			return false;
+			return null;
 		}
 		
 		public void addCmdCfg(CmdCfg cc) {
 //			DetailedException.assertNotAlreadySet(this.cmdCfg, cmdCfg, this);
-			if(!isCmdCfgSet(cc.getTextUniqueKey()))acmdcfgList.add(cc);
+			CmdCfg ccFound=get(cc.getTextUniqueKey());
+			if(ccFound!=null){
+				MessagesI.i().warnMsg(this, "already set", cc.getTextUniqueKey(), cc, ccFound);
+			}else{
+				acmdcfgList.add(cc);
+			}
 		}
 
 		public int getNestingDepth() {
@@ -946,6 +956,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	 * @return
 	 */
 	protected Panel automaticConfiguratorCreation(OptionData od) {
+		// support for full method info, allowing call it using the stored value
 		if (od.getStoredValue() instanceof MethodHelp) {
 			return createConfiguratorMethodHelp(od, (MethodHelp)od.getStoredValue());
 		}

@@ -209,9 +209,13 @@ public class QueueI {
 			sb.append(getName()+strSeparator);
 			
 			if(getEnclosing()!=null){
+				/**
+				 * is info about the enclosing method, 
+				 * there is no accessible concrete object here...
+				 */
 				MethodHelp mh = new MethodHelp();
-				mh.setMethod(getEnclosing());
-				sb.append(mh.getFullHelp(true,false)+strSeparator);
+				mh.setMethod(getEnclosing()); 
+				sb.append(mh.getFullHelp(true,false) + strSeparator);
 			}
 			
 			return sb.toString();

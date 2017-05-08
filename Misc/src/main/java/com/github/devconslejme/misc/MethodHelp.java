@@ -88,17 +88,79 @@ public class MethodHelp{
 		return m.getReturnType();
 	}
 	
-	public String getFullHelp(boolean bUseSimpleNames, boolean bOverrideWithConcrete){
+	public static enum EClassToStrMode{
+		OnlyAnon,
+		OnlyClass,
+		Both,
+		;
+	}
+	
+	public String classToStr(Class cl,boolean bUseSimpleNames, EClassToStrMode e){
+		String strAnon="";
+		if(cl.isAnonymousClass()){
+			if(bUseSimpleNames){
+				// there is no getSimpleName() for anonymous class...
+				String[] astr = cl.getName().split("[.]");
+				strAnon=astr[astr.length-1];
+			}else{
+				strAnon=cl.getName();
+			}
+			
+			cl = cl.getSuperclass();
+		}
 		
+		String strClass = (bUseSimpleNames ? cl.getSimpleName() : cl.getName());
+		
+		switch(e){
+			case Both:
+				return strClass+"/"+strAnon;
+			case OnlyAnon:
+				return strAnon;
+			case OnlyClass:
+				return strClass;
+		}
+		
+		throw new UnsupportedOperationException("mode not implemented: "+e);
+	}
+	
+	public String getFullHelp(boolean bUseSimpleNames, boolean bOverrideWithConcrete){
 		String strFull="";
 		
-		String strDecl		=(bUseSimpleNames?getDeclaring().getSimpleName():getDeclaring().getName());
-		strFull+=(bOverrideWithConcrete?
-			(bUseSimpleNames?getConcrete().getSimpleName():getConcrete().getName()):
-			strDecl
-		)+".";
+		Class cl = bOverrideWithConcrete ? getConcrete() : getDeclaring();
+//		String strAnon="";
+//		if(cl.isAnonymousClass()){
+//			String[] astr = cl.getName().split("[.]");
+//			strAnon="<"+astr[astr.length-1]+">";
+//			cl = cl.getSuperclass();
+//		}
+//		String strClassName=(bUseSimpleNames ? cl.getSimpleName() : cl.getName());;
+//		strClassName+=strAnon;
+//		strFull+=strClassName+strAnon+".";
+		strFull+=classToStr(cl,bUseSimpleNames,EClassToStrMode.OnlyClass)+"."+getMethodHelp(bUseSimpleNames);
 		
-		strFull+=getMethodHelp(bUseSimpleNames);
+//		String strDecl = (bUseSimpleNames ? getDeclaring().getSimpleName() : getDeclaring().getName());
+		
+//		if(bOverrideWithConcrete){
+//			String strConcrete = "";
+//			if(getConcrete().isAnonymousClass()){
+//				if(bUseSimpleNames){
+//					String[] astr = getConcrete().getName().split("[.]");
+//					strConcrete = "(anonymous)"+astr[astr.length-1];
+//				}else{
+//					String[] astr = getConcrete().getName().split("[.]");
+//					strConcrete = "(anonymous)"+astr[astr.length-1];
+//				}
+//			}else{
+//				strConcrete=(bUseSimpleNames ? getConcrete().getSimpleName() : getConcrete().getName());
+//			}
+//			
+//			strFull+=strConcrete;
+//		}else{
+//			strFull+=strDecl;
+//		}
+//		strFull+=".";
+		
+//		strFull+=getMethodHelp(bUseSimpleNames);
 		
 		/**
 		 * as a comment that is compatible with java scripting 
@@ -106,13 +168,22 @@ public class MethodHelp{
 		strFull+=" //";
 		
 		Class clRet = getMethodReturnType();
+		if(!Void.class.isAssignableFrom(clRet) && !void.class.isAssignableFrom(clRet)){
+			strFull+="=";
+		}
 		strFull+=(bUseSimpleNames?clRet.getSimpleName():clRet.getName());
 		
 		if(isStatic())strFull+=" <STATIC>";
 		
-		if(bOverrideWithConcrete)strFull+=" <"+strDecl+">";
+		if(bOverrideWithConcrete){
+			strFull+=" <"+classToStr(getDeclaring(),bUseSimpleNames,EClassToStrMode.Both)+">";
+		}else{
+			// TODO for CallableXAnon, the method call() appears 2 time, one returning Boolean, other returning Object, and there seems to have no way to distinguish between them other than that return type? mostly because both are the same, what is actually pointless..., prefer to show only the ret boolean one?
+			String strAnon = classToStr(getDeclaring(),bUseSimpleNames,EClassToStrMode.OnlyAnon);
+			if(!strAnon.isEmpty())strFull+=" <"+strAnon+">";
+		}
 		
-		if(getNonUserTypeableParamsCount()>0)strFull+=" <UserCannotType="+getNonUserTypeableParamsCount()+">";
+		if(getNonUserTypeableParamsCount()>0)strFull+=" <UserCannotTypeCount="+getNonUserTypeableParamsCount()+">";
 		
 		this.strLastFullHelp=strFull.trim();
 		
