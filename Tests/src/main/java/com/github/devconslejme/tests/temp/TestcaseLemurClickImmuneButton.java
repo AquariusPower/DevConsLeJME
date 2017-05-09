@@ -1,10 +1,8 @@
 package com.github.devconslejme.tests.temp;
 
-import org.lwjgl.opengl.Display;
-
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
+import com.github.devconslejme.misc.LwjglI;
 import com.github.devconslejme.misc.jme.UserDataI;
-import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
@@ -113,7 +111,7 @@ public class TestcaseLemurClickImmuneButton extends SimpleApplication{
 			DialogHierarchyStateI.i().showDialog(rzp);
 		}
 //		getGuiNode().attachChild(rzp);
-		rzp.setLocalTranslation(fX, Display.getHeight()/2f, 0);
+		rzp.setLocalTranslation(fX, LwjglI.i().getDisplay().getHeight()/2f, 0);
 		
 		getStateManager().getState(FocusManagerState.class).setFocus(btn);
 		

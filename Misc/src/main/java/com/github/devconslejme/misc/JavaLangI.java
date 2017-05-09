@@ -425,4 +425,14 @@ public class JavaLangI {
 		
 		return null;
 	}
+	
+	public Class getClassForName(String str){
+		try {
+			return Class.forName(str);
+		} catch (ClassNotFoundException e) {
+			MessagesI.i().warnMsg(this, "failed to retrieve class for", str);
+		}
+		
+		return null;
+	}
 }

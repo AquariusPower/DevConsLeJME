@@ -35,10 +35,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
-import org.lwjgl.opengl.Display;
-
-import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.es.DialogHierarchyComp.DiagCompBean;
+import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.gendiag.ContextMenuI;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextButton;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
@@ -48,6 +46,7 @@ import com.github.devconslejme.gendiag.ContextMenuI.HintUpdaterPerCtxtBtn;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.LwjglI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.github.devconslejme.misc.JavaLangI;
@@ -1278,7 +1277,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	}
 	
 	public Vector3f getWindowSize(){
-		return new Vector3f(Display.getWidth(),Display.getHeight(),0);
+		return new Vector3f(LwjglI.i().getDisplay().getWidth(),LwjglI.i().getDisplay().getHeight(),0);
 	}
 	
 //	public void updateVisibleLogItems(){

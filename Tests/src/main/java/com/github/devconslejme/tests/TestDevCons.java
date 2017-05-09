@@ -41,6 +41,7 @@ import com.github.devconslejme.gendiag.QueueManagerDialogI;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.CheckProblemsI;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.LwjglI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.tests.temp.TestVisualizeOtherWindowContents;
@@ -97,7 +98,7 @@ public class TestDevCons extends SimpleApplication{
 	 ******************************************************************************************/
 	
 	/** */
-	ArrayList<SimpleApplication> aoUpdtOptionals = new ArrayList<SimpleApplication>();
+	ArrayList<SimpleApplication> aoUpdOpts = new ArrayList<SimpleApplication>();
 	private static boolean	bEnableOpt = true;
 	
 	private void opt_disableSomeSimpleAppThings() {
@@ -110,6 +111,8 @@ public class TestDevCons extends SimpleApplication{
 	}
 	
 	private static void opt_initWindow(TestDevCons tst) {
+		LwjglI.i().getDisplay().setResizable(true);
+		
 		AppSettings as = new AppSettings(true);
 		as.setTitle(TestDevCons.class.getSimpleName());
 		as.setResolution(1230,690);
@@ -183,19 +186,26 @@ public class TestDevCons extends SimpleApplication{
 	 * so thru devcons user commands can instantiate the other tests
 	 */
 	private void opt_initOptionalIntegrateAllOtherTests() {
-		aoUpdtOptionals.add(GlobalManagerI.i().putConcrete(new TestContextMenu()));
-		aoUpdtOptionals.add(GlobalManagerI.i().putConcrete(new TestChoiceDialog()));
-		aoUpdtOptionals.add(GlobalManagerI.i().putConcrete(new TestMultiChildDialog()));
-		aoUpdtOptionals.add(GlobalManagerI.i().putConcrete(new TestHierarchyResizablePanel()));
-		aoUpdtOptionals.add(GlobalManagerI.i().putConcrete(new TestMaintenanceDialog()));
-		aoUpdtOptionals.add(GlobalManagerI.i().putConcrete(new TestResizablePanel()));
+		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestContextMenu()));
+		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestChoiceDialog()));
+		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestMultiChildDialog()));
+		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestHierarchyResizablePanel()));
+		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestMaintenanceDialog()));
+		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestResizablePanel()));
 	}
 	
 	@Override
 	public void simpleUpdate(float tpf) {
 		super.simpleUpdate(tpf);
-		for(SimpleApplication obj:aoUpdtOptionals){
+		for(SimpleApplication obj:aoUpdOpts){
 			obj.simpleUpdate(tpf);
+		}
+		
+		if(LwjglI.i().getDisplay().wasResized()){
+			reshape(
+				Math.max(LwjglI.i().getDisplay().getWidth(),1),
+				Math.max(LwjglI.i().getDisplay().getHeight(),1)
+			);
 		}
 	}
 	

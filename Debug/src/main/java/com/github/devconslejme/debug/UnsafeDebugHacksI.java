@@ -32,11 +32,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.lwjgl.opengl.XRandR;
-import org.lwjgl.opengl.XRandR.Screen;
 
 import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.DetailedException.IHandleExceptions;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MessagesI;
 
 /**
@@ -80,7 +80,7 @@ public class UnsafeDebugHacksI {
 	/**
 	 * 
 	 * @param clazzOfObjectFrom what superclass of the object from is to be used? if null, will use owner.class()
-	 * @param objFieldOwner if null, clazz must be set (will be refering to a static field then)
+	 * @param objFieldOwner if null, clazzOfObjectFrom must be set (will be refering to a static field then)
 	 * @param strFieldName this method will break if it gets changed by lib developers...
 	 * @param fldOverride use this or strFieldName
 	 * @param bSetValue
@@ -88,9 +88,10 @@ public class UnsafeDebugHacksI {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> T getOrSetFieldValueHK(Class<?> clazzOfObjectFrom, Object objFieldOwner, String strFieldName, Class<T> clReturnType, Field fldOverride, boolean bSetValue, Object objSetNewValue){
+	public <T> T getOrSetFieldValueHK(Class<?> clazzOfObjectFrom, Object objFieldOwner, String strFieldName, Field fldOverride, boolean bSetValue, Object objSetNewValue){
 		if(!bAllowHacks)return null;
 		
+		assert clazzOfObjectFrom!=null || objFieldOwner!=null : "at least one must be set...";
 		if(clazzOfObjectFrom==null)clazzOfObjectFrom=objFieldOwner.getClass();
 		
 		Object objFieldValue = null;
@@ -146,6 +147,15 @@ public class UnsafeDebugHacksI {
 	 * @return the value that was stored at the variable that was set to null to let this fix work 
 	 */
 	@Bugfix
+	public Object hackXRandRpreventResolutionRestore(){ //this one will be more ready to lwjgl3 in a way..
+		if(!System.getProperty("os.name").equalsIgnoreCase("linux"))return null;
+		
+		return UnsafeDebugHacksI.i().getOrSetFieldValueHK(
+				JavaLangI.i().getClassForName("org.lwjgl.opengl.XRandR"),
+				null, "savedConfiguration", null, true, null);
+	}
+	/*
+	@Bugfix
 	public Screen[] hackXRandRpreventResolutionRestore(){
 		if(!System.getProperty("os.name").equalsIgnoreCase("linux"))return null;
 		
@@ -154,6 +164,7 @@ public class UnsafeDebugHacksI {
 		
 		return a;
 	}
+	*/
 	
 	public boolean isAllowHacks() {
 		return bAllowHacks;

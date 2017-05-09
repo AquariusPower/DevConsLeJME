@@ -32,10 +32,9 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.function.Function;
 
-import org.lwjgl.opengl.Display;
-
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.LwjglI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
@@ -162,17 +161,17 @@ public class MiscLemurI {
 		Vector3f v3fSize = pnl.getSize();
 		Vector3f v3fPos = pnl.getLocalTranslation();
 		return 
-			v3fSize.x==Display.getWidth() && 
-			v3fSize.y==Display.getHeight() &&
+			v3fSize.x==LwjglI.i().getDisplay().getWidth() && 
+			v3fSize.y==LwjglI.i().getDisplay().getHeight() &&
 			v3fPos.x==0 &&
-			v3fPos.y==Display.getHeight()
+			v3fPos.y==LwjglI.i().getDisplay().getHeight()
 			;
 	}
 
 	public void maximize(PanelBase pnl) {
 		maximize(pnl, 
-			new Vector3f(0,Display.getHeight(),0), 
-			new Vector3f(Display.getWidth(),Display.getHeight(),0));
+			new Vector3f(0,LwjglI.i().getDisplay().getHeight(),0), 
+			new Vector3f(LwjglI.i().getDisplay().getWidth(),LwjglI.i().getDisplay().getHeight(),0));
 	}
 	public void maximize(PanelBase pnl, Vector3f v3fPosXY, Vector3f v3fSizeWH) {
 		pnl.setLocalTranslationXY(v3fPosXY);
@@ -218,11 +217,11 @@ public class MiscLemurI {
 	public void moveToScreenCenterXY(PanelBase pnl) {
 		Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSizeCopy(pnl);
 		pnl.setLocalTranslationXY(new Vector3f(
-			Display.getWidth()/2f - v3fSize.x/2f, 
-			Display.getHeight()/2f + v3fSize.y/2f, 
+			LwjglI.i().getDisplay().getWidth()/2f - v3fSize.x/2f, 
+			LwjglI.i().getDisplay().getHeight()/2f + v3fSize.y/2f, 
 			0//			pnl.getLocalTranslation().z 
 		));
-//		pnl.getWorldBound().setCenter(new Vector3f(Display.getWidth()/2f,Display.getHeight()/2f,pnl.getLocalTranslation().z));
+//		pnl.getWorldBound().setCenter(new Vector3f(DisplayI.i()..getWidth()/2f,DisplayI.i()..getHeight()/2f,pnl.getLocalTranslation().z));
 	}
 	
 	public static enum EReSizeApplyMode{

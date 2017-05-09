@@ -27,19 +27,52 @@
 package com.github.devconslejme.misc;
 
 import org.lwjgl.input.Mouse;
-
+import org.lwjgl.opengl.Display;
 
 /**
+ * Lwjgl devcons wrapper.
+ * 
+ * So that lwjgl3 can replace lwjgl more easily... or any other ways to collect the required values
+ * can be applied.
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class RawInputI {
-	public static RawInputI i(){return GlobalManagerI.i().get(RawInputI.class);}
+public class LwjglI {
+	public static LwjglI i(){return GlobalManagerI.i().get(LwjglI.class);}
 	
-	public int isMouseCursorPressedButtons(){
-		int i2=0;
-		for(int i=0;i<9;i++){
-			if(LwjglI.i().getMouse().isButtonDown(i))i2++;
+	public static class DisplayI{
+		public int getWidth(){
+			return Display.getWidth();
 		}
-    return i2;
+		
+		public int getHeight(){
+			return Display.getHeight();
+		}
+		
+		public void setResizable(boolean b){
+			Display.setResizable(b);
+		}
+		public boolean isResizable(){
+			return Display.isResizable();
+		}
+		
+		public boolean wasResized(){
+			return Display.wasResized();
+		}		
 	}
+	private DisplayI display = new DisplayI();
+	public DisplayI getDisplay(){
+		return display;
+	}
+
+	public static class MouseI{
+		public boolean isButtonDown(int i){
+			return Mouse.isButtonDown(i);
+		}
+	}
+	private MouseI mouse = new MouseI();
+	public MouseI getMouse() {
+		return mouse;
+	}
+	
 }

@@ -30,10 +30,9 @@ package com.github.devconslejme.misc.lemur;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.lwjgl.opengl.Display;
-
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.LwjglI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.lemur.MiscLemurI.EReSizeApplyMode;
@@ -49,7 +48,6 @@ import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.core.GuiComponent;
 import com.simsilica.lemur.core.GuiControl;
 import com.simsilica.lemur.core.VersionedHolder;
-import com.simsilica.lemur.core.VersionedObject;
 import com.simsilica.lemur.core.VersionedReference;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
@@ -414,13 +412,13 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		Panel pnlParentest = getParentest();
 		
 		Vector3f v3f = pnlParentest.getPreferredSize().add(new Vector3f(1, 1, 0));
-		if(v3f.equals(new Vector3f(Display.getWidth(),Display.getHeight(),0))){
+		if(v3f.equals(new Vector3f(LwjglI.i().getDisplay().getWidth(),LwjglI.i().getDisplay().getHeight(),0))){
 			MiscLemurI.i().safeSizeRecursively(EReSizeApplyMode.Restore,pnlParentest);
 			return;
 		}
 		
-		if(v3f.x > Display.getWidth())v3f.x=Display.getWidth();
-		if(v3f.y > Display.getHeight())v3f.y=Display.getHeight();
+		if(v3f.x > LwjglI.i().getDisplay().getWidth())v3f.x=LwjglI.i().getDisplay().getWidth();
+		if(v3f.y > LwjglI.i().getDisplay().getHeight())v3f.y=LwjglI.i().getDisplay().getHeight();
 		
 		MessagesI.i().warnMsg(this,"("+i+") increasing size of "+pnlParentest.getName()+" to "+v3f);
 		
@@ -524,7 +522,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 				if(bSkipGrowFix)throw ex;
 				if(!ex.getMessage().startsWith("Size cannot be negative:")) throw ex;
 				Vector3f v3fSize = rzpParentest.getSize();
-				if(v3fSize.x==Display.getWidth() && v3fSize.y==Display.getHeight()){
+				if(v3fSize.x==LwjglI.i().getDisplay().getWidth() && v3fSize.y==LwjglI.i().getDisplay().getHeight()){
 					if(v3fLastSucessSize!=null){
 						MiscLemurI.i().safeSizeRecursively(EReSizeApplyMode.Restore,getParentest());
 //						setPreferredSize(v3fLastSucessSize); //restore last

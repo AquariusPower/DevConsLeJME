@@ -100,7 +100,7 @@ public class DebugTrackProblemsJME implements ICheckProblems{
 	private ArrayList<Spatial> recursiveFindModifications(Node node, ArrayList<Spatial> asptIn){
 		if(asptIn==null)asptIn = new ArrayList<Spatial>();
 		for(Spatial sptChild : node.getChildren()){
-			if(UnsafeDebugHacksI.i().getOrSetFieldValueHK(Spatial.class, sptChild, "refreshFlags", int.class, null, false, null)!=0){
+			if((int)UnsafeDebugHacksI.i().getOrSetFieldValueHK(Spatial.class, sptChild, "refreshFlags", null, false, null)!=0){
 				asptIn.add(sptChild);
 			}
 			if(sptChild instanceof Node){
