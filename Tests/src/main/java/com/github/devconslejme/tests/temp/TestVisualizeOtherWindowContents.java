@@ -85,7 +85,7 @@ public class TestVisualizeOtherWindowContents extends SimpleApplication{
 	 * public so can be called from devcons user cmds
 	 */
 	public void initTest() {
-		sapp = GlobalManagerI.i().get(SimpleApplication.class);
+		sapp = GlobalManagerI.i().get(SimpleApplication.class); //ca be this class or the devcons test one
 		
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override

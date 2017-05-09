@@ -64,8 +64,10 @@ import com.simsilica.lemur.Command;
 public class TestDevCons extends SimpleApplication{
 	public static void main(String[] args) {
 		if(bEnableOpt)opt_initSingleAppInstanceAtMain();
+		
 		TestDevCons tst = new TestDevCons();
 		if(bEnableOpt)opt_initWindow(tst);
+		
 		tst.start();
 	}
 	
@@ -117,7 +119,7 @@ public class TestDevCons extends SimpleApplication{
 		as.setTitle(TestDevCons.class.getSimpleName());
 		as.setResolution(1230,690);
 		as.setResizable(true);
-		as.setFrameRate(60);
+		if(false)as.setFrameRate(60); //using dynamic fps limiter
 		tst.setSettings(as);
 		
 		tst.setShowSettings(false);
@@ -125,7 +127,7 @@ public class TestDevCons extends SimpleApplication{
 	
 	private static void opt_initSingleAppInstanceAtMain() {
 		GlobalManagerI.i().get(SingleAppInstance.class).configureOptionalAtMainMethod(
-				JmeSystem.getStorageFolder(StorageFolderType.Internal)); // this is optional
+			JmeSystem.getStorageFolder(StorageFolderType.Internal)); // this is optional
 	}
 	
 	private void opt_initOptionalExtras() {

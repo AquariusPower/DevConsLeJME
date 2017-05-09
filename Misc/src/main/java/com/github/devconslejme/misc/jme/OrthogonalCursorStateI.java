@@ -58,7 +58,7 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 	private Node	nodeParent;
 	private InputManager	inputman;
 	private int	fSize;
-	private SimpleApplication	sappOpt;
+//	private SimpleApplication	sappOpt;
 	private BitmapText	bt;
 	private ColorRGBA	color;
 	private boolean	bRotating;
@@ -84,7 +84,7 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 	
 	public void configure(Node nodeParent){
 		app = GlobalManagerI.i().get(Application.class);
-		sappOpt = GlobalManagerI.i().get(SimpleApplication.class,false);
+//		sappOpt = GlobalManagerI.i().get(SimpleApplication.class,false);
 		app.getStateManager().attach(this);
 		inputman=app.getInputManager();
 		this.nodeParent=nodeParent;

@@ -77,7 +77,12 @@ public class GlobalManagerI {
     }
     return (T)obj;
   }
-
+  
+  /**
+   * the concrete class will be used as key
+   * @param obj
+   * @return
+   */
   @SuppressWarnings("unchecked")
 	public <T> T putConcrete(T obj){
   	put((Class<T>)obj.getClass(),obj);

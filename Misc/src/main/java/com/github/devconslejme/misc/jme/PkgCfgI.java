@@ -50,7 +50,7 @@ public class PkgCfgI {
 		
 		GlobalManagerI.i().put(Application.class, app);  //first!
 		if(app instanceof SimpleApplication){
-			GlobalManagerI.i().put(SimpleApplication.class, (SimpleApplication)app);
+			GlobalManagerI.i().put(SimpleApplication.class, (SimpleApplication)app); //code depending on this should be optional...
 		}
 		
 		// after first

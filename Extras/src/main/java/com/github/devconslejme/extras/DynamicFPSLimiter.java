@@ -37,6 +37,11 @@ public class DynamicFPSLimiter { //extends AbstractAppState{
 	private long	lNanoThreadSleep;
 	private int	iMaxFPS;
 	private long lOneSecondInNanos = 1000000000L;
+//	private boolean bUnlimited = false;
+	
+	public DynamicFPSLimiter(){
+		setMaxFps(60);
+	}
 	
 	public void setMaxFps(int iMaxFPS){
 		this.iMaxFPS=iMaxFPS;
