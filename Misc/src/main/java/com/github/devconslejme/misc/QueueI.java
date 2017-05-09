@@ -185,12 +185,18 @@ public class QueueI {
 			
 			// auto name
 			if(strName==null){ // for annonimous class
-				if(getEnclosing()!=null)strName=getEnclosing().getName();
+				if(getEnclosing()!=null){
+					strName=getEnclosing().getName();
+				}
 				bAnonymousClass=true;
 			}
 			
 			if(strName==null){
 				strName = steInstancedWhen.getMethodName();
+				if("<init>".equals(strName)){
+					String[] astr = steInstancedWhen.getClassName().split("[.]");
+					strName=astr[astr.length-1]+"."+strName;
+				}
 			}
 			
 			if(strName==null){
@@ -207,8 +213,8 @@ public class QueueI {
 		public String getInfoText(){
 			String strSeparator = ", ";
 			StringBuilder sb = new StringBuilder("");
-			sb.append(getUId()+strSeparator);
-			sb.append(getName()+strSeparator);
+			sb.append("uid="+getUId()+strSeparator);
+			sb.append("'"+getName()+"'"+strSeparator);
 			
 			if(getEnclosing()!=null){
 				/**

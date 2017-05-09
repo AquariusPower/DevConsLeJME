@@ -35,7 +35,6 @@ import com.simsilica.lemur.style.BaseStyles;
  */
 public class _TestBasicCodeToCopyFrom_ extends SimpleApplication{
 	public static void main(String[] args) {
-		assert(true);
 		_TestBasicCodeToCopyFrom_ test = new _TestBasicCodeToCopyFrom_();
 		test.start();
 	}

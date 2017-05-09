@@ -40,6 +40,7 @@ public class StringI {
 	public static StringI i(){return GlobalManagerI.i().get(StringI.class);}
 	
 	private String	strLastUid="0";
+	private int	iUIdRadix = Character.MAX_RADIX;
 	
 	public static enum EStringMatchMode{
 		Exact,
@@ -114,7 +115,6 @@ public class StringI {
 	 * @return
 	 */
 	public String getNextUniqueId(String strLastId){
-		int iRadix=Character.MAX_RADIX;
 		/**
 		 * Do not fix if null like in `if(strLastId==null)strLastId="0";`
 		 * because the last id must be controlled by a manager String field,
@@ -124,9 +124,13 @@ public class StringI {
 		 * 
 		 * TODO better not fix if empty either!?
 		 */
-		BigInteger bi = new BigInteger(strLastId,iRadix);
+		BigInteger bi = new BigInteger(strLastId,iUIdRadix);
 		bi=bi.add(new BigInteger("1"));
-		return bi.toString(iRadix);
+		return bi.toString(iUIdRadix);
+	}
+	
+	public String convertToUniqueId(long l){
+		return new BigInteger(""+l,10).toString(iUIdRadix);
 	}
 	
 	/**
