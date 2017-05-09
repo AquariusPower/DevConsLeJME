@@ -27,8 +27,6 @@
 
 package com.github.devconslejme.misc.jme;
 
-import javax.annotation.concurrent.ThreadSafe;
-
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.JavaLangI;

@@ -53,7 +53,7 @@ import com.github.devconslejme.misc.FileI;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.JavadocI;
 import com.github.devconslejme.misc.MessagesI;
-import com.github.devconslejme.misc.MethodHelp;
+import com.github.devconslejme.misc.MethodX;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.ReportI;
@@ -84,7 +84,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	private HashBiMap<String,File> hmFileReaderExecJS = HashBiMap.create(); 
 	WriterCapture wrc = new WriterCapture();
 	private String	strCmdChar = "/";
-	private HashMap<Object,ArrayList<MethodHelp>> hmMethodsHelp = new HashMap<Object,ArrayList<MethodHelp>>();
+	private HashMap<Object,ArrayList<MethodX>> hmMethodsHelp = new HashMap<Object,ArrayList<MethodX>>();
 	
 	enum EJSObjectBind {
 		selfScript,
@@ -186,7 +186,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	}
 	
 	private void showJavadoc(String strFullMethodHelp) {
-		MethodHelp mh = retrieveMethodHelp(strFullMethodHelp);
+		MethodX mh = retrieveMethodHelp(strFullMethodHelp);
 		if(mh!=null){
 			LoggingI.i().logEntry("Externally browsing javadoc for: "+mh.getFullHelp(false,false));
 			JavadocI.i().browseJavadoc(mh);
@@ -214,7 +214,7 @@ public class JavaScriptI implements IGlobalAddListener {
 //		}
 //	}
 	
-	public MethodHelp retrieveMethodHelp(String strFullMethodHelp){
+	public MethodX retrieveMethodHelp(String strFullMethodHelp){
 //		// remove comments
 //		int iComment = strFullMethodHelp.indexOf("//");
 //		if(iComment>-1)strFullMethodHelp=strFullMethodHelp.substring(0,iComment);
@@ -230,10 +230,10 @@ public class JavaScriptI implements IGlobalAddListener {
 			return null;
 		}
 		
-		ArrayList<MethodHelp> amh = retrieveAllMethodsHelpFor(objJSBind);
+		ArrayList<MethodX> amh = retrieveAllMethodsHelpFor(objJSBind);
 		if(strFullMethodHelp.contains("(")){ //has method anchor
 //		if(i1stDot>-1 && strFullMethodHelp.length()>i1stDot){ //has method anchor
-			for(MethodHelp mh:amh){
+			for(MethodX mh:amh){
 				if(isMethodMatchesFilter(mh)){
 					if(cmpEqualsOnlyWhatMatters(strFullMethodHelp,convertToUserHelp(mh))){
 						return mh;
@@ -246,8 +246,8 @@ public class JavaScriptI implements IGlobalAddListener {
 		return null;
 	}
 	
-	public ArrayList<MethodHelp> retrieveAllMethodsHelpFor(Object obj){
-		ArrayList<MethodHelp> amh = hmMethodsHelp.get(obj);
+	public ArrayList<MethodX> retrieveAllMethodsHelpFor(Object obj){
+		ArrayList<MethodX> amh = hmMethodsHelp.get(obj);
 		if(amh==null){
 			amh = JavadocI.i().prepareAllMethodsHelp(obj);
 			DetailedException.assertIsFalse("empty", amh.size()==0, obj);
@@ -256,7 +256,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		return amh;
 	}
 	
-	public String convertToUserHelp(MethodHelp mh){
+	public String convertToUserHelp(MethodX mh){
 //		return strCmdChar+EBaseCommand.javadoc+" "+mh.getFullHelp(true, true);
 		return mh.getFullHelp(true, true);
 	}
@@ -555,7 +555,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	
 	private void showMethods(Object obj){
 		LoggingI.i().logSubEntry("Accessible Methods:");
-		for(MethodHelp mh:retrieveAllMethodsHelpFor(obj)){
+		for(MethodX mh:retrieveAllMethodsHelpFor(obj)){
 			if(isMethodMatchesFilter(mh)){
 				LoggingI.i().logSubEntry(convertToUserHelp(mh));
 			}
@@ -566,7 +566,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		ArrayList<String> astr = new ArrayList<String>();
 		for(Entry<String, Object> entry:bndJSE.entrySet()){
 			Object objJSBindValue = entry.getValue();
-			for(MethodHelp mh:retrieveAllMethodsHelpFor(objJSBindValue)){
+			for(MethodX mh:retrieveAllMethodsHelpFor(objJSBindValue)){
 				if(isMethodMatchesFilter(mh)){
 					astr.add(convertToUserHelp(mh));
 				}
@@ -582,7 +582,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	 * @param m
 	 * @return null if did not match filters
 	 */
-	public boolean isMethodMatchesFilter(MethodHelp mh){
+	public boolean isMethodMatchesFilter(MethodX mh){
 		if(
 				isShowAllPublicMembers() ||
 				(

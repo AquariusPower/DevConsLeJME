@@ -27,7 +27,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.github.devconslejme.misc.jme;
 
-import com.github.devconslejme.misc.LwjglI;
+import com.github.devconslejme.misc.Annotations.Bean;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.StringI;
 import com.jme3.app.Application;
@@ -96,7 +96,7 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 		
 		// cross
 		geom=new Geometry(OrthogonalCursorStateI.class.getSimpleName());
-		fSize=Math.max(LwjglI.i().getDisplay().getWidth(),LwjglI.i().getDisplay().getHeight())+10; //a bit more to hide the borders
+		fSize=Math.max(EnvironmentI.i().getDisplay().getWidth(),EnvironmentI.i().getDisplay().getHeight())+10; //a bit more to hide the borders
 		geom.setMesh(new Grid(3,3,fSize));
 //		geom.lookAt(new Vector3f(v2f.x,v2f.y-1000000,0), Vector3f.UNIT_Z.mult(1000));
 		geom.lookAt(new Vector3f(0,-1000000,0), Vector3f.UNIT_Z.mult(1000));
@@ -119,10 +119,10 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 	private void updateCursorInfo(){
 		String str=StringI.i().createTable(3,
 				"xy", String.format("%.0f",v2fCursorPos.x), String.format("%.0f",v2fCursorPos.y),
-				"max", ""+LwjglI.i().getDisplay().getWidth(), ""+LwjglI.i().getDisplay().getHeight(),
-				"diff", ""+(LwjglI.i().getDisplay().getWidth()-(int)v2fCursorPos.x), ""+(LwjglI.i().getDisplay().getHeight()-(int)v2fCursorPos.y),
-				"%",	String.format("%.1f", (v2fCursorPos.x/(float)LwjglI.i().getDisplay().getWidth ())*100),
-							String.format("%.1f", (v2fCursorPos.y/(float)LwjglI.i().getDisplay().getHeight())*100)
+				"max", ""+EnvironmentI.i().getDisplay().getWidth(), ""+EnvironmentI.i().getDisplay().getHeight(),
+				"diff", ""+(EnvironmentI.i().getDisplay().getWidth()-(int)v2fCursorPos.x), ""+(EnvironmentI.i().getDisplay().getHeight()-(int)v2fCursorPos.y),
+				"%",	String.format("%.1f", (v2fCursorPos.x/(float)EnvironmentI.i().getDisplay().getWidth ())*100),
+							String.format("%.1f", (v2fCursorPos.y/(float)EnvironmentI.i().getDisplay().getHeight())*100)
 			);
 			
 			bt.setText(str);
@@ -247,4 +247,5 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 	public void setShowCursorInfo(boolean bShowCursorInfo) {
 		this.bShowCursorInfo = bShowCursorInfo;
 	}
+	
 }

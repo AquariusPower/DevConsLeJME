@@ -43,7 +43,7 @@ public class JavadocI {
 	
 	private String	strJavadocFolder = "javadoc/";
 	
-	public void browseJavadoc(MethodHelp mh) {
+	public void browseJavadoc(MethodX mh) {
 		URI uri = mh.getAsJavadocURI();
 		try {
 			// external web browser 
@@ -53,11 +53,11 @@ public class JavadocI {
 		}
 	}
 
-	public ArrayList<MethodHelp> prepareAllMethodsHelp(Object obj){
-		ArrayList<MethodHelp> amh = new ArrayList<MethodHelp>();
+	public ArrayList<MethodX> prepareAllMethodsHelp(Object obj){
+		ArrayList<MethodX> amh = new ArrayList<MethodX>();
 		
 		for(Method m:obj.getClass().getMethods()){
-			MethodHelp mh = new MethodHelp();
+			MethodX mh = new MethodX();
 			mh.setObject(obj);
 			mh.setMethod(m);
 //			mh.setConcrete(obj.getClass());

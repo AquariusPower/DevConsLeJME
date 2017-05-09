@@ -56,7 +56,7 @@ public class PkgCfgI {
 		// after first
 		DebugVisualsI.i().configure();
 		MiscJmeI.i().configure();
-		MouseCUrsorI.i().configure();
+		//TODO enable this: new ConfigureKeyCodeManagerJme().configure();
 		EffectManagerStateI.i().configure();
 		SimulationTimeStateI.i().configure();
 		QueueStateI.i().configure();

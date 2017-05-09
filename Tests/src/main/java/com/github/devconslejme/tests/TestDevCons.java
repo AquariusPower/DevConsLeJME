@@ -41,9 +41,9 @@ import com.github.devconslejme.gendiag.QueueManagerDialogI;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.CheckProblemsI;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.LwjglI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.jme.EnvironmentI;
 import com.github.devconslejme.tests.temp.TestVisualizeOtherWindowContents;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
@@ -113,7 +113,7 @@ public class TestDevCons extends SimpleApplication{
 	}
 	
 	private static void opt_initWindow(TestDevCons tst) {
-		LwjglI.i().getDisplay().setResizable(true);
+		EnvironmentI.i().getDisplay().setResizable(true);
 		
 		AppSettings as = new AppSettings(true);
 		as.setTitle(TestDevCons.class.getSimpleName());
@@ -203,10 +203,10 @@ public class TestDevCons extends SimpleApplication{
 			obj.simpleUpdate(tpf);
 		}
 		
-		if(LwjglI.i().getDisplay().wasResized()){
+		if(EnvironmentI.i().getDisplay().wasResized()){
 			reshape(
-				Math.max(LwjglI.i().getDisplay().getWidth(),1),
-				Math.max(LwjglI.i().getDisplay().getHeight(),1)
+				Math.max(EnvironmentI.i().getDisplay().getWidth(),1),
+				Math.max(EnvironmentI.i().getDisplay().getHeight(),1)
 			);
 		}
 	}

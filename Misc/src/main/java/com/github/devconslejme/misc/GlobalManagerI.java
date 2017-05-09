@@ -59,6 +59,9 @@ public class GlobalManagerI {
   
   protected HashMap<Class,Object> hmInst = new HashMap<Class,Object>();
   
+  public boolean isSet(Class cl){
+  	return hmInst.get(cl)!=null;
+  }
   public <T> T get (Class<T> cl){
   	return get(cl,true);
   }

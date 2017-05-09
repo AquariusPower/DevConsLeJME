@@ -54,6 +54,10 @@ public class AssertionsI {
 		return !Thread.currentThread().getStackTrace()[1+iIncStack].getClassName().startsWith(strPkg);
 	}
 	
+	public boolean restrictedCaller(Class clCaller,int iIncStack){
+		return Thread.currentThread().getStackTrace()[2+iIncStack].getClassName().equals(clCaller.getName());
+	}
+	
 	private boolean	bAllEveryFrame;
 	private CallableXAnon	cx;
 	public void configure(){

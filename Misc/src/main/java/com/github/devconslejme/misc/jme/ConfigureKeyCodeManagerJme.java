@@ -1,0 +1,170 @@
+/* 
+	Copyright (c) 2016, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+	
+	All rights reserved.
+
+	Redistribution and use in source and binary forms, with or without modification, are permitted 
+	provided that the following conditions are met:
+
+	1.	Redistributions of source code must retain the above copyright notice, this list of conditions 
+		and the following disclaimer.
+
+	2.	Redistributions in binary form must reproduce the above copyright notice, this list of conditions 
+		and the following disclaimer in the documentation and/or other materials provided with the distribution.
+	
+	3.	Neither the name of the copyright holder nor the names of its contributors may be used to endorse 
+		or promote products derived from this software without specific prior written permission.
+
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED 
+	WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR 
+	ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+	LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
+	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+package com.github.devconslejme.misc.jme;
+
+import java.lang.reflect.Field;
+
+import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.Key;
+import com.github.devconslejme.misc.KeyCodeManagerI;
+import com.github.devconslejme.misc.KeyCodeManagerI.EKeyMod;
+import com.github.devconslejme.misc.MessagesI;
+import com.jme3.app.Application;
+import com.jme3.input.InputManager;
+import com.jme3.input.KeyInput;
+import com.jme3.input.controls.ActionListener;
+import com.jme3.input.controls.KeyTrigger;
+
+/**
+ * 
+ * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+ *
+ */
+public class ConfigureKeyCodeManagerJme {
+	private ActionListener	alGeneralJmeKeyCodeListener;
+	private boolean	bCaptureKeyModifiersMode;
+	private InputManager	im;
+	
+	public void configure() {
+  	KeyCodeManagerI.i().configure();
+  	
+		KeyCodeManagerI.i().setKeyCodeForEnter(KeyInput.KEY_RETURN);
+		KeyCodeManagerI.i().setKeyCodeForEscape(KeyInput.KEY_ESCAPE);
+  	fillKeyIdCodeFrom();
+  	addSpecialKeys();
+  	
+  	// JME listener/mapping
+  	im = GlobalManagerI.i().get(Application.class).getInputManager();
+  	
+		alGeneralJmeKeyCodeListener = new ActionListener() {
+			@Override
+			public void onAction(String strKeyId, boolean bPressed, float tpf) {
+				KeyCodeManagerI.i().refreshPressedState(strKeyId, bPressed);
+			}
+		};
+		
+		for(Key key:KeyCodeManagerI.i().getKeyListCopy()){
+			addKeyCodeMapping(key);
+		}
+	}
+
+	/** 
+	 * TODO should this be allowed to be called only once? other classes without conflicts would be no problem tho...
+	 * @param iKeyCodeForEscape to setup a generic cancel fail-safe key
+	 * @param iKeyCodeForReturn to setup a generic accept fail-safe key
+	 * @param cl
+	 * @param strKeyIdPrefixFilter can be null
+	 * @return
+	 */
+//	public boolean fillKeyIdCodeFrom(int iKeyCodeForEscape, int iKeyCodeForReturn, Class<?> cl, String strKeyIdPrefixFilter){
+	private boolean fillKeyIdCodeFrom(){
+		Class<?> cl = KeyInput.class;
+		String strKeyIdPrefixFilter="KEY_";
+//		this.strKeyIdPrefixFilter=strKeyIdPrefixFilter;
+//		this.iKeyCodeForEscape=iKeyCodeForEscape;
+//		this.iKeyCodeForEnter=iKeyCodeForReturn;
+		
+//		if(tmIdCode.size()>0){			return;		}
+		try {
+			int iMaxCode=-1;
+			for(Field fld:cl.getFields()){
+				if(strKeyIdPrefixFilter!=null && !strKeyIdPrefixFilter.isEmpty()){
+					if(!fld.getName().startsWith(strKeyIdPrefixFilter))continue;
+				}
+				
+				int iCode=(Integer)fld.get(null);
+				if(iCode>iMaxCode)iMaxCode=iCode;
+				
+				String strId=fld.getName();//.substring(4); //removes the KEY_ prefix
+				
+				if(KeyCodeManagerI.i().addKeyWorkFull(strId,iCode)==null){
+					throw new DetailedException("keycode filling failed",strId,iCode,cl,strKeyIdPrefixFilter);
+				}
+			}
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			throw new DetailedException("unexpected").setCauseAndReturnSelf(e);
+		}
+		
+		return true;
+	}
+
+	/**
+	 * here are mergers, id shorteners etc
+	 * all are key monitors tho.
+	 */
+	public void addSpecialKeys() {
+//		super.addSpecialKeys();
+		
+		EKeyMod.Ctrl .setKey(KeyCodeManagerI.i().addKey(EKeyMod.Ctrl.s(),	KeyInput.KEY_LCONTROL,KeyInput.KEY_RCONTROL));
+		EKeyMod.Alt  .setKey(KeyCodeManagerI.i().addKey(EKeyMod.Alt.s(),	KeyInput.KEY_LMENU,		KeyInput.KEY_RMENU));
+		EKeyMod.Shift.setKey(KeyCodeManagerI.i().addKey(EKeyMod.Shift.s(),KeyInput.KEY_LSHIFT,	KeyInput.KEY_RSHIFT));
+		
+		KeyCodeManagerI.i().addKey("Enter", KeyInput.KEY_RETURN, KeyInput.KEY_NUMPADENTER); //merger
+		
+		KeyCodeManagerI.i().addKey("ESC", KeyInput.KEY_ESCAPE); //short sinonym
+		
+		//other sinonyms
+		KeyCodeManagerI.i().addKey("LAlt", KeyInput.KEY_LMENU);
+		KeyCodeManagerI.i().addKey("RAlt", KeyInput.KEY_RMENU);
+		KeyCodeManagerI.i().addKey("CapsLock", KeyInput.KEY_CAPITAL);
+		KeyCodeManagerI.i().addKey("ScrollLock", KeyInput.KEY_SCROLL);
+	}
+
+
+	private void addKeyCodeMapping(Key key){
+		if(!key.isModeKeyWithCode())return;
+		
+//		if(bRemoveConflictingKeyCodeMappings)removeKeyCodeMaping(key);
+		
+		String strMapping=key.getFullId();
+//		if(im.hasMapping(strMapping)){
+//			throw new PrerequisitesNotMetException("this unique mapping should not be already set",strMapping);
+//		}
+		if(!im.hasMapping(strMapping)){
+			im.addMapping(strMapping, new KeyTrigger(key.getKeyCode()));
+		}
+		/**
+		 * if the "keycode id" mapping already existed, it will just add a listener to it!
+		 */
+		im.addListener(alGeneralJmeKeyCodeListener, strMapping);
+	}
+
+	/**
+	 * Deprecated! keep as reference/info/reason to prevent reimplementation...
+	 * This would needlessly remove the keycode mappings for other already set before here.
+	 * The listener can be removed from all mappings if it becomes necessary...
+	 */
+	@Deprecated
+	private void removeKeyCodeMaping(Key key){
+		String strMapping=key.getFullId();
+		if(im.hasMapping(strMapping)){
+			MessagesI.i().warnMsg(this,"removing already existing keycode mapping", strMapping,key);
+			im.deleteMapping(strMapping);
+		}
+	}
+}

@@ -54,7 +54,7 @@ import com.github.devconslejme.misc.JavadocI;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.JavaLangI.LinkedHashMapX;
 import com.github.devconslejme.misc.MessagesI;
-import com.github.devconslejme.misc.MethodHelp;
+import com.github.devconslejme.misc.MethodX;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
@@ -868,7 +868,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private Panel createConfiguratorMethodHelp(OptionData od, MethodHelp mh){
+	private Panel createConfiguratorMethodHelp(OptionData od, MethodX mh){
 		Method mGetter = mh.getMethod();
 		ContainerEdit ce = new ContainerEdit();
 		ESimpleType etypeGetterRet=ESimpleType.forClass(mGetter.getReturnType(),false);
@@ -957,8 +957,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	 */
 	protected Panel automaticConfiguratorCreation(OptionData od) {
 		// support for full method info, allowing call it using the stored value
-		if (od.getStoredValue() instanceof MethodHelp) {
-			return createConfiguratorMethodHelp(od, (MethodHelp)od.getStoredValue());
+		if (od.getStoredValue() instanceof MethodX) {
+			return createConfiguratorMethodHelp(od, (MethodX)od.getStoredValue());
 		}
 		
 //		if(!JavaLangI.i().isCanUserTypeIt(od.getStoredValue()))return null;

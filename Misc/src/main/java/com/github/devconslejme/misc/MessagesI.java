@@ -77,7 +77,8 @@ public class MessagesI {
 	 * For any useful info that is not critical enough to keep in memory,
 	 * neither will break anything expected to not break.
 	 * 
-	 * Mainly used to track when, by who and at what stack things were configured or initialized.
+	 * Mainly used to track when, by who and at what stack things were configured or initialized,
+	 * so, basically to track things that may happen only once.
 	 * 
 	 * @param objSource
 	 * @param strMsg

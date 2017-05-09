@@ -24,22 +24,69 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package com.github.devconslejme.misc;
+package com.github.devconslejme.misc.jme;
 
 import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.Display;
 
+import com.github.devconslejme.misc.GlobalManagerI;
+import com.jme3.math.Vector3f;
 
 /**
+ * This way lwjgl3 may replace lwjgl more easily... or any other ways to collect the required values
+ * can be used.
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class RawInputI {
-	public static RawInputI i(){return GlobalManagerI.i().get(RawInputI.class);}
+public class EnvironmentI {
+	public static EnvironmentI i(){return GlobalManagerI.i().get(EnvironmentI.class);}
 	
-	public int isMouseCursorPressedButtons(){
-		int i2=0;
-		for(int i=0;i<9;i++){
-			if(LwjglI.i().getMouse().isButtonDown(i))i2++;
+	public static class DisplayI{
+		public int getWidth(){
+			return Display.getWidth();
 		}
-    return i2;
+		
+		public int getHeight(){
+			return Display.getHeight();
+		}
+		
+		public void setResizable(boolean b){
+			Display.setResizable(b);
+		}
+		public boolean isResizable(){
+			return Display.isResizable();
+		}
+		
+		public boolean wasResized(){
+			return Display.wasResized();
+		}		
 	}
+	private DisplayI display = new DisplayI();
+	public DisplayI getDisplay(){
+		return display;
+	}
+
+	public static class MouseI{
+		public boolean isButtonDown(int i){
+			return Mouse.isButtonDown(i);
+		}
+		
+		public Vector3f get3DPos() {
+//			return MiscJmeI.i().toV3f(app.getInputManager().getCursorPosition(), MiscJmeI.i().getZAboveAllAtGuiNode());
+			return new Vector3f(Mouse.getX(), Mouse.getY(), MiscJmeI.i().getZAboveAllAtGuiNode());
+		}
+		
+		public int isMouseCursorPressedButtons(){
+			int i2=0;
+			for(int i=0;i<9;i++){
+				if(isButtonDown(i))i2++;
+			}
+	    return i2;
+		}
+	}
+	private MouseI mouse = new MouseI();
+	public MouseI getMouse() {
+		return mouse;
+	}
+	
 }

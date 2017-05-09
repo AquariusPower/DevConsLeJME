@@ -30,7 +30,7 @@ package com.github.devconslejme.tests;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.gendiag.SimpleGenericDialog;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
-import com.github.devconslejme.misc.LwjglI;
+import com.github.devconslejme.misc.jme.EnvironmentI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.jme3.app.SimpleApplication;
@@ -76,7 +76,7 @@ public class TestChoiceDialog extends SimpleApplication {
 			}
 		});
 		diagParent.setContents(btnChosenOption);
-		diagParent.setLocalTranslation(200, LwjglI.i().getDisplay().getHeight()-100, 0);
+		diagParent.setLocalTranslation(200, EnvironmentI.i().getDisplay().getHeight()-100, 0);
 		
 		DialogHierarchyStateI.i().showDialog(diagParent);
 		

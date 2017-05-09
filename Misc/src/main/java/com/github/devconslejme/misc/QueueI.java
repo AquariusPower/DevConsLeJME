@@ -221,7 +221,7 @@ public class QueueI {
 				 * is info about the enclosing method, 
 				 * there is no accessible concrete object here...
 				 */
-				MethodHelp mh = new MethodHelp();
+				MethodX mh = new MethodX();
 				mh.setMethod(getEnclosing()); 
 				sb.append(mh.getFullHelp(true,false) + strSeparator);
 			}

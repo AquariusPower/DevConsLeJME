@@ -369,8 +369,10 @@ public class JavaLangI {
 	 * and K differs from V type on the concrete class type
 	 * TODO complete with the missing overridable constraint related methods...
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked"})
 	public static class LinkedHashMapX<K,V> extends LinkedHashMap<K,V>{
+		private static final long	serialVersionUID	= -2511773191940212404L;
+		
 		@Override
 		public V put(K key, V value) {
 			assert(key.getClass()!=Object.class);

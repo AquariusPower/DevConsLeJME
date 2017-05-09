@@ -41,7 +41,7 @@ import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction.CmdBtnTA;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.JavadocI;
 import com.github.devconslejme.misc.MessagesI;
-import com.github.devconslejme.misc.MethodHelp;
+import com.github.devconslejme.misc.MethodX;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
@@ -124,7 +124,7 @@ public class ConvertMethodsToOptions {
 			boolean bBeanGetter = JavaLangI.i().isBeanGetter(m);
 			if(bShowOnlyEditableBeans && !bBeanGetter)continue;
 			
-			MethodHelp mh = new MethodHelp().setObject(objToExtractMethodsFrom).setMethod(m);
+			MethodX mh = new MethodX().setObject(objToExtractMethodsFrom).setMethod(m);
 			
 			String strTextKey = mh.getFullHelp(true, false);
 //				if(bRegexFilter && !strTextKey.matches(smd.getInputText()))continue;

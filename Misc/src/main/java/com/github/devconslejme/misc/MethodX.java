@@ -34,18 +34,18 @@ import java.net.URISyntaxException;
 /**
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
-public class MethodHelp{
+public class MethodX{
 	/** mainly to help on debug */
 	private String strLastFullHelp;
-	private Method m;
-	private Object obj;
+	private Method method;
+	private Object objConcrete;
 //	private Class clDeclaring;
 //	private Class clConcrete;
 	private Boolean bStatic=null;
 	private Integer iNonUserTypeableParamsCount=null;
 	
 	public Method getMethod() {
-		return m;
+		return method;
 	}
 	public boolean isStatic() {
 		return bStatic==null?false:bStatic;
@@ -55,24 +55,24 @@ public class MethodHelp{
 	}
 	public Class getDeclaring() {
 //		return clDeclaring;
-		return m.getDeclaringClass();
+		return method.getDeclaringClass();
 	}
 	public Class getConcrete() {
 //		return clConcrete;
-		return obj.getClass();
+		return objConcrete.getClass();
 	}
-	public MethodHelp setMethod(Method m) {
-		DetailedException.assertNotAlreadySet(this.m, m, this);
-		this.m = m;
+	public MethodX setMethod(Method m) {
+		DetailedException.assertNotAlreadySet(this.method, m, this);
+		this.method = m;
 //		this.clDeclaring=m.getDeclaringClass();
 		return this;
 	}
-	public MethodHelp setStatic(boolean bStatic) {
+	public MethodX setStatic(boolean bStatic) {
 		DetailedException.assertNotAlreadySet(this.bStatic, bStatic, this);
 		this.bStatic = bStatic;
 		return this;
 	}
-	public MethodHelp setNonUserTypeableParamsCount(int iNonUserTypeableParamsCount) {
+	public MethodX setNonUserTypeableParamsCount(int iNonUserTypeableParamsCount) {
 		DetailedException.assertNotAlreadySet(this.iNonUserTypeableParamsCount, iNonUserTypeableParamsCount, this);
 		this.iNonUserTypeableParamsCount = iNonUserTypeableParamsCount;
 		return this;
@@ -85,7 +85,7 @@ public class MethodHelp{
 //	}
 	
 	public Class getMethodReturnType(){
-		return m.getReturnType();
+		return method.getReturnType();
 	}
 	
 	public static enum EClassToStrMode{
@@ -202,12 +202,12 @@ public class MethodHelp{
 			
 			// the method anchor
 			String strParamTypes="";
-			for(Class clPT:m.getParameterTypes()){
+			for(Class clPT:method.getParameterTypes()){
 				if(!strParamTypes.isEmpty())strParamTypes+="-"; //in between
 				strParamTypes+=clPT.getName(); //primitives has no dots (only wrappers does)
 			}
 			strParamTypes=strParamTypes.replace("$", "."); //inner classes fix
-			strURI=uri.toString().replace("$", ".")+"#"+m.getName()+"-"+strParamTypes+"-";
+			strURI=uri.toString().replace("$", ".")+"#"+method.getName()+"-"+strParamTypes+"-";
 			
 			uri=new URI(strURI);
 		} catch (URISyntaxException e) {
@@ -221,11 +221,11 @@ public class MethodHelp{
 		String strM = "";
 		
 		
-		strM+=m.getName();
+		strM+=method.getName();
 		
 		strM+="(";
 		String strP="";
-		for(Class<?> p:m.getParameterTypes()){
+		for(Class<?> p:method.getParameterTypes()){
 			if(!strP.isEmpty())strP+=",";
 			strP+=bUseSimpleParamNames?p.getSimpleName():p.getName();
 		}
@@ -233,14 +233,14 @@ public class MethodHelp{
 		
 		return strM;
 	}
-	public MethodHelp setObject(Object obj) {
-		DetailedException.assertNotAlreadySet(this.obj, obj, this);
-		this.obj=obj;
+	public MethodX setObject(Object obj) {
+		DetailedException.assertNotAlreadySet(this.objConcrete, obj, this);
+		this.objConcrete=obj;
 //		this.clConcrete=obj.getClass();
 		return this;
 	}
 	public Object getConcreteObjectInstance(){
-		return obj;
+		return objConcrete;
 	}
 	@Override
 	public String toString() {
@@ -248,9 +248,9 @@ public class MethodHelp{
 		builder.append("MethodHelp [strLastFullHelp=");
 		builder.append(strLastFullHelp);
 		builder.append(", m=");
-		builder.append(m);
+		builder.append(method);
 		builder.append(", obj=");
-		builder.append(obj);
+		builder.append(objConcrete);
 		builder.append(", bStatic=");
 		builder.append(bStatic);
 		builder.append(", iNonUserTypeableParamsCount=");

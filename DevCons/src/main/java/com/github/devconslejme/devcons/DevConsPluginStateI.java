@@ -46,7 +46,6 @@ import com.github.devconslejme.gendiag.ContextMenuI.HintUpdaterPerCtxtBtn;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
-import com.github.devconslejme.misc.LwjglI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.github.devconslejme.misc.JavaLangI;
@@ -55,6 +54,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.jme.EnvironmentI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.lemur.ClickToPositionCaratListenerI;
 import com.github.devconslejme.misc.lemur.CursorListenerX;
@@ -1277,7 +1277,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	}
 	
 	public Vector3f getWindowSize(){
-		return new Vector3f(LwjglI.i().getDisplay().getWidth(),LwjglI.i().getDisplay().getHeight(),0);
+		return new Vector3f(EnvironmentI.i().getDisplay().getWidth(),EnvironmentI.i().getDisplay().getHeight(),0);
 	}
 	
 //	public void updateVisibleLogItems(){
