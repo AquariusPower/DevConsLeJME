@@ -63,6 +63,7 @@ public class PkgCfgI {
 		OrthogonalCursorStateI.i().configure(nodeParent);
 		AssertionsI.i().configure();
 		IndicatorI.i().configure(nodeParent);
+		EnvironmentI.i().configure();
 		
 		bConfigured=true;
 	}

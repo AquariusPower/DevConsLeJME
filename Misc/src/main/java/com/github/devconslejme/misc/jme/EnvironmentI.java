@@ -26,10 +26,14 @@
 */
 package com.github.devconslejme.misc.jme;
 
+import java.util.ArrayList;
+
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.jme3.app.Application;
+import com.jme3.app.state.AbstractAppState;
 import com.jme3.math.Vector3f;
 
 /**
@@ -38,8 +42,31 @@ import com.jme3.math.Vector3f;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class EnvironmentI {
+public class EnvironmentI extends AbstractAppState{
 	public static EnvironmentI i(){return GlobalManagerI.i().get(EnvironmentI.class);}
+	
+	public void configure(){
+		GlobalManagerI.i().get(Application.class).getStateManager().attach(this);
+	}
+	
+	@Override
+	public void update(float tpf) {
+		super.update(tpf);
+		
+		if(getDisplay().wasResized()){
+			for(IEnvironmentListener l:alisteners){
+				l.displayResizedEvent(getDisplay().getWidth(), getDisplay().getHeight());
+			}
+		}
+	}
+	
+	public static interface IEnvironmentListener{
+		void displayResizedEvent(int iW, int iH);
+	}
+	private ArrayList<IEnvironmentListener> alisteners = new ArrayList<IEnvironmentListener>();
+	public void addListener(IEnvironmentListener l){
+		if(!alisteners.contains(l))alisteners.add(l);
+	}
 	
 	public static class DisplayI{
 		public int getWidth(){

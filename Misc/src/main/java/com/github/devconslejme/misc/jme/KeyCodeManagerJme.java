@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 2016, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+	Copyright (c) 2016-2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 	
 	All rights reserved.
 
@@ -45,10 +45,10 @@ import com.jme3.input.controls.KeyTrigger;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  *
  */
-public class ConfigureKeyCodeManagerJme {
+public class KeyCodeManagerJme {
 	private ActionListener	alGeneralJmeKeyCodeListener;
 	private boolean	bCaptureKeyModifiersMode;
-	private InputManager	im;
+	private InputManager	inputman;
 	
 	public void configure() {
   	KeyCodeManagerI.i().configure();
@@ -59,7 +59,7 @@ public class ConfigureKeyCodeManagerJme {
   	addSpecialKeys();
   	
   	// JME listener/mapping
-  	im = GlobalManagerI.i().get(Application.class).getInputManager();
+  	inputman = GlobalManagerI.i().get(Application.class).getInputManager();
   	
 		alGeneralJmeKeyCodeListener = new ActionListener() {
 			@Override
@@ -145,13 +145,13 @@ public class ConfigureKeyCodeManagerJme {
 //		if(im.hasMapping(strMapping)){
 //			throw new PrerequisitesNotMetException("this unique mapping should not be already set",strMapping);
 //		}
-		if(!im.hasMapping(strMapping)){
-			im.addMapping(strMapping, new KeyTrigger(key.getKeyCode()));
+		if(!inputman.hasMapping(strMapping)){
+			inputman.addMapping(strMapping, new KeyTrigger(key.getKeyCode()));
 		}
 		/**
 		 * if the "keycode id" mapping already existed, it will just add a listener to it!
 		 */
-		im.addListener(alGeneralJmeKeyCodeListener, strMapping);
+		inputman.addListener(alGeneralJmeKeyCodeListener, strMapping);
 	}
 
 	/**
@@ -162,9 +162,9 @@ public class ConfigureKeyCodeManagerJme {
 	@Deprecated
 	private void removeKeyCodeMaping(Key key){
 		String strMapping=key.getFullId();
-		if(im.hasMapping(strMapping)){
+		if(inputman.hasMapping(strMapping)){
 			MessagesI.i().warnMsg(this,"removing already existing keycode mapping", strMapping,key);
-			im.deleteMapping(strMapping);
+			inputman.deleteMapping(strMapping);
 		}
 	}
 }

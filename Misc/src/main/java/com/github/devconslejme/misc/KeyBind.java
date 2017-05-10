@@ -37,10 +37,14 @@ public class KeyBind {
 	
 	/** the last/main key to be pressed */
 	private Key keyAction = null;
-	
 	private ArrayList<Key> akeyModifierList;// = new ArrayList<Key>();
-
-	private Object	objOwner;
+//	private Object	objOwner;
+	private long lConsecutiveActivationCount = 0;
+	private long lLastActivationMilis=-1;
+	/** consecutive activation limit*/
+	private long lActLim = 1; //run once
+	/** Consecutive Activation Interval Milis */
+	private long lActDelayMilis = 0; //every frame
 	
 //	private void applyPressedState(Key key, int iKeyCodeCheck, boolean bPressed){
 //		if(key.getKeyCode()==iKeyCodeCheck)key.bPressed=(bPressed);
@@ -53,13 +57,13 @@ public class KeyBind {
 //		}
 //	}
 	
-	public void setOwner(Object obj){
-		DetailedException.assertNotAlreadySet(this.objOwner, obj, "owner", this);
-		this.objOwner=obj;
-	}
+//	public void setOwner(Object obj){
+//		DetailedException.assertNotAlreadySet(this.objOwner, obj, "owner", this);
+//		this.objOwner=obj;
+//	}
 	
 	public boolean isActivated(){
-		if(!keyAction.isPressed())return false;
+		if(!keyAction.isPressed())return false; //TODO the 'on pressed' can already be limited to a single activation, what would have the same meaning/usage. would it still be interesging to allow 'on released' activation mode anyway or is just pointletss and could still complexify/break something?
 		
 		if(akeyModifierList!=null){
 			for(Key keyMod:akeyModifierList){
@@ -195,11 +199,6 @@ public class KeyBind {
 		return setFromKeyIds(strCfg.split("[+]"));
 	}
 
-	/** consecutive activation limit*/
-	private long lActLim = 1; //run once
-	/** Consecutive Activation Interval Milis */
-	private long lActDelayMilis = 0; //every frame
-	
 	public void setRepeatedActivation(){
 		this.lActLim=0; //no limit
 		this.lActDelayMilis=0; //every frame
@@ -213,9 +212,6 @@ public class KeyBind {
 		this.lActDelayMilis=lDelayMilis;
 	}
 	
-	private long lConsecutiveActivationCount = 0;
-	private long lLastActivationMilis=-1;
-
 	public boolean isCanBeRunNowOrReset() {
 		if(isActivated()){
 			boolean bRun=false;

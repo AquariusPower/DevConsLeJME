@@ -1,5 +1,5 @@
 /* 
-Copyright (c) 2016, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+Copyright (c) 2016-2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 
 All rights reserved.
 
@@ -33,49 +33,104 @@ import java.util.TreeMap;
 
 
 /**
-* 
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
-*
 */
-public class KeyBindManagerI {
+public class KeyBindCommandManagerI {
 	
-	private TreeMap<String,KeyBoundVarField> tmbindList = new TreeMap<String, KeyBoundVarField>(String.CASE_INSENSITIVE_ORDER);
-	private HashMap<Integer,ArrayList<KeyBoundVarField>> hmKeyCodeVsActivatedBind = new HashMap<Integer, ArrayList<KeyBoundVarField>>();
-
-	private KeyBoundVarField	bindCaptureToTarget;
-	
+	private TreeMap<String,BindCommand> tmbindList = new TreeMap<String, BindCommand>(String.CASE_INSENSITIVE_ORDER);
+	private HashMap<Integer,ArrayList<BindCommand>> hmKeyCodeVsActivatedBind = new HashMap<Integer, ArrayList<BindCommand>>();
+	private BindCommand	bindCaptureToTarget;
 	private KeyBind kbCaptured;
 	private KeyBind kbWaitBeReleased;
-
-//	private boolean	bResetCaptureBeaconOnSuccess;
-	
-
-	private IRefresh	refreshOwnerAfterCapture;
-
+//	private IRefresh	refreshOwnerAfterCapture;
 	private StackTraceElement[]	asteAlertFrom;
-
-	private KeyBoundVarField	bindConflict;
-
-//	private boolean	bWaitingUserDecision;
-	
+	private BindCommand	bindConflict;
 	private String strRequestUserDecision="Press ESC to cancel or Enter to retry.\n";
-
-	private boolean	bConfigured;
-
 	private Object objLinkedGuiElement;
 	
-	public KeyBindManagerI() {
-		DelegateManagerI.i().addManager(this,KeyBoundVarField.class);
+	public static abstract class CaptureKeyBindAbs{
+		public abstract void hideSystemAlert(StackTraceElement[] asteAlertFrom);
+		public abstract StackTraceElement[] showSystemAlert(String strMsg,	Object objLinkedGuiElement);
+		public abstract void hideSystemAlert(StackTraceElement[] asteAlertFrom, boolean b);
+		public abstract boolean isShowingAlert(boolean b);
+		public abstract void setDynamicInfo(String allPressedKeysSimpleReport);
+		public abstract void setupRecreateFile();
 	}
-	public void configure(){}
+	private CaptureKeyBindAbs capture;
 	
-	public String getMappingFrom(KeyBoundVarField bind){
+	public void configure(CaptureKeyBindAbs capture){
+		this.capture=capture;
+	}
+	
+	/**
+	 * TODO tmp placeholder dummy based on old KeyBoundVarField
+	 */
+	public static class BindCommand{
+
+		public boolean isField() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		public String getUniqueVarId(boolean b) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public String getBindCfg() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+//		public void addManager(ConfigureKeyBindManagerI keyBindManagerI) {
+//			// TODO Auto-generated method stub
+//			
+//		}
+
+		public KeyBind getKeyBind() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public void setValue(KeyBind kbCaptured) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public String getKeyBindRunCommand() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public boolean isValueNull() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		public void runIfActivatedOrResetIfDeactivating() {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public String getUserCommand() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		
+	}
+	
+//	public ConfigureKeyBindManagerI() {
+//		DelegateManagerI.i().addManager(this,KeyBoundVarField.class);
+//	}
+//	public void configure(){}
+	
+	public String getMappingFrom(BindCommand bind){
 		String strMapping=null;
 		
 		if(bind.isField()){
 			strMapping=bind.getUniqueVarId(true);
 			if(tmbindList.containsKey(strMapping)){
-				KeyBoundVarField bindExisting = tmbindList.get(strMapping);
+				BindCommand bindExisting = tmbindList.get(strMapping);
 				if(bindExisting!=bind){
 					throw new DetailedException("conflicting key mapping ids", bindExisting, bind);
 				}
@@ -87,7 +142,7 @@ public class KeyBindManagerI {
 		return strMapping;
 	}
 	
-	public void removeKeyBind(KeyBoundVarField bind){
+	public void removeKeyBind(BindCommand bind){
 		String strMapping=getMappingFrom(bind);
 		removeKeyBind(strMapping);
 	}
@@ -95,16 +150,15 @@ public class KeyBindManagerI {
 		tmbindList.remove(new KeyBind().setFromKeyCfg(strBindCfg).getBindCfg());
 	}
 	
-	@Override
-	public boolean addHandled(KeyBoundVarField bind){
+	public boolean addBindCommand(BindCommand bind){
 		String strMapping=getMappingFrom(bind);
 		
-		KeyBoundVarField kbExisting = tmbindList.get(strMapping);
+		BindCommand kbExisting = tmbindList.get(strMapping);
 		
 		tmbindList.put(strMapping,bind);
 		
 //		DetailedException.assertIsTrue("manager not set", !bind.isHasManagers(), bind, this);
-		bind.addManager(this);
+//		bind.addManager(this);
 		
 		return kbExisting!=bind;
 	}
@@ -117,12 +171,12 @@ public class KeyBindManagerI {
 		if(kbWaitBeReleased!=null){
 			if(kbWaitBeReleased.isActivated()){ 
 				//still pressed (with modifiers)
-				MessagesI.i().info("waiting captured key bind to be released");
+				MessagesI.i().output(false, System.out, "Info", this, "waiting captured key bind to be released");
 				return true; 
 			}else
 			if(kbWaitBeReleased.getActionKey().isPressed()){ 
 				//still pressed (only the action key is still being holded)
-				MessagesI.i().info("waiting captured action key to be released");
+				MessagesI.i().output(false, System.out, "Info", this, "waiting captured action key to be released");
 				return true;
 			}else
 			{ //released
@@ -144,16 +198,16 @@ public class KeyBindManagerI {
 		
 		if(bindCaptureToTarget!=null){
 			
-			GlobalOSAppI.i().setDynamicInfo(GlobalManageKeyCodeI.i().getAllPressedKeysSimpleReport());
+			capture.setDynamicInfo(KeyCodeManagerI.i().getAllPressedKeysSimpleReport());
 			
-			kbCaptured=GlobalManageKeyCodeI.i().getPressedKeysAsKeyBind();
+			kbCaptured=KeyCodeManagerI.i().getPressedKeysAsKeyBind();
 			
 			if(bindConflict!=null){
 				ECaptureUserDecision eud=null;
-				if(isCapturedThisKeyCodeWithoutMods(GlobalManageKeyCodeI.i().getKeyCodeForEscape())){
+				if(isCapturedThisKeyCodeWithoutMods(KeyCodeManagerI.i().getKeyCodeForEscape())){
 					eud=ECaptureUserDecision.Cancelled;
 				}else
-				if(isCapturedThisKeyCodeWithoutMods(GlobalManageKeyCodeI.i().getKeyCodeForReturn())){
+				if(isCapturedThisKeyCodeWithoutMods(KeyCodeManagerI.i().getKeyCodeForEnter())){
 					eud=ECaptureUserDecision.Retry;
 				}
 				
@@ -182,13 +236,13 @@ public class KeyBindManagerI {
 //					GlobalAppOSI.i().hideSystemAlert(asteAlertFrom);
 //				}
 				
-				if(isCapturedThisKeyCodeWithoutMods(GlobalManageKeyCodeI.i().getKeyCodeForEscape())){
+				if(isCapturedThisKeyCodeWithoutMods(KeyCodeManagerI.i().getKeyCodeForEscape())){
 					captureKeyStep(ECaptureUserDecision.Cancelled);
 					return true;
 				}
 				
 				bindConflict=null;
-				for(KeyBoundVarField bind:getHandledListCopy()){
+				for(BindCommand bind:getHandledListCopy()){
 					if(bind==bindCaptureToTarget)continue;
 					if(bind.getKeyBind().isEquivalentTo(kbCaptured)){
 						bindConflict=bind;
@@ -204,7 +258,7 @@ public class KeyBindManagerI {
 					bindCaptureToTarget.setValue(kbCaptured);
 //					bindCaptureToTarget.setAllowCallerAssignedToBeRun(true);
 					
-					MessagesI.i().info(
+					MessagesI.i().output(false, System.out, "Info", this, 
 						"captured key bind "+kbCaptured.getBindCfg()
 						+" for "+bindCaptureToTarget.getKeyBindRunCommand(),
 						bindCaptureToTarget,kbCaptured,this);
@@ -230,15 +284,15 @@ public class KeyBindManagerI {
 		 * fill all binds for each action keycode to check which will win.
 		 */
 		hmKeyCodeVsActivatedBind.clear();
-		for(KeyBoundVarField bind:tmbindList.values()){
+		for(BindCommand bind:tmbindList.values()){
 			if(bind.isValueNull())continue; //not set yet
 			
 			if(bind.getKeyBind().isActivated()){ //pressed
 				Integer iKeyCode = bind.getKeyBind().getActionKey().getKeyCode();
 				
-				ArrayList<KeyBoundVarField> abindForActKeyCode = hmKeyCodeVsActivatedBind.get(iKeyCode);
+				ArrayList<BindCommand> abindForActKeyCode = hmKeyCodeVsActivatedBind.get(iKeyCode);
 				if(abindForActKeyCode==null){
-					abindForActKeyCode=new ArrayList<KeyBoundVarField>();
+					abindForActKeyCode=new ArrayList<BindCommand>();
 					hmKeyCodeVsActivatedBind.put(iKeyCode, abindForActKeyCode);
 				}
 				
@@ -253,10 +307,10 @@ public class KeyBindManagerI {
 		/**
 		 * only the activated bind with most modifiers will be run! 
 		 */
-		for(ArrayList<KeyBoundVarField> abindForActKeyCode:hmKeyCodeVsActivatedBind.values()){
-			KeyBoundVarField bindWin=abindForActKeyCode.get(0);
+		for(ArrayList<BindCommand> abindForActKeyCode:hmKeyCodeVsActivatedBind.values()){
+			BindCommand bindWin=abindForActKeyCode.get(0);
 			
-			for(KeyBoundVarField bind:abindForActKeyCode){
+			for(BindCommand bind:abindForActKeyCode){
 				if(bindWin.getKeyBind().getKeyModListSize() < bind.getKeyBind().getKeyModListSize()){
 					bindWin=bind;
 				}
@@ -295,8 +349,8 @@ public class KeyBindManagerI {
 	private void captureKeyStep(ECaptureUserDecision e) {
 		switch(e){
 			case KeepTrying:
-				if(!GlobalOSAppI.i().isShowingAlert(true)){
-					asteAlertFrom = GlobalOSAppI.i().showSystemAlert(
+				if(!capture.isShowingAlert(true)){
+					asteAlertFrom = capture.showSystemAlert(
 							 " Press a key combination to be captured (where modifiers are ctrl, shift or alt).\n"
 							+" More complex or specific keybindings can be set thru console commands.\n"
 							+" Press ESC to cancel.\n"
@@ -312,20 +366,20 @@ public class KeyBindManagerI {
 				kbCaptured=null;
 				bindConflict=null;
 				
-				GlobalOSAppI.i().hideSystemAlert(asteAlertFrom,true);
+				capture.hideSystemAlert(asteAlertFrom,true);
 				break;
 			case KeyReleased:
 				kbWaitBeReleased=null;
 				break;
 			case HasConflict:
-				GlobalOSAppI.i().hideSystemAlert(asteAlertFrom);
+				capture.hideSystemAlert(asteAlertFrom);
 				
 				String strMsg = "captured key bind "+kbCaptured.getBindCfg()
 					+" is already being used by "+bindConflict.getKeyBindRunCommand()+"\n"
 					+strRequestUserDecision;
-				MessagesI.i().warn(strMsg,	bindConflict,bindCaptureToTarget,kbCaptured,this);
+				MessagesI.i().warnMsg(this,strMsg,	bindConflict,bindCaptureToTarget,kbCaptured,this);
 				
-				asteAlertFrom = GlobalOSAppI.i().showSystemAlert(strMsg,objLinkedGuiElement);
+				asteAlertFrom = capture.showSystemAlert(strMsg,objLinkedGuiElement);
 				
 				kbCaptured=null;
 				break;
@@ -335,25 +389,26 @@ public class KeyBindManagerI {
 				bindCaptureToTarget=null;
 				kbWaitBeReleased=null;
 				
-				GlobalOSAppI.i().hideSystemAlert(asteAlertFrom);
+				capture.hideSystemAlert(asteAlertFrom);
 				break;
 			case Success:
 				captureKeyStep(ECaptureUserDecision.Cancelled);
 				
-				refreshOwnerAfterCapture.requestRefresh();
-				GlobalCommandsDelegatorI.i().setupRecreateFile();
+//				refreshOwnerAfterCapture.requestRefresh();
+				capture.setupRecreateFile();
 				break;
 		}
 		
 	}
 
-	public ArrayList<KeyBoundVarField> getHandledListCopy(){
-		return new ArrayList<KeyBoundVarField>(tmbindList.values());
+	public ArrayList<BindCommand> getHandledListCopy(){
+		return new ArrayList<BindCommand>(tmbindList.values());
 	}
 
-	public ArrayList<String> getReportAsCommands(StringCmdField scfBindKey, boolean bOnlyUserCustomOnes) {
+//	public ArrayList<String> getReportAsCommands(StringCmdField scfBindKey, boolean bOnlyUserCustomOnes) {
+	public ArrayList<String> getReportAsCommands(boolean bOnlyUserCustomOnes) {
 		ArrayList<String> astr = new ArrayList<String>();
-		for(KeyBoundVarField bind:getHandledListCopy()){
+		for(BindCommand bind:getHandledListCopy()){
 			if(bOnlyUserCustomOnes && bind.isField())continue;
 			
 			String strMapping = getMappingFrom(bind);
@@ -370,7 +425,8 @@ public class KeyBindManagerI {
 				strUserCmd+=" ";
 			}
 			
-			astr.add(GlobalCommandsDelegatorI.i().getCommandPrefixStr()+scfBindKey.getSimpleId()+" "
+//			astr.add(GlobalCommandsDelegatorI.i().getCommandPrefixStr()+scfBindKey.getSimpleId()+" "
+			astr.add(""
 				+bind.getBindCfg()+" "
 				+strUserCmd
 				+strMapping);
@@ -378,32 +434,19 @@ public class KeyBindManagerI {
 		return astr;
 	}
 
-	public void captureAndSetKeyBindAt(KeyBoundVarField bindTarget, IRefresh refreshOwner, Object objLinkedGuiElement) {
+//	public void captureAndSetKeyBindAt(BindCommand bindTarget, IRefresh refreshOwner, Object objLinkedGuiElement) {
+	public void captureAndSetKeyBindAt(BindCommand bindTarget, Object objLinkedGuiElement) {
 		if(this.bindCaptureToTarget!=null){
-			MessagesI.i().devWarn("already capturing keybind for", this.bindCaptureToTarget, this.refreshOwnerAfterCapture, this);
+//			MessagesI.i().warnMsg(this, "already capturing keybind for", this.bindCaptureToTarget, this.refreshOwnerAfterCapture, this);
+			MessagesI.i().warnMsg(this, "already capturing keybind for", this.bindCaptureToTarget, this);
 			return;
 		}
 		
-		this.refreshOwnerAfterCapture=refreshOwner;
+//		this.refreshOwnerAfterCapture=refreshOwner;
 		this.bindCaptureToTarget=bindTarget;
 		this.objLinkedGuiElement=objLinkedGuiElement;
 //		MessagesI.i().info("For unconventional (more complex) key bindings, use the console command.", bindTarget); 
 //		bindTarget.setValue(captureKeyBind(bindTarget));
 	}
-
-//	protected abstract KeyBind captureKeyBind(KeyBoundVarField bindTarget);
-
-	@Override public String getUniqueId() {return MiscI.i().prepareUniqueId(this);}
-
-	@Override
-	public boolean isConfigured() {
-		return bConfigured;
-	}
 	
-	@Override
-	public KeyBindManagerI configure(ICfgParm icfg) {
-		bConfigured=true;
-		return this;
-	}
-
 }

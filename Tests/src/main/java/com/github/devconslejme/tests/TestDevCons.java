@@ -41,10 +41,8 @@ import com.github.devconslejme.gendiag.QueueManagerDialogI;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.CheckProblemsI;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.EnvironmentI;
-import com.github.devconslejme.tests.temp.TestVisualizeOtherWindowContents;
+import com.github.devconslejme.misc.jme.EnvironmentI.IEnvironmentListener;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
@@ -61,7 +59,7 @@ import com.simsilica.lemur.Command;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestDevCons extends SimpleApplication{
+public class TestDevCons extends SimpleApplication implements IEnvironmentListener{
 	public static void main(String[] args) {
 		if(bEnableOpt)opt_initSingleAppInstanceAtMain();
 		
@@ -112,17 +110,19 @@ public class TestDevCons extends SimpleApplication{
 		stateManager.getState(StatsAppState.class).setDisplayStatView(false);
 	}
 	
-	private static void opt_initWindow(TestDevCons tst) {
+	private static void opt_initWindow(TestDevCons tdc) {
 		EnvironmentI.i().getDisplay().setResizable(true);
+		EnvironmentI.i().addListener(tdc);
 		
 		AppSettings as = new AppSettings(true);
 		as.setTitle(TestDevCons.class.getSimpleName());
 		as.setResolution(1230,690);
 		as.setResizable(true);
 		if(false)as.setFrameRate(60); //using dynamic fps limiter
-		tst.setSettings(as);
+		tdc.setSettings(as);
 		
-		tst.setShowSettings(false);
+		tdc.setShowSettings(false);
+		
 	}
 	
 	private static void opt_initSingleAppInstanceAtMain() {
@@ -203,12 +203,12 @@ public class TestDevCons extends SimpleApplication{
 			obj.simpleUpdate(tpf);
 		}
 		
-		if(EnvironmentI.i().getDisplay().wasResized()){
-			reshape(
-				Math.max(EnvironmentI.i().getDisplay().getWidth(),1),
-				Math.max(EnvironmentI.i().getDisplay().getHeight(),1)
-			);
-		}
+//		if(EnvironmentI.i().getDisplay().wasResized()){
+//			reshape(
+//				Math.max(EnvironmentI.i().getDisplay().getWidth(),1),
+//				Math.max(EnvironmentI.i().getDisplay().getHeight(),1)
+//			);
+//		}
 	}
 	
 	/**
@@ -227,5 +227,10 @@ public class TestDevCons extends SimpleApplication{
 	public void handleError(String errMsg, Throwable t) {
 		GlobalManagerI.i().get(SingleAppInstance.class).setExitRequestCause(t);
 		super.handleError(errMsg,t); //seems ok after the above
+	}
+
+	@Override
+	public void displayResizedEvent(int iW, int iH) {
+		reshape( Math.max(iW,1), Math.max(iH,1) );
 	}
 }
