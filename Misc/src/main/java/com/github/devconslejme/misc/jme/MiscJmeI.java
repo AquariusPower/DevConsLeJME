@@ -111,7 +111,10 @@ public class MiscJmeI {
 	}
 	
 	public void recursivelyApplyTextNoWrap(Node nodeParent) {
-		LineWrapMode e = LineWrapMode.Clip;//NoWrap;
+		/**
+		 * LineWrapMode.Clip look better than NoWrap
+		 */
+		LineWrapMode e = LineWrapMode.Clip; //TODO could it be a clip only in the height? so it would wrap but would be clipped in the height only if overflowing downwards or outside limits 
 		for(Spatial spt:nodeParent.getChildren()){
 			if(spt instanceof BitmapText){
 //				System.err.println("NoWrapAt:"+((BitmapText)spt).getText());//TODO rm

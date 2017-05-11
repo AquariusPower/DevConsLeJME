@@ -33,9 +33,11 @@ import java.util.HashMap;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.EnvironmentI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
-import com.github.devconslejme.misc.lemur.MiscLemurI.EReSizeApplyMode;
+import com.github.devconslejme.misc.lemur.MiscLemurI.EResizeApplyMode;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.math.ColorRGBA;
@@ -358,7 +360,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 			bUpdateDragFromY=true;
 		}
 		
-		setPreferredSize(v3fNewSize);
+		setPreferredSizeWH(v3fNewSize);
 		if(validateParentest()){
 			setLocalTranslationXY(v3fNewPos);
 			
@@ -372,7 +374,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 				}
 			}
 		}else{
-			setPreferredSize(v3fOldSize);
+			setPreferredSizeWH(v3fOldSize);
 		}
 		
 	}
@@ -409,11 +411,11 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 	 */
 	@Workaround
 	private void growParentestFixAttempt(int i){
-		Panel pnlParentest = getParentest();
+		ResizablePanel pnlParentest = getParentest();
 		
 		Vector3f v3f = pnlParentest.getPreferredSize().add(new Vector3f(1, 1, 0));
 		if(v3f.equals(new Vector3f(EnvironmentI.i().getDisplay().getWidth(),EnvironmentI.i().getDisplay().getHeight(),0))){
-			MiscLemurI.i().safeSizeRecursively(EReSizeApplyMode.Restore,pnlParentest);
+			MiscLemurI.i().safeSizeRecursively(EResizeApplyMode.Restore,pnlParentest);
 			return;
 		}
 		
@@ -422,7 +424,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		
 		MessagesI.i().warnMsg(this,"("+i+") increasing size of "+pnlParentest.getName()+" to "+v3f);
 		
-		pnlParentest.setPreferredSize(v3f);
+		pnlParentest.setPreferredSizeWH(v3f);
 	}
 	
 //	private String strUDKeySafeSizeLast=ResizablePanel.class.getName()+"/SafeSize";
@@ -439,7 +441,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 	
 	public void applyCurrentSafeSizeAsDefault(){
 		if(isUpdateLogicalStateSuccess()){
-			MiscLemurI.i().safeSizeRecursively(EReSizeApplyMode.UpdateDefaultToCurrent, this);
+			MiscLemurI.i().safeSizeRecursively(EResizeApplyMode.UpdateDefaultToCurrent, this);
 		}
 	}
 	
@@ -480,13 +482,13 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 	public void updateLogicalState(float tpf) {
 //		if(true){updateLogicalState(tpf);return;}
 		
-		if(getSize().length()>0 && getLocalTranslation().length()==0){
-			/**
-			 * if it's contents are ready (size),
-			 * and it's location was not set (ZERO), also means is outside the screen..
-			 */
-			MiscLemurI.i().moveToScreenCenterXY(this);
-		}
+//		if(getSize().length()>0 && getLocalTranslation().length()==0){
+//			/**
+//			 * if it's contents are ready (size),
+//			 * and it's location was not set (ZERO), also means is outside the screen..
+//			 */
+//			MiscLemurI.i().moveToScreenCenterXY(this);
+//		}
 		
 		if(bApplyBoundingBoxSize)applyBoundingBoxSizeAfterResizing();
 		
@@ -524,7 +526,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 				Vector3f v3fSize = rzpParentest.getSize();
 				if(v3fSize.x==EnvironmentI.i().getDisplay().getWidth() && v3fSize.y==EnvironmentI.i().getDisplay().getHeight()){
 					if(v3fLastSucessSize!=null){
-						MiscLemurI.i().safeSizeRecursively(EReSizeApplyMode.Restore,getParentest());
+						MiscLemurI.i().safeSizeRecursively(EResizeApplyMode.Restore,getParentest());
 //						setPreferredSize(v3fLastSucessSize); //restore last
 						v3fLastSucessSize=null; //one try only as something inside may have changed making it completely impossible to work
 					}else{
@@ -543,7 +545,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		
 		if(bFirstSuccessOnChange){
 			MiscLemurI.i().safeSizeInitialize(this);
-			MiscLemurI.i().safeSizeRecursively(EReSizeApplyMode.Save,getParentest());
+			MiscLemurI.i().safeSizeRecursively(EResizeApplyMode.Save,getParentest());
 		}
 		
 		for(IResizableListener iuls:listeners){
@@ -608,6 +610,35 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
     styles.applyStyles(this, getElementId(), strStyle);
     
     CursorEventControl.addListenersToSpatial(this, dcl);
+    
+    QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+//				if(ResizablePanel.this.getName().startsWith("QueueManagerDialogI")){
+//					System.out.println("put breakpoint here");
+//				}
+				if(ResizablePanel.this.getParent()==null)return false; //wait 1st attach
+//				if(ResizablePanel.this.getName().startsWith("QueueManagerDialogI")){
+//					System.out.println("put breakpoint here");
+//				}
+				if(getSize().length()<=0)return false; //contents are not ready, are not updated by lemur yet
+//				if(ResizablePanel.this.getName().startsWith("QueueManagerDialogI")){
+//					System.out.println("put breakpoint here");
+//				}
+				if(getLocalTranslationXY().length()>0)return true; //location was already set, so ignore this initializer. 0,0,0 or not initialized, also means it is outside the screen..
+//				if(ResizablePanel.this.getName().startsWith("QueueManagerDialogI")){
+//					System.out.println("put breakpoint here");
+//				}
+				
+				/**
+				 * initial default location: centralized on the screen.
+				 */
+				MiscLemurI.i().moveToScreenCenterXY(ResizablePanel.this);
+				
+				return true;
+			}
+    }.setDelaySeconds(1f) //wait a bit for its contents to accomodate TODO could check every frame if the size stopped changing and aply the location.
+    );
   }
 	
 //  public ResizablePanel(Panel pnlContents) {
@@ -700,7 +731,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		if(v3fSize.x<v3fBB.x){v3fSize.x=v3fBB.x;b=true;}
 		if(v3fSize.y<v3fBB.y){v3fSize.y=v3fBB.y;b=true;}
 		
-		if(b)setPreferredSize(v3fSize);
+		if(b)setPreferredSizeWH(v3fSize);
 	}
 	
 	public void setResizableBorderSize(float x, float y){
@@ -802,13 +833,13 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 	}
 	
 	@Override
-	public void setSize(Vector3f size) {
+	public void setSizeWH(Vector3f size) {
 		super.setSizeWH(size);
 		bUpdateLogicalStateSuccess=false; //requesting revalidation
 	}
 	
 	@Override
-	public void setPreferredSize(Vector3f size) {
+	public void setPreferredSizeWH(Vector3f size) {
 		super.setPreferredSizeWH(size);
 		bUpdateLogicalStateSuccess=false; //requesting revalidation
 	}
@@ -895,7 +926,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 	}
 	
 	public void restoreDefaultSafeSize() {
-		MiscLemurI.i().safeSizeRecursively(EReSizeApplyMode.RestoreDefault, this);
+		MiscLemurI.i().safeSizeRecursively(EResizeApplyMode.RestoreDefault, this);
 	}
 	public boolean isEnableResizing() {
 		return bEnableResizing;

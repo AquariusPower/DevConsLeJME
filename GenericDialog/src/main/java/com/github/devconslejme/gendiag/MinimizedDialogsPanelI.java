@@ -28,13 +28,18 @@ package com.github.devconslejme.gendiag;
 
 import java.util.ArrayList;
 
+import javax.swing.PopupFactory;
+
 import com.github.devconslejme.es.DialogHierarchyComp.DiagCompBean;
 import com.github.devconslejme.es.DialogHierarchySystemI;
+import com.github.devconslejme.gendiag.ContextMenuI.HintUpdaterPerCtxtBtn;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.EnvironmentI;
+import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.github.devconslejme.misc.lemur.ResizablePanel.IResizableListener;
 import com.jme3.math.Vector3f;
@@ -103,6 +108,9 @@ public class MinimizedDialogsPanelI implements IResizableListener{
 		if(dhs.getHierarchyComp(sgd.getDialog()).getHierarchyParent()!=null)return;
 		
 		Button btn = new Button(sgd.getTitle());
+		PopupHintHelpListenerI.i().setPopupHintHelp(btn, btn.getText());
+		MiscJmeI.i().recursivelyApplyTextNoWrap(btn);
+		//TODO rotate text 90degreess if in the vertical?
 		
 		addMinimized(btn, cntrMinimized.getLayout().getChildren().size());
 //		cntrMinimized.addChild(btn, cntrMinimized.getLayout().getChildren().size());
@@ -136,10 +144,7 @@ public class MinimizedDialogsPanelI implements IResizableListener{
 		Vector3f v3fSize = minimizedDiags.getSize().clone();
 		if(v3fSize.x<fMinSize)v3fSize.x=fMinSize;
 		if(v3fSize.y<fMinSize)v3fSize.y=fMinSize;
-//		if(v3fSize.y < fMaxHeight){
-//			v3fSize.y = fMaxHeight;
-			minimizedDiags.setPreferredSize(v3fSize);
-//		}
+		minimizedDiags.setPreferredSizeWH(v3fSize);
 	}
 	
 	private void addMinimized(Node node,int iIndex){

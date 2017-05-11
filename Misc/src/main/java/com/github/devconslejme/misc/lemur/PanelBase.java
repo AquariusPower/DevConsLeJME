@@ -46,7 +46,14 @@ public class PanelBase<SELF extends PanelBase<SELF>> extends Panel {
 	private SELF getThis() {
 		return (SELF)this;
 	}
-
+	
+	@Deprecated
+	@Override
+	public void setLocalTranslation(float x, float y, float z) {
+		assert(AssertionsI.i().useAlternativeMethods(2)); 
+		super.setLocalTranslation(x, y, z);
+	}
+	@Deprecated
 	@Override
 	public void setLocalTranslation(Vector3f v3f) {
 		assert(AssertionsI.i().useAlternativeMethods(2)); 
@@ -54,12 +61,12 @@ public class PanelBase<SELF extends PanelBase<SELF>> extends Panel {
 	}
 	/**
 	 * to help on not messing with Z!!!
-	 * ignores Z from param, reuses self Z
+	 * ignores Z from param, reuses self current Z
 	 * @param localTranslation
 	 * @return 
 	 */
 	public SELF setLocalTranslationXY(Vector3f v3f) {
-		super.setLocalTranslation(v3f.x, v3f.y, this.getLocalTranslation().z);
+		super.setLocalTranslation(v3f.x, v3f.y, getLocalTranslation().z);
 		return getThis();
 	}
 	public SELF setLocalTranslationZ(float fZ) {
@@ -67,7 +74,17 @@ public class PanelBase<SELF extends PanelBase<SELF>> extends Panel {
 		super.setLocalTranslation(v3f.x, v3f.y, fZ);
 		return getThis();
 	}
-
+	
+	/**
+	 * will ignore Z
+	 * @return
+	 */
+	public Vector3f getLocalTranslationXY() {
+		Vector3f v3f = getLocalTranslation();
+		return new Vector3f(v3f.x, v3f.y, 0);
+	}
+	
+	@Deprecated
 	@Override
 	public void setSize(Vector3f size) {
 		assert(AssertionsI.i().useAlternativeMethods(2)); 
@@ -78,10 +95,11 @@ public class PanelBase<SELF extends PanelBase<SELF>> extends Panel {
 	 * @param v3f
 	 */
 	public void setSizeWH(Vector3f v3f) { //TODO is this usable in any way? 
-		Vector3f v3fSize = getSize(); //to do not mess with z!!!
-		super.setSize(new Vector3f(v3f.x,v3f.y,v3fSize.z));
+		Vector3f v3fCurrentSize = getSize(); //to do not mess with z!!!
+		super.setSize(new Vector3f(v3f.x,v3f.y,v3fCurrentSize.z));
 	}
 	
+	@Deprecated
 	@Override
 	public void setPreferredSize(Vector3f size) {
 		assert(AssertionsI.i().useAlternativeMethods(2)); 
@@ -92,7 +110,7 @@ public class PanelBase<SELF extends PanelBase<SELF>> extends Panel {
 	 * @param v3f use z as Float.NaN if you want to indicate it will be ignored
 	 */
 	public void setPreferredSizeWH(Vector3f v3f) {
-		Vector3f v3fSize = getSize(); //to do not mess with z!!!
-		super.setPreferredSize(new Vector3f(v3f.x,v3f.y,v3fSize.z));
+		Vector3f v3fCurrentSize = getSize(); //to do not mess with z!!!
+		super.setPreferredSize(new Vector3f(v3f.x,v3f.y,v3fCurrentSize.z));
 	}
 }

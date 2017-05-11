@@ -24,48 +24,50 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+package com.github.devconslejme.misc.lemur;
 
-package com.github.devconslejme.misc.jme;
-
-import com.github.devconslejme.misc.AssertionsI;
-import com.github.devconslejme.misc.DetailedException;
-import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CaptureKeyBindAbs;
-import com.jme3.app.Application;
-import com.jme3.app.SimpleApplication;
-import com.jme3.scene.Node;
-import com.jme3.system.JmeSystem;
-import com.jme3.system.JmeSystem.StorageFolderType;
-
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PkgCfgI {
-	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
+public class KeyBindCapturer extends CaptureKeyBindAbs {
 	
-	private boolean	bConfigured;
-	public void configure(Application app,Node nodeParent, CaptureKeyBindAbs capture){
-		DetailedException.assertIsFalse("configured", bConfigured, this);
-		com.github.devconslejme.misc.PkgCfgI.i().configure(JmeSystem.getStorageFolder(StorageFolderType.Internal), app.getClass(), capture);
+	@Override
+	public void hideSystemAlert(StackTraceElement[] asteAlertFrom) {
+		// TODO Auto-generated method stub
 		
-		GlobalManagerI.i().put(Application.class, app);  //first!
-		if(app instanceof SimpleApplication){
-			GlobalManagerI.i().put(SimpleApplication.class, (SimpleApplication)app); //code depending on this should be optional...
-		}
-		
-		// after first
-		DebugVisualsI.i().configure();
-		MiscJmeI.i().configure();
-		new KeyCodeConfigureForJme().configure();
-		EffectManagerStateI.i().configure();
-		SimulationTimeStateI.i().configure();
-		QueueStateI.i().configure();
-		OrthogonalCursorStateI.i().configure(nodeParent);
-		AssertionsI.i().configure();
-		IndicatorI.i().configure(nodeParent);
-		EnvironmentI.i().configure();
-		
-		bConfigured=true;
 	}
+	
+	@Override
+	public StackTraceElement[] showSystemAlert(String strMsg,
+			Object objLinkedGuiElement) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
+	public void hideSystemAlert(StackTraceElement[] asteAlertFrom, boolean b) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public boolean isShowingAlert(boolean b) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	
+	@Override
+	public void setDynamicInfo(String allPressedKeysSimpleReport) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public void setupRecreateFile() {
+		// TODO Auto-generated method stub
+		
+	}
+	
 }

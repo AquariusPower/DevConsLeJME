@@ -76,7 +76,7 @@ public class TestChoiceDialog extends SimpleApplication {
 			}
 		});
 		diagParent.setContents(btnChosenOption);
-		diagParent.setLocalTranslation(200, EnvironmentI.i().getDisplay().getHeight()-100, 0);
+		diagParent.setLocalTranslationXY(new Vector3f(200, EnvironmentI.i().getDisplay().getHeight()-100, 0));
 		
 		DialogHierarchyStateI.i().showDialog(diagParent);
 		
@@ -89,7 +89,7 @@ public class TestChoiceDialog extends SimpleApplication {
 		gdc = new SimpleGenericDialog(TestChoiceDialog.class.getSimpleName());
 //		gdc = new SimpleGenericDialog(DialogHierarchyStateI.i().createDialog("options", null));
 		gdc.getDialog().setLocalTranslationXY(new Vector3f(100,550,0)).setLocalTranslationZ(10);
-		gdc.getDialog().setPreferredSize(new Vector3f(600,500,0));
+		gdc.getDialog().setPreferredSizeWH(new Vector3f(600,500,0));
 		
 		gdc.setTextInfo("This could be a good info about something.\n"+
 				"+1 line.\n"+

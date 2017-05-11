@@ -108,7 +108,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	public static DevConsPluginStateI i(){return GlobalManagerI.i().get(DevConsPluginStateI.class);}
 	
 //	private Vector3f	v3fApplicationWindowSize;
-	private float	fLemurPreferredThickness = 1f;
+//	private float	fLemurPreferredThickness = 1f;
 //	private Vector3f	v3fConsoleSize;
 	private float	fConsoleHeightPercDefault = 0.5f;
 	private float	fConsoleHeightPerc = fConsoleHeightPercDefault;
@@ -437,7 +437,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 				rzpMain.setLocalTranslationXY(v3fBkpLastNonDefaultPos);
 			}
 			if(v3fBkpLastNonDefaultSize!=null){
-				rzpMain.setPreferredSize(v3fBkpLastNonDefaultSize);
+				rzpMain.setPreferredSizeWH(v3fBkpLastNonDefaultSize);
 			}
 			if(fBkpLastNonDefaultBarWidthX!=null){
 				rzpVarBar.getPreferredSize().x=fBkpLastNonDefaultBarWidthX;
@@ -1250,12 +1250,12 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 				Vector3f v3f = new Vector3f(
 						getWindowSize().x,
 						iHeightPixels,
-						fLemurPreferredThickness);
+						0);//fLemurPreferredThickness);
 				
 				/**
 				 * PUTS A NEW SIZE REQUEST
 				 */
-				rzpMain.setPreferredSize(v3f);
+				rzpMain.setPreferredSizeWH(v3f);
 //				updateVisibleLogItems();
 				
 				QueueI.i().enqueue(new CallableX() {
@@ -1431,8 +1431,6 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("DevConsPluginStateI [fLemurPreferredThickness=");
-		builder.append(fLemurPreferredThickness);
-		builder.append(", fConsoleHeightPercDefault=");
 		builder.append(fConsoleHeightPercDefault);
 		builder.append(", fConsoleHeightPerc=");
 		builder.append(fConsoleHeightPerc);

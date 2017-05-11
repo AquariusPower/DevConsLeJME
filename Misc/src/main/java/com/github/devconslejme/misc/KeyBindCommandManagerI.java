@@ -36,6 +36,7 @@ import java.util.TreeMap;
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
 public class KeyBindCommandManagerI {
+	public static KeyBindCommandManagerI i(){return GlobalManagerI.i().get(KeyBindCommandManagerI.class);}
 	
 	private TreeMap<String,BindCommand> tmbindList = new TreeMap<String, BindCommand>(String.CASE_INSENSITIVE_ORDER);
 	private HashMap<Integer,ArrayList<BindCommand>> hmKeyCodeVsActivatedBind = new HashMap<Integer, ArrayList<BindCommand>>();

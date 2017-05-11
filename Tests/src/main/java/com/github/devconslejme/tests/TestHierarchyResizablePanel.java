@@ -126,7 +126,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		
 		ResizablePanel rzp = DialogHierarchyStateI.i().createDialog(strName,null);
 		
-		rzp.setPreferredSize(new Vector3f(300,250,0)); //TODO z will cause trouble?
+		rzp.setPreferredSizeWH(new Vector3f(300,250,0)); //TODO z will cause trouble?
 		rzp.setLocalTranslationXY(pos); //above DevCons
 		
 		String strBaseText=strName+"/"+strInfo;

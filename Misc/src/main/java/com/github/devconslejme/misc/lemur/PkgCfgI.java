@@ -49,7 +49,7 @@ public class PkgCfgI {
 	
 	public void configure(Application app, Node nodeParent){
 		DetailedException.assertIsFalse("configured", bConfigured, this);
-		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app,nodeParent);
+		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app,nodeParent,new KeyBindCapturer());
 		
 		// lermur inits
 		if(GuiGlobals.getInstance()==null)GuiGlobals.initialize(app); //GuiGlobals.initialize(app);

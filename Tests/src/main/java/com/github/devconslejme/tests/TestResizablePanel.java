@@ -69,7 +69,7 @@ public class TestResizablePanel extends SimpleApplication {
 
 	private void test(Vector3f pos) {
 		ResizablePanel rzp = new ResizablePanel(null);
-		rzp.setPreferredSize(new Vector3f(300,200,0));
+		rzp.setPreferredSizeWH(new Vector3f(300,200,0));
 		rzp.setLocalTranslationXY(pos); //above DevCons
 		sapp.getGuiNode().attachChild(rzp); //will not use the dialog hierarchy!
 		

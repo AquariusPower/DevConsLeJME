@@ -126,8 +126,8 @@ public class TestVisualizeOtherWindowContents extends SimpleApplication{
 //			getGuiNode().attachChild(btn);
 			
 			pnl = new Panel(BaseStyles.GLASS);
-			pnl.setPreferredSize(new Vector3f(100,100,0.01f));
-			pnl.setLocalTranslation(new Vector3f(100,300,0));
+			MiscLemurI.i().setPreferredSize(pnl,new Vector3f(100,100,0.01f));
+			MiscLemurI.i().setLocalTranslationXY(pnl,new Vector3f(100,300,0));
 			
 			ic = new IconComponent(getFileName());
 			pnl.setBackground(ic);

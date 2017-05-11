@@ -838,6 +838,9 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	}
 	
 	private class ContainerEdit extends Container{
+		private Button btn;
+		private TextField tf;
+		
 		public ContainerEdit() {
 //			super(new BorderLayout(), getDialog().getStyle());
 			super(getDialog().getStyle());
@@ -860,11 +863,9 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			pnl.updateLogicalState(0); //this will pre-calculate the required good size 
 			Vector3f v3fSize = pnl.getSize().clone();
 			if(v3fSize.x<fMinWidth)v3fSize.x=fMinWidth;
-			pnl.setPreferredSize(v3fSize);
+			MiscLemurI.i().setPreferredSize(pnl,v3fSize); //pnl.setPreferredSize(v3fSize);
 			return (T)pnl;
 		}
-		private Button btn;
-		private TextField tf;
 	}
 	
 	@SuppressWarnings("unchecked")

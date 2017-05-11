@@ -224,7 +224,7 @@ public class MiscLemurI {
 //		pnl.getWorldBound().setCenter(new Vector3f(DisplayI.i()..getWidth()/2f,DisplayI.i()..getHeight()/2f,pnl.getLocalTranslation().z));
 	}
 	
-	public static enum EReSizeApplyMode{
+	public static enum EResizeApplyMode{
 		Save,
 		Restore,
 		RestoreDefault,
@@ -244,16 +244,16 @@ public class MiscLemurI {
 	 * @param eapply
 	 * @param pnl
 	 */
-	public void safeSizeRecursively(EReSizeApplyMode eapply, Panel pnl) {
+	public void safeSizeRecursively(EResizeApplyMode eapply, Panel pnl) {
 		SafeSize ss = UserDataI.i().getUserDataPSH(pnl, SafeSize.class, true);
 		switch(eapply){
 			case Restore:{
 				Vector3f v3fSafeSize = ss.v3fSafeSizeLast;
-				if(v3fSafeSize!=null)pnl.setPreferredSize(v3fSafeSize);
+				if(v3fSafeSize!=null)MiscLemurI.i().setPreferredSize(pnl,v3fSafeSize);
 			}break;
 			case RestoreDefault:{
 				Vector3f v3fSafeSize = ss.v3fSafeSizeDefault;
-				if(v3fSafeSize!=null)pnl.setPreferredSize(v3fSafeSize);
+				if(v3fSafeSize!=null)MiscLemurI.i().setPreferredSize(pnl,v3fSafeSize);
 			}break;
 			case Save:{
 				ss.v3fSafeSizeLast=pnl.getPreferredSize().clone();
@@ -272,7 +272,7 @@ public class MiscLemurI {
 	public void safeSizeInitialize(Panel pnl){
 		SafeSize ss = UserDataI.i().getUserDataPSH(pnl, SafeSize.class, true);
 		if(ss.v3fSafeSizeLast==null){ // 1st/initial safe size will be default
-			MiscLemurI.i().safeSizeRecursively(EReSizeApplyMode.UpdateDefaultToCurrent,pnl);
+			MiscLemurI.i().safeSizeRecursively(EResizeApplyMode.UpdateDefaultToCurrent,pnl);
 		}
 	}
 	
@@ -360,13 +360,14 @@ public class MiscLemurI {
 //				if(strNameFilter!=null && !spti.getSpatial().getName().contains(strNameFilter))return false;
 				
 				Class cl = spti.getSpatial().getClass();
-				String str=(Strings.repeat(" ",spti.getDepth())
-					+"#='"+spti.getSpatial().hashCode()+"', "
-					+"Wz="+spti.getSpatial().getWorldTranslation().z+", "
-					+"Bh="+((BoundingBox)spti.getSpatial().getWorldBound()).getZExtent()*2f+", "
-					+"cl='"+cl.getSimpleName()+"', "
-					+"nm='"+spti.getSpatial().getName()+"', "
-				);
+				String str=(Strings.repeat(" ",spti.getDepth()));
+				str+="#='"+spti.getSpatial().hashCode()+"', ";
+				str+="Wz="+spti.getSpatial().getWorldTranslation().z+", ";
+				if(spti.getSpatial().getWorldBound()!=null){
+					str+="Bh="+((BoundingBox)spti.getSpatial().getWorldBound()).getZExtent()*2f+", ";
+				}
+				str+="cl='"+cl.getSimpleName()+"', ";
+				str+="nm='"+spti.getSpatial().getName()+"', ";
 				
 				if(BitmapText.class.isAssignableFrom(cl)){
 					str+="txt='"+((BitmapText)spti.getSpatial()).getText()+"'";
@@ -401,5 +402,37 @@ public class MiscLemurI {
 //		return astrList;
 //		SimpleApplication sapp = GlobalManagerI.i().get(SimpleApplication.class);
 		return SpatialHierarchyI.i().doSomethingRecursively(node, funcDo, 0, null);
+	}
+	
+	/**
+	 * prevent messing with Z size
+	 * @param pnl
+	 * @param v3fSize
+	 */
+	public void setPreferredSize(Panel pnl, Vector3f v3fSize) {
+		if (pnl instanceof ResizablePanel) {
+			ResizablePanel rzp = (ResizablePanel) pnl;
+			rzp.setPreferredSizeWH(v3fSize);
+		}else{
+			if(v3fSize.z==0)v3fSize.z=getMinSizeZ(); //fix squashed
+			if(v3fSize.z!=getMinSizeZ() && v3fSize.z!=pnl.getPreferredSize().z){
+				MessagesI.i().warnMsg(this, "panel size Z is not default neither current", v3fSize, pnl.getPreferredSize(), getMinSizeZ(), pnl);
+			}
+			pnl.setPreferredSize(v3fSize);
+		}
+	}
+	
+	/**
+	 * ignores Z pos, keeping current
+	 * @param pnl
+	 * @param v3fPos
+	 */
+	public void setLocalTranslationXY(Panel pnl, Vector3f v3fPos) {
+		if (pnl instanceof ResizablePanel) {
+			ResizablePanel rzp = (ResizablePanel) pnl;
+			rzp.setLocalTranslationXY(v3fPos);
+		}else{
+			pnl.setLocalTranslation(v3fPos.x, v3fPos.y, pnl.getLocalTranslation().z);
+		}
 	}
 }

@@ -98,6 +98,8 @@ public class QueueI {
 		private Method	mEnclosing;
 
 		private StackTraceElement	steInstancedWhen;
+		private StackTraceElement[]	asteLastEnqueued;
+		
 		
 		private static String strLastUId="0";
 //		private boolean bDone;
@@ -350,6 +352,7 @@ public class QueueI {
 			if(!acxList.contains(cx)){
 				acxList.add(cx);
 			}
+			cx.asteLastEnqueued=Thread.currentThread().getStackTrace();
 		}
 	}
 	/**

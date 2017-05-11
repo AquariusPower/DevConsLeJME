@@ -641,18 +641,18 @@ public class ContextMenuI implements IResizableListener{
 		
 		DialogHierarchyStateI.i().showDialogAsModal(cm.getDialogHierarchyParent(), cm.rzpContextMenu);
 		
-		cm.rzpContextMenu.setPreferredSize(
+		cm.rzpContextMenu.setPreferredSizeWH(
 			new Vector3f(
 				200, 
 				30*cm.hmContextOptions.size(), 
-				cm.rzpContextMenu.getPreferredSize().z)
+				0)//cm.rzpContextMenu.getPreferredSize().z)
 		);
 		
 		int iDisplacement=20;
-		cm.rzpContextMenu.setLocalTranslation(
+		cm.rzpContextMenu.setLocalTranslationXY(new Vector3f(
 			v2fMouseCursorPos.getX()-iDisplacement, 
 			v2fMouseCursorPos.getY()+iDisplacement, 
-			0); // z will be fixed by diag hierarchy
+			0)); // z will be fixed by diag hierarchy
 	}
 	
 //	public boolean isTheContextMenu(ResizablePanel hs) {

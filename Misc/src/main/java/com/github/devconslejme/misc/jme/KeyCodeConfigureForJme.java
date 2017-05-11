@@ -45,13 +45,15 @@ import com.jme3.input.controls.KeyTrigger;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  *
  */
-public class KeyCodeManagerJme {
+public class KeyCodeConfigureForJme {
 	private ActionListener	alGeneralJmeKeyCodeListener;
 	private boolean	bCaptureKeyModifiersMode;
 	private InputManager	inputman;
 	
 	public void configure() {
-  	KeyCodeManagerI.i().configure();
+		if(true)return; //TODO remove this line
+		
+//  	KeyCodeManagerI.i().configure();
   	
 		KeyCodeManagerI.i().setKeyCodeForEnter(KeyInput.KEY_RETURN);
 		KeyCodeManagerI.i().setKeyCodeForEscape(KeyInput.KEY_ESCAPE);
