@@ -30,7 +30,7 @@ eval `secinit`
 SECFUNCuniqueLock --waitbecomedaemon
 
 function FUNCchk(){ # <package to validate> <<what package beyond self can it access> ...>
-	local lbMore=false;if [[ "$1" == "--more" ]];then lbMore=true;shift;fi
+	local lbMore=false;if [[ "$1" == "--basic" ]];then lbMore=true;shift;fi
 	
 	local lstrPkg="$1";shift
 	
@@ -50,8 +50,24 @@ function FUNCchk(){ # <package to validate> <<what package beyond self can it ac
 		bProblemFound=true
 	fi
 	
-	if $lbMore;then #TODO it could depend on anything that comes in the JDK tho, or other small libraries maybe like ZayES?
-		if echo "$strAllDeps" |grep "^[.]/.*/$lstrPkg/[^/]*class:" |egrep -v ":(java|com/github/devconslejme/$lstrPkg)";then
+	if $lbMore;then 
+		#####
+		# deny any other big libraries, 
+		# but these should not be anything complex anyway, 
+		# that requires other things than the JDK...
+		#####
+		local lastrDeps=(
+			java # the JDK
+			com/github/devconslejme/$lstrPkg # self package
+			#com/google #TODO guava?
+			#com/simsilica/es #TODO Zay-ES
+		)
+		local lstrOtherDeps="`echo "${lastrDeps[@]}" |tr ' ' '|'`"
+#		declare -p lstrOtherDeps
+		if 
+			echo "$strAllDeps" \
+				|grep "^[.]/.*/$lstrPkg/[^/]*class:" \
+				|egrep -v ":($lstrOtherDeps)/";then
 			bProblemFound=true
 		fi
 	fi
@@ -69,7 +85,7 @@ while true;do
 	echo "totDepsEntries='`echo "$strDevConsDeps" |wc -l`'"
 
 	# misc can only access misc
-	FUNCchk --more misc
+	FUNCchk --basic misc
 	#~ echo "$strAllDeps" |grep "^[.]/.*/misc/[^/]*class:" |egrep -v ":(java|com/github/devconslejme/misc)"
 
 	FUNCchk misc/jme misc
@@ -83,7 +99,7 @@ while true;do
 
 	FUNCchk devcons gendiag misc/lemur misc/jme misc es
 
-	FUNCchk --more extras
+	FUNCchk --basic extras
 	#~ echo "$strAllDeps" |grep "^[.]/.*/extras/[^/]*class:" |egrep -v ":(java|com/github/devconslejme/extras)"
 
 	if $bProblemFound;then

@@ -198,7 +198,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		public CallableXScrollTo(){
 			super();
 			setDelaySeconds(0.25f);
-			enableLoop();
+			enableLoopMode();
 			setUserCanPause(true);
 		}
 		
@@ -314,7 +314,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		vm.set(esp,strKey,strHelp,"",cx);
 		
 		cx.putKeyClassValue(vm);
-		QueueI.i().enqueue(cx.setName(vm.getQueueName()).enableLoop().setDelaySeconds(1f));
+		QueueI.i().enqueue(cx.setName(vm.getQueueName()).enableLoopMode().setDelaySeconds(1f));
 		
 		enqueueUpdateVarMonList();
 //		updateVarMonList();
@@ -395,7 +395,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			}
 			.setName("UpdateLogNoWrap")
 			.setDelaySeconds(0.25f)
-			.enableLoop()
+			.enableLoopMode()
 		);
 		bRequestUpdateNoWrap=true;
 		
@@ -480,7 +480,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 				return true;
 			}}.setName("VarMonHelp")
 				.setDelaySeconds(1f)
-				.enableLoop()
+				.enableLoopMode()
 				.setUserCanPause(true)
 		);
 		
@@ -526,7 +526,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 					return true;
 				}
 			}.setName("GrantApplyContextMenuAtVarMonListBox")
-			 .enableLoop()
+			 .enableLoopMode()
 			 .setDelaySeconds(1f)
 		);
 

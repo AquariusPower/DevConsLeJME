@@ -142,21 +142,21 @@ public class QueueI {
 			return (SELF)this;
 		}
 		
-		public SELF enableLoop() {
+		public SELF enableLoopMode() {
 			this.bLoop=true;
 			return getThis();
 		}
 		
-		/**
-		 * like killing a pid in linux
-		 * @return
-		 */
-		public SELF killSelf() {
-			disableLoop();
-			return getThis();
-		}
+//		/**
+//		 * like killing a pid in linux
+//		 * @return
+//		 */
+//		public SELF killSelf() {
+//			disableLoop();
+//			return getThis();
+//		}
 		
-		public SELF disableLoop() {
+		public SELF endLoopMode() {
 			this.bLoop=false;
 			return getThis();
 		}
@@ -423,7 +423,7 @@ public class QueueI {
 		for(CallableX cx:acxList){
 			if(strUId.equalsIgnoreCase( strUId.endsWith(".js") ? cx.getName() : cx.getUId() )){
 				if(bKill){
-					if(cx.isUserCanKill())cx.disableLoop();
+					if(cx.isUserCanKill())cx.endLoopMode();
 				}else{
 					if(cx.isUserCanPause())cx.togglePause();
 				}

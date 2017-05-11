@@ -200,7 +200,7 @@ public class PopupHintHelpListenerI implements CursorListener{
 //				updatePopupHelp(null);
 				return true;
 			}
-		}.setDelaySeconds(1).enableLoop());
+		}.setDelaySeconds(1).enableLoopMode());
 	}
 
 	public int getWrapAt() {

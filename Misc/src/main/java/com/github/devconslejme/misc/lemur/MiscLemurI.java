@@ -299,7 +299,7 @@ public class MiscLemurI {
 			}
 			.setName("UpdVisRows:"+lstbx.getName())
 			.setDelaySeconds(0.25f)
-			.enableLoop()
+			.enableLoopMode()
 		);
 	}
 

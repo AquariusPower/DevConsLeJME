@@ -69,7 +69,7 @@ public class DebugVisualsI {
 				@Override	public Boolean call() {
 					if(ga.isDestroy()){
 						ga.removeFromParent();
-						killSelf();
+						endLoopMode();
 					}else{
 						if(isVisualsEnabled()){
 							if(ga.getParent()==null)nodeBase.attachChild(ga);
@@ -80,7 +80,7 @@ public class DebugVisualsI {
 					}
 					
 					return true;
-				}}.enableLoop().setDelaySeconds(getUpdateDelay()))
+				}}.enableLoopMode().setDelaySeconds(getUpdateDelay()))
 		);
 	
 		return ga;

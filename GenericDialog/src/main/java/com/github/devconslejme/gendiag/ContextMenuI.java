@@ -173,7 +173,7 @@ public class ContextMenuI implements IResizableListener{
 				
 				return true;
 			}
-		}.setDelaySeconds(1f).enableLoop();
+		}.setDelaySeconds(1f).enableLoopMode();
 		private Object	objCurrentContextSourceStoredValue;
 		
 		/**

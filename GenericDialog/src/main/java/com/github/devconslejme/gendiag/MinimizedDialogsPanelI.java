@@ -81,7 +81,7 @@ public class MinimizedDialogsPanelI implements IResizableListener{
 				
 				return true;
 			}
-		}.enableLoop().setDelaySeconds(1f).setName("Show/Hide minimized dialogs' panel"));
+		}.enableLoopMode().setDelaySeconds(1f).setName("Show/Hide minimized dialogs' panel"));
 		
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override

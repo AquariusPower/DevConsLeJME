@@ -117,7 +117,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 					return true;
 				}
 
-			}.enableLoop().setDelaySeconds(0.1f));
+			}.enableLoopMode().setDelaySeconds(0.1f));
 		}
 		
 		private void updateMouseEffect() {

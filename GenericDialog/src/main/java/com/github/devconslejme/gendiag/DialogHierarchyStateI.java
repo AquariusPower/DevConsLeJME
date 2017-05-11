@@ -218,7 +218,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 				}
 				return true;
 			}
-		}.enableLoop()
+		}.enableLoopMode()
 		 .setDelaySeconds(1f);
 		QueueI.i().enqueue(cxZOrder);
 		
@@ -239,7 +239,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 				return true;
 			}
 		}.setName("FocusAtDevConsInput")
-		 .setDelaySeconds(0.25f).enableLoop();
+		 .setDelaySeconds(0.25f).enableLoopMode();
 		QueueI.i().enqueue(cxAutoFocus);
 		
 //		QueueI.i().enqueue(new CallableXAnon() {

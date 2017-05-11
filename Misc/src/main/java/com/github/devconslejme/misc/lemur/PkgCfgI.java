@@ -47,9 +47,10 @@ public class PkgCfgI {
 	
 	private boolean	bConfigured;
 	
-	public void configure(Application app, Node nodeParent){
+	public void configure(Application app, Node nodeParent, CaptureKeyBindAbs keycap){
 		DetailedException.assertIsFalse("configured", bConfigured, this);
-		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app,nodeParent,new KeyBindCapturer());
+		SystemAlertLemurI.i().configure(); //this is a global overrider
+		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app,nodeParent,keycap);
 		
 		// lermur inits
 		if(GuiGlobals.getInstance()==null)GuiGlobals.initialize(app); //GuiGlobals.initialize(app);

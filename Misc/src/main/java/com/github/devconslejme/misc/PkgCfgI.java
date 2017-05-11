@@ -39,14 +39,14 @@ public class PkgCfgI {
 	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
 	private boolean	bConfigured;
-	public void configure(File flAppBaseUserDataFolder, Class clAppMainClass, CaptureKeyBindAbs capture){
+	public void configure(File flAppBaseUserDataFolder, Class clAppMainClass, CaptureKeyBindAbs keycap){
 		DetailedException.assertIsFalse("configured", bConfigured, this);
 		MainThreadI.i().configure();
 		
 		FileI.i().configure(flAppBaseUserDataFolder, clAppMainClass);
 		
   	KeyCodeManagerI.i().configure();
-		KeyBindCommandManagerI.i().configure(capture);
+		KeyBindCommandManagerI.i().configure(keycap);
 		
 		bConfigured=true;
 	}

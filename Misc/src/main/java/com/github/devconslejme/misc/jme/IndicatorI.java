@@ -266,14 +266,14 @@ public class IndicatorI {
 		QueueI.i().enqueue(new CallableXAnon() {
 					@Override
 					public Boolean call() {
-						if(!update(getTPF(),gi))disableLoop();
+						if(!update(getTPF(),gi))endLoopMode();
 						return true;
 					}
 				}
 				.setName("IndicatorFollowTarget")
 				.setUserCanPause(true)
 				.setDelaySeconds(1f/20f)
-				.enableLoop()
+				.enableLoopMode()
 			);
 		
 		return gi;

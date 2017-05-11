@@ -78,7 +78,7 @@ public class AssertionsI {
 				}
 				return true;
 			}
-		}.enableLoop());
+		}.enableLoopMode());
 		
 		QueueI.i().enqueue(cx);
 	}

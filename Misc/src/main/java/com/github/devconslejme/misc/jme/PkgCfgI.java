@@ -45,9 +45,10 @@ public class PkgCfgI {
 	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
 	private boolean	bConfigured;
-	public void configure(Application app,Node nodeParent, CaptureKeyBindAbs capture){
+	public void configure(Application app,Node nodeParent, CaptureKeyBindAbs keycap){
 		DetailedException.assertIsFalse("configured", bConfigured, this);
-		com.github.devconslejme.misc.PkgCfgI.i().configure(JmeSystem.getStorageFolder(StorageFolderType.Internal), app.getClass(), capture);
+		com.github.devconslejme.misc.PkgCfgI.i().configure(
+				JmeSystem.getStorageFolder(StorageFolderType.Internal), app.getClass(), keycap);
 		
 		GlobalManagerI.i().put(Application.class, app);  //first!
 		if(app instanceof SimpleApplication){
