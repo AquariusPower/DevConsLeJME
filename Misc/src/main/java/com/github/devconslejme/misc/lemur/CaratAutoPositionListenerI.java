@@ -35,6 +35,7 @@ import com.jme3.font.BitmapText;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.TextField;
 import com.simsilica.lemur.event.CursorButtonEvent;
@@ -54,8 +55,8 @@ public class CaratAutoPositionListenerI implements CursorListener{
 		CursorEventControl.addListenersToSpatial(spt, this);
 	}
 	
-	public void applyRecursivelyAtAllTextFieldsOf(Spatial spt){
-		for(TextField tf:SpatialHierarchyI.i().getAllChildrenRecursiveFrom(spt, TextField.class, null)){
+	public void applyRecursivelyAtAllTextFieldsOf(Node node){
+		for(TextField tf:SpatialHierarchyI.i().getAllChildrenOfTypeRecursiveFrom(node, TextField.class, null)){
 			applyAt(tf);
 		}
 	}

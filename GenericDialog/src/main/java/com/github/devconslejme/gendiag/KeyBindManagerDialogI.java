@@ -27,11 +27,11 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.github.devconslejme.gendiag;
 
-import com.github.devconslejme.devcons.LoggingI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.Key;
 import com.github.devconslejme.misc.KeyBind;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.TimeFormatI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.BindCommand;
 import com.github.devconslejme.misc.KeyCodeManagerI;
@@ -76,7 +76,7 @@ public class KeyBindManagerDialogI {
 		bc.setCommand(new CallableXAnon(){
 			@Override
 			public Boolean call() {
-				LoggingI.i().logEntry(KeyBindManagerDialogI.class.getSimpleName()+":test:"+TimeFormatI.i().getRealTimeFormatted());
+				MessagesI.i().output(false,System.out,"Info:",this,KeyBindManagerDialogI.class.getSimpleName()+":test:"+TimeFormatI.i().getRealTimeFormatted());
 				return true;
 			}
 		});

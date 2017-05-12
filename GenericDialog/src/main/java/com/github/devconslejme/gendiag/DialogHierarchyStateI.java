@@ -54,8 +54,10 @@ import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.github.devconslejme.misc.lemur.ResizablePanel.IResizableListener;
 import com.jme3.app.Application;
+import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.bounding.BoundingBox;
+import com.jme3.input.FlyByCamera;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
@@ -105,6 +107,9 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	private boolean	bLogZOrderDebugInfo;
 //	protected ResizablePanel	minimizedDiags;
 //	protected Container	cntrMinimized;
+	private boolean	bAllowSuspendFlyCam=true;
+	private SimpleApplication	sappOptional;
+	private FlyByCamera	flycam;
 	
 	public static class BlockerCursorListenerX extends CursorListenerX{
 		@Override
@@ -201,6 +206,9 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		app=GlobalManagerI.i().get(Application.class);
     app.getStateManager().attach(this);
 		focusState=app.getStateManager().getState(FocusManagerState.class);
+		
+		if(app instanceof SimpleApplication)this.sappOptional=(SimpleApplication) app;
+		if(sappOptional!=null)setFlycam(sappOptional.getFlyByCamera());
 		
 		vriResizableBorderSize = ResizablePanel.getResizableBorderSizeDefaultVersionedReference();
     
@@ -328,7 +336,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 				}
 			};
 			
-			for(Panel pnl:SpatialHierarchyI.i().getAllChildrenRecursiveFrom(rzp, Panel.class, null)){
+			for(Panel pnl:SpatialHierarchyI.i().getAllChildrenOfTypeRecursiveFrom(rzp, Panel.class, null)){
 				CursorEventControl.addListenersToSpatial(pnl,clSimpleFocusRaiser);
 			}
 		}
@@ -397,12 +405,19 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			bRequestRetryZOrder=false;
 		}
 		
-//		int iMinChildren = cntrMinimized.getLayout().getChildren().size();
-//		if(minimizedDiags.getParent()==null){
-//			if(iMinChildren>0)nodeToMonitor.attachChild(minimizedDiags);
-//		}else{
-//			if(iMinChildren==0)minimizedDiags.removeFromParent();
-//		}
+		if(isAllowSuspendFlyCam()){
+			if(flycam.isEnabled()){
+				if(sys.getAllOpenedDialogs(null).size()>0){
+					flycam.setEnabled(false);
+				}
+			}else{
+				if(sys.getAllOpenedDialogs(null).size()==0){
+					flycam.setEnabled(true);
+				}
+//				SpatialHierarchyI.i().getAllChildrenOfTypeRecursiveFrom(nodeToMonitor, ResizablePanel.class, 1);
+			}
+			
+		}
 	}
 	
 	/**
@@ -699,34 +714,22 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		this.bLogZOrderDebugInfo = bLogZOrderDebugInfo;
 	}
 
-//	@SuppressWarnings("unchecked")
-//	public void minimize(AbstractGenericDialog sgd) {
-//		if(getHierarchyComp(sgd.getDialog()).getHierarchyParent()!=null)return;
-//		
-//		Button btn = new Button(sgd.getTitle());
-//		cntrMinimized.addChild(btn, cntrMinimized.getLayout().getChildren().size());
-//		btn.addClickCommands(new Command<Button>() {
-//			@Override
-//			public void execute(Button source) {
-//				showDialog(sgd.getDialog());
-//				btn.removeFromParent();
-//				
-//				//readd remaining
-//				ArrayList<Node> children = new ArrayList<Node>(cntrMinimized.getLayout().getChildren()); //remaining
-//				cntrMinimized.getLayout().clearChildren();
-////				for(int i=0;i<children.size();i++){
-//				int i=0;for(Node child:children){
-//					cntrMinimized.addChild(child, i++);
-//				}
-//			}
-//		});
-//		sgd.close();
-//	}
+	public boolean isAllowSuspendFlyCam() {
+		return bAllowSuspendFlyCam;
+	}
 
-//	public String getReport(ResizablePanel rzp) {
-//		String str="";
-//		return getHierarchyComp(rzp).toString();
-//		return str;
-//	}
+	public DialogHierarchyStateI setAllowSuspendFlyCam(boolean bAllowSuspendFlyCam) {
+		this.bAllowSuspendFlyCam = bAllowSuspendFlyCam;
+		return this;
+	}
+
+	public FlyByCamera getFlycam() {
+		return flycam;
+	}
+
+	public DialogHierarchyStateI setFlycam(FlyByCamera flycam) {
+		this.flycam = flycam;
+		return this;
+	}
 
 }

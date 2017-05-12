@@ -386,7 +386,7 @@ public class IndicatorI {
 	
 	public void destroyAllIndicatorsRecursively(Spatial spt) {
 		if(spt instanceof Node){
-			for(Spatial sptChild:SpatialHierarchyI.i().getAllChildrenRecursiveFrom(spt, Spatial.class, null)){
+			for(Spatial sptChild:SpatialHierarchyI.i().getAllChildrenOfTypeRecursiveFrom((Node)spt, Spatial.class, null)){
 				destroyAllIndicatorsAt(sptChild);
 			}
 		}else{

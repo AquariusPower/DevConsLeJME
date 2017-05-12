@@ -45,6 +45,7 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Mesh.Mode;
 import com.jme3.scene.Node;
@@ -63,6 +64,7 @@ public class MiscJmeI {
 	private Application	app;
 	private Node	nodeVirtualWorld;
 	private SimpleApplication	sappOptional;
+	private CollisionResults	crLastPick;
 	
 	/**
 	 * 
@@ -281,19 +283,29 @@ public class MiscJmeI {
 		return pickWorldPiercingAtCursor(getNodeVirtualWorld());
 	}
 	public CollisionResults pickWorldPiercingAtCursor(Node nodeVirtualWorld){
-		CollisionResults cr = new CollisionResults();
+		crLastPick = new CollisionResults();
 		
-		Vector3f v3fMouseCursor3D = app.getCamera().getWorldCoordinates(
+		Vector3f v3fCursorAtVirtualWorld3D = app.getCamera().getWorldCoordinates(
 			EnvironmentI.i().getMouse().getPos2D(), 0f);
-		Vector3f v3fDirection = app.getCamera().getWorldCoordinates(
-			EnvironmentI.i().getMouse().getPos2D(), 1f).subtractLocal(v3fMouseCursor3D).normalizeLocal();
 		
-		Ray ray = new Ray(v3fMouseCursor3D, v3fDirection);
-		nodeVirtualWorld.collideWith(ray, cr);
+		Vector3f v3fDirection = app.getCamera().getWorldCoordinates(
+			EnvironmentI.i().getMouse().getPos2D(), 1f);
+		v3fDirection.subtractLocal(v3fCursorAtVirtualWorld3D).normalizeLocal();
+		
+		Ray ray = new Ray(v3fCursorAtVirtualWorld3D, v3fDirection);
+		nodeVirtualWorld.collideWith(ray, crLastPick);
 
-		if(cr.size()>0)return cr;
+		if(crLastPick.size()>0)return crLastPick;
 		
 		return null;
+	}
+	
+	public Geometry getLastWorldPick(){
+		if(crLastPick==null)return null;
+		return crLastPick.getClosestCollision().getGeometry();
+	}
+	public CollisionResults getLastWorldPiercingPick(){
+		return crLastPick;
 	}
 
 	public Node getNodeVirtualWorld() {

@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import com.github.devconslejme.debug.DebugTrackProblemsJME;
 import com.github.devconslejme.debug.UnsafeDebugHacksI;
 import com.github.devconslejme.devcons.DevConsPluginStateI;
+import com.github.devconslejme.devcons.LoggingI;
 import com.github.devconslejme.extras.DynamicFPSLimiter;
 import com.github.devconslejme.extras.OSCmd;
 import com.github.devconslejme.extras.SingleAppInstance;
@@ -44,13 +45,20 @@ import com.github.devconslejme.misc.CheckProblemsI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.EnvironmentI;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.EnvironmentI.IEnvironmentListener;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
 import com.jme3.app.state.AbstractAppState;
+import com.jme3.input.CameraInput;
+import com.jme3.input.MouseInput;
+import com.jme3.input.controls.ActionListener;
+import com.jme3.input.controls.InputListener;
+import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.system.AppSettings;
 import com.jme3.system.JmeSystem;
@@ -83,13 +91,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		JavaScriptI.i().addForbidClassAccessJS(TestDevCons.class);
 		 */
 		
-		if(bEnableOpt){
-			opt_disableSomeSimpleAppThings();
-			opt_initOptionalExtras();
-			opt_initOptionalOtherStuff();
-			opt_initOptionalIntegrateAllOtherTests();
-			opt_initSomeWorldObjects();
-		}
+		if(bEnableOpt)opt_initAll();
 	}
 	
 	
@@ -100,18 +102,42 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	
 	/******************************************************************************************
 	 * OPTIONALS BELOW
-	 * you can just detele them all.
+	 * you can just detele it all from this line below til the end.
 	 ******************************************************************************************/
 	
 	/** */
 	ArrayList<SimpleApplication> aoUpdOpts = new ArrayList<SimpleApplication>();
 	private static boolean	bEnableOpt = true;
 	
+	private void opt_initAll() {
+		opt_disableSomeSimpleAppThings();
+		opt_initOptionalExtras();
+		opt_initOptionalOtherStuff();
+		opt_initOptionalIntegrateAllOtherTests();
+		opt_initSomeWorldObjects();
+	}
+	
 	private void opt_initSomeWorldObjects() {
 		Box box = new Box(0.5f,0.5f,0.5f);
 		Geometry geom = new Geometry("test box",box);
 		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(ColorRGBA.Blue));
 		getRootNode().attachChild(geom);
+		
+		String strPck="PickVirtualWorldThing";
+    getInputManager().addMapping(strPck, new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
+    getInputManager().addListener(new ActionListener() {
+				@Override
+				public void onAction(String name, boolean isPressed, float tpf) {
+					if(getFlyByCamera().isEnabled())return;
+					
+					if(!isPressed && name.equals(strPck)){ //on release
+						Spatial spt = MiscJmeI.i().pickWorldSpatialAtCursor();
+						if(spt!=null)LoggingI.i().logMarker(spt.toString());
+					}
+				}
+			},
+			strPck
+		);
 	}
 	
 	private void opt_disableSomeSimpleAppThings() {

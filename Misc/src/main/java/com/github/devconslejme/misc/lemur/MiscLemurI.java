@@ -142,7 +142,7 @@ public class MiscLemurI {
 		ElementId elidItem = elid.child("item");
 		ElementId elidSelector = elid.child(ListBox.SELECTOR_ID);
 		
-		ArrayList<Panel> apnl = SpatialHierarchyI.i().getAllChildrenRecursiveFrom(lstbx, Panel.class, null);
+		ArrayList<Panel> apnl = SpatialHierarchyI.i().getAllChildrenOfTypeRecursiveFrom(lstbx, Panel.class, null);
 		for(Panel pnl:apnl.toArray(new Panel[0])){
 			if(pnl.getElementId().equals(elidItem))continue;
 			if(bIncludeSelector){

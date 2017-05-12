@@ -69,12 +69,13 @@ public class SpatialHierarchyI {
 		return anode;
 	}
 	
-	public static class FuncSptConcreteClassMatcher implements Function<Spatial,Boolean>{
-		private Class clFilter;
-		public FuncSptConcreteClassMatcher(Class clFilter) {
+	public static class FuncSptConcreteClassMatcher <TYPE extends Spatial> implements Function<Spatial,Boolean>{
+		private Class<TYPE>	clFilter;
+		
+		public FuncSptConcreteClassMatcher(Class<TYPE> clFilter) {
 			this.clFilter=clFilter;
 		}
-		public Class getClassFilter() {
+		public Class<TYPE> getClassFilter() {
 			return clFilter;
 		}
 		@Override
@@ -83,50 +84,55 @@ public class SpatialHierarchyI {
 		}
 	}
 	
-	public <T extends Spatial> T getChildRecursiveExactMatch(Spatial sptParentestToChk, Class<T> clFilter){
-		return getChildRecursiveExactMatch(sptParentestToChk, 
-			new FuncSptConcreteClassMatcher(clFilter));
-//			new SpatialMatcherCallableX().putKeyValue(Class.class.getName(), clFilter));
+	@SuppressWarnings("unchecked")
+	public <T extends Spatial> T getChildRecursiveExactMatch(Node nodeParentestToChk, Class<T> clFilter){
+		return (T)getChildRecursiveExactMatch(
+			nodeParentestToChk, 
+			new FuncSptConcreteClassMatcher(clFilter)
+		);
 	}
 	
-	public <T extends Spatial> T getChildRecursiveExactMatch(Spatial sptParentestToChk, Function<Spatial,Boolean> funcMatcher){
-		ArrayList<T> asptList = getAllChildrenRecursiveFrom(sptParentestToChk, null, funcMatcher);
-		if(asptList.isEmpty() || asptList.size()>1)throw new DetailedException("not exact match",sptParentestToChk,funcMatcher,asptList);
+	public <T extends Spatial> T getChildRecursiveExactMatch(Node nodeParentestToChk, Function<Spatial,Boolean> funcMatcher){
+		ArrayList<T> asptList = getAllChildrenRecursiveFrom(nodeParentestToChk, null, funcMatcher);
+		if(asptList.isEmpty() || asptList.size()>1)throw new DetailedException("not exact match",nodeParentestToChk,funcMatcher,asptList);
 		return asptList.get(0);
 	}
 
 	/**
-	 * @param sptParentestToChk
+	 * @param nodeParentestToChk
 	 * @param clFilter if Spatial, will bring all
 	 * @param iMaxDepth max recursion depth, can be null (unlimited) 
 	 * @return
 	 */
-	public <T extends Spatial> ArrayList<T> getAllChildrenRecursiveFrom(Spatial sptParentestToChk, Class<T> clFilter, Integer iMaxDepth) {
-		return getAllChildrenRecursiveFrom(sptParentestToChk, iMaxDepth, 
-			new FuncSptConcreteClassMatcher(clFilter));
-//			new SpatialMatcherCallableX().putKeyValue(Class.class.getName(), clFilter));
+	@SuppressWarnings("unchecked")
+	public <T extends Spatial> ArrayList<T> getAllChildrenOfTypeRecursiveFrom(Node nodeParentestToChk, Class<T> clTypeFilter, Integer iMaxDepth) {
+		return getAllChildrenRecursiveFrom(
+			nodeParentestToChk, 
+			iMaxDepth, 
+			new FuncSptConcreteClassMatcher(clTypeFilter)
+		);
 	}
 	/**
 	 * 
 	 * @param sptParentestToChk
-	 * @param iMaxDepth max recursion depth, can be null (unlimited) 
+	 * @param iDepth initial/max recursion depth, can be null (unlimited) 
 	 * @param callMatcher can be null, or can retrieve key: Spatial.class.getName()
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public <T extends Spatial> ArrayList<T> getAllChildrenRecursiveFrom(Spatial sptParentestToChk, Integer iMaxDepth, Function<Spatial,Boolean> funcMatcher) {
-		if(sptParentestToChk==null)throw new DetailedException("null spatial");
+	public <T extends Spatial> ArrayList<T> getAllChildrenRecursiveFrom(Node nodeParentestToChk, Integer iDepth, Function<Spatial,Boolean> funcMatcher) {
+		if(nodeParentestToChk==null)throw new DetailedException("null spatial");
 		
 		ArrayList<T> asptList = new ArrayList<T>();
 		
-		if(iMaxDepth!=null){
-			if(iMaxDepth==0)return asptList; 
-			iMaxDepth-=1;
+		if(iDepth!=null){
+			if(iDepth==0)return asptList; 
+			iDepth-=1;
 		}
 		
 		Node nodeParent = null;
-		if (sptParentestToChk instanceof Node) {
-			nodeParent = (Node) sptParentestToChk;
+		if (nodeParentestToChk instanceof Node) {
+			nodeParent = (Node) nodeParentestToChk;
 		}else{
 			return asptList;
 		}
@@ -142,7 +148,7 @@ public class SpatialHierarchyI {
 		// deep search
 		for(Spatial sptChild:nodeParent.getChildren()){
 			if(sptChild instanceof Node){
-				asptList.addAll(getAllChildrenRecursiveFrom(sptChild, iMaxDepth, funcMatcher));
+				asptList.addAll(getAllChildrenRecursiveFrom((Node)sptChild, iDepth, funcMatcher));
 			}
 		}
 		
