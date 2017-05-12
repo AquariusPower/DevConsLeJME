@@ -49,7 +49,7 @@ import com.github.devconslejme.misc.jme.IndicatorI.GeomIndicator;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.jme.UserDataI.IUDKey;
-import com.github.devconslejme.misc.lemur.ClickCommandAbsorptionI;
+import com.github.devconslejme.misc.lemur.AbsorbClickCommandsI;
 import com.github.devconslejme.misc.lemur.CursorListenerX;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
@@ -241,7 +241,7 @@ public class ContextMenuI implements IResizableListener{
 		public ContextButton addNewEntry(String strTextKey, Object objStoreContextItemValue, ApplyContextChoiceCmd cmd, HintUpdaterPerCtxtBtn hu){
 			assert(cmd!=null);
 			ContextButton cb = new ContextButton(strTextKey);
-			ClickCommandAbsorptionI.i().absorbClickCommands(cb);
+			AbsorbClickCommandsI.i().absorbClickCommands(cb);
 			cb.cmParent=this;
 			ContextMenuI.i().applyContextButtonListener(cb,cmd); //cb.addClickCommands(cmd); //TODO use a context cursor listener...
 //			if(cxHintUpdater!=null)UserDataI.i().setUserDataPSH(btn, EContext.HintUpdater, cxHintUpdater);
@@ -581,7 +581,7 @@ public class ContextMenuI implements IResizableListener{
 		}
 		
 		UserDataI.i().setUserDataPSHSafely(sptContextClick, cm);
-		ClickCommandAbsorptionI.i().absorbClickCommands(sptContextClick);
+		AbsorbClickCommandsI.i().absorbClickCommands(sptContextClick);
 		CursorEventControl.addListenersToSpatial(sptContextClick, contextMenuSourceCursorListenerX);
 		
 		if(bUseContextMenuAvailablePermanentIndicators){

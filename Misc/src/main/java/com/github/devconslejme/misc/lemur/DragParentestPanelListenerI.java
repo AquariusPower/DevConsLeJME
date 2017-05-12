@@ -399,7 +399,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 	public void applyAt(Panel pnl, Panel pnlApplyDragAt) {
 		mouseListenerConflictDenier(pnl);
 		
-		ClickCommandAbsorptionI.i().absorbClickCommands(pnl);
+		AbsorbClickCommandsI.i().absorbClickCommands(pnl);
 		
 		DragInfo di = new DragInfo();
 		UserDataI.i().setUserDataPSHSafely(pnl,di);

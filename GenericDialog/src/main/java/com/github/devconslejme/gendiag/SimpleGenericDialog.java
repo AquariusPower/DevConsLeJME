@@ -59,7 +59,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
-import com.github.devconslejme.misc.lemur.ClickCommandAbsorptionI;
+import com.github.devconslejme.misc.lemur.AbsorbClickCommandsI;
 import com.github.devconslejme.misc.lemur.CursorListenerX;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
@@ -688,7 +688,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		@Override
 		public void addClickCommands(Command<? super Button>... commands) {
 			super.addClickCommands(commands);
-			ClickCommandAbsorptionI.i().absorbClickCommands(this);
+			AbsorbClickCommandsI.i().absorbClickCommands(this);
 		}
 	}
 	

@@ -74,7 +74,7 @@ public class SystemAlertI {
 		this.objActionSourceElement=objActionSourceElement;
 //		dumpAlert(); //just in case another one happens before the update...
 		
-		MessagesI.i().output(true, System.out, "ALERT!!!", this, strAlertMsg, strDynamicInfo);
+		MessagesI.i().output(true, System.out, "ALERT!!!", this, strAlertMsg, strDynamicInfo, objActionSourceElement);
 		captureUserInput();
 //		QueueI.i().enqueue(new CallableXAnon() {
 //			@Override
@@ -113,5 +113,18 @@ public class SystemAlertI {
 		return !strDynamicInfo.isEmpty();
 	}
 	
+	public String getFullMessage(){
+		return "ALERT!!!\n"
+				+getAlertMessage()+"\n"
+				+"DynamicInfo: "+getDynamicInfo()+"\n";
+	}
+
+	public String getAlertMessage(){
+		return strAlertMsg;
+	}
+	
+	public Object getActionSourceElement() {
+		return objActionSourceElement;
+	}
 }
 

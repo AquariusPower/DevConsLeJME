@@ -30,7 +30,6 @@ package com.github.devconslejme.misc.jme;
 import com.github.devconslejme.misc.AssertionsI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.KeyBindCommandManagerI.CaptureKeyBindAbs;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.scene.Node;
@@ -45,10 +44,10 @@ public class PkgCfgI {
 	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
 	private boolean	bConfigured;
-	public void configure(Application app,Node nodeParent, CaptureKeyBindAbs keycap){
+	public void configure(Application app,Node nodeParent){
 		DetailedException.assertIsFalse("configured", bConfigured, this);
 		com.github.devconslejme.misc.PkgCfgI.i().configure(
-				JmeSystem.getStorageFolder(StorageFolderType.Internal), app.getClass(), keycap);
+				JmeSystem.getStorageFolder(StorageFolderType.Internal), app.getClass());
 		
 		GlobalManagerI.i().put(Application.class, app);  //first!
 		if(app instanceof SimpleApplication){

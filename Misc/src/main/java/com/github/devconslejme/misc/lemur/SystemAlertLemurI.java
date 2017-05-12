@@ -27,17 +27,317 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.github.devconslejme.misc.lemur;
 
+import java.util.ArrayList;
+
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.SystemAlertI;
+import com.github.devconslejme.misc.TimedDelay;
+import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.jme.EffectElectricity;
+import com.github.devconslejme.misc.jme.EnvironmentI;
+import com.github.devconslejme.misc.jme.IEffect;
+import com.github.devconslejme.misc.jme.SystemAlertJmeI;
+import com.github.devconslejme.misc.lemur.EffectsLemurI.EEffChannel;
+import com.github.devconslejme.misc.lemur.EffectsLemurI.EEffState;
+import com.jme3.bounding.BoundingBox;
+import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector3f;
+import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
+import com.simsilica.lemur.Button;
+import com.simsilica.lemur.Container;
+import com.simsilica.lemur.GuiGlobals;
+import com.simsilica.lemur.Label;
+import com.simsilica.lemur.Panel;
+import com.simsilica.lemur.component.BorderLayout;
+import com.simsilica.lemur.component.BorderLayout.Position;
+import com.simsilica.lemur.component.QuadBackgroundComponent;
 
 
 /**
-* @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+ * @DevSelfNote ALERT!: Keep independent of dialogs hierarchy! this is above all! 
+ * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class SystemAlertLemurI extends SystemAlertI {
+public class SystemAlertLemurI extends SystemAlertJmeI {
 	public static SystemAlertLemurI i(){return GlobalManagerI.i().get(SystemAlertLemurI.class);}
 	
-	public void configure(){
-		GlobalManagerI.i().put(SystemAlertI.class, this); //overrides global
+	private Container	cntrAlert;
+	private Label	lblAlertMsg;
+	private Panel	pnlBlocker;
+	private final TimedDelay	tdBlockerGlow = new TimedDelay(3f, "the blocker blocks all gui elements to let some special feature be performed");
+	private ColorRGBA	colorBlockerBkg;
+	/** "if false, will follow mouse, preventing any clicks from it" */
+	private boolean btgAlertStayOnCenter = false;
+//	private boolean	bStayOnCenter = false;
+	private boolean	bStartedShowEffect;
+	private boolean	bAlertPanelIsReady;
+	private IEffect	ieffAlert;
+	private BoundingBox	bbGuiNodeWorldBoundPriorToAlert;
+	private Node	nodeParent;
+	private ColorRGBA colorEdgesDefault=ColorRGBA.Red.clone();
+	private ArrayList<Panel> aedgeList = new ArrayList<Panel>();
+	
+	public void configure(Node nodeParent){
+		this.nodeParent=nodeParent;
+		
+		if(!GlobalManagerI.i().isSet(SystemAlertI.class)){
+			GlobalManagerI.i().put(SystemAlertI.class, this); //overrides global
+		}
+		if(!GlobalManagerI.i().isSet(SystemAlertJmeI.class)){
+			GlobalManagerI.i().put(SystemAlertJmeI.class, this); //overrides global
+		}
+	}
+	
+	/**
+	 * 
+	 * @param asteFrom
+	 * @param bKeepGuiBlockerOnce useful when going to retry having subsequent alerts
+	 */
+	@Override
+	public void hideSystemAlert(StackTraceElement[] asteFrom, boolean bKeepGuiBlockerOnce) {
+		super.hideSystemAlert(asteFrom,bKeepGuiBlockerOnce);
+		cntrAlert.removeFromParent();
+		cntrAlert=null;
+		
+//		lblAlertMsg.removeFromParent();
+//		lblAlertMsg=null;
+//		if(!bKeepGuiBlockerOnce){
+//			pnlBlocker.removeFromParent();
+//			pnlBlocker=null;
+//		}
+		
+		bStartedShowEffect=false;
+		
+		bAlertPanelIsReady=false;
+		
+		bbGuiNodeWorldBoundPriorToAlert = null;
+		
+//		bAllowNewEffectCreation=false;
+		if(!bKeepGuiBlockerOnce){
+			pnlBlocker.removeFromParent();
+			pnlBlocker=null;
+			
+//			ManageEffectsJmeStateI.i().discardEffectsForOwner(this);
+			if(ieffAlert!=null)ieffAlert.setPlay(false);
+//			ieffAlert=null;
+//			bAllowNewEffectCreation=true;
+		}
+		
+		setAlertSpatial(null);
+	}
+
+	@Override
+	public StackTraceElement[] showSystemAlert(String strMsg, Object objActionSourceElement) {
+		StackTraceElement[] aste = super.showSystemAlert(strMsg,objActionSourceElement);
+		
+		if(getAlertPanel()==null)createAlert();
+		
+		if(bbGuiNodeWorldBoundPriorToAlert==null){
+			bbGuiNodeWorldBoundPriorToAlert = (BoundingBox)nodeParent.getWorldBound().clone();
+		}
+		
+		if(!nodeParent.hasChild(cntrAlert)){
+			nodeParent.attachChild(cntrAlert);
+//			EEffChannel.ChnGrowShrink.play(EEffState.Show, cntrAlert, getPos(EElement.Alert,null));
+		}
+		
+//		if(!lblAlertMsg.getText().equals(strMsg)){
+//			lblAlertMsg.setText(strMsg);
+//		}
+		
+//		updateAlertPosSize();
+		
+		return aste;
+	}
+	
+	private void createAlert(){
+		if(pnlBlocker==null){
+			// old trick to prevent access to other gui elements easily! :D
+			pnlBlocker = new Button(""); //TODO must be button?
+			colorBlockerBkg = ColorRGBA.Red.clone(); //new ColorRGBA(1f,0,0,1);//0.25f);
+			pnlBlocker.setBackground(new QuadBackgroundComponent(colorBlockerBkg));
+			tdBlockerGlow.setActive(true);
+//			GlobalGUINodeI.i().attachChild(pnlBlocker);
+		}
+		
+		// the alert container
+		QuadBackgroundComponent qbc;
+		
+		cntrAlert = new Container(new BorderLayout());
+		setAlertSpatial(cntrAlert);
+		
+		EEffChannel.ChnGrowShrink.applyEffectsAt(cntrAlert);
+//		LemurEffectsI.i().addEffectTo(cntrAlert, LemurEffectsI.i().efGrow);
+		
+		//yellow background with border margin
+		lblAlertMsg = new Label("",getStyle());
+		lblAlertMsg.setColor(ColorRGBA.Blue.clone());
+		lblAlertMsg.setShadowColor(ColorRGBA.Black.clone());
+		lblAlertMsg.setShadowOffset(new Vector3f(1,1,0));
+		lblAlertMsg.setBackground(null);
+		qbc=new QuadBackgroundComponent(new ColorRGBA(1,1,0,0.75f));
+		qbc.setMargin(10f, 10f);
+		lblAlertMsg.setBorder(qbc);
+		cntrAlert.addChild(lblAlertMsg, BorderLayout.Position.Center);
+		
+		//edges countour in red
+		for(BorderLayout.Position eEdge:new Position[]{Position.East,Position.West,Position.North,Position.South}){
+			addAlertEdge(eEdge, ColorRGBA.Red.clone(), new Vector3f(2f,2f,0.1f));
+		}
+		
+	}
+	
+	
+	/**
+	 * TODO rename getAlertAsPanel
+	 * @return
+	 */
+	public Panel getAlertPanel() {
+		return (Panel)super.getAlertSpatial();
+	}
+	
+	public void update(float fTPF) {
+		updateMessage();
+		
+		updateIfPanelIsReady();
+		
+		if(pnlBlocker!=null){
+			ColorI.i().updateColorFading(tdBlockerGlow, colorBlockerBkg, true, 0.25f, 0.35f);
+		}
+	}
+	
+	private void updateMessage(){
+		if(lblAlertMsg!=null)lblAlertMsg.setText(getFullMessage());
+	}
+	
+	private void updateEdgesColor(ColorRGBA c){
+		if(c==null)c=colorEdgesDefault;
+		for(Panel pnl:aedgeList){
+			((QuadBackgroundComponent)pnl.getBackground()).setColor(c);
+		}
+	}
+	
+	private void updateIfPanelIsReady(){
+		if(getAlertPanel()==null)return;
+		
+		Vector3f v3fLblSize = getAlertPanel().getSize();
+		if(v3fLblSize.length()==0)return;
+		
+		bAlertPanelIsReady=true;
+		
+		if(!bStartedShowEffect){
+			EEffChannel.ChnGrowShrink.play(EEffState.Show, cntrAlert, getPos(EElement.Alert,null));
+			
+			createAlertLinkEffect();
+			
+			bStartedShowEffect=true;
+		}
+		
+//		if(getAlertUserInteractionIndicator()!=null){
+		if(isDynamicInfoSet()){
+			updateEdgesColor(ColorRGBA.Cyan.clone());
+		}else{
+			updateEdgesColor(null);
+		}
+	
+		MiscLemurI.i().setLocalTranslationXY(getAlertPanel(), getPos(EElement.Alert,v3fLblSize)); 
+	}
+
+	public String getStyle(){
+		return GuiGlobals.getInstance().getStyles().getDefaultStyle();
+	}
+	
+	private void addAlertEdge(BorderLayout.Position eEdge, ColorRGBA color, Vector3f v3fSize){
+		QuadBackgroundComponent qbc = new QuadBackgroundComponent(color);
+		Label lbl=new Label("",getStyle());
+		lbl.setBackground(qbc);
+		lbl.setPreferredSize(v3fSize); //TODO queue this?
+		
+		aedgeList.add(lbl);
+		
+		cntrAlert.addChild(lbl, eEdge);
+	}
+
+	private void createAlertLinkEffect() {
+		if(ieffAlert==null){
+			ieffAlert = new EffectElectricity().setColor(ColorRGBA.Yellow);
+		}
+		
+		if(getActionSourceElement()!=null){
+			ieffAlert.setFollowFromTarget(getActionSourceElement(), new Vector3f(0,0,1));
+		}else{
+			// use mouse pos
+			ieffAlert.setFromTo( getPos(EElement.Effects, EnvironmentI.i().getMouse().get3DPos()), null);
+		}
+		
+		ieffAlert.setFollowToTarget(cntrAlert, null);
+		
+		ieffAlert.setPlay(true);
+	}
+	
+	private static enum EElement{
+		Blocker,
+		Alert,
+		Effects,
+	}
+
+	private Vector3f getPos(EElement e, Vector3f v3fRef){
+		if(v3fRef!=null)v3fRef=v3fRef.clone(); //safety
+		Vector3f v3fWdwSize = EnvironmentI.i().getDisplay().getAppWindowSize();
+		
+		/**
+		 * TODO the Z displacement should consider each element bounding box Z
+		 * The blocker height is quite thin.
+		 * The effects may vary... TODO query for the effects bounding box z?
+		 * The alert panel is on top, no problem.
+		 */
+		float fZDispl = 10f;
+//		float fZDispl = LemurDiagFocusHelperStateI.i().getDialogZDisplacement();
+		
+		/**
+		 * the alert is ultra special and the Z can be dealt with here!
+		 */
+		float fZ=bbGuiNodeWorldBoundPriorToAlert.getMax(null).z;
+		
+		Vector3f v3fPos = null;
+		fZ += fZDispl*(e.ordinal()+1); // attention how the order/index is a multiplier of the displacement!
+		switch(e){ 
+			case Blocker:
+				v3fPos = new Vector3f(0, v3fWdwSize.y, fZ);
+				break;
+			case Effects:
+				v3fPos = new Vector3f(v3fRef);
+				v3fPos.z=fZ;
+				break;
+			case Alert:
+				Vector3f v3fAlertSize=v3fRef;
+				if(v3fAlertSize==null){
+					v3fAlertSize = v3fWdwSize.mult(0.5f);
+				}
+				
+				if(btgAlertStayOnCenter){
+					v3fPos = new Vector3f(v3fWdwSize.x/2f,v3fWdwSize.y/2f,0);
+					v3fPos.x-=v3fAlertSize.x/2f;
+					v3fPos.y+=v3fAlertSize.y/2f;
+				}else{
+					v3fPos = EnvironmentI.i().getMouse().getPosWithMouseOnCenter(v3fAlertSize);
+				}
+				
+				v3fPos.set(new Vector3f(v3fPos.x, v3fPos.y, fZ));
+				
+				break;
+		}
+		
+		return v3fPos;
+	}
+
+	public boolean isAlertStayOnCenter() {
+		return btgAlertStayOnCenter;
+	}
+
+	public SystemAlertLemurI setAlertStayOnCenter(boolean btgAlertStayOnCenter) {
+		this.btgAlertStayOnCenter = btgAlertStayOnCenter;
+		return this;
 	}
 }

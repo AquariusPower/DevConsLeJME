@@ -29,8 +29,6 @@ package com.github.devconslejme.misc;
 
 import java.io.File;
 
-import com.github.devconslejme.misc.KeyBindCommandManagerI.CaptureKeyBindAbs;
-
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -39,14 +37,14 @@ public class PkgCfgI {
 	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
 	private boolean	bConfigured;
-	public void configure(File flAppBaseUserDataFolder, Class clAppMainClass, CaptureKeyBindAbs keycap){
+	public void configure(File flAppBaseUserDataFolder, Class clAppMainClass){
 		DetailedException.assertIsFalse("configured", bConfigured, this);
 		MainThreadI.i().configure();
 		
 		FileI.i().configure(flAppBaseUserDataFolder, clAppMainClass);
 		
   	KeyCodeManagerI.i().configure();
-		KeyBindCommandManagerI.i().configure(keycap);
+//		KeyBindCommandManagerI.i().configure(keycap);
 		
 		bConfigured=true;
 	}

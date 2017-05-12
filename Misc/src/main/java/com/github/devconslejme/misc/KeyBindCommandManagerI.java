@@ -205,8 +205,6 @@ public class KeyBindCommandManagerI {
 	 * @return true if capturing is on going
 	 */
 	private boolean updateCaptureKey(){
-		if(!isKeyCapturerSet())return false;
-		
 		if(isWaitKeyRelease())return true;
 		
 		if(bindCaptureToTarget!=null){

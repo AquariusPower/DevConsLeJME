@@ -36,7 +36,7 @@ import com.github.devconslejme.misc.FileI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
-import com.github.devconslejme.misc.TimeConvertI;
+import com.github.devconslejme.misc.TimeFormatI;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
@@ -143,7 +143,7 @@ public class LoggingI {
 	public void logMarker(String strInfo){
 //		dateRealTimeForMarker.setTime(System.currentTimeMillis());
 //		strInfo = "[R="+dateFormat.format(dateRealTimeForMarker)+"] "+strInfo;
-		strInfo = "[R="+TimeConvertI.i().getRealTimeFormatted(null,"HH:mm:ss")+"] "+strInfo;
+		strInfo = "[R="+TimeFormatI.i().getRealTimeFormatted(null,"HH:mm:ss")+"] "+strInfo;
 		
 		
 //		Duration durAppElapsed = Duration.ZERO.plusNanos(
@@ -152,7 +152,7 @@ public class LoggingI {
 //		dateForMarker.setTime(TimeConvertI.i().getMilisFrom(DCGlobal.app().getTimer())); //this is a delay from the start of the app
 //		strInfo = strInfo+" [A="+dateFormat.format(dateForMarker)+"]";
 		Timer tm=GlobalManagerI.i().get(Application.class).getTimer();
-		strInfo = strInfo+" [A="+TimeConvertI.i().formatElapsed(tm.getResolution(),tm.getTime())+"]";
+		strInfo = strInfo+" [A="+TimeFormatI.i().formatElapsed(tm.getResolution(),tm.getTime())+"]";
 		
 		strInfo = Strings.padStart(strInfo, iWrapAtColumn/2 +strInfo.length()/2, '_');
 		strInfo = Strings.padEnd(strInfo, iWrapAtColumn, '_');

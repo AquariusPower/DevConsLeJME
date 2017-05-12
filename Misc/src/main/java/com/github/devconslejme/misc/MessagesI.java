@@ -106,7 +106,7 @@ public class MessagesI {
 		//TODO log4j?
 		Class cl = Class.class.isInstance(objSource)?(Class)objSource:objSource.getClass(); //can be from a static method
 		String strOutput = ReportI.i().prepareReport(
-				"["+TimeConvertI.i().getRealTimeFormatted()+"]"
+				"["+TimeFormatI.i().getRealTimeFormatted()+"]"
 				+strMsgType+"["+cl.getSimpleName()+"]: "+strMsg, 
 				aobj);
 
@@ -168,7 +168,7 @@ public class MessagesI {
 			sb.append("UId="+strUId);
 			sb.append(bFull?"\n":";");
 			
-			sb.append("time="+TimeConvertI.i().getRealTimeFormatted(lRealTimeMilis,null));
+			sb.append("time="+TimeFormatI.i().getRealTimeFormatted(lRealTimeMilis,null));
 			sb.append(bFull?"\n":";");
 			
 			sb.append("hc="+iHitCount);

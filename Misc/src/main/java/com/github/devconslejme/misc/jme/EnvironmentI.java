@@ -86,6 +86,10 @@ public class EnvironmentI extends AbstractAppState{
 		
 		public boolean wasResized(){
 			return Display.wasResized();
+		}
+
+		public Vector3f getAppWindowSize() {
+			return new Vector3f(getWidth(),getHeight(),0);
 		}		
 	}
 	private DisplayI display = new DisplayI();
@@ -98,6 +102,10 @@ public class EnvironmentI extends AbstractAppState{
 			return Mouse.isButtonDown(i);
 		}
 		
+		/**
+		 * z is above everything else
+		 * @return
+		 */
 		public Vector3f get3DPos() {
 //			return MiscJmeI.i().toV3f(app.getInputManager().getCursorPosition(), MiscJmeI.i().getZAboveAllAtGuiNode());
 			return new Vector3f(Mouse.getX(), Mouse.getY(), MiscJmeI.i().getZAboveAllAtGuiNode());
@@ -109,6 +117,13 @@ public class EnvironmentI extends AbstractAppState{
 				if(isButtonDown(i))i2++;
 			}
 	    return i2;
+		}
+
+		public Vector3f getPosWithMouseOnCenter(Vector3f v3fSize) {
+			Vector3f v3fPos = get3DPos();
+			v3fPos.x -= v3fSize.x/2f;
+			v3fPos.y += v3fSize.y/2f;
+			return v3fPos;
 		}
 	}
 	private MouseI mouse = new MouseI();

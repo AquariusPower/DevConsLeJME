@@ -44,10 +44,12 @@ import com.simsilica.lemur.event.CursorListener;
 import com.simsilica.lemur.event.CursorMotionEvent;
 
 /**
+ * So the addClickCommands() can still be used,  but will just be handled here instead.
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class ClickCommandAbsorptionI implements CursorListener{
-	public static ClickCommandAbsorptionI i(){return GlobalManagerI.i().get(ClickCommandAbsorptionI.class);}
+public class AbsorbClickCommandsI implements CursorListener{
+	public static AbsorbClickCommandsI i(){return GlobalManagerI.i().get(AbsorbClickCommandsI.class);}
 	
 	private boolean	bDelegateClickCommands=true;
 	

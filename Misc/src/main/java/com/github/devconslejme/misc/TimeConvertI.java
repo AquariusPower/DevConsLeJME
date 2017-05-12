@@ -102,34 +102,5 @@ public class TimeConvertI {
 		
 		throw new UnsupportedOperationException("unsupported timer resolution "+lResolution);
 	}
-	public String formatElapsed(long lResolution, long lTime) {
-		long lElapsedMilis=TimeConvertI.i().getMilisFrom(lResolution, lTime);
-		return sdf.format(new Date(lElapsedMilis - TimeZone.getDefault().getRawOffset()));
-	}
-	
-	public String getRealTimeFormatted() {
-		return getRealTimeFormatted(null,null);
-	}
-	/**
-	 * 
-	 * @param lMilis current time if null
-	 * @param strDateFormatPattern if null will be default full time pattern
-	 * @return
-	 */
-	public String getRealTimeFormatted(Long lMilis,String strDateFormatPattern) {
-		if(lMilis==null)lMilis=System.currentTimeMillis();
-		if(strDateFormatPattern==null)strDateFormatPattern="yyyy/MM/dd+HH:mm:ss.SSS";
-		
-		dateFormat.applyPattern(strDateFormatPattern);
-		dateRealTime.setTime(lMilis);
-//		System.out.println(XMLDecoder.createHandler(null,null,null));
-		return dateFormat.format(dateRealTime);
-	}
-//	public float calcProportional(float fMaxValueForOneSecond, float fSecondsFraction) {
-//		return 0;
-//	}
 
-	//public double convertDelayNanoToSeconds(long lDelayNano){
-	//	return (double)((double)lDelayNano/(double)lNano); //TODO is that?
-	//}
 }

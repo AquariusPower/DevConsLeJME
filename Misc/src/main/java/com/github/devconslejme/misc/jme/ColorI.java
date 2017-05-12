@@ -30,6 +30,7 @@ package com.github.devconslejme.misc.jme;
 import java.util.HashMap;
 
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.TimedDelay;
 import com.jme3.app.Application;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState.BlendMode;
@@ -130,4 +131,25 @@ public class ColorI {
 		return mat;
 	}
 
+	public void updateColorFading(TimedDelay td, ColorRGBA color, boolean bFadeInAndOut){
+		updateColorFading(td, color, bFadeInAndOut, 0.25f, 1.0f);
+	}
+	public void updateColorFading(TimedDelay td, ColorRGBA color, boolean bFadeInAndOut, float fMinAlpha, float fMaxAlpha){
+		if(fMinAlpha<0f)fMinAlpha=0f;
+		if(fMaxAlpha>1f)fMaxAlpha=1f;
+		
+		float fDeltaWorkAlpha = fMaxAlpha - fMinAlpha;
+		
+		td.setOscilateMode(bFadeInAndOut);
+		
+		color.a = fMinAlpha + td.getCurrentDelayCalcDynamic(fDeltaWorkAlpha);
+		
+//		if(color.a<0)color.a=0;
+		if(color.a>fMaxAlpha){
+			color.a=fMaxAlpha;
+		}else
+		if(color.a < fMinAlpha){
+			color.a=fMinAlpha;
+		}
+	}
 }

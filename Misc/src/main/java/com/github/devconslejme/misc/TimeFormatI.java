@@ -25,14 +25,46 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.gendiag;
+package com.github.devconslejme.misc;
 
-import com.github.devconslejme.misc.GlobalManagerI;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
- * TODO list all, allow setting/changing etc
- * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
- */
-public class KeyBindManagerDialogI {
-	public static KeyBindManagerDialogI i(){return GlobalManagerI.i().get(KeyBindManagerDialogI.class);}
+* @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+*/
+public class TimeFormatI {
+	public static TimeFormatI i(){return GlobalManagerI.i().get(TimeFormatI.class);}
+	
+	SimpleDateFormat dateFormat = new SimpleDateFormat();
+	Date dateRealTime = new Date();
+	
+	private SimpleDateFormat	sdf  = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()); //TODO use this too? sdf.setTimeZone(TimeZone.getTimeZone("GMT+0"));
+	
+	public String formatElapsed(long lResolution, long lTime) {
+		long lElapsedMilis=TimeConvertI.i().getMilisFrom(lResolution, lTime);
+		return sdf.format(new Date(lElapsedMilis - TimeZone.getDefault().getRawOffset()));
+	}
+	
+	public String getRealTimeFormatted() {
+		return getRealTimeFormatted(null,null);
+	}
+	/**
+	 * 
+	 * @param lMilis current time if null
+	 * @param strDateFormatPattern if null will be default full time pattern
+	 * @return
+	 */
+	public String getRealTimeFormatted(Long lMilis,String strDateFormatPattern) {
+		if(lMilis==null)lMilis=System.currentTimeMillis();
+		if(strDateFormatPattern==null)strDateFormatPattern="yyyy/MM/dd+HH:mm:ss.SSS";
+		
+		dateFormat.applyPattern(strDateFormatPattern);
+		dateRealTime.setTime(lMilis);
+	//	System.out.println(XMLDecoder.createHandler(null,null,null));
+		return dateFormat.format(dateRealTime);
+	}
+	
 }

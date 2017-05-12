@@ -56,7 +56,7 @@ import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.EnvironmentI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
-import com.github.devconslejme.misc.lemur.ClickToPositionCaratListenerI;
+import com.github.devconslejme.misc.lemur.CaratAutoPositionListenerI;
 import com.github.devconslejme.misc.lemur.CursorListenerX;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
@@ -373,7 +373,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		
 		toggleDefaultPosSize(true);
 		
-		ClickToPositionCaratListenerI.i().applyRecursivelyAtAllTextFieldsOf(cntrMain);
+		CaratAutoPositionListenerI.i().applyRecursivelyAtAllTextFieldsOf(cntrMain);
 
 //		GuiGlobals.getInstance().requestFocus(tfInput);
 		

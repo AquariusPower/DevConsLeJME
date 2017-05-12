@@ -47,8 +47,8 @@ import com.simsilica.lemur.event.CursorMotionEvent;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class ClickToPositionCaratListenerI implements CursorListener{
-	public static ClickToPositionCaratListenerI i(){return GlobalManagerI.i().get(ClickToPositionCaratListenerI.class);}
+public class CaratAutoPositionListenerI implements CursorListener{
+	public static CaratAutoPositionListenerI i(){return GlobalManagerI.i().get(CaratAutoPositionListenerI.class);}
 	
 	public void applyAt(Spatial spt){
 		CursorEventControl.addListenersToSpatial(spt, this);

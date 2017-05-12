@@ -24,53 +24,43 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+package com.github.devconslejme.misc.jme;
 
-package com.github.devconslejme.misc.lemur;
-
-import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.jme.MiscJmeI;
-import com.jme3.app.Application;
-import com.jme3.math.Vector2f;
-import com.jme3.scene.Node;
-import com.simsilica.lemur.GuiGlobals;
-import com.simsilica.lemur.event.PickEventSession;
-import com.simsilica.lemur.event.PickEventSession.RootEntry;
-import com.simsilica.lemur.style.BaseStyles;
-
+import com.github.devconslejme.misc.SystemAlertI;
+import com.jme3.scene.Spatial;
 
 /**
+ * TODO implement a JME only alert, it currently will only work with lemur
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PkgCfgI {
-	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
+public class SystemAlertJmeI extends SystemAlertI {
+	public static SystemAlertJmeI i(){return GlobalManagerI.i().get(SystemAlertJmeI.class);}
 	
-	private boolean	bConfigured;
+	private Spatial	sptAlert;
 	
-	public void configure(Application app, Node nodeParent){
-		DetailedException.assertIsFalse("configured", bConfigured, this);
-		SystemAlertLemurI.i().configure(); //this is a global overrider
-		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app,nodeParent);
-		
-		// lermur inits
-		if(GuiGlobals.getInstance()==null)GuiGlobals.initialize(app); //GuiGlobals.initialize(app);
-		BaseStyles.loadGlassStyle();
-		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS); //this can be set again later
-		
-		// after lemur inits
-		PopupHintHelpListenerI.i().configure(nodeParent);
-		DragParentestPanelListenerI.i().configure(nodeParent);
-		
-		initNonStandard();
-		
-		bConfigured=true;
+	public void configure(){
+		if(!GlobalManagerI.i().isSet(SystemAlertI.class)){
+			GlobalManagerI.i().put(SystemAlertI.class, this); //overrides global
+		}
 	}
 
-	/**
-	 * above all at gui node is hardcoded at {@link PickEventSession#getPickRay(RootEntry,Vector2f)}
-	 */
-	private void initNonStandard() {
-		MiscJmeI.i().setAboveAllAtGuiNode(1001);
+	public Spatial getAlertSpatial() {
+		return sptAlert;
 	}
 	
+	protected void setAlertSpatial(Spatial spt){
+		this.sptAlert=spt;
+	}
+	
+	@Override
+	public Spatial getActionSourceElement() {
+		return (Spatial)super.getActionSourceElement();
+	}
+	
+	@Override
+	public StackTraceElement[] showSystemAlert(String strMsg, Object objActionSourceElement) {
+		assert(Spatial.class.isInstance(objActionSourceElement));
+		return super.showSystemAlert(strMsg, objActionSourceElement);
+	}
 }

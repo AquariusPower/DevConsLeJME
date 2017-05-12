@@ -211,6 +211,11 @@ public class MiscJmeI {
   public void setAboveAllAtGuiNode(float f){
   	this.fAboveAllAtGuiNode=f;
   }
+  
+  /**
+   * TODO use the Gui Node bounding box Z? but then, it would be required to be updated whenever it changes... better keep using a default above all like from lemur 1001 (raycast from 1000 down)
+   * @return
+   */
   public float getZAboveAllAtGuiNode(){
   	return fAboveAllAtGuiNode; 
   }
