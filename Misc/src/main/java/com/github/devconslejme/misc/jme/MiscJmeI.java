@@ -29,15 +29,12 @@ package com.github.devconslejme.misc.jme;
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
-import java.util.ArrayList;
 
+import com.github.devconslejme.misc.Annotations.ToDo;
 import com.github.devconslejme.misc.AssertionsI;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.MessagesI;
-import com.github.devconslejme.misc.SimulationTimeI;
-import com.github.devconslejme.misc.Annotations.MiscGenericMigrateOneDay;
-import com.github.devconslejme.misc.Annotations.ToDo;
 import com.jme3.app.Application;
+import com.jme3.app.SimpleApplication;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.collision.CollisionResults;
@@ -48,7 +45,6 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Mesh.Mode;
 import com.jme3.scene.Node;
@@ -64,8 +60,23 @@ public class MiscJmeI {
 	public static MiscJmeI i(){return GlobalManagerI.i().get(MiscJmeI.class);}
 
 	private float	fAboveAllAtGuiNode=10;
+	private Application	app;
+	private Node	nodeVirtualWorld;
+	private SimpleApplication	sappOptional;
 	
-	public void configure(){
+	/**
+	 * 
+	 * @param nodeVirtualWorld if null, will try to auto-set from simple application
+	 */
+	public void configure(Node nodeVirtualWorld){
+		this.app=GlobalManagerI.i().get(Application.class);
+		if (this.app instanceof SimpleApplication)sappOptional = (SimpleApplication) this.app;
+		
+		setNodeVirtualWorld(nodeVirtualWorld);
+		if(sappOptional!=null && getNodeVirtualWorld()==null){
+			setNodeVirtualWorld(sappOptional.getRootNode());
+		}
+		
 		AssertionsI.i().putAssertRemainUnmodified(Vector3f.UNIT_XYZ, Vector3f.UNIT_XYZ.clone());
 		AssertionsI.i().putAssertRemainUnmodified(Vector3f.UNIT_X, Vector3f.UNIT_X.clone());
 		AssertionsI.i().putAssertRemainUnmodified(Vector3f.UNIT_Y, Vector3f.UNIT_Y.clone());
@@ -139,7 +150,7 @@ public class MiscJmeI {
 	
 	
 	public Vector3f getMouseCursorPosition(){
-		Vector2f v2f = GlobalManagerI.i().get(Application.class).getInputManager().getCursorPosition();
+		Vector2f v2f = app.getInputManager().getCursorPosition();
 		return new Vector3f(v2f.x,v2f.y,0);
 	}
 
@@ -260,6 +271,38 @@ public class MiscJmeI {
 		
 		return v3fRayCastOrigin;
 	}
+	
+	public Spatial pickWorldSpatialAtCursor(){
+		CollisionResults cr = pickWorldPiercingAtCursor();
+		if(cr==null)return null;
+		return cr.getClosestCollision().getGeometry();
+	}
+	public CollisionResults pickWorldPiercingAtCursor(){
+		return pickWorldPiercingAtCursor(getNodeVirtualWorld());
+	}
+	public CollisionResults pickWorldPiercingAtCursor(Node nodeVirtualWorld){
+		CollisionResults cr = new CollisionResults();
+		
+		Vector3f v3fMouseCursor3D = app.getCamera().getWorldCoordinates(
+			EnvironmentI.i().getMouse().getPos2D(), 0f);
+		Vector3f v3fDirection = app.getCamera().getWorldCoordinates(
+			EnvironmentI.i().getMouse().getPos2D(), 1f).subtractLocal(v3fMouseCursor3D).normalizeLocal();
+		
+		Ray ray = new Ray(v3fMouseCursor3D, v3fDirection);
+		nodeVirtualWorld.collideWith(ray, cr);
 
+		if(cr.size()>0)return cr;
+		
+		return null;
+	}
 
+	public Node getNodeVirtualWorld() {
+		return nodeVirtualWorld;
+	}
+
+	public MiscJmeI setNodeVirtualWorld(Node nodeVirtualWorld) {
+		this.nodeVirtualWorld = nodeVirtualWorld;
+		return this;
+	}
+	
 }

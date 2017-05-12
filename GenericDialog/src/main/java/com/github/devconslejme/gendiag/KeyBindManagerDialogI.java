@@ -27,7 +27,15 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.github.devconslejme.gendiag;
 
+import com.github.devconslejme.devcons.LoggingI;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.Key;
+import com.github.devconslejme.misc.KeyBind;
+import com.github.devconslejme.misc.KeyBindCommandManagerI;
+import com.github.devconslejme.misc.TimeFormatI;
+import com.github.devconslejme.misc.KeyBindCommandManagerI.BindCommand;
+import com.github.devconslejme.misc.KeyCodeManagerI;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 
 /**
  * TODO list all, allow setting/changing etc
@@ -35,4 +43,44 @@ import com.github.devconslejme.misc.GlobalManagerI;
  */
 public class KeyBindManagerDialogI {
 	public static KeyBindManagerDialogI i(){return GlobalManagerI.i().get(KeyBindManagerDialogI.class);}
+
+	private SimpleMaintenanceGenericDialog	diagBindMan;
+	
+	public void configure(){
+		diagBindMan = new SimpleMaintenanceGenericDialog(KeyBindManagerDialogI.class.getSimpleName()) {
+			@Override
+			public void updateMaintenanceList() {
+				OptionData odCodeSection = diagBindMan.putSection(null, KeyCodeManagerI.class.getSimpleName());
+				for(Key key:KeyCodeManagerI.i().getKeyListCopy()){
+					diagBindMan.putOption(odCodeSection, key.getAsInfo(), key);
+				}
+				
+				OptionData odBindSection = diagBindMan.putSection(null, KeyBindCommandManagerI.class.getSimpleName());
+				for(BindCommand bind:KeyBindCommandManagerI.i().getKeyBindListCopy()){
+					diagBindMan.putOption(odBindSection, bind.getBindCfg(), bind);
+				}
+			}
+		};
+	}
+	
+	public void show(){
+		DialogHierarchyStateI.i().showDialog(diagBindMan.getDialog());
+	}
+	
+	public void testCreateBind(){
+		KeyBind kb = new KeyBind();
+		kb.setFromKeyCfg("Ctrl+L");
+		
+		BindCommand bc = new BindCommand();
+		bc.setKeyBind(kb);
+		bc.setCommand(new CallableXAnon(){
+			@Override
+			public Boolean call() {
+				LoggingI.i().logEntry(KeyBindManagerDialogI.class.getSimpleName()+":test:"+TimeFormatI.i().getRealTimeFormatted());
+				return true;
+			}
+		});
+		
+		KeyBindCommandManagerI.i().addBindCommand(bc);
+	}
 }

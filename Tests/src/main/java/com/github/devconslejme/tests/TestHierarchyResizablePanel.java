@@ -53,7 +53,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 	
 	@Override
 	public void simpleInitApp() {
-		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode());
+		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode(), getRootNode());
 		
 		initTest();
 	}

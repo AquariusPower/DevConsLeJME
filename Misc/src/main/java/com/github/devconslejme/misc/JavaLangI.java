@@ -312,15 +312,18 @@ public class JavaLangI {
 	 * @param mGetter
 	 * @return
 	 */
-	public Method getBeanSetterFor(Method mGetter) {
+	public Method getBeanSetterFor(Method mGetter, boolean bIsRequired) {
 		try {
 			String strBaseName = null;
-			if(mGetter.getName().startsWith("is"))strBaseName=mGetter.getName().substring(2);
+			if(mGetter.getName().startsWith("is" ))strBaseName=mGetter.getName().substring(2);
 			if(mGetter.getName().startsWith("get"))strBaseName=mGetter.getName().substring(3);
 			
 			return mGetter.getDeclaringClass().getMethod("set"+strBaseName, mGetter.getReturnType());
-		} catch (NoSuchMethodException | SecurityException e) {
-			MessagesI.i().warnMsg(this, e.getMessage(), mGetter, e);
+		} catch (NoSuchMethodException | SecurityException ex) {
+			if(bIsRequired){
+				throw new DetailedException(ex, mGetter, bIsRequired);
+//				MessagesI.i().warnMsg(this, e.getMessage(), mGetter, e);
+			}
 		}
 		
 		return null;
@@ -359,7 +362,7 @@ public class JavaLangI {
 			&&
 			m.getParameterCount()==0
 			&&
-			getBeanSetterFor(m)!=null
+			getBeanSetterFor(m,false)!=null
 		;
 	}
 	

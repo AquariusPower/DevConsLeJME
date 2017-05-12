@@ -28,21 +28,17 @@ package com.github.devconslejme.tests.temp;
 
 import com.github.devconslejme.extras.OSCmd;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
-import com.github.devconslejme.gendiag.GlobalsManagerDialogI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.MiscJmeI;
-import com.github.devconslejme.misc.jme.QueueStateI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.jme3.app.SimpleApplication;
 import com.jme3.asset.AssetNotFoundException;
-import com.jme3.asset.TextureKey;
 import com.jme3.math.Vector3f;
 import com.jme3.ui.Picture;
-import com.simsilica.lemur.Button;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.TextField;
@@ -76,7 +72,7 @@ public class TestVisualizeOtherWindowContents extends SimpleApplication{
 		GuiGlobals.initialize(this);
 		BaseStyles.loadGlassStyle();
 		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
-		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this,getGuiNode());
+		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this,getGuiNode(), getRootNode());
 		
 		initTest();
 	}

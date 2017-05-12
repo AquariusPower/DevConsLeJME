@@ -51,7 +51,7 @@ public class KeyCodeConfigureForJme {
 	private InputManager	inputman;
 	
 	public void configure() {
-		if(true)return; //TODO remove this line
+//		if(true)return; //TODO remove this line
 		
 //  	KeyCodeManagerI.i().configure();
   	
@@ -91,6 +91,8 @@ public class KeyCodeConfigureForJme {
 //		this.iKeyCodeForEscape=iKeyCodeForEscape;
 //		this.iKeyCodeForEnter=iKeyCodeForReturn;
 		
+		KeyCodeManagerI.i().setKeyIdPrefixFilter(strKeyIdPrefixFilter);
+		
 //		if(tmIdCode.size()>0){			return;		}
 		try {
 			int iMaxCode=-1;
@@ -104,7 +106,7 @@ public class KeyCodeConfigureForJme {
 				
 				String strId=fld.getName();//.substring(4); //removes the KEY_ prefix
 				
-				if(KeyCodeManagerI.i().addKeyWorkFull(strId,iCode)==null){
+				if(KeyCodeManagerI.i().addKeyWorkFull(strKeyIdPrefixFilter,strId,iCode)==null){
 					throw new DetailedException("keycode filling failed",strId,iCode,cl,strKeyIdPrefixFilter);
 				}
 			}
@@ -139,7 +141,7 @@ public class KeyCodeConfigureForJme {
 
 
 	private void addKeyCodeMapping(Key key){
-		if(!key.isModeKeyWithCode())return;
+		if(!key.isKeyWithCode())return;
 		
 //		if(bRemoveConflictingKeyCodeMappings)removeKeyCodeMaping(key);
 		
@@ -147,13 +149,18 @@ public class KeyCodeConfigureForJme {
 //		if(im.hasMapping(strMapping)){
 //			throw new PrerequisitesNotMetException("this unique mapping should not be already set",strMapping);
 //		}
-		if(!inputman.hasMapping(strMapping)){
-			inputman.addMapping(strMapping, new KeyTrigger(key.getKeyCode()));
+		
+		if(key.getKeyCode()<=255){ //keytrigger limit
+			if(!inputman.hasMapping(strMapping)){
+				inputman.addMapping(strMapping, new KeyTrigger(key.getKeyCode()));
+			}
+			/**
+			 * if the "keycode id" mapping already existed, it will just add a listener to it!
+			 */
+			inputman.addListener(alGeneralJmeKeyCodeListener, strMapping);
+		}else{
+			MessagesI.i().warnMsg(this, "still not supported", key);
 		}
-		/**
-		 * if the "keycode id" mapping already existed, it will just add a listener to it!
-		 */
-		inputman.addListener(alGeneralJmeKeyCodeListener, strMapping);
 	}
 
 	/**

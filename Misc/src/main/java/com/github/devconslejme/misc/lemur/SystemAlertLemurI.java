@@ -268,7 +268,7 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 			ieffAlert.setFollowFromTarget(getActionSourceElement(), new Vector3f(0,0,1));
 		}else{
 			// use mouse pos
-			ieffAlert.setFromTo( getPos(EElement.Effects, EnvironmentI.i().getMouse().get3DPos()), null);
+			ieffAlert.setFromTo( getPos(EElement.Effects, EnvironmentI.i().getMouse().getPos3D()), null);
 		}
 		
 		ieffAlert.setFollowToTarget(cntrAlert, null);

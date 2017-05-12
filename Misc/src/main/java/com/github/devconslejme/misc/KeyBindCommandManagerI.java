@@ -31,7 +31,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TreeMap;
 
-import com.github.devconslejme.misc.CheckProblemsI.ICheckProblems;
+import com.github.devconslejme.misc.QueueI.CallableX;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 
 
 /**
@@ -73,6 +74,7 @@ public class KeyBindCommandManagerI {
 	 * TODO tmp placeholder dummy based on old KeyBoundVarField
 	 */
 	public static class BindCommand{
+		private CallableX	cxCommand;
 
 		public boolean isField() {
 			// TODO Auto-generated method stub
@@ -99,8 +101,7 @@ public class KeyBindCommandManagerI {
 			return null;
 		}
 
-		public void setValue(KeyBind kbCaptured) {
-			// TODO Auto-generated method stub
+		public void setKeyBind(KeyBind kbCaptured) {
 			
 		}
 
@@ -124,12 +125,25 @@ public class KeyBindCommandManagerI {
 			return null;
 		}
 		
+		public void setCommand(CallableX cx){
+			this.cxCommand = cx;
+		}
 	}
 	
 //	public ConfigureKeyBindManagerI() {
 //		DelegateManagerI.i().addManager(this,KeyBoundVarField.class);
 //	}
 //	public void configure(){}
+	
+	public void configure(){
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				update(getTPF());
+				return true;
+			}
+		}.enableLoopMode());
+	}
 	
 	public String getMappingFrom(BindCommand bind){
 		String strMapping=null;
@@ -250,7 +264,7 @@ public class KeyBindCommandManagerI {
 					captureKeyStep(ECaptureUserDecision.HasConflict);
 					return true;
 				}else{
-					bindCaptureToTarget.setValue(kbCaptured);
+					bindCaptureToTarget.setKeyBind(kbCaptured);
 					
 					MessagesI.i().output(false, System.out, "Info", this, 
 						"captured key bind "+kbCaptured.getBindCfg()

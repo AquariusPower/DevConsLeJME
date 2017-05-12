@@ -44,7 +44,7 @@ public class PkgCfgI {
 		FileI.i().configure(flAppBaseUserDataFolder, clAppMainClass);
 		
   	KeyCodeManagerI.i().configure();
-//		KeyBindCommandManagerI.i().configure(keycap);
+		KeyBindCommandManagerI.i().configure();
 		
 		bConfigured=true;
 	}

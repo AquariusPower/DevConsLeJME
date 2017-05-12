@@ -876,7 +876,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		if( JavaLangI.i().isBeanGetter(mGetter) && etypeGetterRet!=null ) {
 			String strButtonHintHelp=null;
 			try {
-				Method mSetter = JavaLangI.i().getBeanSetterFor(mGetter);//mh.getConcreteObjectInstance(), m.getName());
+				Method mSetter = JavaLangI.i().getBeanSetterFor(mGetter,true);//mh.getConcreteObjectInstance(), m.getName());
 				
 				od.setHasBean(); //first thing, so if it fails below the problem will be clearly visible
 				

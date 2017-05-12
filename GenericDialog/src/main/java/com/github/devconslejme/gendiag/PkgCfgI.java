@@ -41,13 +41,14 @@ public class PkgCfgI {
 	
 	private boolean	bConfigured;
 	
-	public void configure(Application app, Node nodeParent){
+	public void configure(Application app, Node nodeGui, Node nodeVirtualWorld){
 		DetailedException.assertIsFalse("configured", bConfigured, this);
-		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(app, nodeParent);
+		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(app, nodeGui, nodeVirtualWorld);
 		
-		DialogHierarchyStateI.i().configure(nodeParent,0f);
+		DialogHierarchyStateI.i().configure(nodeGui,0f);
 		ContextMenuI.i().configure();
-		MinimizedDialogsPanelI.i().configure(nodeParent);
+		MinimizedDialogsPanelI.i().configure(nodeGui);
+		KeyBindManagerDialogI.i().configure();
 		
 		bConfigured=true;
 	}

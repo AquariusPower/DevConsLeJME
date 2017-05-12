@@ -44,7 +44,7 @@ public class PkgCfgI {
 	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
 	private boolean	bConfigured;
-	public void configure(Application app,Node nodeParent){
+	public void configure(Application app,Node nodeGui, Node nodeVirtualWorld){
 		DetailedException.assertIsFalse("configured", bConfigured, this);
 		com.github.devconslejme.misc.PkgCfgI.i().configure(
 				JmeSystem.getStorageFolder(StorageFolderType.Internal), app.getClass());
@@ -56,14 +56,14 @@ public class PkgCfgI {
 		
 		// after first
 		DebugVisualsI.i().configure();
-		MiscJmeI.i().configure();
+		MiscJmeI.i().configure(nodeVirtualWorld);
 		new KeyCodeConfigureForJme().configure();
 		EffectManagerStateI.i().configure();
 		SimulationTimeStateI.i().configure();
 		QueueStateI.i().configure();
-		OrthogonalCursorStateI.i().configure(nodeParent);
+		OrthogonalCursorStateI.i().configure(nodeGui);
 		AssertionsI.i().configure();
-		IndicatorI.i().configure(nodeParent);
+		IndicatorI.i().configure(nodeGui);
 		EnvironmentI.i().configure();
 		
 		bConfigured=true;

@@ -53,7 +53,7 @@ public class TestResizablePanel extends SimpleApplication {
 //		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
 //		
 //		ConfigureTestsI.i().configure(this, getGuiNode());
-		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(this, getGuiNode());
+		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(this, getGuiNode(), getRootNode());
 		
 		initTest();
 	}

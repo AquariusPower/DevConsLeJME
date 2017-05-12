@@ -70,17 +70,18 @@ public class Key{
 		this(strId);
 		assert(AssertionsI.i().restrictedCaller(KeyCodeManagerI.class, 1));
 		
-		DetailedException.assertNotNull(akeyToMonitor, "keys to monitor", this);
-		DetailedException.assertIsTrue("keys to monitor list has items", akeyToMonitor.length>0, this);
-		
-		addKeysToMonitor(akeyToMonitor);
+		if(akeyToMonitor.length>0)addKeysToMonitor(akeyToMonitor);
+//		DetailedException.assertNotNull(akeyToMonitor, "keys to monitor", this);
+//		DetailedException.assertIsTrue("currkeys to monitor already has items", this.akeyMonitoredList.length>0, this);
+//		addKeysToMonitor(akeyToMonitor);
 	}
 	
 	private Key(String strId){
 		DetailedException.assertNotEmpty("id", strId, this);
 		
 		this.strFullId=strId;
-		prepareSimpleId();
+		this.strSimpleId=this.strFullId;
+//		prepareSimpleId(null);
 		
 		//will now be uniquely prefixed
 //			this.strFullId=GlobalOSAppI.i().getCmdConsLibFullId()+"_"+ManageKeyCode.class.getSimpleName()+"_"+this.strFullId;
@@ -88,20 +89,23 @@ public class Key{
 	}
 	
 	public ArrayList<Key> getKeysToMonitorCopy(){
+		assert(iKeyCode==null);
 		return new ArrayList<Key>(akeyMonitoredList);
 	}
 	
-	public boolean isModeKeyGroupMonitor(){
+	public boolean isKeyGroupMonitor(){
 		return akeyMonitoredList!=null;
 	}
-	public boolean isModeKeyWithCode(){
+	public boolean isKeyWithCode(){
 		return iKeyCode!=null;
 	}
 	
 	public boolean addKeysToMonitor(Key... akeyToMonitor){
+		assert(iKeyCode==null);
 		return workKeysMonitor(true,akeyToMonitor);
 	}
 	public boolean removeKeysFromMonitor(Key... akeyToMonitor){
+		assert(iKeyCode==null);
 		return workKeysMonitor(false,akeyToMonitor);
 	}
 	private boolean workKeysMonitor(boolean bAdd, Key... akeyToMonitor){
@@ -133,6 +137,7 @@ public class Key{
 	}
 	
 	public Integer getKeyCode() {
+		assert(akeyMonitoredList==null);
 		return iKeyCode;
 	}
 
@@ -159,16 +164,29 @@ public class Key{
 		this.bPressed = bPressed;
 	}
 	
-	private void prepareSimpleId(){
-		this.strSimpleId = strFullId;
+	/**
+	 * 
+	 * @param strPrefix can be null
+	 * @return simpleid differs from fullid
+	 */
+	public boolean prepareSimpleId(String strPrefix){
+		assert(this.strSimpleId==this.strFullId);
+//		assert(this.strSimpleId==null);
 		
-		String strPrefix=KeyCodeManagerI.i().getKeyIdPrefixFilter();
+//		String strPrefix=KeyCodeManagerI.i().getKeyIdPrefixFilter();
 		if(strPrefix!=null){
-			if(strSimpleId.startsWith(strPrefix)){
-				strSimpleId=strSimpleId.substring(strPrefix.length());
+			if(strFullId.startsWith(strPrefix)){
+				strSimpleId=strFullId.substring(strPrefix.length());
+				return true;
 			}
 		}
+		
+		return false;
 	}
+	
+//	public boolean isHasSimpleId(){
+//		return strSimpleId!=null;
+//	}
 	
 	public String getSimpleId(){
 		return strSimpleId;
@@ -196,17 +214,34 @@ public class Key{
 		return lLastPressedNano;
 	}
 
-//	public void setLastPressedNano(long lLastPressedNano) {
-//		this.lLastPressedNano = lLastPressedNano;
-//		return this;
-//	}
-
 	public long getLastReleasedNano() {
 		return lLastReleasedNano;
 	}
+	
+	public String getAsInfo(){
+		return getSimpleId()+(akeyMonitoredList!=null?":"+akeyMonitoredList.toString():"");
+	}
 
-//	public void setLastReleasedNano(long lLastReleasedNano) {
-//		this.lLastReleasedNano = lLastReleasedNano;
-//		return this;
-//	}
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Key [strFullId=");
+		builder.append(strFullId);
+		builder.append(", strSimpleId=");
+		builder.append(strSimpleId);
+		builder.append(", iKeyCode=");
+		builder.append(iKeyCode);
+		builder.append(", bPressed=");
+		builder.append(bPressed);
+		builder.append(", lLastPressedNano=");
+		builder.append(lLastPressedNano);
+		builder.append(", lLastReleasedNano=");
+		builder.append(lLastReleasedNano);
+		builder.append(", akeyMonitoredList=");
+		builder.append(akeyMonitoredList);
+		builder.append("]");
+		return builder.toString();
+	}
+	
+	
 }

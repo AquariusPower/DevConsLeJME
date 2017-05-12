@@ -34,6 +34,7 @@ import org.lwjgl.opengl.Display;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 
 /**
@@ -106,7 +107,7 @@ public class EnvironmentI extends AbstractAppState{
 		 * z is above everything else
 		 * @return
 		 */
-		public Vector3f get3DPos() {
+		public Vector3f getPos3D() {
 //			return MiscJmeI.i().toV3f(app.getInputManager().getCursorPosition(), MiscJmeI.i().getZAboveAllAtGuiNode());
 			return new Vector3f(Mouse.getX(), Mouse.getY(), MiscJmeI.i().getZAboveAllAtGuiNode());
 		}
@@ -120,10 +121,14 @@ public class EnvironmentI extends AbstractAppState{
 		}
 
 		public Vector3f getPosWithMouseOnCenter(Vector3f v3fSize) {
-			Vector3f v3fPos = get3DPos();
+			Vector3f v3fPos = getPos3D();
 			v3fPos.x -= v3fSize.x/2f;
 			v3fPos.y += v3fSize.y/2f;
 			return v3fPos;
+		}
+
+		public Vector2f getPos2D() {
+			return new Vector2f(Mouse.getX(), Mouse.getY());
 		}
 	}
 	private MouseI mouse = new MouseI();

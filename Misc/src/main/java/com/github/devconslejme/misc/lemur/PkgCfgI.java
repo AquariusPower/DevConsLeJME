@@ -47,10 +47,10 @@ public class PkgCfgI {
 	
 	private boolean	bConfigured;
 	
-	public void configure(Application app, Node nodeParent){
+	public void configure(Application app, Node nodeGui, Node nodeVirtualWorld){
 		DetailedException.assertIsFalse("configured", bConfigured, this);
 		SystemAlertLemurI.i().configure(); //this is a global overrider
-		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app,nodeParent);
+		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app,nodeGui, nodeVirtualWorld);
 		
 		// lermur inits
 		if(GuiGlobals.getInstance()==null)GuiGlobals.initialize(app); //GuiGlobals.initialize(app);
@@ -58,8 +58,9 @@ public class PkgCfgI {
 		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS); //this can be set again later
 		
 		// after lemur inits
-		PopupHintHelpListenerI.i().configure(nodeParent);
-		DragParentestPanelListenerI.i().configure(nodeParent);
+		PopupHintHelpListenerI.i().configure(nodeGui);
+		DragParentestPanelListenerI.i().configure(nodeGui);
+		MiscLemurI.i().configure(nodeGui);
 		
 		initNonStandard();
 		

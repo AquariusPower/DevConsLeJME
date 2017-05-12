@@ -43,12 +43,12 @@ public class PkgCfgI {
 
 	private boolean	bConfigured;
 	
-	public void configure(Application app, Node nodeParent){
+	public void configure(Application app, Node nodeGui, Node nodeVirtualWorld){
 		DetailedException.assertIsFalse("configured", bConfigured, this);
-		com.github.devconslejme.gendiag.PkgCfgI.i().configure(app,nodeParent);
+		com.github.devconslejme.gendiag.PkgCfgI.i().configure(app,nodeGui,nodeVirtualWorld);
 		
 //		FileI.i().configure(JmeSystem.getStorageFolder(StorageFolderType.Internal), app.getClass());
-		DevConsPluginStateI.i().configure(nodeParent);
+		DevConsPluginStateI.i().configure(nodeGui);
 //		FileI.i().configure(DevConsPluginStateI.i().getStorageFolder());
 		
 		initNonStandard();

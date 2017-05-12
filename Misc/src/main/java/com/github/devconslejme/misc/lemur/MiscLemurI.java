@@ -80,6 +80,11 @@ public class MiscLemurI {
 	/** theoretically, if such offset is ever updated, everywhere on lemur will also be */
 	@Workaround
 	private float	fMinSizeZ = new QuadBackgroundComponent().getZOffset();
+	private Node	nodeGui;
+	
+	public void configure(Node nodeGui){
+		this.nodeGui=nodeGui;
+	}
 	
 	public Integer getEntryHeightPixels(ListBox lstbx){
 		GridModel<Panel> gm = lstbx.getGridPanel().getModel();

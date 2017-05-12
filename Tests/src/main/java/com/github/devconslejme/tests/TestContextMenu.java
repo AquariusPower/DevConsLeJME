@@ -52,12 +52,11 @@ public class TestContextMenu extends SimpleApplication{
 		GuiGlobals.initialize(this);
 		BaseStyles.loadGlassStyle();
 		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
-		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode());
+		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode(), getRootNode());
 		
 		initTest();
 	}
 
-	@SuppressWarnings("unchecked")
 	public void initTest() {
 		ResizablePanel rzp = DialogHierarchyStateI.i().createDialog(TestContextMenu.class.getSimpleName(), null);
 		rzp.setContents(new Button("context click me"));

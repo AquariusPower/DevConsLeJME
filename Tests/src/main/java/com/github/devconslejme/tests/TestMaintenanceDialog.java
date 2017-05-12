@@ -54,7 +54,7 @@ public class TestMaintenanceDialog extends SimpleApplication{
 		GuiGlobals.initialize(this);
 		BaseStyles.loadGlassStyle();
 		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
-		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this,getGuiNode());
+		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this,getGuiNode(), getRootNode());
 		
 		initTest();
 	}

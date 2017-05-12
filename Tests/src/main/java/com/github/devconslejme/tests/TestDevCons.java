@@ -37,16 +37,21 @@ import com.github.devconslejme.extras.OSCmd;
 import com.github.devconslejme.extras.SingleAppInstance;
 import com.github.devconslejme.extras.SingleAppInstance.CallChkProblemsAbs;
 import com.github.devconslejme.gendiag.GlobalsManagerDialogI;
+import com.github.devconslejme.gendiag.KeyBindManagerDialogI;
 import com.github.devconslejme.gendiag.QueueManagerDialogI;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.CheckProblemsI;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.EnvironmentI;
 import com.github.devconslejme.misc.jme.EnvironmentI.IEnvironmentListener;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
 import com.jme3.app.state.AbstractAppState;
+import com.jme3.math.ColorRGBA;
+import com.jme3.scene.Geometry;
+import com.jme3.scene.shape.Box;
 import com.jme3.system.AppSettings;
 import com.jme3.system.JmeSystem;
 import com.jme3.system.JmeSystem.StorageFolderType;
@@ -71,7 +76,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	
 	@Override
 	public void simpleInitApp() {
-		com.github.devconslejme.devcons.PkgCfgI.i().configure(this,getGuiNode());
+		com.github.devconslejme.devcons.PkgCfgI.i().configure(this,getGuiNode(), getRootNode());
 		
 		/**
 		 * to remove {@link JavaScriptI} auto global access to some class/object, ex.: 
@@ -83,6 +88,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 			opt_initOptionalExtras();
 			opt_initOptionalOtherStuff();
 			opt_initOptionalIntegrateAllOtherTests();
+			opt_initSomeWorldObjects();
 		}
 	}
 	
@@ -100,6 +106,13 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	/** */
 	ArrayList<SimpleApplication> aoUpdOpts = new ArrayList<SimpleApplication>();
 	private static boolean	bEnableOpt = true;
+	
+	private void opt_initSomeWorldObjects() {
+		Box box = new Box(0.5f,0.5f,0.5f);
+		Geometry geom = new Geometry("test box",box);
+		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(ColorRGBA.Blue));
+		getRootNode().attachChild(geom);
+	}
 	
 	private void opt_disableSomeSimpleAppThings() {
 		// disable some mappings to let the console manage it too.
@@ -166,6 +179,14 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 				GlobalsManagerDialogI.i().show();
 			}}, null
 		);
+		
+		//// KeyBinding manager dialog
+		GlobalsManagerDialogI.i().configure();
+		DevConsPluginStateI.i().putButtonLater("KeyBindingManager", "open key bindings manager", 
+				new Command<Button>() {@Override public void execute(Button source) {
+					KeyBindManagerDialogI.i().show();
+				}}, null
+				);
 	}
 
 	private void opt_initOptionalOtherStuff() {

@@ -35,6 +35,8 @@ import java.util.HashMap;
  * - override a global instance.
  * - list all globals (to use on javascript for ex.)
  * 
+ * Obs.: The classes tha have globals may also have alternative instances for specific usages.
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class GlobalManagerI {
