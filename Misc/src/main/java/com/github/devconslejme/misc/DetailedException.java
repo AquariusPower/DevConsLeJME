@@ -36,6 +36,7 @@ import java.util.Arrays;
 
 /**
  * This will provide more and better readable information about exceptions.
+ * The "assertions" methods here are permanent, independent of -ea JVM parm
  * 
  * TODO substitute all NullPointerException by this one.
  * 
@@ -185,7 +186,7 @@ public class DetailedException extends NullPointerException{
 	
 	public static void assertIsTrue(String strDescWhat, boolean b, Object... aobjMoreObjectsForDebugInfo){
 		if(!b){
-			throw new DetailedException("NOT (or DON'T) "+strDescWhat+"!", aobjMoreObjectsForDebugInfo);
+			throw new DetailedException("NOT/DON'T/ISN'T: "+strDescWhat+"!", aobjMoreObjectsForDebugInfo);
 		}
 	}
 

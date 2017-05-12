@@ -113,7 +113,7 @@ public class MethodX{
 		
 		switch(e){
 			case Both:
-				return strClass+"/"+strAnon;
+				return strClass+(strAnon.isEmpty()?"":"/"+strAnon);
 			case OnlyAnon:
 				return strAnon;
 			case OnlyClass:
@@ -127,40 +127,7 @@ public class MethodX{
 		String strFull="";
 		
 		Class cl = bOverrideWithConcrete ? getConcrete() : getDeclaring();
-//		String strAnon="";
-//		if(cl.isAnonymousClass()){
-//			String[] astr = cl.getName().split("[.]");
-//			strAnon="<"+astr[astr.length-1]+">";
-//			cl = cl.getSuperclass();
-//		}
-//		String strClassName=(bUseSimpleNames ? cl.getSimpleName() : cl.getName());;
-//		strClassName+=strAnon;
-//		strFull+=strClassName+strAnon+".";
 		strFull+=classToStr(cl,bUseSimpleNames,EClassToStrMode.OnlyClass)+"."+getMethodHelp(bUseSimpleNames);
-		
-//		String strDecl = (bUseSimpleNames ? getDeclaring().getSimpleName() : getDeclaring().getName());
-		
-//		if(bOverrideWithConcrete){
-//			String strConcrete = "";
-//			if(getConcrete().isAnonymousClass()){
-//				if(bUseSimpleNames){
-//					String[] astr = getConcrete().getName().split("[.]");
-//					strConcrete = "(anonymous)"+astr[astr.length-1];
-//				}else{
-//					String[] astr = getConcrete().getName().split("[.]");
-//					strConcrete = "(anonymous)"+astr[astr.length-1];
-//				}
-//			}else{
-//				strConcrete=(bUseSimpleNames ? getConcrete().getSimpleName() : getConcrete().getName());
-//			}
-//			
-//			strFull+=strConcrete;
-//		}else{
-//			strFull+=strDecl;
-//		}
-//		strFull+=".";
-		
-//		strFull+=getMethodHelp(bUseSimpleNames);
 		
 		/**
 		 * as a comment that is compatible with java scripting 

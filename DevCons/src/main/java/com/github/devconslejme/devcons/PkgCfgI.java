@@ -30,7 +30,9 @@ package com.github.devconslejme.devcons;
 import com.github.devconslejme.misc.Annotations.NonStandard;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.MessagesI;
+import com.google.common.base.Function;
 import com.jme3.app.Application;
 import com.jme3.scene.Node;
 
@@ -50,6 +52,15 @@ public class PkgCfgI {
 //		FileI.i().configure(JmeSystem.getStorageFolder(StorageFolderType.Internal), app.getClass());
 		DevConsPluginStateI.i().configure(nodeGui);
 //		FileI.i().configure(DevConsPluginStateI.i().getStorageFolder());
+		if(KeyBindCommandManagerI.i().getFuncRunUserCommand()==null){
+			KeyBindCommandManagerI.i().setFuncRunUserCommand(new Function<String, Boolean>() {
+				@Override
+				public Boolean apply(String strJS) {
+					JavaScriptI.i().execScript(strJS, false);
+					return true;
+				}
+			});
+		}
 		
 		initNonStandard();
 		

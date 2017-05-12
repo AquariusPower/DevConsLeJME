@@ -80,7 +80,7 @@ public class QueueI {
 		
 		private boolean	bPaused;
 		
-		private String	strName;
+		private String	strName="";
 		private float	fDelaySeconds=0f;
 		private boolean	bLoop=false;
 		
@@ -419,9 +419,9 @@ public class QueueI {
 //		}
 //	}
 
-	private void killOrPauseToggle(String strUId,boolean bKill) {
+	private void killOrPauseToggle(String strUIdOrJS,boolean bKill) {
 		for(CallableX cx:acxList){
-			if(strUId.equalsIgnoreCase( strUId.endsWith(".js") ? cx.getName() : cx.getUId() )){
+			if(strUIdOrJS.equalsIgnoreCase( strUIdOrJS.endsWith(".js") ? cx.getName() : cx.getUId() )){
 				if(bKill){
 					if(cx.isUserCanKill())cx.endLoopMode();
 				}else{

@@ -57,7 +57,7 @@ public class KeyBindManagerDialogI {
 				
 				OptionData odBindSection = diagBindMan.putSection(null, KeyBindCommandManagerI.class.getSimpleName());
 				for(BindCommand bind:KeyBindCommandManagerI.i().getKeyBindListCopy()){
-					diagBindMan.putOption(odBindSection, bind.getBindCfg(), bind);
+					diagBindMan.putOption(odBindSection, bind.getKeyBind().getBindCfg(), bind);
 				}
 			}
 		};
@@ -73,14 +73,14 @@ public class KeyBindManagerDialogI {
 		
 		BindCommand bc = new BindCommand();
 		bc.setKeyBind(kb);
-		bc.setCommand(new CallableXAnon(){
+		bc.setHardCommand(new CallableXAnon(){
 			@Override
 			public Boolean call() {
 				MessagesI.i().output(false,System.out,"Info:",this,KeyBindManagerDialogI.class.getSimpleName()+":test:"+TimeFormatI.i().getRealTimeFormatted());
 				return true;
 			}
-		});
+		}.setName("simple test log entry for bind cmd"));
 		
-		KeyBindCommandManagerI.i().addBindCommand(bc);
+		KeyBindCommandManagerI.i().putBindCommand(bc);
 	}
 }

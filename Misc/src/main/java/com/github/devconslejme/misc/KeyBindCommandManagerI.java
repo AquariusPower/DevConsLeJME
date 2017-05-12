@@ -33,6 +33,7 @@ import java.util.TreeMap;
 
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.google.common.base.Function;
 
 
 /**
@@ -46,94 +47,86 @@ public class KeyBindCommandManagerI {
 	private BindCommand	bindCaptureToTarget;
 	private KeyBind kbCaptured;
 	private KeyBind kbWaitBeReleased;
-//	private IRefresh	refreshOwnerAfterCapture;
 	private StackTraceElement[]	asteAlertFrom;
 	private BindCommand	bindConflict;
 	private String strRequestUserDecision="Press ESC to cancel or Enter to retry.\n";
 	private Object objLinkedGuiElement;
-	
-//	public static abstract class CaptureKeyBindAbs{
-//		public abstract void hideSystemAlert(StackTraceElement[] asteAlertFrom);
-//		public abstract StackTraceElement[] showSystemAlert(String strMsg,	Object objLinkedGuiElement);
-//		public abstract void hideSystemAlert(StackTraceElement[] asteAlertFrom, boolean b);
-//		public abstract boolean isShowingAlert(boolean b);
-//		public abstract void setDynamicInfo(String allPressedKeysSimpleReport);
-//		public abstract void setupRecreateFile();
-//	}
-//	private CaptureKeyBindAbs keycapturer;
-	
-//	public void configure(CaptureKeyBindAbs keycap){
-//		this.keycapturer=keycap;
-//	}
-//	
-//	public boolean isKeyCapturerSet(){
-//		return keycapturer!=null;
-//	}
+	private Function<String,Boolean> funcRunUserCommand;
 	
 	/**
 	 * TODO tmp placeholder dummy based on old KeyBoundVarField
 	 */
 	public static class BindCommand{
-		private CallableX	cxCommand;
+		private CallableX	cxHardCommand;
+		private KeyBind	kb;
+//		private boolean	bReadOnly;
+		private String	strUserCommand;
 
-		public boolean isField() {
-			// TODO Auto-generated method stub
-			return false;
-		}
-
-		public String getUniqueVarId(boolean b) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		public String getBindCfg() {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-//		public void addManager(ConfigureKeyBindManagerI keyBindManagerI) {
-//			// TODO Auto-generated method stub
-//			
+//		public boolean isReadOnly() {
+//			return bReadOnly;
+//		}
+//		
+//		/**
+//		 * locks the keybind preventing changing the bound keys and the command
+//		 * @return
+//		 */
+//		public BindCommand setReadOnly(){
+//			this.bReadOnly=true;
+//			return this;
 //		}
 
 		public KeyBind getKeyBind() {
-			// TODO Auto-generated method stub
-			return null;
+			return kb;
 		}
 
-		public void setKeyBind(KeyBind kbCaptured) {
-			
+		public BindCommand setKeyBind(KeyBind kb) {
+			this.kb=kb;
+			return this;
 		}
 
-		public String getKeyBindRunCommand() {
-			// TODO Auto-generated method stub
-			return null;
+		public boolean isCommandSet() {
+			return cxHardCommand!=null;
 		}
 
-		public boolean isValueNull() {
-			// TODO Auto-generated method stub
-			return false;
-		}
-
-		public void runIfActivatedOrResetIfDeactivating() {
-			// TODO Auto-generated method stub
-			
-		}
-
-		public String getUserCommand() {
-			// TODO Auto-generated method stub
-			return null;
+		public String getCommandsInfo(){
+			String str="";
+			if(strUserCommand!=null)str+=strUserCommand;
+			if(!str.isEmpty())str+=";";
+			if(cxHardCommand!=null)str+=cxHardCommand.getName();
+			return str;
 		}
 		
-		public void setCommand(CallableX cx){
-			this.cxCommand = cx;
+		public String getUserCommand() {
+			return strUserCommand;
 		}
+		public CallableX getHardCommand(){
+			return cxHardCommand;
+		}
+		
+		/**
+		 * TODO syntax for executing on-press, on-release, b4 hard-command, after hard-command.
+		 * @param strUserCommand
+		 */
+		public void setUserCommand(String strUserCommand){
+			this.strUserCommand=strUserCommand;
+		}
+		public void setHardCommand(CallableX cx){
+//			if(this.cxCommand!=null && isReadOnly())throw new DetailedException("readonly",this);
+//			if(isReadOnly())throw new DetailedException("readonly",this);
+			assertHardCommandNotSet(cx); //DetailedException.assertNotAlreadySet(this.cxHardCommand, cx, this);
+			DetailedException.assertIsTrue("name set", !cx.getName().isEmpty(), cx, this);
+			this.cxHardCommand = cx;
+		}
+		
+		public void assertHardCommandNotSet(Object... aobjDbg){
+			if(this.cxHardCommand!=null)throw new DetailedException("already set",this,aobjDbg);
+		}
+		
+//		private boolean isReadOnly() {
+//			return cxCommand!=null;
+//		}
+
 	}
-	
-//	public ConfigureKeyBindManagerI() {
-//		DelegateManagerI.i().addManager(this,KeyBoundVarField.class);
-//	}
-//	public void configure(){}
 	
 	public void configure(){
 		QueueI.i().enqueue(new CallableXAnon() {
@@ -145,45 +138,54 @@ public class KeyBindCommandManagerI {
 		}.enableLoopMode());
 	}
 	
-	public String getMappingFrom(BindCommand bind){
-		String strMapping=null;
-		
-		if(bind.isField()){
-			strMapping=bind.getUniqueVarId(true);
-			if(tmbindList.containsKey(strMapping)){
-				BindCommand bindExisting = tmbindList.get(strMapping);
-				if(bindExisting!=bind){
-					throw new DetailedException("conflicting key mapping ids", bindExisting, bind);
-				}
-			}
-		}else{
-			strMapping = bind.getBindCfg();
-		}
-		
-		return strMapping;
-	}
+//	public String getMappingFrom(BindCommand bind){
+//		String strMapping=bind.getKeyBind().getBindCfg();
+//		
+//		BindCommand bindExisting = tmbindList.get(strMapping);
+//		if(bindExisting!=bind){ //TODO this should happen when the bind is added...
+//			throw new DetailedException("conflicting key mapping ids", bindExisting, bind);
+//		}
+//		
+////		if(bind.isField()){
+////			strMapping=bind.getUniqueVarId(true);
+////			if(tmbindList.containsKey(strMapping)){
+////				BindCommand bindExisting = tmbindList.get(strMapping);
+////				if(bindExisting!=bind){
+////					throw new DetailedException("conflicting key mapping ids", bindExisting, bind);
+////				}
+////			}
+////		}else{
+////			strMapping = bind.getKeyBind().getBindCfg();
+////		}
+//		
+//		return strMapping;
+//	}
 	
-	public void removeKeyBind(BindCommand bind){
-		String strMapping=getMappingFrom(bind);
-		removeKeyBind(strMapping);
+	public void removeKeyBind(BindCommand bc){
+		removeKeyBind(bc.getKeyBind().getBindCfg());
 	}
 	public void removeKeyBind(String strBindCfg){
-		tmbindList.remove(new KeyBind().setFromKeyCfg(strBindCfg).getBindCfg());
+		strBindCfg=new KeyBind().setFromKeyCfg(strBindCfg).getBindCfg(); //fixed/corrected cfg
+		BindCommand bc = tmbindList.get(strBindCfg);
+		bc.assertHardCommandNotSet(strBindCfg);
+//		if(bc.isReadOnly())throw new DetailedException("readonly",bc);
+		tmbindList.remove(strBindCfg);
 	}
 	
-	public boolean addBindCommand(BindCommand bind){
-		String strMapping=getMappingFrom(bind);
+	/**
+	 * 
+	 * @param bc
+	 * @return previously set one if any
+	 */
+	public BindCommand putBindCommand(BindCommand bc){
+		String str=bc.getKeyBind().getBindCfg();
 		
-		BindCommand kbExisting = tmbindList.get(strMapping);
+		BindCommand bcExisting = tmbindList.get(str);
+//		if(bcExisting.isReadOnly())throw new DetailedException("readonly",bcExisting,bc);
+		if(bcExisting!=null)bcExisting.assertHardCommandNotSet(bc);
 		
-		tmbindList.put(strMapping,bind);
-		
-//		DetailedException.assertIsTrue("manager not set", !bind.isHasManagers(), bind, this);
-//		bind.addManager(this);
-		
-		return kbExisting!=bind;
+		return tmbindList.put(str,bc);
 	}
-	
 	
 	private boolean isWaitKeyRelease(){
 		/**
@@ -268,7 +270,7 @@ public class KeyBindCommandManagerI {
 					
 					MessagesI.i().output(false, System.out, "Info", this, 
 						"captured key bind "+kbCaptured.getBindCfg()
-						+" for "+bindCaptureToTarget.getKeyBindRunCommand(),
+						+" for "+bindCaptureToTarget.getUserCommand(),
 						bindCaptureToTarget,kbCaptured,this);
 				}
 				
@@ -292,11 +294,11 @@ public class KeyBindCommandManagerI {
 		 * fill all binds for each action keycode to check which will win.
 		 */
 		hmKeyCodeVsActivatedBind.clear();
-		for(BindCommand bind:tmbindList.values()){
-			if(bind.isValueNull())continue; //not set yet
+		for(BindCommand bc:tmbindList.values()){
+			if(bc.isCommandSet())continue; //not set yet
 			
-			if(bind.getKeyBind().isActivated()){ //pressed
-				Integer iKeyCode = bind.getKeyBind().getActionKey().getKeyCode();
+			if(bc.getKeyBind().isActivated()){ //pressed
+				Integer iKeyCode = bc.getKeyBind().getActionKey().getKeyCode();
 				
 				ArrayList<BindCommand> abindForActKeyCode = hmKeyCodeVsActivatedBind.get(iKeyCode);
 				if(abindForActKeyCode==null){
@@ -304,10 +306,10 @@ public class KeyBindCommandManagerI {
 					hmKeyCodeVsActivatedBind.put(iKeyCode, abindForActKeyCode);
 				}
 				
-				abindForActKeyCode.add(bind);
+				abindForActKeyCode.add(bc);
 			}else{ //released
-				if(bind.getKeyBind().isWasAlreadyActivatedAtLeastOnce()){
-					bind.runIfActivatedOrResetIfDeactivating();
+				if(bc.getKeyBind().isWasAlreadyActivatedAtLeastOnce()){
+					runUserCommand(bc);
 				}
 			}
 		}
@@ -316,18 +318,29 @@ public class KeyBindCommandManagerI {
 		 * only the activated bind with most modifiers will be run! 
 		 */
 		for(ArrayList<BindCommand> abindForActKeyCode:hmKeyCodeVsActivatedBind.values()){
-			BindCommand bindWin=abindForActKeyCode.get(0);
+			BindCommand bcWin=abindForActKeyCode.get(0);
 			
 			for(BindCommand bind:abindForActKeyCode){
-				if(bindWin.getKeyBind().getKeyModListSize() < bind.getKeyBind().getKeyModListSize()){
-					bindWin=bind;
+				if(bcWin.getKeyBind().getKeyModListSize() < bind.getKeyBind().getKeyModListSize()){
+					bcWin=bind;
 				}
 			}
 			
-			bindWin.runIfActivatedOrResetIfDeactivating();
+			runUserCommand(bcWin);
 		}
 	}
-
+	
+	private void runUserCommand(BindCommand bc){
+		bc.getHardCommand().call(); //TODO put on the queue?
+		if(bc.getUserCommand()!=null){
+			if(getFuncRunUserCommand()==null){
+				MessagesI.i().warnMsg(this, "function to run user command is not set", this, bc);
+			}else{
+				getFuncRunUserCommand().apply(bc.getUserCommand());
+			}
+		}
+	}
+	
 	private boolean isCapturedThisKeyCodeWithoutMods(int iKeyCode) {
 		if(
 				kbCaptured!=null &&
@@ -364,8 +377,8 @@ public class KeyBindCommandManagerI {
 							+" Press ESC to cancel.\n"
 							+"\n"
 							+" Re-binding keys for command:\n"
-							+"  "+bindCaptureToTarget.getKeyBindRunCommand()+"\n"
-							+" Current key bind: "+bindCaptureToTarget.getBindCfg()+"\n",
+							+"  "+bindCaptureToTarget.getCommandsInfo()+"\n"
+							+" Current key bind: "+bindCaptureToTarget.getKeyBind().getBindCfg()+"\n",
 							objLinkedGuiElement
 						);
 				}
@@ -383,7 +396,7 @@ public class KeyBindCommandManagerI {
 				SystemAlertI.i().hideSystemAlert(asteAlertFrom);
 				
 				String strMsg = "captured key bind "+kbCaptured.getBindCfg()
-					+" is already being used by "+bindConflict.getKeyBindRunCommand()+"\n"
+					+" is already being used by "+bindConflict.getCommandsInfo()+"\n"
 					+strRequestUserDecision;
 				MessagesI.i().warnMsg(this,strMsg,	bindConflict,bindCaptureToTarget,kbCaptured,this);
 				
@@ -418,29 +431,22 @@ public class KeyBindCommandManagerI {
 	}
 
 //	public ArrayList<String> getReportAsCommands(StringCmdField scfBindKey, boolean bOnlyUserCustomOnes) {
-	public ArrayList<String> getReportAsCommands(boolean bOnlyUserCustomOnes) {
+	public ArrayList<String> getUserCommands() {
 		ArrayList<String> astr = new ArrayList<String>();
-		for(BindCommand bind:getKeyBindListCopy()){
-			if(bOnlyUserCustomOnes && bind.isField())continue;
-			
-			String strMapping = getMappingFrom(bind);
-			if(strMapping.equals(bind.getBindCfg())){
+		for(BindCommand bc:getKeyBindListCopy()){
+			String strMapping = bc.getKeyBind().getBindCfg();
+			if(strMapping.equals(bc.getKeyBind().getBindCfg())){
 				strMapping="";
 			}else{
 				strMapping="#ActionMappingId("+strMapping+")";
 			}
 			
-			String strUserCmd = bind.getUserCommand();
-			if(strUserCmd==null){
-				strUserCmd="";
-			}else{
-				strUserCmd+=" ";
-			}
+			String strUserCmd = bc.getUserCommand();
 			
-//			astr.add(GlobalCommandsDelegatorI.i().getCommandPrefixStr()+scfBindKey.getSimpleId()+" "
 			astr.add(""
-				+bind.getBindCfg()+" "
-				+strUserCmd
+				+bc.getKeyBind().getBindCfg()+" "
+				+(strUserCmd==null?"":strUserCmd+" ")
+				+(bc.getHardCommand()==null?"":bc.getHardCommand().getName()+" ")
 				+strMapping);
 		}
 		return astr;
@@ -459,6 +465,16 @@ public class KeyBindCommandManagerI {
 		this.objLinkedGuiElement=objLinkedGuiElement;
 //		MessagesI.i().info("For unconventional (more complex) key bindings, use the console command.", bindTarget); 
 //		bindTarget.setValue(captureKeyBind(bindTarget));
+	}
+
+	public Function<String,Boolean> getFuncRunUserCommand() {
+		return funcRunUserCommand;
+	}
+
+	public KeyBindCommandManagerI setFuncRunUserCommand(Function<String,Boolean> funcRunUserCommand) {
+		assert(this.funcRunUserCommand==null);
+		this.funcRunUserCommand = funcRunUserCommand;
+		return this;
 	}
 
 }
