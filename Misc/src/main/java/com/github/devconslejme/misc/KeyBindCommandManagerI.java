@@ -308,7 +308,8 @@ public class KeyBindCommandManagerI {
 				
 				abindForActKeyCode.add(bc);
 			}else{ //released
-				runCommandOnKeyRelease(bc);
+				bc.getKeyBind().reset(); //np if keep reseting, it should/is fast
+//				runCommandOnKeyRelease(bc);
 			}
 		}
 		
@@ -329,13 +330,13 @@ public class KeyBindCommandManagerI {
 		}
 	}
 	
-	private void runCommandOnKeyRelease(BindCommand bc){
-		bc.getKeyBind().isCanBeRunNowOrReset();
-		if(true)return; //TODO enable on key release?
-		if(bc.getKeyBind().isWasAlreadyActivatedAtLeastOnce()){
-			runCommands(bc);
-		}
-	}
+//	private void runCommandOnKeyRelease(BindCommand bc){
+//		bc.getKeyBind().isCanBeRunNowOrReset();
+//		if(true)return; //TODO enable on key release?
+//		if(bc.getKeyBind().isWasAlreadyActivatedAtLeastOnce()){
+//			runCommands(bc);
+//		}
+//	}
 	
 	private void runCommands(BindCommand bc){
 		if(!bc.getKeyBind().isCanBeRunNowOrReset())return;
