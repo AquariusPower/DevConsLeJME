@@ -41,11 +41,6 @@ public class KeyBind {
 	private Key keyAction = null;
 	private ArrayList<Key> akeyModifierList;// = new ArrayList<Key>();
 	private long lLastActivationMilis=-1;
-//	/** consecutive activation limit*/
-//	private long lActLim = 1; //run once TODO the activation count should be controlled by the command being called, not by the key itself... 
-//	private long lConsecutiveActivationCount = 0;
-//	/** Consecutive Activation Interval Milis */
-//	private long lActDelayMilis = 0; //every frame TODO delay should be like a global repeat ratio, not per key?
 	
 	/**
 	 * TODO see {@link KeyBindCommandManagerI#runCommandOnKeyRelease(BindCommand)}, the 'on pressed' can already be limited to a single activation, what would have the same meaning/usage. would it still be interesging to allow 'on released' activation mode anyway or is just pointletss and could still complexify/break something?
@@ -189,59 +184,18 @@ public class KeyBind {
 		return setFromKeyIds(strCfg.split("[+]"));
 	}
 
-//	public void setRepeatedActivation(){
-//		this.lActLim=0; //no limit
-//		this.lActDelayMilis=0; //every frame
-//	}
-//	public void setRepeatedActivation(long lDelayMilis){
-//		this.lActLim=0; //no limit
-//		this.lActDelayMilis=lDelayMilis;
-//	}
-//	public void setRepeatedActivation(long lLimit, long lDelayMilis){
-//		this.lActLim=lLimit;
-//		this.lActDelayMilis=lDelayMilis;
-//	}
-	
-	public boolean isCanBeRunNowOrReset() {
+	public boolean isCanBeRunNow() {
 		if(isActivated()){
-//			boolean bRun=false;
-//			
-//			if(lActLim>0){
-//				if(lConsecutiveActivationCount<lActLim){
-//					if(lConsecutiveActivationCount==0){ //no delay for 1st time
-//						bRun=true;
-//					}else{
-//						if(lActDelayMilis==0){ //every frame
-//							bRun=true;
-//						}else{
-//							if(SimulationTimeI.i().getMillis() > (lLastActivationMilis+lActDelayMilis)){
-//								bRun=true;
-//							}
-//						}
-//					}
-//				}
-//			}
-			
 			lLastActivationMilis = SimulationTimeI.i().getMillis();
-//			lConsecutiveActivationCount++;
-			
-//			return bRun;
 			return true;
 		}
-		else{
-			reset();
-			return false;
-		}
+		
+		return false;
 	}
 	
 	public void reset(){
-//		lConsecutiveActivationCount=0;
 		lLastActivationMilis=-1;
 	}
-	
-//	public boolean isActivated(){
-//		return getValue().isActivated();
-//	}
 	
 	/**
 	 * was already activated at least once

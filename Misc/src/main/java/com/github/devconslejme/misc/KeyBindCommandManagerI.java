@@ -339,8 +339,9 @@ public class KeyBindCommandManagerI {
 //	}
 	
 	private void runCommands(BindCommand bc){
-		if(!bc.getKeyBind().isCanBeRunNowOrReset())return;
+		if(!bc.getKeyBind().isCanBeRunNow())return;
 		
+//		bc.getKeyBind().isActivated()
 		bc.getHardCommand().call(); //TODO put on the queue?
 		
 		if(bc.getUserCommand()!=null){
