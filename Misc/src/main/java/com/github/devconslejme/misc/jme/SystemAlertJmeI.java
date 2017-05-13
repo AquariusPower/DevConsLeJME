@@ -27,6 +27,9 @@
 package com.github.devconslejme.misc.jme;
 
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableX;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.SystemAlertI;
 import com.jme3.scene.Spatial;
 
@@ -63,4 +66,26 @@ public class SystemAlertJmeI extends SystemAlertI {
 		assert(Spatial.class.isInstance(objActionSourceElement));
 		return super.showSystemAlert(strMsg, objActionSourceElement);
 	}
+	
+//	@Override
+//	protected void captureUserInput() {
+//		QueueI.i().enqueue(new CallableXAnon() {
+//			@Override
+//			public Boolean call() {
+//				update(getTPF());
+//				return true;
+//			}
+//		});
+//	}
+	
+//	@Override
+//	protected boolean updateCapture(float fTPF, CallableX cx) {
+//		// TODO Auto-generated method stub
+//		throw new UnsupportedOperationException("method not implemented");
+//		return super.updateCapture(fTPF, cx);
+//	}
+	
+//	private void update(float tpf) {
+//		//TODO do something here
+//	}
 }

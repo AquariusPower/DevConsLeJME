@@ -29,11 +29,13 @@ package com.github.devconslejme.misc.lemur;
 
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.app.Application;
 import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
 import com.simsilica.lemur.GuiGlobals;
+import com.simsilica.lemur.component.QuadBackgroundComponent;
 import com.simsilica.lemur.event.PickEventSession;
 import com.simsilica.lemur.event.PickEventSession.RootEntry;
 import com.simsilica.lemur.style.BaseStyles;
@@ -58,20 +60,33 @@ public class PkgCfgI {
 		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS); //this can be set again later
 		
 		// after lemur inits
+		initNonStandardLemurPickingRayCastFrom(); //first!
 		PopupHintHelpListenerI.i().configure(nodeGui);
 		DragParentestPanelListenerI.i().configure(nodeGui);
 		MiscLemurI.i().configure(nodeGui);
-		
-		initNonStandard();
+		SystemAlertLemurI.i().configure(nodeGui);
+		EffectsLemurI.i().configure();
 		
 		bConfigured=true;
 	}
 
 	/**
-	 * above all at gui node is hardcoded at {@link PickEventSession#getPickRay(RootEntry,Vector2f)}
+	 * TODO request these being exposed at least readonly
+	 * 
+	 * 1) lemur picking ray cast from at gui node is hardcoded at 
+	 * {@link PickEventSession#getPickRay(RootEntry,Vector2f)},
+	 * and it is not accessible, currently is 1000
+	 * 
+	 * 2) expectedly, if such default initial offset is ever updated, everywhere on lemur will also be
+	 * {@link QuadBackgroundComponent#getZOffset()}
 	 */
-	private void initNonStandard() {
+	@Workaround
+	private void initNonStandardLemurPickingRayCastFrom() {
 		MiscJmeI.i().setAboveAllAtGuiNode(1001);
+		
+		MiscLemurI.i().setPickingRayCastFromZ(1000);
+
+		MiscLemurI.i().setMinSizeZ(new QuadBackgroundComponent().getZOffset());
 	}
 	
 }

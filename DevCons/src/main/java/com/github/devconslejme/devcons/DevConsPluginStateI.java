@@ -1555,5 +1555,14 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	public void setAutoUpdateWrapAt(boolean bAutoUpdateWrapAt) {
 		this.bAutoUpdateWrapAt = bAutoUpdateWrapAt;
 	}
+
+	public int getKeyCodeToggleConsole() {
+		return iKeyCodeToggleConsole;
+	}
+
+	public DevConsPluginStateI setKeyCodeToggleConsole(int iKeyCodeToggleConsole) {
+		this.iKeyCodeToggleConsole = iKeyCodeToggleConsole;
+		return this;
+	}
 	
 }

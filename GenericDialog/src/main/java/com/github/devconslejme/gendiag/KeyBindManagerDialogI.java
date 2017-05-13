@@ -31,11 +31,12 @@ import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.Key;
 import com.github.devconslejme.misc.KeyBind;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
-import com.github.devconslejme.misc.MessagesI;
-import com.github.devconslejme.misc.TimeFormatI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.BindCommand;
 import com.github.devconslejme.misc.KeyCodeManagerI;
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.TimeFormatI;
+import com.simsilica.lemur.Button;
 
 /**
  * TODO list all, allow setting/changing etc
@@ -56,8 +57,14 @@ public class KeyBindManagerDialogI {
 				}
 				
 				OptionData odBindSection = diagBindMan.putSection(null, KeyBindCommandManagerI.class.getSimpleName());
-				for(BindCommand bind:KeyBindCommandManagerI.i().getKeyBindListCopy()){
-					diagBindMan.putOption(odBindSection, bind.getKeyBind().getBindCfg(), bind);
+				for(BindCommand bc:KeyBindCommandManagerI.i().getKeyBindListCopy()){
+					OptionData odbc = diagBindMan.putOption(odBindSection, bc.getKeyBind().getBindCfg(), bc);
+					odbc.addCmdCfg(new CmdCfg("ChangeBind") {
+						@Override
+						public void execute(Button source) {
+							KeyBindCommandManagerI.i().captureAndSetKeyBindAt(bc, source);
+						}
+					});
 				}
 			}
 		};
@@ -69,20 +76,21 @@ public class KeyBindManagerDialogI {
 	
 	public void testCreateBind(){
 		KeyBind kb = new KeyBind();
-		kb.setFromKeyCfg("Ctrl+M");
+		kb.setFromKeyCfg("Ctrl+L");
 		
 		BindCommand bc = new BindCommand();
 		bc.setKeyBind(kb);
 		bc.setHardCommand(new CallableXAnon(){
-			@Override
-			public Boolean call() {
-				MessagesI.i().output(false,System.out,"Info:",this,KeyBindManagerDialogI.class.getSimpleName()+":test:"+TimeFormatI.i().getRealTimeFormatted());
-				return true;
+				@Override
+				public Boolean call() {
+					MessagesI.i().output(false,System.out,"Info:",this,KeyBindManagerDialogI.class.getSimpleName()+":test:"+TimeFormatI.i().getRealTimeFormatted());
+					return true;
+				}
 			}
-		}
-		.enableLoopMode()
-		.setDelaySeconds(1f)
-		.setName("simple test log entry for bind cmd"));
+			.enableLoopMode()
+			.setDelaySeconds(1f)
+			.setName("simple test log entry for bind cmd")
+		);
 		
 		KeyBindCommandManagerI.i().putBindCommand(bc);
 	}

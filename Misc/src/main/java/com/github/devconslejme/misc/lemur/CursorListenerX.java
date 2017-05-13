@@ -53,6 +53,13 @@ public abstract class CursorListenerX implements CursorListener{
 //		efDisplaced.setFollowToMouse(true);
 	}
 	
+	/**
+	 * 
+	 * @param event
+	 * @param target
+	 * @param capture
+	 * @return true if it is to consume the event
+	 */
 	protected abstract boolean click(CursorButtonEvent event, Spatial target,				Spatial capture);
 	
 	/**

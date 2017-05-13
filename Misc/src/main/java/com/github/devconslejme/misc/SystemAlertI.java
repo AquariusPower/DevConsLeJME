@@ -28,6 +28,10 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.github.devconslejme.misc;
 
 import java.io.File;
+import java.nio.channels.UnsupportedAddressTypeException;
+
+import com.github.devconslejme.misc.QueueI.CallableX;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 
 
 /**
@@ -75,29 +79,51 @@ public class SystemAlertI {
 //		dumpAlert(); //just in case another one happens before the update...
 		
 		MessagesI.i().output(true, System.out, "ALERT!!!", this, strAlertMsg, strDynamicInfo, objActionSourceElement);
-		captureUserInput();
-//		QueueI.i().enqueue(new CallableXAnon() {
-//			@Override
-//			public Boolean call() {
-//				if(strAlertMsg==null){
-//					endLoopMode();
-//					return true;
-//				}
-//			
-//				MessagesI.i().output(true, System.out, "ALERT!!!", this, strAlertMsg, strDynamicInfo);
-//				return true;
-//			}
-//		}.enableLoopMode().setDelaySeconds(2f));
+		enqueueCaptureUserInput();
 		
 		return this.asteStackKeyRequestOrigin;
 	}
 	
-	protected void captureUserInput() {
-		//TODO this could be a text mode terminal user input
-		throw new UnsupportedOperationException("method not implemented");
+//	/**
+//	 * Override also to disable this, if other means will be used than direct input reading
+//	 */
+	/** */
+	protected void enqueueCaptureUserInput() {
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				updateCaptureUserInput(getTPF(),this);
+				return true;
+			}
+		}.enableLoopMode().setRunImediatelyOnce().setDelaySeconds(2f));
 	}
 	
-	public boolean isShowingAlert(boolean bFullAlert){
+	protected boolean updateCaptureUserInput(float fTPF, CallableX cx){
+		if(strAlertMsg==null){
+			cx.endLoopMode();
+			endCaptureUserInput();
+			return true;
+		}
+		
+		doCapture(fTPF,cx);
+		
+		return true;
+	}
+	
+	protected void endCaptureUserInput() {
+		//TODO do something here (one day...)
+	}
+	
+	/**
+	 * Override if other means will be used to capture input
+	 */
+	protected void doCapture(float fTPF, CallableX cxQueuedCall) {
+		MessagesI.i().output(true, System.out, "ALERT!!!", this, strAlertMsg, strDynamicInfo);
+		//TODO do capture text terminal input (one day...)
+		throw new UnsupportedOperationException("not implemented");
+	}
+	
+	public boolean isShowingAlert(){
 		return strAlertMsg!=null;
 	}
 	

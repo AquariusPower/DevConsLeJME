@@ -47,6 +47,8 @@ import com.jme3.scene.Spatial;
  * 
  * TODO track all userdata usages (from this class and from JME direct methods) on this project, to review and improve/clarify the code.
  * 
+ * TODO deprecate all other usages and use a single retrieve? (that gets, but also sets if not already). allow only non simple data (no primitives, only custom classes). when using the retrieved, make it a field of some worker class to deal with its inner values. etc...
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class UserDataI {

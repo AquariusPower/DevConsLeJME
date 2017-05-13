@@ -32,6 +32,7 @@ import java.nio.ShortBuffer;
 
 import com.github.devconslejme.misc.Annotations.ToDo;
 import com.github.devconslejme.misc.AssertionsI;
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
@@ -60,7 +61,7 @@ import com.jme3.util.BufferUtils;
 public class MiscJmeI {
 	public static MiscJmeI i(){return GlobalManagerI.i().get(MiscJmeI.class);}
 
-	private float	fAboveAllAtGuiNode=10;
+	private Float	fAboveAllAtGuiNode=null;
 	private Application	app;
 	private Node	nodeVirtualWorld;
 	private SimpleApplication	sappOptional;
@@ -222,6 +223,7 @@ public class MiscJmeI {
   }
   
   public void setAboveAllAtGuiNode(float f){
+		if(this.fAboveAllAtGuiNode!=null)throw new DetailedException("already set");
   	this.fAboveAllAtGuiNode=f;
   }
   

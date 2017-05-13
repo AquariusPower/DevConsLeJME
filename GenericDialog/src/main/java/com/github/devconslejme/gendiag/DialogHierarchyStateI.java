@@ -34,6 +34,7 @@ import com.github.devconslejme.es.DialogHierarchyComp;
 import com.github.devconslejme.es.DialogHierarchyComp.DiagCompBean;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.SystemAlertI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
@@ -237,6 +238,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 					ResizablePanel rzp = SpatialHierarchyI.i().getParentest(pnl, ResizablePanel.class, true);
 					DialogHierarchyComp hc = DialogHierarchyStateI.i().getHierarchyComp(rzp);
 					if(!hc.isOpened())continue;
+					if(SystemAlertI.i().isShowingAlert())continue;
 					
 					if(!hc.isBlocked()){
 						GuiGlobals.getInstance().requestFocus(pnl);
@@ -673,7 +675,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			setFocus(entidP, false);
 		}
 		
-		cxZOrder.runImediatelyOnce();
+		cxZOrder.setRunImediatelyOnce();
 //		QueueI.i().enqueue(cxZOrder);
 	}
 	private void setFocus(EntityId entid, boolean bRecursive){

@@ -30,7 +30,7 @@ package com.github.devconslejme.misc.lemur;
 import java.util.ArrayList;
 
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.SystemAlertI;
 import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.jme.ColorI;
@@ -53,6 +53,8 @@ import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.BorderLayout;
 import com.simsilica.lemur.component.BorderLayout.Position;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
+import com.simsilica.lemur.event.CursorButtonEvent;
+import com.simsilica.lemur.event.CursorEventControl;
 
 
 /**
@@ -73,13 +75,14 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 	private boolean	bStartedShowEffect;
 	private boolean	bAlertPanelIsReady;
 	private IEffect	ieffAlert;
+	@Deprecated
 	private BoundingBox	bbGuiNodeWorldBoundPriorToAlert;
-	private Node	nodeParent;
+	private Node	nodeGui;
 	private ColorRGBA colorEdgesDefault=ColorRGBA.Red.clone();
 	private ArrayList<Panel> aedgeList = new ArrayList<Panel>();
 	
-	public void configure(Node nodeParent){
-		this.nodeParent=nodeParent;
+	public void configure(Node nodeGui){
+		this.nodeGui=nodeGui;
 		
 		if(!GlobalManagerI.i().isSet(SystemAlertI.class)){
 			GlobalManagerI.i().put(SystemAlertI.class, this); //overrides global
@@ -87,6 +90,7 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 		if(!GlobalManagerI.i().isSet(SystemAlertJmeI.class)){
 			GlobalManagerI.i().put(SystemAlertJmeI.class, this); //overrides global
 		}
+		
 	}
 	
 	/**
@@ -129,16 +133,17 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 
 	@Override
 	public StackTraceElement[] showSystemAlert(String strMsg, Object objActionSourceElement) {
-		StackTraceElement[] aste = super.showSystemAlert(strMsg,objActionSourceElement);
-		
-		if(getAlertPanel()==null)createAlert();
-		
 		if(bbGuiNodeWorldBoundPriorToAlert==null){
-			bbGuiNodeWorldBoundPriorToAlert = (BoundingBox)nodeParent.getWorldBound().clone();
+			//TODO should this be updated as things may change while the alert is running? but it also would require many other things to be updated...
+			bbGuiNodeWorldBoundPriorToAlert = (BoundingBox)nodeGui.getWorldBound().clone();
 		}
 		
-		if(!nodeParent.hasChild(cntrAlert)){
-			nodeParent.attachChild(cntrAlert);
+		StackTraceElement[] aste = super.showSystemAlert(strMsg,objActionSourceElement);
+		
+		if(getAlertAsPanel()==null)createAlert();
+		
+		if(!nodeGui.hasChild(cntrAlert)){
+			nodeGui.attachChild(cntrAlert);
 //			EEffChannel.ChnGrowShrink.play(EEffState.Show, cntrAlert, getPos(EElement.Alert,null));
 		}
 		
@@ -151,6 +156,15 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 		return aste;
 	}
 	
+	private static class BlockerClickListener extends CursorListenerX{
+		@Override
+		protected boolean click(CursorButtonEvent event, Spatial target, Spatial capture) {
+			SystemAlertLemurI.i().tdBlockerGlow.reactivate(); //a simple effect to show it received the click
+			return true;
+		}
+	}
+	private BlockerClickListener bcl=new BlockerClickListener();
+	
 	private void createAlert(){
 		if(pnlBlocker==null){
 			// old trick to prevent access to other gui elements easily! :D
@@ -159,12 +173,18 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 			pnlBlocker.setBackground(new QuadBackgroundComponent(colorBlockerBkg));
 			tdBlockerGlow.setActive(true);
 //			GlobalGUINodeI.i().attachChild(pnlBlocker);
+			nodeGui.attachChild(pnlBlocker);
+			MiscLemurI.i().setPreferredSize(pnlBlocker, EnvironmentI.i().getDisplay().getAppWindowSize());
+			pnlBlocker.setLocalTranslation(getPosForElement(EElement.Blocker, null));
+//			MiscLemurI.i().setLocalTranslationXY(pnlBlocker, EnvironmentI.i().getDisplay().getTopLeftCorner());
+//			MiscLemurI.i().setLocalTranslationZ(pnlBlocker, MiscJmeI.i().getZAboveAllAtGuiNode()-MiscLemurI.i().getMinSizeZ()); //just below the lemur raycast
+			CursorEventControl.addListenersToSpatial(pnlBlocker, bcl);
 		}
 		
 		// the alert container
 		QuadBackgroundComponent qbc;
 		
-		cntrAlert = new Container(new BorderLayout());
+		cntrAlert = new Container(new BorderLayout(),getStyle());
 		setAlertSpatial(cntrAlert);
 		
 		EEffChannel.ChnGrowShrink.applyEffectsAt(cntrAlert);
@@ -188,16 +208,14 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 		
 	}
 	
-	
-	/**
-	 * TODO rename getAlertAsPanel
-	 * @return
-	 */
-	public Panel getAlertPanel() {
+	public Panel getAlertAsPanel() {
 		return (Panel)super.getAlertSpatial();
 	}
 	
-	public void update(float fTPF) {
+	@Override
+	protected void doCapture(float fTPF, CallableX cxQueuedCall) {
+		cxQueuedCall.setDelaySeconds(0.05f); //faster than default
+		
 		updateMessage();
 		
 		updateIfPanelIsReady();
@@ -205,6 +223,12 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 		if(pnlBlocker!=null){
 			ColorI.i().updateColorFading(tdBlockerGlow, colorBlockerBkg, true, 0.25f, 0.35f);
 		}
+	}
+	
+	@Override
+	protected void endCaptureUserInput() {
+		super.endCaptureUserInput();
+		//TODO do something here?
 	}
 	
 	private void updateMessage(){
@@ -219,15 +243,15 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 	}
 	
 	private void updateIfPanelIsReady(){
-		if(getAlertPanel()==null)return;
+		if(getAlertAsPanel()==null)return;
 		
-		Vector3f v3fLblSize = getAlertPanel().getSize();
+		Vector3f v3fLblSize = getAlertAsPanel().getSize();
 		if(v3fLblSize.length()==0)return;
 		
 		bAlertPanelIsReady=true;
 		
 		if(!bStartedShowEffect){
-			EEffChannel.ChnGrowShrink.play(EEffState.Show, cntrAlert, getPos(EElement.Alert,null));
+			EEffChannel.ChnGrowShrink.play(EEffState.Show, cntrAlert, getPosForElement(EElement.Alert,null));
 			
 			createAlertLinkEffect();
 			
@@ -241,7 +265,7 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 			updateEdgesColor(null);
 		}
 	
-		MiscLemurI.i().setLocalTranslationXY(getAlertPanel(), getPos(EElement.Alert,v3fLblSize)); 
+		MiscLemurI.i().setLocalTranslationXY(getAlertAsPanel(), getPosForElement(EElement.Alert,v3fLblSize)); 
 	}
 
 	public String getStyle(){
@@ -268,7 +292,7 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 			ieffAlert.setFollowFromTarget(getActionSourceElement(), new Vector3f(0,0,1));
 		}else{
 			// use mouse pos
-			ieffAlert.setFromTo( getPos(EElement.Effects, EnvironmentI.i().getMouse().getPos3D()), null);
+			ieffAlert.setFromTo( getPosForElement(EElement.Effects, EnvironmentI.i().getMouse().getPos3D()), null);
 		}
 		
 		ieffAlert.setFollowToTarget(cntrAlert, null);
@@ -277,12 +301,21 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 	}
 	
 	private static enum EElement{
-		Blocker,
-		Alert,
-		Effects,
+		/**
+		 * BEWARE!!! this enums order MATTERS!!!
+		 */
+		Blocker, //belowest
+		Alert, 
+		Effects, //toppest
 	}
-
-	private Vector3f getPos(EElement e, Vector3f v3fRef){
+	
+	/**
+	 * 
+	 * @param e
+	 * @param v3fRef see the code, it may be null or used in different ways
+	 * @return
+	 */
+	private Vector3f getPosForElement(EElement e, Vector3f v3fRef){
 		if(v3fRef!=null)v3fRef=v3fRef.clone(); //safety
 		Vector3f v3fWdwSize = EnvironmentI.i().getDisplay().getAppWindowSize();
 		
@@ -298,10 +331,13 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 		/**
 		 * the alert is ultra special and the Z can be dealt with here!
 		 */
-		float fZ=bbGuiNodeWorldBoundPriorToAlert.getMax(null).z;
+//		float fZ=bbGuiNodeWorldBoundPriorToAlert.getMax(null).z;
+//		float fZ=MiscJmeI.i().getZAboveAllAtGuiNode()-MiscLemurI.i().getMinSizeZ(); //just below the lemur raycast start point
+		float fZ=MiscLemurI.i().getPickingRayCastFromZ()-MiscLemurI.i().getMinSizeZ(); //just below the lemur raycast start point
 		
 		Vector3f v3fPos = null;
-		fZ += fZDispl*(e.ordinal()+1); // attention how the order/index is a multiplier of the displacement!
+//		fZ += fZDispl*(e.ordinal()+1); // attention how the order/index is a multiplier of the displacement!
+		fZ += fZDispl*e.ordinal(); // begins in 0. attention how the order/index is a multiplier of the displacement!
 		switch(e){ 
 			case Blocker:
 				v3fPos = new Vector3f(0, v3fWdwSize.y, fZ);
@@ -340,4 +376,12 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 		this.btgAlertStayOnCenter = btgAlertStayOnCenter;
 		return this;
 	}
+	
+//	@Override
+//	protected void captureUserInput() {
+//		/**
+//		 * KEEP EMPTY, just to disable super input capture mode
+//		 */
+//	}
+
 }

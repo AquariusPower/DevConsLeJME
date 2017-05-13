@@ -233,7 +233,7 @@ public class QueueI {
 			return sb.toString();
 		}
 		
-		public void updateRunAt() {
+		private void updateRunAt() {
 			this.lRunAtTime = QueueI.i().calcRunAt(fDelaySeconds);
 		}
 		
@@ -294,8 +294,9 @@ public class QueueI {
 			this.bUserCanPause = bUserCanPause;
 			return getThis();
 		}
-		public void togglePause() {
+		public boolean togglePause() {
 			bPaused=!bPaused;
+			return bPaused;
 		}
 		public boolean isPaused() {
 			return bPaused;
@@ -319,14 +320,12 @@ public class QueueI {
 		public String getName() {
 			return strName;
 		}
-//		public void setName(String strName) {
-//			this.strName = strName;
-//		}
 		public boolean isRunImediatelyOnce() {
 			return bRunImediatelyOnce;
 		}
-		public void runImediatelyOnce() {
+		public SELF setRunImediatelyOnce() {
 			this.bRunImediatelyOnce = true;
+			return getThis();
 		}
 		public Method getEnclosing() {
 			return mEnclosing;
@@ -342,9 +341,6 @@ public class QueueI {
 			this.steInstancedWhen = steInstancedWhen;
 			return getThis();
 		}
-//		public void justRemoveFromQueueOnce() {
-//			bJustRemoveFromQueueOnce=true;
-//		}
 		
 	}
 	

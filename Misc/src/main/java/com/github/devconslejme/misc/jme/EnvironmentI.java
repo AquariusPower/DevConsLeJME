@@ -41,6 +41,8 @@ import com.jme3.math.Vector3f;
  * This way lwjgl3 may replace lwjgl more easily... or any other ways to collect the required values
  * can be used.
  * 
+ * TODO prefer using whatever is not a direct read from lwjgl (while still being precise/actual) if possible
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class EnvironmentI extends AbstractAppState{
@@ -91,6 +93,10 @@ public class EnvironmentI extends AbstractAppState{
 
 		public Vector3f getAppWindowSize() {
 			return new Vector3f(getWidth(),getHeight(),0);
+		}
+
+		public Vector3f getTopLeftCorner() {
+			return new Vector3f(0,getHeight(),0);
 		}		
 	}
 	private DisplayI display = new DisplayI();

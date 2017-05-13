@@ -77,10 +77,17 @@ import com.simsilica.lemur.style.ElementId;
 public class MiscLemurI {
 	public static MiscLemurI i(){return GlobalManagerI.i().get(MiscLemurI.class);}
 	
-	/** theoretically, if such offset is ever updated, everywhere on lemur will also be */
-	@Workaround
-	private float	fMinSizeZ = new QuadBackgroundComponent().getZOffset();
+//	/** 
+//	 * expectedly, if such default initial offset is ever updated, everywhere on lemur will also be
+//	 * {@link QuadBackgroundComponent#getZOffset()}
+//	 */
+//	@Workaround
+//	private float	fMinSizeZ = new QuadBackgroundComponent().getZOffset();
+	private Float	fMinSizeZ = null;
+	
 	private Node	nodeGui;
+
+	private Float	lPickingRayCastFromZ=null;
 	
 	public void configure(Node nodeGui){
 		this.nodeGui=nodeGui;
@@ -326,6 +333,7 @@ public class MiscLemurI {
 	}
 	
 	/**
+	 * see {@link #fMinSizeZ}
 	 * @return
 	 */
 	public float getMinSizeZ() {
@@ -439,5 +447,27 @@ public class MiscLemurI {
 		}else{
 			pnl.setLocalTranslation(v3fPos.x, v3fPos.y, pnl.getLocalTranslation().z);
 		}
+	}
+
+	public void setLocalTranslationZ(Panel pnl, float fZ) {
+		Vector3f v3f = pnl.getLocalTranslation().clone();
+		v3f.z=fZ;
+		pnl.setLocalTranslation(v3f);
+	}
+
+	public float getPickingRayCastFromZ() {
+		return lPickingRayCastFromZ;
+	}
+	
+	public MiscLemurI setPickingRayCastFromZ(float fZ) {
+		if(this.lPickingRayCastFromZ!=null)throw new DetailedException("already set");
+		this.lPickingRayCastFromZ=fZ;
+		return this;
+	}
+
+	public MiscLemurI setMinSizeZ(float fZ) {
+		if(this.fMinSizeZ!=null)throw new DetailedException("already set");
+		this.fMinSizeZ=fZ;
+		return this;
 	}
 }

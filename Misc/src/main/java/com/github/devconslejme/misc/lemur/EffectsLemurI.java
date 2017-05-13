@@ -46,6 +46,71 @@ import com.simsilica.lemur.effect.EffectInfo;
 public class EffectsLemurI {
 	public static EffectsLemurI i(){return GlobalManagerI.i().get(EffectsLemurI.class);}
 	
+	public abstract class BfdEffect extends AbstractEffect<Panel>{
+		protected EEffChannel	echn;
+  	protected float fTime=0.250f;
+		private String	strName;
+
+		public BfdEffect(String strName, EEffChannel echn, EEffState es) {
+			super(echn.s());
+			this.strName=strName;
+			echn.putEffect(es,this);
+			this.echn = echn;
+		}
+
+		public String getName(){
+			return strName;
+		}
+		
+		public Vector3f getMoveStartAt(Panel target){
+    	Vector3f v3fOrigin = target.getLocalTranslation().clone();
+    	if(echn.v3fPlayPosStartOverride!=null){
+      	v3fOrigin = echn.v3fPlayPosStartOverride.clone();
+    	}
+    	return v3fOrigin;
+		}
+	}
+	BfdEffect efGrow;
+	BfdEffect efShrink;
+	
+	public void configure(){
+		efShrink = new BfdEffect("Shrink", EEffChannel.ChnGrowShrink, EEffState.Hide) {
+	    @Override
+			public Animation create( Panel target, EffectInfo existing ) {
+	    	// always current position
+	    	Vector3f v3fOrigin = target.getLocalTranslation().clone();
+	    	
+	    	/**
+	    	 * it is subtract because the start pos is the lower left corner
+	    	 */
+	    	Vector3f v3fFrom = v3fOrigin.subtract(getRelativeCenterXYposOf(target));
+	    	Vector3f v3fTo = v3fOrigin.clone();
+	    	
+	    	// just inverted "to" "from" related to grow one
+	  		Tween twMove = SpatialTweens.move(target, v3fTo, v3fFrom, fTime);
+	      Tween twScale = SpatialTweens.scale(target, 1, 0, fTime);
+	      return new TweenAnimation(Tweens.smoothStep(Tweens.parallel(twMove, twScale)));
+	    }
+		};
+		
+		efGrow = new BfdEffect("Grow",EEffChannel.ChnGrowShrink, EEffState.Show) {
+	    @Override
+			public Animation create( Panel target, EffectInfo existing ) {
+	    	Vector3f v3fOrigin = getMoveStartAt(target);
+	    	
+	    	/**
+	    	 * it is subtract because the start pos is the lower left corner
+	    	 */
+	    	Vector3f v3fFrom = v3fOrigin.subtract(getRelativeCenterXYposOf(target));
+	    	Vector3f v3fTo = v3fOrigin.clone();
+	    	
+	      Tween twMove = SpatialTweens.move(target, v3fFrom, v3fTo, fTime);
+	      Tween twScale = SpatialTweens.scale(target, 0, 1, fTime);
+	      return new TweenAnimation(Tweens.smoothStep(Tweens.parallel(twMove, twScale)));
+	    }
+		};
+	}
+	
 	public static enum EEffState{
 		Show,
 		Hide,
@@ -89,66 +154,6 @@ public class EffectsLemurI {
 		}
 		public String s(){return toString();}
 	}
-	
-	public abstract class BfdEffect extends AbstractEffect<Panel>{
-		protected EEffChannel	echn;
-  	protected float fTime=0.250f;
-		private String	strName;
-
-		public BfdEffect(String strName, EEffChannel echn, EEffState es) {
-			super(echn.s());
-			this.strName=strName;
-			echn.putEffect(es,this);
-			this.echn = echn;
-		}
-
-		public String getName(){
-			return strName;
-		}
-		
-		public Vector3f getMoveStartAt(Panel target){
-    	Vector3f v3fOrigin = target.getLocalTranslation().clone();
-    	if(echn.v3fPlayPosStartOverride!=null){
-      	v3fOrigin = echn.v3fPlayPosStartOverride.clone();
-    	}
-    	return v3fOrigin;
-		}
-	}
-	
-	BfdEffect efGrow = new BfdEffect("Grow",EEffChannel.ChnGrowShrink, EEffState.Show) {
-    @Override
-		public Animation create( Panel target, EffectInfo existing ) {
-    	Vector3f v3fOrigin = getMoveStartAt(target);
-    	
-    	/**
-    	 * it is subtract because the start pos is the lower left corner
-    	 */
-    	Vector3f v3fFrom = v3fOrigin.subtract(getRelativeCenterXYposOf(target));
-    	Vector3f v3fTo = v3fOrigin.clone();
-    	
-      Tween twMove = SpatialTweens.move(target, v3fFrom, v3fTo, fTime);
-      Tween twScale = SpatialTweens.scale(target, 0, 1, fTime);
-      return new TweenAnimation(Tweens.smoothStep(Tweens.parallel(twMove, twScale)));
-    }
-	};
-	BfdEffect efShrink = new BfdEffect("Shrink", EEffChannel.ChnGrowShrink, EEffState.Hide) {
-    @Override
-		public Animation create( Panel target, EffectInfo existing ) {
-    	// always current position
-    	Vector3f v3fOrigin = target.getLocalTranslation().clone();
-    	
-    	/**
-    	 * it is subtract because the start pos is the lower left corner
-    	 */
-    	Vector3f v3fFrom = v3fOrigin.subtract(getRelativeCenterXYposOf(target));
-    	Vector3f v3fTo = v3fOrigin.clone();
-    	
-    	// just inverted "to" "from" related to grow one
-  		Tween twMove = SpatialTweens.move(target, v3fTo, v3fFrom, fTime);
-      Tween twScale = SpatialTweens.scale(target, 1, 0, fTime);
-      return new TweenAnimation(Tweens.smoothStep(Tweens.parallel(twMove, twScale)));
-    }
-	};
 	
 	protected Vector3f getRelativeCenterXYposOf(Panel target) {
 		return target.getWorldBound().getCenter();

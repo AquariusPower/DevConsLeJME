@@ -122,9 +122,18 @@ public class TimedDelay {
 			return fDelay;
 		}
 	}
-	public void reset() {
+	
+	/**
+	 * will start from now
+	 */
+	public void reactivate(){
+		updateTime();
+	}
+	
+	public void resetTime() {
 		lLastUpdateReferenceTimeNano=null;
 	}
+	
 	public boolean isActive() {
 		return lLastUpdateReferenceTimeNano!=null;
 	}
@@ -138,7 +147,7 @@ public class TimedDelay {
 		if(b){
 			if(!isActive())updateTime();
 		}else{
-			reset();
+			resetTime();
 		}
 		
 		return this;
@@ -224,7 +233,7 @@ public class TimedDelay {
 	}
 
 	public TimedDelay resetAndChangeDelayTo(float fDelaySeconds){
-		reset();
+		resetTime();
 		fDelay=(fDelaySeconds);
 		return this;
 	}

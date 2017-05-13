@@ -27,6 +27,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.github.devconslejme.misc;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TreeMap;
@@ -396,7 +397,7 @@ public class KeyBindCommandManagerI {
 	private void captureKeyStep(ECaptureUserDecision e) {
 		switch(e){
 			case KeepTrying:
-				if(!SystemAlertI.i().isShowingAlert(true)){
+				if(!SystemAlertI.i().isShowingAlert()){
 					asteAlertFrom = SystemAlertI.i().showSystemAlert(
 							 " Press a key combination to be captured (where modifiers are ctrl, shift or alt).\n"
 							+" More complex or specific keybindings can be set thru console commands.\n"
@@ -448,8 +449,16 @@ public class KeyBindCommandManagerI {
 		
 	}
 	private void recreateKeyBindFile() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented");
+		File flCfg = FileI.i().createNewFile(this, "cfg", true);
+		flCfg.delete();
+		for(BindCommand bc:getKeyBindListCopy()){
+			FileI.i().appendLine(flCfg, prepareConfig(bc));
+		}
+	}
+
+	private String prepareConfig(BindCommand bc) {
+		//TODO this is still useless/tmp
+		return bc.getKeyBind().getBindCfg()+" "+bc.getCommandsInfo();
 	}
 
 	public ArrayList<BindCommand> getKeyBindListCopy(){
