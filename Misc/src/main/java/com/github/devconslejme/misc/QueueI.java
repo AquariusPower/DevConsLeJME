@@ -99,6 +99,8 @@ public class QueueI {
 
 		private StackTraceElement	steInstancedWhen;
 		private StackTraceElement[]	asteLastEnqueued;
+
+		private boolean	bJustRemoveFromQueueOnce;
 		
 		
 		private static String strLastUId="0";
@@ -340,6 +342,9 @@ public class QueueI {
 			this.steInstancedWhen = steInstancedWhen;
 			return getThis();
 		}
+//		public void justRemoveFromQueueOnce() {
+//			bJustRemoveFromQueueOnce=true;
+//		}
 		
 	}
 	
@@ -373,6 +378,12 @@ public class QueueI {
 		return lCurrentTime + (long)(fDelaySeconds * lTimeResolution);
 	}
 	
+	public void removeFromQueue(CallableX cx){
+		if(acxList.contains(cx)){
+			cx.bJustRemoveFromQueueOnce=true;
+		}
+	}
+	
 	@SuppressWarnings("unchecked")
 	public void update(long lCurrentTime, float fTPF) {
 		this.lCurrentTime=lCurrentTime;
@@ -385,13 +396,22 @@ public class QueueI {
 				cx.setTPF(fTPF);
 				if(cx.call()){ 
 //					cx.done();
-					if(cx.isLoopEnabled()){
-						cx.updateRunAt();
-					}else{
+					if(!cx.isLoopEnabled() || cx.bJustRemoveFromQueueOnce){
 						synchronized(acxList){
 							acxList.remove(cx);
+							cx.bJustRemoveFromQueueOnce=false;
 						}
+					}else{
+						cx.updateRunAt();
 					}
+					
+//					if(cx.isLoopEnabled()){
+//						cx.updateRunAt();
+//					}else{
+//						synchronized(acxList){
+//							acxList.remove(cx);
+//						}
+//					}
 				}else{
 					// if a loop queue fails, it will not wait and will promptly retry!
 				}

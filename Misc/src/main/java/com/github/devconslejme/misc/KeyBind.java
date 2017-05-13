@@ -40,7 +40,8 @@ public class KeyBind {
 	/** the last/main key to be pressed */
 	private Key keyAction = null;
 	private ArrayList<Key> akeyModifierList;// = new ArrayList<Key>();
-	private long lLastActivationMilis=-1;
+//	private long lLastActivationMilis=-1;
+	private long	lActivationCount = 0;
 	
 	/**
 	 * TODO see {@link KeyBindCommandManagerI#runCommandOnKeyRelease(BindCommand)}, the 'on pressed' can already be limited to a single activation, what would have the same meaning/usage. would it still be interesging to allow 'on released' activation mode anyway or is just pointletss and could still complexify/break something?
@@ -57,6 +58,7 @@ public class KeyBind {
 			}			
 		}
 		
+//		lActivationCount++;
 		return true;
 	}
 	
@@ -184,27 +186,27 @@ public class KeyBind {
 		return setFromKeyIds(strCfg.split("[+]"));
 	}
 
-	public boolean isCanBeRunNow() {
-		if(isActivated()){
-			lLastActivationMilis = SimulationTimeI.i().getMillis();
-			return true;
-		}
-		
-		return false;
-	}
+//	public boolean isCanBeRunNow() {
+//		if(isActivated()){
+//			lLastActivationMilis = SimulationTimeI.i().getMillis();
+//			return true;
+//		}
+//		
+//		return false;
+//	}
+//	
+//	public void reset(){
+//		lLastActivationMilis=-1;
+//	}
 	
-	public void reset(){
-		lLastActivationMilis=-1;
-	}
-	
-	/**
-	 * was already activated at least once
-	 * @return
-	 */
-//	public boolean isWaitingDeactivation(){
-	public boolean isWasAlreadyActivatedAtLeastOnce(){
-		return lLastActivationMilis!=-1;
-	}
+//	/**
+//	 * was already activated at least once
+//	 * @return
+//	 */
+////	public boolean isWaitingDeactivation(){
+//	public boolean isWasAlreadyActivatedAtLeastOnce(){
+//		return lLastActivationMilis!=-1;
+//	}
 	
 //	public Comparator<KeyBind> getComparatorById(){
 //		return new Comparator<KeyBind>() {
@@ -229,6 +231,22 @@ public class KeyBind {
 		}
 		
 		return false;
+	}
+
+	public boolean isResetted() {
+		return lActivationCount ==0;
+	}
+
+	public void reset() {
+		lActivationCount=0;
+	}
+
+	public void incActivationCount() {
+		lActivationCount++;
+	}
+
+	public long getActivationCount() {
+		return lActivationCount;
 	}
 	
 }

@@ -308,8 +308,9 @@ public class KeyBindCommandManagerI {
 				
 				abindForActKeyCode.add(bc);
 			}else{ //released
-				bc.getKeyBind().reset(); //np if keep reseting, it should/is fast
-//				runCommandOnKeyRelease(bc);
+				reset(bc);
+//				bc.getKeyBind().reset(); //np if keep reseting, it should/is fast
+////				runCommandOnKeyRelease(bc);
 			}
 		}
 		
@@ -338,12 +339,25 @@ public class KeyBindCommandManagerI {
 //		}
 //	}
 	
+	private void reset(BindCommand bc) {
+		if(bc.getKeyBind().isResetted())return;
+		bc.getKeyBind().reset();
+		QueueI.i().removeFromQueue(bc.getHardCommand()); //bc.getHardCommand().justRemoveFromQueueOnce();
+	}
+
 	private void runCommands(BindCommand bc){
-		if(!bc.getKeyBind().isCanBeRunNow())return;
+//		if(!bc.getKeyBind().isActivated())return;
 		
-//		bc.getKeyBind().isActivated()
-		bc.getHardCommand().call(); //TODO put on the queue?
+		bc.getKeyBind().incActivationCount();
+		if(bc.getKeyBind().getActivationCount()==1){
+			QueueI.i().enqueue(bc.getHardCommand());
+		}
+////		bc.getKeyBind().isActivated()
+//		bc.getHardCommand().call(); //TODO put on the queue?
 		
+		/**
+		 * TODO review custom user command? it is quite limited (lacking features) compared to the queued hardcommand call... allow user to configure every command may be using options on the very user command to set at the CallableX? :D
+		 */
 		if(bc.getUserCommand()!=null){
 			if(getFuncRunUserCommand()==null){
 				MessagesI.i().warnMsg(this, "function to run user command is not set", this, bc);

@@ -69,7 +69,7 @@ public class KeyBindManagerDialogI {
 	
 	public void testCreateBind(){
 		KeyBind kb = new KeyBind();
-		kb.setFromKeyCfg("Ctrl+L");
+		kb.setFromKeyCfg("Ctrl+M");
 		
 		BindCommand bc = new BindCommand();
 		bc.setKeyBind(kb);
@@ -79,7 +79,10 @@ public class KeyBindManagerDialogI {
 				MessagesI.i().output(false,System.out,"Info:",this,KeyBindManagerDialogI.class.getSimpleName()+":test:"+TimeFormatI.i().getRealTimeFormatted());
 				return true;
 			}
-		}.setName("simple test log entry for bind cmd"));
+		}
+		.enableLoopMode()
+		.setDelaySeconds(1f)
+		.setName("simple test log entry for bind cmd"));
 		
 		KeyBindCommandManagerI.i().putBindCommand(bc);
 	}
