@@ -28,6 +28,8 @@ package com.github.devconslejme.misc;
 
 import java.util.ArrayList;
 
+import com.github.devconslejme.misc.KeyBindCommandManagerI.BindCommand;
+
 /**
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -38,32 +40,20 @@ public class KeyBind {
 	/** the last/main key to be pressed */
 	private Key keyAction = null;
 	private ArrayList<Key> akeyModifierList;// = new ArrayList<Key>();
-//	private Object	objOwner;
-	private long lConsecutiveActivationCount = 0;
 	private long lLastActivationMilis=-1;
 	/** consecutive activation limit*/
-	private long lActLim = 1; //run once
+	private long lActLim = 1; //run once TODO the activation count should be controlled by the command being called, not by the key itself... 
+	private long lConsecutiveActivationCount = 0;
 	/** Consecutive Activation Interval Milis */
-	private long lActDelayMilis = 0; //every frame
+	private long lActDelayMilis = 0; //every frame TODO delay should be like a global repeat ratio, not per key?
 	
-//	private void applyPressedState(Key key, int iKeyCodeCheck, boolean bPressed){
-//		if(key.getKeyCode()==iKeyCodeCheck)key.bPressed=(bPressed);
-//	}
-//	public void applyPressedState(int iKeyCode, boolean bPressed){
-//		applyPressedState(keyAction, iKeyCode, bPressed);
-//		
-//		for(Key key:akeyModifierList){
-//			applyPressedState(key, iKeyCode, bPressed);
-//		}
-//	}
-	
-//	public void setOwner(Object obj){
-//		DetailedException.assertNotAlreadySet(this.objOwner, obj, "owner", this);
-//		this.objOwner=obj;
-//	}
-	
+	/**
+	 * TODO see {@link KeyBindCommandManagerI#runCommandOnKeyRelease(BindCommand)}, the 'on pressed' can already be limited to a single activation, what would have the same meaning/usage. would it still be interesging to allow 'on released' activation mode anyway or is just pointletss and could still complexify/break something?
+	 * 
+	 * @return
+	 */
 	public boolean isActivated(){
-		if(!keyAction.isPressed())return false; //TODO the 'on pressed' can already be limited to a single activation, what would have the same meaning/usage. would it still be interesging to allow 'on released' activation mode anyway or is just pointletss and could still complexify/break something?
+		if(!keyAction.isPressed())return false;
 		
 		if(akeyModifierList!=null){
 			for(Key keyMod:akeyModifierList){
@@ -237,12 +227,14 @@ public class KeyBind {
 			
 			return bRun;
 		}else{
-			//reset
-			lConsecutiveActivationCount=0;
-			lLastActivationMilis=-1;
-			
+			reset();
 			return false;
 		}
+	}
+	
+	public void reset(){
+		lConsecutiveActivationCount=0;
+		lLastActivationMilis=-1;
 	}
 	
 //	public boolean isActivated(){

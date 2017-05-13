@@ -61,7 +61,7 @@ public class KeyBindCommandManagerI {
 		private KeyBind	kb;
 //		private boolean	bReadOnly;
 		private String	strUserCommand;
-
+		
 //		public boolean isReadOnly() {
 //			return bReadOnly;
 //		}
@@ -114,7 +114,7 @@ public class KeyBindCommandManagerI {
 //			if(this.cxCommand!=null && isReadOnly())throw new DetailedException("readonly",this);
 //			if(isReadOnly())throw new DetailedException("readonly",this);
 			assertHardCommandNotSet(cx); //DetailedException.assertNotAlreadySet(this.cxHardCommand, cx, this);
-			DetailedException.assertIsTrue("name set", !cx.getName().isEmpty(), cx, this);
+			DetailedException.assertIsTrue("name set (a description is necessary as the command is hard coded)", !cx.getName().isEmpty(), cx, this);
 			this.cxHardCommand = cx;
 		}
 		
@@ -295,7 +295,7 @@ public class KeyBindCommandManagerI {
 		 */
 		hmKeyCodeVsActivatedBind.clear();
 		for(BindCommand bc:tmbindList.values()){
-			if(bc.isCommandSet())continue; //not set yet
+			if(!bc.isCommandSet())continue; //not set yet
 			
 			if(bc.getKeyBind().isActivated()){ //pressed
 				Integer iKeyCode = bc.getKeyBind().getActionKey().getKeyCode();
@@ -308,9 +308,7 @@ public class KeyBindCommandManagerI {
 				
 				abindForActKeyCode.add(bc);
 			}else{ //released
-				if(bc.getKeyBind().isWasAlreadyActivatedAtLeastOnce()){
-					runUserCommand(bc);
-				}
+				runCommandOnKeyRelease(bc);
 			}
 		}
 		
@@ -321,17 +319,29 @@ public class KeyBindCommandManagerI {
 			BindCommand bcWin=abindForActKeyCode.get(0);
 			
 			for(BindCommand bind:abindForActKeyCode){
+				if(bcWin==bind)continue;
 				if(bcWin.getKeyBind().getKeyModListSize() < bind.getKeyBind().getKeyModListSize()){
 					bcWin=bind;
 				}
 			}
 			
-			runUserCommand(bcWin);
+			runCommands(bcWin);
 		}
 	}
 	
-	private void runUserCommand(BindCommand bc){
+	private void runCommandOnKeyRelease(BindCommand bc){
+		bc.getKeyBind().isCanBeRunNowOrReset();
+		if(true)return; //TODO enable on key release?
+		if(bc.getKeyBind().isWasAlreadyActivatedAtLeastOnce()){
+			runCommands(bc);
+		}
+	}
+	
+	private void runCommands(BindCommand bc){
+		if(!bc.getKeyBind().isCanBeRunNowOrReset())return;
+		
 		bc.getHardCommand().call(); //TODO put on the queue?
+		
 		if(bc.getUserCommand()!=null){
 			if(getFuncRunUserCommand()==null){
 				MessagesI.i().warnMsg(this, "function to run user command is not set", this, bc);
