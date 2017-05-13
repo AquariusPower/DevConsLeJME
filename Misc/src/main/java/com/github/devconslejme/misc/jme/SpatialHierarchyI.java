@@ -43,29 +43,62 @@ import com.jme3.scene.Spatial;
 public class SpatialHierarchyI {
 	public static SpatialHierarchyI i(){return GlobalManagerI.i().get(SpatialHierarchyI.class);}
 	
+	public <T extends Spatial> T getParentest(Spatial sptStartFrom, Class<T> clTypeParentest, boolean bIncludeStartFrom){
+		return getParentest(sptStartFrom, clTypeParentest, bIncludeStartFrom, true);
+	}
+	
+	/**
+	 * 
+	 * @param sptStartFrom
+	 * @param clTypeParentest
+	 * @param bIncludeStartFrom
+	 * @param bIncludeLast if false will skip any kind of last parent, not necessarily the maching type required
+	 * @return
+	 */
 	@SuppressWarnings({ "unchecked" })
-	public <T extends Node> T getParentest(Spatial sptStartFrom, Class<T> clTypeParentest, boolean bIncludeStartFrom){
+	public <T extends Spatial> T getParentest(Spatial sptStartFrom, Class<T> clTypeParentest, boolean bIncludeStartFrom, boolean bIncludeLast){
 		T parentest = null;
-		if(bIncludeStartFrom && clTypeParentest.isInstance(sptStartFrom))parentest=(T)sptStartFrom;
+		if(bIncludeStartFrom && clTypeParentest.isInstance(sptStartFrom)){
+			parentest=(T)sptStartFrom;
+		}
 		
 		Node nodeParent = sptStartFrom.getParent();
 		while(nodeParent!=null){
 			if(clTypeParentest.isInstance(nodeParent)){
 				parentest=(T)nodeParent;
 			}
+			
+			if(!bIncludeLast && nodeParent.getParent()!=null){
+				// ex.:parent->rootNode  ->null
+				if(nodeParent.getParent().getParent()==null){ //YES double parent check!!!
+					break; //skips the top/root/gui nodes 
+				}
+			}
+			
 			nodeParent=nodeParent.getParent();
 		}
 		
 		return parentest;
 	}
-
-	public ArrayList<Node> getAllParents(Spatial spt) {
+	
+	/**
+	 * 
+	 * @param spt
+	 * @param bIncludeLast usually the root virtual world or gui node
+	 * @return last one is the parentest
+	 */
+	public ArrayList<Node> getAllParents(Spatial spt, boolean bIncludeLast) {
 		ArrayList<Node> anode = new ArrayList<>();
+		
 		Node nodeParent = spt.getParent();
+		
 		while(nodeParent!=null){
 			anode.add(nodeParent);
 			nodeParent=nodeParent.getParent();
 		}
+		
+		if(!bIncludeLast && anode.size()>0)anode.remove(anode.size()-1);
+		
 		return anode;
 	}
 	

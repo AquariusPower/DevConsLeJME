@@ -322,7 +322,7 @@ public class MiscLemurI {
 //				return true;
 //			}
 //		}
-		for(Node node:SpatialHierarchyI.i().getAllParents(capture)){
+		for(Node node:SpatialHierarchyI.i().getAllParents(capture,false)){
 			if(ListBox.class.isInstance(node))return true;
 		}
 		return false;

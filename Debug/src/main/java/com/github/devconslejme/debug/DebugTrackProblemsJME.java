@@ -79,7 +79,7 @@ public class DebugTrackProblemsJME implements ICheckProblems{
 				String str="";
 				for(Spatial spt : asptList){
 					str+=spt.getName()+"@";
-					for(Node node:SpatialHierarchyI.i().getAllParents(spt)){
+					for(Node node:SpatialHierarchyI.i().getAllParents(spt,true)){
 						str+=node.getName()+"/";
 					}
 				}

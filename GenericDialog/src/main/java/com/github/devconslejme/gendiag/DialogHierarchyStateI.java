@@ -242,7 +242,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 					
 					if(!hc.isBlocked()){
 						GuiGlobals.getInstance().requestFocus(pnl);
-						return true; //skip others, they cant fight against each other...
+						return true; //skip others, they cant fight against each other... TODO sort the auto focus list by last focus time before this?
 					}
 				}
 				
@@ -408,17 +408,33 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		}
 		
 		if(isAllowSuspendFlyCam()){
-			if(flycam.isEnabled()){
-				if(sys.getAllOpenedDialogs(null).size()>0){
-					flycam.setEnabled(false);
-				}
-			}else{
-				if(sys.getAllOpenedDialogs(null).size()==0){
-					flycam.setEnabled(true);
-				}
-//				SpatialHierarchyI.i().getAllChildrenOfTypeRecursiveFrom(nodeToMonitor, ResizablePanel.class, 1);
-			}
+			showCursor(sys.getAllOpenedDialogs(null).size()>0);
+//			ArrayList<Entity> aentList = sys.getAllOpenedDialogs(null);
+//			if(flycam.isEnabled()){
+//				if(aentList.size()>0){
+//					flycam.setEnabled(false);
+//					app.getInputManager().setCursorVisible(true);
+//				}
+//			}else{
+//				if(aentList.size()==0){
+//					flycam.setEnabled(true);
+//					app.getInputManager().setCursorVisible(false);
+//				}
+////				SpatialHierarchyI.i().getAllChildrenOfTypeRecursiveFrom(nodeToMonitor, ResizablePanel.class, 1);
+//			}
 			
+		}
+	}
+	
+	private void showCursor(boolean bEnableCursorVisible){
+		boolean bEnableFlyCam = !bEnableCursorVisible;
+		if(flycam!=null && flycam.isEnabled()!=bEnableFlyCam){
+			flycam.setEnabled(bEnableFlyCam);
+		}
+		
+//		boolean bEnableCursorVisible = !bEnableFlyCam;
+		if(app.getInputManager().isCursorVisible() != bEnableCursorVisible){
+			app.getInputManager().setCursorVisible( bEnableCursorVisible );
 		}
 	}
 	

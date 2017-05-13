@@ -28,6 +28,7 @@
 package com.github.devconslejme.tests;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.github.devconslejme.debug.DebugTrackProblemsJME;
 import com.github.devconslejme.debug.UnsafeDebugHacksI;
@@ -43,20 +44,25 @@ import com.github.devconslejme.gendiag.QueueManagerDialogI;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.CheckProblemsI;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.jme.DebugVisualsI;
 import com.github.devconslejme.misc.jme.EnvironmentI;
-import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.EnvironmentI.IEnvironmentListener;
+import com.github.devconslejme.misc.jme.FlyByCameraX;
+import com.github.devconslejme.misc.jme.PickingHandI;
 import com.jme3.app.Application;
+import com.jme3.app.DebugKeysAppState;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
 import com.jme3.app.state.AbstractAppState;
-import com.jme3.input.CameraInput;
+import com.jme3.audio.AudioListenerState;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
-import com.jme3.input.controls.InputListener;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
@@ -84,6 +90,8 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	
 	@Override
 	public void simpleInitApp() {
+		if(bEnableOpt)opt_initBasics();
+		
 		com.github.devconslejme.devcons.PkgCfgI.i().configure(this,getGuiNode(), getRootNode());
 		
 		/**
@@ -107,22 +115,57 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	
 	/** */
 	ArrayList<SimpleApplication> aoUpdOpts = new ArrayList<SimpleApplication>();
+	private FlyByCameraX	flycam;
 	private static boolean	bEnableOpt = true;
 	
-	private void opt_initAll() {
-		opt_disableSomeSimpleAppThings();
-		opt_initOptionalExtras();
-		opt_initOptionalOtherStuff();
-		opt_initOptionalIntegrateAllOtherTests();
-		opt_initSomeWorldObjects();
+	@Override
+	public FlyByCameraX getFlyByCamera() {
+		return flycam;
 	}
 	
+	public TestDevCons() {
+    super(new AudioListenerState());
+	}
+	
+	private void opt_initBasics() {
+    flycam = new FlyByCameraX(getCamera()).setAllowMove(true);
+    flycam.registerWithInput(getInputManager());
+		
+		//Unnecessary now: opt_disableSomeSimpleAppThings();
+	}
+	
+	private void opt_initAll() {
+		opt_initExtras();
+		
+		opt_initSomeWorldObjects();
+		
+		opt_initShowFPS();
+		
+		opt_initOtherStuff();
+		
+		opt_initIntegrateAllOtherTests();
+	}
+	
+	private void opt_initShowFPS() {
+//		throw new UnsupportedOperationException("method not implemented");
+	}
+
 	private void opt_initSomeWorldObjects() {
+		// origin
+		getRootNode().attachChild(DebugVisualsI.i()
+			.createArrow(ColorRGBA.Red).setFromTo(Vector3f.ZERO, Vector3f.UNIT_X));
+		getRootNode().attachChild(DebugVisualsI.i()
+			.createArrow(ColorRGBA.Green).setFromTo(Vector3f.ZERO, Vector3f.UNIT_Y));
+		getRootNode().attachChild(DebugVisualsI.i()
+			.createArrow(ColorRGBA.Blue).setFromTo(Vector3f.ZERO, Vector3f.UNIT_Z));
+		
+		// things to pickup
 		Box box = new Box(0.5f,0.5f,0.5f);
 		Geometry geom = new Geometry("test box",box);
 		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(ColorRGBA.Blue));
 		getRootNode().attachChild(geom);
 		
+		// picker
 		String strPck="PickVirtualWorldThing";
     getInputManager().addMapping(strPck, new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
     getInputManager().addListener(new ActionListener() {
@@ -131,7 +174,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 					if(getFlyByCamera().isEnabled())return;
 					
 					if(!isPressed && name.equals(strPck)){ //on release
-						Spatial spt = MiscJmeI.i().pickWorldSpatialAtCursor();
+						Spatial spt = PickingHandI.i().pickWorldSpatialAtCursor();
 						if(spt!=null)LoggingI.i().logMarker(spt.toString());
 					}
 				}
@@ -140,12 +183,37 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		);
 	}
 	
-	private void opt_disableSomeSimpleAppThings() {
+	private void disableSomeKeyMappings(){
 		// disable some mappings to let the console manage it too.
-		getInputManager().deleteMapping(SimpleApplication.INPUT_MAPPING_CAMERA_POS); //TODO there is no super code for it?
-		getInputManager().deleteMapping(SimpleApplication.INPUT_MAPPING_MEMORY); //TODO there is no super code for it?
-		getInputManager().deleteMapping(SimpleApplication.INPUT_MAPPING_HIDE_STATS);
-		getInputManager().deleteMapping(SimpleApplication.INPUT_MAPPING_EXIT); //this is important to let ESC be used for more things
+		QueueI.i().enqueue(new CallableXAnon() {
+			ArrayList<String> astrList = new ArrayList<String>(
+				Arrays.asList(
+					new String[]{
+						DebugKeysAppState.INPUT_MAPPING_MEMORY,
+						DebugKeysAppState.INPUT_MAPPING_CAMERA_POS,
+						SimpleApplication.INPUT_MAPPING_HIDE_STATS,
+						SimpleApplication.INPUT_MAPPING_EXIT, //this is important to let ESC be used for more things
+					}
+				)
+			);
+			
+			@Override
+			public Boolean call() {
+				for(String str:astrList.toArray(new String[0])){
+					if(getInputManager().hasMapping(str)){
+						getInputManager().deleteMapping(str);
+						astrList.remove(str);
+					}
+				}
+				
+				return astrList.size()==0; //will keep trying till all are deleted
+			}
+		});
+		
+	}
+	
+	private void opt_disableSomeSimpleAppThings() {
+		disableSomeKeyMappings();
 		stateManager.getState(StatsAppState.class).setDisplayStatView(false);
 	}
 	
@@ -169,7 +237,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 			JmeSystem.getStorageFolder(StorageFolderType.Internal)); // this is optional
 	}
 	
-	private void opt_initOptionalExtras() {
+	private void opt_initExtras() {
 		//// SingleAppInstance
 		GlobalManagerI.i().get(SingleAppInstance.class).configureRequiredAtApplicationInitialization(null);
 		GlobalManagerI.i().get(SingleAppInstance.class).addCheckProblemsCall(
@@ -215,7 +283,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 				);
 	}
 
-	private void opt_initOptionalOtherStuff() {
+	private void opt_initOtherStuff() {
 		//// Debug Track Problems
 		DebugTrackProblemsJME.i().configure(getGuiNode(), getRootNode());
 		CheckProblemsI.i().addProblemsChecker(DebugTrackProblemsJME.i());
@@ -234,7 +302,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	/**
 	 * so thru devcons user commands can instantiate the other tests
 	 */
-	private void opt_initOptionalIntegrateAllOtherTests() {
+	private void opt_initIntegrateAllOtherTests() {
 		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestContextMenu()));
 		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestChoiceDialog()));
 		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestMultiChildDialog()));

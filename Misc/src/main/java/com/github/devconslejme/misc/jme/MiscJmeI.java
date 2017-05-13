@@ -65,7 +65,6 @@ public class MiscJmeI {
 	private Application	app;
 	private Node	nodeVirtualWorld;
 	private SimpleApplication	sappOptional;
-	private CollisionResults	crLastPick;
 	
 	/**
 	 * 
@@ -76,7 +75,7 @@ public class MiscJmeI {
 		if (this.app instanceof SimpleApplication)sappOptional = (SimpleApplication) this.app;
 		
 		setNodeVirtualWorld(nodeVirtualWorld);
-		if(sappOptional!=null && getNodeVirtualWorld()==null){
+		if(isSimpleApplication() && getNodeVirtualWorld()==null){
 			setNodeVirtualWorld(sappOptional.getRootNode());
 		}
 		
@@ -276,39 +275,6 @@ public class MiscJmeI {
 		return v3fRayCastOrigin;
 	}
 	
-	public Spatial pickWorldSpatialAtCursor(){
-		CollisionResults cr = pickWorldPiercingAtCursor();
-		if(cr==null)return null;
-		return cr.getClosestCollision().getGeometry();
-	}
-	public CollisionResults pickWorldPiercingAtCursor(){
-		return pickWorldPiercingAtCursor(getNodeVirtualWorld());
-	}
-	public CollisionResults pickWorldPiercingAtCursor(Node nodeVirtualWorld){
-		crLastPick = new CollisionResults();
-		
-		Vector3f v3fCursorAtVirtualWorld3D = app.getCamera().getWorldCoordinates(
-			EnvironmentI.i().getMouse().getPos2D(), 0f);
-		
-		Vector3f v3fDirection = app.getCamera().getWorldCoordinates(
-			EnvironmentI.i().getMouse().getPos2D(), 1f);
-		v3fDirection.subtractLocal(v3fCursorAtVirtualWorld3D).normalizeLocal();
-		
-		Ray ray = new Ray(v3fCursorAtVirtualWorld3D, v3fDirection);
-		nodeVirtualWorld.collideWith(ray, crLastPick);
-
-		if(crLastPick.size()>0)return crLastPick;
-		
-		return null;
-	}
-	
-	public Geometry getLastWorldPick(){
-		if(crLastPick==null)return null;
-		return crLastPick.getClosestCollision().getGeometry();
-	}
-	public CollisionResults getLastWorldPiercingPick(){
-		return crLastPick;
-	}
 
 	public Node getNodeVirtualWorld() {
 		return nodeVirtualWorld;
@@ -318,5 +284,16 @@ public class MiscJmeI {
 		this.nodeVirtualWorld = nodeVirtualWorld;
 		return this;
 	}
+
+	public Application getApp() {
+		return app;
+	}
 	
+	public boolean isSimpleApplication(){
+		return sappOptional!=null;
+	}
+	
+	public SimpleApplication getSApp(){
+		return sappOptional;
+	}
 }

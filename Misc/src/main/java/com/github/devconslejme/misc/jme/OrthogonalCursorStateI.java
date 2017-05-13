@@ -186,18 +186,23 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 			
 			v2fCursorPosPrevious.set(v2fCursorPos);
 		}
+		
+		setShow(inputman.isCursorVisible());
 	}
 	
 	@Override
 	public void setEnabled(boolean enabled) {
 		super.setEnabled(enabled);
 		
-		if(enabled){
-			nodeParent.attachChild(geom);
+		setShow(enabled);
+	}
+	
+	public void setShow(boolean b){
+		if(b){
+			if(geom.getParent()==null)nodeParent.attachChild(geom);
 		}else{
-			geom.removeFromParent();
+			if(geom.getParent()!=null)geom.removeFromParent();
 		}
-		
 	}
 
 	public boolean isRotating() {
