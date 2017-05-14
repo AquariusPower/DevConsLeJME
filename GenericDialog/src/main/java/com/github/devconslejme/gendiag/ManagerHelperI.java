@@ -26,8 +26,9 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.github.devconslejme.gendiag;
 
+import java.util.function.Function;
+
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.google.common.base.Function;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -35,18 +36,47 @@ import com.google.common.base.Function;
 public class ManagerHelperI {
 	public static ManagerHelperI i(){return GlobalManagerI.i().get(ManagerHelperI.class);}
 	
-	private Function<Object, Void>	funcHandleCallRetVal;
-
-	public void setHandleCallRetVal(Function<Object,Void> func){
+	private Function<RetVal, Void>	funcHandleCallRetVal;
+	
+	public static class RetVal{
+		private Object objRet;
+		private String strDescription;
+		
+		public RetVal(Object objRet, String strDescription) {
+			super();
+			this.objRet = objRet;
+			this.strDescription = strDescription;
+		}
+		public Object getRetVal() {
+			return objRet;
+		}
+		public RetVal setRet(Object objRet) {
+			this.objRet = objRet;
+			return this; //for beans setter
+		}
+		public String getDescription() {
+			return strDescription;
+		}
+		public RetVal setDescription(String strDescription) {
+			this.strDescription = strDescription;
+			return this; //for beans setter
+		}
+	}
+	
+	public void setHandleCallRetVal(Function<RetVal,Void> func){
 		assert(funcHandleCallRetVal==null);
 		this.funcHandleCallRetVal=func;
 	}
 	
-	public Function<Object, Void> getHandleCallRetVal(){
+	public Function<RetVal, Void> getHandleCallRetVal(){
 		return funcHandleCallRetVal;
 	}
 	
 	public boolean isHandleCallRetValSet(){
 		return funcHandleCallRetVal!=null;
+	}
+	
+	public void applyCallHandler(RetVal rv){
+		funcHandleCallRetVal.apply(rv);
 	}
 }

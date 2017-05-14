@@ -27,13 +27,14 @@
 
 package com.github.devconslejme.misc.jme;
 
+import java.util.function.Function;
+
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MainThreadI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
-import com.google.common.base.Function;
 import com.jme3.scene.Spatial;
 
 

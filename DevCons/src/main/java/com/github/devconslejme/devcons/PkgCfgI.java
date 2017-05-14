@@ -27,12 +27,13 @@
 
 package com.github.devconslejme.devcons;
 
+import java.util.function.Function;
+
 import com.github.devconslejme.misc.Annotations.NonStandard;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.MessagesI;
-import com.google.common.base.Function;
 import com.jme3.app.Application;
 import com.jme3.scene.Node;
 

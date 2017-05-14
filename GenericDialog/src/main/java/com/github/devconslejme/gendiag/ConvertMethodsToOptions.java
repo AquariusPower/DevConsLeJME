@@ -34,6 +34,7 @@ import java.lang.reflect.Modifier;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextButton;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
+import com.github.devconslejme.gendiag.ManagerHelperI.RetVal;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.CmdCfg;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction;
@@ -47,7 +48,6 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.StringI.EStringMatchMode;
-import com.google.common.base.Function;
 import com.simsilica.lemur.Button;
 
 /**
@@ -151,7 +151,7 @@ public class ConvertMethodsToOptions {
 							Object objRet = mh.getMethod().invoke(mh.getConcreteObjectInstance());
 							MessagesI.i().output(true, System.out, "ReturnValue", this, strInfo, objRet);
 							if(G.i(ManagerHelperI.class).isHandleCallRetValSet()){
-								G.i(ManagerHelperI.class).getHandleCallRetVal().apply(objRet);
+								G.i(ManagerHelperI.class).applyCallHandler(new RetVal(objRet, mh.getFullHelp(true, true)));
 							}
 //							if(funcHandleCallRetVal!=null)funcHandleCallRetVal.apply(objRet);
 //							JavaScriptI.i().showRetVal(objRet);
@@ -176,6 +176,31 @@ public class ConvertMethodsToOptions {
 		
 		return iValidCount;
 	}
+	
+//	public static class ReturnValueHolder{
+//		private Object objRet;
+//		private String strDescription;
+//		
+//		public ReturnValueHolder(Object objRet, String strDescription) {
+//			super();
+//			this.objRet = objRet;
+//			this.strDescription = strDescription;
+//		}
+//		public Object getRet() {
+//			return objRet;
+//		}
+//		public ReturnValueHolder setRet(Object objRet) {
+//			this.objRet = objRet;
+//			return this; //for beans setter
+//		}
+//		public String getDescription() {
+//			return strDescription;
+//		}
+//		public ReturnValueHolder setDescription(String strDescription) {
+//			this.strDescription = strDescription;
+//			return this; //for beans setter
+//		}
+//	}
 	
 //	public void setHandleCallRetVal(Function<Object,Void> func){
 //		assert(funcHandleCallRetVal==null);

@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import com.github.devconslejme.es.DialogHierarchyComp.DiagCompBean;
 import com.github.devconslejme.es.DialogHierarchySystemI;
@@ -45,6 +46,7 @@ import com.github.devconslejme.gendiag.ContextMenuI.ContextMenuAnon;
 import com.github.devconslejme.gendiag.ContextMenuI.HintUpdaterPerCtxtBtn;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.gendiag.ManagerHelperI;
+import com.github.devconslejme.gendiag.ManagerHelperI.RetVal;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
@@ -68,7 +70,6 @@ import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI.EPopup;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.github.devconslejme.misc.lemur.ResizablePanel.EEdge;
 import com.github.devconslejme.misc.lemur.VersionedVector3f;
-import com.google.common.base.Function;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
@@ -303,10 +304,11 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		JavaScriptI.i().configure(); //before all others
 		LoggingI.i().configure();
 		
-		ManagerHelperI.i().setHandleCallRetVal(new Function<Object, Void>() {
+		ManagerHelperI.i().setHandleCallRetVal(new Function<RetVal, Void>() {
 			@Override
-			public Void apply(Object input) {
-				JavaScriptI.i().showRetVal(input);
+			public Void apply(RetVal rv) {
+				LoggingI.i().logEntry(rv.getDescription());
+				JavaScriptI.i().showRetVal(rv.getRetVal());
 				return null;
 			}
 		});
