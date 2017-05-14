@@ -203,29 +203,49 @@ public class StringI {
 	public ArrayList<String> splitInLines(String strHelp, int iWrapAt) {
 		String[] astrWords = strHelp.split(" ");
 		
-		ArrayList<String> astrList  = new ArrayList<String>();
+		ArrayList<String> astrLines  = new ArrayList<String>();
 //		for(char ch:strHelp.toCharArray()){
 		String strLine="";
+		int iWordCountPerLine=0;
 		for(int i=0;i<astrWords.length;i++){
-			String str = astrWords[i];
+			String strWord = astrWords[i];
 			
 			if(!strLine.isEmpty()){
-				if((strLine+" "+str).length()>=iWrapAt){
-					astrList.add(strLine);
-					strLine="";
+				if((strLine+" "+strWord).length()>=iWrapAt){
+					addLine(strLine, strWord, astrLines, iWrapAt, iWordCountPerLine);
+					strLine="";iWordCountPerLine=0; //reset line
+//					if(iWordCountPerLine==1 && strLine.length()>iWrapAt){ //too big word
+//						astrLines.add(strLine.substring(0, iWrapAt));
+//						strLine=strLine.substring(iWrapAt);
+//					}
+//					astrLines.add(strLine);
+//					strLine="";
+//					iWordCountPerLine=0;
 				}
 			}
 			
 			if(!strLine.isEmpty())strLine+=" ";
-			strLine+=str;
+			strLine+=strWord;
+			iWordCountPerLine++;
 			
 			if(i==astrWords.length-1){
-				astrList.add(strLine);
-				break;
+				addLine(strLine, strWord, astrLines, iWrapAt, iWordCountPerLine);
+//				astrLines.add(strLine);
+//				iWordCountPerLine=0;
+//				break; //redundant
 			}
 		}
 		
-		return astrList;
+		return astrLines;
 	}
+	private void addLine(String strLine, String strWord, ArrayList<String> astrLinesToModify, int iWrapAt, int iWordCountPerLine){
+		if(iWordCountPerLine==1 && strLine.length()>iWrapAt){ //too big word
+			astrLinesToModify.add(strLine.substring(0, iWrapAt));
+			strLine=strLine.substring(iWrapAt);
+		}
+		astrLinesToModify.add(strLine);
+//		strLine="";iWordCountPerLine=0;
+	}
+	
 	
 }

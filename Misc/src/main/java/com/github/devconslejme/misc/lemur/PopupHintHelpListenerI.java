@@ -122,51 +122,43 @@ public class PopupHintHelpListenerI implements CursorListener{
 	}
 	
 	private void updatePopupHelp(Vector2f v2fMousePos){
-//		if(v2fMousePos==null){
-//			v2fMousePos=this.v2fMousePosLast;
-//		}else{
-//			this.v2fMousePosLast=v2fMousePos;
-//		}
-		
 		if(strPopupHelp!=null){
 			lblPopupHelp.setText(strPopupHelp);
 			lblPopupHelp.setInsets(new Insets3f(3, 3, 3, 3));
 			
-			Vector3f v3fSize = lblPopupHelp.getSize();
-			
-			float fDistFromCursor=10f;
-//			float fZAboveAll=MiscJmeI.i().getZAboveAllAtGuiNode(); 
-			
-			float fX = v2fMousePos.x-v3fSize.x/2;
-			if(fX<0){
-				fX=0;
-			}else{
-				float fDiff = (fX+cntrPopupHelp.getSize().x) - EnvironmentI.i().getDisplay().getWidth();
-				if(fDiff>0)fX-=fDiff;
-			}
-//			if(fX+cntrPopupHelp.getSize().x > DisplayI.i().getWidth()){}
-			
-			float fY = v2fMousePos.y+v3fSize.y+fDistFromCursor;
-			if(fY>EnvironmentI.i().getDisplay().getHeight()){
-				fY=EnvironmentI.i().getDisplay().getHeight();
-			}else{
-				if( (fY - cntrPopupHelp.getSize().y) < 0 )fY=cntrPopupHelp.getSize().y;
-			}
-			
-			cntrPopupHelp.setLocalTranslation(fX,fY,MiscJmeI.i().getZAboveAllAtGuiNode());
-			
-			//TODO position always fully inside app screen limits!!!
+			positionFullyInsideScreenLimits(v2fMousePos);
 			
 			if(cntrPopupHelp.getParent()==null)nodeGui.attachChild(cntrPopupHelp);
 		}else{
-//			if(lblPopupHelp!=null){
-				if(cntrPopupHelp.getParent()!=null){
-					cntrPopupHelp.removeFromParent();
-				}
-//			}
+			if(cntrPopupHelp.getParent()!=null){
+				cntrPopupHelp.removeFromParent();
+			}
 		}
 	}
 	
+	private void positionFullyInsideScreenLimits(Vector2f v2fMousePos) {
+		Vector3f v3fSize = lblPopupHelp.getSize();
+		
+		float fDistFromCursor=10f;
+		
+		float fX = v2fMousePos.x-v3fSize.x/2;
+		if(fX<0){
+			fX=0;
+		}else{
+			float fDiff = (fX+cntrPopupHelp.getSize().x) - EnvironmentI.i().getDisplay().getWidth();
+			if(fDiff>0)fX-=fDiff;
+		}
+		
+		float fY = v2fMousePos.y+v3fSize.y+fDistFromCursor;
+		if(fY>EnvironmentI.i().getDisplay().getHeight()){
+			fY=EnvironmentI.i().getDisplay().getHeight();
+		}else{
+			if( (fY - cntrPopupHelp.getSize().y) < 0 )fY=cntrPopupHelp.getSize().y;
+		}
+		
+		cntrPopupHelp.setLocalTranslation(fX,fY,MiscJmeI.i().getZAboveAllAtGuiNode());
+	}
+
 	public static class PopupHelpUserData{
 		String strPopupHelp=null;
 
@@ -177,32 +169,24 @@ public class PopupHintHelpListenerI implements CursorListener{
 	}
 	
 	public String getPopupHelp(Spatial spt){
-//		return UserDataI.i().getUserDataPSH(spt, EPopup.strPopupHelpUserData.uId());
 		PopupHelpUserData ud = UserDataI.i().retrieve(spt, PopupHelpUserData.class, false);
 		if(ud==null)return null;
 		return ud.strPopupHelp;
 	}
 	public void resetPopupHelp(Spatial spt){
-//		UserDataI.i().setUserDataPSHSafely(spt, EPopup.strPopupHelpUserData.uId(), null);
 		PopupHelpUserData ud = UserDataI.i().retrieve(spt, PopupHelpUserData.class, true);
 		if(ud!=null)ud.setPopupHelp(null);
 	}
 	public void setPopupHintHelp(Spatial spt, String strHelp){
 		if(strHelp.length()>iWrapAt){
 			ArrayList<String> astrLines = StringI.i().splitInLines(strHelp,iWrapAt);
-//			Iterable<String> astr = Splitter
-//					.fixedLength(iWrapAt)
-//					.split(strHelp);
-//			strHelp = Joiner.on("\n").join(astr);
 			strHelp = Joiner.on("\n").join(astrLines);
 		}
 		
 		UserDataI.i().put(spt, new PopupHelpUserData().setPopupHelp(strHelp));
 		CursorEventControl.addListenersToSpatial(spt, this);
-//		spt.setUserData(EUserDataMiscJme.strPopupHelp.s(), strHelp);
 	}
 	
-//	public void configure(Node nodeParent,String strPopupStyle) {
 	public void configure(Node nodeParent) {
 		this.nodeGui = nodeParent;
 		

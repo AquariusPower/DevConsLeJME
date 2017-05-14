@@ -42,8 +42,11 @@ import com.simsilica.lemur.input.FunctionId;
 /**
  * Do not use UserData with Spatials you instance.
  * It is much better to extend the required class and add clearly recognizable fields on it.
+ * 
  * The UserData is mainly to apply at other Spatials that will easify extra functionalities without
- * having to deal with local HashMaps.
+ * having to deal with local HashMaps. 
+ * (Opinion) Still then, a single custom class with any amount of fields will be more readable/reconizable and 
+ * much less confusing than several spread values set directly using UserData. 
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */

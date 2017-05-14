@@ -41,6 +41,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Function;
 
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Primitives;
@@ -439,5 +440,34 @@ public class JavaLangI {
 		}
 		
 		return null;
+	}
+	
+	/** shorteners */
+	public static class FunctionX{
+//		public static abstract class F{
+//			abstract void work();
+//		}
+//		public static abstract class FI<I>{
+//			abstract void work(I in);
+//		}
+//		public static abstract class FO<O>{
+//			abstract O work();
+//		}
+//		public static abstract class FIO<I,O>{
+//			abstract O work(I in);
+//		}
+		
+		public static abstract class F implements Function<Void,Void>{
+			/** apply */abstract void a();
+		}
+		public static abstract class FI<I> implements Function<I,Void>{
+			/** apply */abstract void a(I in);
+		}
+		public static abstract class FO<O> implements Function<Void,O>{
+			/** apply */abstract O a();
+		}
+		public static abstract class FIO<I,O> implements Function<I,O>{
+			/** apply */abstract O a(I in);
+		}
 	}
 }
