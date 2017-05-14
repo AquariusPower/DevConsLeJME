@@ -36,6 +36,7 @@ import com.github.devconslejme.misc.MainThreadI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.jme3.scene.Spatial;
+import com.simsilica.lemur.input.FunctionId;
 
 
 /**
@@ -60,7 +61,7 @@ public class UserDataI {
 	 * all super classes of the object will be the keys
 	 * see {@link #setUserDataPSHSafely(Spatial, String, Object)}
 	 */
-	public <T extends Spatial> boolean setUserDataPSHSafely(T spt, Object obj) {
+	private <T extends Spatial> boolean setUserDataPSHSafely(T spt, Object obj) {
 		boolean b=false;
 		for(Class<?> cl:JavaLangI.i().getSuperClassesOf(obj,true)){
 			b=setUserDataPSHSafely(spt, cl.getName(), obj);
@@ -74,7 +75,7 @@ public class UserDataI {
 	 * @param obj each key will be one super class of it
 	 * @return if was set now or will be at the main thread 
 	 */
-	public <T extends Spatial> boolean setUserDataPSHSafely(T spt, String strKey, Object obj) {
+	private <T extends Spatial> boolean setUserDataPSHSafely(T spt, String strKey, Object obj) {
 		CallableX cx = new CallableX() {
 			@SuppressWarnings("unchecked")
 			@Override
@@ -110,7 +111,7 @@ public class UserDataI {
 	 * @param bCreateIfNull requires class to have empty constructor
 	 * @return
 	 */
-	public <R> R getUserDataPSH(Spatial spt, Class<R> cl, boolean bCreateIfNull){
+	private <R> R getUserDataPSH(Spatial spt, Class<R> cl, boolean bCreateIfNull){
 		R ret = getUserDataPSH(spt, cl);
 		if(ret==null && bCreateIfNull){
 			try {
@@ -121,10 +122,10 @@ public class UserDataI {
 		}
 		return ret;
 	}
-	public <R> R getUserDataPSH(Spatial spt, Class<R> cl){
+	private <R> R getUserDataPSH(Spatial spt, Class<R> cl){
 		return getUserDataPSH(spt, cl.getName());
 	}
-	public <R> R getUserDataPSH(Spatial spt, String strKey){
+	private <R> R getUserDataPSH(Spatial spt, String strKey){
 		R ret = spt.getUserData(strKey);
 		if(ret==null)return null;
 		
@@ -148,7 +149,7 @@ public class UserDataI {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public <R> R getUserDataPSH(Spatial spt, IUDKey eKey){
+	private <R> R getUserDataPSH(Spatial spt, IUDKey eKey){
 		R ret = getUserDataPSH( spt, eKey.getUId() );
 		if(ret!=null && !eKey.getType().isAssignableFrom(ret.getClass())){
 			throw new DetailedException("incompatible types",ret.getClass(),eKey.getType(),spt,eKey);
@@ -157,22 +158,44 @@ public class UserDataI {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public boolean setUserDataPSH(Spatial spt, IUDKey eKey, Object obj){
+	private boolean setUserDataPSH(Spatial spt, IUDKey eKey, Object obj){
 		if(obj!=null && !eKey.getType().isAssignableFrom(obj.getClass())){
 			throw new DetailedException("incompatible types",obj.getClass(),eKey,eKey.getType(),spt);
 		}
 		return setUserDataPSHSafely(spt, eKey.getUId(), obj);
 	}
 	
-	public <T> T retrieve(Spatial spt, String strKey, Function<Void,T> funcInstanceFactory){
-		T obj = getUserDataPSH(spt, strKey);
-		if(obj==null){
-			obj=funcInstanceFactory.apply(null);
-			setUserDataPSHSafely(spt, strKey, obj);
+//	public boolean isUserDataSet(Spatial spt, Class cl){
+//		return getUserDataPSH(spt, cl.getName())!=null;
+//	}
+//	public <T> T retrieve(Spatial spt, String strKey, Function<Void,T> funcInstanceFactory){
+	/**
+	 * 
+	 * @param spt
+	 * @param cl
+	 * @param funcInstanceFactory if null will instance using this function
+	 * @return
+	 */
+	public <T> T retrieve(Spatial spt, Class<T> cl, Function<Void,T> funcInstanceFactory){
+		T ret = getUserDataPSH(spt, cl);
+//		T obj = getUserDataPSH(spt, strKey);
+		if(ret==null){
+			ret=funcInstanceFactory.apply(null);
+//			setUserDataPSHSafely(spt, strKey, ret);
+			setUserDataPSHSafely(spt, ret);
 		}
-		return obj;
+		return ret;
 	}
-	public <R> R retrieve(Spatial spt, Class<R> cl){
-		return getUserDataPSH(spt, cl, true);
+	@SuppressWarnings("unchecked")
+	public <T> T put(Spatial spt, T objToStore){
+		return retrieve(spt, (Class<T>)objToStore.getClass(), new Function<Void,T>(){
+			@Override
+			public T apply(Void t) {
+				return objToStore;
+			}
+		});
+	}
+	public <R> R retrieve(Spatial spt, Class<R> cl, boolean bCreateIfNull){
+		return getUserDataPSH(spt, cl, bCreateIfNull);
 	}
 }

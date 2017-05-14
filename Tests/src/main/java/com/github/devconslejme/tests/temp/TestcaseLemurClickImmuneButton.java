@@ -4,6 +4,7 @@ import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.misc.jme.EnvironmentI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
+import com.github.devconslejme.tests.TestHierarchyResizablePanel.BaseTextUD;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
@@ -60,11 +61,25 @@ public class TestcaseLemurClickImmuneButton extends SimpleApplication{
 		
 		DialogHierarchyStateI.i().showDialog(rzpParent);
 	}
-	enum EUserData{
-		keyBaseText,
-		;
-		public String s(){return toString();}
+	
+	public static class BaseTextUD{
+		private String strBaseText;
+
+		public String getBaseText() {
+			return strBaseText;
+		}
+
+		public BaseTextUD setBaseText(String strBaseText) {
+			this.strBaseText = strBaseText;
+			return this; //for beans setter
+		}
 	}
+
+//	enum EUserData{
+//		keyBaseText,
+//		;
+//		public String s(){return toString();}
+//	}
 	private ResizablePanel createDialog(Vector3f pos,String strName,String strInfo) {
 		if(strInfo==null)strInfo=strName;
 		
@@ -74,7 +89,7 @@ public class TestcaseLemurClickImmuneButton extends SimpleApplication{
 		
 		String strBaseText=strName+"/"+strInfo;
 		Button btn = new Button(strBaseText);
-		UserDataI.i().setUserDataPSHSafely(btn, EUserData.keyBaseText.s(), strBaseText);
+		UserDataI.i().put(btn, new BaseTextUD().setBaseText(strBaseText));
 		rzp.setContents(btn);
 //		DragParentestPanelListenerI.i().applyAt(btn);
 		

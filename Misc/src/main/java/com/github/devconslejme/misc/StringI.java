@@ -193,4 +193,39 @@ public class StringI {
 		
 		return strOut;
 	}
+	
+	/**
+	 * this will also be careful to not break words
+	 * @param strHelp
+	 * @param iWrapAt
+	 * @return
+	 */
+	public ArrayList<String> splitInLines(String strHelp, int iWrapAt) {
+		String[] astrWords = strHelp.split(" ");
+		
+		ArrayList<String> astrList  = new ArrayList<String>();
+//		for(char ch:strHelp.toCharArray()){
+		String strLine="";
+		for(int i=0;i<astrWords.length;i++){
+			String str = astrWords[i];
+			
+			if(!strLine.isEmpty()){
+				if((strLine+" "+str).length()>=iWrapAt){
+					astrList.add(strLine);
+					strLine="";
+				}
+			}
+			
+			if(!strLine.isEmpty())strLine+=" ";
+			strLine+=str;
+			
+			if(i==astrWords.length-1){
+				astrList.add(strLine);
+				break;
+			}
+		}
+		
+		return astrList;
+	}
+	
 }

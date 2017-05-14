@@ -1164,7 +1164,8 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		clBg = colorConsoleStyleBackground.mult(1.1f); //new ColorRGBA(0,0.25f,0,0.75f);
 		attrs.set(Button.LAYER_BACKGROUND, new QuadBackgroundComponent(clBg));
 		
-		attrs = styles.getSelector(EPopup.DialogStyleElementIdPopupHelp.uId(), getStyle());
+		//TODO this would require recreating the popup help label every time to apply current target's style...
+		attrs = styles.getSelector(EPopup.DialogStyleElementIdPopupHelp.getUId(), getStyle());
 		attrs.set(EAttribute.color.s(), ColorRGBA.Blue.clone());
 		clBg = ColorRGBA.Cyan.clone();
 		attrs.set(Button.LAYER_BACKGROUND, new QuadBackgroundComponent(clBg));

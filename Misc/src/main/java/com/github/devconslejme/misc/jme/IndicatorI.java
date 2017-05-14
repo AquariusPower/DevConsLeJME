@@ -232,11 +232,11 @@ public class IndicatorI {
 	
 	private GeomIndicatorsData createNewGeomIndicatorsDataAt(Spatial spt){
 		GeomIndicatorsData data=new GeomIndicatorsData();
-		UserDataI.i().setUserDataPSHSafely(spt, data);
+		UserDataI.i().put(spt, data);
 		return data;
 	}
 	private GeomIndicatorsData getGeomIndicatorsDataFrom(Spatial spt){
-		return UserDataI.i().getUserDataPSH(spt, GeomIndicatorsData.class);
+		return UserDataI.i().retrieve(spt, GeomIndicatorsData.class, false);
 	}
 	
 	public static enum EIndicatorMode{

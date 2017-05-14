@@ -478,7 +478,9 @@ public class ContextMenuI implements IResizableListener{
 			
 			Button btn = (Button)capture;
 			
-			ContextMenu cm = UserDataI.i().getUserDataPSH(btn, ContextMenu.class);
+//			ContextMenu cm = UserDataI.i().getUserDataPSH(btn, ContextMenu.class);
+			ContextMenu cm = UserDataI.i().retrieve(btn, ContextMenu.class,false);
+//			if(UserDataI.i().isUserDataSet(btn, ContextMenu.class)){
 			if(cm!=null){
 				ContextMenuI.i().showContextMenu(event.getLocation(), btn.getText(), cm.setContextSource(btn));
 				return true;
@@ -579,11 +581,11 @@ public class ContextMenuI implements IResizableListener{
 	 * @return true if was just applied, false if was already applied before and did nothing now
 	 */
 	public boolean applyContextMenuAtSource(Spatial sptContextClick, ContextMenu cm){
-		if(UserDataI.i().getUserDataPSH(sptContextClick, ContextMenu.class)!=null){
+		if(UserDataI.i().retrieve(sptContextClick, ContextMenu.class, false)!=null){
 			return false; //already set
 		}
 		
-		UserDataI.i().setUserDataPSHSafely(sptContextClick, cm);
+		UserDataI.i().put(sptContextClick, cm);
 		AbsorbClickCommandsI.i().absorbClickCommands(sptContextClick);
 		CursorEventControl.addListenersToSpatial(sptContextClick, contextMenuSourceCursorListenerX);
 		

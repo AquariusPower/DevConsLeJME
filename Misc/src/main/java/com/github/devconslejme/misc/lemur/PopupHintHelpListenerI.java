@@ -27,12 +27,17 @@
 
 package com.github.devconslejme.misc.lemur;
 
+import java.util.ArrayList;
+
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.EnvironmentI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
+import com.github.devconslejme.misc.jme.UserDataI.IUDKey;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.jme3.math.ColorRGBA;
@@ -58,11 +63,21 @@ import com.simsilica.lemur.style.ElementId;
 public class PopupHintHelpListenerI implements CursorListener{
 	public static PopupHintHelpListenerI i(){return GlobalManagerI.i().get(PopupHintHelpListenerI.class);}
 	
-	public static enum EPopup{
-		strPopupHelpUserData,
+	public static enum EPopup implements IUDKey{
+//		strPopupHelpUserData,
 		DialogStyleElementIdPopupHelp,
 		;
-		public String uId(){return EPopup.class.getName()+"/"+toString();}
+//		public String uId(){return EPopup.class.getName()+"/"+toString();}
+
+		@Override
+		public Class getType() {
+			return null;
+		}
+
+		@Override
+		public String getUId() {
+			return JavaLangI.i().enumUId(this);
+		}
 	}
 	private Label	lblPopupHelp;
 	private String	strPopupHelp;
@@ -89,6 +104,8 @@ public class PopupHintHelpListenerI implements CursorListener{
 		strPopupHelp = getPopupHelp(target);
 		if(strPopupHelp!=null){
 			this.sptLastPopupHelpValidTarget = target;
+			//TODO recreate the label with the target's style?
+//			lblPopupHelp;
 		}
 	}
 
@@ -118,7 +135,7 @@ public class PopupHintHelpListenerI implements CursorListener{
 			Vector3f v3fSize = lblPopupHelp.getSize();
 			
 			float fDistFromCursor=10f;
-			float fZAboveAll=MiscJmeI.i().getZAboveAllAtGuiNode(); 
+//			float fZAboveAll=MiscJmeI.i().getZAboveAllAtGuiNode(); 
 			
 			float fX = v2fMousePos.x-v3fSize.x/2;
 			if(fX<0){
@@ -136,7 +153,7 @@ public class PopupHintHelpListenerI implements CursorListener{
 				if( (fY - cntrPopupHelp.getSize().y) < 0 )fY=cntrPopupHelp.getSize().y;
 			}
 			
-			cntrPopupHelp.setLocalTranslation(fX,fY,fZAboveAll);
+			cntrPopupHelp.setLocalTranslation(fX,fY,MiscJmeI.i().getZAboveAllAtGuiNode());
 			
 			//TODO position always fully inside app screen limits!!!
 			
@@ -150,54 +167,65 @@ public class PopupHintHelpListenerI implements CursorListener{
 		}
 	}
 	
+	public static class PopupHelpUserData{
+		String strPopupHelp=null;
+
+		public PopupHelpUserData setPopupHelp(String strHelp) {
+			this.strPopupHelp=strHelp;
+			return this;
+		}
+	}
+	
 	public String getPopupHelp(Spatial spt){
-		return UserDataI.i().getUserDataPSH(spt, EPopup.strPopupHelpUserData.uId());
+//		return UserDataI.i().getUserDataPSH(spt, EPopup.strPopupHelpUserData.uId());
+		PopupHelpUserData ud = UserDataI.i().retrieve(spt, PopupHelpUserData.class, false);
+		if(ud==null)return null;
+		return ud.strPopupHelp;
 	}
 	public void resetPopupHelp(Spatial spt){
-		UserDataI.i().setUserDataPSHSafely(spt, EPopup.strPopupHelpUserData.uId(), null);
+//		UserDataI.i().setUserDataPSHSafely(spt, EPopup.strPopupHelpUserData.uId(), null);
+		PopupHelpUserData ud = UserDataI.i().retrieve(spt, PopupHelpUserData.class, true);
+		if(ud!=null)ud.setPopupHelp(null);
 	}
 	public void setPopupHintHelp(Spatial spt, String strHelp){
 		if(strHelp.length()>iWrapAt){
-			Iterable<String> astr = Splitter
-					.fixedLength(iWrapAt)
-					.split(strHelp);
-			strHelp = Joiner.on("\n").join(astr);
+			ArrayList<String> astrLines = StringI.i().splitInLines(strHelp,iWrapAt);
+//			Iterable<String> astr = Splitter
+//					.fixedLength(iWrapAt)
+//					.split(strHelp);
+//			strHelp = Joiner.on("\n").join(astr);
+			strHelp = Joiner.on("\n").join(astrLines);
 		}
-
-		UserDataI.i().setUserDataPSHSafely(spt, EPopup.strPopupHelpUserData.uId(), strHelp);
+		
+		UserDataI.i().put(spt, new PopupHelpUserData().setPopupHelp(strHelp));
 		CursorEventControl.addListenersToSpatial(spt, this);
 //		spt.setUserData(EUserDataMiscJme.strPopupHelp.s(), strHelp);
 	}
-
+	
 //	public void configure(Node nodeParent,String strPopupStyle) {
 	public void configure(Node nodeParent) {
 		this.nodeGui = nodeParent;
 		
-//		if(lblPopupHelp==null){
 			lblPopupHelp = new Label(
 				"nothing yet...", 
-				new ElementId(EPopup.strPopupHelpUserData.uId()),
+				new ElementId(EPopup.DialogStyleElementIdPopupHelp.getUId()),
 				GuiGlobals.getInstance().getStyles().getDefaultStyle() //BaseStyles.GLASS
-//				strPopupStyle==null?GuiGlobals.getInstance().getStyles().getDefaultStyle():strPopupStyle //BaseStyles.GLASS
 			); 
 			lblPopupHelp.setName("Popup Help/Hint Label");
-//		}
-			lblPopupHelp.setColor(ColorRGBA.Blue);
+//			lblPopupHelp.setColor(ColorRGBA.Blue);
 		
 		MiscJmeI.i().addToName(lblPopupHelp, PopupHintHelpListenerI.class.getSimpleName(), true);
 		
 		cntrPopupHelp = new Container();
-		cntrPopupHelp.setBackground(new QuadBackgroundComponent(ColorRGBA.Cyan));
+//		cntrPopupHelp.setBackground(new QuadBackgroundComponent(ColorRGBA.Cyan));
 		
 		cntrPopupHelp.addChild(lblPopupHelp, 0);
 		MiscJmeI.i().addToName(cntrPopupHelp, PopupHintHelpListenerI.class.getSimpleName(), true);
-//		((TbtQuadBackgroundComponent)cntrPopupHelp.getBackground()).setColor(ColorRGBA.Cyan);
 		
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
 				updatePopupHelpText(null);
-//				updatePopupHelp(null);
 				return true;
 			}
 		}.setDelaySeconds(1).enableLoopMode());

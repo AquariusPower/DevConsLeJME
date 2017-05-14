@@ -115,11 +115,23 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		DialogHierarchyStateI.i().showDialog(rzpParent);
 	}
 	
-	enum EUserData{
-		keyBaseText,
-		;
-		public String s(){return toString();}
+	public static class BaseTextUD{
+		private String strBaseText;
+
+		public String getBaseText() {
+			return strBaseText;
+		}
+
+		public BaseTextUD setBaseText(String strBaseText) {
+			this.strBaseText = strBaseText;
+			return this; //for beans setter
+		}
 	}
+//	enum EUserData{
+//		keyBaseText,
+//		;
+//		public String s(){return toString();}
+//	}
 	
 	private ResizablePanel createDialog(Vector3f pos,String strName,String strInfo) {
 		if(strInfo==null)strInfo=strName;
@@ -131,7 +143,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		
 		String strBaseText=strName+"/"+strInfo;
 		Button btn = new Button(strBaseText);
-		UserDataI.i().setUserDataPSHSafely(btn, EUserData.keyBaseText.s(), strBaseText);
+		UserDataI.i().put(btn, new BaseTextUD().setBaseText(strBaseText));
 		rzp.setContents(btn);
 //		btn.setInsets(new Insets3f(10, 0, 0, 0));
 //		DragParentestPanelListenerI.i().applyAt(rzp);
@@ -150,7 +162,7 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		
 		for(ResizablePanel rzp:DialogHierarchyStateI.i().getAllOpenedDialogs()){
 			Button btn = (Button)rzp.getContents();
-			String str = UserDataI.i().getUserDataPSH(btn, EUserData.keyBaseText.s());
+			String str = UserDataI.i().retrieve(btn, BaseTextUD.class, false).getBaseText();
 			btn.setText(str+"\n"
 				+DialogHierarchyStateI.i().getHierarchyComp(rzp).toString().replace(",", "\n")
 			);

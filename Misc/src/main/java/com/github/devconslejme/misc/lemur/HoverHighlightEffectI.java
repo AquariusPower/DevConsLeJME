@@ -53,13 +53,26 @@ import com.simsilica.lemur.event.MouseEventControl;
 public class HoverHighlightEffectI {
 	public static HoverHighlightEffectI i(){return GlobalManagerI.i().get(HoverHighlightEffectI.class);}
 	
+	public static class EffectUserData{
+		private QuadBackgroundComponent	qbcHighLightTarget;
+
+		public QuadBackgroundComponent getQbcHighLightTarget() {
+			return qbcHighLightTarget;
+		}
+
+		public EffectUserData setQbcHighLightTarget(QuadBackgroundComponent qbcHighLightTarget) {
+			this.qbcHighLightTarget = qbcHighLightTarget;
+			return this; //for beans setter
+		}
+	}
+	
 	private static enum EEffectIds{
 		ChannelHighLight,
 		
 		EffectActivateHighLight,
 		EffectDeactivateHighLight,
 		
-		UserDataHighLightTarget,
+//		UserDataHighLightTarget,
 		
 		EffectDummy,
 		;
@@ -79,7 +92,8 @@ public class HoverHighlightEffectI {
 			
 			return new Animation() {
 //				QuadBackgroundComponent gcBg = (QuadBackgroundComponent)gcBgChk;
-				QuadBackgroundComponent qbc = UserDataI.i().getUserDataPSH(pnlTarget, EEffectIds.UserDataHighLightTarget.s());
+//				QuadBackgroundComponent qbc = UserDataI.i().getUserDataPSH(pnlTarget, EEffectIds.UserDataHighLightTarget.s());
+				QuadBackgroundComponent qbc = UserDataI.i().retrieve(pnlTarget, EffectUserData.class, false).getQbcHighLightTarget();
 				ColorRGBA colorBkp = qbc.getColor().clone();
 				boolean bApplied=false;
 				@Override	public void cancel() {
@@ -115,7 +129,8 @@ public class HoverHighlightEffectI {
 	private DummyEffect	efDummy;
 	public void applyAt(Panel pnlToThisElement, QuadBackgroundComponent qbcTargetToBeHighlighted){
 		MouseEventControl.addListenersToSpatial(pnlToThisElement, hml);
-		UserDataI.i().setUserDataPSHSafely(pnlToThisElement, EEffectIds.UserDataHighLightTarget.s(), qbcTargetToBeHighlighted);
+//		UserDataI.i().setUserDataPSHSafely(pnlToThisElement, EEffectIds.UserDataHighLightTarget.s(), qbcTargetToBeHighlighted);
+		UserDataI.i().put(pnlToThisElement, new EffectUserData().setQbcHighLightTarget(qbcTargetToBeHighlighted));
 //		pnl.setUserData(EEffectIds.UserDataHighLightTarget.s(), qbc);
 		efDummy = setupSimpleEffect(pnlToThisElement, EEffectIds.EffectActivateHighLight, efHighLightBkg, efDummy);
 		pnlToThisElement.addEffect(EEffectIds.EffectDeactivateHighLight.s(),efDummy);

@@ -70,13 +70,15 @@ public class AbsorbClickCommandsI implements CursorListener{
 			Button btn = (Button) capture;
 //			ArrayList<Command<? super Button>> clickCommandsStored =
 //				UserDataI.i().retrieve(btn, EUDClickCmds.ClickCommands.getUId(), new Function<Void, ArrayList<Command<? super Button>>>() {@Override	public ArrayList<Command<? super Button>> apply(Void input) {return new ArrayList<Command<? super Button>>();}});
-			ClickCommandsStore ccs = UserDataI.i().getUserDataPSH(btn, ClickCommandsStore.class);
+//			ClickCommandsStore ccs = UserDataI.i().getUserDataPSH(btn, ClickCommandsStore.class);
 //			ArrayList<Command<? super Button>> clickCommandsStored = 
 //				UserDataI.i().getUserDataPSH(btn, EUDClickCmds.ClickCommands.getUId());
 //				List<Command<? super Button>> clickCommands = btn.getClickCommands();
 //				if(clickCommands!=null){
 //					for(Command<? super Button> a:clickCommands){
+			ClickCommandsStore ccs = UserDataI.i().retrieve(btn, ClickCommandsStore.class, false);
 			if(ccs!=null){
+//			if(UserDataI.i().isUserDataSet(btn, ClickCommandsStore.class)){
 				for(Command<? super Button> a:ccs.clickCommandsStored){
 					a.execute(btn);
 					iExecutedClickCmds++;
@@ -104,7 +106,7 @@ public class AbsorbClickCommandsI implements CursorListener{
 				
 //				ArrayList<Command<? super Button>> clickCommandsStored =
 //						UserDataI.i().retrieve(btn, EUDClickCmds.ClickCommands.getUId(), new Function<Void, ArrayList<Command<? super Button>>>() {@Override	public ArrayList<Command<? super Button>> apply(Void input) {return new ArrayList<Command<? super Button>>();}});
-				ClickCommandsStore ccs = UserDataI.i().retrieve(btn, ClickCommandsStore.class);
+				ClickCommandsStore ccs = UserDataI.i().retrieve(btn, ClickCommandsStore.class, true);
 				if(ccs.clickCommandsStored.size()==0)CursorEventControl.addListenersToSpatial(btn, this); //1st time
 //				ArrayList<Command<? super Button>> clickCommandsStored = 
 //					UserDataI.i().getUserDataPSH(btn, EUDClickCmds.ClickCommands.getUId());

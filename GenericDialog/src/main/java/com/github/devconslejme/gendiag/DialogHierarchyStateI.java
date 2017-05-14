@@ -292,8 +292,8 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		vs.setEntityId(entid);
 		vs.setDiag(rzp);
 		vs.setBlocker(pnlBlocker);
-		UserDataI.i().setUserDataPSHSafely(rzp, vs);
-		UserDataI.i().setUserDataPSHSafely(pnlBlocker, vs);
+		UserDataI.i().put(rzp, vs);
+		UserDataI.i().put(pnlBlocker, vs);
 		
 		arzpAllCreatedDialogs.add(rzp);
 		
@@ -307,7 +307,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	 */
 	public Visuals getVisuals(Spatial spt){
 		if(spt==null)return null;
-		return UserDataI.i().getUserDataPSH(spt,Visuals.class);
+		return UserDataI.i().retrieve(spt,Visuals.class,false);
 	}
 	
 	public DialogHierarchyComp getHierarchyComp(Spatial spt){
