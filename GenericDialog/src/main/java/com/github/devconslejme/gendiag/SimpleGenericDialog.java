@@ -55,6 +55,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.AbsorbClickCommandsI;
 import com.github.devconslejme.misc.lemur.CursorListenerX;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
@@ -545,24 +546,44 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		}
 	}
 	
+	public static class MaximizeUD{
+		private Vector3f v3fPosBeforeMaximize;
+
+		public Vector3f getPosBeforeMaximize() {
+			return v3fPosBeforeMaximize;
+		}
+
+		public MaximizeUD setPosBeforeMaximize(Vector3f v3fPosBeforeMaximize) {
+			this.v3fPosBeforeMaximize = v3fPosBeforeMaximize;
+			return this; //for beans setter
+		}
+	}
+	
 	private void initSectionInfoTitle() {
 
 		cmdInfoSectionTitleButtons = new Command<Button>() {
-			private String	strUDKeyPosBeforeMaximize = SimpleGenericDialog.class+"/PosBeforeMaximize";
+//			private String	strUDKeyPosBeforeMaximize = SimpleGenericDialog.class+"/PosBeforeMaximize";
 			@Override
 			public void execute(Button source) {
 				if(source==btnMaximizeRestore){ //toggle
 					if(bKeepMaximized){							/**							 * restore							 */
 						getDialog().restoreDefaultSafeSize();
 						
-						Vector3f v3fPosBeforeMaximize = (Vector3f)getDialog().getUserData(strUDKeyPosBeforeMaximize);
+//						Vector3f v3fPosBeforeMaximize = (Vector3f)getDialog().getUserData(strUDKeyPosBeforeMaximize);
+						Vector3f v3fPosBeforeMaximize = UserDataI.i().retrieve(getDialog(), MaximizeUD.class, false).getPosBeforeMaximize();
 						getDialog().setLocalTranslationXY(v3fPosBeforeMaximize);
 						
 						bKeepMaximized=false;
 					}else{							/**							 * maximize							 */
 						getDialog().applyCurrentSafeSizeAsDefault();
 						
-						getDialog().setUserData(strUDKeyPosBeforeMaximize,getDialog().getLocalTranslation().clone());
+//						getDialog().setUserData(strUDKeyPosBeforeMaximize,getDialog().getLocalTranslation().clone());
+						UserDataI.i().put(
+							getDialog(), 
+							new MaximizeUD().setPosBeforeMaximize(
+								getDialog().getLocalTranslation().clone()
+							)
+						);
 						
 						bKeepMaximized=true;
 					}

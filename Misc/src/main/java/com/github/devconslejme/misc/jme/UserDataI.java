@@ -42,15 +42,8 @@ import com.simsilica.lemur.input.FunctionId;
 /**
  * Do not use UserData with Spatials you instance.
  * It is much better to extend the required class and add clearly recognizable fields on it.
- * The UserData is mainly to apply at outside Spatials that will easify extra functionalities without
- * having to deal with HashMaps.
- * 
- * IMPORTANT: Also, better wrap these methods into anothers that are easy to give maintenance, 
- * based on enums, so it will not be confusing when using them...
- * 
- * TODO track all userdata usages (from this class and from JME direct methods) on this project, to review and improve/clarify the code.
- * 
- * TODO deprecate all other usages and use a single retrieve? (that gets, but also sets if not already). allow only non simple data (no primitives, only custom classes). when using the retrieved, make it a field of some worker class to deal with its inner values. etc...
+ * The UserData is mainly to apply at other Spatials that will easify extra functionalities without
+ * having to deal with local HashMaps.
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
