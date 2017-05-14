@@ -301,31 +301,31 @@ public class ContextMenuI implements IResizableListener{
 //		}
 	}
 	
-	/**
-	 * keep private to keep this logic restricted to this class.
-	 * To avoid creating usage confusion outside here.
-	 */
-	private static enum EContext implements IUDKey{
-//		Choice(Button.class),
-//		Menu(ContextMenu.class),
-//		HintUpdater(CallableX.class),
-		PopupHintHelp(String.class),
-		;
-		
-		private Class	cl;
-		private EContext(Class cl) {
-			this.cl=cl;
-		}
-		
-//		public String uId(){return EContext.class.getName()+"/"+toString();}
-		@Override
-		public String getUId(){return JavaLangI.i().enumUId(this);}
-		
-		@Override
-		public Class getType() {
-			return cl;
-		}
-	}
+//	/**
+//	 * keep private to keep this logic restricted to this class.
+//	 * To avoid creating usage confusion outside here.
+//	 */
+//	private static enum EContext implements IUDKey{
+////		Choice(Button.class),
+////		Menu(ContextMenu.class),
+////		HintUpdater(CallableX.class),
+//		PopupHintHelp(String.class),
+//		;
+//		
+//		private Class	cl;
+//		private EContext(Class cl) {
+//			this.cl=cl;
+//		}
+//		
+////		public String uId(){return EContext.class.getName()+"/"+toString();}
+//		@Override
+//		public String getUId(){return JavaLangI.i().enumUId(this);}
+//		
+//		@Override
+//		public Class getType() {
+//			return cl;
+//		}
+//	}
 	
 	/**
 	 * {@link ContextButton} 1 to 1 {@link HintUpdaterPerCtxtBtn}<br>
@@ -337,14 +337,17 @@ public class ContextMenuI implements IResizableListener{
 	 */
 	public static abstract class HintUpdaterPerCtxtBtn extends CallableX<HintUpdaterPerCtxtBtn>{
 		private ContextButton	cbParent;
+		private String strPopupHintHelp;
 
 		public void setPopupHintHelp(String str){
-			putKeyValue(EContext.PopupHintHelp.getUId(),str);
+			this.strPopupHintHelp=str;
+//			putKeyValue(EContext.PopupHintHelp.getUId(),str);
 //			this.setLoopEnabled(true).setPopupHintHelp(""); //tst dummy
 		}
 
 		public String getPopupHintHelp() {
-			return getValue(EContext.PopupHintHelp.getUId());
+			return strPopupHintHelp;
+//			return getValue(EContext.PopupHintHelp.getUId());
 		}
 		
 		private void setContextButtonParent(ContextButton cb){

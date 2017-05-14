@@ -408,7 +408,8 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		}
 		
 		if(isAllowSuspendFlyCam()){
-			showCursor(sys.getAllOpenedDialogs(null).size()>0);
+			flycam.setEnabled(sys.getAllOpenedDialogs(null).size()==0);
+//			showCursor(sys.getAllOpenedDialogs(null).size()>0);
 //			ArrayList<Entity> aentList = sys.getAllOpenedDialogs(null);
 //			if(flycam.isEnabled()){
 //				if(aentList.size()>0){
@@ -426,17 +427,17 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		}
 	}
 	
-	private void showCursor(boolean bEnableCursorVisible){
-		boolean bEnableFlyCam = !bEnableCursorVisible;
-		if(flycam!=null && flycam.isEnabled()!=bEnableFlyCam){
-			flycam.setEnabled(bEnableFlyCam);
-		}
-		
-//		boolean bEnableCursorVisible = !bEnableFlyCam;
-		if(app.getInputManager().isCursorVisible() != bEnableCursorVisible){
-			app.getInputManager().setCursorVisible( bEnableCursorVisible );
-		}
-	}
+//	private void showCursor(boolean bEnableCursorVisible){
+//		boolean bEnableFlyCam = !bEnableCursorVisible;
+//		if(flycam!=null && flycam.isEnabled()!=bEnableFlyCam){
+//			flycam.setEnabled(bEnableFlyCam);
+//		}
+//		
+////		boolean bEnableCursorVisible = !bEnableFlyCam;
+//		if(app.getInputManager().isCursorVisible() != bEnableCursorVisible){
+//			app.getInputManager().setCursorVisible( bEnableCursorVisible );
+//		}
+//	}
 	
 	/**
 	 * even the not currently opened ones

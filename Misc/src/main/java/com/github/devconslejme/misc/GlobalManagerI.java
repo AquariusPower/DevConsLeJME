@@ -40,8 +40,9 @@ import java.util.HashMap;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class GlobalManagerI {
-	/** shortener TODO good? */
+	/** code shortener TODO good? */
 	public static class G{
+		/** returns the instance for the specified class */
 		public static <T> T i(Class<T>cl){
 			return GlobalManagerI.i().get(cl);
 		}

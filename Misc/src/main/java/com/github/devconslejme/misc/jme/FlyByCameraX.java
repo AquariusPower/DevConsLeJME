@@ -26,14 +26,14 @@
 */
 package com.github.devconslejme.misc.jme;
 
+import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.jme3.app.Application;
 import com.jme3.input.CameraInput;
 import com.jme3.input.FlyByCamera;
-import com.jme3.input.KeyInput;
 import com.jme3.input.MouseInput;
-import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.renderer.Camera;
 
@@ -45,6 +45,7 @@ import com.jme3.renderer.Camera;
 public class FlyByCameraX extends FlyByCamera{
 	private boolean	bAllowZooming=false;
 	private boolean	bAllowMove=false;
+	private boolean	bOverrideKeepFlyCamDisabled;
 	
 	public void reBindKeys(){
     MiscJmeI.i().enqueueUnregisterKeyMappings( //these were set at super
@@ -132,6 +133,19 @@ public class FlyByCameraX extends FlyByCamera{
 //				return true;
 //			}
 //		});
+		
+		KeyBindCommandManagerI.i().putBindCommandLater("F5","hold to keep mouse cursor visible",new CallableXAnon(){
+			@Override	public Boolean call(){
+				bOverrideKeepFlyCamDisabled=true;
+				setEnabled(false);
+				return true;
+			}
+			
+			@Override public void callAfterRemovedFromQueue() {
+				bOverrideKeepFlyCamDisabled=false;
+			};
+			
+		}.enableLoopMode());
 	}
 	
 	@Override
@@ -179,4 +193,35 @@ public class FlyByCameraX extends FlyByCamera{
 		this.bAllowMove = bAllowMove;
 		return this; //for beans setter
 	}
+	
+	@Override
+	public void setEnabled(boolean bEnable) {
+		if(bOverrideKeepFlyCamDisabled && bEnable==true)return;
+		
+		if(isEnabled()!=bEnable){
+			super.setEnabled(bEnable); //this will also show the cursor but not hide it!
+			G.i(Application.class).getInputManager().setCursorVisible(!bEnable);
+		}
+	}
+
+	public boolean isOverrideKeepFlyCamDisabled() {
+		return bOverrideKeepFlyCamDisabled;
+	}
+
+//	public FlyByCameraX setOverrideKeepFlyCamDisabled(boolean bOverrideKeepFlyCamDisabled) {
+//		this.bOverrideKeepFlyCamDisabled = bOverrideKeepFlyCamDisabled;
+//		return this; //for beans setter
+//	}
+	
+//	public void showCursor(boolean bEnableCursorVisible){
+//		boolean bEnableFlyCam = !bEnableCursorVisible;
+//		if(isEnabled()!=bEnableFlyCam){
+//			setEnabled(bEnableFlyCam);
+//		}
+//		
+//		//boolean bEnableCursorVisible = !bEnableFlyCam;
+//		if(app.getInputManager().isCursorVisible() != bEnableCursorVisible){
+//			app.getInputManager().setCursorVisible( bEnableCursorVisible );
+//		}
+//	}
 }

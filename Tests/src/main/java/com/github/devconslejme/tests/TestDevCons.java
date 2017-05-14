@@ -141,7 +141,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
     flycam = new FlyByCameraX(getCamera()).setAllowMove(true);
     flycam.registerWithInput(getInputManager());
 		
-		//Unnecessary now: opt_disableSomeSimpleAppThings();
+		opt_disableSomeSimpleAppThings();
 	}
 	
 	private void opt_initAll() {
@@ -216,15 +216,14 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		);
 	}
 	
-	@Deprecated
 	private void opt_disableSomeSimpleAppThings() {
 		MiscJmeI.i().enqueueUnregisterKeyMappings(
-			DebugKeysAppState.INPUT_MAPPING_MEMORY,
-			DebugKeysAppState.INPUT_MAPPING_CAMERA_POS,
-			SimpleApplication.INPUT_MAPPING_HIDE_STATS,
+//			DebugKeysAppState.INPUT_MAPPING_MEMORY,
+//			DebugKeysAppState.INPUT_MAPPING_CAMERA_POS,
+//			SimpleApplication.INPUT_MAPPING_HIDE_STATS,
 			SimpleApplication.INPUT_MAPPING_EXIT //this is important to let ESC be used for more things
 		);
-		stateManager.getState(StatsAppState.class).setDisplayStatView(false);
+//		stateManager.getState(StatsAppState.class).setDisplayStatView(false);
 	}
 	
 	private static void opt_initWindow(TestDevCons tdc) {

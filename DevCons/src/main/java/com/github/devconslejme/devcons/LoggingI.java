@@ -30,12 +30,11 @@ package com.github.devconslejme.devcons;
 import java.io.File;
 import java.io.PrintStream;
 
+import com.github.devconslejme.devcons.DevConsPluginStateI.CallableVarMonX;
 import com.github.devconslejme.devcons.DevConsPluginStateI.EStatPriority;
-import com.github.devconslejme.devcons.DevConsPluginStateI.VarMon;
 import com.github.devconslejme.misc.FileI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
-import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.TimeFormatI;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -71,10 +70,10 @@ public class LoggingI {
 		 */
 		logEntry("Initializing console.");
 		
-		DevConsPluginStateI.i().createVarMon(EStatPriority.Normal, "WrapAt", LoggingI.class.getSimpleName()+": Wrap at column",new CallableXAnon() {
+		DevConsPluginStateI.i().createVarMon(EStatPriority.Normal, "WrapAt", LoggingI.class.getSimpleName()+": Wrap at column",new CallableVarMonX() {
 			@Override
 			public Boolean call() {
-				getValue(VarMon.class).set(""+getWrapAtColumn());
+				getVarMon().set(""+getWrapAtColumn());
 				return true;
 			}
 		});

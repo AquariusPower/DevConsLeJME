@@ -93,7 +93,7 @@ public class QueueI {
 		private boolean	bUserCanKill = false;
 		private boolean	bUserCanPause = false;
 		
-		private HashMap<String,Object> hmKeyValue = new HashMap<String,Object>();
+//		private HashMap<String,Object> hmKeyValue = new HashMap<String,Object>();
 		private boolean	bAnonymousClass;
 		
 		private boolean bRunImediatelyOnce = false;
@@ -335,43 +335,43 @@ public class QueueI {
 		public boolean isPaused() {
 			return bPaused;
 		}
-		/**
-		 * TODO it is possible to avoid using this by extending the {@link CallableX}
-		 * @param objVal
-		 * @return
-		 */
-		synchronized public SELF putKeyClassValue(Object objVal) {
-			hmKeyValue.put(objVal.getClass().getName(),objVal);
-			return getThis();
-		}
-		/**
-		 * TODO it is possible to avoid using this by extending the {@link CallableX}
-		 * @param strKey
-		 * @param objVal
-		 * @return
-		 */
-		synchronized public SELF putKeyValue(String strKey, Object objVal) {
-			hmKeyValue.put(strKey,objVal);
-			return getThis();
-		}
-		/**
-		 * TODO it is possible to avoid using this by extending the {@link CallableX}
-		 * @param cl
-		 * @return
-		 */
-		@SuppressWarnings("unchecked")
-		synchronized public <T> T getValue(Class<T> cl) {
-			return (T)hmKeyValue.get(cl.getName());
-		}
-		/**
-		 * TODO it is possible to avoid using this by extending the {@link CallableX}
-		 * @param strKey
-		 * @return
-		 */
-		@SuppressWarnings("unchecked")
-		synchronized public <T> T getValue(String strKey) {
-			return (T)hmKeyValue.get(strKey);
-		}
+//		/**
+//		 * TODO it is possible to avoid using this by extending the {@link CallableX}
+//		 * @param objVal
+//		 * @return
+//		 */
+//		synchronized public SELF putKeyClassValue(Object objVal) {
+//			hmKeyValue.put(objVal.getClass().getName(),objVal);
+//			return getThis();
+//		}
+//		/**
+//		 * TODO it is possible to avoid using this by extending the {@link CallableX}
+//		 * @param strKey
+//		 * @param objVal
+//		 * @return
+//		 */
+//		synchronized public SELF putKeyValue(String strKey, Object objVal) {
+//			hmKeyValue.put(strKey,objVal);
+//			return getThis();
+//		}
+//		/**
+//		 * TODO it is possible to avoid using this by extending the {@link CallableX}
+//		 * @param cl
+//		 * @return
+//		 */
+//		@SuppressWarnings("unchecked")
+//		synchronized public <T> T getValue(Class<T> cl) {
+//			return (T)hmKeyValue.get(cl.getName());
+//		}
+//		/**
+//		 * TODO it is possible to avoid using this by extending the {@link CallableX}
+//		 * @param strKey
+//		 * @return
+//		 */
+//		@SuppressWarnings("unchecked")
+//		synchronized public <T> T getValue(String strKey) {
+//			return (T)hmKeyValue.get(strKey);
+//		}
 		public boolean isNameSetProperly(){
 			return strName!=null && !strName.isEmpty();
 		}
@@ -410,6 +410,8 @@ public class QueueI {
 			this.steInstancedWhere = steInstancedWhen;
 			return getThis();
 		}
+		
+		public void callAfterRemovedFromQueue() {}
 		
 	}
 	
@@ -469,6 +471,7 @@ public class QueueI {
 					if(!cx.isLoopEnabled() || cx.bJustRemoveFromQueueOnce){
 						synchronized(acxList){
 							acxList.remove(cx);
+							cx.callAfterRemovedFromQueue();
 							cx.bJustRemoveFromQueueOnce=false;
 						}
 					}else{

@@ -279,7 +279,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			cx.call();
 		}
 		
-		public CallableX getUpdateCall(){
+		public CallableX getCallableUpdater(){
 			return cx;
 		}
 		
@@ -309,23 +309,27 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		protected CallableVarMonX getThis() {
 			return this;
 		}
+
+		public VarMon getVarMon() {
+			return vm;
+		}
+		
 	}
 	
-	public VarMon createVarMon(EStatPriority esp, String strKey, String strHelp, CallableX cx){
-		VarMon vm=hmVarMon.get(strKey);
-		if(vm==null){
-			vm=new VarMon();
-			hmVarMon.put(strKey, vm);
+	public VarMon createVarMon(EStatPriority esp, String strKey, String strHelp, CallableVarMonX cx){
+		cx.vm=(hmVarMon.get(strKey));
+		if(cx.getVarMon()==null){
+			cx.vm=(new VarMon());
+			hmVarMon.put(strKey, cx.getVarMon());
 		}
-		vm.set(esp,strKey,strHelp,"",cx);
+		cx.getVarMon().set(esp,strKey,strHelp,"",cx);
 		
-		cx.putKeyClassValue(vm);
-		QueueI.i().enqueue(cx.setName(vm.getQueueName()).enableLoopMode().setDelaySeconds(1f));
+		QueueI.i().enqueue(cx.setName(cx.getVarMon().getQueueName()).enableLoopMode().setDelaySeconds(1f));
 		
 		enqueueUpdateVarMonList();
 //		updateVarMonList();
 		
-		return vm;
+		return cx.getVarMon();
 	}
 	
 	@Override
@@ -582,10 +586,10 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	}
 	
 	private void initVarMonValues() {
-		createVarMon(EStatPriority.Bottom, "Slider", strBaseTitle+" Logging area Slider Value",new CallableXAnon() {
+		createVarMon(EStatPriority.Bottom, "Slider", strBaseTitle+" Logging area Slider Value",new CallableVarMonX() {
 			@Override
 			public Boolean call() {
-				getValue(VarMon.class).set(
+				getVarMon().set(
 					String.format("%.0f/%.0f(%.0f)", 
 						lstbxLoggingSection.getSlider().getModel().getValue(),
 						lstbxLoggingSection.getSlider().getModel().getMaximum(),
@@ -596,28 +600,28 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			}
 		});
 		
-		createVarMon(EStatPriority.Bottom, "VisibleRows", strBaseTitle+" Logging area Visible Rows",new CallableXAnon() {
+		createVarMon(EStatPriority.Bottom, "VisibleRows", strBaseTitle+" Logging area Visible Rows",new CallableVarMonX() {
 			@Override
 			public Boolean call() {
-				getValue(VarMon.class).set( String.format("%d", lstbxLoggingSection.getVisibleItems()) );
+				getVarMon().set( String.format("%d", lstbxLoggingSection.getVisibleItems()) );
 				return true;
 			}
 		});
 		
-		VarMon vmCursorPos = createVarMon(EStatPriority.Normal, "CursorPos", "Mouse Cursor Position on the application",new CallableXAnon() {
+		VarMon vmCursorPos = createVarMon(EStatPriority.Normal, "CursorPos", "Mouse Cursor Position on the application",new CallableVarMonX() {
 			@Override
 			public Boolean call() {
 				Vector2f v2fCursor = app.getInputManager().getCursorPosition();
-				getValue(VarMon.class).set( String.format("%.0f,%.0f", v2fCursor.x, v2fCursor.y) );
+				getVarMon().set( String.format("%.0f,%.0f", v2fCursor.x, v2fCursor.y) );
 				return true;
 			}
 		});
-		vmCursorPos.getUpdateCall().setDelaySeconds(0.25f);
+		vmCursorPos.getCallableUpdater().setDelaySeconds(0.25f);
 		
-		createVarMon(EStatPriority.Normal, "AppTime", "Application Elapsed Time from its start time",new CallableXAnon() {
+		createVarMon(EStatPriority.Normal, "AppTime", "Application Elapsed Time from its start time",new CallableVarMonX() {
 			@Override
 			public Boolean call() {
-				getValue(VarMon.class).set( String.format("%.3f", app.getTimer().getTimeInSeconds()) );
+				getVarMon().set( String.format("%.3f", app.getTimer().getTimeInSeconds()) );
 				return true;
 			}
 		});
