@@ -38,16 +38,17 @@ import com.github.devconslejme.gendiag.SimpleGenericDialog.CmdCfg;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction.CmdBtnTA;
+import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.JavadocI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.MethodX;
 import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.StringI.EStringMatchMode;
+import com.google.common.base.Function;
 import com.simsilica.lemur.Button;
-import com.simsilica.lemur.core.VersionedReference;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -62,6 +63,7 @@ public class ConvertMethodsToOptions {
 	private boolean	bRegexFilter=true;
 	private String	strUserInputTextFilter="";
 	private EStringMatchMode	eStringMatchMode = EStringMatchMode.Contains;
+//	private Function<Object, Void>	funcHandleCallRetVal;
 
 	public ConvertMethodsToOptions(SimpleGenericDialog diag) {
 		this.diag=diag;
@@ -148,12 +150,16 @@ public class ConvertMethodsToOptions {
 							MessagesI.i().output(false, System.out, "CallMethod", this, strInfo);
 							Object objRet = mh.getMethod().invoke(mh.getConcreteObjectInstance());
 							MessagesI.i().output(true, System.out, "ReturnValue", this, strInfo, objRet);
+							if(G.i(ManagerHelperI.class).isHandleCallRetValSet()){
+								G.i(ManagerHelperI.class).getHandleCallRetVal().apply(objRet);
+							}
+//							if(funcHandleCallRetVal!=null)funcHandleCallRetVal.apply(objRet);
 //							JavaScriptI.i().showRetVal(objRet);
 						} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
 							MessagesI.i().warnMsg(this, strInfo, mh);
 //							LoggingI.i().logExceptionEntry(ex, strInfo);
 						}
-					}}.setHintHelp("will call this simple (parameters less) method, which may perform more actions than the obvious one, better find out what it does before using it"));
+					}}.setHintHelp("will call this simple (parameters less) method, which may perform more actions than the obvious one, better find out what it does before using it. The return value will go to the text terminal output, and may also be further handled."));
 				}
 			}
 			
@@ -170,6 +176,11 @@ public class ConvertMethodsToOptions {
 		
 		return iValidCount;
 	}
+	
+//	public void setHandleCallRetVal(Function<Object,Void> func){
+//		assert(funcHandleCallRetVal==null);
+//		this.funcHandleCallRetVal=func;
+//	}
 	
 	public boolean isShowInherited() {
 		return bShowInherited;

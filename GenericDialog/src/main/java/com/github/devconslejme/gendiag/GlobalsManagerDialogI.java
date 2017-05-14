@@ -50,7 +50,7 @@ public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 	
 	private SimpleMaintenanceGenericDialog	diagMaint;
 	private boolean	bShowPackagesPrepended;
-	private ConvertMethodsToOptions	metho;
+	private ConvertMethodsToOptions	cmto;
 	
 	public GlobalsManagerDialogI(){}
 	
@@ -74,7 +74,7 @@ public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 				diagMaint.setTitle(GlobalsManagerDialogI.class.getSimpleName());
 				
 //				diagMaint.setAllowAutoCfgForComplexObjects(false); //will be handled here
-				metho = new ConvertMethodsToOptions(diagMaint);
+				cmto = new ConvertMethodsToOptions(diagMaint);
 				
 				diagMaint.addUserInputTextSubmittedListener(GlobalsManagerDialogI.this);
 				
@@ -112,7 +112,7 @@ public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 		
 		for(Entry<String, Object> entry:hmSortedGlobals.entrySet()){
 			OptionData odGlobal = diagMaint.putSection(null,entry.getKey());
-			if(metho.createOptionFromMethods(odGlobal, entry.getValue())==0){
+			if(cmto.createOptionFromMethods(odGlobal, entry.getValue())==0){
 				diagMaint.remove(odGlobal);
 			}
 		}
@@ -120,7 +120,7 @@ public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 	
 	@Override
 	public void receiveSubmitedUserInputTextEvent(String str) {
-		metho.setUserInputTextFilter(str);
+		cmto.setUserInputTextFilter(str);
 		diagMaint.requestUpdateListItems();
 	}
 

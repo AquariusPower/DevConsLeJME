@@ -35,6 +35,7 @@ import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.jme.UserDataI.IUDKey;
+import com.google.common.base.Function;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
@@ -67,13 +68,16 @@ public class AbsorbClickCommandsI implements CursorListener{
 		int iExecutedClickCmds=0;
 		if (capture instanceof Button) {
 			Button btn = (Button) capture;
-			ArrayList<Command<? super Button>> clickCommandsStored = 
-				UserDataI.i().getUserDataPSH(btn, EUDClickCmds.ClickCommands.getUId());
+//			ArrayList<Command<? super Button>> clickCommandsStored =
+//				UserDataI.i().retrieve(btn, EUDClickCmds.ClickCommands.getUId(), new Function<Void, ArrayList<Command<? super Button>>>() {@Override	public ArrayList<Command<? super Button>> apply(Void input) {return new ArrayList<Command<? super Button>>();}});
+			ClickCommandsStore ccs = UserDataI.i().getUserDataPSH(btn, ClickCommandsStore.class);
+//			ArrayList<Command<? super Button>> clickCommandsStored = 
+//				UserDataI.i().getUserDataPSH(btn, EUDClickCmds.ClickCommands.getUId());
 //				List<Command<? super Button>> clickCommands = btn.getClickCommands();
 //				if(clickCommands!=null){
 //					for(Command<? super Button> a:clickCommands){
-			if(clickCommandsStored!=null){
-				for(Command<? super Button> a:clickCommandsStored){
+			if(ccs!=null){
+				for(Command<? super Button> a:ccs.clickCommandsStored){
 					a.execute(btn);
 					iExecutedClickCmds++;
 				}
@@ -98,34 +102,43 @@ public class AbsorbClickCommandsI implements CursorListener{
 				clickCommands = new ArrayList<Command<? super Button>>(clickCommands); //copy b4 clearing
 				btn.removeClickCommands(clickCommands.toArray(new Command[0]));
 				
-				ArrayList<Command<? super Button>> clickCommandsStored = 
-					UserDataI.i().getUserDataPSH(btn, EUDClickCmds.ClickCommands.getUId());
-				if(clickCommandsStored==null){
-					clickCommandsStored=new ArrayList<Command<? super Button>>();
-					UserDataI.i().setUserDataPSHSafely(btn, EUDClickCmds.ClickCommands.getUId(), clickCommandsStored);
-					CursorEventControl.addListenersToSpatial(btn, this);
-				}
-				clickCommandsStored.addAll(clickCommands);
+//				ArrayList<Command<? super Button>> clickCommandsStored =
+//						UserDataI.i().retrieve(btn, EUDClickCmds.ClickCommands.getUId(), new Function<Void, ArrayList<Command<? super Button>>>() {@Override	public ArrayList<Command<? super Button>> apply(Void input) {return new ArrayList<Command<? super Button>>();}});
+				ClickCommandsStore ccs = UserDataI.i().retrieve(btn, ClickCommandsStore.class);
+				if(ccs.clickCommandsStored.size()==0)CursorEventControl.addListenersToSpatial(btn, this); //1st time
+//				ArrayList<Command<? super Button>> clickCommandsStored = 
+//					UserDataI.i().getUserDataPSH(btn, EUDClickCmds.ClickCommands.getUId());
+//				if(clickCommandsStored==null){
+//					clickCommandsStored=new ArrayList<Command<? super Button>>();
+//					UserDataI.i().setUserDataPSHSafely(btn, EUDClickCmds.ClickCommands.getUId(), clickCommandsStored);
+//					CursorEventControl.addListenersToSpatial(btn, this);
+//				}
+				ccs.clickCommandsStored.addAll(clickCommands);
 			}
 			
 		}
 	}
-
-	private static enum EUDClickCmds implements IUDKey{
-		ClickCommands,
-		;
-		public String s(){return toString();}
-
-		@Override
-		public Class getType() {
-			return null;
-		}
-
-		@Override
-		public String getUId() {
-			return JavaLangI.i().enumUId(this);
-		}
+	
+	public static class ClickCommandsStore{
+		ArrayList<Command<? super Button>> clickCommandsStored =
+			new ArrayList<Command<? super Button>>();
 	}
+
+//	private static enum EUDClickCmds implements IUDKey{
+//		ClickCommands,
+//		;
+//		public String s(){return toString();}
+//
+//		@Override
+//		public Class getType() {
+//			return null;
+//		}
+//
+//		@Override
+//		public String getUId() {
+//			return JavaLangI.i().enumUId(this);
+//		}
+//	}
 	
 	@Bugfix
 	public boolean isDelegateClickCommands() {

@@ -412,6 +412,13 @@ public class QueueI {
 		}
 		
 		public void callAfterRemovedFromQueue() {}
+		public long getFailCount() {
+			return lFailCount;
+		}
+		private SELF setFailCount(long lFailCount) {
+			this.lFailCount = lFailCount;
+			return getThis();
+		}
 		
 	}
 	
@@ -487,7 +494,7 @@ public class QueueI {
 //					}
 				}else{
 					// if a loop queue fails, it will not wait and will promptly retry!
-					cx.lFailCount++;
+					cx.setFailCount(cx.getFailCount() + 1);
 				}
 			}
 		}
@@ -502,6 +509,14 @@ public class QueueI {
 	public void configure(long lTimeResolution) {
 		this.lTimeResolution=lTimeResolution;
 		if(lTimeResolution < 1000L)throw new DetailedException("timer resolution is too low");
+	}
+	
+	public ArrayList<CallableX> getQueuedWithFailures(long lMinFailures){
+		ArrayList<CallableX> acxList = getQueueCopy();
+		for(CallableX cx:acxList.toArray(new CallableX[0])){
+			if(cx.lFailCount<lMinFailures)acxList.remove(cx);
+		}
+		return acxList;
 	}
 	
 	public ArrayList<CallableX> getQueueCopy(){

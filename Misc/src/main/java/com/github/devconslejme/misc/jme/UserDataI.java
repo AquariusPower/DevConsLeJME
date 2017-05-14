@@ -33,6 +33,7 @@ import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MainThreadI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
+import com.google.common.base.Function;
 import com.jme3.scene.Spatial;
 
 
@@ -160,5 +161,17 @@ public class UserDataI {
 			throw new DetailedException("incompatible types",obj.getClass(),eKey,eKey.getType(),spt);
 		}
 		return setUserDataPSHSafely(spt, eKey.getUId(), obj);
+	}
+	
+	public <T> T retrieve(Spatial spt, String strKey, Function<Void,T> funcInstanceFactory){
+		T obj = getUserDataPSH(spt, strKey);
+		if(obj==null){
+			obj=funcInstanceFactory.apply(null);
+			setUserDataPSHSafely(spt, strKey, obj);
+		}
+		return obj;
+	}
+	public <R> R retrieve(Spatial spt, Class<R> cl){
+		return getUserDataPSH(spt, cl, true);
 	}
 }
