@@ -40,6 +40,13 @@ import java.util.HashMap;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class GlobalManagerI {
+	/** shortener TODO good? */
+	public static class G{
+		public static <T> T i(Class<T>cl){
+			return GlobalManagerI.i().get(cl);
+		}
+	}
+	
   private static GlobalManagerI instance=new GlobalManagerI();
   public static void setGlobalOverride (GlobalManagerI inst){
   	if(GlobalManagerI.instance!=null)throw new DetailedException("already set "+instance+", "+inst);

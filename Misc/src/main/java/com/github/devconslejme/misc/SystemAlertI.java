@@ -90,12 +90,16 @@ public class SystemAlertI {
 	/** */
 	protected void enqueueCaptureUserInput() {
 		QueueI.i().enqueue(new CallableXAnon() {
-			@Override
-			public Boolean call() {
-				updateCaptureUserInput(getTPF(),this);
-				return true;
+				@Override
+				public Boolean call() {
+					updateCaptureUserInput(getTPF(),this);
+					return true;
+				}
 			}
-		}.enableLoopMode().setRunImediatelyOnce().setDelaySeconds(2f));
+			.enableLoopMode()
+			.setInitialDelay(0)
+			.setDelaySeconds(2f)
+		);
 	}
 	
 	protected boolean updateCaptureUserInput(float fTPF, CallableX cx){

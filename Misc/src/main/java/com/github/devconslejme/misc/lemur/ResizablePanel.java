@@ -30,12 +30,14 @@ package com.github.devconslejme.misc.lemur;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.EnvironmentI;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.lemur.MiscLemurI.EResizeApplyMode;
 import com.jme3.bounding.BoundingBox;
@@ -98,6 +100,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 //	private long lConsecutiveSuccessCount=0;
 	private boolean	bApplyBoundingBoxSize = true;
 	private Vector3f	v3fLastSucessSize=null;
+	private boolean bMoveToCenterOnce=true;
 	
 //	public static interface IResizableListener {
 //		//public static class VersionedVector3f extends Vector3f implements VersionedObject{}; //???
@@ -117,6 +120,18 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 //		public void closedEvent(ResizablePanel rzpSource);
 	}
 	private ArrayList<IResizableListener> listeners = new ArrayList<IResizableListener>();
+	private CallableXAnon	cxNoWrap = new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				MiscJmeI.i().recursivelyApplyTextNoWrap(getContents());
+				return true;
+			}
+		}
+		.enableLoopMode()
+		.setDelaySeconds(10) //will still keep running if contents change to fix them TODO 10s good to spare cpu?
+		.setInitialDelay(1f) //good to let the panel be ready
+		.setName("ApplyNoWrap")
+		;
 	
 	public static interface IBorderMargin {
 		public void setMargin(int i);
@@ -372,6 +387,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 				for(IResizableListener iuls:listeners){
 					iuls.resizableStillResizingEvent(this,v3fNewSize);
 				}
+				cxNoWrap.setRunImediatelyOnce();
 			}
 		}else{
 			setPreferredSizeWH(v3fOldSize);
@@ -480,6 +496,11 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 	
 	@Override
 	public void updateLogicalState(float tpf) {
+		if(bMoveToCenterOnce){
+			moveToScreenCenterLater();
+			bMoveToCenterOnce=false;
+		}
+		
 //		if(true){updateLogicalState(tpf);return;}
 		
 //		if(getSize().length()>0 && getLocalTranslation().length()==0){
@@ -611,35 +632,27 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
     
     CursorEventControl.addListenersToSpatial(this, dcl);
     
-    QueueI.i().enqueue(new CallableXAnon() {
-			@Override
-			public Boolean call() {
-//				if(ResizablePanel.this.getName().startsWith("QueueManagerDialogI")){
-//					System.out.println("put breakpoint here");
-//				}
-				if(ResizablePanel.this.getParent()==null)return false; //wait 1st attach
-//				if(ResizablePanel.this.getName().startsWith("QueueManagerDialogI")){
-//					System.out.println("put breakpoint here");
-//				}
-				if(getSize().length()<=0)return false; //contents are not ready, are not updated by lemur yet
-//				if(ResizablePanel.this.getName().startsWith("QueueManagerDialogI")){
-//					System.out.println("put breakpoint here");
-//				}
-				if(getLocalTranslationXY().length()>0)return true; //location was already set, so ignore this initializer. 0,0,0 or not initialized, also means it is outside the screen..
-//				if(ResizablePanel.this.getName().startsWith("QueueManagerDialogI")){
-//					System.out.println("put breakpoint here");
-//				}
-				
-				/**
-				 * initial default location: centralized on the screen.
-				 */
-				MiscLemurI.i().moveToScreenCenterXY(ResizablePanel.this);
-				
-				return true;
-			}
-    }.setDelaySeconds(1f) //wait a bit for its contents to accomodate TODO could check every frame if the size stopped changing and aply the location.
-    );
+//    moveToScreenCenterLater();
   }
+	
+	public void moveToScreenCenterLater(){
+    QueueI.i().enqueue(new CallableXAnon() {
+				@Override
+				public Boolean call() {
+					if(ResizablePanel.this.getParent()==null)return false; //wait 1st attach
+					if(getSize().length()<=0)return false; //contents are not ready, are not updated by lemur yet
+					if(getLocalTranslationXY().length()>0)return true; //location was already set, so ignore this initializer. 0,0,0 or not initialized, also means it is outside the screen..
+					
+					/**
+					 * initial default location: centralized on the screen.
+					 */
+					MiscLemurI.i().moveToScreenCenterXY(ResizablePanel.this);
+					
+					return true;
+				}
+	    }.setDelaySeconds(1f) //wait a bit for its contents to accomodate TODO could check every frame if the size stopped changing and aply the location.
+    );
+	}
 	
 //  public ResizablePanel(Panel pnlContents) {
 //  	this(pnlContents.getPreferredSize().x, pnlContents.getPreferredSize().y, pnlContents.getStyle());
@@ -671,6 +684,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 				for(IResizableListener iuls:rzp.listeners){
 					iuls.resizableEndedResizingEvent(rzp);
 				}
+				rzp.cxNoWrap.setRunImediatelyOnce();
 				event.setConsumed(); //this also prevents sending the event to other than this panel
 			}
 		}
@@ -799,8 +813,21 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 	        layout.addChild(contents,  BorderLayout.Position.Center);
 	      }
 	    }
+	    
+	    noWrapAllChildrenRecursiveLoopLater();
+	    
 			return this;
 	}
+	
+	/**
+	 * resizing, actually shrinking, may make the BitmapText children to wrap beyond its Panel
+	 * bounding limits :(
+	 */
+	@Bugfix
+	private void noWrapAllChildrenRecursiveLoopLater() {
+		QueueI.i().enqueue(cxNoWrap);
+	}
+	
 	public Panel getContents(){
 		return contents;
 	}

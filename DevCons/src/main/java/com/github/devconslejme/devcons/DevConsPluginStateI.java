@@ -196,7 +196,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 	
 	class CallableXScrollTo extends CallableX{
 		public CallableXScrollTo(){
-			super();
+			super(1);
 			setDelaySeconds(0.25f);
 			enableLoopMode();
 			setUserCanPause(true);

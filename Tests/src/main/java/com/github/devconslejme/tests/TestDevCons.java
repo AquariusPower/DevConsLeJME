@@ -49,6 +49,7 @@ import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.DebugVisualsI;
 import com.github.devconslejme.misc.jme.EnvironmentI;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.EnvironmentI.IEnvironmentListener;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.PickingHandI;
@@ -57,6 +58,7 @@ import com.jme3.app.DebugKeysAppState;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
 import com.jme3.app.state.AbstractAppState;
+import com.jme3.app.state.AppState;
 import com.jme3.audio.AudioListenerState;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
@@ -83,6 +85,13 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		if(bEnableOpt)opt_initSingleAppInstanceAtMain();
 		
 		TestDevCons tst = new TestDevCons();
+		
+		/**
+		 * this is mainly to disable default key bindings and features,
+		 * to also easify replacing them 
+		 */
+		if(bEnableOpt)tst = new TestDevCons(new AudioListenerState()); //the above will just be ignored
+		
 		if(bEnableOpt)opt_initWindow(tst);
 		
 		tst.start();
@@ -111,22 +120,21 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	/******************************************************************************************
 	 * OPTIONALS BELOW
 	 * you can just detele it all from this line below til the end.
+	 * or bEnableOpt=false just for a simpler test.
 	 ******************************************************************************************/
+	private static boolean	bEnableOpt = true;
 	
-	/** */
 	ArrayList<SimpleApplication> aoUpdOpts = new ArrayList<SimpleApplication>();
 	private FlyByCameraX	flycam;
-	private static boolean	bEnableOpt = true;
 	
 	@Override
 	public FlyByCameraX getFlyByCamera() {
 		return flycam;
 	}
 	
-	public TestDevCons() {
-    super(new AudioListenerState());
-	}
-	
+	public TestDevCons() {super();}
+	public TestDevCons(AppState... initialStates) {super(initialStates);}
+
 	private void opt_initBasics() {
     flycam = new FlyByCameraX(getCamera()).setAllowMove(true);
     flycam.registerWithInput(getInputManager());
@@ -183,37 +191,14 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		);
 	}
 	
-	private void disableSomeKeyMappings(){
-		// disable some mappings to let the console manage it too.
-		QueueI.i().enqueue(new CallableXAnon() {
-			ArrayList<String> astrList = new ArrayList<String>(
-				Arrays.asList(
-					new String[]{
-						DebugKeysAppState.INPUT_MAPPING_MEMORY,
-						DebugKeysAppState.INPUT_MAPPING_CAMERA_POS,
-						SimpleApplication.INPUT_MAPPING_HIDE_STATS,
-						SimpleApplication.INPUT_MAPPING_EXIT, //this is important to let ESC be used for more things
-					}
-				)
-			);
-			
-			@Override
-			public Boolean call() {
-				for(String str:astrList.toArray(new String[0])){
-					if(getInputManager().hasMapping(str)){
-						getInputManager().deleteMapping(str);
-						astrList.remove(str);
-					}
-				}
-				
-				return astrList.size()==0; //will keep trying till all are deleted
-			}
-		});
-		
-	}
-	
+	@Deprecated
 	private void opt_disableSomeSimpleAppThings() {
-		disableSomeKeyMappings();
+		MiscJmeI.i().enqueueUnregisterKeyMappings(
+			DebugKeysAppState.INPUT_MAPPING_MEMORY,
+			DebugKeysAppState.INPUT_MAPPING_CAMERA_POS,
+			SimpleApplication.INPUT_MAPPING_HIDE_STATS,
+			SimpleApplication.INPUT_MAPPING_EXIT //this is important to let ESC be used for more things
+		);
 		stateManager.getState(StatsAppState.class).setDisplayStatView(false);
 	}
 	

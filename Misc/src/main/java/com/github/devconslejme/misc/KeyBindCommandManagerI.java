@@ -38,8 +38,14 @@ import com.google.common.base.Function;
 
 
 /**
-* @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
-*/
+ * intended to:
+ * - dismiss conflicting key bindings, 
+ * - to suspend all commands, 
+ * - to allow custom key modifiers,
+ * - and to help on capturing keys to change key bindings.
+ * 
+ * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+ */
 public class KeyBindCommandManagerI {
 	public static KeyBindCommandManagerI i(){return GlobalManagerI.i().get(KeyBindCommandManagerI.class);}
 	
@@ -91,9 +97,12 @@ public class KeyBindCommandManagerI {
 
 		public String getCommandsInfo(){
 			String str="";
-			if(strUserCommand!=null)str+=strUserCommand;
-			if(!str.isEmpty())str+=";";
+			
 			if(cxHardCommand!=null)str+=cxHardCommand.getName();
+			if(!str.isEmpty())str+=";";
+			
+			if(strUserCommand!=null)str+=strUserCommand;
+			
 			return str;
 		}
 		
@@ -111,12 +120,13 @@ public class KeyBindCommandManagerI {
 		public void setUserCommand(String strUserCommand){
 			this.strUserCommand=strUserCommand;
 		}
-		public void setHardCommand(CallableX cx){
+		public BindCommand setHardCommand(CallableX cx){
 //			if(this.cxCommand!=null && isReadOnly())throw new DetailedException("readonly",this);
 //			if(isReadOnly())throw new DetailedException("readonly",this);
 			assertHardCommandNotSet(cx); //DetailedException.assertNotAlreadySet(this.cxHardCommand, cx, this);
 			DetailedException.assertIsTrue("name set (a description is necessary as the command is hard coded)", !cx.getName().isEmpty(), cx, this);
 			this.cxHardCommand = cx;
+			return this;
 		}
 		
 		public void assertHardCommandNotSet(Object... aobjDbg){
@@ -173,6 +183,37 @@ public class KeyBindCommandManagerI {
 		tmbindList.remove(strBindCfg);
 	}
 	
+	/**
+	 * see {@link #putBindCommand(String, String, CallableX)}
+	 * @param strKeyBindCfg
+	 * @param strName
+	 * @param cx
+	 * @return
+	 */
+	public void putBindCommandLater(String strKeyBindCfg, String strName, CallableX cx){
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				if(KeyCodeManagerI.i().getKeyListCopy().size()==0)return false;
+				putBindCommand( strKeyBindCfg,  strName,  cx);
+				return true;
+			}
+		});
+	}
+	
+	/**
+	 * 
+	 * @param strKeyBindCfg see {@link KeyBind#setFromKeyCfg(String)}
+	 * @param cx
+	 * @return
+	 */
+	public BindCommand putBindCommand(String strKeyBindCfg, String strName, CallableX cx){
+		return putBindCommand(
+			new BindCommand()
+				.setKeyBind(new KeyBind().setFromKeyCfg(strKeyBindCfg))
+				.setHardCommand(cx.setName(strName))
+		);
+	}
 	/**
 	 * 
 	 * @param bc

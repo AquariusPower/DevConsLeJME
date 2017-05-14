@@ -63,6 +63,7 @@ public class QueueManagerDialogI implements IUserTextInputSubmited{
 				}
 				diagMaint.setTitle(QueueManagerDialogI.class.getSimpleName());
 				
+				diagMaint.addUserInputTextSubmittedListener(QueueManagerDialogI.this);
 //				MiscJmeI.i().addToName(diagMaint.getDialog(), GlobalsManagerDialogI.class.getSimpleName(), true);
 				
 				return true;

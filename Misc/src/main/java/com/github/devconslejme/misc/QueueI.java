@@ -63,7 +63,11 @@ public class QueueI {
 	/**
 	 * use this one for anonymous classes
 	 */
-	public static abstract class CallableXAnon extends CallableX<CallableXAnon>{}
+	public static abstract class CallableXAnon extends CallableX<CallableXAnon>{
+		public CallableXAnon(){
+			super(1);
+		}
+	}
 	
 	/**
 	 * TODO could this be a guava's Function class? 
@@ -97,10 +101,15 @@ public class QueueI {
 
 		private Method	mEnclosing;
 
-		private StackTraceElement	steInstancedWhen;
+		private StackTraceElement	steInstancedWhere;
 		private StackTraceElement[]	asteLastEnqueued;
 
 		private boolean	bJustRemoveFromQueueOnce;
+
+		private Long	lFirstRunAtTime=null;
+
+		private long	lRunCount=0;
+		private long	lFailCount=0;
 		
 		
 		private static String strLastUId="0";
@@ -126,6 +135,10 @@ public class QueueI {
 			return getThis();
 		}
 		
+		/**
+		 * 
+		 * @return the tpf of the application main update method
+		 */
 		public float getTPF() {
 			return fTPF;
 		}
@@ -172,46 +185,59 @@ public class QueueI {
 		 * see {@link CallableX}
 		 */
 		public CallableX(){
-//			this(1,null,0,false);
-//		}
-//		public CallableX(float fDelaySeconds, boolean bLoop){
-//			this(1,null,fDelaySeconds,bLoop);
-//		}
-//		public CallableX(String strName, float fDelaySeconds, boolean bLoop){
-//			this(1,strName,fDelaySeconds,bLoop);
-//		}
-//		public CallableX(int iStackAdd, String strName, float fDelaySeconds, boolean bLoop){
+			this(0);
+		}
+		/**
+		 * 
+		 * @param iIncStack to be used to determine where it was instanced using the stack trace
+		 */
+		public CallableX(int iIncStack){
 			strUId=strLastUId=StringI.i().getNextUniqueId(strLastUId);
 			
 			setEnclosing(this.getClass().getEnclosingMethod());
 			
-			setInstancedWhen(Thread.currentThread().getStackTrace()[2]);
+			setInstancedWhere(Thread.currentThread().getStackTrace()[2+iIncStack]);
 			
+//			prepareName();
+			
+			updateRunAt();
+		}
+		
+		private String prepareNameFromEnclosing(){
+			if(getEnclosing()!=null){
+				return getEnclosing().getName().trim();
+			}
+			return null;
+		}
+		private String prepareNameFromStack(){
+			String str = steInstancedWhere.getMethodName().trim(); //can be "<init>".equals(str) too
+//			if("<init>".equals(str)){
+				String[] astr = steInstancedWhere.getClassName().split("[.]");
+				str=astr[astr.length-1]+"."+str;
+				str=str.trim();
+//			}
+			return str;
+		}
+		private void prepareName(){
+			///////////////////////////////////// enclosing
 			// auto name
-			if(strName==null){ // for annonimous class
-				if(getEnclosing()!=null){
-					strName=getEnclosing().getName();
-				}
+			if(!isNameSetProperly()){ // for annonimous class
+				strName = prepareNameFromEnclosing();
 				bAnonymousClass=true;
 			}
 			
-			if(strName==null){
-				strName = steInstancedWhen.getMethodName();
-				if("<init>".equals(strName)){
-					String[] astr = steInstancedWhen.getClassName().split("[.]");
-					strName=astr[astr.length-1]+"."+strName;
-				}
+			if(!isNameSetProperly()){
+				strName = prepareNameFromStack();
 			}
 			
-			if(strName==null){
-				strName=this.getClass().getSimpleName(); //TODO never used right?
+			// above is about enclosing origin
+			if(isNameSetProperly())strName="Something@"+strName;
+			
+			/////////////////////////////////////// failed
+			if(!isNameSetProperly()){
+				strName="WARN: unable to automatically prepare a good name #"+this.hashCode(); //TODO this looks bad :(
+				MessagesI.i().warnMsg(this, strName, this, getEnclosing(), steInstancedWhere);
 			}
-			
-//			this.strName = strName;
-//			this.bLoop=bLoop;
-//			this.fDelaySeconds=(fDelaySeconds);
-			
-			updateRunAt();
 		}
 		
 		public String getInfoText(){
@@ -228,6 +254,8 @@ public class QueueI {
 				MethodX mh = new MethodX();
 				mh.setMethod(getEnclosing()); 
 				sb.append(mh.getFullHelp(true,false) + strSeparator);
+			}else{
+				sb.append(prepareNameFromStack() + strSeparator);
 			}
 			
 			return sb.toString();
@@ -246,6 +274,11 @@ public class QueueI {
 				bRunImediatelyOnce=false;
 				return true;
 			}
+			
+			if(lFirstRunAtTime!=null && lRunCount==0){
+				return QueueI.i().isReady(lFirstRunAtTime);
+			}
+			
 			return QueueI.i().isReady(lRunAtTime);
 		}
 
@@ -301,30 +334,64 @@ public class QueueI {
 		public boolean isPaused() {
 			return bPaused;
 		}
+		/**
+		 * TODO it is possible to avoid using this by extending the {@link CallableX}
+		 * @param objVal
+		 * @return
+		 */
 		synchronized public SELF putKeyClassValue(Object objVal) {
 			hmKeyValue.put(objVal.getClass().getName(),objVal);
 			return getThis();
 		}
+		/**
+		 * TODO it is possible to avoid using this by extending the {@link CallableX}
+		 * @param strKey
+		 * @param objVal
+		 * @return
+		 */
 		synchronized public SELF putKeyValue(String strKey, Object objVal) {
 			hmKeyValue.put(strKey,objVal);
 			return getThis();
 		}
+		/**
+		 * TODO it is possible to avoid using this by extending the {@link CallableX}
+		 * @param cl
+		 * @return
+		 */
 		@SuppressWarnings("unchecked")
 		synchronized public <T> T getValue(Class<T> cl) {
 			return (T)hmKeyValue.get(cl.getName());
 		}
+		/**
+		 * TODO it is possible to avoid using this by extending the {@link CallableX}
+		 * @param strKey
+		 * @return
+		 */
 		@SuppressWarnings("unchecked")
 		synchronized public <T> T getValue(String strKey) {
 			return (T)hmKeyValue.get(strKey);
 		}
+		public boolean isNameSetProperly(){
+			return strName!=null && !strName.isEmpty();
+		}
 		public String getName() {
 			return strName;
+		}
+		public SELF setRunImediatelyOnce() {
+			this.bRunImediatelyOnce = true;
+			return getThis();
 		}
 		public boolean isRunImediatelyOnce() {
 			return bRunImediatelyOnce;
 		}
-		public SELF setRunImediatelyOnce() {
-			this.bRunImediatelyOnce = true;
+		/**
+		 * sets the first run delay, may be 0 to be imediately
+		 * @param f
+		 * @return
+		 */
+		public SELF setInitialDelay(float f) {
+			lFirstRunAtTime=QueueI.i().calcRunAt(f);
+//			this.bRunImediatelyOnce = true;
 			return getThis();
 		}
 		public Method getEnclosing() {
@@ -334,11 +401,12 @@ public class QueueI {
 			this.mEnclosing = mEnclosing;
 			return getThis();
 		}
-		public StackTraceElement getInstancedWhen() {
-			return steInstancedWhen;
+		public StackTraceElement getInstancedWhere() {
+			return steInstancedWhere;
 		}
-		public SELF setInstancedWhen(StackTraceElement steInstancedWhen) {
-			this.steInstancedWhen = steInstancedWhen;
+		public SELF setInstancedWhere(StackTraceElement steInstancedWhen) {
+			assert(this.steInstancedWhere==null);
+			this.steInstancedWhere = steInstancedWhen;
 			return getThis();
 		}
 		
@@ -354,6 +422,10 @@ public class QueueI {
 				acxList.add(cx);
 			}
 			cx.asteLastEnqueued=Thread.currentThread().getStackTrace();
+			
+			if(cx.getName()==null || cx.getName().isEmpty()){
+				cx.prepareName();
+			}
 		}
 	}
 	/**
@@ -390,6 +462,7 @@ public class QueueI {
 				if(cx.isPaused())continue;
 				
 				cx.setTPF(fTPF);
+				cx.lRunCount++; //working or not
 				if(cx.call()){ 
 //					cx.done();
 					if(!cx.isLoopEnabled() || cx.bJustRemoveFromQueueOnce){
@@ -410,6 +483,7 @@ public class QueueI {
 //					}
 				}else{
 					// if a loop queue fails, it will not wait and will promptly retry!
+					cx.lFailCount++;
 				}
 			}
 		}

@@ -691,7 +691,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			setFocus(entidP, false);
 		}
 		
-		cxZOrder.setRunImediatelyOnce();
+		cxZOrder.setInitialDelay(0);
 //		QueueI.i().enqueue(cxZOrder);
 	}
 	private void setFocus(EntityId entid, boolean bRecursive){

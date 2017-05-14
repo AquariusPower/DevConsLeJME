@@ -29,11 +29,15 @@ package com.github.devconslejme.misc.jme;
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.github.devconslejme.misc.Annotations.ToDo;
 import com.github.devconslejme.misc.AssertionsI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.bounding.BoundingBox;
@@ -46,7 +50,6 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Mesh.Mode;
 import com.jme3.scene.Node;
@@ -295,5 +298,27 @@ public class MiscJmeI {
 	
 	public SimpleApplication getSApp(){
 		return sappOptional;
+	}
+	
+	/**
+	 * will keep trying to unregister until all are found
+	 */
+	public void enqueueUnregisterKeyMappings(String... astr){
+		QueueI.i().enqueue(new CallableXAnon() {
+			ArrayList<String> astrList = new ArrayList<String>(Arrays.asList(astr));
+			
+			@Override
+			public Boolean call() {
+				for(String str:astrList.toArray(new String[0])){
+					if(app.getInputManager().hasMapping(str)){
+						app.getInputManager().deleteMapping(str);
+						astrList.remove(str);
+					}
+				}
+				
+				return astrList.size()==0; //will keep trying till all are deleted
+			}
+		});
+		
 	}
 }

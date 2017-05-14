@@ -1417,6 +1417,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			}
 		}
 		
+		clearToolsSelection();
+		
 		if(isOptionSelected()){
 			if(isCloseOnChoiceMade()){
 				getDialog().close();
@@ -1424,6 +1426,17 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		}
 	}
 	
+	/**
+	 * This is required to prevent being unable to click an already selected tool button option.
+	 * Also, having them selected is pointless anyway.
+	 */
+	@Bugfix
+	private void clearToolsSelection() {
+		if(lstbxTools.getSelectionModel().getSelection()!=null){
+			lstbxTools.getSelectionModel().setSelection(-1);
+		}
+	}
+
 	private void updateOptionSelected() {
 		OptionData od = getSelectedOptionData();
 		if(od==null)return;

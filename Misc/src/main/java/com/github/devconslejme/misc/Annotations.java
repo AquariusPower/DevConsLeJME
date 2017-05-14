@@ -55,7 +55,9 @@ public class Annotations{
 	public static @interface NonStandard {}
 	
 	/**
-	 * use this to pin point workarounds for dependencies limitations
+	 * use this to pin point workarounds for dependencies limitations, 
+	 * for things that you want them to work differently,
+	 * and also are problematic in some way or another  
 	 */
 	@Target(value = {
 			ElementType.ANNOTATION_TYPE,
