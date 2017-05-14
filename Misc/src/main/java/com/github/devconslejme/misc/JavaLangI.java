@@ -442,7 +442,25 @@ public class JavaLangI {
 		return null;
 	}
 	
-	/** shorteners */
+	public static abstract class FuncIn<I> implements Function<I,Void>{
+		public abstract void applyIn(I in);
+		@Override
+		public Void apply(I in) {
+			applyIn(in);
+			return null;
+		}
+	}
+	public static abstract class FuncOut<O> implements Function<Void,O>{
+		public abstract O applyOut();
+		@Override
+		public O apply(Void dummy) {
+			applyOut();
+			return null;
+		}
+	}
+	
+	/** Function code shorteners */
+	@Deprecated
 	public static class FunctionX{
 //		public static abstract class F{
 //			abstract void work();
@@ -457,17 +475,25 @@ public class JavaLangI {
 //			abstract O work(I in);
 //		}
 		
-		public static abstract class F implements Function<Void,Void>{
-			/** apply */abstract void a();
+		/** Function code shortener */
+		@Deprecated public static abstract class F implements Function<Void,Void>{
+			/** apply() */public abstract void a();
+			@Override public Void apply(Void dummy) {a();return null;}
 		}
-		public static abstract class FI<I> implements Function<I,Void>{
-			/** apply */abstract void a(I in);
+		/** Function code shortener */
+		@Deprecated public static abstract class FI<I> implements Function<I,Void>{
+			/** apply() */public abstract void a(I in);
+			@Override public Void apply(I t) {a(t);return null;}
 		}
-		public static abstract class FO<O> implements Function<Void,O>{
-			/** apply */abstract O a();
+		/** Function code shortener */
+		@Deprecated public static abstract class FO<O> implements Function<Void,O>{
+			/** apply() */public abstract O a();
+			@Override public O apply(Void dummy) {return a();}
 		}
-		public static abstract class FIO<I,O> implements Function<I,O>{
-			/** apply */abstract O a(I in);
+		/** Function code shortener */
+		@Deprecated public static abstract class FIO<I,O> implements Function<I,O>{
+			/** apply() */public abstract O a(I in);
+			@Override public O apply(I in) {return a(in);}
 		}
 	}
 }

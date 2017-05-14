@@ -54,6 +54,8 @@ public class EffectElectricity extends EffectBaseAbs<EffectElectricity>{
 	private ArrayList<Vector3f>	av3fList  = new ArrayList<Vector3f>() {};
 	private Integer	iOverrideThickness=null;
 	private ElectricalPath	elp;
+//	private int	iMinPathParts;
+//	private int	iMaxPathParts;
 	
 	public EffectElectricity() {
 		elp = new ElectricalPath();
@@ -101,108 +103,9 @@ public class EffectElectricity extends EffectBaseAbs<EffectElectricity>{
 				tpf,
 				getLocationFrom(),
 				getLocationTo(),
-//				iPartMaxDots,
-//				fPartMinPerc,
-//				getHoldPreviousFrom(),
-//				getHoldPreviousTo(),
-//				getMaxHoldMilis(),
 				fAmplitudePerc
-//				fDeltaPerc
 		);
 	}
-//	@MiscGenericMigrateOneDay
-//	public ArrayList<Vector3f> recreatePath() {
-//		assertNotDiscarded();
-//		Vector3f v3fTargetSpot=getLocationTo();
-//		
-//		int iPartMaxDotsCurrent = iPartMaxDots;
-//		int iDotsMaxDist = (int) getLocationFrom().distance(v3fTargetSpot);
-//		if(iDotsMaxDist<iPartMaxDots)iPartMaxDotsCurrent=iDotsMaxDist;
-//		
-//		Vector3f v3fDirectionNormalized = v3fTargetSpot.subtract(getLocationFrom()).normalize();
-//		Vector3f v3fRelativePartStepMaxPos = v3fDirectionNormalized.mult(iPartMaxDotsCurrent);
-//		int iMinDotsLength = (int) (iPartMaxDotsCurrent*fPartMinPerc);
-//		if(iMinDotsLength==0)iMinDotsLength=1;
-//		int iMaxAllowedParts = (iDotsMaxDist/iMinDotsLength);
-//		
-//		boolean bUpdate=false;
-//		float fMaxMoveDetectDist=0.01f;
-//		if(getHoldPreviousFrom().distance(getLocationFrom()) > fMaxMoveDetectDist)bUpdate=true;
-//		if(getHoldPreviousTo().distance(getLocationTo()) > fMaxMoveDetectDist)bUpdate=true;
-//		if(getHoldUntilMilis() < SimulationTimeI.i().getMillis()){
-//			setHoldUntilMilis(SimulationTimeI.i().getMillis() + FastMath.nextRandomInt(250, getMaxHoldMilis() ));
-//			bUpdate=true;
-//		}
-//		
-//		if(bUpdate){
-//			av3fList.clear();
-//			// updating
-//			getHoldPreviousFrom().set(getLocationFrom());
-//			getHoldPreviousTo().set(getLocationTo());
-//		}else{
-//			// holding
-//			spreadInnersABit(av3fList);
-//			return av3fList;
-//		}
-//		
-//		Vector3f v3fPartStart = getLocationFrom();
-//		av3fList.add(v3fPartStart.clone());
-//		while(true){
-//			// move a bit towards the end
-//			Vector3f v3fPartEnd = new Vector3f(v3fPartStart);
-//			float fPerc = fPartMinPerc + (FastMath.nextRandomFloat() * fDeltaPerc);
-//			v3fPartEnd.interpolateLocal(v3fPartEnd.add(v3fRelativePartStepMaxPos), fPerc);
-//			
-//			// random coolness missplacement
-//			float fDots=iPartMaxDotsCurrent*fAmplitudePerc;
-//			v3fPartEnd.x+=((FastMath.nextRandomFloat()*2f)-1f)*fDots;
-//			v3fPartEnd.y+=((FastMath.nextRandomFloat()*2f)-1f)*fDots;
-//			v3fPartEnd.z+=((FastMath.nextRandomFloat()*2f)-1f)*fDots;
-//			
-//			int iDotsCurrentDist = (int) getLocationFrom().distance(v3fPartEnd);
-//			boolean bBreak = false;
-//			if(!bBreak && av3fList.size()==iMaxAllowedParts-1){
-//				MessagesI.i().debugInfo(this,"max parts reached, is the code well implemented?");//,getUId());
-//				bBreak=true; //max parts reached 
-//			}
-//			if(!bBreak && (iDotsCurrentDist>=iDotsMaxDist))bBreak=true; //max parts reached 
-//			if(bBreak){
-//				v3fPartEnd=v3fTargetSpot.clone();
-//			}
-//			
-//			av3fList.add(v3fPartEnd.clone());
-//			
-//			if(bBreak)break;
-//			
-//			v3fPartStart = v3fPartEnd.clone();
-//		}
-//		
-//		for(Vector3f v3f:av3fList){
-//			v3f.subtractLocal(getLocationFrom()); //the mesh is relative to the geometry
-//		}
-//		
-//		return av3fList;
-//	}
-	
-//	private void spreadInnersABit(ArrayList<Vector3f> av3fList) {
-//		Vector3f v3fFromTmp=av3fList.get(0);
-//		Vector3f v3fToTmp=av3fList.get(av3fList.size()-1);
-//		float fDistMax=v3fFromTmp.distance(v3fToTmp);
-//		for(int i=1;i<av3fList.size()-1;i++){
-//			Vector3f v3f=av3fList.get(i);
-////		for(Vector3f v3f:av3fList){
-//			/**
-//			 * throw a line from <---> to
-//			 * get the nearest point at it relative to the inner part vertex
-//			 * not need to be precise tho :(
-//			 */
-//			float fDist=v3fFromTmp.distance(v3f);
-//			Vector3f v3fNearest = v3fFromTmp.clone().interpolateLocal(v3fToTmp, fDist/fDistMax);
-//			Vector3f v3fNew = v3fNearest.clone().interpolateLocal(v3f, 1.02f);
-//			v3f.set(v3fNew);
-//		}
-//	}
-	
 	
 	public EffectElectricity setAmplitudePerc(float f) {
 		this.fAmplitudePerc=f;
@@ -215,5 +118,19 @@ public class EffectElectricity extends EffectBaseAbs<EffectElectricity>{
 		eff.fAmplitudePerc=this.fAmplitudePerc;
 		return eff;
 	}
+	
+	public ElectricalPath getElectricalPath(){
+		return elp;
+	}
+	
+//	public void setMinMaxPerc(float fMin, float fMax) {
+//		elp.setMinMaxPerc(fMin, fMax);
+//	}
+
+//	public void setPathParts(int iMin, int iMax) {
+//		elp.setPathParts(iMin,iMax);
+////		this.iMinPathParts=iMin;
+////		this.iMaxPathParts=iMax;
+//	}
 
 }

@@ -29,6 +29,7 @@ package com.github.devconslejme.gendiag;
 import java.util.function.Function;
 
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.JavaLangI.FuncIn;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -36,7 +37,8 @@ import com.github.devconslejme.misc.GlobalManagerI;
 public class ManagerHelperI {
 	public static ManagerHelperI i(){return GlobalManagerI.i().get(ManagerHelperI.class);}
 	
-	private Function<RetVal, Void>	funcHandleCallRetVal;
+//	private Function<RetVal, Void>	funcHandleCallRetVal;
+	private FuncIn<RetVal>	funcHandleCallRetVal;
 	
 	public static class RetVal{
 		private Object objRet;
@@ -63,12 +65,12 @@ public class ManagerHelperI {
 		}
 	}
 	
-	public void setHandleCallRetVal(Function<RetVal,Void> func){
+	public void setHandleCallRetVal(FuncIn<RetVal> func){
 		assert(funcHandleCallRetVal==null);
 		this.funcHandleCallRetVal=func;
 	}
 	
-	public Function<RetVal, Void> getHandleCallRetVal(){
+	public FuncIn<RetVal> getHandleCallRetVal(){
 		return funcHandleCallRetVal;
 	}
 	

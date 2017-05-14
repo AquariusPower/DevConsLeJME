@@ -27,16 +27,14 @@
 
 package com.github.devconslejme.misc.jme;
 
-import java.util.function.Function;
-
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.JavaLangI;
+import com.github.devconslejme.misc.JavaLangI.FuncOut;
 import com.github.devconslejme.misc.MainThreadI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.jme3.scene.Spatial;
-import com.simsilica.lemur.input.FunctionId;
 
 
 /**
@@ -144,7 +142,7 @@ public class UserDataI {
 	 * @param eKey enum
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "unused" })
 	private <R> R getUserDataPSH(Spatial spt, IUDKey eKey){
 		R ret = getUserDataPSH( spt, eKey.getUId() );
 		if(ret!=null && !eKey.getType().isAssignableFrom(ret.getClass())){
@@ -153,7 +151,7 @@ public class UserDataI {
 		return ret;
 	}
 	
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "unused" })
 	private boolean setUserDataPSH(Spatial spt, IUDKey eKey, Object obj){
 		if(obj!=null && !eKey.getType().isAssignableFrom(obj.getClass())){
 			throw new DetailedException("incompatible types",obj.getClass(),eKey,eKey.getType(),spt);
@@ -172,11 +170,11 @@ public class UserDataI {
 	 * @param funcInstanceFactory if null will instance using this function
 	 * @return
 	 */
-	public <T> T retrieve(Spatial spt, Class<T> cl, Function<Void,T> funcInstanceFactory){
+	public <T> T retrieve(Spatial spt, Class<T> cl, FuncOut<T> funcInstanceFactory){
 		T ret = getUserDataPSH(spt, cl);
 //		T obj = getUserDataPSH(spt, strKey);
 		if(ret==null){
-			ret=funcInstanceFactory.apply(null);
+			ret=funcInstanceFactory.applyOut();
 //			setUserDataPSHSafely(spt, strKey, ret);
 			setUserDataPSHSafely(spt, ret);
 		}
@@ -184,9 +182,9 @@ public class UserDataI {
 	}
 	@SuppressWarnings("unchecked")
 	public <T> T put(Spatial spt, T objToStore){
-		return retrieve(spt, (Class<T>)objToStore.getClass(), new Function<Void,T>(){
+		return retrieve(spt, (Class<T>)objToStore.getClass(), new FuncOut<T>(){
 			@Override
-			public T apply(Void t) {
+			public T applyOut() {
 				return objToStore;
 			}
 		});

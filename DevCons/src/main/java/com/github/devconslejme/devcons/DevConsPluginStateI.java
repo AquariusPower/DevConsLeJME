@@ -52,6 +52,8 @@ import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.github.devconslejme.misc.JavaLangI;
+import com.github.devconslejme.misc.JavaLangI.FuncIn;
+import com.github.devconslejme.misc.JavaLangI.FunctionX.FI;
 import com.github.devconslejme.misc.KeyBind;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
@@ -304,14 +306,10 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		JavaScriptI.i().configure(); //before all others
 		LoggingI.i().configure();
 		
-		ManagerHelperI.i().setHandleCallRetVal(new Function<RetVal, Void>() {
-			@Override
-			public Void apply(RetVal rv) {
-				LoggingI.i().logEntry(rv.getDescription());
-				JavaScriptI.i().showRetVal(rv.getRetVal());
-				return null;
-			}
-		});
+		ManagerHelperI.i().setHandleCallRetVal(new FuncIn<RetVal>(){@Override public void applyIn(RetVal rv){
+			LoggingI.i().logEntry(rv.getDescription());
+			JavaScriptI.i().showRetVal(rv.getRetVal());
+		}});
 		LoggingI.i().logEntry("Handling calls return values, will be shown here thru: "+ManagerHelperI.class.getName());
 	}
 	

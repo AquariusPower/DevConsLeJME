@@ -41,14 +41,16 @@ public class ElectricalPath {
 	private ArrayList<Vector3f>	av3fList  = new ArrayList<Vector3f>() {};
 	private long	lHoldUntilMilis;
 	private int iPartMaxDots=100;
-	private float	fPartMinPerc=0.20f;
+	private float	fPartMinPerc=0.20f; // max of 5 parts
 	private float	fPartMaxPerc=1.00f;
-	private float fDeltaPerc = fPartMaxPerc-fPartMinPerc;
+//	private float fDeltaPerc = fPartMaxPerc-fPartMinPerc;
 	private int	iMaxHoldMilis = 1000;
 	private Vector3f	v3fHoldPreviousFrom=new Vector3f();
 	private Vector3f	v3fHoldPreviousTo=new Vector3f();
 	private long	lTimeMilis;
 	private boolean	bUseRealTime = false;
+//	private int	iMinPathParts=3;
+//	private int	iMaxPathParts=-1;
 	
 	public Vector3f getHoldPreviousFrom() {
 		return v3fHoldPreviousFrom;
@@ -84,15 +86,10 @@ public class ElectricalPath {
 			Float fTPF,
 			Vector3f v3fFrom,
 			Vector3f v3fTo,
-//			float fPartMinPerc,
-//			Vector3f v3fHoldPreviousFrom,
-//			Vector3f v3fHoldPreviousTo,
-//			int iMaxHoldMilis,
 			float fAmplitudePerc
-//			float fDeltaPerc
 	) {
 		updateTime(fTPF);
-		Vector3f v3fTargetSpot=v3fTo;
+		Vector3f v3fTargetSpot=v3fTo.clone();
 		
 		int iPartMaxDotsCurrent = iPartMaxDots;
 		int iDotsMaxDist = (int) v3fFrom.distance(v3fTargetSpot);
@@ -129,7 +126,7 @@ public class ElectricalPath {
 		while(true){
 			// move a bit towards the end
 			Vector3f v3fPartEnd = new Vector3f(v3fPartStart);
-			float fPerc = fPartMinPerc + (FastMath.nextRandomFloat() * fDeltaPerc);
+			float fPerc = fPartMinPerc + (FastMath.nextRandomFloat() * getDeltaPerc());
 			v3fPartEnd.interpolateLocal(v3fPartEnd.add(v3fRelativePartStepMaxPos), fPerc);
 			
 			// random coolness missplacement
@@ -163,6 +160,10 @@ public class ElectricalPath {
 		return av3fList;
 	}
 	
+	private float getDeltaPerc() {
+		return fPartMaxPerc-fPartMinPerc;
+	}
+
 	private void spreadInnersABit(ArrayList<Vector3f> av3fList) {
 		Vector3f v3fFromTmp=av3fList.get(0);
 		Vector3f v3fToTmp=av3fList.get(av3fList.size()-1);
@@ -208,6 +209,34 @@ public class ElectricalPath {
 	public ElectricalPath setUseRealTime(boolean bUseRealTime) {
 		this.bUseRealTime = bUseRealTime;
 		return this;
+	}
+
+//	public void setPathParts(int iMin, int iMax) {
+//		this.iMinPathParts=iMin;
+//		this.iMaxPathParts=iMax;
+//	}
+
+	public int getPartMaxDots() {
+		return iPartMaxDots;
+	}
+
+	public ElectricalPath setPartMaxDots(int iPartMaxDots) {
+		this.iPartMaxDots = iPartMaxDots;
+		return this; //for beans setter
+	}
+
+	public float getPartMinPerc() {
+		return fPartMinPerc;
+	}
+
+	public ElectricalPath setPartMinPerc(float fPartMinPerc) {
+		this.fPartMinPerc = fPartMinPerc;
+		return this; //for beans setter
+	}
+
+	public void setMinMaxPerc(float fMin, float fMax) {
+		this.fPartMinPerc=fMin;
+		this.fPartMaxPerc=fMax;
 	}
 	
 }

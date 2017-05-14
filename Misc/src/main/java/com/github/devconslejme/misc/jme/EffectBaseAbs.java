@@ -53,7 +53,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 //	private Vector3f	v3fHoldPreviousTo=new Vector3f();
 //	private int	iMaxHoldMilis = 1000;
 	
-	private ColorRGBA	colorRefDefault=ColorI.i().colorChangeCopy(ColorRGBA.Cyan, 0f, 0.5f);
+	private ColorRGBA	colorRefDefault=ColorI.i().colorChangeCopy(ColorRGBA.Cyan, 0f, 0.75f);
 	private ColorRGBA	colorRefBase;
 	private Node	nodeParent;
 	private Geometry	geom;
