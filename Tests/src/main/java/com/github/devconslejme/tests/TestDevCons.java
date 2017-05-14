@@ -46,6 +46,7 @@ import com.github.devconslejme.misc.CheckProblemsI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.DebugVisualsI;
 import com.github.devconslejme.misc.jme.EnvironmentI;
@@ -53,6 +54,7 @@ import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.EnvironmentI.IEnvironmentListener;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.PickingHandI;
+import com.github.devconslejme.misc.lemur.SystemAlertLemurI;
 import com.jme3.app.Application;
 import com.jme3.app.DebugKeysAppState;
 import com.jme3.app.SimpleApplication;
@@ -152,8 +154,31 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		opt_initOtherStuff();
 		
 		opt_initIntegrateAllOtherTests();
+		
+		opt_initAlertConsoleKey();
 	}
 	
+	private void opt_initAlertConsoleKey() {
+		QueueI.i().enqueue(new CallableXAnon() {
+			TimedDelay td = new TimedDelay(3f, "wait user read it");
+			private StackTraceElement[]	aste;
+			@Override
+			public Boolean call() {
+				if(!SystemAlertLemurI.i().isShowingAlert()){
+					aste=SystemAlertLemurI.i().showSystemAlert("hit F10 to open console", null);
+					td.setActive(true);
+				}else{
+					if(td.isReady()){
+						SystemAlertLemurI.i().hideSystemAlert(aste);
+						return true;//end
+					}
+				}
+				
+				return false;
+			}
+		});
+	}
+
 	private void opt_initShowFPS() {
 //		throw new UnsupportedOperationException("method not implemented");
 	}

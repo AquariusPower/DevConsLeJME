@@ -995,6 +995,16 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		}
 	}
 	
+	public void putToolActionLater(ToolAction ta){
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				if(vlodTools==null)return false;
+				putToolAction(ta);
+				return true;
+			}
+		});
+	}
 	public ToolAction putToolAction(ToolAction ta){
 		if(!vlodTools.contains(ta)){
 			vlodTools.add(ta);

@@ -57,6 +57,7 @@ public class QueueI {
 	/**
 	 * this can also be used with anonimous classes like: `new CallableX<CXA>{...`
 	 * but prefer using {@link CallableXAnon}
+	 * TODO may using this cause some problem?
 	 */
 	public static abstract class CXA extends CallableX<CXA>{}
 	

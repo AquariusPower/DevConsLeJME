@@ -78,47 +78,12 @@ public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 				
 				diagMaint.addUserInputTextSubmittedListener(GlobalsManagerDialogI.this);
 				
-//				diagMaint.putToolAction(new ToolAction("Methods from", new CmdBtnTA() {
-//					@Override	public Integer executeTA(Button source) {
-//						diagMaint.requestUpdateListItems();
-//						return (bShowInherited=!bShowInherited)?0:1;
-//					}
-//				}).setMultiStatusMode(bShowInherited?0:1,"concrete","inherited too"));
-				
 				diagMaint.putToolAction(new ToolAction("Pkg info", new CmdBtnTA() {
 					@Override	public Integer executeTA(Button source) {
 						diagMaint.requestUpdateListItems();
 						return (bShowPackagesPrepended=!bShowPackagesPrepended)?0:1;
 					}
 				}).setMultiStatusMode(bShowPackagesPrepended?0:1,"after","prepend"));
-				
-//				diagMaint.putToolAction(new ToolAction("Method kind", new CmdBtnTA() {
-//					@Override	public Integer executeTA(Button btn) {
-//						diagMaint.requestUpdateListItems();
-//						return (bShowOnlyEditableBeans=!bShowOnlyEditableBeans)?0:1;
-//					}
-//				}).setMultiStatusMode(bShowOnlyEditableBeans?0:1,"all","only beans"));
-				
-//				// user filter
-//				ApplyContextChoiceCmd cmd = new ApplyContextChoiceCmd() {
-//					@Override
-//					public void executeContextCommand(ContextButton cbSource) {
-//						eStringMatchMode = (EStringMatchMode) cbSource.getStoredValue();
-//					}
-//				};
-//				ContextMenu cm = ContextMenuI.i().createStringRegexOptContextMenu(
-//						diagMaint.getDialog(), eStringMatchMode, cmd);
-//				CmdBtnTA cmdbta = new CmdBtnTA() {
-//					@Override	public Integer executeTA(Button btn) {
-//						diagMaint.requestUpdateListItems();
-////						return (bRegexFilter=!bRegexFilter)?0:1;
-//						return (bRegexFilter=!bRegexFilter)?1:0;
-//					}
-//				};
-//				ToolAction ta = new ToolAction("User filter",cmdbta)
-//					.setMultiStatusMode(bRegexFilter?0:1,"enable","disable")
-//					.setContextMenu(cm);
-//				diagMaint.putToolAction(ta);
 				
 				vfNewInputTextFilterSubmitted = diagMaint.createInputTextSubmitedVersionedReference();
 				

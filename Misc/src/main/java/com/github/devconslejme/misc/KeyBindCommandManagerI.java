@@ -464,7 +464,7 @@ public class KeyBindCommandManagerI {
 				SystemAlertI.i().hideSystemAlert(asteAlertFrom);
 				
 				String strMsg = "captured key bind "+kbCaptured.getBindCfg()
-					+" is already being used by "+bindConflict.getCommandsInfo()+"\n"
+					+" is already being used by '"+bindConflict.getCommandsInfo()+"'\n"
 					+strRequestUserDecision;
 				MessagesI.i().warnMsg(this,strMsg,	bindConflict,bindCaptureToTarget,kbCaptured,this);
 				

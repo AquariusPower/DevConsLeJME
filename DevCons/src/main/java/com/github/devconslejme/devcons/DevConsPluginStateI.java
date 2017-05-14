@@ -49,6 +49,7 @@ import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.github.devconslejme.misc.JavaLangI;
+import com.github.devconslejme.misc.KeyBind;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
@@ -102,6 +103,8 @@ import com.simsilica.lemur.style.Styles;
 import com.simsilica.lemur.text.DocumentModel;
 
 /**
+ * By default hit F10 to open it. 
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class DevConsPluginStateI extends AbstractAppState {//implements IResizableListener{
@@ -164,6 +167,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 			return i;
 		}
 	};
+	private ActionListener	alToggleConsole;
 	private static class VersionedStatus extends VersionedList<String>{
 		private HashMap<String,Integer> hmKV = new HashMap<String,Integer>();
 		public void put(String strKey, String strValue){
@@ -294,15 +298,17 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		
 		app.getStateManager().attach(this);
 		
-//		flStorageFolder = new File(
-//			JmeSystem.getStorageFolder(StorageFolderType.Internal),
-//			app.getClass().getPackage().getName().replace(".",File.separator) //package of Application class
-//				+File.separator+app.getClass().getSimpleName() //Application class
-//				+File.separator+DevConsPluginStateI.class.getSimpleName() //DevCons plugin
-//		);
-		
 		JavaScriptI.i().configure(); //before all others
 		LoggingI.i().configure();
+	}
+	
+	public static abstract class CallableVarMonX extends CallableX<CallableVarMonX>{
+		private VarMon vm;
+		
+		@Override
+		protected CallableVarMonX getThis() {
+			return this;
+		}
 	}
 	
 	public VarMon createVarMon(EStatPriority esp, String strKey, String strHelp, CallableX cx){
@@ -338,7 +344,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		cxScrollTo = new CallableXScrollTo();
 		QueueI.i().enqueue(cxScrollTo);
 		
-		ActionListener al = new ActionListener(){
+		alToggleConsole = new ActionListener(){
       @Override
 			public void onAction(String name, boolean value, float tpf) {
 				if(!value)return;
@@ -348,9 +354,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 				}
 			}
 		};
-		app.getInputManager().addMapping(strInputMappingToggleDeveloperConsole, 
-			new KeyTrigger(iKeyCodeToggleConsole));
-		app.getInputManager().addListener(al, strInputMappingToggleDeveloperConsole);
+		setKeyCodeToggleConsole(iKeyCodeToggleConsole);
 		
 		// js
 		JavaScriptI.i().init();
@@ -1560,8 +1564,25 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		return iKeyCodeToggleConsole;
 	}
 
+	public DevConsPluginStateI setKeyCodeToggleConsole(String strKeyToggleConsoleNoMods) {
+		setKeyCodeToggleConsole(new KeyBind().setFromKeyCfg(strKeyToggleConsoleNoMods).getActionKey().getKeyCode());
+		return this;
+	}
+	
 	public DevConsPluginStateI setKeyCodeToggleConsole(int iKeyCodeToggleConsole) {
 		this.iKeyCodeToggleConsole = iKeyCodeToggleConsole;
+		
+		if(alToggleConsole!=null){ //otherwise will be called again during initialize
+			if(app.getInputManager().hasMapping(strInputMappingToggleDeveloperConsole)){
+				app.getInputManager().deleteMapping(strInputMappingToggleDeveloperConsole);
+			}
+			
+			app.getInputManager().addMapping(strInputMappingToggleDeveloperConsole, 
+				new KeyTrigger(iKeyCodeToggleConsole));
+			
+			app.getInputManager().addListener(alToggleConsole, strInputMappingToggleDeveloperConsole);
+		}
+		
 		return this;
 	}
 	

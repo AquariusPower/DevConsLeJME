@@ -146,7 +146,7 @@ public class SystemAlertI {
 	public String getFullMessage(){
 		return "ALERT!!!\n"
 				+getAlertMessage()+"\n"
-				+"DynamicInfo: "+getDynamicInfo()+"\n";
+				+(isDynamicInfoSet() ? "DynamicInfo: "+getDynamicInfo()+"\n" : "");
 	}
 
 	public String getAlertMessage(){

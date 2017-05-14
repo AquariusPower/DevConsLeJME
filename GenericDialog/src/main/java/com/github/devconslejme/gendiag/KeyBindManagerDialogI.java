@@ -27,6 +27,8 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.github.devconslejme.gendiag;
 
+import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction;
+import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction.CmdBtnTA;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.Key;
 import com.github.devconslejme.misc.KeyBind;
@@ -46,6 +48,7 @@ public class KeyBindManagerDialogI {
 	public static KeyBindManagerDialogI i(){return GlobalManagerI.i().get(KeyBindManagerDialogI.class);}
 
 	private SimpleMaintenanceGenericDialog	diagBindMan;
+	private boolean	bKeybindPrepend = true;
 	
 	public void configure(){
 		diagBindMan = new SimpleMaintenanceGenericDialog(KeyBindManagerDialogI.class.getSimpleName()) {
@@ -58,9 +61,17 @@ public class KeyBindManagerDialogI {
 				
 				OptionData odBindSection = diagBindMan.putSection(null, KeyBindCommandManagerI.class.getSimpleName());
 				for(BindCommand bc:KeyBindCommandManagerI.i().getKeyBindListCopy()){
-					String str="["+bc.getKeyBind().getBindCfg()+"]";
-					str+=" -> ";
-					str+=bc.getCommandsInfo();
+					String str="";
+					
+					str+="["+bc.getKeyBind().getBindCfg()+"]";
+					if(bKeybindPrepend){
+						str+=" -> ";
+						str+=bc.getCommandsInfo();
+					}else{
+						str=" -> "+str;
+						str=bc.getCommandsInfo()+str;
+					}
+					
 					OptionData odbc = diagBindMan.putOption(odBindSection, str, bc);
 					odbc.addCmdCfg(new CmdCfg("ChangeBind") {
 						@Override
@@ -71,6 +82,14 @@ public class KeyBindManagerDialogI {
 				}
 			}
 		};
+		
+		diagBindMan.putToolActionLater(new ToolAction("Key Bound", new CmdBtnTA() {
+			@Override	public Integer executeTA(Button source) {
+				diagBindMan.requestUpdateListItems();
+				return (bKeybindPrepend=!bKeybindPrepend)?0:1;
+			}
+		}).setMultiStatusMode(bKeybindPrepend?0:1,"after","prepend"));
+		
 	}
 	
 	public void show(){

@@ -63,7 +63,7 @@ public class SystemAlertJmeI extends SystemAlertI {
 	
 	@Override
 	public StackTraceElement[] showSystemAlert(String strMsg, Object objActionSourceElement) {
-		assert(Spatial.class.isInstance(objActionSourceElement));
+		assert(objActionSourceElement==null || Spatial.class.isInstance(objActionSourceElement));
 		return super.showSystemAlert(strMsg, objActionSourceElement);
 	}
 	
