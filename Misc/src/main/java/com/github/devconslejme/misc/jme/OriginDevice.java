@@ -28,6 +28,7 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 
+import com.github.devconslejme.devcons.JavaScriptI;
 import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.jme.DebugVisualsI.Cone;
 import com.jme3.bounding.BoundingBox;
@@ -82,6 +83,8 @@ public class OriginDevice extends Node{
 	
 	public OriginDevice(){
 		setName(OriginDevice.class.getSimpleName());
+		
+		JavaScriptI.i().setJSBinding(OriginDevice.ERotMode.class);
 		
 		fDisplacement=5;
 		iCS=50;
@@ -285,9 +288,9 @@ public class OriginDevice extends Node{
 		
 		// name
 		MiscJmeI.i().addToName(geom, OriginDevice.class.getSimpleName(), true);
-		if(v3fUp.x==1)MiscJmeI.i().addToName(geom, "X", false);
-		if(v3fUp.y==1)MiscJmeI.i().addToName(geom, "Y", false);
-		if(v3fUp.z==1)MiscJmeI.i().addToName(geom, "Z", false);
+		if(v3fUp.x==1){MiscJmeI.i().addToName(geom, "X", false);node.ea=EAxis.X;}
+		if(v3fUp.y==1){MiscJmeI.i().addToName(geom, "Y", false);node.ea=EAxis.Y;}
+		if(v3fUp.z==1){MiscJmeI.i().addToName(geom, "Z", false);node.ea=EAxis.Z;}
 		
 		MiscJmeI.i().addToName(node, geom.getName(), false);
 		

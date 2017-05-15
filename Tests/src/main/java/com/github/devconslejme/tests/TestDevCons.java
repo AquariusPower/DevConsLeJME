@@ -191,7 +191,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	private void opt_initSomeWorldObjects() {
 		orde = new OriginDevice();
 		getRootNode().attachChild(orde);
-		JavaScriptI.i().setJSBinding(OriginDevice.ERotMode.class);
+//		JavaScriptI.i().setJSBinding(OriginDevice.ERotMode.class);
 		
 		getCamera().setLocation(new Vector3f(9.787677f, 6.957723f, 11.003839f)); //taken from devcons
 		getCamera().setRotation(new Quaternion(-0.068618454f, 0.91919893f, -0.18511744f, -0.34072912f)); //taken from devcons

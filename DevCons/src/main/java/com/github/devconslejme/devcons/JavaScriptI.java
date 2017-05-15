@@ -32,6 +32,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -91,11 +92,11 @@ public class JavaScriptI implements IGlobalAddListener {
 	private String	strCmdChar = "/";
 	private HashMap<Object,ArrayList<MethodX>> hmMethodsHelp = new HashMap<Object,ArrayList<MethodX>>();
 	
-	enum EJSObjectBind {
-		selfScript,
-		;
-		public String s(){return toString();}
-	}
+//	enum EJSObjectBind {
+//		selfScript,
+//		;
+//		public String s(){return toString();}
+//	}
 	
 	enum EBaseCommand{
 		clear("clears the console log (not the log file)"),
@@ -345,36 +346,38 @@ public class JavaScriptI implements IGlobalAddListener {
 	 * @return previous value for id
 	 */
 //	private void setJSBinding(String strBindId, Object objBindValue){
-	private void setJSBinding(Object objBindValue){
-		String strBindId = genKeyFor(objBindValue);
-		
+	public void setJSBinding(Object objBindValue){
 		if(isForbidAccess(objBindValue))return;
 		
-		if(JavaLangI.i().isEnumClass(objBindValue)){
-			Class cl = (Class)objBindValue;
-//			String[] astr = cl.getName().split("[.]");
-//			String strBindIdNew=astr[astr.length-1];
-//			if(!strBindIdNew.equals(strBindId)){
-//				throw new DetailedException("should be equal (let it be automatic)",strBindId,strBindIdNew,objBindValue);
-//			}
-//			strBindId=strBindIdNew;
-			try {
-				objBindValue = jse.eval("Java.type('"+cl.getName()+"');");
-			} catch (ScriptException e) {
-				e.printStackTrace();
-			}
-		}
+		Class clEnum = (JavaLangI.i().isEnumClass(objBindValue)) ? (Class)objBindValue : null;
 		
+		String strBindId = genKeyFor(objBindValue);
 		if(bndJSE.get(strBindId)!=null){
+			if(clEnum!=null)return; //np if already set, just skip/ignore
 			throw new DetailedException("already set: "+strBindId, bndJSE.get(strBindId));
 		}
 		
-		bndJSE.put(strBindId,objBindValue);
+		if(clEnum!=null){
+			try {
+				objBindValue = jse.eval("Java.type('"+clEnum.getName()+"');"); //prepares a static class access
+			} catch (ScriptException e) {
+				throw new DetailedException(e, strBindId, objBindValue);
+			}
+		}
 		
+		
+		bndJSE.put(strBindId,objBindValue);
 		MessagesI.i().debugInfo(this,"created JS bind: "+strBindId,objBindValue);
 		
-//		astrJSClassBindList.add(strBindId);
+		Class<?>[] acl = objBindValue.getClass().getDeclaredClasses();
+		for(Class<?> cl:acl){
+			if(JavaLangI.i().isEnumClass(cl)){
+//				QueueI.i().enqueue(cx);
+				setJSBinding(cl);
+			}
+		}
 	}
+	
 	private boolean isForbidAccess(Object objBindValue) {
 		if(aclForbidJS.contains(objBindValue.getClass())){
 			MessagesI.i().warnMsg(this, "forbidden JS access to class", objBindValue.getClass());
@@ -463,24 +466,25 @@ public class JavaScriptI implements IGlobalAddListener {
 		showRetVal(objRetValFile); //this method will be called by the user, so show the return value
 		return b;
 	}
-	public File asFile(String strFile){
+	public FileSelfScript asFile(String strFile){
 		if(strFile.isEmpty()){
 			LoggingI.i().logWarn("missing file param");
 			return null;
 		}
 		
-		File flJS = null;
+		FileSelfScript flJS = null;
 		try {
-			flJS = new File(strFile); //first try to find it at some absolute location
+			flJS = new FileSelfScript(strFile); //first try to find it at some absolute location
 			if(!flJS.exists()){ 
 				//now try relatively to default storage path
-				flJS = FileI.i().createNewFileHandler(strFile,true);// new File(DevConsPluginStateI.i().getStorageFolder(),strFile);
+				flJS = new FileSelfScript(FileI.i().createNewFileHandler(strFile,true).toURI());
 			}
 			
 			if(!flJS.exists()){
 				flJS.createNewFile();
 				FileI.i().appendLine(flJS, "//Classes: "+bndJSE.keySet());
-				FileI.i().appendLine(flJS, "//"+EJSObjectBind.class.getSimpleName()+": "+Arrays.toString(EJSObjectBind.values()));
+//				FileI.i().appendLine(flJS, "//"+EJSObjectBind.class.getSimpleName()+": "+Arrays.toString(EJSObjectBind.values()));
+				FileI.i().appendLine(flJS, "//"+genKeyFor(flJS));
 				LoggingI.i().logWarn("created file "+flJS.getAbsoluteFile());
 				return null;
 			}
@@ -536,9 +540,10 @@ public class JavaScriptI implements IGlobalAddListener {
 	
 	public static class FileSelfScript extends File{
 		private static final long	serialVersionUID	= -1605739267004772815L;
-		public FileSelfScript(String pathname) {
-			super(pathname);
-		}
+		public FileSelfScript(URI uri) {super(uri);}
+		public FileSelfScript(File parent, String child) {super(parent, child);}
+		public FileSelfScript(String parent, String child) {super(parent, child);}
+		public FileSelfScript(String pathname) {super(pathname);}
 	}
 	
 	/**
@@ -549,8 +554,11 @@ public class JavaScriptI implements IGlobalAddListener {
 	 */
 	private boolean execFile(File flJS){
 		try {
-			bndJSE.remove(EJSObjectBind.selfScript.s());
-			setJSBinding(EJSObjectBind.selfScript.s(), flJS);
+			FileSelfScript flsc = new FileSelfScript(flJS.toURI());
+//			bndJSE.remove(EJSObjectBind.selfScript.s());
+			bndJSE.remove(genKeyFor(flsc));
+//			setJSBinding(EJSObjectBind.selfScript.s(), flJS);
+			setJSBinding(flsc);
 //			bndJSE.put(EJSObjectBind.selfScript.s(), flJS);
 //			rd.reset();
 			objRetValFile = jse.eval(new FileReader(flJS),bndJSE);
