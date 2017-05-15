@@ -97,9 +97,9 @@ public class ElectricalPath {
 		
 		Vector3f v3fDirectionNormalized = v3fTargetSpot.subtract(v3fFrom).normalize();
 		Vector3f v3fRelativePartStepMaxPos = v3fDirectionNormalized.mult(iPartMaxDotsCurrent);
-		int iMinDotsLength = (int) (iPartMaxDotsCurrent*fPartMinPerc);
-		if(iMinDotsLength==0)iMinDotsLength=1;
-		int iMaxAllowedParts = (iDotsMaxDist/iMinDotsLength);
+		float fMinDotsLength = (int) (iPartMaxDotsCurrent*fPartMinPerc);
+//		if(iMinDotsLength==0)iMinDotsLength=1;
+		int iMaxAllowedParts = (int) (iDotsMaxDist/fMinDotsLength);
 		
 		boolean bUpdate=false;
 		float fMaxMoveDetectDist=0.01f;
