@@ -37,6 +37,7 @@ import com.github.devconslejme.misc.AssertionsI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
@@ -47,6 +48,7 @@ import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.font.LineWrapMode;
 import com.jme3.math.FastMath;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -344,5 +346,23 @@ public class MiscJmeI {
 		if(v3fAround!=null)v3f.addLocal(v3fAround);
 		
 		return v3f;
+	}
+	
+	public String fmtVector3f(Vector3f v3f,int iScale){
+		return ""
+			+StringI.i().fmtFloat(v3f.getX(),iScale)+"f,"
+			+StringI.i().fmtFloat(v3f.getY(),iScale)+"f,"
+			+StringI.i().fmtFloat(v3f.getZ(),iScale)+"f"
+			;
+	}
+	
+	public String fmtToDegrees(Quaternion qua,int iScale){
+		float[] afAngles = qua.toAngles(null);
+		return ""
+			+StringI.i().fmtFloat(afAngles[0]*FastMath.RAD_TO_DEG,iScale)+"f,"
+			+StringI.i().fmtFloat(afAngles[1]*FastMath.RAD_TO_DEG,iScale)+"f,"
+			+StringI.i().fmtFloat(afAngles[2]*FastMath.RAD_TO_DEG,iScale)+"f"
+//			+StringI.i().fmtFloat(qua.getW()*FastMath.RAD_TO_DEG,1)+""
+			;
 	}
 }

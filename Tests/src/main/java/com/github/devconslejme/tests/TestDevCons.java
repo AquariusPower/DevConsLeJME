@@ -184,7 +184,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	}
 
 	private void opt_initShowFPS() {
-//		throw new UnsupportedOperationException("method not implemented");
+		EnvironmentJmeI.i().setShowFPS(true).setShowCamPos(true).setShowCamRot(true);
 	}
 
 	private void opt_initSomeWorldObjects() {

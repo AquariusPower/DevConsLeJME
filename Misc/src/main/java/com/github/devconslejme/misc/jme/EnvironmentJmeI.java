@@ -32,10 +32,18 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.GlobalManagerI.G;
+import com.github.devconslejme.misc.StringI;
 import com.jme3.app.Application;
+import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
+import com.jme3.font.BitmapText;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Geometry;
+import com.jme3.scene.Node;
+import com.jme3.scene.shape.Quad;
 
 /**
  * This way lwjgl3 may replace lwjgl more easily... or any other ways to collect the required values
@@ -47,13 +55,40 @@ import com.jme3.math.Vector3f;
  */
 public class EnvironmentJmeI extends AbstractAppState{
 	public static EnvironmentJmeI i(){return GlobalManagerI.i().get(EnvironmentJmeI.class);}
+	
+	private MouseI mouse = new MouseI();
+	private DisplayI display = new DisplayI();
+	private ArrayList<IEnvironmentListener> alisteners = new ArrayList<IEnvironmentListener>();
+	
 	private float	fTPF;
 	private float	fSumTPF;
 	private int	iFrameCount;
-	private float	fFPS;
+	private int	iFPS;
+	private BitmapText	btInfo;
+	private boolean	bShowFPS;
+	private Vector3f	v3fInfoLocation;
+	private boolean	bShowCamPos;
+	private boolean	bShowCamRot;
+	private Node	nodeGui;
+	private Node nodeInfo=new Node();
+	private Geometry geomInfoBkg = new Geometry();
 	
-	public void configure(){
-		GlobalManagerI.i().get(Application.class).getStateManager().attach(this);
+	public void configure(Node nodeGui){
+		G.i(Application.class).getStateManager().attach(this);
+		this.nodeGui=nodeGui;
+		if(this.nodeGui==null){
+			if(G.i(SimpleApplication.class)!=null){
+				this.nodeGui=G.i(SimpleApplication.class).getGuiNode();
+			}
+		}
+		
+		btInfo = new BitmapText(MiscJmeI.i().loadDefaultFont());
+		btInfo.setSize(12);
+		
+		geomInfoBkg.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(new ColorRGBA(0,0,0,0.25f)));
+		btInfo.setLocalTranslation(new Vector3f(0,0,1));
+		nodeInfo.attachChild(btInfo);
+		nodeInfo.attachChild(geomInfoBkg);
 	}
 	
 	@Override
@@ -65,7 +100,7 @@ public class EnvironmentJmeI extends AbstractAppState{
 		this.fSumTPF+=fTPF;
 		this.iFrameCount++;
 		if(fSumTPF>=1f){
-			fFPS=1f/(float)iFrameCount;
+			iFPS=iFrameCount;
 			fSumTPF-=1f;
 			iFrameCount=0;
 		}
@@ -75,12 +110,13 @@ public class EnvironmentJmeI extends AbstractAppState{
 				l.displayResizedEvent(getDisplay().getWidth(), getDisplay().getHeight());
 			}
 		}
+		
+		updateInfo();
 	}
 	
 	public static interface IEnvironmentListener{
 		void displayResizedEvent(int iW, int iH);
 	}
-	private ArrayList<IEnvironmentListener> alisteners = new ArrayList<IEnvironmentListener>();
 	public void addListener(IEnvironmentListener l){
 		if(!alisteners.contains(l))alisteners.add(l);
 	}
@@ -113,7 +149,6 @@ public class EnvironmentJmeI extends AbstractAppState{
 			return new Vector3f(0,getHeight(),0);
 		}		
 	}
-	private DisplayI display = new DisplayI();
 	public DisplayI getDisplay(){
 		return display;
 	}
@@ -151,7 +186,7 @@ public class EnvironmentJmeI extends AbstractAppState{
 			return new Vector2f(Mouse.getX(), Mouse.getY());
 		}
 	}
-	private MouseI mouse = new MouseI();
+	
 	public MouseI getMouse() {
 		return mouse;
 	}
@@ -161,10 +196,97 @@ public class EnvironmentJmeI extends AbstractAppState{
 	}
 	
 	public float getFPS() {
-		return fFPS;
+		return iFPS;
 	}
 	
-	public void showFPS(Vector3f v3f){
-		throw new UnsupportedOperationException("not implemented yet");
+//	/**
+//	 * 
+//	 * @param v3fInfo if null will re-use last one
+//	 * @param bShowFPS
+//	 */
+//	public void showInfo(Vector3f v3fInfo, boolean bShowFPS){
+//		this.v3fInfo = v3fInfo;
+//		this.bShowFPS = bShowFPS;
+//	}
+	
+	protected void updateInfo(){
+		if(
+				!bShowFPS &&
+				!bShowCamPos &&
+				!bShowCamRot
+		){
+			btInfo.removeFromParent();
+			return;
+		}
+		
+		StringBuilder sb=new StringBuilder();
+		String strSep="\n";
+		
+		if(bShowFPS)sb.append("FPS="+iFPS+strSep);
+		if(bShowCamPos){
+			sb.append("CamPos="
+				+MiscJmeI.i().fmtVector3f(G.i(Application.class).getCamera().getLocation(),2)
+				+strSep);
+		}
+		if(bShowCamRot){
+			//TODO show a drawn line about Z at XY plane rotation, and another about up/downwards degrees
+			sb.append("CamRotDeg="
+				+MiscJmeI.i().fmtToDegrees(G.i(Application.class).getCamera().getRotation(),1)
+				+strSep);
+		}
+		
+		btInfo.setText(sb.toString());
+		geomInfoBkg.setMesh(new Quad(btInfo.getLineWidth(),btInfo.getHeight()));
+		
+		Vector3f v3f=v3fInfoLocation;
+		if(v3f==null){
+			v3f=new Vector3f(0,0,MiscJmeI.i().getZAboveAllAtGuiNode());
+			v3f.y=btInfo.getHeight();
+		}
+		nodeInfo.setLocalTranslation(v3f);
+		
+		if(nodeInfo.getParent()==null)nodeGui.attachChild(nodeInfo);
 	}
+
+	public boolean isShowFPS() {
+		return bShowFPS;
+	}
+
+	public EnvironmentJmeI setShowFPS(boolean bShowFPS) {
+		this.bShowFPS = bShowFPS;
+		return this; //for beans setter
+	}
+
+	public Vector3f getInfoLocation() {
+		return v3fInfoLocation;
+	}
+
+	/**
+	 * 
+	 * @param v3fInfo if null will be auto lower left corner
+	 * @return
+	 */
+	public EnvironmentJmeI setInfoLocation(Vector3f v3fInfo) {
+		this.v3fInfoLocation = v3fInfo;
+		return this; //for beans setter
+	}
+
+	public boolean isShowCamPos() {
+		return bShowCamPos;
+	}
+
+	public EnvironmentJmeI setShowCamPos(boolean bShowCamPos) {
+		this.bShowCamPos = bShowCamPos;
+		return this; //for beans setter
+	}
+
+	public boolean isShowCamRot() {
+		return bShowCamRot;
+	}
+	
+	public EnvironmentJmeI setShowCamRot(boolean bShowCamRot) {
+		this.bShowCamRot = bShowCamRot;
+		return this; //for beans setter
+	}
+	
 }

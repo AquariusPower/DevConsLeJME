@@ -102,7 +102,8 @@ public class OriginDevice extends Node{
 		// electricity
 		tdEffectRetarget = new TimedDelay(fRetargetDefaultDelay,"").setActive(true);
 		ef=new EffectElectricity();
-		ef.setColor(ColorRGBA.Cyan); //opaque
+//		ef.setColor(ColorRGBA.Cyan); //opaque
+		float f=0.5f;ef.setColor(new ColorRGBA(f,f,1f,1));
 		ef.setNodeParent(this);
 		ef.setAmplitudePerc(0.05f);
 		ef.getElectricalPath().setMinMaxPerc(0.05f, 0.1f);
@@ -169,7 +170,7 @@ public class OriginDevice extends Node{
 		ColorRGBA color = new ColorRGBA(v3fUp.x,v3fUp.y,v3fUp.z,1f);
 		
 		// small shape
-		Node nodeThing = createThings(mesh, color, v3fUp.mult(fDisplacement), 0.75f, v3fUp);
+		Node nodeThing = createThings(mesh, color, v3fUp.mult(fDisplacement), 0.5f, v3fUp, true);
 		anodeElectricShapesList.add(nodeThing);
 		anodeMainShapes.add(nodeThing);
 		
@@ -177,7 +178,7 @@ public class OriginDevice extends Node{
 		
 		// static rotation track
 		Node nodeTrack=createThings(new Torus(iCS,iRS,0.01f,fDisplacementTorus), 
-			color, new Vector3f(0,0,0), fRotTorOpac+0.5f, v3fUp);
+			color, new Vector3f(0,0,0), 0.15f, v3fUp);
 		MiscJmeI.i().addToName(nodeTrack, "Track", false);
 		nodeTrack.lookAt(v3fUp, v3fUp);
 		
@@ -185,16 +186,26 @@ public class OriginDevice extends Node{
 		Node nodeRotating=createThings(new Torus(iCS,iRS,fIR,fDisplacementTorus), 
 			color, new Vector3f(0,0,0), fRotTorOpac, v3fUp);
 		//TODO this may break if the track contents is changed...
-		Geometry geomTrackClone = SpatialHierarchyI.i().getChildRecursiveExactMatch(nodeTrack,Geometry.class).clone();
-//		geomTrackClone.setCullHint(CullHint.Never);
-//		geomTrackClone.setQueueBucket(Bucket.Opaque);
-		nodeRotating.attachChild(geomTrackClone);
+		Node nodeCore=createThings(new Torus(iCS,iRS,fIR*0.35f,fDisplacementTorus), 
+			color, new Vector3f(0,0,0), fRotTorOpac+0.5f, v3fUp);
+		rotate(nodeCore,v3fUp,true);
+//		if(v3fUp.z==1)nodeCore.rotate(xAngle, yAngle, zAngle);
+		nodeRotating.attachChild(nodeCore);
+//		Geometry geomTrackClone = SpatialHierarchyI.i().getChildRecursiveExactMatch(nodeTrack,Geometry.class).clone();
+//		nodeRotating.attachChild(geomTrackClone);
 		
 		createIntersections(nodeRotating,color,fDisplacementTorus,v3fUp);
 		
 		return nodeRotating;
 	}
-
+	
+	private void rotate(Node node, Vector3f v3fUp, boolean bZOnly){
+		float fRot=FastMath.DEG_TO_RAD*90;
+		if(!bZOnly && v3fUp.x==1)node.rotate(0, fRot, 0);
+		if(!bZOnly && v3fUp.y==1)node.rotate(0, fRot, 0);
+		if(v3fUp.z==1)node.rotate(-fRot, fRot, 0);
+	}
+	
 	private void createIntersections(Node nodeRotating, ColorRGBA color, float fDisplacementTorus, Vector3f v3fUp) {
 		float fIRa=fIR*1.5f;
 		float fOpac=fRotTorOpac+0.25f;
@@ -202,10 +213,7 @@ public class OriginDevice extends Node{
 		Node nodeP = createThings(new Cone(fIRa*2f),
 				color, new Vector3f( fDisplacementTorus,0,0), fOpac, v3fUp);
 		nodeP.lookAt(v3fUp, v3fUp);
-		float fRot=FastMath.DEG_TO_RAD*90;
-		if(v3fUp.x==1)nodeP.rotate(0, fRot, 0);
-		if(v3fUp.y==1)nodeP.rotate(0, fRot, 0);
-		if(v3fUp.z==1)nodeP.rotate(-fRot, fRot, 0);
+		rotate(nodeP,v3fUp,false);
 		nodeRotating.attachChild(nodeP);
 		anodeElectricShapesList.add(nodeP);
 		
@@ -216,6 +224,9 @@ public class OriginDevice extends Node{
 	}
 
 	protected Node createThings(Mesh mesh, ColorRGBA color, Vector3f v3f, float fOpacity, Vector3f v3fUp) {
+		return createThings( mesh,  color,  v3f,  fOpacity,  v3fUp, false);
+	}
+	protected Node createThings(Mesh mesh, ColorRGBA color, Vector3f v3f, float fOpacity, Vector3f v3fUp, boolean bAddWireFrame) {
 		Node node = new Node("Node");
 		
 		Geometry geom = new Geometry(mesh.getClass().getSimpleName(),mesh);
@@ -234,8 +245,16 @@ public class OriginDevice extends Node{
 		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
 		if(fOpacity!=1f)geom.setQueueBucket(Bucket.Transparent);
 		
+		Geometry geomWireFrame=null;
+		if(bAddWireFrame){
+			geomWireFrame = geom.clone();
+			geomWireFrame.setMaterial(geomWireFrame.getMaterial().clone());
+			geomWireFrame.getMaterial().getAdditionalRenderState().setWireframe(true);
+		}
+		
 		// hierarchy/pos
 		node.attachChild(geom);
+		if(geomWireFrame!=null)node.attachChild(geomWireFrame);
 		
 		node.setLocalTranslation(v3f);
 		node.rotateUpTo(v3fUp);

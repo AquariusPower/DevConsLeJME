@@ -246,6 +246,13 @@ public class StringI {
 		astrLinesToModify.add(strLine);
 //		strLine="";iWordCountPerLine=0;
 	}
+
+	public String fmtFloat(float fValue) {
+		return fmtFloat(fValue,2);
+	}
+	public String fmtFloat(float fValue, int iScale) {
+		return String.format("%."+iScale+"f", fValue);
+	}
 	
 	
 }

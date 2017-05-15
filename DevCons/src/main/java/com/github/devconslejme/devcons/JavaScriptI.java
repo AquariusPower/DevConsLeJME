@@ -48,6 +48,7 @@ import com.github.devconslejme.misc.AutoCompleteI;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.GlobalManagerI.IGlobalAddListener;
 import com.github.devconslejme.misc.FileI;
 import com.github.devconslejme.misc.JavaLangI;
@@ -56,9 +57,13 @@ import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.MethodX;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.ReportI;
 import com.google.common.collect.HashBiMap;
+import com.jme3.app.Application;
 import com.jme3.input.KeyInput;
+import com.jme3.math.Quaternion;
+import com.jme3.math.Vector3f;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -96,6 +101,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		clear("clears the console log (not the log file)"),
 		echo("print some text on the console log"),
 		exec("[file] runs a script file, mainly at "+FileI.i().getStorageFolder()),
+		exit,
 		help("[filter]"),
 		javadoc("[filter]"),
 		history("[filter] show commands history"),
@@ -169,6 +175,9 @@ public class JavaScriptI implements IGlobalAddListener {
 				return true;
 			case ini:
 				appendUserInitCommand(strParams);
+				return true;
+			case exit:
+				G.i(Application.class).stop();
 				return true;
 			case exec:
 				execFileAndShowRetVal(strParams);
@@ -536,9 +545,32 @@ public class JavaScriptI implements IGlobalAddListener {
 //				LoggingI.i().logSubEntry("ReturnType: "+objJSLastEval.toString()+" ("+objJSLastEval.getClass()+")");
 			LoggingI.i().logSubEntry("Return type: "+obj.getClass());
 			if(JavaLangI.i().isCanUserTypeIt(obj)){ // simple types result in simple and readable strings
-				LoggingI.i().logSubEntry("Return value = '"+obj+"'");
+				String str="";
+//				if (obj instanceof Vector3f) {
+//					Vector3f v3f = (Vector3f) obj;
+//					str+="new Vector3f("+MiscJmeI.i().fmtVector3f(v3f,2)+")";
+//				}else
+//				if (obj instanceof Quaternion) {
+//					Quaternion qua = (Quaternion) obj;
+//					str+="new Quaternion().fromAngles("+MiscJmeI.i().fmtToDegrees(qua,2)+")";
+//				}else{
+					str+="Return value = '"+obj+"'";
+//				}
+				LoggingI.i().logSubEntry(str);
 			}else
 			if(!isAndShowArray(obj)){
+				String str="";
+				if (obj instanceof Vector3f) {
+					Vector3f v3f = (Vector3f) obj;
+					str+="new Vector3f("+MiscJmeI.i().fmtVector3f(v3f,2)+")";
+				}else
+				if (obj instanceof Quaternion) {
+					Quaternion qua = (Quaternion) obj;
+					str+="new Quaternion().fromAngles("+MiscJmeI.i().fmtToDegrees(qua,2)+")";
+				}else{
+					str+="Return value as String = '"+obj+"'";
+				}
+				LoggingI.i().logSubEntry(str);
 				showMethods(obj);
 			}
 		}
