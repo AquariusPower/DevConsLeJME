@@ -36,7 +36,7 @@ import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
-import com.github.devconslejme.misc.jme.EnvironmentI;
+import com.github.devconslejme.misc.jme.EnvironmentJmeI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.lemur.MiscLemurI.EResizeApplyMode;
@@ -430,13 +430,13 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		ResizablePanel pnlParentest = getParentest();
 		
 		Vector3f v3f = pnlParentest.getPreferredSize().add(new Vector3f(1, 1, 0));
-		if(v3f.equals(new Vector3f(EnvironmentI.i().getDisplay().getWidth(),EnvironmentI.i().getDisplay().getHeight(),0))){
+		if(v3f.equals(new Vector3f(EnvironmentJmeI.i().getDisplay().getWidth(),EnvironmentJmeI.i().getDisplay().getHeight(),0))){
 			MiscLemurI.i().safeSizeRecursively(EResizeApplyMode.Restore,pnlParentest);
 			return;
 		}
 		
-		if(v3f.x > EnvironmentI.i().getDisplay().getWidth())v3f.x=EnvironmentI.i().getDisplay().getWidth();
-		if(v3f.y > EnvironmentI.i().getDisplay().getHeight())v3f.y=EnvironmentI.i().getDisplay().getHeight();
+		if(v3f.x > EnvironmentJmeI.i().getDisplay().getWidth())v3f.x=EnvironmentJmeI.i().getDisplay().getWidth();
+		if(v3f.y > EnvironmentJmeI.i().getDisplay().getHeight())v3f.y=EnvironmentJmeI.i().getDisplay().getHeight();
 		
 		MessagesI.i().warnMsg(this,"("+i+") increasing size of "+pnlParentest.getName()+" to "+v3f);
 		
@@ -545,7 +545,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 				if(bSkipGrowFix)throw ex;
 				if(!ex.getMessage().startsWith("Size cannot be negative:")) throw ex;
 				Vector3f v3fSize = rzpParentest.getSize();
-				if(v3fSize.x==EnvironmentI.i().getDisplay().getWidth() && v3fSize.y==EnvironmentI.i().getDisplay().getHeight()){
+				if(v3fSize.x==EnvironmentJmeI.i().getDisplay().getWidth() && v3fSize.y==EnvironmentJmeI.i().getDisplay().getHeight()){
 					if(v3fLastSucessSize!=null){
 						MiscLemurI.i().safeSizeRecursively(EResizeApplyMode.Restore,getParentest());
 //						setPreferredSize(v3fLastSucessSize); //restore last

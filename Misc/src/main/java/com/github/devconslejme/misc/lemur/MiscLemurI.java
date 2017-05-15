@@ -38,7 +38,7 @@ import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
-import com.github.devconslejme.misc.jme.EnvironmentI;
+import com.github.devconslejme.misc.jme.EnvironmentJmeI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI.SpatialInfo;
@@ -173,17 +173,17 @@ public class MiscLemurI {
 		Vector3f v3fSize = pnl.getSize();
 		Vector3f v3fPos = pnl.getLocalTranslation();
 		return 
-			v3fSize.x==EnvironmentI.i().getDisplay().getWidth() && 
-			v3fSize.y==EnvironmentI.i().getDisplay().getHeight() &&
+			v3fSize.x==EnvironmentJmeI.i().getDisplay().getWidth() && 
+			v3fSize.y==EnvironmentJmeI.i().getDisplay().getHeight() &&
 			v3fPos.x==0 &&
-			v3fPos.y==EnvironmentI.i().getDisplay().getHeight()
+			v3fPos.y==EnvironmentJmeI.i().getDisplay().getHeight()
 			;
 	}
 
 	public void maximize(PanelBase pnl) {
 		maximize(pnl, 
-			new Vector3f(0,EnvironmentI.i().getDisplay().getHeight(),0), 
-			new Vector3f(EnvironmentI.i().getDisplay().getWidth(),EnvironmentI.i().getDisplay().getHeight(),0));
+			new Vector3f(0,EnvironmentJmeI.i().getDisplay().getHeight(),0), 
+			new Vector3f(EnvironmentJmeI.i().getDisplay().getWidth(),EnvironmentJmeI.i().getDisplay().getHeight(),0));
 	}
 	public void maximize(PanelBase pnl, Vector3f v3fPosXY, Vector3f v3fSizeWH) {
 		pnl.setLocalTranslationXY(v3fPosXY);
@@ -229,8 +229,8 @@ public class MiscLemurI {
 	public void moveToScreenCenterXY(PanelBase pnl) {
 		Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSizeCopy(pnl);
 		pnl.setLocalTranslationXY(new Vector3f(
-			EnvironmentI.i().getDisplay().getWidth()/2f - v3fSize.x/2f, 
-			EnvironmentI.i().getDisplay().getHeight()/2f + v3fSize.y/2f, 
+			EnvironmentJmeI.i().getDisplay().getWidth()/2f - v3fSize.x/2f, 
+			EnvironmentJmeI.i().getDisplay().getHeight()/2f + v3fSize.y/2f, 
 			0//			pnl.getLocalTranslation().z 
 		));
 //		pnl.getWorldBound().setCenter(new Vector3f(DisplayI.i()..getWidth()/2f,DisplayI.i()..getHeight()/2f,pnl.getLocalTranslation().z));

@@ -37,7 +37,7 @@ import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.EffectArrow;
 import com.github.devconslejme.misc.jme.EffectManagerStateI;
-import com.github.devconslejme.misc.jme.EnvironmentI;
+import com.github.devconslejme.misc.jme.EnvironmentJmeI;
 import com.github.devconslejme.misc.jme.IndicatorI;
 import com.github.devconslejme.misc.jme.IndicatorI.EIndicatorMode;
 import com.github.devconslejme.misc.jme.IndicatorI.GeomIndicator;
@@ -121,7 +121,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 		}
 		
 		private void updateMouseEffect() {
-			if(EnvironmentI.i().getMouse().isMouseCursorPressedButtons()>0){
+			if(EnvironmentJmeI.i().getMouse().isMouseCursorPressedButtons()>0){
 				if(v3fPressedPos==null){
 					v3fPressedPos = MiscJmeI.i().toV3f(inputman.getCursorPosition());
 					v3fPressedPos.z=MiscJmeI.i().getZAboveAllAtGuiNode();

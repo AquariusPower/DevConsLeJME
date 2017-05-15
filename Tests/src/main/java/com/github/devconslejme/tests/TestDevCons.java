@@ -46,8 +46,8 @@ import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.TimedDelay;
-import com.github.devconslejme.misc.jme.EnvironmentI;
-import com.github.devconslejme.misc.jme.EnvironmentI.IEnvironmentListener;
+import com.github.devconslejme.misc.jme.EnvironmentJmeI;
+import com.github.devconslejme.misc.jme.EnvironmentJmeI.IEnvironmentListener;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.OriginDevice;
@@ -273,8 +273,8 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	
 	@SuppressWarnings("unused")
 	private static void opt_initWindow(TestDevCons tdc) {
-		EnvironmentI.i().getDisplay().setResizable(true);
-		EnvironmentI.i().addListener(tdc);
+		EnvironmentJmeI.i().getDisplay().setResizable(true);
+		EnvironmentJmeI.i().addListener(tdc);
 		
 		AppSettings as = new AppSettings(true);
 		as.setTitle(TestDevCons.class.getSimpleName());

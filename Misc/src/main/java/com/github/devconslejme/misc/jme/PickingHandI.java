@@ -57,10 +57,10 @@ public class PickingHandI {
 		crLastPick = new CollisionResults();
 		
 		Vector3f v3fCursorAtVirtualWorld3D = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(
-			EnvironmentI.i().getMouse().getPos2D(), 0f);
+			EnvironmentJmeI.i().getMouse().getPos2D(), 0f);
 		
 		Vector3f v3fDirection = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(
-			EnvironmentI.i().getMouse().getPos2D(), 1f);
+			EnvironmentJmeI.i().getMouse().getPos2D(), 1f);
 		v3fDirection.subtractLocal(v3fCursorAtVirtualWorld3D).normalizeLocal();
 		
 		Ray ray = new Ray(v3fCursorAtVirtualWorld3D, v3fDirection);

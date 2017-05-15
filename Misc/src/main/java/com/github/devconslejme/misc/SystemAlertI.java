@@ -70,6 +70,12 @@ public class SystemAlertI {
 		hideSystemAlert(asteFrom, false);
 	}
 	
+	/**
+	 * 
+	 * @param strMsg
+	 * @param objActionSourceElement
+	 * @return stack trace key to allow hiding the alert
+	 */
 	public StackTraceElement[] showSystemAlert(String strMsg, Object objActionSourceElement){
 		DetailedException.assertNotAlreadySet(this.strAlertMsg, strMsg, "system alert message", asteStackKeyRequestOrigin, this);
 		this.asteStackKeyRequestOrigin=Thread.currentThread().getStackTrace();

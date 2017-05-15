@@ -45,16 +45,30 @@ import com.jme3.math.Vector3f;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class EnvironmentI extends AbstractAppState{
-	public static EnvironmentI i(){return GlobalManagerI.i().get(EnvironmentI.class);}
+public class EnvironmentJmeI extends AbstractAppState{
+	public static EnvironmentJmeI i(){return GlobalManagerI.i().get(EnvironmentJmeI.class);}
+	private float	fTPF;
+	private float	fSumTPF;
+	private int	iFrameCount;
+	private float	fFPS;
 	
 	public void configure(){
 		GlobalManagerI.i().get(Application.class).getStateManager().attach(this);
 	}
 	
 	@Override
-	public void update(float tpf) {
-		super.update(tpf);
+	public void update(float fTPF) {
+		super.update(fTPF);
+		
+		this.fTPF=(fTPF);
+		
+		this.fSumTPF+=fTPF;
+		this.iFrameCount++;
+		if(fSumTPF>=1f){
+			fFPS=1f/(float)iFrameCount;
+			fSumTPF-=1f;
+			iFrameCount=0;
+		}
 		
 		if(getDisplay().wasResized()){
 			for(IEnvironmentListener l:alisteners){
@@ -141,5 +155,16 @@ public class EnvironmentI extends AbstractAppState{
 	public MouseI getMouse() {
 		return mouse;
 	}
+
+	public float getTPF() {
+		return fTPF;
+	}
 	
+	public float getFPS() {
+		return fFPS;
+	}
+	
+	public void showFPS(Vector3f v3f){
+		throw new UnsupportedOperationException("not implemented yet");
+	}
 }

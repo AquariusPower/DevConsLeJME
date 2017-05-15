@@ -24,48 +24,20 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+package com.github.devconslejme.misc.lemur;
 
-package com.github.devconslejme.misc.jme;
-
-import com.github.devconslejme.misc.AssertionsI;
-import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.jme3.app.Application;
-import com.jme3.app.SimpleApplication;
-import com.jme3.scene.Node;
-import com.jme3.system.JmeSystem;
-import com.jme3.system.JmeSystem.StorageFolderType;
-
+import com.github.devconslejme.misc.jme.EnvironmentJmeI;
+import com.jme3.math.Vector3f;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PkgCfgI {
-	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
+public class EnvironmentLemurI extends EnvironmentJmeI{
+	public static EnvironmentLemurI i(){return GlobalManagerI.i().get(EnvironmentLemurI.class);}
 	
-	private boolean	bConfigured;
-	public void configure(Application app,Node nodeGui, Node nodeVirtualWorld){
-		DetailedException.assertIsFalse("configured", bConfigured, this);
-		com.github.devconslejme.misc.PkgCfgI.i().configure(
-				JmeSystem.getStorageFolder(StorageFolderType.Internal), app.getClass());
+	@Override
+	public void showFPS(Vector3f v3f) {
 		
-		GlobalManagerI.i().put(Application.class, app);  //first!
-		if(app instanceof SimpleApplication){
-			GlobalManagerI.i().put(SimpleApplication.class, (SimpleApplication)app); //code depending on this should be optional...
-		}
-		
-		// after first
-		DebugVisualsI.i().configure();
-		MiscJmeI.i().configure(nodeVirtualWorld);
-		new KeyCodeConfigureForJme().configure();
-		EffectManagerStateI.i().configure();
-		SimulationTimeStateI.i().configure();
-		QueueStateI.i().configure();
-		OrthogonalCursorStateI.i().configure(nodeGui);
-		AssertionsI.i().configure();
-		IndicatorI.i().configure(nodeGui);
-		EnvironmentJmeI.i().configure();
-		
-		bConfigured=true;
 	}
 }

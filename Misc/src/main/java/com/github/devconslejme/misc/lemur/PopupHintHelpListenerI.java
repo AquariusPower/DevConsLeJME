@@ -34,7 +34,7 @@ import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
-import com.github.devconslejme.misc.jme.EnvironmentI;
+import com.github.devconslejme.misc.jme.EnvironmentJmeI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.jme.UserDataI.IUDKey;
@@ -145,13 +145,13 @@ public class PopupHintHelpListenerI implements CursorListener{
 		if(fX<0){
 			fX=0;
 		}else{
-			float fDiff = (fX+cntrPopupHelp.getSize().x) - EnvironmentI.i().getDisplay().getWidth();
+			float fDiff = (fX+cntrPopupHelp.getSize().x) - EnvironmentJmeI.i().getDisplay().getWidth();
 			if(fDiff>0)fX-=fDiff;
 		}
 		
 		float fY = v2fMousePos.y+v3fSize.y+fDistFromCursor;
-		if(fY>EnvironmentI.i().getDisplay().getHeight()){
-			fY=EnvironmentI.i().getDisplay().getHeight();
+		if(fY>EnvironmentJmeI.i().getDisplay().getHeight()){
+			fY=EnvironmentJmeI.i().getDisplay().getHeight();
 		}else{
 			if( (fY - cntrPopupHelp.getSize().y) < 0 )fY=cntrPopupHelp.getSize().y;
 		}
