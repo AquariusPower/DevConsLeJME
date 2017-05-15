@@ -28,7 +28,6 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 
-import com.github.devconslejme.devcons.JavaScriptI;
 import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.jme.DebugVisualsI.Cone;
 import com.jme3.bounding.BoundingBox;
@@ -41,6 +40,7 @@ import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.scene.shape.Torus;
@@ -70,8 +70,12 @@ public class OriginDevice extends Node{
 	private float	fIR=0.1f;
 	private float	fRotTorOpac=0.15f;
 	private Vector3f v3fSpeed=new Vector3f();
-	private NodeAxis	nodeA;
-	private NodeAxis	nodeB;
+	private NodeAxis	nodeElectricA;
+	private NodeAxis	nodeElectricB;
+//	private NodeAxis	nodeElectricSrc;
+	private boolean	bUnstable;
+	private ERotMode erm = ERotMode.Disaligned;
+	private Spatial	sptElectricSrc;
 	
 	public static class NodeAxis extends Node{
 		public NodeAxis(String str) {
@@ -84,8 +88,6 @@ public class OriginDevice extends Node{
 	public OriginDevice(){
 		setName(OriginDevice.class.getSimpleName());
 		
-		JavaScriptI.i().setJSBinding(OriginDevice.ERotMode.class);
-		
 		fDisplacement=5;
 		iCS=50;
 		iRS=15;
@@ -97,7 +99,9 @@ public class OriginDevice extends Node{
 	}
 	
 	public void update(float fTPF){
-		updateOriginObjects();
+		updateTorusRotations();
+		updateElectricalEffects();
+		updateAxisMainShapes();
 	}
 	
 	protected void init(){
@@ -110,10 +114,10 @@ public class OriginDevice extends Node{
 			.createArrow(ColorRGBA.Blue).setFromTo(Vector3f.ZERO, Vector3f.UNIT_Z));
 		
 		// some basic shapes
-		nodeTorX=createAxisThing(Vector3f.UNIT_X, new Box(0.5f,0.5f,0.5f));
-		nodeTorY=createAxisThing(Vector3f.UNIT_Y, new Sphere(10,10,0.5f));
+		nodeTorX=createAxis(Vector3f.UNIT_X, new Box(0.5f,0.5f,0.5f));
+		nodeTorY=createAxis(Vector3f.UNIT_Y, new Sphere(10,10,0.5f));
 //		torZ=createAxisThing(Vector3f.UNIT_Z, new Cylinder(5,10,0.5f,0.001f,1f,true,false));
-		nodeTorZ=createAxisThing(Vector3f.UNIT_Z, new Cone());
+		nodeTorZ=createAxis(Vector3f.UNIT_Z, new Cone());
 		
 		// electricity
 		tdEffectRetarget = new TimedDelay(fRetargetDefaultDelay,"").setActive(true);
@@ -127,18 +131,17 @@ public class OriginDevice extends Node{
 		EffectManagerStateI.i().add(ef);
 	}
 	
-	protected void updateOriginObjects() {
-		updateTorusRotations();
-		
-		updateElectricalEffects();
-		
-		updateAxisShapes();
-	}
-
-	private void updateAxisShapes() {
+	private void updateAxisMainShapes() {
 		for(NodeAxis node:anodeMainShapes){
 			Vector3f v3f = getRotSpeedCopy();
-			if(node==nodeA || node==nodeB)v3f.multLocal(10f);
+			if(node==nodeElectricA || node==nodeElectricB){
+				if(nodeElectricA==nodeElectricB){
+					v3f = getRotSpeedCopy(ERotMode.Chaotic);
+				}
+				
+				v3f.multLocal(10f);
+			}
+			
 			node.rotate(v3f.x,v3f.y,v3f.z);
 		}
 	}
@@ -153,18 +156,26 @@ public class OriginDevice extends Node{
 			}
 			
 			tdEffectRetarget.resetAndChangeDelayTo(fRetargetDefaultDelay*FastMath.nextRandomFloat()).setActive(true);
+			
 			int iA=FastMath.nextRandomInt(0, anodeElectricShapesList.size()-1);
+			nodeElectricA = anodeElectricShapesList.get(iA);
+			Vector3f v3fWorldA = nodeElectricA.getWorldTranslation();
+			if(sptElectricSrc!=null){
+				iA=anodeElectricShapesList.indexOf(sptElectricSrc); //external node will be -1
+				if(iA>-1)nodeElectricA=(NodeAxis) sptElectricSrc;
+				v3fWorldA = sptElectricSrc.getWorldTranslation();
+			}
+			
 			int iB=FastMath.nextRandomInt(0, anodeElectricShapesList.size()-1);
-			nodeA = anodeElectricShapesList.get(iA);
-			nodeB = anodeElectricShapesList.get(iB);
+			nodeElectricB = anodeElectricShapesList.get(iB);
 			if(iA!=iB){
 				ef.setFromTo(
-					nodeA.getWorldTranslation(),
-					nodeB.getWorldTranslation()
+					v3fWorldA,
+					nodeElectricB.getWorldTranslation()
 				);
 			}else{
 				//TODO create new effect to self electr
-				nodeSelfElectrocute=nodeA;
+				nodeSelfElectrocute=nodeElectricA;
 			}
 		}
 		
@@ -202,9 +213,62 @@ public class OriginDevice extends Node{
 		rotateTor(nodeTorZ,v3fSpeed);//,EAxis.Z);
 	}
 	
-	private void rotateTor(NodeAxis node,Vector3f v3fSpeed){//, EAxis ea) {
+	private void rotateTor(NodeAxis nodeTor,Vector3f v3fSpeed){//, EAxis ea) {
+		float fMult=1f;
+		if(bUnstable){
+			if(nodeElectricA==nodeElectricB && nodeElectricA!=null && nodeTor.ea==nodeElectricA.ea){
+				if(anodeMainShapes.contains(nodeElectricA)){
+					/**
+					 * main shape electrocuting self, will boost related torus spin
+					 */
+					fMult=(20f);
+				}else{
+					if(SpatialHierarchyI.i().isChildRecursive(nodeTor,nodeElectricA,nodeElectricB)){
+						/**
+						 * if it is an intersection electrifiying self, the torus will stop moving (just to differ from non equal axis behavior)
+						 */
+						fMult=0; //hold
+					}
+				}
+			}else{
+				if(anodeMainShapes.contains(nodeElectricA) && anodeMainShapes.contains(nodeElectricB)){
+					if(nodeTor.ea==nodeElectricA.ea || nodeTor.ea==nodeElectricB.ea){
+						/**
+						 * both are main shapes (always mismatching axis), spin fast reversed, only related torus
+						 */
+						fMult=(-10f);
+					}
+				}else{
+					if(SpatialHierarchyI.i().isChildRecursive(nodeTor,nodeElectricA,nodeElectricB)){
+						/**
+						 * any is a torus intersection, spin fast
+						 */
+						fMult=(10f);
+						
+						if(
+								SpatialHierarchyI.i().isChildRecursive(nodeTor,nodeElectricA)
+								&&
+								SpatialHierarchyI.i().isChildRecursive(nodeTor,nodeElectricB)
+						){
+							/**
+							 * both are intersections of the same torus? spin reversed
+							 */
+							fMult*=-1f;
+						}
+						
+						if(nodeElectricA.ea!=nodeElectricB.ea){
+							/**
+							 * non matching axis? chaotic mode
+							 */
+							v3fSpeed=getRotSpeedCopy(ERotMode.Chaotic);
+						}
+					}
+				}
+			}
+		}
+		
 		float f=0;
-		switch(node.ea){
+		switch(nodeTor.ea){
 			case X:
 				f=v3fSpeed.x;
 				break;
@@ -215,71 +279,74 @@ public class OriginDevice extends Node{
 				f=v3fSpeed.z;
 				break;
 		}
-		if(node==nodeA || node==nodeB)f*=(10f);
-		node.rotate(0,f,0);
+		
+		nodeTor.rotate(0,f*fMult,0);
 	}
 
-	protected NodeAxis createAxisThing(Vector3f v3fUp, Mesh mesh) {
+//	private void rotate(NodeAxis node, Vector3f v3fUp, boolean bZOnly){
+	private void rotate(NodeAxis node, boolean bZOnly){
+		float fRot=FastMath.DEG_TO_RAD*90;
+//		if(!bZOnly && v3fUp.x==1)node.rotate(0, fRot, 0);
+//		if(!bZOnly && v3fUp.y==1)node.rotate(0, fRot, 0);
+//		if(v3fUp.z==1)node.rotate(-fRot, fRot, 0);
+		if(!bZOnly && node.ea==EAxis.X)node.rotate(0, fRot, 0);
+		if(!bZOnly && node.ea==EAxis.Y)node.rotate(0, fRot, 0);
+		if(node.ea==EAxis.Z)node.rotate(-fRot, fRot, 0);
+	}
+	
+	protected NodeAxis createAxis(Vector3f v3fUp, Mesh mesh) {
 		ColorRGBA color = new ColorRGBA(v3fUp.x,v3fUp.y,v3fUp.z,1f);
 		
 		// small shape
-		NodeAxis nodeThing = createThings(mesh, color, v3fUp.mult(fDisplacement), 0.5f, v3fUp, true, null);
+		NodeAxis nodeThing = createAxisShape(mesh, color, v3fUp.mult(fDisplacement), 0.5f, v3fUp, true, null);
 		anodeElectricShapesList.add(nodeThing);
 		anodeMainShapes.add(nodeThing);
 		
 		float fDisplacementTorus = fDisplacement+1;
 		
 		// static rotation track
-		NodeAxis nodeTrack=createThings(new Torus(iCS,iRS,0.01f,fDisplacementTorus), 
+		NodeAxis nodeTrack=createAxisShape(new Torus(iCS,iRS,0.01f,fDisplacementTorus), 
 			color, new Vector3f(0,0,0), 0.15f, v3fUp);
 		MiscJmeI.i().addToName(nodeTrack, "Track", false);
 		nodeTrack.lookAt(v3fUp, v3fUp);
 		
 		// rotating torus
-		NodeAxis nodeRotating=createThings(new Torus(iCS,iRS,fIR,fDisplacementTorus), 
+		NodeAxis nodeRotating=createAxisShape(new Torus(iCS,iRS,fIR,fDisplacementTorus), 
 			color, new Vector3f(0,0,0), fRotTorOpac, v3fUp);
 		//TODO this may break if the track contents is changed...
-		NodeAxis nodeCore=createThings(new Torus(iCS,iRS,fIR*0.35f,fDisplacementTorus), 
+		NodeAxis nodeCore=createAxisShape(new Torus(iCS,iRS,fIR*0.35f,fDisplacementTorus), 
 			color, new Vector3f(0,0,0), fRotTorOpac+0.5f, v3fUp);
-		rotate(nodeCore,v3fUp,true);
-//		if(v3fUp.z==1)nodeCore.rotate(xAngle, yAngle, zAngle);
+		rotate(nodeCore,true);
 		nodeRotating.attachChild(nodeCore);
-//		Geometry geomTrackClone = SpatialHierarchyI.i().getChildRecursiveExactMatch(nodeTrack,Geometry.class).clone();
-//		nodeRotating.attachChild(geomTrackClone);
 		
-		createIntersections(nodeRotating,color,fDisplacementTorus,v3fUp);
+		createTorusIntersections(nodeRotating,color,fDisplacementTorus,v3fUp);
 		
 		return nodeRotating;
 	}
 	
-	private void rotate(NodeAxis node, Vector3f v3fUp, boolean bZOnly){
-		float fRot=FastMath.DEG_TO_RAD*90;
-		if(!bZOnly && v3fUp.x==1)node.rotate(0, fRot, 0);
-		if(!bZOnly && v3fUp.y==1)node.rotate(0, fRot, 0);
-		if(v3fUp.z==1)node.rotate(-fRot, fRot, 0);
-	}
-	
-	private void createIntersections(Node nodeRotating, ColorRGBA color, float fDisplacementTorus, Vector3f v3fUp) {
+	private void createTorusIntersections(Node nodeTor, ColorRGBA color, float fDisplacementTorus, Vector3f v3fUp) {
 		float fIRa=fIR*1.5f;
 		float fOpac=fRotTorOpac+0.25f;
 		
-		NodeAxis nodeP = createThings(new Cone(fIRa*2f),
+		NodeAxis nodePosit = createAxisShape(new Cone(fIRa*2f),
 				color, new Vector3f( fDisplacementTorus,0,0), fOpac, v3fUp, false, new Vector3f(1,1,2));
-		nodeP.lookAt(v3fUp, v3fUp);
-		rotate(nodeP,v3fUp,false);
-		nodeRotating.attachChild(nodeP);
-		anodeElectricShapesList.add(nodeP);
+		MiscJmeI.i().addToName(nodePosit, "Intersection", false);
+		nodePosit.lookAt(v3fUp, v3fUp);
+		rotate(nodePosit,false);
+		nodeTor.attachChild(nodePosit);
+		anodeElectricShapesList.add(nodePosit);
 		
-		NodeAxis nodeN=createThings(new Sphere(10,10,fIRa),
+		NodeAxis nodeNegat=createAxisShape(new Sphere(10,10,fIRa),
 			color, new Vector3f(-fDisplacementTorus,0,0), fOpac, v3fUp);
-		nodeRotating.attachChild(nodeN);
-		anodeElectricShapesList.add(nodeN);
+		MiscJmeI.i().addToName(nodeNegat, "Intersection", false);
+		nodeTor.attachChild(nodeNegat);
+		anodeElectricShapesList.add(nodeNegat);
 	}
 
-	protected NodeAxis createThings(Mesh mesh, ColorRGBA color, Vector3f v3f, float fOpacity, Vector3f v3fUp) {
-		return createThings( mesh,  color,  v3f,  fOpacity,  v3fUp, false, null);
+	protected NodeAxis createAxisShape(Mesh mesh, ColorRGBA color, Vector3f v3f, float fOpacity, Vector3f v3fUp) {
+		return createAxisShape( mesh,  color,  v3f,  fOpacity,  v3fUp, false, null);
 	}
-	protected NodeAxis createThings(Mesh mesh, ColorRGBA color, Vector3f v3f, float fOpacity, Vector3f v3fUp, boolean bAddWireFrame, Vector3f v3fScale) {
+	protected NodeAxis createAxisShape(Mesh mesh, ColorRGBA color, Vector3f v3f, float fOpacity, Vector3f v3fUp, boolean bAddWireFrame, Vector3f v3fScale) {
 		if(v3fScale==null)v3fScale=new Vector3f(1,1,1);
 		
 		NodeAxis node = new NodeAxis("Node");
@@ -328,10 +395,12 @@ public class OriginDevice extends Node{
 		Aligned,
 		;
 	}
-	private ERotMode erm = ERotMode.Disaligned;
 	
 	public Vector3f getRotSpeedCopy() {
-		switch(erm){
+		return getRotSpeedCopy(null);
+	}
+	public Vector3f getRotSpeedCopy(ERotMode ermOverride) {
+		switch(ermOverride!=null ? ermOverride : this.erm){
 			case Chaotic:
 				return v3fSpeed.mult(new Vector3f(
 						2f*FastMath.nextRandomFloat()-1f,
@@ -362,6 +431,24 @@ public class OriginDevice extends Node{
 
 	public OriginDevice setRotMode(ERotMode erm) {
 		this.erm = erm;
+		return this; //for beans setter
+	}
+
+	public boolean isUnstable() {
+		return bUnstable;
+	}
+
+	public OriginDevice setUnstable(boolean bUnstable) {
+		this.bUnstable = bUnstable;
+		return this; //for beans setter
+	}
+
+	public Spatial getNodeElectricSrc() {
+		return sptElectricSrc;
+	}
+
+	public OriginDevice setNodeElectricSrc(Spatial sptElectricSrc) {
+		this.sptElectricSrc = sptElectricSrc;
 		return this; //for beans setter
 	}
 }

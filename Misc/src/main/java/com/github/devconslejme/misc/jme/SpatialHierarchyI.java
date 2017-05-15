@@ -260,5 +260,16 @@ public class SpatialHierarchyI {
 		
 		return hmStore;
 	}
+
+	public boolean isChildRecursive(Node nodeParent, Node... anodeChild) {
+		for(Node nodeChild:anodeChild){
+			if(nodeChild==null)continue;
+			for(Node nodeP:getAllParents(nodeChild, true)){
+				if(nodeP==nodeParent)return true;
+			}
+		}
+		
+		return false;
+	}
 	
 }
