@@ -43,8 +43,8 @@ import com.jme3.renderer.Camera;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class FlyByCameraX extends FlyByCamera{
-	private boolean	bAllowZooming=false;
-	private boolean	bAllowMove=false;
+	private boolean	bAllowZooming=false; //only with scope or eagle eye
+	private boolean	bAllowMove=true; //as it is a flycam, must be default true
 	private boolean	bOverrideKeepFlyCamDisabled;
 	
 	public void reBindKeys(){
@@ -146,6 +146,8 @@ public class FlyByCameraX extends FlyByCamera{
 			};
 			
 		}.enableLoopMode());
+		
+		setEnabled(!isEnabled());setEnabled(isEnabled()); //trick to setup more things
 	}
 	
 	@Override
@@ -199,8 +201,16 @@ public class FlyByCameraX extends FlyByCamera{
 		if(bOverrideKeepFlyCamDisabled && bEnable==true)return;
 		
 		if(isEnabled()!=bEnable){
-			super.setEnabled(bEnable); //this will also show the cursor but not hide it!
-			G.i(Application.class).getInputManager().setCursorVisible(!bEnable);
+			super.setEnabled(bEnable); //the super will also show the cursor but not hide it back!
+			
+			QueueI.i().enqueue(new CallableXAnon() {
+				@Override
+				public Boolean call() {
+					if(G.i(Application.class)==null)return false;
+					G.i(Application.class).getInputManager().setCursorVisible(!bEnable);
+					return true;
+				}
+			});
 		}
 	}
 

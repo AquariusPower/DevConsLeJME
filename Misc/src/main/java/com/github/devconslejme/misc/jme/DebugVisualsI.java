@@ -41,6 +41,7 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.debug.Arrow;
+import com.jme3.scene.shape.Cylinder;
 
 /**
  * These visuals are to not be integrated as child into other spatials as they would most probably 
@@ -56,6 +57,28 @@ public class DebugVisualsI {
 	private float fUpdateDelay=1f;
 	
 	public void configure(){} //just to let the global be promptly instantiated
+	
+	public static class Cone extends Cylinder{
+		public Cone() {
+			this(1f);
+		}
+		public Cone(float fScale) {
+			super(3, 9, 0.5f*fScale, 0.01f, fScale, true, false);
+		}
+
+		public Cone(int axisSamples, int radialSamples, float radius, float height,	boolean closed) {
+			super(axisSamples, radialSamples, radius, 0.01f, height, closed, false);
+		}
+
+		public Cone(int axisSamples, int radialSamples, float radius, float height, boolean closed, boolean inverted) {
+			super(axisSamples, radialSamples, radius, 0.01f, height, closed, inverted);
+		}
+
+		public Cone(int axisSamples, int radialSamples, float radius, float height) {
+			super(axisSamples, radialSamples, radius, 0.01f, height, false, false);
+		}
+		
+	}
 	
 	public ArrowGeometry createArrowFollowing(Node nodeBase, Spatial sptFrom, Spatial sptTo, ColorRGBA color){
 		ArrowGeometry ga = createArrow(color);

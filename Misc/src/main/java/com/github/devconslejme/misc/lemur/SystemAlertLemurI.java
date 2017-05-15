@@ -70,7 +70,7 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 	private final TimedDelay	tdBlockerGlow = new TimedDelay(3f, "the blocker blocks all gui elements to let some special feature be performed");
 	private ColorRGBA	colorBlockerBkg;
 	/** "if false, will follow mouse, preventing any clicks from it" */
-	private boolean btgAlertStayOnCenter = false;
+	private boolean bAlertStayOnCenter = false;
 //	private boolean	bStayOnCenter = false;
 	private boolean	bStartedShowEffect;
 	private boolean	bAlertPanelIsReady;
@@ -133,6 +133,8 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 
 	@Override
 	public StackTraceElement[] showSystemAlert(String strMsg, Object objActionSourceElement) {
+		bAlertStayOnCenter=false; //follow mouse by default
+		
 		if(bbGuiNodeWorldBoundPriorToAlert==null){
 			//TODO should this be updated as things may change while the alert is running? but it also would require many other things to be updated...
 			bbGuiNodeWorldBoundPriorToAlert = (BoundingBox)nodeGui.getWorldBound().clone();
@@ -353,7 +355,7 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 					v3fAlertSize = v3fWdwSize.mult(0.5f);
 				}
 				
-				if(btgAlertStayOnCenter){
+				if(bAlertStayOnCenter){
 					v3fPos = new Vector3f(v3fWdwSize.x/2f,v3fWdwSize.y/2f,0);
 					v3fPos.x-=v3fAlertSize.x/2f;
 					v3fPos.y+=v3fAlertSize.y/2f;
@@ -370,11 +372,11 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 	}
 
 	public boolean isAlertStayOnCenter() {
-		return btgAlertStayOnCenter;
+		return bAlertStayOnCenter;
 	}
 
 	public SystemAlertLemurI setAlertStayOnCenter(boolean btgAlertStayOnCenter) {
-		this.btgAlertStayOnCenter = btgAlertStayOnCenter;
+		this.bAlertStayOnCenter = btgAlertStayOnCenter;
 		return this;
 	}
 	

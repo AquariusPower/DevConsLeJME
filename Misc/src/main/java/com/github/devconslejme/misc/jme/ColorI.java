@@ -35,6 +35,7 @@ import com.jme3.app.Application;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
+import com.jme3.renderer.queue.RenderQueue.Bucket;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -118,6 +119,12 @@ public class ColorI {
 	 * @return
 	 */
 	public Material retrieveMaterialUnshadedColor(ColorRGBA color){
+		color = new ColorRGBA(
+			colorComponentLimit(color.r),
+			colorComponentLimit(color.g),
+			colorComponentLimit(color.b),
+			colorComponentLimit(color.a)
+		);
 		int i = color.asIntRGBA();
 		Material mat = hmMatUnshadedColor.get(i);
 		if(mat==null){
@@ -130,7 +137,7 @@ public class ColorI {
 		}
 		return mat;
 	}
-
+	
 	public void updateColorFading(TimedDelay td, ColorRGBA color, boolean bFadeInAndOut){
 		updateColorFading(td, color, bFadeInAndOut, 0.25f, 1.0f);
 	}

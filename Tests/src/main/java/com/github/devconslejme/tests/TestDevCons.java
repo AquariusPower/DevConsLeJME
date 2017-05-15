@@ -46,14 +46,11 @@ import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.TimedDelay;
-import com.github.devconslejme.misc.jme.ColorI;
-import com.github.devconslejme.misc.jme.DebugVisualsI;
-import com.github.devconslejme.misc.jme.EffectElectricity;
-import com.github.devconslejme.misc.jme.EffectManagerStateI;
 import com.github.devconslejme.misc.jme.EnvironmentI;
 import com.github.devconslejme.misc.jme.EnvironmentI.IEnvironmentListener;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.jme.OriginDevice;
 import com.github.devconslejme.misc.jme.PickingHandI;
 import com.github.devconslejme.misc.lemur.SystemAlertLemurI;
 import com.jme3.app.Application;
@@ -64,16 +61,9 @@ import com.jme3.audio.AudioListenerState;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.MouseButtonTrigger;
-import com.jme3.math.ColorRGBA;
-import com.jme3.math.FastMath;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.Geometry;
-import com.jme3.scene.Mesh;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.shape.Box;
-import com.jme3.scene.shape.Cylinder;
-import com.jme3.scene.shape.Sphere;
-import com.jme3.scene.shape.Torus;
 import com.jme3.system.AppSettings;
 import com.jme3.system.JmeSystem;
 import com.jme3.system.JmeSystem.StorageFolderType;
@@ -133,15 +123,14 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	ArrayList<SimpleApplication> aoUpdOpts = new ArrayList<SimpleApplication>();
 	private FlyByCameraX	flycam;
 
-	private Geometry	torX;
-	private Geometry	torY;
-	private Geometry	torZ;
+	private OriginDevice	orde;
 
-	private EffectElectricity	ef;
-
-	private TimedDelay	tdEffectRetarget;
-
-	private float	fRetargetDefaultDelay=3;
+//	private Geometry	torX;
+//	private Geometry	torY;
+//	private Geometry	torZ;
+//	private EffectElectricity	ef;
+//	private TimedDelay	tdEffectRetarget;
+//	private float	fRetargetDefaultDelay=3;
 	
 	@Override
 	public FlyByCameraX getFlyByCamera() {
@@ -152,7 +141,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	public TestDevCons(AppState... initialStates) {super(initialStates);}
 
 	private void opt_initBasics() {
-    flycam = new FlyByCameraX(getCamera()).setAllowMove(true);
+    flycam = new FlyByCameraX(getCamera());//.setAllowMove(true);
     flycam.registerWithInput(getInputManager());
 		
 		opt_disableSomeSimpleAppThings();
@@ -180,6 +169,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 			public Boolean call() {
 				if(!SystemAlertLemurI.i().isShowingAlert()){
 					aste=SystemAlertLemurI.i().showSystemAlert("hit F10 to open console", null);
+					SystemAlertLemurI.i().setAlertStayOnCenter(true);
 					td.setActive(true);
 				}else{
 					if(td.isReady()){
@@ -198,25 +188,31 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	}
 
 	private void opt_initSomeWorldObjects() {
-		// origin
-		getRootNode().attachChild(DebugVisualsI.i()
-			.createArrow(ColorRGBA.Red).setFromTo(Vector3f.ZERO, Vector3f.UNIT_X));
-		getRootNode().attachChild(DebugVisualsI.i()
-			.createArrow(ColorRGBA.Green).setFromTo(Vector3f.ZERO, Vector3f.UNIT_Y));
-		getRootNode().attachChild(DebugVisualsI.i()
-			.createArrow(ColorRGBA.Blue).setFromTo(Vector3f.ZERO, Vector3f.UNIT_Z));
+		orde = new OriginDevice();
+		getRootNode().attachChild(orde);
 		
-		// things to pickup at origin
-		torX=createAxisThing(Vector3f.UNIT_X, new Box(0.5f,0.5f,0.5f));
-		torY=createAxisThing(Vector3f.UNIT_Y, new Sphere(10,10,0.5f));
-		torZ=createAxisThing(Vector3f.UNIT_Z, new Cylinder(5,10,0.5f,1f,true));
+		getCamera().setLocation(new Vector3f(9.787677f, 6.957723f, 11.003839f)); //taken from devcons
+		getCamera().setRotation(new Quaternion(-0.068618454f, 0.91919893f, -0.18511744f, -0.34072912f)); //taken from devcons
 		
-		tdEffectRetarget = new TimedDelay(fRetargetDefaultDelay,"").setActive(true);
-		ef=new EffectElectricity();
-//		ef.setFrom(new Vector3f());
-		ef.setNodeParent(getRootNode());
-//		ef.setPlay(true);
-		EffectManagerStateI.i().add(ef);
+//		// origin
+//		getRootNode().attachChild(DebugVisualsI.i()
+//			.createArrow(ColorRGBA.Red).setFromTo(Vector3f.ZERO, Vector3f.UNIT_X));
+//		getRootNode().attachChild(DebugVisualsI.i()
+//			.createArrow(ColorRGBA.Green).setFromTo(Vector3f.ZERO, Vector3f.UNIT_Y));
+//		getRootNode().attachChild(DebugVisualsI.i()
+//			.createArrow(ColorRGBA.Blue).setFromTo(Vector3f.ZERO, Vector3f.UNIT_Z));
+//		
+//		// things to pickup at origin
+//		torX=createAxisThing(Vector3f.UNIT_X, new Box(0.5f,0.5f,0.5f));
+//		torY=createAxisThing(Vector3f.UNIT_Y, new Sphere(10,10,0.5f));
+//		torZ=createAxisThing(Vector3f.UNIT_Z, new Cylinder(5,10,0.5f,1f,true));
+//		
+//		tdEffectRetarget = new TimedDelay(fRetargetDefaultDelay,"").setActive(true);
+//		ef=new EffectElectricity();
+////		ef.setFrom(new Vector3f());
+//		ef.setNodeParent(getRootNode());
+////		ef.setPlay(true);
+//		EffectManagerStateI.i().add(ef);
 		
 		// picker
 		String strPck="PickVirtualWorldThing";
@@ -236,35 +232,34 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		);
 	}
 	
-	ArrayList<Geometry> ageomList=new ArrayList<Geometry>();
-	
-	private Geometry createAxisThing(Vector3f v3fUp, Mesh mesh) {
-		int iDisplacement=5;
-		int iCS=50;
-		int iRS=15;
-		ColorRGBA color = new ColorRGBA(v3fUp.x,v3fUp.y,v3fUp.z,1f);
-		
-		// tiny shape
-		ageomList.add(createThings(mesh, color, v3fUp.mult(iDisplacement), false, v3fUp));
-		
-		// rotation track
-		createThings(new Torus(iCS,iRS,0.01f,iDisplacement+1), color, new Vector3f(0,0,0), true, v3fUp)
-			.lookAt(v3fUp, v3fUp);
-		
-		// rotating
-		return createThings(new Torus(iCS,iRS,0.5f ,iDisplacement+1), color, new Vector3f(0,0,0), false, v3fUp);
-	}
+//	ArrayList<Geometry> ageomList=new ArrayList<Geometry>();
+//	private Geometry createAxisThing(Vector3f v3fUp, Mesh mesh) {
+//		int iDisplacement=5;
+//		int iCS=50;
+//		int iRS=15;
+//		ColorRGBA color = new ColorRGBA(v3fUp.x,v3fUp.y,v3fUp.z,1f);
+//		
+//		// tiny shape
+//		ageomList.add(createThings(mesh, color, v3fUp.mult(iDisplacement), false, v3fUp));
+//		
+//		// rotation track
+//		createThings(new Torus(iCS,iRS,0.01f,iDisplacement+1), color, new Vector3f(0,0,0), true, v3fUp)
+//			.lookAt(v3fUp, v3fUp);
+//		
+//		// rotating
+//		return createThings(new Torus(iCS,iRS,0.5f ,iDisplacement+1), color, new Vector3f(0,0,0), false, v3fUp);
+//	}
 
-	private Geometry createThings(Mesh mesh, ColorRGBA color, Vector3f v3f, boolean bOpaque, Vector3f v3fUp) {
-		Geometry geom = new Geometry("test "+mesh.getClass().getSimpleName(),mesh);
-		color=color.clone();
-		if(!bOpaque)color.a=0.25f;
-		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
-		geom.setLocalTranslation(v3f);
-		getRootNode().attachChild(geom);
-		geom.rotateUpTo(v3fUp);
-		return geom;
-	}
+//	private Geometry createThings(Mesh mesh, ColorRGBA color, Vector3f v3f, boolean bOpaque, Vector3f v3fUp) {
+//		Geometry geom = new Geometry("test "+mesh.getClass().getSimpleName(),mesh);
+//		color=color.clone();
+//		if(!bOpaque)color.a=0.25f;
+//		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
+//		geom.setLocalTranslation(v3f);
+//		getRootNode().attachChild(geom);
+//		geom.rotateUpTo(v3fUp);
+//		return geom;
+//	}
 
 	private void opt_disableSomeSimpleAppThings() {
 		MiscJmeI.i().enqueueUnregisterKeyMappings(
@@ -276,6 +271,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 //		stateManager.getState(StatsAppState.class).setDisplayStatView(false);
 	}
 	
+	@SuppressWarnings("unused")
 	private static void opt_initWindow(TestDevCons tdc) {
 		EnvironmentI.i().getDisplay().setResizable(true);
 		EnvironmentI.i().addListener(tdc);
@@ -371,45 +367,46 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	}
 	
 	@Override
-	public void simpleUpdate(float tpf) {
-		super.simpleUpdate(tpf);
+	public void simpleUpdate(float fTPF) {
+		super.simpleUpdate(fTPF);
 		
 		if(bEnableOpt){
 			for(SimpleApplication obj:aoUpdOpts){
-				obj.simpleUpdate(tpf);
+				obj.simpleUpdate(fTPF);
 			}
 			
-			updateOriginObjects();
+			orde.update(fTPF);
+//			updateOriginObjects();
 		}
 		
 	}
 	
-	private void updateOriginObjects() {
-		float fSpeed=0.0025f;
-		torX.rotate(0,fSpeed,0);
-		torY.rotate(0,fSpeed,0);
-		torZ.rotate(0,fSpeed,0);
-		
-		if(tdEffectRetarget.isReady(true)){
-			tdEffectRetarget.resetAndChangeDelayTo(fRetargetDefaultDelay*FastMath.nextRandomFloat()).setActive(true);
-			int iA=FastMath.nextRandomInt(0, ageomList.size()-1);
-			int iB=FastMath.nextRandomInt(0, ageomList.size()-1);
-			if(iA!=iB){
-				ef.getElectricalPath().setMinMaxPerc(0.05f, 0.1f);
-//				ef.getElectricalPath().setMaxHoldMilis(iMaxHoldMilis);
-				
-				ef.setPlay(true);
-				ef.setAmplitudePerc(0.05f);
-//				ef.setMinMaxPerc(5,15);
-				ef.setFromTo(
-					ageomList.get(iA).getLocalTranslation(),
-					ageomList.get(iB).getLocalTranslation()
-				);
-			}else{
-				ef.setPlay(false);
-			}
-		}
-	}
+//	private void updateOriginObjects() {
+//		float fSpeed=0.0025f;
+//		torX.rotate(0,fSpeed,0);
+//		torY.rotate(0,fSpeed,0);
+//		torZ.rotate(0,fSpeed,0);
+//		
+//		if(tdEffectRetarget.isReady(true)){
+//			tdEffectRetarget.resetAndChangeDelayTo(fRetargetDefaultDelay*FastMath.nextRandomFloat()).setActive(true);
+//			int iA=FastMath.nextRandomInt(0, ageomList.size()-1);
+//			int iB=FastMath.nextRandomInt(0, ageomList.size()-1);
+//			if(iA!=iB){
+//				ef.getElectricalPath().setMinMaxPerc(0.05f, 0.1f);
+////				ef.getElectricalPath().setMaxHoldMilis(iMaxHoldMilis);
+//				
+//				ef.setPlay(true);
+//				ef.setAmplitudePerc(0.05f);
+////				ef.setMinMaxPerc(5,15);
+//				ef.setFromTo(
+//					ageomList.get(iA).getLocalTranslation(),
+//					ageomList.get(iB).getLocalTranslation()
+//				);
+//			}else{
+//				ef.setPlay(false);
+//			}
+//		}
+//	}
 
 	/**
 	 * Linux only: raise application window as easy workaround to make strict focus policy painless

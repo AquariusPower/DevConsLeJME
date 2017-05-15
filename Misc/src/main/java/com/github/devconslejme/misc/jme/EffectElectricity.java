@@ -74,15 +74,20 @@ public class EffectElectricity extends EffectBaseAbs<EffectElectricity>{
 	@Override
 	protected void playWork(float tpf){
 		MiscJmeI.i().updateMultiLineMesh(getGeom().getMesh(), recreatePath(tpf).toArray(new Vector3f[0]));
-		getGeom().getMaterial().getAdditionalRenderState().setLineWidth(getThickNess());
+		getGeom().getMaterial().getAdditionalRenderState().setLineWidth(getThickness());
 	}
 	
-	public EffectElectricity setOverrideThickness(int i){
+	/**
+	 * 
+	 * @param i can be null to disable
+	 * @return
+	 */
+	public EffectElectricity setOverrideThickness(Integer i){
 		this.iOverrideThickness=i;
 		return getThis();
 	}
 	
-	public int getThickNess(){
+	public int getThickness(){
 		if(iOverrideThickness!=null)return iOverrideThickness;
 		
 		/**

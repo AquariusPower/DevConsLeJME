@@ -321,4 +321,28 @@ public class MiscJmeI {
 		});
 		
 	}
+	
+	public Vector3f getRandomSpot(Vector3f v3fAround, float fScale){
+		return getRandomSpot(v3fAround, true, fScale);
+	}
+	/**
+	 * 
+	 * @param v3fAround can be null, last thing applied
+	 * @param bNormalize
+	 * @param fScale can be null, applied AFTER normalize
+	 * @return
+	 */
+	public Vector3f getRandomSpot(Vector3f v3fAround, boolean bNormalize, Float fScale){
+		Vector3f v3f = new Vector3f(
+				2*FastMath.nextRandomFloat()-1,
+				2*FastMath.nextRandomFloat()-1,
+				2*FastMath.nextRandomFloat()-1
+			);
+		
+		if(bNormalize)v3f.normalizeLocal();
+		if(fScale!=null)v3f.multLocal(fScale);
+		if(v3fAround!=null)v3f.addLocal(v3fAround);
+		
+		return v3f;
+	}
 }
