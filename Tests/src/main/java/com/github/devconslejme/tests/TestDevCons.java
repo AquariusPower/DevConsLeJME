@@ -50,6 +50,8 @@ import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI.IEnvironmentListener;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
+import com.github.devconslejme.misc.jme.GeometryI;
+import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.OriginDevice;
 import com.github.devconslejme.misc.jme.PickingHandI;
@@ -62,8 +64,12 @@ import com.jme3.audio.AudioListenerState;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.MouseButtonTrigger;
+import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Geometry;
+import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.system.AppSettings;
 import com.jme3.system.JmeSystem;
@@ -197,6 +203,21 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		
 		getCamera().setLocation(new Vector3f(9.787677f, 6.957723f, 11.003839f)); //taken from devcons
 		getCamera().setRotation(new Quaternion(-0.068618454f, 0.91919893f, -0.18511744f, -0.34072912f)); //taken from devcons
+		
+		Node nodeRef=new Node();
+		for(int i=0;i<10;i++){
+			nodeRef.rotate(i*30*FastMath.DEG_TO_RAD,0,0);
+			
+			Geometry geom = GeometryI.i().create(MeshI.i().box(0.1f*i),ColorRGBA.randomColor(),false);
+			geom.getMaterial().getAdditionalRenderState().setWireframe(true);
+			
+			geom.setLocalTranslation(new Vector3f(i,(i*i)/3f,i));
+			
+			nodeRef.attachChild(geom);
+			Vector3f v3fRotAtWorld = geom.getWorldTranslation(); //rotated position
+			getRootNode().attachChild(geom);
+			geom.setLocalTranslation(v3fRotAtWorld);
+		}
 		
 //		// origin
 //		getRootNode().attachChild(DebugVisualsI.i()

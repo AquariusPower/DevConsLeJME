@@ -111,7 +111,21 @@ public class ColorI {
 //		
 //		return f;
 //	}
-
+	
+	/**
+	 * TODO apply it everywhere
+	 * @param color
+	 * @return
+	 */
+	public ColorRGBA fixCopy(ColorRGBA color){
+		return new ColorRGBA( //fix it
+				colorComponentLimit(color.r),
+				colorComponentLimit(color.g),
+				colorComponentLimit(color.b),
+				colorComponentLimit(color.a)
+			);
+	}
+	
 	HashMap<Integer,Material> hmMatUnshadedColor = new HashMap<Integer,Material>();
 	/**
 	 * uses a cache too
@@ -119,12 +133,7 @@ public class ColorI {
 	 * @return
 	 */
 	public Material retrieveMaterialUnshadedColor(ColorRGBA color){
-		color = new ColorRGBA(
-			colorComponentLimit(color.r),
-			colorComponentLimit(color.g),
-			colorComponentLimit(color.b),
-			colorComponentLimit(color.a)
-		);
+		color = fixCopy(color);
 		int i = color.asIntRGBA();
 		Material mat = hmMatUnshadedColor.get(i);
 		if(mat==null){

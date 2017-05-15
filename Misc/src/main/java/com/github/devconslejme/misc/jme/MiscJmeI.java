@@ -186,10 +186,20 @@ public class MiscJmeI {
 	}
 	
 	public void addToName(Spatial spt, String str, boolean bPrepend){
+		addToName( spt,  str,  bPrepend , false);
+	}
+	public void addToName(Spatial spt, String str, boolean bPrepend, boolean bRecursive){
 		if(bPrepend){
 			spt.setName(str+"/"+spt.getName());
 		}else{
 			spt.setName(spt.getName()+"/"+str);
+		}
+		
+		if (spt instanceof Node) {
+			Node node = (Node) spt;
+			for(Spatial sptChidl:node.getChildren()){
+				addToName( sptChidl,  str,  bPrepend,  bRecursive);
+			}
 		}
 	}
 	
