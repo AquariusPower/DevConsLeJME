@@ -43,6 +43,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 
+import javax.script.ScriptException;
+
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Primitives;
 
@@ -496,4 +498,15 @@ public class JavaLangI {
 			@Override public O apply(I in) {return a(in);}
 		}
 	}
+	
+	public boolean isEnumClass(Object obj){
+		if (obj instanceof Class) {
+			Class cl = (Class) obj;
+			if(Enum.class.isAssignableFrom(cl)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
 }

@@ -47,18 +47,18 @@ import javax.script.ScriptException;
 import com.github.devconslejme.misc.AutoCompleteI;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
 import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.FileI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.GlobalManagerI.IGlobalAddListener;
-import com.github.devconslejme.misc.FileI;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.JavadocI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.MethodX;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
-import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.ReportI;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.google.common.collect.HashBiMap;
 import com.jme3.app.Application;
 import com.jme3.input.KeyInput;
@@ -303,6 +303,8 @@ public class JavaScriptI implements IGlobalAddListener {
 		jse.getContext().setWriter(wrc);
 		
 		bndJSE = jse.createBindings();
+//		jse.getContext().setAttribute(name, value, scope);
+//		jse.eva
 //		for(EBaseCommand ebc:EBaseCommand.values()){
 //			astrIdList.add(ebc.s());
 //		}
@@ -314,7 +316,8 @@ public class JavaScriptI implements IGlobalAddListener {
 		for(Object obj:GlobalManagerI.i().getListCopy()){
 			if(bndJSE.get(genKeyFor(obj))==null)setJSBinding(obj);
 		}
-		setJSBinding(Vector3f.class.getSimpleName(), new Vector3f());
+//		setJSBinding(Vector3f.class.getSimpleName(), new Vector3f());
+		setJSBinding(new Vector3f());
 		
 		/**
 		 * listen for new ones
@@ -323,20 +326,47 @@ public class JavaScriptI implements IGlobalAddListener {
 	}
 	
 	private String genKeyFor(Object obj){
+		if(JavaLangI.i().isEnumClass(obj)){
+			Class cl = (Class)obj;
+			String[] astr = cl.getName().split("[.]");
+			String strBindIdNew=astr[astr.length-1];
+			return strBindIdNew;
+		}
+		
 		return obj.getClass().getSimpleName();
 	}
 	
 	/**
+	 * will have automatic id based on object class simple name, 
+	 * it can also be a .class of static enums
 	 * 
 	 * @param strBindId
 	 * @param objBindValue
 	 * @return previous value for id
 	 */
-	public void setJSBinding(String strBindId, Object objBindValue){
+//	private void setJSBinding(String strBindId, Object objBindValue){
+	private void setJSBinding(Object objBindValue){
+		String strBindId = genKeyFor(objBindValue);
+		
 		if(isForbidAccess(objBindValue))return;
 		
+		if(JavaLangI.i().isEnumClass(objBindValue)){
+			Class cl = (Class)objBindValue;
+//			String[] astr = cl.getName().split("[.]");
+//			String strBindIdNew=astr[astr.length-1];
+//			if(!strBindIdNew.equals(strBindId)){
+//				throw new DetailedException("should be equal (let it be automatic)",strBindId,strBindIdNew,objBindValue);
+//			}
+//			strBindId=strBindIdNew;
+			try {
+				objBindValue = jse.eval("Java.type('"+cl.getName()+"');");
+			} catch (ScriptException e) {
+				e.printStackTrace();
+			}
+		}
+		
 		if(bndJSE.get(strBindId)!=null){
-			throw new DetailedException("already set: "+strBindId);
+			throw new DetailedException("already set: "+strBindId, bndJSE.get(strBindId));
 		}
 		
 		bndJSE.put(strBindId,objBindValue);
@@ -354,13 +384,14 @@ public class JavaScriptI implements IGlobalAddListener {
 		return false;
 	}
 
-	/**
-	 * 
-	 * @param objBindValue automatic id based on object class simple name
-	 */
-	public void setJSBinding(Object objBindValue){
-		setJSBinding(genKeyFor(objBindValue), objBindValue);
-	}
+//	/**
+//	 * will have automatic id based on object class simple name, 
+//	 * it can also be a .class of static enums
+//	 * @param objBindValue 
+//	 */
+//	public void setJSBinding(Object objBindValue){
+//		setJSBinding(genKeyFor(objBindValue), objBindValue);
+//	}
 	
 	protected void submitUserCommand() {
 		String strJS = DevConsPluginStateI.i().getInputText();
@@ -501,6 +532,13 @@ public class JavaScriptI implements IGlobalAddListener {
 			.setUserCanKill(true)
 			.setUserCanPause(true)
 		);
+	}
+	
+	public static class FileSelfScript extends File{
+		private static final long	serialVersionUID	= -1605739267004772815L;
+		public FileSelfScript(String pathname) {
+			super(pathname);
+		}
 	}
 	
 	/**

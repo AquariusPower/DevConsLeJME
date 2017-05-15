@@ -50,14 +50,14 @@ import com.jme3.scene.shape.Torus;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class OriginDevice extends Node{
-	private Node	torX;
-	private Node	torY;
-	private Node	torZ;
+	private NodeAxis	nodeTorX;
+	private NodeAxis	nodeTorY;
+	private NodeAxis	nodeTorZ;
 	private EffectElectricity	ef;
 	private TimedDelay	tdEffectRetarget;
 	private float	fRetargetDefaultDelay=3;
-	private ArrayList<Node> anodeMainShapes=new ArrayList<Node>();
-	private ArrayList<Node> anodeElectricShapesList=new ArrayList<Node>();
+	private ArrayList<NodeAxis> anodeMainShapes=new ArrayList<NodeAxis>();
+	private ArrayList<NodeAxis> anodeElectricShapesList=new ArrayList<NodeAxis>();
 //	private Node	nodeBase = new Node(OriginDevice.class.getSimpleName());
 	private Integer	iMaxHoldMilisBkp = null;
 //	private Integer	iThicknessBkp = null;
@@ -65,10 +65,20 @@ public class OriginDevice extends Node{
 	private int	iCS;
 	private int	iRS;
 	private Vector3f	v3fBaseSpeed=new Vector3f(1,1,1).mult(0.0025f);
-	private Node	nodeSelfElectrocute;
+	private NodeAxis	nodeSelfElectrocute;
 	private float	fIR=0.1f;
 	private float	fRotTorOpac=0.15f;
 	private Vector3f v3fSpeed=new Vector3f();
+	private NodeAxis	nodeA;
+	private NodeAxis	nodeB;
+	
+	public static class NodeAxis extends Node{
+		public NodeAxis(String str) {
+			super(str);
+		}
+
+		EAxis ea;
+	}
 	
 	public OriginDevice(){
 		setName(OriginDevice.class.getSimpleName());
@@ -97,10 +107,10 @@ public class OriginDevice extends Node{
 			.createArrow(ColorRGBA.Blue).setFromTo(Vector3f.ZERO, Vector3f.UNIT_Z));
 		
 		// some basic shapes
-		torX=createAxisThing(Vector3f.UNIT_X, new Box(0.5f,0.5f,0.5f));
-		torY=createAxisThing(Vector3f.UNIT_Y, new Sphere(10,10,0.5f));
+		nodeTorX=createAxisThing(Vector3f.UNIT_X, new Box(0.5f,0.5f,0.5f));
+		nodeTorY=createAxisThing(Vector3f.UNIT_Y, new Sphere(10,10,0.5f));
 //		torZ=createAxisThing(Vector3f.UNIT_Z, new Cylinder(5,10,0.5f,0.001f,1f,true,false));
-		torZ=createAxisThing(Vector3f.UNIT_Z, new Cone());
+		nodeTorZ=createAxisThing(Vector3f.UNIT_Z, new Cone());
 		
 		// electricity
 		tdEffectRetarget = new TimedDelay(fRetargetDefaultDelay,"").setActive(true);
@@ -119,8 +129,14 @@ public class OriginDevice extends Node{
 		
 		updateElectricalEffects();
 		
-		for(Node node:anodeMainShapes){
-			node.rotate(getRotSpeed().x,getRotSpeed().y,getRotSpeed().z); //to disalign intentionally
+		updateAxisShapes();
+	}
+
+	private void updateAxisShapes() {
+		for(NodeAxis node:anodeMainShapes){
+			Vector3f v3f = getRotSpeedCopy();
+			if(node==nodeA || node==nodeB)v3f.multLocal(10f);
+			node.rotate(v3f.x,v3f.y,v3f.z);
 		}
 	}
 
@@ -136,14 +152,16 @@ public class OriginDevice extends Node{
 			tdEffectRetarget.resetAndChangeDelayTo(fRetargetDefaultDelay*FastMath.nextRandomFloat()).setActive(true);
 			int iA=FastMath.nextRandomInt(0, anodeElectricShapesList.size()-1);
 			int iB=FastMath.nextRandomInt(0, anodeElectricShapesList.size()-1);
+			nodeA = anodeElectricShapesList.get(iA);
+			nodeB = anodeElectricShapesList.get(iB);
 			if(iA!=iB){
 				ef.setFromTo(
-					anodeElectricShapesList.get(iA).getWorldTranslation(),
-					anodeElectricShapesList.get(iB).getWorldTranslation()
+					nodeA.getWorldTranslation(),
+					nodeB.getWorldTranslation()
 				);
 			}else{
 				//TODO create new effect to self electr
-				nodeSelfElectrocute=anodeElectricShapesList.get(iA);
+				nodeSelfElectrocute=nodeA;
 			}
 		}
 		
@@ -164,34 +182,61 @@ public class OriginDevice extends Node{
 			);
 		}
 	}
-
+	
+	public static enum EAxis{
+		X,
+		Y,
+		Z
+	}
+	
 	protected void updateTorusRotations() {
-		torX.rotate(0,getRotSpeed().x,0);
-		torY.rotate(0,getRotSpeed().y,0);
-		torZ.rotate(0,getRotSpeed().z,0);
+//		nodeTorX.rotate(0,getRotSpeedCopy().x,0);
+//		nodeTorY.rotate(0,getRotSpeedCopy().y,0);
+//		nodeTorZ.rotate(0,getRotSpeedCopy().z,0);
+		Vector3f v3fSpeed = getRotSpeedCopy();
+		rotateTor(nodeTorX,v3fSpeed);//,EAxis.X);
+		rotateTor(nodeTorY,v3fSpeed);//,EAxis.Y);
+		rotateTor(nodeTorZ,v3fSpeed);//,EAxis.Z);
+	}
+	
+	private void rotateTor(NodeAxis node,Vector3f v3fSpeed){//, EAxis ea) {
+		float f=0;
+		switch(node.ea){
+			case X:
+				f=v3fSpeed.x;
+				break;
+			case Y:
+				f=v3fSpeed.y;
+				break;
+			case Z:
+				f=v3fSpeed.z;
+				break;
+		}
+		if(node==nodeA || node==nodeB)f*=(10f);
+		node.rotate(0,f,0);
 	}
 
-	protected Node createAxisThing(Vector3f v3fUp, Mesh mesh) {
+	protected NodeAxis createAxisThing(Vector3f v3fUp, Mesh mesh) {
 		ColorRGBA color = new ColorRGBA(v3fUp.x,v3fUp.y,v3fUp.z,1f);
 		
 		// small shape
-		Node nodeThing = createThings(mesh, color, v3fUp.mult(fDisplacement), 0.5f, v3fUp, true, null);
+		NodeAxis nodeThing = createThings(mesh, color, v3fUp.mult(fDisplacement), 0.5f, v3fUp, true, null);
 		anodeElectricShapesList.add(nodeThing);
 		anodeMainShapes.add(nodeThing);
 		
 		float fDisplacementTorus = fDisplacement+1;
 		
 		// static rotation track
-		Node nodeTrack=createThings(new Torus(iCS,iRS,0.01f,fDisplacementTorus), 
+		NodeAxis nodeTrack=createThings(new Torus(iCS,iRS,0.01f,fDisplacementTorus), 
 			color, new Vector3f(0,0,0), 0.15f, v3fUp);
 		MiscJmeI.i().addToName(nodeTrack, "Track", false);
 		nodeTrack.lookAt(v3fUp, v3fUp);
 		
 		// rotating torus
-		Node nodeRotating=createThings(new Torus(iCS,iRS,fIR,fDisplacementTorus), 
+		NodeAxis nodeRotating=createThings(new Torus(iCS,iRS,fIR,fDisplacementTorus), 
 			color, new Vector3f(0,0,0), fRotTorOpac, v3fUp);
 		//TODO this may break if the track contents is changed...
-		Node nodeCore=createThings(new Torus(iCS,iRS,fIR*0.35f,fDisplacementTorus), 
+		NodeAxis nodeCore=createThings(new Torus(iCS,iRS,fIR*0.35f,fDisplacementTorus), 
 			color, new Vector3f(0,0,0), fRotTorOpac+0.5f, v3fUp);
 		rotate(nodeCore,v3fUp,true);
 //		if(v3fUp.z==1)nodeCore.rotate(xAngle, yAngle, zAngle);
@@ -204,7 +249,7 @@ public class OriginDevice extends Node{
 		return nodeRotating;
 	}
 	
-	private void rotate(Node node, Vector3f v3fUp, boolean bZOnly){
+	private void rotate(NodeAxis node, Vector3f v3fUp, boolean bZOnly){
 		float fRot=FastMath.DEG_TO_RAD*90;
 		if(!bZOnly && v3fUp.x==1)node.rotate(0, fRot, 0);
 		if(!bZOnly && v3fUp.y==1)node.rotate(0, fRot, 0);
@@ -215,26 +260,26 @@ public class OriginDevice extends Node{
 		float fIRa=fIR*1.5f;
 		float fOpac=fRotTorOpac+0.25f;
 		
-		Node nodeP = createThings(new Cone(fIRa*2f),
+		NodeAxis nodeP = createThings(new Cone(fIRa*2f),
 				color, new Vector3f( fDisplacementTorus,0,0), fOpac, v3fUp, false, new Vector3f(1,1,2));
 		nodeP.lookAt(v3fUp, v3fUp);
 		rotate(nodeP,v3fUp,false);
 		nodeRotating.attachChild(nodeP);
 		anodeElectricShapesList.add(nodeP);
 		
-		Node nodeN=createThings(new Sphere(10,10,fIRa),
+		NodeAxis nodeN=createThings(new Sphere(10,10,fIRa),
 			color, new Vector3f(-fDisplacementTorus,0,0), fOpac, v3fUp);
 		nodeRotating.attachChild(nodeN);
 		anodeElectricShapesList.add(nodeN);
 	}
 
-	protected Node createThings(Mesh mesh, ColorRGBA color, Vector3f v3f, float fOpacity, Vector3f v3fUp) {
+	protected NodeAxis createThings(Mesh mesh, ColorRGBA color, Vector3f v3f, float fOpacity, Vector3f v3fUp) {
 		return createThings( mesh,  color,  v3f,  fOpacity,  v3fUp, false, null);
 	}
-	protected Node createThings(Mesh mesh, ColorRGBA color, Vector3f v3f, float fOpacity, Vector3f v3fUp, boolean bAddWireFrame, Vector3f v3fScale) {
+	protected NodeAxis createThings(Mesh mesh, ColorRGBA color, Vector3f v3f, float fOpacity, Vector3f v3fUp, boolean bAddWireFrame, Vector3f v3fScale) {
 		if(v3fScale==null)v3fScale=new Vector3f(1,1,1);
 		
-		Node node = new Node("Node");
+		NodeAxis node = new NodeAxis("Node");
 		
 		Geometry geom = new Geometry(mesh.getClass().getSimpleName(),mesh);
 		
@@ -282,7 +327,7 @@ public class OriginDevice extends Node{
 	}
 	private ERotMode erm = ERotMode.Disaligned;
 	
-	public Vector3f getRotSpeed() {
+	public Vector3f getRotSpeedCopy() {
 		switch(erm){
 			case Chaotic:
 				return v3fSpeed.mult(new Vector3f(
@@ -298,7 +343,7 @@ public class OriginDevice extends Node{
 					));
 			default: //just to let it compile...
 			case Aligned:
-				return v3fSpeed;
+				return v3fSpeed.clone();
 		}
 	}
 
