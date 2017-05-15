@@ -64,10 +64,11 @@ public class OriginDevice extends Node{
 	private float fDisplacement;
 	private int	iCS;
 	private int	iRS;
-	private float	fSpeed;
+	private Vector3f	v3fBaseSpeed=new Vector3f(1,1,1).mult(0.0025f);
 	private Node	nodeSelfElectrocute;
 	private float	fIR=0.1f;
 	private float	fRotTorOpac=0.15f;
+	private Vector3f v3fSpeed=new Vector3f();
 	
 	public OriginDevice(){
 		setName(OriginDevice.class.getSimpleName());
@@ -75,7 +76,9 @@ public class OriginDevice extends Node{
 		fDisplacement=5;
 		iCS=50;
 		iRS=15;
-		fSpeed=0.0025f;
+//		fBaseSpeed=0.0025f;
+//		v3fSpeed.set(fBaseSpeed,fBaseSpeed,fBaseSpeed);
+		v3fSpeed.set(v3fBaseSpeed);
 		
 		init();
 	}
@@ -117,7 +120,7 @@ public class OriginDevice extends Node{
 		updateElectricalEffects();
 		
 		for(Node node:anodeMainShapes){
-			node.rotate(fSpeed,fSpeed,fSpeed);
+			node.rotate(getRotSpeed().x,getRotSpeed().y,getRotSpeed().z); //to disalign intentionally
 		}
 	}
 
@@ -141,14 +144,16 @@ public class OriginDevice extends Node{
 			}else{
 				//TODO create new effect to self electr
 				nodeSelfElectrocute=anodeElectricShapesList.get(iA);
-				
-				iMaxHoldMilisBkp = ef.getElectricalPath().getMaxHoldMilis();
-				ef.getElectricalPath().setMaxHoldMilis(100); //frenetic
-				ef.setOverrideThickness(1);
 			}
 		}
 		
 		if(nodeSelfElectrocute!=null){
+			if(iMaxHoldMilisBkp==null){
+				iMaxHoldMilisBkp = ef.getElectricalPath().getMaxHoldMilis();
+				ef.getElectricalPath().setMaxHoldMilis(100); //frenetic
+				ef.setOverrideThickness(2);
+			}
+			
 			BoundingVolume bv = nodeSelfElectrocute.getWorldBound();
 			float fScale=1f;
 			if (bv instanceof BoundingBox)fScale = ((BoundingBox)bv).getExtent(null).length();
@@ -161,16 +166,16 @@ public class OriginDevice extends Node{
 	}
 
 	protected void updateTorusRotations() {
-		torX.rotate(0,fSpeed,0);
-		torY.rotate(0,fSpeed,0);
-		torZ.rotate(0,fSpeed,0);
+		torX.rotate(0,getRotSpeed().x,0);
+		torY.rotate(0,getRotSpeed().y,0);
+		torZ.rotate(0,getRotSpeed().z,0);
 	}
 
 	protected Node createAxisThing(Vector3f v3fUp, Mesh mesh) {
 		ColorRGBA color = new ColorRGBA(v3fUp.x,v3fUp.y,v3fUp.z,1f);
 		
 		// small shape
-		Node nodeThing = createThings(mesh, color, v3fUp.mult(fDisplacement), 0.5f, v3fUp, true);
+		Node nodeThing = createThings(mesh, color, v3fUp.mult(fDisplacement), 0.5f, v3fUp, true, null);
 		anodeElectricShapesList.add(nodeThing);
 		anodeMainShapes.add(nodeThing);
 		
@@ -211,7 +216,7 @@ public class OriginDevice extends Node{
 		float fOpac=fRotTorOpac+0.25f;
 		
 		Node nodeP = createThings(new Cone(fIRa*2f),
-				color, new Vector3f( fDisplacementTorus,0,0), fOpac, v3fUp);
+				color, new Vector3f( fDisplacementTorus,0,0), fOpac, v3fUp, false, new Vector3f(1,1,2));
 		nodeP.lookAt(v3fUp, v3fUp);
 		rotate(nodeP,v3fUp,false);
 		nodeRotating.attachChild(nodeP);
@@ -224,9 +229,11 @@ public class OriginDevice extends Node{
 	}
 
 	protected Node createThings(Mesh mesh, ColorRGBA color, Vector3f v3f, float fOpacity, Vector3f v3fUp) {
-		return createThings( mesh,  color,  v3f,  fOpacity,  v3fUp, false);
+		return createThings( mesh,  color,  v3f,  fOpacity,  v3fUp, false, null);
 	}
-	protected Node createThings(Mesh mesh, ColorRGBA color, Vector3f v3f, float fOpacity, Vector3f v3fUp, boolean bAddWireFrame) {
+	protected Node createThings(Mesh mesh, ColorRGBA color, Vector3f v3f, float fOpacity, Vector3f v3fUp, boolean bAddWireFrame, Vector3f v3fScale) {
+		if(v3fScale==null)v3fScale=new Vector3f(1,1,1);
+		
 		Node node = new Node("Node");
 		
 		Geometry geom = new Geometry(mesh.getClass().getSimpleName(),mesh);
@@ -244,12 +251,14 @@ public class OriginDevice extends Node{
 		color.a=fOpacity;
 		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
 		if(fOpacity!=1f)geom.setQueueBucket(Bucket.Transparent);
+		geom.setLocalScale(v3fScale);
 		
 		Geometry geomWireFrame=null;
 		if(bAddWireFrame){
 			geomWireFrame = geom.clone();
 			geomWireFrame.setMaterial(geomWireFrame.getMaterial().clone());
 			geomWireFrame.getMaterial().getAdditionalRenderState().setWireframe(true);
+			geomWireFrame.setLocalScale(v3fScale);
 		}
 		
 		// hierarchy/pos
@@ -263,5 +272,48 @@ public class OriginDevice extends Node{
 		attachChild(node);
 		
 		return node;
+	}
+	
+	public static enum ERotMode{
+		Chaotic,
+		Disaligned,
+		Aligned,
+		;
+	}
+	private ERotMode erm = ERotMode.Disaligned;
+	
+	public Vector3f getRotSpeed() {
+		switch(erm){
+			case Chaotic:
+				return v3fSpeed.mult(new Vector3f(
+						2f*FastMath.nextRandomFloat()-1f,
+						2f*FastMath.nextRandomFloat()-1f,
+						2f*FastMath.nextRandomFloat()-1f
+					));
+			case Disaligned:
+				return v3fSpeed.mult(new Vector3f(
+						FastMath.nextRandomFloat(),
+						FastMath.nextRandomFloat()*1.5f,
+						FastMath.nextRandomFloat()*2.0f
+					));
+			default: //just to let it compile...
+			case Aligned:
+				return v3fSpeed;
+		}
+	}
+
+	public OriginDevice setRotSpeed(Vector3f v3f) {
+//		this.v3fSpeed.set(v3f.x*fBaseSpeed,v3f.y*fBaseSpeed,v3f.z*fBaseSpeed);
+		this.v3fSpeed.set(v3fBaseSpeed.mult(v3f));
+		return this; //for beans setter
+	}
+
+	public ERotMode getRotMode() {
+		return erm;
+	}
+
+	public OriginDevice setRotMode(ERotMode erm) {
+		this.erm = erm;
+		return this; //for beans setter
 	}
 }

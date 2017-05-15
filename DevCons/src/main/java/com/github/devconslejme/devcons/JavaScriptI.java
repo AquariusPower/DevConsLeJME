@@ -314,6 +314,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		for(Object obj:GlobalManagerI.i().getListCopy()){
 			if(bndJSE.get(genKeyFor(obj))==null)setJSBinding(obj);
 		}
+		setJSBinding(Vector3f.class.getSimpleName(), new Vector3f());
 		
 		/**
 		 * listen for new ones

@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import com.github.devconslejme.debug.DebugTrackProblemsJME;
 import com.github.devconslejme.debug.UnsafeDebugHacksI;
 import com.github.devconslejme.devcons.DevConsPluginStateI;
+import com.github.devconslejme.devcons.JavaScriptI;
 import com.github.devconslejme.devcons.LoggingI;
 import com.github.devconslejme.extras.DynamicFPSLimiter;
 import com.github.devconslejme.extras.OSCmd;
@@ -190,6 +191,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	private void opt_initSomeWorldObjects() {
 		orde = new OriginDevice();
 		getRootNode().attachChild(orde);
+//		JavaScriptI.i().setJSBinding("OriginDevice_ERotMode", OriginDevice.ERotMode.Aligned);
 		
 		getCamera().setLocation(new Vector3f(9.787677f, 6.957723f, 11.003839f)); //taken from devcons
 		getCamera().setRotation(new Quaternion(-0.068618454f, 0.91919893f, -0.18511744f, -0.34072912f)); //taken from devcons
@@ -430,4 +432,9 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	public void displayResizedEvent(int iW, int iH) {
 		reshape( Math.max(iW,1), Math.max(iH,1) );
 	}
+
+	public OriginDevice getOriginDevice() {
+		return orde;
+	}
+
 }
