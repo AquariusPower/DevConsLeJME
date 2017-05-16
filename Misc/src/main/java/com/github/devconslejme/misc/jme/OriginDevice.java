@@ -75,7 +75,11 @@ public class OriginDevice extends Node{
 	private boolean	bUnstable;
 	private ERotMode erm = ERotMode.Disaligned;
 	private Spatial	sptElectricSrc;
+	private NodeAxis	nodeElectricSrc;
 	private boolean	bSameAxis;
+	private ESourceMode esm = ESourceMode.Follow;
+	private float	fInitialDistToSrc;
+	private float	fMoveBaseSpeed=0.01f;
 	
 	public static class NodeAxis extends Node{
 		public NodeAxis(String str) {
@@ -102,8 +106,69 @@ public class OriginDevice extends Node{
 		updateTorusRotations();
 		updateElectricalEffects();
 		updateAxisMainShapes();
+		updateSourceMode();
 	}
 	
+	/**
+	 * TODO deplet energy sources
+	 */
+	protected void updateSourceMode() {
+		if(sptElectricSrc==null)return;
+		if(==nodeElectricA || sptElectricSrc==nodeElectricB)return;
+		
+		Vector3f v3fSrcWPos = sptElectricSrc.getWorldTranslation();
+		
+		float fPseudoDiameter = (float) Math.cbrt(getWorldBound().getVolume());  
+		float fForceBasedOnDiameterMult = 3f;
+		float fMaxTractionDist=fPseudoDiameter*fForceBasedOnDiameterMult;
+		float fMoveSpeed=fMoveBaseSpeed*(fMaxTractionDist/v3fSrcWPos.distance(getWorldTranslation()));
+		
+		Vector3f v3fDist=v3fSrcWPos.subtract(getWorldTranslation());
+		float fDist = v3fDist.length();
+		
+		if(fDist > fMaxTractionDist){
+			sptElectricSrc=null;
+			return; //disconnected
+		}
+		
+		if(fDist < fPseudoDiameter/2f){
+			fMoveSpeed=fMoveBaseSpeed;
+		}
+		
+		Vector3f v3fDir = v3fDist.normalize();
+		Vector3f v3fSpeed = v3fDir.mult(fMoveSpeed);
+		float fSafeMinDist=0.01f;
+		switch(esm){
+			case JustStay:
+				//TODO do nothing? could deplet the energy source at least
+				break;
+				
+			case Attract:
+				if(fDist>fSafeMinDist)sptElectricSrc.move(v3fSpeed.negate());
+				break;
+			case Repel:
+				sptElectricSrc.move(v3fSpeed);
+				break;
+				
+			case Follow:
+				if(fInitialDistToSrc < fDist){
+					move(v3fSpeed);
+					lookAt(v3fSrcWPos,Vector3f.UNIT_Y);
+				}
+				break;
+				
+			case MoveAway:
+				move(v3fSpeed.negate());
+				lookAt(v3fSrcWPos,Vector3f.UNIT_Y);
+				getLocalRotation().negate(); //TODO this looks bad... will be upside down?
+				break;
+			case MoveTo:
+				if(fDist>fSafeMinDist)move(v3fSpeed);
+				lookAt(v3fSrcWPos,Vector3f.UNIT_Y);
+				break;
+		}
+	}
+
 	protected void init(){
 		// origin
 		attachChild(DebugVisualsI.i()
@@ -147,6 +212,9 @@ public class OriginDevice extends Node{
 	}
 
 	protected void updateElectricalEffects() {
+		ef.setPlay(bUnstable);
+		if(!bUnstable)return;
+		
 		if(tdEffectRetarget.isReady(true)){
 			nodeSelfElectrocute=null;
 			if(iMaxHoldMilisBkp!=null){
@@ -172,7 +240,7 @@ public class OriginDevice extends Node{
 				v3fWorldA = nodeElectricA.getWorldTranslation();
 			}
 			
-			bSameAxis = (nodeElectricA!=null && nodeElectricB!=null && nodeElectricA.ea==nodeElectricB.ea);
+//			bSameAxis = (nodeElectricA!=null && nodeElectricB!=null && nodeElectricA.ea==nodeElectricB.ea);
 			
 			int iB=FastMath.nextRandomInt(0, anodeElectricShapesList.size()-1);
 			nodeElectricB = anodeElectricShapesList.get(iB);
@@ -203,6 +271,8 @@ public class OriginDevice extends Node{
 				MiscJmeI.i().getRandomSpot(bv.getCenter(), fScale)
 			);
 		}
+		
+		bSameAxis = (nodeElectricA!=null && nodeElectricB!=null && nodeElectricA.ea==nodeElectricB.ea);
 	}
 	
 	private NodeAxis electricNodeFor(Spatial spt) {
@@ -235,6 +305,11 @@ public class OriginDevice extends Node{
 		boolean bTorChildA = SpatialHierarchyI.i().isChildRecursive(nodeTor,nodeElectricA);
 		boolean bTorChildB = SpatialHierarchyI.i().isChildRecursive(nodeTor,nodeElectricB);
 		
+//		if(bTorChildB && nodeTor.ea==EAxis.X){
+//			System.out.println("rbeakpoint");
+//		}
+		
+		float fBoost=10f;
 		float fMult=1f;
 		if(bUnstable){
 			if(nodeSelfElectrocute!=null && nodeTor.ea==nodeSelfElectrocute.ea){
@@ -242,7 +317,7 @@ public class OriginDevice extends Node{
 					/**
 					 * main shape electrocuting self, will boost related torus spin
 					 */
-					fMult=(20f);
+					fMult=(fBoost*2f);
 				}else{
 					if(bTorChildA || bTorChildB){
 						/**
@@ -257,14 +332,14 @@ public class OriginDevice extends Node{
 						/**
 						 * both are main shapes (always mismatching axis), spin fast reversed, only related torus
 						 */
-						fMult=(-10f);
+						fMult=(-fBoost);
 					}
 				}else{
 					if(bTorChildA || bTorChildB){
 						/**
 						 * any is a torus intersection, spin fast
 						 */
-						fMult=(10f);
+						fMult=(fBoost);
 						
 						if(bTorChildA && bTorChildB){
 							/**
@@ -465,9 +540,41 @@ public class OriginDevice extends Node{
 	public Spatial getNodeElectricSrc() {
 		return sptElectricSrc;
 	}
-
-	public OriginDevice setNodeElectricSrc(Spatial sptElectricSrc) {
+	
+	public static enum ESourceMode{
+		Attract,
+		Repel,
+		MoveTo,
+		MoveAway,
+		Follow,
+		JustStay,
+		;
+	}
+	
+	public OriginDevice setElectricitySource(Spatial sptElectricSrc) {
 		this.sptElectricSrc = sptElectricSrc;
+		if(sptElectricSrc!=null){
+			fInitialDistToSrc=sptElectricSrc.getWorldTranslation().subtract(getWorldTranslation()).length();
+			nodeElectricSrc = electricNodeFor(sptElectricSrc);
+		}
+		return this; //for beans setter
+	}
+
+	public ESourceMode getSourceMode() {
+		return esm;
+	}
+
+	public OriginDevice setSourceMode(ESourceMode esmSourceMode) {
+		this.esm = esmSourceMode;
+		return this; //for beans setter
+	}
+
+	public float getMoveBaseSpeed() {
+		return fMoveBaseSpeed;
+	}
+
+	public OriginDevice setMoveBaseSpeed(float fMoveBaseSpeed) {
+		this.fMoveBaseSpeed = fMoveBaseSpeed;
 		return this; //for beans setter
 	}
 }

@@ -197,7 +197,8 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	private void opt_initSomeWorldObjects() {
 		orde = new OriginDevice();
 		orde.setUnstable(true);
-		JavaScriptI.i().setJSBinding(OriginDevice.ERotMode.class);
+//		JavaScriptI.i().setJSBinding(OriginDevice.ERotMode.class);
+		JavaScriptI.i().setJSBindingForEnumsOf(OriginDevice.class);
 		getRootNode().attachChild(orde);
 //		JavaScriptI.i().setJSBinding(OriginDevice.ERotMode.class);
 		

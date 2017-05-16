@@ -36,6 +36,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -91,6 +92,14 @@ public class JavaScriptI implements IGlobalAddListener {
 	WriterCapture wrc = new WriterCapture();
 	private String	strCmdChar = "/";
 	private HashMap<Object,ArrayList<MethodX>> hmMethodsHelp = new HashMap<Object,ArrayList<MethodX>>();
+	private Comparator	cmpMethodX = new Comparator<MethodX>() {
+		@Override
+		public int compare(MethodX o1, MethodX o2) {
+			String str1=o1.getConcrete().getSimpleName()+o1.getMethod().getName();
+			String str2=o2.getConcrete().getSimpleName()+o2.getMethod().getName();
+			return str1.compareTo(str2);
+		}
+	};
 	
 //	enum EJSObjectBind {
 //		selfScript,
@@ -260,6 +269,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		ArrayList<MethodX> amh = hmMethodsHelp.get(obj);
 		if(amh==null){
 			amh = JavadocI.i().prepareAllMethodsHelp(obj);
+			Collections.sort(amh,cmpMethodX );
 			DetailedException.assertIsFalse("empty", amh.size()==0, obj);
 			hmMethodsHelp.put(obj,amh);
 		}
@@ -369,7 +379,18 @@ public class JavaScriptI implements IGlobalAddListener {
 		bndJSE.put(strBindId,objBindValue);
 		MessagesI.i().debugInfo(this,"created JS bind: "+strBindId,objBindValue);
 		
-		Class<?>[] acl = objBindValue.getClass().getDeclaredClasses();
+		setJSBindingForEnumsOf(objBindValue.getClass());
+//		Class<?>[] acl = objBindValue.getClass().getDeclaredClasses();
+//		for(Class<?> cl:acl){
+//			if(JavaLangI.i().isEnumClass(cl)){
+////				QueueI.i().enqueue(cx);
+//				setJSBinding(cl);
+//			}
+//		}
+	}
+	
+	public void setJSBindingForEnumsOf(Class clWithEnums){
+		Class<?>[] acl = clWithEnums.getDeclaredClasses();
 		for(Class<?> cl:acl){
 			if(JavaLangI.i().isEnumClass(cl)){
 //				QueueI.i().enqueue(cx);
@@ -589,20 +610,10 @@ public class JavaScriptI implements IGlobalAddListener {
 		if(obj==null){
 			LoggingI.i().logSubEntry("Return is null or void.");
 		}else{
-//				LoggingI.i().logSubEntry("ReturnType: "+objJSLastEval.toString()+" ("+objJSLastEval.getClass()+")");
 			LoggingI.i().logSubEntry("Return type: "+obj.getClass());
 			if(JavaLangI.i().isCanUserTypeIt(obj)){ // simple types result in simple and readable strings
 				String str="";
-//				if (obj instanceof Vector3f) {
-//					Vector3f v3f = (Vector3f) obj;
-//					str+="new Vector3f("+MiscJmeI.i().fmtVector3f(v3f,2)+")";
-//				}else
-//				if (obj instanceof Quaternion) {
-//					Quaternion qua = (Quaternion) obj;
-//					str+="new Quaternion().fromAngles("+MiscJmeI.i().fmtToDegrees(qua,2)+")";
-//				}else{
 					str+="Return value = '"+obj+"'";
-//				}
 				LoggingI.i().logSubEntry(str);
 			}else
 			if(!isAndShowArray(obj)){
