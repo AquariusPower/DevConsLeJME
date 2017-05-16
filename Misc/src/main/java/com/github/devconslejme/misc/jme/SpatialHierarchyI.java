@@ -87,14 +87,15 @@ public class SpatialHierarchyI {
 	 * @param bIncludeLast usually the root virtual world or gui node
 	 * @return last one is the parentest
 	 */
-	public ArrayList<Node> getAllParents(Spatial spt, boolean bIncludeLast) {
-		ArrayList<Node> anode = new ArrayList<>();
+	@SuppressWarnings("unchecked")
+	public <T extends Node> ArrayList<T> getAllParents(Spatial spt, boolean bIncludeLast) {
+		ArrayList<T> anode = new ArrayList<>();
 		
-		Node nodeParent = spt.getParent();
+		T nodeParent = (T)spt.getParent();
 		
 		while(nodeParent!=null){
 			anode.add(nodeParent);
-			nodeParent=nodeParent.getParent();
+			nodeParent=(T)nodeParent.getParent();
 		}
 		
 		if(!bIncludeLast && anode.size()>0)anode.remove(anode.size()-1);

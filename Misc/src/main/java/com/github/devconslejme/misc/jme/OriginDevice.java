@@ -29,6 +29,7 @@ package com.github.devconslejme.misc.jme;
 import java.util.ArrayList;
 
 import com.github.devconslejme.misc.TimedDelay;
+import com.github.devconslejme.misc.jme.ColorI.ColorRGBAx;
 import com.github.devconslejme.misc.jme.MeshI.Cone;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
@@ -36,12 +37,10 @@ import com.jme3.bounding.BoundingVolume;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
-import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.scene.shape.Torus;
 
@@ -76,6 +75,7 @@ public class OriginDevice extends Node{
 	private boolean	bUnstable;
 	private ERotMode erm = ERotMode.Disaligned;
 	private Spatial	sptElectricSrc;
+	private boolean	bSameAxis;
 	
 	public static class NodeAxis extends Node{
 		public NodeAxis(String str) {
@@ -131,7 +131,7 @@ public class OriginDevice extends Node{
 		EffectManagerStateI.i().add(ef);
 	}
 	
-	private void updateAxisMainShapes() {
+	protected void updateAxisMainShapes() {
 		for(NodeAxis node:anodeMainShapes){
 			Vector3f v3f = getRotSpeedCopy();
 			if(node==nodeElectricA || node==nodeElectricB){
@@ -161,14 +161,18 @@ public class OriginDevice extends Node{
 			nodeElectricA = null;
 			Vector3f v3fWorldA = null;
 			if(sptElectricSrc!=null){
-				iA=anodeElectricShapesList.indexOf(sptElectricSrc); //external spatial will be -1
-				if(iA>-1)nodeElectricA=(NodeAxis) sptElectricSrc;
+				nodeElectricA=electricNodeFor(sptElectricSrc);
+				iA=anodeElectricShapesList.indexOf(nodeElectricA); //external spatial will be -1
+//				iA=anodeElectricShapesList.indexOf(sptElectricSrc); //external spatial will be -1
+//				if(iA>-1)nodeElectricA=(NodeAxis) sptElectricSrc;
 				v3fWorldA = sptElectricSrc.getWorldTranslation();
 			}else{
 				iA=FastMath.nextRandomInt(0, anodeElectricShapesList.size()-1);
 				nodeElectricA = anodeElectricShapesList.get(iA);
 				v3fWorldA = nodeElectricA.getWorldTranslation();
 			}
+			
+			bSameAxis = (nodeElectricA!=null && nodeElectricB!=null && nodeElectricA.ea==nodeElectricB.ea);
 			
 			int iB=FastMath.nextRandomInt(0, anodeElectricShapesList.size()-1);
 			nodeElectricB = anodeElectricShapesList.get(iB);
@@ -201,6 +205,16 @@ public class OriginDevice extends Node{
 		}
 	}
 	
+	private NodeAxis electricNodeFor(Spatial spt) {
+		ArrayList<Node> anode = SpatialHierarchyI.i().getAllParents(spt, false);
+		for(Node node:anode){
+			if(anodeElectricShapesList.contains(node)){
+				return (NodeAxis)node; //must cast as nodes may not be NodeAxis
+			}
+		}
+		return null;
+	}
+
 	public static enum EAxis{
 		X,
 		Y,
@@ -217,7 +231,7 @@ public class OriginDevice extends Node{
 		rotateTor(nodeTorZ,v3fSpeed);//,EAxis.Z);
 	}
 	
-	private void rotateTor(NodeAxis nodeTor,Vector3f v3fSpeed){//, EAxis ea) {
+	protected void rotateTor(NodeAxis nodeTor,Vector3f v3fSpeed){//, EAxis ea) {
 		boolean bTorChildA = SpatialHierarchyI.i().isChildRecursive(nodeTor,nodeElectricA);
 		boolean bTorChildB = SpatialHierarchyI.i().isChildRecursive(nodeTor,nodeElectricB);
 		
@@ -259,7 +273,7 @@ public class OriginDevice extends Node{
 							fMult*=-1f;
 						}
 						
-						if(nodeElectricA.ea!=nodeElectricB.ea){
+						if(!bSameAxis){
 							/**
 							 * non matching axis? chaotic mode
 							 */
@@ -286,8 +300,8 @@ public class OriginDevice extends Node{
 		nodeTor.rotate(0,f*fMult,0);
 	}
 
-//	private void rotate(NodeAxis node, Vector3f v3fUp, boolean bZOnly){
-	private void rotate(NodeAxis node, boolean bZOnly){
+//	protected void rotate(NodeAxis node, Vector3f v3fUp, boolean bZOnly){
+	protected void rotate(NodeAxis node, boolean bZOnly){
 		float fRot=FastMath.DEG_TO_RAD*90;
 //		if(!bZOnly && v3fUp.x==1)node.rotate(0, fRot, 0);
 //		if(!bZOnly && v3fUp.y==1)node.rotate(0, fRot, 0);
@@ -327,12 +341,12 @@ public class OriginDevice extends Node{
 		return nodeRotating;
 	}
 	
-	private void createTorusIntersections(Node nodeTor, ColorRGBA color, float fDisplacementTorus, Vector3f v3fUp) {
+	protected void createTorusIntersections(Node nodeTor, ColorRGBA color, float fDisplacementTorus, Vector3f v3fUp) {
 		float fIRa=fIR*1.5f;
-		float fOpac=fRotTorOpac+0.25f;
+		float fAlpha=fRotTorOpac+0.25f;
 		
 		NodeAxis nodePosit = createAxisShape(new Cone(fIRa*2f),
-				color, new Vector3f( fDisplacementTorus,0,0), fOpac, v3fUp, false, new Vector3f(1,1,2));
+				color, new Vector3f( fDisplacementTorus,0,0), fAlpha, v3fUp, false, new Vector3f(1,1,2));
 		MiscJmeI.i().addToName(nodePosit, "Intersection", false, true);
 		nodePosit.lookAt(v3fUp, v3fUp);
 		rotate(nodePosit,false);
@@ -340,22 +354,22 @@ public class OriginDevice extends Node{
 		anodeElectricShapesList.add(nodePosit);
 		
 		NodeAxis nodeNegat=createAxisShape(new Sphere(10,10,fIRa),
-			color, new Vector3f(-fDisplacementTorus,0,0), fOpac, v3fUp);
+			color, new Vector3f(-fDisplacementTorus,0,0), fAlpha, v3fUp);
 		MiscJmeI.i().addToName(nodeNegat, "Intersection", false, true);
 		nodeTor.attachChild(nodeNegat);
 		anodeElectricShapesList.add(nodeNegat);
 	}
 
-	protected NodeAxis createAxisShape(Mesh mesh, ColorRGBA color, Vector3f v3f, float fOpacity, Vector3f v3fUp) {
-		return createAxisShape( mesh,  color,  v3f,  fOpacity,  v3fUp, false, null);
+	protected NodeAxis createAxisShape(Mesh mesh, ColorRGBA color, Vector3f v3f, float fAlpha, Vector3f v3fUp) {
+		return createAxisShape( mesh,  color,  v3f,  fAlpha,  v3fUp, false, null);
 	}
-	protected NodeAxis createAxisShape(Mesh mesh, ColorRGBA color, Vector3f v3f, float fOpacity, Vector3f v3fUp, boolean bAddWireFrame, Vector3f v3fScale) {
+	protected NodeAxis createAxisShape(Mesh mesh, ColorRGBA color, Vector3f v3f, float fAlpha, Vector3f v3fUp, boolean bAddWireFrame, Vector3f v3fScale) {
 		if(v3fScale==null)v3fScale=new Vector3f(1,1,1);
 		
 		NodeAxis node = new NodeAxis("Node");
 		
 //		Geometry geom = new Geometry(mesh.getClass().getSimpleName(),mesh);
-		Geometry geom = GeometryI.i().create(mesh,color,true);
+		Geometry geom = GeometryI.i().create(mesh,ColorI.i().colorChangeCopy(color,0,fAlpha),true);
 		
 		// name
 		MiscJmeI.i().addToName(geom, OriginDevice.class.getSimpleName(), true);
@@ -365,11 +379,11 @@ public class OriginDevice extends Node{
 		
 		MiscJmeI.i().addToName(node, geom.getName(), false);
 		
-		// color/transparency
-		color=color.clone();
-		color.a=fOpacity;
-		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
-		if(fOpacity!=1f)geom.setQueueBucket(Bucket.Transparent);
+//		// color/transparency
+//		color=color.clone();
+//		color.a=fOpacity;
+//		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
+//		if(fOpacity!=1f)geom.setQueueBucket(Bucket.Transparent);
 		
 		geom.setLocalScale(v3fScale);
 		

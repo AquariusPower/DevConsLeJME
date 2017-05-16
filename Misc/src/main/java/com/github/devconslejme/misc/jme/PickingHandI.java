@@ -71,7 +71,14 @@ public class PickingHandI {
 		return null;
 	}
 	
+	/**
+	 * 
+	 * @return can be a Geometry or a Node
+	 */
 	public Spatial getLastWorldPickParentest(){
+		Geometry geom = getLastWorldPick();
+		if(geom==null)return null;
+		
 		if(getLastWorldPick().getParent()==MiscJmeI.i().getNodeVirtualWorld()){
 			return getLastWorldPick();
 		}
@@ -82,6 +89,7 @@ public class PickingHandI {
 	}
 	public Geometry getLastWorldPick(){
 		if(crLastPick==null)return null;
+		if(crLastPick.getClosestCollision()==null)return null;
 		return crLastPick.getClosestCollision().getGeometry();
 	}
 	public CollisionResults getLastWorldPiercingPick(){

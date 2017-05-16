@@ -35,13 +35,25 @@ import com.jme3.app.Application;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
-import com.jme3.renderer.queue.RenderQueue.Bucket;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class ColorI {
 	public static ColorI i(){return GlobalManagerI.i().get(ColorI.class);}
+	
+	public static class ColorRGBAx {
+		private ColorRGBA	color;
+
+		public ColorRGBAx(ColorRGBA color) {
+			this.color = color;
+		}
+
+		public ColorRGBA setA(float fAlpha) {
+			color.a=fAlpha;
+			return color;
+		}
+	}
 	
 	/**
 	 * no overlapping
@@ -58,13 +70,19 @@ public class ColorI {
 	}
 	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB, float fAlpha){
 		color = color.clone();
+//		color.a=fAlpha;
+//		color = fixCopy(color);
 		
-		color.r=colorComponentLimit(color.r+=fAddRGB);
-		color.g=colorComponentLimit(color.g+=fAddRGB);
-		color.b=colorComponentLimit(color.b+=fAddRGB);
+//		color.r=colorComponentLimit(color.r+=fAddRGB);
+//		color.g=colorComponentLimit(color.g+=fAddRGB);
+//		color.b=colorComponentLimit(color.b+=fAddRGB);
+		color.r+=(fAddRGB);
+		color.g+=(fAddRGB);
+		color.b+=(fAddRGB);
 		
 		color.a=fAlpha;
-		return color;
+//		return color;
+		return fixCopy(color);
 	}
 	
 	/**

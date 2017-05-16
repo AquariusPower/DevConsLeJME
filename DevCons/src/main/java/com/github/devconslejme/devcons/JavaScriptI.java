@@ -501,14 +501,14 @@ public class JavaScriptI implements IGlobalAddListener {
 		return null;
 	}
 	
-	public void queueExecFile(String strFile, float fDelaySeconds, boolean bLoop){
-		queueExecFile(asFile(strFile), fDelaySeconds, bLoop);
+	public void execFileLater(String strFile, float fDelaySeconds, boolean bLoop, boolean bShowRetVal){
+		execFileLater(asFile(strFile), fDelaySeconds, bLoop, bShowRetVal);
 	}
-	public void queueExecFile(File flJS, float fDelaySeconds, boolean bLoop){
-		queueExec(null, flJS, fDelaySeconds, bLoop);
+	public void execFileLater(File flJS, float fDelaySeconds, boolean bLoop, boolean bShowRetVal){
+		execLater(null, flJS, fDelaySeconds, bLoop, bShowRetVal);
 	}
-	public void queueExecScript(String strSimpleScript, float fDelaySeconds, boolean bLoop){
-		queueExec(strSimpleScript, null, fDelaySeconds, bLoop);
+	public void execScriptLater(String strSimpleScript, float fDelaySeconds, boolean bLoop, boolean bShowRetVal){
+		execLater(strSimpleScript, null, fDelaySeconds, bLoop, bShowRetVal);
 	}
 	/**
 	 * 
@@ -517,14 +517,14 @@ public class JavaScriptI implements IGlobalAddListener {
 	 * @param fDelaySeconds
 	 * @param bLoop
 	 */
-	private void queueExec(String strSimpleScript, File flJS, float fDelaySeconds, boolean bLoop){
+	private void execLater(String strSimpleScript, File flJS, float fDelaySeconds, boolean bLoop,boolean bShowRetVal){
 		QueueI.i().enqueue(new CallableX() {
 				@Override
 				public Boolean call() {
 					if(flJS!=null){
 						execFile(flJS);
 					}else{
-						execScript(strSimpleScript, true);
+						execScript(strSimpleScript,bShowRetVal);
 					}
 					
 					return true;
