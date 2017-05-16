@@ -54,6 +54,7 @@ import com.github.devconslejme.misc.jme.GeometryI;
 import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.OriginDevice;
+import com.github.devconslejme.misc.jme.OriginDevice.ESourceMode;
 import com.github.devconslejme.misc.jme.PickingHandI;
 import com.github.devconslejme.misc.jme.PickingHandI.IPickListener;
 import com.github.devconslejme.misc.lemur.SystemAlertLemurI;
@@ -63,9 +64,6 @@ import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppState;
 import com.jme3.audio.AudioListenerState;
 import com.jme3.collision.CollisionResults;
-import com.jme3.input.MouseInput;
-import com.jme3.input.controls.ActionListener;
-import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
@@ -198,7 +196,10 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 
 	private void opt_initSomeWorldObjects() {
 		orde = new OriginDevice();
-		orde.setUnstable(true);
+		orde.setUnstable(true)
+			.setDestroySpatials(true)
+			.setSourceMode(ESourceMode.Attract)
+			.setAutoTargetNearestSpatials(true);
 //		JavaScriptI.i().setJSBinding(OriginDevice.ERotMode.class);
 		JavaScriptI.i().setJSBindingForEnumsOf(OriginDevice.class);
 		getRootNode().attachChild(orde);
@@ -213,6 +214,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 			
 			Geometry geom = GeometryI.i().create(MeshI.i().box(0.1f*i),ColorRGBA.randomColor(),false);
 			geom.getMaterial().getAdditionalRenderState().setWireframe(true);
+			MiscJmeI.i().addToName(geom, "Tst"+i, false);
 			
 			geom.setLocalTranslation(new Vector3f(i,(i*i)/3f,i));
 			
@@ -220,6 +222,8 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 			Vector3f v3fRotAtWorld = geom.getWorldTranslation(); //rotated position
 			getRootNode().attachChild(geom);
 			geom.setLocalTranslation(v3fRotAtWorld);
+			
+			orde.applyTargetTokenLater(geom);
 		}
 		
 		// picker
@@ -248,6 +252,8 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 			orde.setElectricitySource(geom);
 			return true;
 		}
+		
+		orde.setElectricitySource(null);
 		
 		return false;
 	}
