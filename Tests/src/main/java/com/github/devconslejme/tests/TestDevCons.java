@@ -55,12 +55,14 @@ import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.OriginDevice;
 import com.github.devconslejme.misc.jme.PickingHandI;
+import com.github.devconslejme.misc.jme.PickingHandI.IPickListener;
 import com.github.devconslejme.misc.lemur.SystemAlertLemurI;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppState;
 import com.jme3.audio.AudioListenerState;
+import com.jme3.collision.CollisionResults;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.MouseButtonTrigger;
@@ -83,7 +85,7 @@ import com.simsilica.lemur.Command;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestDevCons extends SimpleApplication implements IEnvironmentListener{
+public class TestDevCons extends SimpleApplication implements IEnvironmentListener, IPickListener{
 	public static void main(String[] args) {
 		if(bEnableOpt)opt_initSingleAppInstanceAtMain();
 		
@@ -220,73 +222,36 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 			geom.setLocalTranslation(v3fRotAtWorld);
 		}
 		
-//		// origin
-//		getRootNode().attachChild(DebugVisualsI.i()
-//			.createArrow(ColorRGBA.Red).setFromTo(Vector3f.ZERO, Vector3f.UNIT_X));
-//		getRootNode().attachChild(DebugVisualsI.i()
-//			.createArrow(ColorRGBA.Green).setFromTo(Vector3f.ZERO, Vector3f.UNIT_Y));
-//		getRootNode().attachChild(DebugVisualsI.i()
-//			.createArrow(ColorRGBA.Blue).setFromTo(Vector3f.ZERO, Vector3f.UNIT_Z));
-//		
-//		// things to pickup at origin
-//		torX=createAxisThing(Vector3f.UNIT_X, new Box(0.5f,0.5f,0.5f));
-//		torY=createAxisThing(Vector3f.UNIT_Y, new Sphere(10,10,0.5f));
-//		torZ=createAxisThing(Vector3f.UNIT_Z, new Cylinder(5,10,0.5f,1f,true));
-//		
-//		tdEffectRetarget = new TimedDelay(fRetargetDefaultDelay,"").setActive(true);
-//		ef=new EffectElectricity();
-////		ef.setFrom(new Vector3f());
-//		ef.setNodeParent(getRootNode());
-////		ef.setPlay(true);
-//		EffectManagerStateI.i().add(ef);
-		
 		// picker
-		String strPck="PickVirtualWorldThing";
-    getInputManager().addMapping(strPck, new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
-    getInputManager().addListener(new ActionListener() {
-				@Override
-				public void onAction(String name, boolean isPressed, float tpf) {
-					if(getFlyByCamera().isEnabled())return;
-					
-					if(!isPressed && name.equals(strPck)){ //on release
-						Spatial spt = PickingHandI.i().pickWorldSpatialAtCursor();
-						if(spt!=null)LoggingI.i().logMarker(spt.toString());
-					}
-				}
-			},
-			strPck
-		);
+//		String strPck="PickVirtualWorldThing";
+//    getInputManager().addMapping(strPck, new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
+//    getInputManager().addListener(new ActionListener() {
+//				@Override
+//				public void onAction(String name, boolean isPressed, float tpf) {
+//					if(getFlyByCamera().isEnabled())return;
+//					
+//					if(!isPressed && name.equals(strPck)){ //on release
+//						Spatial spt = PickingHandI.i().pickWorldSpatialAtCursor();
+//						if(spt!=null)LoggingI.i().logMarker(spt.toString());
+//					}
+//				}
+//			},
+//			strPck
+//		);
+    PickingHandI.i().addListener(this);
 	}
 	
-//	ArrayList<Geometry> ageomList=new ArrayList<Geometry>();
-//	private Geometry createAxisThing(Vector3f v3fUp, Mesh mesh) {
-//		int iDisplacement=5;
-//		int iCS=50;
-//		int iRS=15;
-//		ColorRGBA color = new ColorRGBA(v3fUp.x,v3fUp.y,v3fUp.z,1f);
-//		
-//		// tiny shape
-//		ageomList.add(createThings(mesh, color, v3fUp.mult(iDisplacement), false, v3fUp));
-//		
-//		// rotation track
-//		createThings(new Torus(iCS,iRS,0.01f,iDisplacement+1), color, new Vector3f(0,0,0), true, v3fUp)
-//			.lookAt(v3fUp, v3fUp);
-//		
-//		// rotating
-//		return createThings(new Torus(iCS,iRS,0.5f ,iDisplacement+1), color, new Vector3f(0,0,0), false, v3fUp);
-//	}
-
-//	private Geometry createThings(Mesh mesh, ColorRGBA color, Vector3f v3f, boolean bOpaque, Vector3f v3fUp) {
-//		Geometry geom = new Geometry("test "+mesh.getClass().getSimpleName(),mesh);
-//		color=color.clone();
-//		if(!bOpaque)color.a=0.25f;
-//		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
-//		geom.setLocalTranslation(v3f);
-//		getRootNode().attachChild(geom);
-//		geom.rotateUpTo(v3fUp);
-//		return geom;
-//	}
-
+	@Override
+	public boolean updatePickingEvent(CollisionResults cr, Geometry geom, Spatial sptParentest) {
+		if(geom!=null){
+			LoggingI.i().logMarker(geom.toString());
+			orde.setElectricitySource(geom);
+			return true;
+		}
+		
+		return false;
+	}
+	
 	private void opt_disableSomeSimpleAppThings() {
 		MiscJmeI.i().enqueueUnregisterKeyMappings(
 //			DebugKeysAppState.INPUT_MAPPING_MEMORY,

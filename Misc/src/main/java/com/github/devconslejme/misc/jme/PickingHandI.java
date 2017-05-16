@@ -29,8 +29,15 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 
+import com.github.devconslejme.devcons.LoggingI;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.GlobalManagerI.G;
+import com.jme3.app.Application;
 import com.jme3.collision.CollisionResults;
+import com.jme3.input.FlyByCamera;
+import com.jme3.input.MouseInput;
+import com.jme3.input.controls.ActionListener;
+import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
@@ -44,6 +51,43 @@ public class PickingHandI {
 	public static PickingHandI i(){return GlobalManagerI.i().get(PickingHandI.class);}
 	
 	private CollisionResults	crLastPick;
+	private Ray	rayLastCast;
+	ArrayList<IPickListener> aplList = new ArrayList<IPickListener>();
+	private boolean	bAllowConsume=true;
+	
+	public static interface IPickListener{
+		/**
+		 * 
+		 * @param cr
+		 * @param geom
+		 * @param sptParentest
+		 * @return true if consumed TODO prioritize listeners?
+		 */
+		boolean updatePickingEvent(CollisionResults cr, Geometry geom, Spatial sptParentest);
+	}
+	
+	public  void addListener(IPickListener l){
+		if(!aplList.contains(l))aplList.add(l);
+	}
+	
+	public void configure(FlyByCamera flycam){
+		String strPck="PickVirtualWorldThing";
+		G.i(Application.class).getInputManager().addMapping(strPck, new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
+		G.i(Application.class).getInputManager().addListener(new ActionListener() {
+				@Override
+				public void onAction(String name, boolean isPressed, float tpf) {
+					if(flycam!=null && flycam.isEnabled())return;
+					
+					if(!isPressed && name.equals(strPck)){ //on release
+						PickingHandI.i().pickWorldSpatialAtCursor();
+//						Spatial spt = PickingHandI.i().pickWorldSpatialAtCursor();
+//						if(spt!=null)LoggingI.i().logMarker(spt.toString());
+					}
+				}
+			},
+			strPck
+		);
+	}
 	
 	public Spatial pickWorldSpatialAtCursor(){
 		CollisionResults cr = pickWorldPiercingAtCursor();
@@ -63,12 +107,22 @@ public class PickingHandI {
 			EnvironmentJmeI.i().getMouse().getPos2D(), 1f);
 		v3fDirection.subtractLocal(v3fCursorAtVirtualWorld3D).normalizeLocal();
 		
-		Ray ray = new Ray(v3fCursorAtVirtualWorld3D, v3fDirection);
-		nodeVirtualWorld.collideWith(ray, crLastPick);
+		rayLastCast = new Ray(v3fCursorAtVirtualWorld3D, v3fDirection);
+		nodeVirtualWorld.collideWith(rayLastCast, crLastPick);
 
-		if(crLastPick.size()>0)return crLastPick;
+		if(crLastPick.size()==0)crLastPick=null;
 		
-		return null;
+		for(IPickListener l:aplList){
+			if(crLastPick!=null){
+				if(l.updatePickingEvent(crLastPick, getLastWorldPick(), getLastWorldPickParentest())){
+					if(bAllowConsume)break;
+				}
+			}else{
+				l.updatePickingEvent(null,null,null);
+			}
+		}
+		
+		return crLastPick;
 	}
 	
 	/**
@@ -95,5 +149,16 @@ public class PickingHandI {
 	public CollisionResults getLastWorldPiercingPick(){
 		return crLastPick;
 	}
-	
+	public Ray getRayLastCast() {
+		return rayLastCast;
+	}
+
+	public boolean isAllowConsume() {
+		return bAllowConsume;
+	}
+
+	public PickingHandI setAllowConsume(boolean bAllowConsume) {
+		this.bAllowConsume = bAllowConsume;
+		return this; //for beans setter
+	}
 }

@@ -30,8 +30,10 @@ package com.github.devconslejme.misc.jme;
 import com.github.devconslejme.misc.AssertionsI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
+import com.jme3.input.FlyByCamera;
 import com.jme3.scene.Node;
 import com.jme3.system.JmeSystem;
 import com.jme3.system.JmeSystem.StorageFolderType;
@@ -50,8 +52,10 @@ public class PkgCfgI {
 				JmeSystem.getStorageFolder(StorageFolderType.Internal), app.getClass());
 		
 		GlobalManagerI.i().put(Application.class, app);  //first!
+		FlyByCamera flycam=null;
 		if(app instanceof SimpleApplication){
 			GlobalManagerI.i().put(SimpleApplication.class, (SimpleApplication)app); //code depending on this should be optional...
+			flycam=G.i(SimpleApplication.class).getFlyByCamera();
 		}
 		
 		// after first
@@ -65,6 +69,7 @@ public class PkgCfgI {
 		AssertionsI.i().configure();
 		IndicatorI.i().configure(nodeGui);
 		EnvironmentJmeI.i().configure(nodeGui);
+		PickingHandI.i().configure(flycam);
 		
 		bConfigured=true;
 	}

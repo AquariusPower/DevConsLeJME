@@ -80,6 +80,7 @@ public class OriginDevice extends Node{
 	private ESourceMode esm = ESourceMode.Follow;
 	private float	fInitialDistToSrc;
 	private float	fMoveBaseSpeed=0.01f;
+	private boolean	bUpdateElectricalEffectForNewSourceOnce;
 	
 	public static class NodeAxis extends Node{
 		public NodeAxis(String str) {
@@ -114,26 +115,41 @@ public class OriginDevice extends Node{
 	 */
 	protected void updateSourceMode() {
 		if(sptElectricSrc==null)return;
-		if(==nodeElectricA || sptElectricSrc==nodeElectricB)return;
+		if(nodeElectricSrc!=null)return; //dont mess with self
 		
 		Vector3f v3fSrcWPos = sptElectricSrc.getWorldTranslation();
-		
-		float fPseudoDiameter = (float) Math.cbrt(getWorldBound().getVolume());  
-		float fForceBasedOnDiameterMult = 3f;
-		float fMaxTractionDist=fPseudoDiameter*fForceBasedOnDiameterMult;
-		float fMoveSpeed=fMoveBaseSpeed*(fMaxTractionDist/v3fSrcWPos.distance(getWorldTranslation()));
 		
 		Vector3f v3fDist=v3fSrcWPos.subtract(getWorldTranslation());
 		float fDist = v3fDist.length();
 		
+		float fPseudoDiameter = (float) Math.cbrt(getWorldBound().getVolume());  
+		float fTractionForceBasedOnDiameterMult = 3f;
+		float fMaxTractionDist=fPseudoDiameter*fTractionForceBasedOnDiameterMult;
 		if(fDist > fMaxTractionDist){
 			sptElectricSrc=null;
 			return; //disconnected
 		}
 		
-		if(fDist < fPseudoDiameter/2f){
-			fMoveSpeed=fMoveBaseSpeed;
+		float fMoveSpeed=fMoveBaseSpeed;
+		float fFollowDist = fMaxTractionDist/2f;
+		float fFollowBoostMult=10f;
+		if(esm==ESourceMode.Follow || esm==ESourceMode.MoveTo){
+			if(esm==ESourceMode.Follow){
+				fMoveSpeed*=fDist/fFollowDist;
+				fMoveSpeed*=fFollowBoostMult;
+			}else
+			if(esm==ESourceMode.MoveTo){
+				fMoveSpeed*=fDist/fMaxTractionDist;
+			}
+		}else{
+			fMoveSpeed*=fMaxTractionDist/fDist;
+			
+			if(fDist < fPseudoDiameter/2f){
+				fMoveSpeed=fMoveBaseSpeed*fDist;
+			}
 		}
+		
+		if(fMoveSpeed<fMoveBaseSpeed)fMoveSpeed=fMoveBaseSpeed;
 		
 		Vector3f v3fDir = v3fDist.normalize();
 		Vector3f v3fSpeed = v3fDir.mult(fMoveSpeed);
@@ -151,9 +167,13 @@ public class OriginDevice extends Node{
 				break;
 				
 			case Follow:
-				if(fInitialDistToSrc < fDist){
+//				if(fInitialDistToSrc < fDist){
+				if(fDist > fFollowDist*1.1f){
 					move(v3fSpeed);
 					lookAt(v3fSrcWPos,Vector3f.UNIT_Y);
+				}else
+				if(fDist < fFollowDist*0.9f){
+					move(v3fSpeed.negate());
 				}
 				break;
 				
@@ -189,7 +209,6 @@ public class OriginDevice extends Node{
 		ef=new EffectElectricity();
 //		ef.setColor(ColorRGBA.Cyan); //opaque
 		float f=0.5f;ef.setColor(new ColorRGBA(f,f,1f,1));
-		ef.setNodeParent(this);
 		ef.setAmplitudePerc(0.05f);
 		ef.getElectricalPath().setMinMaxPerc(0.05f, 0.1f);
 		ef.setFromTo(new Vector3f(),new Vector3f()).setPlay(true); //just to allow started
@@ -215,7 +234,10 @@ public class OriginDevice extends Node{
 		ef.setPlay(bUnstable);
 		if(!bUnstable)return;
 		
-		if(tdEffectRetarget.isReady(true)){
+		ef.setNodeParent(this.getParent());
+		
+		if(tdEffectRetarget.isReady(true) || bUpdateElectricalEffectForNewSourceOnce){
+			bUpdateElectricalEffectForNewSourceOnce=false;
 			nodeSelfElectrocute=null;
 			if(iMaxHoldMilisBkp!=null){
 				ef.getElectricalPath().setMaxHoldMilis(iMaxHoldMilisBkp);
@@ -229,7 +251,7 @@ public class OriginDevice extends Node{
 			nodeElectricA = null;
 			Vector3f v3fWorldA = null;
 			if(sptElectricSrc!=null){
-				nodeElectricA=electricNodeFor(sptElectricSrc);
+				nodeElectricA=nodeElectricSrc;
 				iA=anodeElectricShapesList.indexOf(nodeElectricA); //external spatial will be -1
 //				iA=anodeElectricShapesList.indexOf(sptElectricSrc); //external spatial will be -1
 //				if(iA>-1)nodeElectricA=(NodeAxis) sptElectricSrc;
@@ -556,6 +578,8 @@ public class OriginDevice extends Node{
 		if(sptElectricSrc!=null){
 			fInitialDistToSrc=sptElectricSrc.getWorldTranslation().subtract(getWorldTranslation()).length();
 			nodeElectricSrc = electricNodeFor(sptElectricSrc);
+//			tdEffectRetarget.reactivate();
+			bUpdateElectricalEffectForNewSourceOnce=true;
 		}
 		return this; //for beans setter
 	}
