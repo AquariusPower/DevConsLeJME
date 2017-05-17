@@ -39,14 +39,26 @@ public class GeometryI {
 	public static GeometryI i(){return GlobalManagerI.i().get(GeometryI.class);}
 
 	public Geometry create(Mesh mesh, ColorRGBA color) {
-		return create(mesh,color,color.a<1f);
+		return create(mesh,color,null,null);
 	}
 	
-	public Geometry create(Mesh mesh, ColorRGBA color, boolean bTransparent) {
-		Geometry geom = new Geometry(mesh.getClass().getSimpleName());
-		geom.setMesh(mesh);
-		if(color!=null)geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
-		if(bTransparent)geom.setQueueBucket(Bucket.Transparent);
-		return geom;
+	/**
+	 * 
+	 * @param mesh
+	 * @param color
+	 * @param bTransparent null will be auto if alpha<1f
+	 * @param geomStore
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public <T extends Geometry> T create(Mesh mesh, ColorRGBA color, Boolean bTransparent, T geomStore) {
+		if(bTransparent==null)bTransparent = color.a<1f;
+//		GeometryX geom = new GeometryX(mesh.getClass().getSimpleName());
+		if(geomStore==null)geomStore = (T)new Geometry();
+		geomStore.setName(mesh.getClass().getSimpleName());
+		geomStore.setMesh(mesh);
+		if(color!=null)geomStore.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
+		if(bTransparent)geomStore.setQueueBucket(Bucket.Transparent);
+		return geomStore;
 	}
 }

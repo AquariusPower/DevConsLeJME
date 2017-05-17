@@ -73,7 +73,7 @@ public class EffectElectricity extends EffectBaseAbs<EffectElectricity>{
 	
 	@Override
 	protected void playWork(float tpf){
-		MiscJmeI.i().updateMultiLineMesh(getGeom().getMesh(), recreatePath(tpf).toArray(new Vector3f[0]));
+		MeshI.i().updateMultiLineMesh(getGeom().getMesh(), recreatePath(tpf).toArray(new Vector3f[0]));
 		getGeom().getMaterial().getAdditionalRenderState().setLineWidth(getThickness());
 	}
 	

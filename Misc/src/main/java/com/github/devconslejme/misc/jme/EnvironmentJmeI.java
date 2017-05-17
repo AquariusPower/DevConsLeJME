@@ -27,13 +27,14 @@
 package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
 
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
-import com.github.devconslejme.misc.StringI;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
@@ -209,6 +210,11 @@ public class EnvironmentJmeI extends AbstractAppState{
 //		this.bShowFPS = bShowFPS;
 //	}
 	
+	LinkedHashMap<String,String> hmCustomInfo = new LinkedHashMap<String,String>(); 
+	public void putCustomInfo(String strKey,String strValue){
+		hmCustomInfo.put(strKey, strValue);
+	}
+	
 	protected void updateInfo(){
 		if(
 				!bShowFPS &&
@@ -233,6 +239,11 @@ public class EnvironmentJmeI extends AbstractAppState{
 			sb.append("CamRotDeg="
 				+MiscJmeI.i().fmtToDegrees(G.i(Application.class).getCamera().getRotation(),1)
 				+strSep);
+		}
+		if(hmCustomInfo.size()>0){
+			for(Entry<String, String> entry:hmCustomInfo.entrySet()){
+				sb.append(entry.getKey()+"="+entry.getValue());
+			}
 		}
 		
 		btInfo.setText(sb.toString());

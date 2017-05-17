@@ -26,6 +26,9 @@
 */
 package com.github.devconslejme.misc.jme;
 
+import java.util.HashMap;
+import java.util.Map.Entry;
+
 import com.github.devconslejme.misc.Annotations.Bean;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
@@ -34,6 +37,9 @@ import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.DebugVisualsI.ArrowGeometry.EFollowMode;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
+import com.jme3.bounding.BoundingBox;
+import com.jme3.bounding.BoundingSphere;
+import com.jme3.bounding.BoundingVolume;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -41,7 +47,8 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.debug.Arrow;
-import com.jme3.scene.shape.Cylinder;
+import com.jme3.scene.debug.WireBox;
+import com.jme3.scene.shape.Box;
 
 /**
  * These visuals are to not be integrated as child into other spatials as they would most probably 
@@ -53,11 +60,121 @@ public class DebugVisualsI {
 	public static DebugVisualsI i(){return GlobalManagerI.i().get(DebugVisualsI.class);}
 	
 	private boolean bVisualsEnabled=false;
-	
+	private boolean bShowWorldBound=false;
 	private float fUpdateDelay=1f;
+	HashMap<Spatial,GeometryBV> ahmShowWorldBound = new HashMap<Spatial,GeometryBV>();
 	
-	public void configure(){} //just to let the global be promptly instantiated
+	public void configure(){
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				update(getTPF());
+				return true;
+			}
+		}.enableLoopMode());
+	} //just to let the global be promptly instantiated
 	
+	protected void update(float tpf) {
+//		if(bShowWorldBound)
+		updateShowWorldBound(tpf);
+	}
+	
+	public static class GeometryBV extends Geometry{
+
+		private BoundingBox	bb;
+		private BoundingSphere	bs;
+		private Spatial	sptTarget;
+		private boolean	bShowWorldBound;
+
+		public GeometryBV(Spatial spt) {
+			this.sptTarget = spt;
+		}
+
+		public BoundingBox getTargetBB() {
+			return bb;
+		}
+
+		public void setTargetBB(BoundingBox bb) {
+			this.bb = bb;
+		}
+
+		public void setTargetBS(BoundingSphere bs) {
+			this.bs = bs;
+		}
+
+		public BoundingSphere getTargetBS() {
+			return bs;
+		}
+
+		public GeometryBV setShow(boolean bShowWorldBound) {
+			this.bShowWorldBound=bShowWorldBound;
+			
+			if(!bShowWorldBound){
+				removeFromParent();
+			}else{
+				if(sptTarget.getParent()!=null){
+					sptTarget.getParent().attachChild(this);
+				}
+			}
+			
+			return this;
+		}
+
+		public boolean isShow() {
+			return bShowWorldBound;
+		}
+
+	}
+	
+	private void updateShowWorldBound(float tpf) {
+		for(Entry<Spatial, GeometryBV> entry:ahmShowWorldBound.entrySet()){
+			Spatial spt = entry.getKey();
+			GeometryBV geomBV = entry.getValue();
+			if(spt.getParent()==null && geomBV.getParent()!=null){
+				geomBV.removeFromParent();
+				continue;
+			}
+			
+			if(spt.getParent()!=null && geomBV.getParent()==null && geomBV.isShow()){
+				geomBV.setShow(true);
+			}
+			
+			updateWorldBoundGeom(spt,geomBV);
+			geomBV.setLocalTranslation(spt.getLocalTranslation());
+		}
+	}
+	
+	public GeometryBV createWorldBoundGeom(Spatial spt){
+		return updateWorldBoundGeom(spt,null);
+	}
+	public GeometryBV updateWorldBoundGeom(Spatial spt,GeometryBV geomBound){
+		BoundingVolume bv = spt.getWorldBound();
+		GeometryBV geomBoundNew=null;
+		ColorRGBA color=ColorRGBA.Blue;
+		//TODO if it was already created, could just modify it?
+		if (bv instanceof BoundingBox) {
+			BoundingBox bb = (BoundingBox) bv;
+			if(geomBound==null || !bb.getExtent(null).equals(geomBound.getTargetBB().getExtent(null))){
+				geomBoundNew = GeometryI.i().create(new Box(bb.getXExtent(),bb.getYExtent(),bb.getZExtent()), 
+					color, false,	new GeometryBV(spt)	);
+				geomBoundNew.setTargetBB(bb);
+			}
+		}else
+		if (bv instanceof BoundingSphere) {
+			BoundingSphere bs = (BoundingSphere) bv;
+			if(geomBound==null || bs.getRadius()!=geomBound.getTargetBS().getRadius()){
+				geomBoundNew = GeometryI.i().create(MeshI.i().sphere(bs.getRadius()), 
+					color, false, new GeometryBV(spt));
+				geomBoundNew.setTargetBS(bs);
+			}
+		}else{
+			throw new UnsupportedOperationException("unsupported "+bv.getClass());
+		}
+		
+		if(geomBoundNew!=null)geomBoundNew.getMaterial().getAdditionalRenderState().setWireframe(true);
+		return geomBoundNew;
+	}
+
 	public ArrowGeometry createArrowFollowing(Node nodeBase, Spatial sptFrom, Spatial sptTo, ColorRGBA color){
 		ArrowGeometry ga = createArrow(color);
 //		MiscJmeI.i().addToName(ga, DebugVisualsI.class.getSimpleName(), true);
@@ -288,6 +405,26 @@ public class DebugVisualsI {
 		geom.setMesh(new Arrow(new Vector3f(0,0,1f))); //its size will be controled by z scale
 		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
 		return geom;
+	}
+	
+	public void showWorldBound(Spatial spt) {
+		ahmShowWorldBound.put(spt, createWorldBoundGeom(spt).setShow(true));
+//		if(!ahmShowWorldBound.get(spt)==null)asptShowWorldBound.add(spt);
+//		setShowWorldBound(true);
+	}
+	
+	public boolean isShowWorldBound() {
+		return bShowWorldBound;
+	}
+
+	public DebugVisualsI setShowWorldBound(boolean bShowWorldBound) {
+		this.bShowWorldBound = bShowWorldBound;
+		if(!this.bShowWorldBound){
+			for(GeometryBV spt:ahmShowWorldBound.values()){
+				spt.setShow(bShowWorldBound);
+			}
+		}
+		return this; //for beans setter
 	}
 
 }

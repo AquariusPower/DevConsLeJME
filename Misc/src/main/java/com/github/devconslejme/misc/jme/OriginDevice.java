@@ -28,8 +28,10 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.jme.MeshI.Cone;
 import com.jme3.bounding.BoundingBox;
@@ -66,7 +68,7 @@ public class OriginDevice extends Node{
 	private NodeAxis	nodeTorX;
 	private NodeAxis	nodeTorY;
 	private NodeAxis	nodeTorZ;
-	private EffectElectricity	ef;
+	private EffectElectricity	efElec;
 	private TimedDelay	tdEffectRetarget;
 	private float	fRetargetDefaultDelay=3;
 	private ArrayList<NodeAxis> anodeMainShapes=new ArrayList<NodeAxis>();
@@ -87,10 +89,10 @@ public class OriginDevice extends Node{
 //	private NodeAxis	nodeElectricSrc;
 	private boolean	bUnstable;
 	private ERotMode erm = ERotMode.Disaligned;
-	private Spatial	sptElectricSrc;
+	private Spatial	sptTarget;
 	private NodeAxis	nodeElectricSrc;
 	private boolean	bSameAxis;
-	private ESourceMode esm = ESourceMode.JustStay;
+	private ETargetMode esm = ETargetMode.JustStay;
 	private float	fInitialDistToSrc;
 	private float	fMoveBaseSpeed=0.01f;
 	private boolean	bUpdateElectricalEffectForNewSourceOnce;
@@ -98,14 +100,16 @@ public class OriginDevice extends Node{
 	private boolean	bAutoTargetNearestSpatials;
 	private boolean	bRequireTargetsToken=true;
 	private float	fTPF;
-	private NodeAxis	nodeEnerCore;
+	private NodeAxis	nodeEnergyCore;
 //	private float	fPseudoDiameter;
 	private float	fTractionForceBasedOnDiameterMult;
 	private float	fMaxTractionDist;
 	private float	fSafeMinDist=0.01f;
-	private double	fPseudoEnergCoreRadius;
-	private double	fPseudoRadius;
+	private float	fPseudoEnergyCoreRadius;
+	private float	fPseudoDeviceRadius;
 	private boolean	bTmpAttract;
+	private EffectArrow	efHook;
+	private long	lLowEnergy=10000;
 	
 	public static class NodeAxis extends Node{
 		public NodeAxis(String str) {
@@ -133,7 +137,7 @@ public class OriginDevice extends Node{
 		
 		// self stats
 		float fPseudoDiameter = (float) Math.cbrt(getWorldBound().getVolume());
-		fPseudoRadius=fPseudoDiameter/2f;
+		fPseudoDeviceRadius=fPseudoDiameter/2f;
 		fTractionForceBasedOnDiameterMult = 3f;
 		fMaxTractionDist=fPseudoDiameter*fTractionForceBasedOnDiameterMult;
 		
@@ -150,24 +154,46 @@ public class OriginDevice extends Node{
 		if(lEnergyWattsPerMilis>0){
 			fECScale=((float)Math.cbrt(lEnergyWattsPerMilis/1000L));
 		}
-		nodeEnerCore.setLocalScale(fECScale);
-		float f=0.001f;nodeEnerCore.rotate(f,f,f);
-		fPseudoEnergCoreRadius = Math.cbrt(nodeEnerCore.getWorldBound().getVolume())/2f;
+		nodeEnergyCore.setLocalScale(fECScale);
+		float fRotSpeed = bUnstable ? 0.1f*FastMath.nextRandomFloat() : 0.001f;
+		nodeEnergyCore.rotate(fRotSpeed,fRotSpeed,fRotSpeed);
+		fPseudoEnergyCoreRadius = (float) (Math.cbrt(nodeEnergyCore.getWorldBound().getVolume())/2f);
+		
+		bUnstable=(isOvercharged());
 	}
-
+	
+	public boolean isOvercharged(){
+//		return(energyCoreOverchargePerc()>0f);
+//	}
+//	public float energyCoreOverchargePerc(){
+//		if(fPseudoEnergyCoreRadius < fPseudoDeviceRadius/2f)return 0f;
+		if(fPseudoEnergyCoreRadius < fPseudoDeviceRadius/2f)return false;
+		return true;
+//		return fPseudoEnergyCoreRadius/(fPseudoDeviceRadius/2f);
+	}
+	
+	public String energyInfo(){
+		return ""
+			+"("+lEnergyWattsPerMilis+">"+lLowEnergy+")w/ms, "
+			+"r=("+StringI.i().fmtFloat(fPseudoEnergyCoreRadius)+"/"
+				+StringI.i().fmtFloat(fPseudoDeviceRadius/2f)+")";
+	}
+	
 	private void updateAutoTarget() {
 		if(bAutoTargetNearestSpatials){
-			if(sptElectricSrc==null){
+			if(sptTarget==null){
 				Spatial sptNearest=null;
 				Float fDistNearest=null;
 				for(Spatial spt:getParent().getChildren()){
 					if(spt==this)continue;
 					
-					if(fPseudoEnergCoreRadius>=fPseudoRadius/2f)continue;
+//					if(fPseudoEnergCoreRadius>=fPseudoRadius/2f)continue;
+					if(isOvercharged())continue;
+					if(!isLowEnergy())continue;
 					
 					float fDist = getLocalTranslation().distance(spt.getLocalTranslation());
 					if(fDist > fMaxTractionDist)continue;
-
+					
 					if(!isRequireTargetsToken() || !hasTargetToken(spt))continue; //TODO "heavier?" is after
 					if(
 							fDist<=fSafeMinDist && //destruction area 
@@ -182,47 +208,55 @@ public class OriginDevice extends Node{
 						fDistNearest = getLocalTranslation().distance(sptNearest.getLocalTranslation());
 					}
 				}
-				sptElectricSrc=sptNearest;
+				sptTarget=sptNearest;
 			}
+			
+			if(sptTarget!=null){
+				efHook.setFromTo(nodeEnergyCore.getLocalTranslation(), sptTarget.getLocalTranslation());
+			}
+			
+			efHook.setPlay(sptTarget!=null);
 		}
 	}
 	
+	
+	
 	public boolean isLowEnergy(){
-		return lEnergyWattsPerMilis<10000;
+		return lEnergyWattsPerMilis<lLowEnergy; //this was based on the tractor energy 
 	}
 
 	/**
 	 * TODO deplet energy sources
 	 */
 	protected void updateEnergySourceInteraction() {
-		if(sptElectricSrc==null)return;
+		if(sptTarget==null)return;
 		if(nodeElectricSrc!=null)return; //dont mess with self
 		
-		Vector3f v3fSrcWPos = sptElectricSrc.getWorldTranslation();
+		Vector3f v3fSrcWPos = sptTarget.getWorldTranslation();
 		
 		Vector3f v3fDist=v3fSrcWPos.subtract(getWorldTranslation());
 		float fDist = v3fDist.length();
 		
 		if(fDist > fMaxTractionDist){
-			sptElectricSrc=null;
+			sptTarget=null;
 			return; //disconnected
 		}
 		
 		float fMoveSpeed=fMoveBaseSpeed;
 		float fFollowDist = fMaxTractionDist/2f;
 		float fFollowBoostMult=10f;
-		if(esm==ESourceMode.Follow || esm==ESourceMode.MoveOver){
-			if(esm==ESourceMode.Follow){
+		if(esm==ETargetMode.Follow || esm==ETargetMode.MoveOver){
+			if(esm==ETargetMode.Follow){
 				fMoveSpeed*=fDist/fFollowDist;
 				fMoveSpeed*=fFollowBoostMult;
 			}else
-			if(esm==ESourceMode.MoveOver){
+			if(esm==ETargetMode.MoveOver){
 				fMoveSpeed*=fDist/fMaxTractionDist;
 			}
 		}else{
 			fMoveSpeed*=fMaxTractionDist/fDist;
 			
-			if(fDist < fPseudoRadius){
+			if(fDist < fPseudoDeviceRadius){
 				fMoveSpeed=fMoveBaseSpeed*fDist;
 			}
 		}
@@ -231,8 +265,8 @@ public class OriginDevice extends Node{
 		
 		Vector3f v3fDir = v3fDist.normalize();
 		Vector3f v3fSpeed = v3fDir.mult(fMoveSpeed);
-		ESourceMode esmChosen=esm;
-		if(esm==ESourceMode.MoveOver && bTmpAttract)esmChosen=ESourceMode.Attract;
+		ETargetMode esmChosen=esm;
+		if(esm==ETargetMode.MoveOver && bTmpAttract)esmChosen=ETargetMode.Attract;
 		switch(esmChosen){
 			case JustStay:
 				//TODO do nothing? could deplet the energy source at least
@@ -241,16 +275,16 @@ public class OriginDevice extends Node{
 			case Attract:
 				if(fDist>fSafeMinDist){
 					if(consumeEnergyPF(EEnergyConsumpWpM.Tractor, fMoveSpeed)>0){
-						sptElectricSrc.move(v3fSpeed.negate());
+						sptTarget.move(v3fSpeed.negate());
 					}
 				}else{
-					absorbEnergy(sptElectricSrc);
+					absorbEnergy(sptTarget);
 					bTmpAttract=false;
 				}
 				break;
 			case Repel:
 				if(consumeEnergyPF(EEnergyConsumpWpM.Tractor, fMoveSpeed)>0){
-					sptElectricSrc.move(v3fSpeed);
+					sptTarget.move(v3fSpeed);
 				}
 				break;
 				
@@ -283,7 +317,7 @@ public class OriginDevice extends Node{
 						bTmpAttract=true;
 					}
 				}else{
-					absorbEnergy(sptElectricSrc);
+					absorbEnergy(sptTarget);
 				}
 				break;
 		}
@@ -301,7 +335,7 @@ public class OriginDevice extends Node{
 		long l = consumeEnergy(calcEnergyToDisintegrate(spt));
 		if(l>0){
 			spt.removeFromParent();
-			if(spt==sptElectricSrc)sptElectricSrc=null;
+			if(spt==sptTarget)sptTarget=null;
 		}
 		return l;
 	}
@@ -368,62 +402,87 @@ public class OriginDevice extends Node{
 			.createArrow(ColorRGBA.Blue).setFromTo(Vector3f.ZERO, Vector3f.UNIT_Z));
 		
 		// energy core
-		nodeEnerCore=createAxisShape(new Sphere(10,10,0.5f), //diameter 1f to be scaled
-			ColorRGBA.Cyan, new Vector3f(), 0.05f, Vector3f.UNIT_Y, true, null);
-		MiscJmeI.i().addToName(nodeEnerCore, "EnergyCore", false, true);
-		attachChild(nodeEnerCore);
-		anodeElectricShapesList.add(nodeEnerCore);
+		nodeEnergyCore=createEnergyCore();
+		attachChild(nodeEnergyCore);
+		anodeElectricShapesList.add(nodeEnergyCore);
 //		anodeMainShapes.add(nodeEnerCore);
 		
 		// toruses
 		nodeTorX=createAxis(Vector3f.UNIT_X, MeshI.i().box(0.5f));
 		nodeTorY=createAxis(Vector3f.UNIT_Y, new Sphere(10,10,0.5f));
+		rotate(nodeTorY, 90, false);
 //		torZ=createAxisThing(Vector3f.UNIT_Z, new Cylinder(5,10,0.5f,0.001f,1f,true,false));
 		nodeTorZ=createAxis(Vector3f.UNIT_Z, new Cone());
 		
 		// electricity
 		tdEffectRetarget = new TimedDelay(fRetargetDefaultDelay,"").setActive(true);
-		ef=new EffectElectricity();
-//		ef.setColor(ColorRGBA.Cyan); //opaque
-		float f=0.5f;ef.setColor(new ColorRGBA(f,f,1f,1));
-		ef.setAmplitudePerc(0.05f);
-		ef.getElectricalPath().setMinMaxPerc(0.05f, 0.1f);
-		ef.setFromTo(new Vector3f(),new Vector3f()).setPlay(true); //just to allow started
-		EffectManagerStateI.i().add(ef);
+		efHook=new EffectArrow();
+		efHook.setColor(ColorRGBA.Gray);
+		EffectManagerStateI.i().add(efHook);
+		efElec=new EffectElectricity();
+		float f=0.5f;efElec.setColor(new ColorRGBA(f,f,1f,1));
+		efElec.setAmplitudePerc(0.025f);
+		efElec.getElectricalPath().setMinMaxPerc(0.05f, 0.1f);
+		efElec.setFromTo(new Vector3f(),new Vector3f()).setPlay(true); //just to allow started
+		EffectManagerStateI.i().add(efElec);
 		
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				if(OriginDevice.this.getParent()==null)return false;
+				efElec.setNodeParent(OriginDevice.this.getParent());
+				efHook.setNodeParent(OriginDevice.this.getParent());
+				return true;
+			}
+		});
 	}
 	
+	private NodeAxis createEnergyCore() {
+		NodeAxis node=createAxisShape(new Sphere(10,10,0.5f), //diameter 1f to be scaled
+			ColorRGBA.Cyan, new Vector3f(), 0.05f, Vector3f.UNIT_Y, true, null);
+		MiscJmeI.i().addToName(nodeEnergyCore, "EnergyCore", false, true);
+		return node;
+	}
+
 	protected void updateAxisMainShapes() {
 		for(NodeAxis node:anodeMainShapes){
 			Vector3f v3f = getRotSpeedCopy();
+			float fEnergySpentMultExtra=1f;
 			if(node==nodeElectricA || node==nodeElectricB){
 				if(nodeElectricA==nodeElectricB){
 					v3f = getRotSpeedCopy(ERotMode.Chaotic);
+					fEnergySpentMultExtra=chaoticEnergySpentMult();
 				}
 				
 				v3f.multLocal(10f);
 			}
 			
-			if(consumeEnergyPF(EEnergyConsumpWpM.RotateMin, v3f.length())>0){
+			if(consumeEnergyPF(EEnergyConsumpWpM.RotateMin, v3f.length()*fEnergySpentMultExtra)>0){
 				node.rotate(v3f.x,v3f.y,v3f.z);
 			}
 		}
 		
 	}
 
+	private float chaoticEnergySpentMult() {
+		return FastMath.nextRandomFloat()*100f;
+	}
+
 	protected void updateElectricalEffects() {
-		ef.setPlay(bUnstable);
+		efElec.setPlay(bUnstable);
 		consumeEnergyPF(EEnergyConsumpWpM.StandBy, bUnstable ? FastMath.nextRandomFloat()*13f : 1f); //13 is arbitrary luck :)
-		if(!bUnstable){return;}
+//		if(!bUnstable){return;}
 		
-		ef.setNodeParent(this.getParent());
+//		efElec.setNodeParent(this.getParent());
+//		efHook.setNodeParent(this.getParent());
+//		efHook.setFromTo(v3fWorldA,nodeElectricB.getWorldTranslation());
 		
 		if(tdEffectRetarget.isReady(true) || bUpdateElectricalEffectForNewSourceOnce){
 			bUpdateElectricalEffectForNewSourceOnce=false;
 			nodeSelfElectrocute=null;
 			if(iMaxHoldMilisBkp!=null){
-				ef.getElectricalPath().setMaxHoldMilis(iMaxHoldMilisBkp);
-				ef.setOverrideThickness(null);
+				efElec.getElectricalPath().setMaxHoldMilis(iMaxHoldMilisBkp);
+				efElec.setOverrideThickness(null);
 				iMaxHoldMilisBkp=null;
 			}
 			
@@ -432,12 +491,12 @@ public class OriginDevice extends Node{
 			int iA=-1;
 			nodeElectricA = null;
 			Vector3f v3fWorldA = null;
-			if(sptElectricSrc!=null){
+			if(sptTarget!=null){
 				nodeElectricA=nodeElectricSrc;
 				iA=anodeElectricShapesList.indexOf(nodeElectricA); //external spatial will be -1
 //				iA=anodeElectricShapesList.indexOf(sptElectricSrc); //external spatial will be -1
 //				if(iA>-1)nodeElectricA=(NodeAxis) sptElectricSrc;
-				v3fWorldA = sptElectricSrc.getWorldTranslation();
+				v3fWorldA = sptTarget.getWorldTranslation();
 			}else{
 				iA=FastMath.nextRandomInt(0, anodeElectricShapesList.size()-1);
 				nodeElectricA = anodeElectricShapesList.get(iA);
@@ -449,30 +508,28 @@ public class OriginDevice extends Node{
 			int iB=FastMath.nextRandomInt(0, anodeElectricShapesList.size()-1);
 			nodeElectricB = anodeElectricShapesList.get(iB);
 			if(iA!=iB){
-				ef.setFromTo(
-					v3fWorldA,
-					nodeElectricB.getWorldTranslation()
-				);
+				efElec.setFromTo(v3fWorldA,nodeElectricB.getWorldTranslation());
+//				efHook.setFromTo(v3fWorldA,nodeElectricB.getWorldTranslation());
 			}else{
 				//TODO create new effect to self electr
 				nodeSelfElectrocute=nodeElectricA;
 			}
 		}
 		
-		if(sptElectricSrc!=null)absorbEnergy(sptElectricSrc,true);
+		if(sptTarget!=null)absorbEnergy(sptTarget,true);
 		
 		if(nodeSelfElectrocute!=null){
 			if(iMaxHoldMilisBkp==null){
-				iMaxHoldMilisBkp = ef.getElectricalPath().getMaxHoldMilis();
-				ef.getElectricalPath().setMaxHoldMilis(100); //frenetic
-				ef.setOverrideThickness(2);
+				iMaxHoldMilisBkp = efElec.getElectricalPath().getMaxHoldMilis();
+				efElec.getElectricalPath().setMaxHoldMilis(100); //frenetic
+				efElec.setOverrideThickness(2);
 			}
 			
 			BoundingVolume bv = nodeSelfElectrocute.getWorldBound();
 			float fScale=1f;
 			if (bv instanceof BoundingBox)fScale = ((BoundingBox)bv).getExtent(null).length();
 			if (bv instanceof BoundingSphere)fScale = ((BoundingSphere)bv).getRadius();
-			ef.setFromTo(
+			efElec.setFromTo(
 				MiscJmeI.i().getRandomSpot(bv.getCenter(), fScale),
 				MiscJmeI.i().getRandomSpot(bv.getCenter(), fScale)
 			);
@@ -517,6 +574,7 @@ public class OriginDevice extends Node{
 		
 		float fBoost=10f;
 		float fMult=1f;
+		float fEnergySpentMultExtra=1f;
 		if(bUnstable){
 			if(nodeSelfElectrocute!=null && nodeTor.ea==nodeSelfElectrocute.ea){
 				if(anodeMainShapes.contains(nodeSelfElectrocute)){
@@ -559,6 +617,7 @@ public class OriginDevice extends Node{
 							 * non matching axis? chaotic mode
 							 */
 							v3fSpeed=getRotSpeedCopy(ERotMode.Chaotic);
+							fEnergySpentMultExtra=chaoticEnergySpentMult();
 						}
 					}
 				}
@@ -579,7 +638,7 @@ public class OriginDevice extends Node{
 		}
 		
 		fSpeed*=fMult;
-		if(consumeEnergyPF(EEnergyConsumpWpM.RotateMin,FastMath.abs(fSpeed))>0){
+		if(consumeEnergyPF(EEnergyConsumpWpM.RotateMin,FastMath.abs(fSpeed*fEnergySpentMultExtra))>0){
 			nodeTor.rotate(0,fSpeed,0);
 		}
 //		lEnergyWattsPerMilis-=fSpeed*calcEnergyPF(EEnergyConsumpWpM.RotateMin);
@@ -633,14 +692,14 @@ public class OriginDevice extends Node{
 	}
 	
 //	protected void rotate(NodeAxis node, Vector3f v3fUp, boolean bZOnly){
-	protected void rotate(NodeAxis node, boolean bZOnly){
-		float fRot=FastMath.DEG_TO_RAD*90;
+	protected void rotate(NodeAxis node, float fAngleDegrees, boolean bZOnly){
+		float fRotRad=FastMath.DEG_TO_RAD*fAngleDegrees;
 //		if(!bZOnly && v3fUp.x==1)node.rotate(0, fRot, 0);
 //		if(!bZOnly && v3fUp.y==1)node.rotate(0, fRot, 0);
 //		if(v3fUp.z==1)node.rotate(-fRot, fRot, 0);
-		if(!bZOnly && node.ea==EAxis.X)node.rotate(0, fRot, 0);
-		if(!bZOnly && node.ea==EAxis.Y)node.rotate(0, fRot, 0);
-		if(node.ea==EAxis.Z)node.rotate(-fRot, fRot, 0);
+		if(!bZOnly && node.ea==EAxis.X)node.rotate(0, fRotRad, 0);
+		if(!bZOnly && node.ea==EAxis.Y)node.rotate(0, fRotRad, 0);
+		if(node.ea==EAxis.Z)node.rotate(-fRotRad, fRotRad, 0);
 	}
 	
 	protected NodeAxis createAxis(Vector3f v3fUp, Mesh mesh) {
@@ -665,7 +724,7 @@ public class OriginDevice extends Node{
 		//TODO this may break if the track contents is changed...
 		NodeAxis nodeCore=createAxisShape(new Torus(iCS,iRS,fIR*0.35f,fDisplacementTorus), 
 			color, new Vector3f(0,0,0), fRotTorOpac+0.5f, v3fUp);
-		rotate(nodeCore,true);
+		rotate(nodeCore,90,true);
 		nodeRotating.attachChild(nodeCore);
 		
 		createTorusIntersections(nodeRotating,color,fDisplacementTorus,v3fUp);
@@ -677,14 +736,16 @@ public class OriginDevice extends Node{
 		float fIRa=fIR*1.5f;
 		float fAlpha=fRotTorOpac+0.25f;
 		
+		// arrow tip
 		NodeAxis nodePosit = createAxisShape(new Cone(fIRa*2f),
-				color, new Vector3f( fDisplacementTorus,0,0), fAlpha, v3fUp, false, new Vector3f(1,1,2));
+				color, new Vector3f(fDisplacementTorus,0,0), fAlpha, v3fUp, false, new Vector3f(1,1,2));
 		MiscJmeI.i().addToName(nodePosit, "Intersection", false, true);
 		nodePosit.lookAt(v3fUp, v3fUp);
-		rotate(nodePosit,false);
+		rotate(nodePosit,-90,false);
 		nodeTor.attachChild(nodePosit);
 		anodeElectricShapesList.add(nodePosit);
 		
+		// other end
 		NodeAxis nodeNegat=createAxisShape(new Sphere(10,10,fIRa),
 			color, new Vector3f(-fDisplacementTorus,0,0), fAlpha, v3fUp);
 		MiscJmeI.i().addToName(nodeNegat, "Intersection", false, true);
@@ -701,7 +762,7 @@ public class OriginDevice extends Node{
 		NodeAxis node = new NodeAxis("Node");
 		
 //		Geometry geom = new Geometry(mesh.getClass().getSimpleName(),mesh);
-		Geometry geom = GeometryI.i().create(mesh, ColorI.i().colorChangeCopy(color,0,fAlpha), true);
+		Geometry geom = GeometryI.i().create(mesh, ColorI.i().colorChangeCopy(color,0,fAlpha), true,null);
 		
 		// name
 		MiscJmeI.i().addToName(geom, OriginDevice.class.getSimpleName(), true);
@@ -798,10 +859,10 @@ public class OriginDevice extends Node{
 	}
 
 	public Spatial getNodeElectricSrc() {
-		return sptElectricSrc;
+		return sptTarget;
 	}
 	
-	public static enum ESourceMode{
+	public static enum ETargetMode{
 		Attract,
 		Repel,
 		MoveOver,
@@ -812,7 +873,7 @@ public class OriginDevice extends Node{
 	}
 	
 	public OriginDevice setElectricitySource(Spatial sptElectricSrc) {
-		this.sptElectricSrc = sptElectricSrc;
+		this.sptTarget = sptElectricSrc;
 		if(sptElectricSrc!=null){
 			fInitialDistToSrc=sptElectricSrc.getWorldTranslation().subtract(getWorldTranslation()).length();
 			nodeElectricSrc = electricNodeFor(sptElectricSrc);
@@ -822,11 +883,11 @@ public class OriginDevice extends Node{
 		return this; //for beans setter
 	}
 
-	public ESourceMode getSourceMode() {
+	public ETargetMode getSourceMode() {
 		return esm;
 	}
 
-	public OriginDevice setSourceMode(ESourceMode esmSourceMode) {
+	public OriginDevice setSourceMode(ETargetMode esmSourceMode) {
 		this.esm = esmSourceMode;
 		return this; //for beans setter
 	}
@@ -871,11 +932,31 @@ public class OriginDevice extends Node{
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
-				float f=spt.getWorldBound().getVolume();
-				if(f==0)return false; //not ready
+				if(spt.getWorldBound().getVolume()==0)return false; //not ready
 				
-				long l = (long)(f*1000000);
-				assert(l>0);
+				ArrayList<Geometry> ageom = new ArrayList<Geometry>();
+				if (spt instanceof Node) {
+					Node node = (Node) spt;
+					ageom.addAll(
+						SpatialHierarchyI.i().getAllChildrenOfTypeRecursiveFrom(node, Geometry.class, null));
+				}else
+				if(spt instanceof Geometry){
+					ageom.add((Geometry)spt);
+				}
+				
+				float fVolume=0f;
+				for(Geometry geom:ageom){
+				 fVolume += MeshI.i().calcVolume(geom);
+				}
+				
+				/**
+				 * each 0.01^3 = 1 watt/miliseconds
+				 */
+				long l = (long)(fVolume*1000000);
+				if(l==0){
+					throw new DetailedException("target has no energy",spt);
+				}
+				
 				UserDataI.i().put(spt, new TargetToken(OriginDevice.this, l));
 				
 				return true;
@@ -912,6 +993,15 @@ public class OriginDevice extends Node{
 
 	public OriginDevice setEnergyWattsPerMilis(long lEnergyWattsPerMilis) {
 		this.lEnergyWattsPerMilis = lEnergyWattsPerMilis;
+		return this; //for beans setter
+	}
+
+	public long getLowEnergy() {
+		return lLowEnergy;
+	}
+
+	public OriginDevice setLowEnergy(long lLowEnergy) {
+		this.lLowEnergy = lLowEnergy;
 		return this; //for beans setter
 	}
 }

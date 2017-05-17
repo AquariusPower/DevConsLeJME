@@ -44,9 +44,12 @@ import com.github.devconslejme.gendiag.QueueManagerDialogI;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.CheckProblemsI;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.TimedDelay;
+import com.github.devconslejme.misc.jme.DebugVisualsI;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI.IEnvironmentListener;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
@@ -54,7 +57,7 @@ import com.github.devconslejme.misc.jme.GeometryI;
 import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.OriginDevice;
-import com.github.devconslejme.misc.jme.OriginDevice.ESourceMode;
+import com.github.devconslejme.misc.jme.OriginDevice.ETargetMode;
 import com.github.devconslejme.misc.jme.PickingHandI;
 import com.github.devconslejme.misc.jme.PickingHandI.IPickListener;
 import com.github.devconslejme.misc.lemur.SystemAlertLemurI;
@@ -132,6 +135,8 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 
 	private OriginDevice	orde;
 
+	private float	fSpeedBkp;
+
 //	private Geometry	torX;
 //	private Geometry	torY;
 //	private Geometry	torZ;
@@ -195,60 +200,103 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	}
 
 	private void opt_initSomeWorldObjects() {
-		orde = new OriginDevice();
-		orde.setUnstable(true)
-			.setDestroySpatials(true)
-			.setSourceMode(ESourceMode.Attract)
-			.setAutoTargetNearestSpatials(true);
-//		JavaScriptI.i().setJSBinding(OriginDevice.ERotMode.class);
-		JavaScriptI.i().setJSBindingForEnumsOf(OriginDevice.class);
-		getRootNode().attachChild(orde);
-//		JavaScriptI.i().setJSBinding(OriginDevice.ERotMode.class);
-		
+		// good position related to these objects
 		getCamera().setLocation(new Vector3f(9.787677f, 6.957723f, 11.003839f)); //taken from devcons
 		getCamera().setRotation(new Quaternion(-0.068618454f, 0.91919893f, -0.18511744f, -0.34072912f)); //taken from devcons
 		
+		// Orde
+		orde = new OriginDevice();
+		orde.setUnstable(true)
+			.setDestroySpatials(true)
+			.setSourceMode(ETargetMode.Attract)
+			.setAutoTargetNearestSpatials(true);
+		JavaScriptI.i().setJSBindingForEnumsOf(OriginDevice.class);
+		getRootNode().attachChild(orde);
+		
+		// Orde's food
 		Node nodeRef=new Node();
+		String strOrdeFood="OrdeFood";
 		for(int i=0;i<10;i++){
-			nodeRef.rotate(i*30*FastMath.DEG_TO_RAD,0,0);
+			nodeRef.rotate(i*30*FastMath.DEG_TO_RAD, 0, 0);
 			
-			Geometry geom = GeometryI.i().create(MeshI.i().box(0.1f*i),ColorRGBA.randomColor(),false);
-			geom.getMaterial().getAdditionalRenderState().setWireframe(true);
-			MiscJmeI.i().addToName(geom, "Tst"+i, false);
+			float fExtent=0.1f*i;
+			Geometry geom = GeometryI.i().create(MeshI.i().box(fExtent), ColorRGBA.randomColor(), false,null);
+//			geom.getMaterial().getAdditionalRenderState().setWireframe(true);
+			MiscJmeI.i().addToName(geom, strOrdeFood+i, false);
+			MiscJmeI.i().addToName(geom, "Extent="+StringI.i().fmtFloat(fExtent), false);
 			
-			geom.setLocalTranslation(new Vector3f(i,(i*i)/3f,i));
+			geom.setLocalTranslation(new Vector3f(i, (i*i)/3f, i));
+			
+			float fRot=i*15*FastMath.DEG_TO_RAD;
+			geom.rotate(fRot,fRot,fRot);
 			
 			nodeRef.attachChild(geom);
-			Vector3f v3fRotAtWorld = geom.getWorldTranslation(); //rotated position
+			Vector3f v3fWorld = geom.getWorldTranslation(); //rotated position
 			getRootNode().attachChild(geom);
-			geom.setLocalTranslation(v3fRotAtWorld);
+			geom.setLocalTranslation(v3fWorld);
+			
+			DebugVisualsI.i().showWorldBound(geom);
 			
 			orde.applyTargetTokenLater(geom);
 		}
-		
-		// picker
-//		String strPck="PickVirtualWorldThing";
-//    getInputManager().addMapping(strPck, new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
-//    getInputManager().addListener(new ActionListener() {
-//				@Override
-//				public void onAction(String name, boolean isPressed, float tpf) {
-//					if(getFlyByCamera().isEnabled())return;
-//					
-//					if(!isPressed && name.equals(strPck)){ //on release
-//						Spatial spt = PickingHandI.i().pickWorldSpatialAtCursor();
-//						if(spt!=null)LoggingI.i().logMarker(spt.toString());
+//		QueueI.i().enqueue(new CallableXAnon() {
+//			@Override
+//			public Boolean call() {
+//				for(Spatial spt:getRootNode().getChildren()){
+//					if(spt.getName().contains(strOrdeFood)){
+//						DebugVisualsI.i().showWorldBound(spt);
 //					}
 //				}
-//			},
-//			strPck
-//		);
+//				return true;
+//			}
+//		});
+		
+		// Orde's pet
+		Geometry geom = GeometryI.i().create(MeshI.i().cone(1f),ColorRGBA.Yellow,false,null);
+		geom.setLocalTranslation(10,3,0);
+		getRootNode().attachChild(geom);
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				rotAround(geom);
+				return true;
+			}
+		}.enableLoopMode().setDelaySeconds(0.1f));
+		
+		// picking 
     PickingHandI.i().addListener(this);
 	}
 	
+	public TestDevCons setSpeed(float f){
+		if(f<0){
+			MessagesI.i().warnMsg(this, "positive only", f, speed);
+		}else{
+			super.speed=f;
+		}
+		return this;
+	}
+	
+	public void togglePause(){
+		if(speed==0){
+			assert(fSpeedBkp>0);
+			setSpeed(fSpeedBkp);
+		}else{
+			fSpeedBkp=speed;
+			setSpeed(0);
+		}
+	}
+	
+	protected void rotAround(Geometry geom) {
+		MiscJmeI.i().rotateAround(geom, orde, 1*FastMath.DEG_TO_RAD);
+//		geom.setLocalTranslation(10,3,0);
+	}
+
 	@Override
 	public boolean updatePickingEvent(CollisionResults cr, Geometry geom, Spatial sptParentest) {
 		if(geom!=null){
-			LoggingI.i().logMarker(geom.toString());
+			LoggingI.i().logMarker(""+geom);
+			LoggingI.i().logEntry(""+geom.getWorldBound());
+			LoggingI.i().logEntry("Volume="+geom.getWorldBound().getVolume());
 			orde.setElectricitySource(geom);
 			return true;
 		}
@@ -373,6 +421,8 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 			}
 			
 			orde.update(fTPF);
+//			EnvironmentJmeI.i().putCustomInfo("OrdeEnergy", ""+orde.getEnergyWattsPerMilis());
+			EnvironmentJmeI.i().putCustomInfo("OrdeEnergy", ""+orde.energyInfo());
 //			updateOriginObjects();
 		}
 		
