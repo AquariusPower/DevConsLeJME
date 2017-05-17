@@ -58,8 +58,8 @@ import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.OriginDevice;
 import com.github.devconslejme.misc.jme.OriginDevice.ETargetMode;
-import com.github.devconslejme.misc.jme.PickingHandI;
-import com.github.devconslejme.misc.jme.PickingHandI.IPickListener;
+import com.github.devconslejme.misc.jme.WorldPickingI;
+import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
 import com.github.devconslejme.misc.lemur.SystemAlertLemurI;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
@@ -74,6 +74,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.debug.WireSphere;
 import com.jme3.system.AppSettings;
 import com.jme3.system.JmeSystem;
 import com.jme3.system.JmeSystem.StorageFolderType;
@@ -221,7 +222,6 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 			
 			float fExtent=0.1f*i;
 			Geometry geom = GeometryI.i().create(MeshI.i().box(fExtent), ColorRGBA.randomColor(), false,null);
-//			geom.getMaterial().getAdditionalRenderState().setWireframe(true);
 			MiscJmeI.i().addToName(geom, strOrdeFood+i, false);
 			MiscJmeI.i().addToName(geom, "Extent="+StringI.i().fmtFloat(fExtent), false);
 			
@@ -232,8 +232,14 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 			
 			nodeRef.attachChild(geom);
 			Vector3f v3fWorld = geom.getWorldTranslation(); //rotated position
-			getRootNode().attachChild(geom);
 			geom.setLocalTranslation(v3fWorld);
+			getRootNode().attachChild(geom);
+			
+			// wont move, just for debug 
+			Geometry geomVolume = GeometryI.i().create(MeshI.i().sphereFromVolumeOf(geom), ColorRGBA.Red,false,null);
+			geomVolume.getMaterial().getAdditionalRenderState().setWireframe(true);
+			geomVolume.setLocalTranslation(v3fWorld);
+			getRootNode().attachChild(geomVolume);
 			
 			DebugVisualsI.i().showWorldBound(geom);
 			
@@ -264,7 +270,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		}.enableLoopMode().setDelaySeconds(0.1f));
 		
 		// picking 
-    PickingHandI.i().addListener(this);
+    WorldPickingI.i().addListener(this);
 	}
 	
 	public TestDevCons setSpeed(float f){
@@ -297,7 +303,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 			LoggingI.i().logMarker(""+geom);
 			LoggingI.i().logEntry(""+geom.getWorldBound());
 			LoggingI.i().logEntry("Volume="+geom.getWorldBound().getVolume());
-			orde.setElectricitySource(geom);
+			orde.setElectricitySource(geom,true);
 			return true;
 		}
 		

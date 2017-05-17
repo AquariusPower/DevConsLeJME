@@ -28,13 +28,17 @@ package com.github.devconslejme.misc.jme;
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
+import java.util.ArrayList;
 
+import com.github.devconslejme.misc.CalcI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Mesh.Mode;
+import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Cylinder;
@@ -46,6 +50,13 @@ import com.jme3.util.BufferUtils;
  */
 public class MeshI {
 	public static MeshI i(){return GlobalManagerI.i().get(MeshI.class);}
+	
+//	/**
+//	 *     <- here ->
+//	 * v = ((4/3)*pi) * r^3
+//	 */
+//	float fSphereVolBaseMul = (4f/3f)*FastMath.PI; //see BoundingSphere.getVolume()
+//float fSphereVolBaseMul = (4 * FastMath.ONE_THIRD) * FastMath.PI; //see BoundingSphere.getVolume()
 	
 	/**
 	 * tip at Z=0
@@ -74,43 +85,56 @@ public class MeshI {
 	}
 	
 	/**
-	 * 
-	 * @param geom
-	 * @return in cubic world units 
+	 * TODO ignore intersections? but if they de-intersect (move away each other)... too much trouble?
+	 * @return in cubic world units
 	 */
-	public Double calcVolume(Geometry geom){
-		Vector3f v3f = volumeOf(geom);
-		if(v3f==null)return null;
-		return 
-			((double)v3f.x)
-			*
-			((double)v3f.y)
-			*
-			((double)v3f.z);
+	public Double volumeOf(Spatial spt){
+		ArrayList<Geometry> ageom = new ArrayList<Geometry>();
+		if (spt instanceof Node) {
+			Node node = (Node) spt;
+			ageom.addAll(
+				SpatialHierarchyI.i().getAllChildrenOfTypeRecursiveFrom(node, Geometry.class, null));
+		}else
+		if(spt instanceof Geometry){
+			ageom.add((Geometry)spt);
+		}
+		
+		double dVolume=0;
+		for(Geometry geom:ageom){
+			dVolume += volumeOf(geom);
+		}
+		
+		return dVolume;
 	}
-	public Vector3f volumeOf(Geometry geom){
+	
+	/**
+	 * @return in cubic world units
+	 */
+	public Double volumeOf(Geometry geom){
 		Mesh mesh=geom.getMesh();
 		Vector3f v3fWScale = geom.getWorldScale();
 		
 		if (mesh instanceof Box) {
 			Box box = (Box) mesh;
-			return new Vector3f(
-				box.getXExtent()*2f * v3fWScale.x,
-				box.getYExtent()*2f * v3fWScale.y,
+			return (double) (
+				box.getXExtent()*2f * v3fWScale.x *
+				box.getYExtent()*2f * v3fWScale.y *
 				box.getZExtent()*2f * v3fWScale.z
 			);
 		}
 		
 		if (mesh instanceof Sphere) {
 			Sphere s = (Sphere) mesh;
-			double d = 4 * FastMath.ONE_THIRD * FastMath.PI * //see BoundingSphere.getVolume()
-				((double)(s.radius * v3fWScale.x))
-				*
-				((double)(s.radius * v3fWScale.y))
-				*
-				((double)(s.radius * v3fWScale.z));
-			float f=(float) Math.cbrt(d);
-			return new Vector3f(f,f,f); //so.. it returns like a cube, funny...
+			return CalcI.i().sphereVolume(
+				s.radius * v3fWScale.x,
+				s.radius * v3fWScale.y,
+				s.radius * v3fWScale.z
+			);
+//			return (double) ( fSphereVolBaseMul *
+//				s.radius * v3fWScale.x *
+//				s.radius * v3fWScale.y *
+//				s.radius * v3fWScale.z
+//			);
 		}
 		
 		throw new UnsupportedOperationException("mesh type not supported yet "+mesh.getClass());
@@ -120,9 +144,22 @@ public class MeshI {
 		return new Box(fExtent,fExtent,fExtent);
 	}
 	
+	public Mesh sphereFromVolumeOf(Spatial spt) {
+		return sphereFromVolume(volumeOf(spt));
+	}
+//	/**
+//	 * v = (4/3)*pi * r^3
+//	 * r^3 = v / ((4/3)*pi)
+//	 * r = (v / ((4/3)*pi)) ^ (1/3)
+//	 */
+//	public float radiusFromVolume(double dVolume) {
+//		return (float) Math.cbrt( dVolume / ((4f/3f)*Math.PI) );
+//	}
+	public Mesh sphereFromVolume(double dVolume) {
+		return sphere((float) CalcI.i().radiusFromVolume(dVolume));
+	}
 	public Mesh sphere(float fRadius) {
 		return new Sphere(5, 6, fRadius);
-
 	}
 	public Mesh cone(float fScale) {
 		return new Cone(fScale);

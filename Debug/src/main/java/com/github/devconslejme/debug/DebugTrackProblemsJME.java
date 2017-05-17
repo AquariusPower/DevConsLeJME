@@ -68,7 +68,8 @@ public class DebugTrackProblemsJME implements ICheckProblems{
 	private ArrayList<Spatial> checkForSpatialsImproperlyModified(Throwable thr, boolean bDumpMessage){
 		ArrayList<Spatial> asptList = new ArrayList<Spatial>();
 		
-		if(thr.getMessage().contains("Make sure you do not modify the scene from another thread!")){
+		String strMsg="Make sure you do not modify the scene from another thread!";
+		if(thr.getMessage()!=null && thr.getMessage().contains(strMsg)){
 			for(Node node:anodeList){
 				asptList.addAll(checkForSpatialsImproperlyModified(node));
 			}

@@ -69,7 +69,10 @@ public class PkgCfgI {
 		AssertionsI.i().configure();
 		IndicatorI.i().configure(nodeGui);
 		EnvironmentJmeI.i().configure(nodeGui);
-		PickingHandI.i().configure(flycam);
+		WorldPickingI.i().configure(flycam);
+		
+		// non standard cfgs
+		WorldPickingI.i().addSkipType(DebugVisualsI.GeometryBV.class);
 		
 		bConfigured=true;
 	}

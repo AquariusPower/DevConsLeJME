@@ -28,7 +28,9 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 
+import com.github.devconslejme.misc.CalcI;
 import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.StringI;
@@ -76,7 +78,7 @@ public class OriginDevice extends Node{
 //	private Node	nodeBase = new Node(OriginDevice.class.getSimpleName());
 	private Integer	iMaxHoldMilisBkp = null;
 //	private Integer	iThicknessBkp = null;
-	private float fDisplacement;
+	private float fRadius;
 	private int	iCS;
 	private int	iRS;
 	private Vector3f	v3fBaseSpeed=new Vector3f(1,1,1).mult(0.0025f);
@@ -105,11 +107,19 @@ public class OriginDevice extends Node{
 	private float	fTractionForceBasedOnDiameterMult;
 	private float	fMaxTractionDist;
 	private float	fSafeMinDist=0.01f;
-	private float	fPseudoEnergyCoreRadius;
-	private float	fPseudoDeviceRadius;
+	private float	fEnergyCoreRadius;
+//	private float	fPseudoEnergyCoreRadius;
+//	private float	fPseudoDeviceRadius;
 	private boolean	bTmpAttract;
 	private EffectArrow	efHook;
 	private long	lLowEnergy=10000;
+//	private Geometry	geomEnergyCore;
+	private boolean	bForceAbsorptionOnce;
+	
+//	/**
+//	 * each 0.01^3 wold volume = 1 watt/miliseconds
+//	 */
+//	private long lVolumeToWattPerMilis = 1000000;
 	
 	public static class NodeAxis extends Node{
 		public NodeAxis(String str) {
@@ -122,7 +132,7 @@ public class OriginDevice extends Node{
 	public OriginDevice(){
 		setName(OriginDevice.class.getSimpleName());
 		
-		fDisplacement=5;
+		fRadius=5;
 		iCS=50;
 		iRS=15;
 //		fBaseSpeed=0.0025f;
@@ -136,10 +146,10 @@ public class OriginDevice extends Node{
 		this.fTPF=fTPF;
 		
 		// self stats
-		float fPseudoDiameter = (float) Math.cbrt(getWorldBound().getVolume());
-		fPseudoDeviceRadius=fPseudoDiameter/2f;
+//		float fPseudoDiameter = (float) Math.cbrt(getWorldBound().getVolume());
+//		fPseudoDeviceRadius=fDiameter/2f;
 		fTractionForceBasedOnDiameterMult = 3f;
-		fMaxTractionDist=fPseudoDiameter*fTractionForceBasedOnDiameterMult;
+		fMaxTractionDist=(fRadius*2f)*fTractionForceBasedOnDiameterMult;
 		
 		updateEnergyCore();
 		updateAutoTarget();
@@ -149,15 +159,32 @@ public class OriginDevice extends Node{
 		updateEnergySourceInteraction();
 	}
 	
+//	private void updateEnergyCore() {
+//		float fECScale=0.01f;
+//		if(lEnergyWattsPerMilis>0){
+//			fECScale=((float)Math.cbrt(lEnergyWattsPerMilis/1000L));
+//		}
+//		nodeEnergyCore.setLocalScale(fECScale);
+//		float fRotSpeed = bUnstable ? 0.1f*FastMath.nextRandomFloat() : 0.001f;
+//		nodeEnergyCore.rotate(fRotSpeed,fRotSpeed,fRotSpeed);
+//		fPseudoEnergyCoreRadius = (float) (Math.cbrt(nodeEnergyCore.getWorldBound().getVolume())/2f);
+//		
+//		bUnstable=(isOvercharged());
+//	}
 	private void updateEnergyCore() {
 		float fECScale=0.01f;
 		if(lEnergyWattsPerMilis>0){
-			fECScale=((float)Math.cbrt(lEnergyWattsPerMilis/1000L));
+//			fECScale=((float)Math.cbrt(lEnergyWattsPerMilis/1000L));
+			double dV=elecj.energyToVolume(lEnergyWattsPerMilis);
+			fEnergyCoreRadius = (float) CalcI.i().radiusFromVolume(dV);
+			fECScale = fEnergyCoreRadius*2f;
 		}
 		nodeEnergyCore.setLocalScale(fECScale);
+		
 		float fRotSpeed = bUnstable ? 0.1f*FastMath.nextRandomFloat() : 0.001f;
 		nodeEnergyCore.rotate(fRotSpeed,fRotSpeed,fRotSpeed);
-		fPseudoEnergyCoreRadius = (float) (Math.cbrt(nodeEnergyCore.getWorldBound().getVolume())/2f);
+		
+//		fPseudoEnergyCoreRadius = (float) (Math.cbrt(nodeEnergyCore.getWorldBound().getVolume())/2f);
 		
 		bUnstable=(isOvercharged());
 	}
@@ -167,16 +194,18 @@ public class OriginDevice extends Node{
 //	}
 //	public float energyCoreOverchargePerc(){
 //		if(fPseudoEnergyCoreRadius < fPseudoDeviceRadius/2f)return 0f;
-		if(fPseudoEnergyCoreRadius < fPseudoDeviceRadius/2f)return false;
+		if(fEnergyCoreRadius < (fRadius/2f))return false;
 		return true;
 //		return fPseudoEnergyCoreRadius/(fPseudoDeviceRadius/2f);
 	}
 	
 	public String energyInfo(){
-		return ""
-			+"("+lEnergyWattsPerMilis+">"+lLowEnergy+")w/ms, "
-			+"r=("+StringI.i().fmtFloat(fPseudoEnergyCoreRadius)+"/"
-				+StringI.i().fmtFloat(fPseudoDeviceRadius/2f)+")";
+		StringBuilder sb = new StringBuilder();
+		sb.append("("+lEnergyWattsPerMilis+">"+lLowEnergy+")w/ms, ");
+		sb.append("r=("+StringI.i().fmtFloat(fEnergyCoreRadius)+"/");
+		sb.append(StringI.i().fmtFloat(fRadius/2f)+")");
+		if(sptTarget!=null)sb.append("tgt="+sptTarget.getName()+getTargetToken(sptTarget).lEnergyWattsPerMilis);
+		return sb.toString();
 	}
 	
 	private void updateAutoTarget() {
@@ -256,7 +285,7 @@ public class OriginDevice extends Node{
 		}else{
 			fMoveSpeed*=fMaxTractionDist/fDist;
 			
-			if(fDist < fPseudoDeviceRadius){
+			if(fDist < fRadius){
 				fMoveSpeed=fMoveBaseSpeed*fDist;
 			}
 		}
@@ -350,6 +379,8 @@ public class OriginDevice extends Node{
 			if(!bRemotely){ //it all
 				lAbso=tt.lEnergyWattsPerMilis;
 				
+				bForceAbsorptionOnce=false;
+				
 				if(canDestroy(spt)){
 					disintegrate(spt);
 				}
@@ -403,6 +434,7 @@ public class OriginDevice extends Node{
 		
 		// energy core
 		nodeEnergyCore=createEnergyCore();
+//		geomEnergyCore=SpatialHierarchyI.i().getChildRecursiveExactMatch(nodeEnergyCore, Geometry.class);
 		attachChild(nodeEnergyCore);
 		anodeElectricShapesList.add(nodeEnergyCore);
 //		anodeMainShapes.add(nodeEnerCore);
@@ -440,7 +472,7 @@ public class OriginDevice extends Node{
 	private NodeAxis createEnergyCore() {
 		NodeAxis node=createAxisShape(new Sphere(10,10,0.5f), //diameter 1f to be scaled
 			ColorRGBA.Cyan, new Vector3f(), 0.05f, Vector3f.UNIT_Y, true, null);
-		MiscJmeI.i().addToName(nodeEnergyCore, "EnergyCore", false, true);
+		MiscJmeI.i().addToName(node, "EnergyCore", false, true);
 		return node;
 	}
 
@@ -706,11 +738,11 @@ public class OriginDevice extends Node{
 		ColorRGBA color = new ColorRGBA(v3fUp.x,v3fUp.y,v3fUp.z,1f);
 		
 		// small shape
-		NodeAxis nodeThing = createAxisShape(mesh, color, v3fUp.mult(fDisplacement), 0.5f, v3fUp, true, null);
+		NodeAxis nodeThing = createAxisShape(mesh, color, v3fUp.mult(fRadius), 0.5f, v3fUp, true, null);
 		anodeElectricShapesList.add(nodeThing);
 		anodeMainShapes.add(nodeThing);
 		
-		float fDisplacementTorus = fDisplacement+1;
+		float fDisplacementTorus = fRadius+1;
 		
 		// static rotation track
 		NodeAxis nodeTrack=createAxisShape(new Torus(iCS,iRS,0.01f,fDisplacementTorus), 
@@ -758,10 +790,7 @@ public class OriginDevice extends Node{
 	}
 	protected NodeAxis createAxisShape(Mesh mesh, ColorRGBA color, Vector3f v3f, float fAlpha, Vector3f v3fUp, boolean bAddWireFrame, Vector3f v3fScale) {
 		if(v3fScale==null)v3fScale=new Vector3f(1,1,1);
-		
 		NodeAxis node = new NodeAxis("Node");
-		
-//		Geometry geom = new Geometry(mesh.getClass().getSimpleName(),mesh);
 		Geometry geom = GeometryI.i().create(mesh, ColorI.i().colorChangeCopy(color,0,fAlpha), true,null);
 		
 		// name
@@ -771,12 +800,6 @@ public class OriginDevice extends Node{
 		if(v3fUp.z==1){MiscJmeI.i().addToName(geom, "Z", false);node.ea=EAxis.Z;}
 		
 		MiscJmeI.i().addToName(node, geom.getName(), false);
-		
-//		// color/transparency
-//		color=color.clone();
-//		color.a=fOpacity;
-//		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
-//		if(fOpacity!=1f)geom.setQueueBucket(Bucket.Transparent);
 		
 		geom.setLocalScale(v3fScale);
 		
@@ -873,12 +896,21 @@ public class OriginDevice extends Node{
 	}
 	
 	public OriginDevice setElectricitySource(Spatial sptElectricSrc) {
+		return setElectricitySource(sptElectricSrc,false);
+	}
+	public OriginDevice setElectricitySource(Spatial sptElectricSrc, boolean bForceAbsorption) {
+		if(sptElectricSrc!=null && getTargetToken(sptElectricSrc)==null){
+			MessagesI.i().warnMsg(this, "skipping", sptElectricSrc, bForceAbsorption);
+			return this; //skip
+		}
+		
 		this.sptTarget = sptElectricSrc;
 		if(sptElectricSrc!=null){
 			fInitialDistToSrc=sptElectricSrc.getWorldTranslation().subtract(getWorldTranslation()).length();
 			nodeElectricSrc = electricNodeFor(sptElectricSrc);
 //			tdEffectRetarget.reactivate();
 			bUpdateElectricalEffectForNewSourceOnce=true;
+			this.bForceAbsorptionOnce=bForceAbsorption;
 		}
 		return this; //for beans setter
 	}
@@ -928,41 +960,30 @@ public class OriginDevice extends Node{
 		return false;
 	}
 	
-	public void applyTargetTokenLater(Spatial spt){
+	/**
+	 * 
+	 * @param spt
+	 * @return target's energy
+	 */
+	public long applyTargetTokenLater(Spatial spt){
+		long lEnergy = elecj.volumeToEnergy(spt);
+		if(lEnergy==0)return 0;
+//			throw new DetailedException("target has no energy",spt);
+		
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
 				if(spt.getWorldBound().getVolume()==0)return false; //not ready
-				
-				ArrayList<Geometry> ageom = new ArrayList<Geometry>();
-				if (spt instanceof Node) {
-					Node node = (Node) spt;
-					ageom.addAll(
-						SpatialHierarchyI.i().getAllChildrenOfTypeRecursiveFrom(node, Geometry.class, null));
-				}else
-				if(spt instanceof Geometry){
-					ageom.add((Geometry)spt);
-				}
-				
-				float fVolume=0f;
-				for(Geometry geom:ageom){
-				 fVolume += MeshI.i().calcVolume(geom);
-				}
-				
-				/**
-				 * each 0.01^3 = 1 watt/miliseconds
-				 */
-				long l = (long)(fVolume*1000000);
-				if(l==0){
-					throw new DetailedException("target has no energy",spt);
-				}
-				
-				UserDataI.i().put(spt, new TargetToken(OriginDevice.this, l));
+				UserDataI.i().put(spt, new TargetToken(OriginDevice.this, lEnergy));
 				
 				return true;
 			}
 		});
+		
+		return lEnergy;
 	}
+	
+	ElectricJme elecj = new ElectricJme();
 	
 	public OriginDevice setDestroySpatials(boolean bDestroySpatials) {
 		this.bDestroySpatials = bDestroySpatials;
@@ -1004,4 +1025,13 @@ public class OriginDevice extends Node{
 		this.lLowEnergy = lLowEnergy;
 		return this; //for beans setter
 	}
+	
+//	/**
+//	 * changes on the original (mesh/material) will afect all copies TODO confirm
+//	 * @return
+//	 */
+//	public Geometry getEnergyCoreGeomCopy() {
+//		return geomEnergyCore.clone();
+//	}
+
 }

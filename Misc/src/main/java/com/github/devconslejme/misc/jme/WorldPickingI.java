@@ -29,10 +29,11 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 
-import com.github.devconslejme.devcons.LoggingI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
+import com.google.common.collect.Lists;
 import com.jme3.app.Application;
+import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
 import com.jme3.input.FlyByCamera;
 import com.jme3.input.MouseInput;
@@ -47,8 +48,8 @@ import com.jme3.scene.Spatial;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PickingHandI {
-	public static PickingHandI i(){return GlobalManagerI.i().get(PickingHandI.class);}
+public class WorldPickingI {
+	public static WorldPickingI i(){return GlobalManagerI.i().get(WorldPickingI.class);}
 	
 	private CollisionResults	crLastPick;
 	private Ray	rayLastCast;
@@ -79,7 +80,7 @@ public class PickingHandI {
 					if(flycam!=null && flycam.isEnabled())return;
 					
 					if(!isPressed && name.equals(strPck)){ //on release
-						PickingHandI.i().pickWorldSpatialAtCursor();
+						WorldPickingI.i().pickWorldSpatialAtCursor();
 //						Spatial spt = PickingHandI.i().pickWorldSpatialAtCursor();
 //						if(spt!=null)LoggingI.i().logMarker(spt.toString());
 					}
@@ -89,10 +90,29 @@ public class PickingHandI {
 		);
 	}
 	
+	ArrayList<Class<? extends Spatial>> aclspt = new ArrayList<Class<? extends Spatial>>();
+	public void addSkipType(Class<? extends Spatial> cl){
+		if(!aclspt.contains(cl))aclspt.add(cl);
+	}
+	
+	public boolean isSkipType(Class<? extends Spatial> clChk){
+		for(Class<? extends Spatial> cl:aclspt){
+			if(cl.isAssignableFrom(clChk)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public Spatial pickWorldSpatialAtCursor(){
-		CollisionResults cr = pickWorldPiercingAtCursor();
-		if(cr==null)return null;
-		return cr.getClosestCollision().getGeometry();
+		CollisionResults crs = pickWorldPiercingAtCursor();
+		if(crs==null)return null;
+		if(aclspt.size()==0)return crs.getClosestCollision().getGeometry();
+		for(CollisionResult cr:Lists.newArrayList(crs.iterator())){
+			if(isSkipType(cr.getGeometry().getClass()))continue;
+			return cr.getGeometry(); //1st
+		}
+		return null;
 	}
 	public CollisionResults pickWorldPiercingAtCursor(){
 		return pickWorldPiercingAtCursor(MiscJmeI.i().getNodeVirtualWorld());
@@ -157,7 +177,7 @@ public class PickingHandI {
 		return bAllowConsume;
 	}
 
-	public PickingHandI setAllowConsume(boolean bAllowConsume) {
+	public WorldPickingI setAllowConsume(boolean bAllowConsume) {
 		this.bAllowConsume = bAllowConsume;
 		return this; //for beans setter
 	}
