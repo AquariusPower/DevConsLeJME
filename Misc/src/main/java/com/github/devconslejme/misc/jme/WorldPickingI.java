@@ -51,7 +51,7 @@ import com.jme3.scene.Spatial;
 public class WorldPickingI {
 	public static WorldPickingI i(){return GlobalManagerI.i().get(WorldPickingI.class);}
 	
-	private CollisionResults	crLastPick;
+	private ArrayList<CollisionResult>	acrLastPickList;
 	private Ray	rayLastCast;
 	ArrayList<IPickListener> aplList = new ArrayList<IPickListener>();
 	private boolean	bAllowConsume=true;
@@ -64,7 +64,7 @@ public class WorldPickingI {
 		 * @param sptParentest
 		 * @return true if consumed TODO prioritize listeners?
 		 */
-		boolean updatePickingEvent(CollisionResults cr, Geometry geom, Spatial sptParentest);
+		boolean updatePickingEvent(ArrayList<CollisionResult> acrList, Geometry geom, Spatial sptParentest);
 	}
 	
 	public  void addListener(IPickListener l){
@@ -80,7 +80,8 @@ public class WorldPickingI {
 					if(flycam!=null && flycam.isEnabled())return;
 					
 					if(!isPressed && name.equals(strPck)){ //on release
-						WorldPickingI.i().pickWorldSpatialAtCursor();
+						WorldPickingI.i().pickWorldPiercingAtCursor(); //will call the listeners
+//						WorldPickingI.i().pickWorldSpatialAtCursor();
 //						Spatial spt = PickingHandI.i().pickWorldSpatialAtCursor();
 //						if(spt!=null)LoggingI.i().logMarker(spt.toString());
 					}
@@ -91,10 +92,19 @@ public class WorldPickingI {
 	}
 	
 	ArrayList<Class<? extends Spatial>> aclspt = new ArrayList<Class<? extends Spatial>>();
+	/**
+	 * TODO use skipper class at UserData? and this would be per Spatial!
+	 * @param cl
+	 */
 	public void addSkipType(Class<? extends Spatial> cl){
 		if(!aclspt.contains(cl))aclspt.add(cl);
 	}
 	
+	/**
+	 * TODO use skipper class at UserData?
+	 * @param clChk
+	 * @return
+	 */
 	public boolean isSkipType(Class<? extends Spatial> clChk){
 		for(Class<? extends Spatial> cl:aclspt){
 			if(cl.isAssignableFrom(clChk)){
@@ -104,21 +114,16 @@ public class WorldPickingI {
 		return false;
 	}
 	
-	public Spatial pickWorldSpatialAtCursor(){
-		CollisionResults crs = pickWorldPiercingAtCursor();
+	public CollisionResult pickCollisionResultAtCursor(){
+		ArrayList<CollisionResult> crs = pickWorldPiercingAtCursor();
 		if(crs==null)return null;
-		if(aclspt.size()==0)return crs.getClosestCollision().getGeometry();
-		for(CollisionResult cr:Lists.newArrayList(crs.iterator())){
-			if(isSkipType(cr.getGeometry().getClass()))continue;
-			return cr.getGeometry(); //1st
-		}
-		return null;
+		return crs.get(0);
 	}
-	public CollisionResults pickWorldPiercingAtCursor(){
+	public ArrayList<CollisionResult> pickWorldPiercingAtCursor(){
 		return pickWorldPiercingAtCursor(MiscJmeI.i().getNodeVirtualWorld());
 	}
-	public CollisionResults pickWorldPiercingAtCursor(Node nodeVirtualWorld){
-		crLastPick = new CollisionResults();
+	public ArrayList<CollisionResult> pickWorldPiercingAtCursor(Node nodeVirtualWorld){
+		CollisionResults crs = new CollisionResults();
 		
 		Vector3f v3fCursorAtVirtualWorld3D = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(
 			EnvironmentJmeI.i().getMouse().getPos2D(), 0f);
@@ -128,13 +133,25 @@ public class WorldPickingI {
 		v3fDirection.subtractLocal(v3fCursorAtVirtualWorld3D).normalizeLocal();
 		
 		rayLastCast = new Ray(v3fCursorAtVirtualWorld3D, v3fDirection);
-		nodeVirtualWorld.collideWith(rayLastCast, crLastPick);
-
-		if(crLastPick.size()==0)crLastPick=null;
+		nodeVirtualWorld.collideWith(rayLastCast, crs);
+		
+		ArrayList<CollisionResult> acrList=null;
+		if(crs.size()==0){
+			acrLastPickList=null;
+		}else{
+			acrList = Lists.newArrayList(crs.iterator());
+			if(aclspt.size()>0){
+				for(CollisionResult cr:acrList.toArray(new CollisionResult[0])){
+					if(isSkipType(cr.getGeometry().getClass())){
+						acrList.remove(cr);
+					}
+				}
+			}
+		}
 		
 		for(IPickListener l:aplList){
-			if(crLastPick!=null){
-				if(l.updatePickingEvent(crLastPick, getLastWorldPick(), getLastWorldPickParentest())){
+			if(crs!=null){
+				if(l.updatePickingEvent(acrList, getLastWorldPickGeometry(), getLastWorldPickParentest())){
 					if(bAllowConsume)break;
 				}
 			}else{
@@ -142,7 +159,7 @@ public class WorldPickingI {
 			}
 		}
 		
-		return crLastPick;
+		return acrList;
 	}
 	
 	/**
@@ -150,24 +167,24 @@ public class WorldPickingI {
 	 * @return can be a Geometry or a Node
 	 */
 	public Spatial getLastWorldPickParentest(){
-		Geometry geom = getLastWorldPick();
+		Geometry geom = getLastWorldPickGeometry();
 		if(geom==null)return null;
 		
-		if(getLastWorldPick().getParent()==MiscJmeI.i().getNodeVirtualWorld()){
-			return getLastWorldPick();
+		if(getLastWorldPickGeometry().getParent()==MiscJmeI.i().getNodeVirtualWorld()){
+			return getLastWorldPickGeometry();
 		}
 		
-		return SpatialHierarchyI.i().getParentest(getLastWorldPick(), Node.class, true, false);
+		return SpatialHierarchyI.i().getParentest(getLastWorldPickGeometry(), Node.class, true, false);
 //		ArrayList<Node> anode = SpatialHierarchyI.i().getAllParents(getLastWorldPick(),false);
 //		return anode.get(anode.size()-1);
 	}
-	public Geometry getLastWorldPick(){
-		if(crLastPick==null)return null;
-		if(crLastPick.getClosestCollision()==null)return null;
-		return crLastPick.getClosestCollision().getGeometry();
+	public Geometry getLastWorldPickGeometry(){
+		if(acrLastPickList==null)return null;
+//		if(crLastPick.getClosestCollision()==null)return null;
+		return acrLastPickList.get(0).getGeometry();
 	}
-	public CollisionResults getLastWorldPiercingPick(){
-		return crLastPick;
+	public ArrayList<CollisionResult> getLastWorldPiercingPick(){
+		return acrLastPickList;
 	}
 	public Ray getRayLastCast() {
 		return rayLastCast;

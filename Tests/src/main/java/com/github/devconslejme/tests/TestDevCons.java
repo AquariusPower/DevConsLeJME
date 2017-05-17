@@ -66,6 +66,7 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppState;
 import com.jme3.audio.AudioListenerState;
+import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -88,6 +89,9 @@ import com.simsilica.lemur.Command;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class TestDevCons extends SimpleApplication implements IEnvironmentListener, IPickListener{
+	public class GeometryVolDbg extends Geometry{
+	}
+
 	public static void main(String[] args) {
 		if(bEnableOpt)opt_initSingleAppInstanceAtMain();
 		
@@ -236,7 +240,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 			getRootNode().attachChild(geom);
 			
 			// wont move, just for debug 
-			Geometry geomVolume = GeometryI.i().create(MeshI.i().sphereFromVolumeOf(geom), ColorRGBA.Red,false,null);
+			GeometryVolDbg geomVolume = GeometryI.i().create(MeshI.i().sphereFromVolumeOf(geom), ColorRGBA.Red,false,new GeometryVolDbg());
 			geomVolume.getMaterial().getAdditionalRenderState().setWireframe(true);
 			geomVolume.setLocalTranslation(v3fWorld);
 			getRootNode().attachChild(geomVolume);
@@ -271,6 +275,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		
 		// picking 
     WorldPickingI.i().addListener(this);
+    WorldPickingI.i().addSkipType(GeometryVolDbg.class);
 	}
 	
 	public TestDevCons setSpeed(float f){
@@ -298,7 +303,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	}
 
 	@Override
-	public boolean updatePickingEvent(CollisionResults cr, Geometry geom, Spatial sptParentest) {
+	public boolean updatePickingEvent(ArrayList<CollisionResult> acrList, Geometry geom, Spatial sptParentest) {
 		if(geom!=null){
 			LoggingI.i().logMarker(""+geom);
 			LoggingI.i().logEntry(""+geom.getWorldBound());

@@ -62,7 +62,7 @@ public class DebugVisualsI {
 	private boolean bVisualsEnabled=false;
 	private boolean bShowWorldBound=false;
 	private float fUpdateDelay=1f;
-	HashMap<Spatial,GeometryBV> ahmShowWorldBound = new HashMap<Spatial,GeometryBV>();
+	HashMap<Spatial,GeometryBVolDbg> ahmShowWorldBound = new HashMap<Spatial,GeometryBVolDbg>();
 	
 	public void configure(){
 		QueueI.i().enqueue(new CallableXAnon() {
@@ -79,14 +79,14 @@ public class DebugVisualsI {
 		updateShowWorldBound(tpf);
 	}
 	
-	public static class GeometryBV extends Geometry{
+	public static class GeometryBVolDbg extends Geometry{
 
 		private BoundingBox	bb;
 		private BoundingSphere	bs;
 		private Spatial	sptTarget;
 		private boolean	bShowWorldBound;
 
-		public GeometryBV(Spatial spt) {
+		public GeometryBVolDbg(Spatial spt) {
 			this.sptTarget = spt;
 		}
 
@@ -106,7 +106,7 @@ public class DebugVisualsI {
 			return bs;
 		}
 
-		public GeometryBV setShow(boolean bShowWorldBound) {
+		public GeometryBVolDbg setShow(boolean bShowWorldBound) {
 			this.bShowWorldBound=bShowWorldBound;
 			
 			if(!bShowWorldBound){
@@ -127,9 +127,9 @@ public class DebugVisualsI {
 	}
 	
 	private void updateShowWorldBound(float tpf) {
-		for(Entry<Spatial, GeometryBV> entry:ahmShowWorldBound.entrySet()){
+		for(Entry<Spatial, GeometryBVolDbg> entry:ahmShowWorldBound.entrySet()){
 			Spatial spt = entry.getKey();
-			GeometryBV geomBV = entry.getValue();
+			GeometryBVolDbg geomBV = entry.getValue();
 			if(spt.getParent()==null && geomBV.getParent()!=null){
 				geomBV.removeFromParent();
 				continue;
@@ -144,19 +144,19 @@ public class DebugVisualsI {
 		}
 	}
 	
-	public GeometryBV createWorldBoundGeom(Spatial spt){
+	public GeometryBVolDbg createWorldBoundGeom(Spatial spt){
 		return updateWorldBoundGeom(spt,null);
 	}
-	public GeometryBV updateWorldBoundGeom(Spatial spt,GeometryBV geomBound){
+	public GeometryBVolDbg updateWorldBoundGeom(Spatial spt,GeometryBVolDbg geomBound){
 		BoundingVolume bv = spt.getWorldBound();
-		GeometryBV geomBoundNew=null;
+		GeometryBVolDbg geomBoundNew=null;
 		ColorRGBA color=ColorRGBA.Blue;
 		//TODO if it was already created, could just modify it?
 		if (bv instanceof BoundingBox) {
 			BoundingBox bb = (BoundingBox) bv;
 			if(geomBound==null || !bb.getExtent(null).equals(geomBound.getTargetBB().getExtent(null))){
 				geomBoundNew = GeometryI.i().create(new Box(bb.getXExtent(),bb.getYExtent(),bb.getZExtent()), 
-					color, false,	new GeometryBV(spt)	);
+					color, false,	new GeometryBVolDbg(spt)	);
 				geomBoundNew.setTargetBB(bb);
 			}
 		}else
@@ -164,7 +164,7 @@ public class DebugVisualsI {
 			BoundingSphere bs = (BoundingSphere) bv;
 			if(geomBound==null || bs.getRadius()!=geomBound.getTargetBS().getRadius()){
 				geomBoundNew = GeometryI.i().create(MeshI.i().sphere(bs.getRadius()), 
-					color, false, new GeometryBV(spt));
+					color, false, new GeometryBVolDbg(spt));
 				geomBoundNew.setTargetBS(bs);
 			}
 		}else{
@@ -420,7 +420,7 @@ public class DebugVisualsI {
 	public DebugVisualsI setShowWorldBound(boolean bShowWorldBound) {
 		this.bShowWorldBound = bShowWorldBound;
 		if(!this.bShowWorldBound){
-			for(GeometryBV spt:ahmShowWorldBound.values()){
+			for(GeometryBVolDbg spt:ahmShowWorldBound.values()){
 				spt.setShow(bShowWorldBound);
 			}
 		}

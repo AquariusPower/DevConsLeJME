@@ -72,7 +72,7 @@ public class PkgCfgI {
 		WorldPickingI.i().configure(flycam);
 		
 		// non standard cfgs
-		WorldPickingI.i().addSkipType(DebugVisualsI.GeometryBV.class);
+		WorldPickingI.i().addSkipType(DebugVisualsI.GeometryBVolDbg.class);
 		
 		bConfigured=true;
 	}
