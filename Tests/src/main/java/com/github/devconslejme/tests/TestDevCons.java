@@ -49,6 +49,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.TimedDelay;
+import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.DebugVisualsI;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI.IEnvironmentListener;
@@ -240,12 +241,14 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 			getRootNode().attachChild(geom);
 			
 			// wont move, just for debug 
-			GeometryVolDbg geomVolume = GeometryI.i().create(MeshI.i().sphereFromVolumeOf(geom), ColorRGBA.Red,false,new GeometryVolDbg());
-			geomVolume.getMaterial().getAdditionalRenderState().setWireframe(true);
-			geomVolume.setLocalTranslation(v3fWorld);
-			getRootNode().attachChild(geomVolume);
-	    WorldPickingI.i().addSkip(geomVolume);
-			
+			if(false){
+				GeometryVolDbg geomVolume = GeometryI.i().create(MeshI.i().sphereFromVolumeOf(geom), ColorRGBA.Red,false,new GeometryVolDbg());
+				geomVolume.getMaterial().getAdditionalRenderState().setWireframe(true);
+				geomVolume.setLocalTranslation(v3fWorld);
+				getRootNode().attachChild(geomVolume);
+		    WorldPickingI.i().addSkip(geomVolume);
+			}
+		    
 			DebugVisualsI.i().showWorldBound(geom);
 			
 			orde.applyTargetTokenLater(geom);
@@ -263,8 +266,11 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 //		});
 		
 		// Orde's pet
-		Geometry geom = GeometryI.i().create(MeshI.i().cone(1f),ColorRGBA.Yellow,false,null);
-		geom.setLocalTranslation(10,3,0);
+		Geometry geom = GeometryI.i().create(MeshI.i().cone(1f),
+			ColorI.i().colorChangeCopy(ColorRGBA.Yellow, 0f, 0.25f),false,null);
+		geom.setLocalScale(0.15f, 0.15f, 1);
+		geom.setLocalTranslation(10,0,0);
+//		DebugVisualsI.i().showWorldBound(geom);
 		getRootNode().attachChild(geom);
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
@@ -272,7 +278,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 				rotAround(geom);
 				return true;
 			}
-		}.enableLoopMode().setDelaySeconds(0.1f));
+		}).enableLoopMode();//.setDelaySeconds(0.1f);//.setInitialDelay(10));
 		
 		// picking 
     WorldPickingI.i().addListener(this);
@@ -297,8 +303,17 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		}
 	}
 	
+	TimedDelay td = new TimedDelay(1f, "").setActive(true);
 	protected void rotAround(Geometry geom) {
-		MiscJmeI.i().rotateAround(geom, orde, 1*FastMath.DEG_TO_RAD);
+//		MiscJmeI.i().rotateAround(geom, orde, -1*FastMath.DEG_TO_RAD);
+//		Vector3f v3fLookAt = geom.getLocalRotation().getRotationColumn(2);
+		
+		Vector3f v3fUp = null; //geom.getLocalRotation().getRotationColumn(1);
+//		Vector3f v3fUp = new Vector3f(0,0,1);
+		if(td.isReady(true))v3fUp = MiscJmeI.i().randomDirection();
+//		v3fUp.addLocal(Vector3f.UNIT_XYZ.clone().mult(FastMath.nextRandomFloat())).normalizeLocal();
+//		geom.lookAt(geom.getLocalTranslation().add(v3fLookAt), v3fUp);
+		MiscJmeI.i().rotateAround(geom, orde, -1f*FastMath.DEG_TO_RAD,	v3fUp, false);
 //		geom.setLocalTranslation(10,3,0);
 	}
 

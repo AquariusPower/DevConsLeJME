@@ -66,11 +66,20 @@ public class MiscJmeI {
 	private Node	nodeVirtualWorld;
 	private SimpleApplication	sappOptional;
 	
+	/** rotateAround() */
+	private Node nodeCenter = new Node();
+	/** rotateAround() */
+	private Node nodePos = new Node();
+	/** rotateAround() */
+	private Quaternion quaAdd=new Quaternion();
+	
 	/**
 	 * 
 	 * @param nodeVirtualWorld if null, will try to auto-set from simple application
 	 */
 	public void configure(Node nodeVirtualWorld){
+		nodeCenter.attachChild(nodePos);
+		
 		this.app=GlobalManagerI.i().get(Application.class);
 		if (this.app instanceof SimpleApplication)sappOptional = (SimpleApplication) this.app;
 		
@@ -329,33 +338,52 @@ public class MiscJmeI {
 	public void rotateAround(Spatial spt, Spatial sptCenter, float fAddAngleRadians){
 		rotateAround(spt,sptCenter,fAddAngleRadians, sptCenter.getLocalRotation().getRotationColumn(1), false);
 	}
+	
 	/**
 	 * 
 	 * @param spt
 	 * @param sptCenter
 	 * @param fAddAngleRadians (remember u can use f*FastMath.DEG_TO_RAD too)
-	 * @param v3fAxis
+	 * @param v3fUp if will will be Y
 	 * @param bKeepOriginalLocalRotation
 	 */
-	@ToDo //not working yet..
-	public void rotateAround(Spatial spt, Spatial sptCenter, float fAddAngleRadians, Vector3f v3fAxis, boolean bKeepOriginalLocalRotation){
+	public void rotateAround(Spatial spt, Spatial sptCenter, float fAddAngleRadians, Vector3f v3fUp, boolean bKeepOriginalLocalRotation){
+		if(v3fUp==null)v3fUp=spt.getLocalRotation().getRotationColumn(1);
 		Vector3f v3fPos = spt.getLocalTranslation();
 		Vector3f v3fCenter = sptCenter.getLocalTranslation();
 		Vector3f v3fSub = v3fPos.subtract(v3fCenter);
 		Vector3f v3fDir = v3fSub.normalize();
 		float fDist = v3fSub.length();
 		
-		Quaternion qua = new Quaternion();
-		qua.lookAt(v3fDir, v3fAxis);
-		Quaternion quaAdd=new Quaternion().fromAngleAxis(fAddAngleRadians, v3fAxis);
-		qua.addLocal(quaAdd);
-		if(!bKeepOriginalLocalRotation){
-			spt.getLocalRotation().addLocal(quaAdd);
-		}
-		Vector3f v3fLookAt = qua.getRotationColumn(2,null); //TODO normalized?
-		Vector3f v3fStretched = v3fLookAt.scaleAdd(fDist, new Vector3f());
+		nodeCenter.setLocalTranslation(v3fCenter);
+		nodePos.setLocalTranslation(v3fPos);
 		
-		spt.setLocalTranslation(v3fCenter.add(v3fStretched));
+		quaAdd.fromAngleAxis(fAddAngleRadians, v3fUp);
+		nodeCenter.setLocalRotation(Quaternion.IDENTITY);
+		nodeCenter.rotate(quaAdd);
+//		if(!bKeepOriginalLocalRotation){
+//			spt.rotate(quaAdd);  //use lookat?
+//		}
+		
+		spt.setLocalTranslation(nodePos.getWorldTranslation());
+		
+		if(!bKeepOriginalLocalRotation){
+//			spt.lookAt(v3fPos, v3fUp);
+			spt.rotate(quaAdd);  //TODO use lookat?
+		}
+		
+		if(false){ //???
+			Quaternion qua = new Quaternion();
+			qua.lookAt(v3fDir, v3fUp);
+			qua.addLocal(quaAdd);
+			if(!bKeepOriginalLocalRotation){
+				spt.getLocalRotation().addLocal(quaAdd);
+			}
+			Vector3f v3fLookAt = qua.getRotationColumn(2,null).normalize();
+			Vector3f v3fStretched = v3fLookAt.clone().scaleAdd(fDist, new Vector3f());
+			
+			spt.setLocalTranslation(v3fCenter.add(v3fStretched));
+		}
 	}
 	
 	public float getTPF(){
