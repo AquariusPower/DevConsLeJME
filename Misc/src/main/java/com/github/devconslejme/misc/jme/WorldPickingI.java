@@ -135,31 +135,41 @@ public class WorldPickingI {
 		rayLastCast = new Ray(v3fCursorAtVirtualWorld3D, v3fDirection);
 		nodeVirtualWorld.collideWith(rayLastCast, crs);
 		
-		ArrayList<CollisionResult> acrList=null;
+		ArrayList<CollisionResult> acrList=new ArrayList<CollisionResult>();
 		if(crs.size()==0){
 			acrLastPickList=null;
 		}else{
-			acrList = Lists.newArrayList(crs.iterator());
 			if(aclspt.size()>0){
-				for(CollisionResult cr:acrList.toArray(new CollisionResult[0])){
-					if(isSkipType(cr.getGeometry().getClass())){
-						acrList.remove(cr);
-					}
+				for(CollisionResult cr:Lists.newArrayList(crs.iterator())){
+					if(!isSkipType(cr.getGeometry().getClass()))acrList.add(cr);
 				}
 			}
+			
+			if(acrList.size()>0)acrLastPickList=acrList;
 		}
 		
+		Geometry geom = null; 
+		Spatial spt = null;
+		if(acrLastPickList!=null){
+			geom = getLastWorldPickGeometry(); 
+			spt = getLastWorldPickParentest();
+		}
 		for(IPickListener l:aplList){
-			if(crs!=null){
-				if(l.updatePickingEvent(acrList, getLastWorldPickGeometry(), getLastWorldPickParentest())){
+			if(l.updatePickingEvent(acrLastPickList,geom,spt)){
+				if(acrLastPickList!=null){
 					if(bAllowConsume)break;
 				}
-			}else{
-				l.updatePickingEvent(null,null,null);
 			}
+//			if(acrLastPickList!=null){
+//				if(l.updatePickingEvent(acrLastPickList,geom,spt)){
+//					if(bAllowConsume)break;
+//				}
+//			}else{
+//				l.updatePickingEvent(null,null,null);
+//			}
 		}
 		
-		return acrList;
+		return acrLastPickList;
 	}
 	
 	/**
