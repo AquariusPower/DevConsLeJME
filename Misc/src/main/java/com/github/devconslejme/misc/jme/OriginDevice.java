@@ -115,6 +115,7 @@ public class OriginDevice extends Node{
 	private long	lLowEnergy=10000;
 //	private Geometry	geomEnergyCore;
 	private boolean	bForceAbsorptionOnce;
+	private long	lEnergyCapacity=100000;
 	
 //	/**
 //	 * each 0.01^3 wold volume = 1 watt/miliseconds
@@ -190,13 +191,9 @@ public class OriginDevice extends Node{
 	}
 	
 	public boolean isOvercharged(){
-//		return(energyCoreOverchargePerc()>0f);
-//	}
-//	public float energyCoreOverchargePerc(){
-//		if(fPseudoEnergyCoreRadius < fPseudoDeviceRadius/2f)return 0f;
-		if(fEnergyCoreRadius < (fRadius/2f))return false;
-		return true;
-//		return fPseudoEnergyCoreRadius/(fPseudoDeviceRadius/2f);
+//		if(fEnergyCoreRadius < (fRadius/2f))return false;
+//		return true;
+		return lEnergyWattsPerMilis>lEnergyCapacity;
 	}
 	
 	public String energyInfo(){
@@ -1023,6 +1020,15 @@ public class OriginDevice extends Node{
 
 	public OriginDevice setLowEnergy(long lLowEnergy) {
 		this.lLowEnergy = lLowEnergy;
+		return this; //for beans setter
+	}
+
+	public long getEnergyCapacity() {
+		return lEnergyCapacity;
+	}
+
+	public OriginDevice setEnergyCapacity(long lEnergyCapacity) {
+		this.lEnergyCapacity = lEnergyCapacity;
 		return this; //for beans setter
 	}
 	

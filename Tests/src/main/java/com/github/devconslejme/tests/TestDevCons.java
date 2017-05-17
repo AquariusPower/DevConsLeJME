@@ -244,6 +244,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 			geomVolume.getMaterial().getAdditionalRenderState().setWireframe(true);
 			geomVolume.setLocalTranslation(v3fWorld);
 			getRootNode().attachChild(geomVolume);
+	    WorldPickingI.i().addSkip(geomVolume);
 			
 			DebugVisualsI.i().showWorldBound(geom);
 			
@@ -275,7 +276,6 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		
 		// picking 
     WorldPickingI.i().addListener(this);
-    WorldPickingI.i().addSkipType(GeometryVolDbg.class);
 	}
 	
 	public TestDevCons setSpeed(float f){

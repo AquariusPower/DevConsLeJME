@@ -156,7 +156,7 @@ public class DebugVisualsI {
 			BoundingBox bb = (BoundingBox) bv;
 			if(geomBound==null || !bb.getExtent(null).equals(geomBound.getTargetBB().getExtent(null))){
 				geomBoundNew = GeometryI.i().create(new Box(bb.getXExtent(),bb.getYExtent(),bb.getZExtent()), 
-					color, false,	new GeometryBVolDbg(spt)	);
+					color, false,	createGeomBVolDbg(spt) );
 				geomBoundNew.setTargetBB(bb);
 			}
 		}else
@@ -164,7 +164,7 @@ public class DebugVisualsI {
 			BoundingSphere bs = (BoundingSphere) bv;
 			if(geomBound==null || bs.getRadius()!=geomBound.getTargetBS().getRadius()){
 				geomBoundNew = GeometryI.i().create(MeshI.i().sphere(bs.getRadius()), 
-					color, false, new GeometryBVolDbg(spt));
+					color, false, createGeomBVolDbg(spt));
 				geomBoundNew.setTargetBS(bs);
 			}
 		}else{
@@ -173,6 +173,12 @@ public class DebugVisualsI {
 		
 		if(geomBoundNew!=null)geomBoundNew.getMaterial().getAdditionalRenderState().setWireframe(true);
 		return geomBoundNew;
+	}
+
+	private GeometryBVolDbg createGeomBVolDbg(Spatial spt) {
+		GeometryBVolDbg geom = new GeometryBVolDbg(spt);
+		WorldPickingI.i().addSkip(geom);
+		return geom;
 	}
 
 	public ArrowGeometry createArrowFollowing(Node nodeBase, Spatial sptFrom, Spatial sptTo, ColorRGBA color){

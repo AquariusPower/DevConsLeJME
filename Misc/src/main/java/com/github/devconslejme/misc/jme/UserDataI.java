@@ -192,4 +192,8 @@ public class UserDataI {
 	public <R> R retrieve(Spatial spt, Class<R> cl, boolean bCreateIfNull){
 		return getUserDataPSH(spt, cl, bCreateIfNull);
 	}
+
+//	public boolean contains(Spatial spt, Class cl) {
+//		return retrieve(spt, cl, false)!=null;
+//	}
 }

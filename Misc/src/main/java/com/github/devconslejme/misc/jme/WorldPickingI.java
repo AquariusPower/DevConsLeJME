@@ -91,28 +91,36 @@ public class WorldPickingI {
 		);
 	}
 	
-	ArrayList<Class<? extends Spatial>> aclspt = new ArrayList<Class<? extends Spatial>>();
-	/**
-	 * TODO use skipper class at UserData? and this would be per Spatial!
-	 * @param cl
-	 */
-	public void addSkipType(Class<? extends Spatial> cl){
-		if(!aclspt.contains(cl))aclspt.add(cl);
-	}
+//	ArrayList<Class<? extends Spatial>> aclspt = new ArrayList<Class<? extends Spatial>>();
+//	/**
+//	 * TODO use skipper class at UserData? and this would be per Spatial!
+//	 * @param cl
+//	 */
+//	public void addSkipType(Class<? extends Spatial> cl){
+//		if(!aclspt.contains(cl))aclspt.add(cl);
+//	}
 	
-	/**
-	 * TODO use skipper class at UserData?
-	 * @param clChk
-	 * @return
-	 */
-	public boolean isSkipType(Class<? extends Spatial> clChk){
-		for(Class<? extends Spatial> cl:aclspt){
-			if(cl.isAssignableFrom(clChk)){
-				return true;
-			}
-		}
-		return false;
+	public void addSkip(Spatial spt){
+		UserDataI.i().put(spt,new Skip());
 	}
+	private static class Skip{}
+	
+	public boolean isSkip(Spatial spt){
+		return (UserDataI.i().retrieve(spt, Skip.class, false)!=null);
+	}
+//	/**
+//	 * TODO use skipper class at UserData?
+//	 * @param clChk
+//	 * @return
+//	 */
+//	public boolean isSkipType(Class<? extends Spatial> clChk){
+//		for(Class<? extends Spatial> cl:aclspt){
+//			if(cl.isAssignableFrom(clChk)){
+//				return true;
+//			}
+//		}
+//		return false;
+//	}
 	
 	public CollisionResult pickCollisionResultAtCursor(){
 		ArrayList<CollisionResult> crs = pickWorldPiercingAtCursor();
@@ -139,11 +147,11 @@ public class WorldPickingI {
 		if(crs.size()==0){
 			acrLastPickList=null;
 		}else{
-			if(aclspt.size()>0){
+//			if(aclspt.size()>0){
 				for(CollisionResult cr:Lists.newArrayList(crs.iterator())){
-					if(!isSkipType(cr.getGeometry().getClass()))acrList.add(cr);
+					if(!isSkip(cr.getGeometry()))acrList.add(cr);
 				}
-			}
+//			}
 			
 			if(acrList.size()>0)acrLastPickList=acrList;
 		}
