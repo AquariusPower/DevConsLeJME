@@ -26,6 +26,10 @@
 */
 package com.github.devconslejme.misc;
 
+import com.github.devconslejme.misc.jme.ElectricJme;
+import com.jme3.math.FastMath;
+
+
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
@@ -36,14 +40,91 @@ public class Electric {
 	 */
 	private long lVolumeToWattPerMilis = 1000000;
 	private double dWattPerMilisToVolume = 1/((double)lVolumeToWattPerMilis);
+	
+	private long	lLowEnergy=10000;
+	private long	lEnergyCapacity=100000;
+	private long lEnergyWattsPerMilis=0;
 
 	public long volumeToEnergy(double dVolume) {
 		return (long)(dVolume*lVolumeToWattPerMilis);
 	}
 	
+	public double energyToVolume(){
+		return energyToVolume(lEnergyWattsPerMilis);
+	}
 	public double energyToVolume(long lEnergyWpMs){
 //		return ((double)lEnergyWpMs)/((double)lVolumeToWattPerMilis);
 		return lEnergyWpMs*dWattPerMilisToVolume;
 	}
 	
+	public long getEnergyWattsPerMilis() {
+		return lEnergyWattsPerMilis;
+	}
+
+	public Electric setEnergyWattsPerMilis(long lEnergyWattsPerMilis) {
+		this.lEnergyWattsPerMilis = lEnergyWattsPerMilis;
+		return this; //for beans setter
+	}
+
+	public long getLowEnergy() {
+		return lLowEnergy;
+	}
+
+	public Electric setLowEnergy(long lLowEnergy) {
+		this.lLowEnergy = lLowEnergy;
+		return this; //for beans setter
+	}
+
+	public long getEnergyCapacity() {
+		return lEnergyCapacity;
+	}
+
+	public Electric setEnergyCapacity(long lEnergyCapacity) {
+		this.lEnergyCapacity = lEnergyCapacity;
+		return this; //for beans setter
+	}
+
+	public long consumeEnergy(long lConsume) {
+		if(lEnergyWattsPerMilis>=lConsume){
+			lEnergyWattsPerMilis-=lConsume;
+			return lConsume;
+		}
+		return 0; //TODO consume partial and resulting bevarior is erratic/sluggish 
+	}
+
+	public boolean isHasEnergyWattsPerMilis() {
+		return lEnergyWattsPerMilis>0;
+	}
+
+	public boolean isOvercharged(){
+	//	if(fEnergyCoreRadius < (fRadius/2f))return false;
+	//	return true;
+		return lEnergyWattsPerMilis>lEnergyCapacity;
+	}
+	public String energyInfo(){
+		StringBuilder sb = new StringBuilder();
+		sb.append("("+lEnergyWattsPerMilis+">"+lLowEnergy+")w/ms, ");
+		return sb.toString();
+	}
+
+	public boolean isLowEnergy(){
+		return lEnergyWattsPerMilis<lLowEnergy; //this was based on the tractor energy 
+	}
+
+	public void addEnergy(long l) {
+		lEnergyWattsPerMilis+=l;
+	}
+	
+	/**
+	 * 
+	 * @param elecOther
+	 * @param lAbso
+	 * @return actually absorbed
+	 */
+	public long absorb(Electric elecOther, long lAbso) {
+		lAbso = Math.min(lAbso, elecOther.lEnergyWattsPerMilis);
+		lEnergyWattsPerMilis+=lAbso;
+		elecOther.lEnergyWattsPerMilis-=lAbso;
+		return lAbso;
+	}
 }

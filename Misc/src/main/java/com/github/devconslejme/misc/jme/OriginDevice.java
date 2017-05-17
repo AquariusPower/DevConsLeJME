@@ -56,17 +56,20 @@ import com.jme3.scene.shape.Torus;
  */
 public class OriginDevice extends Node{
 	public class TargetToken {
+	//	long lEnergyWattsPerMilis;
+		private ElectricJme elecj = new ElectricJme();
+		private OriginDevice ordeApplier;
+	
 		public TargetToken(OriginDevice ordeApplier, long lEnergyWattsPerMilis) {
 			this.ordeApplier=ordeApplier;
-			this.lEnergyWattsPerMilis=lEnergyWattsPerMilis;
-			assert(this.lEnergyWattsPerMilis>=0);
+			elecj.addEnergy(lEnergyWattsPerMilis);
+//			this.lEnergyWattsPerMilis=lEnergyWattsPerMilis;
+			assert(elecj.getEnergyWattsPerMilis()>=0);
 		}
 		
-		long lEnergyWattsPerMilis;
-		OriginDevice ordeApplier;
 	}
 	
-	private long lEnergyWattsPerMilis=0;
+	private ElectricJme elecj = new ElectricJme();
 	private NodeAxis	nodeTorX;
 	private NodeAxis	nodeTorY;
 	private NodeAxis	nodeTorZ;
@@ -104,7 +107,7 @@ public class OriginDevice extends Node{
 	private float	fTPF;
 	private NodeAxis	nodeEnergyCore;
 //	private float	fPseudoDiameter;
-	private float	fTractionForceBasedOnDiameterMult;
+	private float	fTractionForceBasedOnDiameterMult = 3f;
 	private float	fMaxTractionDist;
 	private float	fSafeMinDist=0.01f;
 	private float	fEnergyCoreRadius;
@@ -112,10 +115,8 @@ public class OriginDevice extends Node{
 //	private float	fPseudoDeviceRadius;
 	private boolean	bTmpAttract;
 	private EffectArrow	efHook;
-	private long	lLowEnergy=10000;
 //	private Geometry	geomEnergyCore;
 	private boolean	bForceAbsorptionOnce;
-	private long	lEnergyCapacity=100000;
 	
 //	/**
 //	 * each 0.01^3 wold volume = 1 watt/miliseconds
@@ -149,7 +150,8 @@ public class OriginDevice extends Node{
 		// self stats
 //		float fPseudoDiameter = (float) Math.cbrt(getWorldBound().getVolume());
 //		fPseudoDeviceRadius=fDiameter/2f;
-		fTractionForceBasedOnDiameterMult = 3f;
+		bUnstable=(elecj.isOvercharged());
+//		fTractionForceBasedOnDiameterMult = 3f;
 		fMaxTractionDist=(fRadius*2f)*fTractionForceBasedOnDiameterMult;
 		
 		updateEnergyCore();
@@ -174,9 +176,9 @@ public class OriginDevice extends Node{
 //	}
 	private void updateEnergyCore() {
 		float fECScale=0.01f;
-		if(lEnergyWattsPerMilis>0){
+		if(elecj.isHasEnergyWattsPerMilis()){
 //			fECScale=((float)Math.cbrt(lEnergyWattsPerMilis/1000L));
-			double dV=elecj.energyToVolume(lEnergyWattsPerMilis);
+			double dV=elecj.energyToVolume();
 			fEnergyCoreRadius = (float) CalcI.i().radiusFromVolume(dV);
 			fECScale = fEnergyCoreRadius*2f;
 		}
@@ -187,21 +189,17 @@ public class OriginDevice extends Node{
 		
 //		fPseudoEnergyCoreRadius = (float) (Math.cbrt(nodeEnergyCore.getWorldBound().getVolume())/2f);
 		
-		bUnstable=(isOvercharged());
-	}
-	
-	public boolean isOvercharged(){
-//		if(fEnergyCoreRadius < (fRadius/2f))return false;
-//		return true;
-		return lEnergyWattsPerMilis>lEnergyCapacity;
+//		bUnstable=(elecj.isOvercharged());
 	}
 	
 	public String energyInfo(){
-		StringBuilder sb = new StringBuilder();
-		sb.append("("+lEnergyWattsPerMilis+">"+lLowEnergy+")w/ms, ");
+		StringBuilder sb = new StringBuilder(elecj.energyInfo());
+//		sb.append("("+lEnergyWattsPerMilis+">"+lLowEnergy+")w/ms, ");
 		sb.append("r=("+StringI.i().fmtFloat(fEnergyCoreRadius)+"/");
 		sb.append(StringI.i().fmtFloat(fRadius/2f)+")");
-		if(sptTarget!=null)sb.append("tgt="+sptTarget.getName()+getTargetToken(sptTarget).lEnergyWattsPerMilis);
+		if(sptTarget!=null){
+			sb.append("tgt="+sptTarget.getName()+getTargetToken(sptTarget).elecj.getEnergyWattsPerMilis());
+		}
 		return sb.toString();
 	}
 	
@@ -214,8 +212,8 @@ public class OriginDevice extends Node{
 					if(spt==this)continue;
 					
 //					if(fPseudoEnergCoreRadius>=fPseudoRadius/2f)continue;
-					if(isOvercharged())continue;
-					if(!isLowEnergy())continue;
+					if(elecj.isOvercharged())continue;
+					if(!elecj.isLowEnergy())continue;
 					
 					float fDist = getLocalTranslation().distance(spt.getLocalTranslation());
 					if(fDist > fMaxTractionDist)continue;
@@ -223,7 +221,7 @@ public class OriginDevice extends Node{
 					if(!isRequireTargetsToken() || !hasTargetToken(spt))continue; //TODO "heavier?" is after
 					if(
 							fDist<=fSafeMinDist && //destruction area 
-							lEnergyWattsPerMilis >= calcEnergyToDisintegrate(spt) //&&
+							elecj.getEnergyWattsPerMilis() >= calcEnergyToDisintegrate(spt) //&&
 //							getTargetToken(spt).lEnergyWattsPerMilis >=
 //							isLowEnergy()
 					)continue; //needs more energy
@@ -245,12 +243,6 @@ public class OriginDevice extends Node{
 		}
 	}
 	
-	
-	
-	public boolean isLowEnergy(){
-		return lEnergyWattsPerMilis<lLowEnergy; //this was based on the tractor energy 
-	}
-
 	/**
 	 * TODO deplet energy sources
 	 */
@@ -358,7 +350,7 @@ public class OriginDevice extends Node{
 //	}
 
 	protected long disintegrate(Spatial spt) {
-		long l = consumeEnergy(calcEnergyToDisintegrate(spt));
+		long l = elecj.consumeEnergy(calcEnergyToDisintegrate(spt));
 		if(l>0){
 			spt.removeFromParent();
 			if(spt==sptTarget)sptTarget=null;
@@ -374,7 +366,8 @@ public class OriginDevice extends Node{
 		long lAbso=0;
 		if(tt!=null){
 			if(!bRemotely){ //it all
-				lAbso=tt.lEnergyWattsPerMilis;
+//				lAbso=tt.elecj.getEnergyWattsPerMilis();
+				lAbso=elecj.absorb(tt.elecj,tt.elecj.getEnergyWattsPerMilis());
 				
 				bForceAbsorptionOnce=false;
 				
@@ -382,14 +375,20 @@ public class OriginDevice extends Node{
 					disintegrate(spt);
 				}
 			}else{
-				long l = calcEnergyPF(EEnergyConsumpWpM.Remotely);
-				if(l <= tt.lEnergyWattsPerMilis){
-					lAbso=l; //TODO farer absorbs less
-				}
+				lAbso=elecj.absorb(tt.elecj,calcEnergyPF(EEnergyConsumpWpM.Remotely));
+//				long l = calcEnergyPF(EEnergyConsumpWpM.Remotely);
+//				if(l <= tt.elecj.getEnergyWattsPerMilis()){
+//					lAbso=l; //TODO farer absorbs less
+//				}
 			}
 			
-			lEnergyWattsPerMilis+=lAbso;
-			tt.lEnergyWattsPerMilis-=lAbso;
+//			elecj.absorb(tt.elecj,lAbso);
+//			if(lAbso!=elecj.absorb(tt.elecj,lAbso)){
+//				throw new DetailedException(""
+//			}
+//			elecj.addEnergy(lAbso);
+//			tt.elecj.addEnergy(-lAbso);
+//			tt.lEnergyWattsPerMilis-=lAbso;
 		}
 		
 		return lAbso;
@@ -477,13 +476,16 @@ public class OriginDevice extends Node{
 		for(NodeAxis node:anodeMainShapes){
 			Vector3f v3f = getRotSpeedCopy();
 			float fEnergySpentMultExtra=1f;
-			if(node==nodeElectricA || node==nodeElectricB){
-				if(nodeElectricA==nodeElectricB){
-					v3f = getRotSpeedCopy(ERotMode.Chaotic);
-					fEnergySpentMultExtra=chaoticEnergySpentMult();
+			
+			if(bUnstable){
+				if(node==nodeElectricA || node==nodeElectricB){
+					if(nodeElectricA==nodeElectricB){
+						v3f = getRotSpeedCopy(ERotMode.Chaotic);
+						fEnergySpentMultExtra=chaoticEnergySpentMult();
+					}
+					
+					v3f.multLocal(10f);
 				}
-				
-				v3f.multLocal(10f);
 			}
 			
 			if(consumeEnergyPF(EEnergyConsumpWpM.RotateMin, v3f.length()*fEnergySpentMultExtra)>0){
@@ -679,7 +681,7 @@ public class OriginDevice extends Node{
 	public long consumeEnergyPF(EEnergyConsumpWpM ee, float fMult){
 		assert(fMult>=0f);
 		
-		if(isLowEnergy() && (ee!=EEnergyConsumpWpM.Tractor)){
+		if(elecj.isLowEnergy() && (ee!=EEnergyConsumpWpM.Tractor)){
 			return 0;
 		}
 		
@@ -691,7 +693,7 @@ public class OriginDevice extends Node{
 //		assert(lConsume>0);
 //		if(lConsume<=0)return 0;
 		
-		return consumeEnergy(lConsume);
+		return elecj.consumeEnergy(lConsume);
 //		if(lEnergyWattsPerMilis>=lConsume){
 //			lEnergyWattsPerMilis-=lConsume;
 //			return lConsume;
@@ -699,13 +701,13 @@ public class OriginDevice extends Node{
 //		
 //		return 0; 
 	}
-	private long consumeEnergy(long lConsume) {
-		if(lEnergyWattsPerMilis>=lConsume){
-			lEnergyWattsPerMilis-=lConsume;
-			return lConsume;
-		}
-		return 0; //TODO consume partial and resulting bevarior is erratic/sluggish 
-	}
+//	private long consumeEnergy(long lConsume) {
+//		if(lEnergyWattsPerMilis>=lConsume){
+//			lEnergyWattsPerMilis-=lConsume;
+//			return lConsume;
+//		}
+//		return 0; //TODO consume partial and resulting bevarior is erratic/sluggish 
+//	}
 	
 	/**
 	 * per frame
@@ -980,8 +982,6 @@ public class OriginDevice extends Node{
 		return lEnergy;
 	}
 	
-	ElectricJme elecj = new ElectricJme();
-	
 	public OriginDevice setDestroySpatials(boolean bDestroySpatials) {
 		this.bDestroySpatials = bDestroySpatials;
 		return this; //for beans setter
@@ -1005,33 +1005,6 @@ public class OriginDevice extends Node{
 		return this; //for beans setter
 	}
 
-	public long getEnergyWattsPerMilis() {
-		return lEnergyWattsPerMilis;
-	}
-
-	public OriginDevice setEnergyWattsPerMilis(long lEnergyWattsPerMilis) {
-		this.lEnergyWattsPerMilis = lEnergyWattsPerMilis;
-		return this; //for beans setter
-	}
-
-	public long getLowEnergy() {
-		return lLowEnergy;
-	}
-
-	public OriginDevice setLowEnergy(long lLowEnergy) {
-		this.lLowEnergy = lLowEnergy;
-		return this; //for beans setter
-	}
-
-	public long getEnergyCapacity() {
-		return lEnergyCapacity;
-	}
-
-	public OriginDevice setEnergyCapacity(long lEnergyCapacity) {
-		this.lEnergyCapacity = lEnergyCapacity;
-		return this; //for beans setter
-	}
-	
 //	/**
 //	 * changes on the original (mesh/material) will afect all copies TODO confirm
 //	 * @return

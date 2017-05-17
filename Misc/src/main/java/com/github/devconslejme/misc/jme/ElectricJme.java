@@ -37,4 +37,5 @@ public class ElectricJme extends Electric {
 	public long volumeToEnergy(Spatial spt) {
 		return super.volumeToEnergy(MeshI.i().volumeOf(spt));
 	}
+
 }
