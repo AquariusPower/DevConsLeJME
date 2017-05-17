@@ -162,18 +162,6 @@ public class OriginDevice extends Node{
 		updateEnergySourceInteraction();
 	}
 	
-//	private void updateEnergyCore() {
-//		float fECScale=0.01f;
-//		if(lEnergyWattsPerMilis>0){
-//			fECScale=((float)Math.cbrt(lEnergyWattsPerMilis/1000L));
-//		}
-//		nodeEnergyCore.setLocalScale(fECScale);
-//		float fRotSpeed = bUnstable ? 0.1f*FastMath.nextRandomFloat() : 0.001f;
-//		nodeEnergyCore.rotate(fRotSpeed,fRotSpeed,fRotSpeed);
-//		fPseudoEnergyCoreRadius = (float) (Math.cbrt(nodeEnergyCore.getWorldBound().getVolume())/2f);
-//		
-//		bUnstable=(isOvercharged());
-//	}
 	private void updateEnergyCore() {
 		float fECScale=0.01f;
 		if(elecj.isHasEnergyWattsPerMilis()){
@@ -376,19 +364,8 @@ public class OriginDevice extends Node{
 				}
 			}else{
 				lAbso=elecj.absorb(tt.elecj,calcEnergyPF(EEnergyConsumpWpM.Remotely));
-//				long l = calcEnergyPF(EEnergyConsumpWpM.Remotely);
-//				if(l <= tt.elecj.getEnergyWattsPerMilis()){
-//					lAbso=l; //TODO farer absorbs less
-//				}
 			}
 			
-//			elecj.absorb(tt.elecj,lAbso);
-//			if(lAbso!=elecj.absorb(tt.elecj,lAbso)){
-//				throw new DetailedException(""
-//			}
-//			elecj.addEnergy(lAbso);
-//			tt.elecj.addEnergy(-lAbso);
-//			tt.lEnergyWattsPerMilis-=lAbso;
 		}
 		
 		return lAbso;
@@ -672,7 +649,6 @@ public class OriginDevice extends Node{
 		if(consumeEnergyPF(EEnergyConsumpWpM.RotateMin,FastMath.abs(fSpeed*fEnergySpentMultExtra))>0){
 			nodeTor.rotate(0,fSpeed,0);
 		}
-//		lEnergyWattsPerMilis-=fSpeed*calcEnergyPF(EEnergyConsumpWpM.RotateMin);
 	}
 	
 	public long consumeEnergyToMovePF(float fMult){
@@ -685,29 +661,11 @@ public class OriginDevice extends Node{
 			return 0;
 		}
 		
-//		float f = calcEnergyPF(ee)*fMult;
 		long lConsume = (long)(calcEnergyPF(ee)*fMult);
-//		long lConsume = (long)(f);
-//		if(lConsume==0 && f>0)lConsume=1; //TODO imprecision... could accumulate to give at least 1.0?
 		if(lConsume==0)lConsume=1; //TODO imprecision... could accumulate to give at least 1.0?
-//		assert(lConsume>0);
-//		if(lConsume<=0)return 0;
 		
 		return elecj.consumeEnergy(lConsume);
-//		if(lEnergyWattsPerMilis>=lConsume){
-//			lEnergyWattsPerMilis-=lConsume;
-//			return lConsume;
-//		}
-//		
-//		return 0; 
 	}
-//	private long consumeEnergy(long lConsume) {
-//		if(lEnergyWattsPerMilis>=lConsume){
-//			lEnergyWattsPerMilis-=lConsume;
-//			return lConsume;
-//		}
-//		return 0; //TODO consume partial and resulting bevarior is erratic/sluggish 
-//	}
 	
 	/**
 	 * per frame
