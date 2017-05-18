@@ -469,6 +469,7 @@ public class OriginDevice extends Node{
 //		geom.setLocalScale(0.05f, 0.15f, 1);
 //		geom.setLocalTranslation(fRadius+1,0,0);
 		anodeElectricShapesList.add(node);
+		node.geomWireFrame.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(ColorRGBA.Cyan));
 		
 //		node.attachChild(geom);
 		QueueI.i().enqueue(new CallableXAnon() {
@@ -783,7 +784,8 @@ public class OriginDevice extends Node{
 		createTorusIntersections(nodeRotating,color,fDisplacementTorus,v3fUp);
 		
 		// pets
-		NodeAxis nodePet = createAxisShape(MeshI.i().cone(1f), color, new Vector3f(fRadius+1,0,0), 1f, v3fUp, false, 
+		NodeAxis nodePet = createAxisShape(
+			MeshI.i().cone(1f), color, new Vector3f(fRadius+1,0,0), 1f, v3fUp, true, 
 			new Vector3f(0.05f, 0.15f, 1));
 		preparePet(nodePet);
 		
