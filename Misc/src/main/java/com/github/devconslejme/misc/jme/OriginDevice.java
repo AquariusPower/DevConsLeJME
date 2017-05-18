@@ -128,7 +128,7 @@ public class OriginDevice extends Node{
 //	private boolean	bTmpAttract;
 	private EffectArrow	efHook;
 //	private Geometry	geomEnergyCore;
-	private boolean	bForceAbsorptionOnce;
+//	private boolean	bForceAbsorptionOnce;
 
 	private float	fPetMaxDist;
 	
@@ -215,9 +215,12 @@ public class OriginDevice extends Node{
 //		sb.append("("+lEnergyWattsPerMilis+">"+lLowEnergy+")w/ms, ");
 		sb.append("r=("+StringI.i().fmtFloat(fEnergyCoreRadius)+"/"
 			+StringI.i().fmtFloat(fRadius/2f)+")");
+		sb.append("v3f="+TextI.i().fmtVector3f(getWorldTranslation(),2)+", ");
+		
 		if(sptTarget!=null){
 			sb.append("tgt="+sptTarget.getName()+getTargetToken(sptTarget).elecj.energyInfo());
 		}
+		
 		return sb.toString();
 	}
 	
@@ -368,6 +371,8 @@ public class OriginDevice extends Node{
 	private EffectElectricity	setFollowToTarget;
 
 	private Spatial	sptUserChosenTarget;
+
+	private Spatial	sptForceAbsorption;
 	@Deprecated	@Override	public void lookAt(Vector3f position, Vector3f upVector) {		throw new UnsupportedOperationException(strMsgError);	}
 	@Deprecated	@Override	public void setLocalRotation(Matrix3f rotation) {		throw new UnsupportedOperationException(strMsgError);	}
 	@Deprecated @Override	public void setLocalRotation(Quaternion quaternion) {		throw new UnsupportedOperationException("method not implemented");	}
@@ -387,8 +392,10 @@ public class OriginDevice extends Node{
 		long l = energy.consumeEnergy(calcEnergyToDisintegrate(spt));
 		if(l>0){
 			spt.removeFromParent();
-			if(spt==sptTarget)sptTarget=null;
-			if(spt==sptUserChosenTarget)sptUserChosenTarget=null;
+			
+			setElectricitySource(null);
+//			if(spt==sptTarget)sptTarget=null;
+//			if(spt==sptUserChosenTarget)sptUserChosenTarget=null;
 //			if(nodeaxisUserChosen==electricNodeFor(spt))nodeaxisUserChosen=null;
 		}
 		return l;
@@ -637,7 +644,7 @@ public class OriginDevice extends Node{
 	}
 
 	protected void updateElectricalEffects() {
-		efElec.setPlay(isUnstable());
+		efElec.setPlay(isUnstable() || sptTarget!=null);
 		consumeEnergyPF(EEnergyConsumpWpM.SmoothActive, isUnstable() ? FastMath.nextRandomFloat()*13f : 1f); //13 is arbitrary luck :)
 //		if(!bUnstable){return;}
 		
@@ -659,7 +666,7 @@ public class OriginDevice extends Node{
 			int iA=-1;
 			nodeElectricA = null;
 			Vector3f v3fWorldA = null;
-			if(sptTarget!=null){
+			if(sptTarget!=null){ // if target is set, it will always be A
 				nodeElectricA=nodeaxisUserChosen;
 				iA=anodeElectricShapesList.indexOf(nodeElectricA); //external spatial will be -1
 //				iA=anodeElectricShapesList.indexOf(sptElectricSrc); //external spatial will be -1
@@ -1038,24 +1045,26 @@ public class OriginDevice extends Node{
 	public OriginDevice setElectricitySource(Spatial sptElectricSrc) {
 		return setElectricitySource(sptElectricSrc,true);
 	}
-	public OriginDevice setElectricitySource(Spatial sptElectricSrc, boolean bForceAbsorption) {
+	public OriginDevice setElectricitySource(Spatial sptElectricSrc, boolean bForceAbsorptionOnce) {
 		if(sptElectricSrc!=null && getTargetToken(sptElectricSrc)==null){
-			MessagesI.i().warnMsg(this, "skipping", sptElectricSrc, bForceAbsorption);
+			MessagesI.i().warnMsg(this, "skipping", sptElectricSrc, bForceAbsorptionOnce);
 			return this; //skip
 		}
 		
 		this.sptTarget = sptElectricSrc;
 		this.sptUserChosenTarget = sptElectricSrc;
+		if(bForceAbsorptionOnce)sptForceAbsorption=sptElectricSrc;
+		nodeaxisUserChosen = electricNodeFor(sptElectricSrc);
+		
 		if(sptElectricSrc!=null){
 			fInitialDistToSrc=sptElectricSrc.getWorldTranslation().subtract(getWorldTranslation()).length();
-			nodeaxisUserChosen = electricNodeFor(sptElectricSrc);
 //			tdEffectRetarget.reactivate();
 			bUpdateElectricalEffectForNewSourceOnce=true;
-			this.bForceAbsorptionOnce=bForceAbsorption;
+//			this.bForceAbsorptionOnce=bForceAbsorptionOnce;
 		}
 		return this; //for beans setter
 	}
-
+	
 	public ETargetMode getSourceMode() {
 		return esm;
 	}
@@ -1161,7 +1170,7 @@ public class OriginDevice extends Node{
 	 * @return
 	 */
 	public Object debugTest(Object... aobj){
-		energy.setEnergy(900000);
+		energy.setEnergyStored(900000);
 		setLocalTranslation(1000,0,0);
 		return null;
 	}

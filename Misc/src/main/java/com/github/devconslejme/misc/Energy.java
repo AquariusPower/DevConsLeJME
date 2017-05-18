@@ -76,7 +76,7 @@ public class Energy {
 		return lStoredEnergy;
 	}
 
-	public Energy setEnergy(long lEnergyWattsPerMilis) {
+	public Energy setEnergyStored(long lEnergyWattsPerMilis) {
 		this.lStoredEnergy = lEnergyWattsPerMilis;
 		return this; //for beans setter
 	}

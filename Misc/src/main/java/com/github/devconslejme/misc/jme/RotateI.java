@@ -82,8 +82,13 @@ public class RotateI {
 	 */
 	public void rotateAroundPivot(Spatial sptToRotate, Spatial sptPivot, float fAddAngleRadians, Vector3f v3fUp, boolean bKeepOriginalLocalRotation){
 		if(v3fUp==null)v3fUp=sptToRotate.getLocalRotation().getRotationColumn(1);
-		Vector3f v3fPos = sptToRotate.getLocalTranslation();
-		Vector3f v3fCenter = sptPivot.getLocalTranslation();
+		
+		/**
+		 * we need to know where they are in the world
+		 */
+		Vector3f v3fPos = sptToRotate.getWorldTranslation();
+		Vector3f v3fCenter = sptPivot.getWorldTranslation();
+		
 		Vector3f v3fSub = v3fPos.subtract(v3fCenter);
 		Vector3f v3fDir = v3fSub.normalize();
 		float fDist = v3fSub.length();
