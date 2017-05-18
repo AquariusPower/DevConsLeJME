@@ -108,8 +108,35 @@ public class DebugVisualsI {
 			this.sptTarget = spt;
 		}
 		
+		@Override
+		public void setLocalTranslation(float x, float y, float z) {
+			super.setLocalTranslation(x, y, z);
+			if(getLocalTranslation().length()==0){
+				System.out.println("brkpt");
+			}
+		}
+		@Override
+		public void setLocalTranslation(Vector3f localTranslation) {
+			super.setLocalTranslation(localTranslation);
+			if(getLocalTranslation().length()==0){
+				System.out.println("brkpt");
+			}
+		}
+		@Override
+		public void updateLogicalState(float tpf) {
+			super.updateLogicalState(tpf);
+			if(getLocalTranslation().length()==0){
+				System.out.println("brkpt");
+			}
+		}
+		
+//		@Override
+//		public void setLocalTranslation(Vector3f localTranslation) {
+//			super.setLocalTranslation(localTranslation);
+//		}
+		
 		public void updateAxesScale() {
-			float fMult=2.2f;//10% beyond limits to be surely visible
+			float fMult=2f*1.1f;//10% beyond limits to be surely visible
 			if(geombv.bb!=null){
 				axes.setLocalScale(geombv.bb.getExtent(null).mult(fMult));
 			}else
@@ -245,9 +272,9 @@ public class DebugVisualsI {
 			}
 			
 			updateWorldBoundAndAxes(spt,nd);
-			System.out.println("B:"+nd.getLocalTranslation());
+//			System.out.println("B:"+nd.getLocalTranslation());
 			nd.setLocalTranslation(spt.getLocalTranslation().clone());
-			System.out.println("A:"+nd.getLocalTranslation());
+//			System.out.println("A:"+nd.getLocalTranslation());
 		}
 	}
 	

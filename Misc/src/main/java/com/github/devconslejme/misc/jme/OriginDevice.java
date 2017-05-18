@@ -449,6 +449,8 @@ public class OriginDevice extends Node{
 		});
 		
 		createPet();
+		createPet();
+		createPet();
 	}
 	
 	private void createPet() {
@@ -468,8 +470,14 @@ public class OriginDevice extends Node{
 			@Override
 			public Boolean call() {
 				if(getParent()==null)return false;
-				getParent().attachChild(node);
-				petRotateAround(getTPF(),node,geom,td);
+				
+				if(bUnstable){
+					getParent().attachChild(node);
+					petRotateAround(getTPF(),node,geom,td);
+				}else{
+					node.removeFromParent();
+				}
+				
 				return true;
 			}
 		}).enableLoopMode();//.setDelaySeconds(0.1f);//.setInitialDelay(10));
