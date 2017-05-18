@@ -50,7 +50,7 @@ public class FlyByCameraX extends FlyByCamera{
 	private boolean	bAllowMove=true; //as it is a flycam, must be default true
 	private boolean	bOverrideKeepFlyCamDisabled;
 	private float	fAccMvTm = 0.05f;
-//	private boolean	bAccumulatingTime;
+	private ArrayList<CallableX> acxList=new ArrayList<CallableX>();
 	
 	public void reBindKeys(){
     MiscJmeI.i().enqueueUnregisterKeyMappings( //these were set at super
@@ -107,10 +107,9 @@ public class FlyByCameraX extends FlyByCamera{
 		
 	}
 	
-	ArrayList<CallableX> acxList=new ArrayList<CallableX>();
 	protected void resetMvTm(CallableXAnon cx) {
-		if(!acxList.contains(cx)){acxList.add(cx);return;}
-		fAccMvTm=0f;
+		acxList.remove(cx);
+		if(acxList.size()==0)fAccMvTm=0f;
 	}
 	protected void accMvTrsTm(CallableXAnon cx){
 		if(!acxList.contains(cx))acxList.add(cx);
