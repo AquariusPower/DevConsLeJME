@@ -456,7 +456,7 @@ public class OriginDevice extends Node{
 	}
 	
 //	private void createPet(EAxis ea) {
-	private void createPet(NodeAxis node) {
+	private void preparePet(NodeAxis node) {
 //		NodeAxis node=new NodeAxis("Pet"+ea);
 		MiscJmeI.i().addToName(node, "Pet", false);
 //		node.ea=ea;
@@ -785,7 +785,7 @@ public class OriginDevice extends Node{
 		// pets
 		NodeAxis nodePet = createAxisShape(MeshI.i().cone(1f), color, new Vector3f(fRadius+1,0,0), 1f, v3fUp, false, 
 			new Vector3f(0.05f, 0.15f, 1));
-		createPet(nodePet);
+		preparePet(nodePet);
 		
 		return nodeRotating;
 	}
