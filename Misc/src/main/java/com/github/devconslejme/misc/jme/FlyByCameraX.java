@@ -46,6 +46,8 @@ public class FlyByCameraX extends FlyByCamera{
 	private boolean	bAllowZooming=false; //only with scope or eagle eye
 	private boolean	bAllowMove=true; //as it is a flycam, must be default true
 	private boolean	bOverrideKeepFlyCamDisabled;
+	protected float	fAccumulatedMoveTrust;
+	private float	fAccumulatedMoveSide;
 	
 	public void reBindKeys(){
     MiscJmeI.i().enqueueUnregisterKeyMappings( //these were set at super
@@ -85,9 +87,11 @@ public class FlyByCameraX extends FlyByCamera{
 			moveCamera(-getTPF(),true );return true;}}.enableLoopMode());
 		
 		KeyBindCommandManagerI.i().putBindCommandLater("W",CameraInput.FLYCAM_FORWARD,new CallableXAnon(){@Override	public Boolean call(){
-			moveCamera( getTPF(),false);return true;}}.enableLoopMode());
+			moveCamera( getTPF(),false);accMvTrsTm(getTPF(),false);return true;}
+			@Override	public void callAfterRemovedFromQueue() {fAccumulatedMoveTrust=0f;}}.enableLoopMode());
 		KeyBindCommandManagerI.i().putBindCommandLater("S",CameraInput.FLYCAM_BACKWARD,new CallableXAnon(){@Override	public Boolean call(){
-			moveCamera(-getTPF(),false);return true;}}.enableLoopMode());
+			moveCamera(-getTPF(),false);accMvTrsTm(getTPF(),false);return true;}
+			@Override	public void callAfterRemovedFromQueue() {fAccumulatedMoveTrust=0f;}}.enableLoopMode());
 		
 		KeyBindCommandManagerI.i().putBindCommandLater("Q",CameraInput.FLYCAM_RISE,new CallableXAnon(){@Override	public Boolean call(){
 			riseCamera( getTPF());return true;}}.enableLoopMode());
@@ -159,7 +163,26 @@ public class FlyByCameraX extends FlyByCamera{
 	@Override
 	protected void moveCamera(float value, boolean sideways) {
 		if(!isAllowMove())return;
-		super.moveCamera(value, sideways);
+//		if(!sideways)fAccumulatedMoveTrust+=gettpf
+		super.moveCamera(value+getAccMove(sideways), sideways);
+	}
+	
+	protected float getAccMove(boolean bSide){
+		float f=0f;
+		if(bSide){
+			f=fAccumulatedMoveSide;
+		}else{
+			f=fAccumulatedMoveTrust;
+		}
+		return f/10f;
+	}
+	
+	protected void accMvTrsTm(float fTPF,boolean bSide){
+		if(bSide){
+			fAccumulatedMoveSide+=fTPF;
+		}else{
+			fAccumulatedMoveTrust+=fTPF;
+		}
 	}
 	
 	@Override

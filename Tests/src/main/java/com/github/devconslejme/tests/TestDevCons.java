@@ -222,7 +222,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		// Orde's food
 		Node nodeRef=new Node();
 		String strOrdeFood="OrdeFood";
-		for(int i=0;i<10;i++){
+		for(int i=1;i<=10;i++){
 			nodeRef.rotate(i*30*FastMath.DEG_TO_RAD, 0, 0);
 			
 			float fExtent=0.1f*i;

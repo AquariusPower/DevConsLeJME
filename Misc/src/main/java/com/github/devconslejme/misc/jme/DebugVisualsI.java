@@ -79,9 +79,9 @@ public class DebugVisualsI {
 		public NodeAxesDbg(Spatial spt) {
 			this.sptTarget=spt;
 		}
-		public void setShow(boolean b) {
-			DebugVisualsI.i().setShow(this,b);
-		}
+//		public void setShow(boolean b) {
+//			DebugVisualsI.i().setShow(this,b);
+//		}
 		@Override
 		public void setTarget(Spatial spt) {
 			this.sptTarget=spt;
@@ -108,34 +108,34 @@ public class DebugVisualsI {
 			this.sptTarget = spt;
 		}
 		
-		@Override
-		public void setLocalTranslation(float x, float y, float z) {
-			super.setLocalTranslation(x, y, z);
-			if(getLocalTranslation().length()==0){
-				System.out.println("brkpt");
-			}
-		}
-		@Override
-		public void setLocalTranslation(Vector3f localTranslation) {
-			super.setLocalTranslation(localTranslation);
-			if(getLocalTranslation().length()==0){
-				System.out.println("brkpt");
-			}
-		}
-		@Override
-		public void updateLogicalState(float tpf) {
-			super.updateLogicalState(tpf);
-			if(getLocalTranslation().length()==0){
-				System.out.println("brkpt");
-			}
-		}
-		
+//		@Override
+//		public void setLocalTranslation(float x, float y, float z) {
+//			super.setLocalTranslation(x, y, z);
+//			if(getLocalTranslation().length()==0){
+//				System.out.println("brkpt");
+//			}
+//		}
+//		@Override
+//		public void setLocalTranslation(Vector3f localTranslation) {
+//			super.setLocalTranslation(localTranslation);
+//			if(getLocalTranslation().length()==0){
+//				System.out.println("brkpt");
+//			}
+//		}
+//		@Override
+//		public void updateLogicalState(float tpf) {
+//			super.updateLogicalState(tpf);
+//			if(getLocalTranslation().length()==0){
+//				System.out.println("brkpt");
+//			}
+//		}
+//		
 //		@Override
 //		public void setLocalTranslation(Vector3f localTranslation) {
 //			super.setLocalTranslation(localTranslation);
 //		}
 		
-		public void updateAxesScale() {
+		public void updateAxes() {
 			float fMult=2f*1.1f;//10% beyond limits to be surely visible
 			if(geombv.bb!=null){
 				axes.setLocalScale(geombv.bb.getExtent(null).mult(fMult));
@@ -143,15 +143,36 @@ public class DebugVisualsI {
 			if(geombv.bs!=null){
 				axes.setLocalScale(geombv.bs.getRadius()*fMult);
 			}
+			
+			axes.setLocalRotation(sptTarget.getLocalRotation());
 		}
+//		protected void setShow(Spatial spt, boolean b) {
+//			if(b){
+//				Node parent = ((IDbg)spt).getTarget().getParent();
+//				if(parent!=null){
+//					parent.attachChild(spt);
+//				}
+//			}else{
+//				spt.removeFromParent();
+//			}
+//		}
 		public NodeDbg setShow(boolean b) {
 			this.bShow=b;
 			
+			if(b){
+				Node parent = sptTarget.getParent();
+				if(parent!=null){
+					parent.attachChild(this);
+				}
+			}else{
+				removeFromParent();
+			}
+			
 //			geombv.setTarget(getTarget());
-			geombv.setShow(b);
+//			geombv.setShow(b);
 			
 //			axes.setTarget(getTarget());
-			axes.setShow(b);
+//			axes.setShow(b);
 			
 			return this;
 		}
@@ -196,9 +217,9 @@ public class DebugVisualsI {
 			return bs;
 		}
 
-		public void setShow(boolean b) {
-			DebugVisualsI.i().setShow(this,b);
-		}
+//		public void setShow(boolean b) {
+//			DebugVisualsI.i().setShow(this,b);
+//		}
 //		public GeometryBVolDbg setShow(boolean bShowWorldBound) {
 //			this.bShowWorldBound=bShowWorldBound;
 //			
@@ -245,16 +266,16 @@ public class DebugVisualsI {
 //			}
 //		}
 //	}
-	protected void setShow(Spatial spt, boolean b) {
-		if(b){
-			Node parent = ((IDbg)spt).getTarget().getParent();
-			if(parent!=null){
-				parent.attachChild(spt);
-			}
-		}else{
-			spt.removeFromParent();
-		}
-	}
+//	protected void setShow(Spatial spt, boolean b) {
+//		if(b){
+//			Node parent = ((IDbg)spt).getTarget().getParent();
+//			if(parent!=null){
+//				parent.attachChild(spt);
+//			}
+//		}else{
+//			spt.removeFromParent();
+//		}
+//	}
 	
 	protected void updateShowWorldBound(float tpf) {
 		for(Entry<Spatial, NodeDbg> entry:ahmShowWorldBound.entrySet()){
@@ -283,28 +304,28 @@ public class DebugVisualsI {
 		if(nd==null)nd=new NodeDbg(spt);
 		return updateWorldBoundAndAxes(spt,nd);
 	}
-	protected NodeDbg updateWorldBoundAndAxes(Spatial spt,NodeDbg nd){
-		GeometryBVolDbg geomBound = nd.geombv;
-		BoundingVolume bv = spt.getWorldBound();
+	protected NodeDbg updateWorldBoundAndAxes(Spatial sptTarget,NodeDbg nd){
+//		GeometryBVolDbg geomBound = nd.geombv;
+		BoundingVolume bv = sptTarget.getWorldBound();
 		GeometryBVolDbg geomBoundNew=null;
 		ColorRGBA color=ColorRGBA.Blue;
-		boolean bCreating=false;
+//		boolean bCreating=false;
 		//TODO if it was already created, could just modify it?
 		if (bv instanceof BoundingBox) {
 			BoundingBox bb = (BoundingBox) bv;
-			if(geomBound==null || !bb.getExtent(null).equals(geomBound.getTargetBB().getExtent(null))){
+			if(nd.geombv==null || !bb.getExtent(null).equals(nd.geombv.getTargetBB().getExtent(null))){
 				geomBoundNew = GeometryI.i().create(new Box(bb.getXExtent(),bb.getYExtent(),bb.getZExtent()), 
-					color, false,	createGeomBVolDbg(spt) );
-				bCreating=true;
+					color, false,	createGeomBVolDbg(sptTarget) );
+//				bCreating=true;
 				geomBoundNew.setTargetBB(bb);
 			}
 		}else
 		if (bv instanceof BoundingSphere) {
 			BoundingSphere bs = (BoundingSphere) bv;
-			if(geomBound==null || bs.getRadius()!=geomBound.getTargetBS().getRadius()){
+			if(nd.geombv==null || bs.getRadius()!=nd.geombv.getTargetBS().getRadius()){
 				geomBoundNew = GeometryI.i().create(MeshI.i().sphere(bs.getRadius()), 
-					color, false, createGeomBVolDbg(spt));
-				bCreating=true;
+					color, false, createGeomBVolDbg(sptTarget));
+//				bCreating=true;
 				geomBoundNew.setTargetBS(bs);
 			}
 		}else{
@@ -313,15 +334,21 @@ public class DebugVisualsI {
 		
 		if(geomBoundNew!=null){
 			geomBoundNew.getMaterial().getAdditionalRenderState().setWireframe(true);
+			if(nd.geombv!=null)nd.geombv.removeFromParent();
 			nd.geombv=geomBoundNew;
+//		}
+//		
+//		if(bCreating){
+			nd.attachChild(nd.geombv);
 		}
 		
-		if(bCreating){
-//			nd = new NodeDbg(spt);
-			nd.axes = NodeI.i().createRotationAxes(new NodeAxesDbg(spt));
+		if(nd.axes==null){
+	//		nd = new NodeDbg(spt);
+			nd.axes = NodeI.i().createRotationAxes(new NodeAxesDbg(sptTarget));
+			nd.attachChild(nd.axes);
 		}
 		
-		nd.updateAxesScale();
+		nd.updateAxes();
 		
 		return nd;
 	}
@@ -415,7 +442,7 @@ public class DebugVisualsI {
 		this.bShowWorldBound = bShowWorldBound;
 		if(!this.bShowWorldBound){
 			for(NodeDbg noded:ahmShowWorldBound.values()){
-				noded.geombv.setShow(bShowWorldBound);
+				noded.setShow(bShowWorldBound);
 			}
 		}
 		return this; //for beans setter
