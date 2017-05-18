@@ -27,6 +27,7 @@
 package com.github.devconslejme.misc.jme;
 
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.MessagesI;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
@@ -43,24 +44,24 @@ public class RotateI {
 	private RotateHelper	rhRotVec;
 	
 	public static class RotateHelper{
-		private Node nodeCenter = new Node();
-		private Node nodePos = new Node();
+		private Node nodePivotIsParent = new Node();
+		private Node nodeChild = new Node();
 		private Quaternion quaAdd=new Quaternion();
 		public RotateHelper(){
-			nodeCenter.attachChild(nodePos);
+			nodePivotIsParent.attachChild(nodeChild);
 		}
 	}
 	public Vector3f rotateVector(Vector3f v3fTipToRotate, Vector3f v3fUp, float fAddAngleRadians) {
 		if(rhRotVec==null)rhRotVec=new RotateHelper();
 		
-		rhRotVec.nodeCenter.setLocalTranslation(0,0,0);
-		rhRotVec.nodePos.setLocalTranslation(v3fTipToRotate);
+		rhRotVec.nodePivotIsParent.setLocalTranslation(0,0,0);
+		rhRotVec.nodeChild.setLocalTranslation(v3fTipToRotate);
 		
 		rhRotVec.quaAdd.fromAngleAxis(fAddAngleRadians, v3fUp);
-		rhRotVec.nodeCenter.setLocalRotation(Quaternion.IDENTITY);
-		rhRotVec.nodeCenter.rotate(rhRotVec.quaAdd);
+		rhRotVec.nodePivotIsParent.setLocalRotation(Quaternion.IDENTITY);
+		rhRotVec.nodePivotIsParent.rotate(rhRotVec.quaAdd);
 		
-		return rhRotVec.nodePos.getWorldTranslation();
+		return rhRotVec.nodeChild.getWorldTranslation();
 	}
 
 	public void rotateSpinning(Spatial spt, Vector3f v3fSpotToRotate,	Vector3f v3fUp, float fAngleRadians) {
@@ -72,47 +73,102 @@ public class RotateI {
 		rotateAroundPivot(spt,sptCenter,fAddAngleRadians, sptCenter.getLocalRotation().getRotationColumn(1), false);
 	}
 	
+//	/**
+//	 * 
+//	 * @param sptToRotate
+//	 * @param sptPivot
+//	 * @param fAddAngleRadians (remember u can use f*FastMath.DEG_TO_RAD too)
+//	 * @param v3fUp if will will be Y
+//	 * @param bKeepOriginalLocalRotation
+//	 */
+//	public void rotateAroundPivot(Spatial sptToRotate, Spatial sptPivot, float fAddAngleRadians, Vector3f v3fUp, boolean bKeepOriginalLocalRotation){
+//		if(v3fUp==null)v3fUp=sptToRotate.getLocalRotation().getRotationColumn(1);
+//		
+//		/**
+//		 * we need to know where they are in the world
+//		 */
+//		Vector3f v3fPos = sptToRotate.getWorldTranslation();
+//		Vector3f v3fCenter = sptPivot.getWorldTranslation();
+//		
+//		Vector3f v3fSub = v3fPos.subtract(v3fCenter);
+//		if(!validateLengthOfDelta(v3fSub, v3fSub.length(), sptToRotate, sptPivot, fAddAngleRadians, v3fUp, bKeepOriginalLocalRotation))return;
+//		
+//		Vector3f v3fDir = v3fSub.normalize();
+//		float fDist = v3fSub.length();
+//		
+//		if(rhRotAround==null)rhRotAround=new RotateHelper();
+//		
+//		rhRotAround.nodeCenter.setLocalTranslation(v3fCenter);
+//		rhRotAround.nodePos.setLocalTranslation(v3fPos);
+//		rhRotAround.nodePos.setLocalRotation(sptToRotate.getLocalRotation());
+//		
+//		rhRotAround.quaAdd.fromAngleAxis(fAddAngleRadians, v3fUp);
+//		rhRotAround.nodeCenter.setLocalRotation(Quaternion.IDENTITY);
+//		rhRotAround.nodeCenter.rotate(rhRotAround.quaAdd);
+////		if(!bKeepOriginalLocalRotation){
+////			spt.rotate(quaAdd);  //use lookat?
+////		}
+//		
+//		sptToRotate.setLocalTranslation(
+//				sptToRotate.worldToLocal(rhRotAround.nodePos.getWorldTranslation(),null) );
+//		
+//		if(!bKeepOriginalLocalRotation){
+//			sptToRotate.setLocalRotation(rhRotAround.nodePos.getWorldRotation());
+//		}
+//		
+//	}
 	/**
 	 * 
-	 * @param sptToRotate
+	 * @param sptTargetToRotate
 	 * @param sptPivot
 	 * @param fAddAngleRadians (remember u can use f*FastMath.DEG_TO_RAD too)
 	 * @param v3fUp if will will be Y
 	 * @param bKeepOriginalLocalRotation
 	 */
-	public void rotateAroundPivot(Spatial sptToRotate, Spatial sptPivot, float fAddAngleRadians, Vector3f v3fUp, boolean bKeepOriginalLocalRotation){
-		if(v3fUp==null)v3fUp=sptToRotate.getLocalRotation().getRotationColumn(1);
-		
+	public void rotateAroundPivot(Spatial sptTargetToRotate, Spatial sptPivot, float fAddAngleRadians, Vector3f v3fUp, boolean bKeepOriginalLocalRotation){
+		if(v3fUp==null)v3fUp=sptTargetToRotate.getLocalRotation().getRotationColumn(1);
+			
 		/**
 		 * we need to know where they are in the world
 		 */
-		Vector3f v3fPos = sptToRotate.getWorldTranslation();
-		Vector3f v3fCenter = sptPivot.getWorldTranslation();
+		Vector3f v3fWTarget = sptTargetToRotate.getWorldTranslation();
+		Vector3f v3fWPivot = sptPivot.getWorldTranslation();
 		
-		Vector3f v3fSub = v3fPos.subtract(v3fCenter);
-		Vector3f v3fDir = v3fSub.normalize();
-		float fDist = v3fSub.length();
+		Vector3f v3fDistFromPivotToTarget = v3fWTarget.subtract(v3fWPivot);
+		if(!validateLengthOfDelta(v3fDistFromPivotToTarget, v3fDistFromPivotToTarget.length(), sptTargetToRotate, sptPivot, fAddAngleRadians, v3fUp, bKeepOriginalLocalRotation))return;
+		
+		Vector3f v3fDir = v3fDistFromPivotToTarget.normalize();
+		float fDist = v3fDistFromPivotToTarget.length();
 		
 		if(rhRotAround==null)rhRotAround=new RotateHelper();
 		
-		rhRotAround.nodeCenter.setLocalTranslation(v3fCenter);
-		rhRotAround.nodePos.setLocalTranslation(v3fPos);
-		rhRotAround.nodePos.setLocalRotation(sptToRotate.getLocalRotation());
+		rhRotAround.nodePivotIsParent.setLocalTranslation(v3fWPivot);
+		rhRotAround.nodeChild.setLocalTranslation(v3fDistFromPivotToTarget);
+		rhRotAround.nodeChild.setLocalRotation(sptTargetToRotate.getLocalRotation());
 		
 		rhRotAround.quaAdd.fromAngleAxis(fAddAngleRadians, v3fUp);
-		rhRotAround.nodeCenter.setLocalRotation(Quaternion.IDENTITY);
-		rhRotAround.nodeCenter.rotate(rhRotAround.quaAdd);
+		rhRotAround.nodePivotIsParent.setLocalRotation(Quaternion.IDENTITY); //reset
+		rhRotAround.nodePivotIsParent.rotate(rhRotAround.quaAdd);
 //		if(!bKeepOriginalLocalRotation){
 //			spt.rotate(quaAdd);  //use lookat?
 //		}
 		
-		sptToRotate.setLocalTranslation(
-			sptToRotate.worldToLocal(rhRotAround.nodePos.getWorldTranslation(),null) );
+		sptTargetToRotate.setLocalTranslation(
+			sptTargetToRotate.worldToLocal(rhRotAround.nodeChild.getWorldTranslation(),null) );
 		
 		if(!bKeepOriginalLocalRotation){
-			sptToRotate.setLocalRotation(rhRotAround.nodePos.getWorldRotation());
+			sptTargetToRotate.setLocalRotation(rhRotAround.nodeChild.getWorldRotation());
 		}
 		
+	}
+
+	private boolean validateLengthOfDelta(Vector3f v3fDelta, Object... aobjDebug) {
+		if(v3fDelta.length()>10000){
+//			MessagesI.i().warnMsg(this, "that far away? isnt something wrong?", v3fSub, v3fSub.length(), sptToRotate, sptPivot, fAddAngleRadians, v3fUp, bKeepOriginalLocalRotation);
+			MessagesI.i().warnMsg(this, "that far away? isnt something wrong?", aobjDebug);
+			return false;
+		}
+		return true;
 	}
 
 	public Vector3f getRandomSpotAround(Vector3f v3fAround, float fScale){

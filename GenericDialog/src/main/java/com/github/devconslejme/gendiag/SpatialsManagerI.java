@@ -75,6 +75,7 @@ public class SpatialsManagerI implements IUserTextInputSubmited{
 				 * create a section and update the parent for new childs
 				 */
 				odParent = diagMaint.putSection(odParent, strKey);
+				strKey="<SELF_NODE_REF> "+strKey;
 			}
 		}
 		

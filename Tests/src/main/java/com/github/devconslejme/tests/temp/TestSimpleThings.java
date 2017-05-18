@@ -4,8 +4,12 @@ import com.github.devconslejme.misc.StringI;
 
 public class TestSimpleThings {
 	public static void main(String[] args) {
-		tst2();
+		tst3();
+//		tst2();
 //		tst1();
+	}
+	private static void tst3() {
+		System.out.println(""+-10000000000000000.00000000000001);
 	}
 	private static void tst2() {
 //		System.out.println(9^(1f/2f));

@@ -527,10 +527,10 @@ public class OriginDevice extends Node{
 				if(getParent()==null)return false;
 				
 				if(isUnstable()){
-					if(nodePet.getParent()==null)getParent().attachChild(nodePet);
+					if(nodePet.nodeGeometries.getParent()==null)nodePet.attachChild(nodePet.nodeGeometries);
 					updatePet(getTPF(),nodePet,td);
 				}else{
-					nodePet.removeFromParent();
+					nodePet.nodeGeometries.removeFromParent();
 				}
 				
 				return true;
@@ -578,10 +578,10 @@ public class OriginDevice extends Node{
 		Vector3f v3fNodeUp = nodePet.getLocalRotation().getRotationColumn(1);//y
 		if(td.isReady(true))v3fNodeUp = RotateI.i().randomDirection();
 		float fRotSpeed=250f;
-		if(false)
+//		if(false)
 		RotateI.i().rotateAroundPivot(nodePet, this, -(fRotSpeed*fTPF)*FastMath.DEG_TO_RAD,	v3fNodeUp, false);
 		
-		////////////////// spin 
+		////////////////// spin around self
 		Quaternion qua = nodePet.nodeGeometries.getLocalRotation().clone();
 		Vector3f v3fGeomUp = qua.getRotationColumn(1); //y
 		float fSpinSpeed=500f;
@@ -707,13 +707,17 @@ public class OriginDevice extends Node{
 			}
 			
 			BoundingVolume bv = nodeSelfElectrocute.getWorldBound();
-			float fScale=1f;
-			if (bv instanceof BoundingBox)fScale = ((BoundingBox)bv).getExtent(null).length();
-			if (bv instanceof BoundingSphere)fScale = ((BoundingSphere)bv).getRadius();
-			efElec.setFromTo(
-				RotateI.i().getRandomSpotAround(bv.getCenter(), fScale),
-				RotateI.i().getRandomSpotAround(bv.getCenter(), fScale)
-			);
+			if(bv!=null){
+				float fScale=1f;
+				if (bv instanceof BoundingBox)fScale = ((BoundingBox)bv).getExtent(null).length();
+				if (bv instanceof BoundingSphere)fScale = ((BoundingSphere)bv).getRadius();
+				efElec.setFromTo(
+					RotateI.i().getRandomSpotAround(bv.getCenter(), fScale),
+					RotateI.i().getRandomSpotAround(bv.getCenter(), fScale)
+				);
+			}else{
+				efElec.setPlay(false);
+			}
 		}
 		
 		bSameAxis = (nodeElectricA!=null && nodeElectricB!=null && nodeElectricA.ea==nodeElectricB.ea);
@@ -1053,7 +1057,7 @@ public class OriginDevice extends Node{
 	}
 	public OriginDevice setElectricitySource(Spatial sptElectricSrc, boolean bForceAbsorptionOnce) {
 		if(sptElectricSrc!=null && getTargetToken(sptElectricSrc)==null){
-			MessagesI.i().warnMsg(this, "skipping", sptElectricSrc, bForceAbsorptionOnce);
+			MessagesI.i().warnMsg(this, "has no energy, skipping", sptElectricSrc, bForceAbsorptionOnce);
 			return this; //skip
 		}
 		
