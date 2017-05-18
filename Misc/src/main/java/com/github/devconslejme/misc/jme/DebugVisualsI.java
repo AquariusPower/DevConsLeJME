@@ -45,7 +45,7 @@ import com.jme3.scene.shape.Box;
 
 /**
  * These visuals are to not be integrated as child into other spatials as they would most probably 
- * modify their world bound, possibly causing troubles.
+ * modify their world bound, possibly causing other troubles.
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
@@ -95,8 +95,13 @@ public class DebugVisualsI {
 	public static class NodeDbg extends Node implements IDbg{
 		private GeometryBVolDbg geombv;
 		private NodeAxesDbg	axes;
-		private boolean	bShowAxes;
+//		private boolean	bShowAxes;
 		private Spatial	sptTarget;
+		
+		private boolean	bShow;
+		public boolean isShow() {
+			return bShow;
+		}
 		
 		public NodeDbg(Spatial spt) {
 			this.sptTarget = spt;
@@ -112,6 +117,8 @@ public class DebugVisualsI {
 			}
 		}
 		public NodeDbg setShow(boolean b) {
+			this.bShow=b;
+			
 //			geombv.setTarget(getTarget());
 			geombv.setShow(b);
 			
@@ -136,7 +143,10 @@ public class DebugVisualsI {
 		private BoundingBox	bb;
 		private BoundingSphere	bs;
 		private Spatial	sptTarget;
-		private boolean	bShowWorldBound;
+//		private boolean	bShowWorldBound;
+////	public boolean isShow() {
+////	return bShowWorldBound;
+////}
 
 		public GeometryBVolDbg(Spatial spt) {
 			this.sptTarget = spt;
@@ -175,9 +185,9 @@ public class DebugVisualsI {
 //			return this;
 //		}
 
-		public boolean isShow() {
-			return bShowWorldBound;
-		}
+//		public boolean isShow() {
+//			return bShowWorldBound;
+//		}
 
 		@Override
 		public void setTarget(Spatial spt) {
@@ -233,7 +243,7 @@ public class DebugVisualsI {
 				nd.setShow(true);
 			}
 			
-			updateWorldBoundGeom(spt,nd);
+			updateWorldBoundAndAxes(spt,nd);
 			nd.setLocalTranslation(spt.getLocalTranslation());
 		}
 	}
@@ -241,9 +251,9 @@ public class DebugVisualsI {
 	protected NodeDbg createWorldBoundGeomAndAxes(Spatial spt){
 		NodeDbg nd = ahmShowWorldBound.get(spt);
 		if(nd==null)nd=new NodeDbg(spt);
-		return updateWorldBoundGeom(spt,nd);
+		return updateWorldBoundAndAxes(spt,nd);
 	}
-	protected NodeDbg updateWorldBoundGeom(Spatial spt,NodeDbg nd){
+	protected NodeDbg updateWorldBoundAndAxes(Spatial spt,NodeDbg nd){
 		GeometryBVolDbg geomBound = nd.geombv;
 		BoundingVolume bv = spt.getWorldBound();
 		GeometryBVolDbg geomBoundNew=null;
