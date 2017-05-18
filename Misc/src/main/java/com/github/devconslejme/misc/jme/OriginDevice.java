@@ -470,7 +470,7 @@ public class OriginDevice extends Node{
 //		geom.setLocalTranslation(fRadius+1,0,0);
 		anodeElectricShapesList.add(node);
 		node.geomWireFrame.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(ColorRGBA.Cyan));
-		
+//		node.geom.getMaterial()
 //		node.attachChild(geom);
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
@@ -822,29 +822,37 @@ public class OriginDevice extends Node{
 		Geometry geom = GeometryI.i().create(mesh, ColorI.i().colorChangeCopy(color,0,fAlpha), true,null);
 		node.geom=geom;
 		
-		// name
-		MiscJmeI.i().addToName(geom, OriginDevice.class.getSimpleName(), true);
-		if(v3fUp.x==1){MiscJmeI.i().addToName(geom, "X", false);node.ea=EAxis.X;}
-		if(v3fUp.y==1){MiscJmeI.i().addToName(geom, "Y", false);node.ea=EAxis.Y;}
-		if(v3fUp.z==1){MiscJmeI.i().addToName(geom, "Z", false);node.ea=EAxis.Z;}
-		
-		MiscJmeI.i().addToName(node, geom.getName(), false);
-		
-		geom.setLocalScale(v3fScale);
-		
 		Geometry geomWireFrame=null;
 		if(bAddWireFrame){
-			geomWireFrame = geom.clone();
-//			geomWireFrame.setMaterial(geomWireFrame.getMaterial().clone());
+			geomWireFrame = new Geometry("WireFrame",mesh);
 			ColorRGBA colorW = color.clone();
 			colorW.a=1;
 			geomWireFrame.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(colorW));
 			geomWireFrame.getMaterial().getAdditionalRenderState().setWireframe(true);
-			geomWireFrame.setLocalScale(v3fScale);
+			
 			node.geomWireFrame=geomWireFrame;
 		}
 		
-		// hierarchy/pos
+		// name
+		MiscJmeI.i().addToName(geom, OriginDevice.class.getSimpleName(), true);
+		if(v3fUp.x==1){node.ea=EAxis.X;}
+		if(v3fUp.y==1){node.ea=EAxis.Y;}
+		if(v3fUp.z==1){node.ea=EAxis.Z;}
+		MiscJmeI.i().addToName(geom, node.ea.toString(), false);
+//		if(v3fUp.x==1){MiscJmeI.i().addToName(geom, "X", false);node.ea=EAxis.X;}
+//		if(v3fUp.y==1){MiscJmeI.i().addToName(geom, "Y", false);node.ea=EAxis.Y;}
+//		if(v3fUp.z==1){MiscJmeI.i().addToName(geom, "Z", false);node.ea=EAxis.Z;}
+		if(geomWireFrame!=null){
+			MiscJmeI.i().addToName(geomWireFrame, node.ea.toString(), false);
+//			MiscJmeI.i().addToName(geomWireFrame,"WireFrame",false);
+		}
+		
+		MiscJmeI.i().addToName(node, geom.getName(), false);
+		
+		// hierarchy/pos/scale/rotation
+		geom.setLocalScale(v3fScale);
+		if(geomWireFrame!=null)geomWireFrame.setLocalScale(v3fScale);
+		
 		node.attachChild(geom);
 		if(geomWireFrame!=null)node.attachChild(geomWireFrame);
 		
