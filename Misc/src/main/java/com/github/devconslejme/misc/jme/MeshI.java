@@ -32,6 +32,7 @@ import java.util.ArrayList;
 
 import com.github.devconslejme.misc.CalcI;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.MessagesI;
 import com.jme3.math.FastMath;
 import com.jme3.math.Triangle;
 import com.jme3.math.Vector3f;
@@ -84,6 +85,8 @@ public class MeshI {
 			super(axisSamples, radialSamples, fRadius1Default, radius2, height, closed, inverted);
 		}
 	}
+
+	private boolean	bDebug;
 	
 	/**
 	 * TODO ignore intersections? but if they de-intersect (move away each other)... too much trouble?
@@ -102,8 +105,11 @@ public class MeshI {
 		
 		double dVolume=0;
 		for(Geometry geom:ageom){
-			System.out.println(volumeOf(geom)+"//"+geom);
-			System.out.println(volumeOf(geom)+"//"+geom);
+			if(isDebug()){
+				MessagesI.i().output(true, System.out, "MeshVolume", this, "\n"+ 
+					volumeOf(geom)+"//"+geom+"\n"+
+					volOf((Mesh)geom.getMesh(),geom.getWorldScale())+"//MESH//"+geom);
+			}
 			dVolume += volumeOf(geom);
 		}
 		
@@ -207,6 +213,15 @@ public class MeshI {
 		mesh.updateCounts();
 		
 		return mesh;
+	}
+
+	public boolean isDebug() {
+		return bDebug;
+	}
+
+	public MeshI setDebug(boolean bDebug) {
+		this.bDebug = bDebug;
+		return this; //for beans setter
 	}
 
 }
