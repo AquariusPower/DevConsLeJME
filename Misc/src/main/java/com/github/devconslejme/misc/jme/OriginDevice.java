@@ -448,11 +448,13 @@ public class OriginDevice extends Node{
 			}
 		});
 		
-		initPet();
+		createPet();
 	}
 	
-	private void initPet() {
+	private void createPet() {
 		Node node=new Node();
+		
+		TimedDelay td = new TimedDelay(1f, "").setActive(true);
 		
 		// Orde's pet
 		Geometry geom = GeometryI.i().create(MeshI.i().cone(1f),
@@ -467,14 +469,13 @@ public class OriginDevice extends Node{
 			public Boolean call() {
 				if(getParent()==null)return false;
 				getParent().attachChild(node);
-				petRotateAround(getTPF(),node,geom);
+				petRotateAround(getTPF(),node,geom,td);
 				return true;
 			}
 		}).enableLoopMode();//.setDelaySeconds(0.1f);//.setInitialDelay(10));
 	}
 
-	TimedDelay td = new TimedDelay(1f, "").setActive(true);
-	protected void petRotateAround(float fTPF,Node node, Geometry geom) {
+	protected void petRotateAround(float fTPF,Node node, Geometry geom, TimedDelay td) {
 		Vector3f v3fUp = node.getLocalRotation().getRotationColumn(1);
 //		if(td.isReady(true))v3fUp = MiscJmeI.i().randomDirection();
 		float fRotSpeed=1f;
