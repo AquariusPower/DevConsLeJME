@@ -135,6 +135,8 @@ public class OriginDevice extends Node{
 		}
 
 		EAxis ea;
+		protected Geometry	geom;
+		public Geometry	geomWireFrame;
 	}
 	
 	public OriginDevice(){
@@ -448,24 +450,27 @@ public class OriginDevice extends Node{
 			}
 		});
 		
-		createPet();
-		createPet();
-		createPet();
+//		createPet(EAxis.X);
+//		createPet(EAxis.Y);
+//		createPet(EAxis.Z);
 	}
 	
-	private void createPet() {
-		Node node=new Node();
+//	private void createPet(EAxis ea) {
+	private void createPet(NodeAxis node) {
+//		NodeAxis node=new NodeAxis("Pet"+ea);
+		MiscJmeI.i().addToName(node, "Pet", false);
+//		node.ea=ea;
 		
 		TimedDelay td = new TimedDelay(1f, "").setActive(true);
 		
 		// Orde's pet
-		Geometry geom = GeometryI.i().create(MeshI.i().cone(1f),
-			ColorI.i().colorChangeCopy(ColorRGBA.Cyan, 0f, 0.5f),false,null);
-		geom.setLocalScale(0.05f, 0.15f, 1);
-		geom.setLocalTranslation(fRadius+1,0,0);
+//		Geometry geom = GeometryI.i().create(MeshI.i().cone(1f),
+//			ColorI.i().colorChangeCopy(ColorRGBA.Cyan, 0f, 0.5f),false,null);
+//		geom.setLocalScale(0.05f, 0.15f, 1);
+//		geom.setLocalTranslation(fRadius+1,0,0);
+		anodeElectricShapesList.add(node);
 		
-		node.attachChild(geom);
-//		DebugVisualsI.i().showWorldBound(geom);
+//		node.attachChild(geom);
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
@@ -473,7 +478,7 @@ public class OriginDevice extends Node{
 				
 				if(bUnstable){
 					getParent().attachChild(node);
-					petRotateAround(getTPF(),node,geom,td);
+					petRotateAround(getTPF(),node,node.geom,td);
 				}else{
 					node.removeFromParent();
 				}
@@ -754,9 +759,9 @@ public class OriginDevice extends Node{
 		ColorRGBA color = new ColorRGBA(v3fUp.x,v3fUp.y,v3fUp.z,1f);
 		
 		// small shape
-		NodeAxis nodeThing = createAxisShape(mesh, color, v3fUp.mult(fRadius), 0.5f, v3fUp, true, null);
-		anodeElectricShapesList.add(nodeThing);
-		anodeMainShapes.add(nodeThing);
+		NodeAxis nodeSimpleShape = createAxisShape(mesh, color, v3fUp.mult(fRadius), 0.5f, v3fUp, true, null);
+		anodeElectricShapesList.add(nodeSimpleShape);
+		anodeMainShapes.add(nodeSimpleShape);
 		
 		float fDisplacementTorus = fRadius+1;
 		
@@ -776,6 +781,11 @@ public class OriginDevice extends Node{
 		nodeRotating.attachChild(nodeCore);
 		
 		createTorusIntersections(nodeRotating,color,fDisplacementTorus,v3fUp);
+		
+		// pets
+		NodeAxis nodePet = createAxisShape(MeshI.i().cone(1f), color, new Vector3f(fRadius+1,0,0), 1f, v3fUp, false, 
+			new Vector3f(0.05f, 0.15f, 1));
+		createPet(nodePet);
 		
 		return nodeRotating;
 	}
@@ -804,10 +814,11 @@ public class OriginDevice extends Node{
 	protected NodeAxis createAxisShape(Mesh mesh, ColorRGBA color, Vector3f v3f, float fAlpha, Vector3f v3fUp) {
 		return createAxisShape( mesh,  color,  v3f,  fAlpha,  v3fUp, false, null);
 	}
-	protected NodeAxis createAxisShape(Mesh mesh, ColorRGBA color, Vector3f v3f, float fAlpha, Vector3f v3fUp, boolean bAddWireFrame, Vector3f v3fScale) {
+	protected NodeAxis createAxisShape(Mesh mesh, ColorRGBA color, Vector3f v3fPos, float fAlpha, Vector3f v3fUp, boolean bAddWireFrame, Vector3f v3fScale) {
 		if(v3fScale==null)v3fScale=new Vector3f(1,1,1);
 		NodeAxis node = new NodeAxis("Node");
 		Geometry geom = GeometryI.i().create(mesh, ColorI.i().colorChangeCopy(color,0,fAlpha), true,null);
+		node.geom=geom;
 		
 		// name
 		MiscJmeI.i().addToName(geom, OriginDevice.class.getSimpleName(), true);
@@ -828,13 +839,14 @@ public class OriginDevice extends Node{
 			geomWireFrame.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(colorW));
 			geomWireFrame.getMaterial().getAdditionalRenderState().setWireframe(true);
 			geomWireFrame.setLocalScale(v3fScale);
+			node.geomWireFrame=geomWireFrame;
 		}
 		
 		// hierarchy/pos
 		node.attachChild(geom);
 		if(geomWireFrame!=null)node.attachChild(geomWireFrame);
 		
-		node.setLocalTranslation(v3f);
+		node.setLocalTranslation(v3fPos);
 		node.rotateUpTo(v3fUp);
 //		node.lookAt(v3fUp, v3fUp);
 		
