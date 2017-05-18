@@ -26,9 +26,12 @@
 */
 package com.github.devconslejme.misc.jme;
 
+import java.util.ArrayList;
+
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.jme3.app.Application;
 import com.jme3.input.CameraInput;
@@ -46,8 +49,8 @@ public class FlyByCameraX extends FlyByCamera{
 	private boolean	bAllowZooming=false; //only with scope or eagle eye
 	private boolean	bAllowMove=true; //as it is a flycam, must be default true
 	private boolean	bOverrideKeepFlyCamDisabled;
-	protected float	fAccumulatedMoveTrust;
-	private float	fAccumulatedMoveSide;
+	private float	fAccMvTm = 0.05f;
+//	private boolean	bAccumulatingTime;
 	
 	public void reBindKeys(){
     MiscJmeI.i().enqueueUnregisterKeyMappings( //these were set at super
@@ -80,26 +83,40 @@ public class FlyByCameraX extends FlyByCamera{
 		restoreMouseAxisLater(CameraInput.FLYCAM_UP,MouseInput.AXIS_Y,false);
 		restoreMouseAxisLater(CameraInput.FLYCAM_DOWN,MouseInput.AXIS_Y,true);
 		
-    // movement
-		KeyBindCommandManagerI.i().putBindCommandLater("A",CameraInput.FLYCAM_STRAFELEFT,new CallableXAnon(){@Override	public Boolean call(){
-			moveCamera( getTPF(),true );return true;}}.enableLoopMode());
+    // movement, each key requires an independent queue object instance as they can be combined
+		KeyBindCommandManagerI.i().putBindCommandLater("A",CameraInput.FLYCAM_STRAFELEFT ,new CallableXAnon(){@Override	public Boolean call(){
+			moveCamera( getTPF(),true );accMvTrsTm(this);return true;}
+			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.enableLoopMode());
 		KeyBindCommandManagerI.i().putBindCommandLater("D",CameraInput.FLYCAM_STRAFERIGHT,new CallableXAnon(){@Override	public Boolean call(){
-			moveCamera(-getTPF(),true );return true;}}.enableLoopMode());
+			moveCamera(-getTPF(),true );accMvTrsTm(this);return true;}
+			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.enableLoopMode());
 		
-		KeyBindCommandManagerI.i().putBindCommandLater("W",CameraInput.FLYCAM_FORWARD,new CallableXAnon(){@Override	public Boolean call(){
-			moveCamera( getTPF(),false);accMvTrsTm(getTPF(),false);return true;}
-			@Override	public void callAfterRemovedFromQueue() {fAccumulatedMoveTrust=0f;}}.enableLoopMode());
-		KeyBindCommandManagerI.i().putBindCommandLater("S",CameraInput.FLYCAM_BACKWARD,new CallableXAnon(){@Override	public Boolean call(){
-			moveCamera(-getTPF(),false);accMvTrsTm(getTPF(),false);return true;}
-			@Override	public void callAfterRemovedFromQueue() {fAccumulatedMoveTrust=0f;}}.enableLoopMode());
+		KeyBindCommandManagerI.i().putBindCommandLater("W",CameraInput.FLYCAM_FORWARD    ,new CallableXAnon(){@Override	public Boolean call(){
+			moveCamera( getTPF(),false);accMvTrsTm(this);return true;}
+			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.enableLoopMode());
+		KeyBindCommandManagerI.i().putBindCommandLater("S",CameraInput.FLYCAM_BACKWARD   ,new CallableXAnon(){@Override	public Boolean call(){
+			moveCamera(-getTPF(),false);accMvTrsTm(this);return true;}
+			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.enableLoopMode());
 		
-		KeyBindCommandManagerI.i().putBindCommandLater("Q",CameraInput.FLYCAM_RISE,new CallableXAnon(){@Override	public Boolean call(){
-			riseCamera( getTPF());return true;}}.enableLoopMode());
-		KeyBindCommandManagerI.i().putBindCommandLater("Z",CameraInput.FLYCAM_LOWER,new CallableXAnon(){@Override	public Boolean call(){
-			riseCamera(-getTPF());return true;}}.enableLoopMode());
+		KeyBindCommandManagerI.i().putBindCommandLater("Q",CameraInput.FLYCAM_RISE       ,new CallableXAnon(){@Override	public Boolean call(){
+			riseCamera( getTPF()      );accMvTrsTm(this);return true;}
+			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.enableLoopMode());
+		KeyBindCommandManagerI.i().putBindCommandLater("Z",CameraInput.FLYCAM_LOWER      ,new CallableXAnon(){@Override	public Boolean call(){
+			riseCamera(-getTPF()      );accMvTrsTm(this);return true;}
+			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.enableLoopMode());
 		
 	}
 	
+	ArrayList<CallableX> acxList=new ArrayList<CallableX>();
+	protected void resetMvTm(CallableXAnon cx) {
+		if(!acxList.contains(cx)){acxList.add(cx);return;}
+		fAccMvTm=0f;
+	}
+	protected void accMvTrsTm(CallableXAnon cx){
+		if(!acxList.contains(cx))acxList.add(cx);
+		fAccMvTm+=cx.getTPF();
+	}
+
 	public boolean toggleInvertY(){
 		invertY=!invertY;
 		return invertY;
@@ -164,31 +181,21 @@ public class FlyByCameraX extends FlyByCamera{
 	protected void moveCamera(float value, boolean sideways) {
 		if(!isAllowMove())return;
 //		if(!sideways)fAccumulatedMoveTrust+=gettpf
-		super.moveCamera(value+getAccMove(sideways), sideways);
+		super.moveCamera(getCurrentVelocity(value), sideways);
 	}
 	
-	protected float getAccMove(boolean bSide){
-		float f=0f;
-		if(bSide){
-			f=fAccumulatedMoveSide;
-		}else{
-			f=fAccumulatedMoveTrust;
-		}
-		return f/10f;
+	protected float getCurrentVelocity(float value){
+		float f=1;
+		if(value<0)f=-1;
+		return value+(f*fAccMvTm*fAcceleration);
 	}
 	
-	protected void accMvTrsTm(float fTPF,boolean bSide){
-		if(bSide){
-			fAccumulatedMoveSide+=fTPF;
-		}else{
-			fAccumulatedMoveTrust+=fTPF;
-		}
-	}
+	private float fAcceleration=0.1f;
 	
 	@Override
 	protected void riseCamera(float value) {
 		if(!isAllowMove())return;
-		super.riseCamera(value);
+		super.riseCamera(getCurrentVelocity(value));
 	}
 	
 	public boolean isAllowZooming() {
@@ -241,20 +248,13 @@ public class FlyByCameraX extends FlyByCamera{
 		return bOverrideKeepFlyCamDisabled;
 	}
 
-//	public FlyByCameraX setOverrideKeepFlyCamDisabled(boolean bOverrideKeepFlyCamDisabled) {
-//		this.bOverrideKeepFlyCamDisabled = bOverrideKeepFlyCamDisabled;
-//		return this; //for beans setter
-//	}
-	
-//	public void showCursor(boolean bEnableCursorVisible){
-//		boolean bEnableFlyCam = !bEnableCursorVisible;
-//		if(isEnabled()!=bEnableFlyCam){
-//			setEnabled(bEnableFlyCam);
-//		}
-//		
-//		//boolean bEnableCursorVisible = !bEnableFlyCam;
-//		if(app.getInputManager().isCursorVisible() != bEnableCursorVisible){
-//			app.getInputManager().setCursorVisible( bEnableCursorVisible );
-//		}
-//	}
+	public float getAcceleration() {
+		return fAcceleration;
+	}
+
+	public FlyByCameraX setAcceleration(float fAcceleration) {
+		this.fAcceleration = fAcceleration;
+		return this; //for beans setter
+	}
+
 }
