@@ -26,6 +26,7 @@
 */
 package com.github.devconslejme.misc;
 
+
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
@@ -34,6 +35,8 @@ public class Energy {
 	private Long	lLowEnergy;
 	private long	lEnergyCapacity;
 	private long lStoredEnergy;
+	private float	fEnerUnstablePerc;
+	
 	public Energy(long lEnergyDensity, long lEnergyCapacity, long lLowEnergy,	long lStoredEnergy) {
 		super();
 		this.lEnergyDensity = lEnergyDensity;
@@ -69,7 +72,7 @@ public class Energy {
 		return lEnergyWpMs/((double)lEnergyDensity);
 	}
 	
-	public long getEnergy() {
+	public long getEnergyStored() {
 		return lStoredEnergy;
 	}
 
@@ -115,7 +118,11 @@ public class Energy {
 	}
 	public String energyInfo(){
 		StringBuilder sb = new StringBuilder();
-		sb.append("("+lStoredEnergy+">"+lLowEnergy+")w/ms, ");
+		sb.append("("
+			+"C="+StringI.i().fmtLong(lEnergyCapacity)+">"
+			+"S="+StringI.i().fmtLong(lStoredEnergy)+">"
+			+"L="+StringI.i().fmtLong(lLowEnergy)+")w/ms, ");
+		sb.append(StringI.i().fmtFloat(getPerc()*100f)+"%, ");
 		return sb.toString();
 	}
 
@@ -138,5 +145,17 @@ public class Energy {
 		lStoredEnergy+=lAbso;
 		enOther.lStoredEnergy-=lAbso;
 		return lAbso;
+	}
+
+	public float getPerc() {
+		return (float) (lStoredEnergy / (double)lEnergyCapacity); 
+	}
+	public float getUnstablePerc() {
+		float f = getPerc()-1f;
+		return fEnerUnstablePerc = f>=0 ? f : 0;
+	}
+	public Energy setEnerUnstablePerc(float fEnerUnstablePerc) {
+		this.fEnerUnstablePerc = fEnerUnstablePerc;
+		return this; //for beans setter
 	}
 }

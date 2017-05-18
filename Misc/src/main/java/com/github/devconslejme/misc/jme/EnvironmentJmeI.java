@@ -39,9 +39,11 @@ import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.font.BitmapText;
+import com.jme3.input.InputManager;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.renderer.Camera;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Quad;
@@ -57,7 +59,7 @@ import com.jme3.scene.shape.Quad;
 public class EnvironmentJmeI extends AbstractAppState{
 	public static EnvironmentJmeI i(){return GlobalManagerI.i().get(EnvironmentJmeI.class);}
 	
-	private MouseI mouse = new MouseI();
+	private MouseI mouse;
 	private DisplayI display = new DisplayI();
 	private ArrayList<IEnvironmentListener> alisteners = new ArrayList<IEnvironmentListener>();
 	
@@ -73,9 +75,17 @@ public class EnvironmentJmeI extends AbstractAppState{
 	private Node	nodeGui;
 	private Node nodeInfo=new Node();
 	private Geometry geomInfoBkg = new Geometry();
+	private Application	app;
+	private InputManager	inputman;
+	private Camera	cam;
 	
 	public void configure(Node nodeGui){
-		G.i(Application.class).getStateManager().attach(this);
+		app=G.i(Application.class);
+		cam=app.getCamera();
+		inputman=app.getInputManager();
+		mouse = new MouseI(inputman);
+		
+		app.getStateManager().attach(this);
 		this.nodeGui=nodeGui;
 		if(this.nodeGui==null){
 			if(G.i(SimpleApplication.class)!=null){
@@ -115,6 +125,11 @@ public class EnvironmentJmeI extends AbstractAppState{
 		updateInfo();
 	}
 	
+//	public Vector3f getMouseCursorPosition(){
+//		Vector2f v2f = inputman.getCursorPosition();
+//		return new Vector3f(v2f.x,v2f.y,0);
+//	}
+
 	public static interface IEnvironmentListener{
 		void displayResizedEvent(int iW, int iH);
 	}
@@ -155,6 +170,12 @@ public class EnvironmentJmeI extends AbstractAppState{
 	}
 
 	public static class MouseI{
+		private InputManager	inputman;
+
+		public MouseI(InputManager inputman) {
+			this.inputman = inputman;
+		}
+
 		public boolean isButtonDown(int i){
 			return Mouse.isButtonDown(i);
 		}
@@ -164,8 +185,9 @@ public class EnvironmentJmeI extends AbstractAppState{
 		 * @return
 		 */
 		public Vector3f getPos3D() {
-//			return MiscJmeI.i().toV3f(app.getInputManager().getCursorPosition(), MiscJmeI.i().getZAboveAllAtGuiNode());
-			return new Vector3f(Mouse.getX(), Mouse.getY(), MiscJmeI.i().getZAboveAllAtGuiNode());
+//			return new Vector3f(Mouse.getX(), Mouse.getY(), MiscJmeI.i().getZAboveAllAtGuiNode());
+			Vector2f v2f = getPos2D();
+			return new Vector3f(v2f.x,v2f.y,MiscJmeI.i().getZAboveAllAtGuiNode());
 		}
 		
 		public int isMouseCursorPressedButtons(){
@@ -184,7 +206,7 @@ public class EnvironmentJmeI extends AbstractAppState{
 		}
 
 		public Vector2f getPos2D() {
-			return new Vector2f(Mouse.getX(), Mouse.getY());
+			return inputman.getCursorPosition(); //return new Vector2f(Mouse.getX(), Mouse.getY());
 		}
 	}
 	
@@ -231,13 +253,13 @@ public class EnvironmentJmeI extends AbstractAppState{
 		if(bShowFPS)sb.append("FPS="+iFPS+strSep);
 		if(bShowCamPos){
 			sb.append("CamPos="
-				+TextI.i().fmtVector3f(G.i(Application.class).getCamera().getLocation(),2)
+				+TextI.i().fmtVector3f(cam.getLocation(),2)
 				+strSep);
 		}
 		if(bShowCamRot){
 			//TODO show a drawn line about Z at XY plane rotation, and another about up/downwards degrees
 			sb.append("CamRotDeg="
-				+TextI.i().fmtToDegrees(G.i(Application.class).getCamera().getRotation(),1)
+				+TextI.i().fmtToDegrees(cam.getRotation(),1)
 				+strSep);
 		}
 		if(hmCustomInfo.size()>0){

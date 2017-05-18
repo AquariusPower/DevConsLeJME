@@ -97,8 +97,9 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 	public Vector3f getLocationTo() {
 		Vector3f v3fTargetSpot = v3fTo==null?null:v3fTo.clone();
 		if(bToMouse){
-			v3fTargetSpot=MiscJmeI.i().getMouseCursorPosition();
-			v3fTargetSpot.z=v3fTo==null?MiscJmeI.i().getZAboveAllAtGuiNode():v3fTo.z;
+			v3fTargetSpot=EnvironmentJmeI.i().getMouse().getPos3D();
+			if(v3fTo!=null)v3fTargetSpot.z=v3fTo.z;
+//			v3fTargetSpot.z = v3fTo==null ? MiscJmeI.i().getZAboveAllAtGuiNode() : v3fTo.z;
 		}else
 		if(sptFollowTo!=null){
 			//TODO if sptFollow is a node, add a node to it and apply displacement to let rotations etc apply
@@ -113,8 +114,9 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 //		return v3fFrom;
 //	}
 //
-	public void setFrom(Vector3f v3fFrom) {
+	public THIS setFrom(Vector3f v3fFrom) {
 		this.v3fFrom = v3fFrom;
+		return getThis();
 	}
 //
 //	public Vector3f getV3fTo() {
@@ -211,6 +213,9 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 		return getThis();
 	}
 	
+	/**
+	 * @param v3fDisplacement can be null
+	 */
 	@Override
 	public THIS setFollowToTarget(Spatial spt, Vector3f v3fDisplacement){
 		assertNotDiscarded();
@@ -222,7 +227,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 	@Override
 	public THIS setColor(ColorRGBA colorRef){
 		this.colorRefBase = colorRef!=null ? colorRef : colorRefDefault;
-		this.geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(colorRef));
+		this.geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(colorRef).clone()); //must be a clone or will modify the line thickness of all using the same material
 		return getThis();
 	}
 	@Override
@@ -273,6 +278,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 		}
 		
 		if(sptOwner==null)sptOwner=sptFollowFrom;
+		if(sptOwner==null)sptOwner=sptFollowTo;
 		
 		if(nodeParent==null){
 //			if (objOwner instanceof ILinkedSpatial) {

@@ -60,17 +60,17 @@ public class MiscJmeI {
 	private Application	app;
 	private Node	nodeVirtualWorld;
 	private SimpleApplication	sappOptional;
-	private RotateHelper	rhRotAround;
-	private RotateHelper	rhRotVec;
-	
-	public static class RotateHelper{
-		private Node nodeCenter = new Node();
-		private Node nodePos = new Node();
-		private Quaternion quaAdd=new Quaternion();
-		public RotateHelper(){
-			nodeCenter.attachChild(nodePos);
-		}
-	}
+//	private RotateHelper	rhRotAround;
+//	private RotateHelper	rhRotVec;
+//	
+//	public static class RotateHelper{
+//		private Node nodeCenter = new Node();
+//		private Node nodePos = new Node();
+//		private Quaternion quaAdd=new Quaternion();
+//		public RotateHelper(){
+//			nodeCenter.attachChild(nodePos);
+//		}
+//	}
 		
 	/**
 	 * 
@@ -136,10 +136,10 @@ public class MiscJmeI {
 //		}
 //	}
 
-	public Vector3f getMouseCursorPosition(){
-		Vector2f v2f = app.getInputManager().getCursorPosition();
-		return new Vector3f(v2f.x,v2f.y,0);
-	}
+//	public Vector3f getMouseCursorPosition(){
+//		Vector2f v2f = app.getInputManager().getCursorPosition();
+//		return new Vector3f(v2f.x,v2f.y,0);
+//	}
 
 	public void addToName(Spatial spt, String str, boolean bPrepend){
 		addToName( spt,  str,  bPrepend , false);
@@ -175,12 +175,12 @@ public class MiscJmeI {
 //		return sptTarget.getLocalTranslation().add(getBoundingBoxSize(sptTarget).mult(0.5f));
 	}
 	
-	public Vector3f randomDirection(){
-		return new Vector3f(
-			FastMath.nextRandomFloat()*2f-1f,
-			FastMath.nextRandomFloat()*2f-1f,
-			FastMath.nextRandomFloat()*2f-1f).normalize();
-	}
+//	public Vector3f randomDirection(){
+//		return new Vector3f(
+//			FastMath.nextRandomFloat()*2f-1f,
+//			FastMath.nextRandomFloat()*2f-1f,
+//			FastMath.nextRandomFloat()*2f-1f).normalize();
+//	}
 	
 //  public BitmapFont loadDefaultFont() {
 //  	return loadFont("Interface/Fonts/Default.fnt");
@@ -290,29 +290,29 @@ public class MiscJmeI {
 		
 	}
 	
-	public Vector3f getRandomSpot(Vector3f v3fAround, float fScale){
-		return getRandomSpot(v3fAround, true, fScale);
-	}
-	/**
-	 * 
-	 * @param v3fAround can be null, last thing applied
-	 * @param bNormalize
-	 * @param fScale can be null, applied AFTER normalize
-	 * @return
-	 */
-	public Vector3f getRandomSpot(Vector3f v3fAround, boolean bNormalize, Float fScale){
-		Vector3f v3f = new Vector3f(
-				2*FastMath.nextRandomFloat()-1,
-				2*FastMath.nextRandomFloat()-1,
-				2*FastMath.nextRandomFloat()-1
-			);
-		
-		if(bNormalize)v3f.normalizeLocal();
-		if(fScale!=null)v3f.multLocal(fScale);
-		if(v3fAround!=null)v3f.addLocal(v3fAround);
-		
-		return v3f;
-	}
+//	public Vector3f getRandomSpot(Vector3f v3fAround, float fScale){
+//		return getRandomSpot(v3fAround, true, fScale);
+//	}
+//	/**
+//	 * 
+//	 * @param v3fAround can be null, last thing applied
+//	 * @param bNormalize
+//	 * @param fScale can be null, applied AFTER normalize
+//	 * @return
+//	 */
+//	public Vector3f getRandomSpot(Vector3f v3fAround, boolean bNormalize, Float fScale){
+//		Vector3f v3f = new Vector3f(
+//				2*FastMath.nextRandomFloat()-1,
+//				2*FastMath.nextRandomFloat()-1,
+//				2*FastMath.nextRandomFloat()-1
+//			);
+//		
+//		if(bNormalize)v3f.normalizeLocal();
+//		if(fScale!=null)v3f.multLocal(fScale);
+//		if(v3fAround!=null)v3f.addLocal(v3fAround);
+//		
+//		return v3f;
+//	}
 	
 //	public String fmtVector3f(Vector3f v3f,int iScale){
 //		return ""
@@ -332,61 +332,66 @@ public class MiscJmeI {
 //			;
 //	}
 	
-	public void rotateAround(Spatial spt, Spatial sptCenter, float fAddAngleRadians){
-		rotateAroundPivot(spt,sptCenter,fAddAngleRadians, sptCenter.getLocalRotation().getRotationColumn(1), false);
-	}
-	
-	/**
-	 * 
-	 * @param sptToRotate
-	 * @param sptPivot
-	 * @param fAddAngleRadians (remember u can use f*FastMath.DEG_TO_RAD too)
-	 * @param v3fUp if will will be Y
-	 * @param bKeepOriginalLocalRotation
-	 */
-	public void rotateAroundPivot(Spatial sptToRotate, Spatial sptPivot, float fAddAngleRadians, Vector3f v3fUp, boolean bKeepOriginalLocalRotation){
-		if(v3fUp==null)v3fUp=sptToRotate.getLocalRotation().getRotationColumn(1);
-		Vector3f v3fPos = sptToRotate.getLocalTranslation();
-		Vector3f v3fCenter = sptPivot.getLocalTranslation();
-		Vector3f v3fSub = v3fPos.subtract(v3fCenter);
-		Vector3f v3fDir = v3fSub.normalize();
-		float fDist = v3fSub.length();
-		
-		if(rhRotAround==null)rhRotAround=new RotateHelper();
-		
-		rhRotAround.nodeCenter.setLocalTranslation(v3fCenter);
-		rhRotAround.nodePos.setLocalTranslation(v3fPos);
-		rhRotAround.nodePos.setLocalRotation(sptToRotate.getLocalRotation());
-		
-		rhRotAround.quaAdd.fromAngleAxis(fAddAngleRadians, v3fUp);
-		rhRotAround.nodeCenter.setLocalRotation(Quaternion.IDENTITY);
-		rhRotAround.nodeCenter.rotate(rhRotAround.quaAdd);
+//	public void rotateAround(Spatial spt, Spatial sptCenter, float fAddAngleRadians){
+//		rotateAroundPivot(spt,sptCenter,fAddAngleRadians, sptCenter.getLocalRotation().getRotationColumn(1), false);
+//	}
+//	
+//	/**
+//	 * 
+//	 * @param sptToRotate
+//	 * @param sptPivot
+//	 * @param fAddAngleRadians (remember u can use f*FastMath.DEG_TO_RAD too)
+//	 * @param v3fUp if will will be Y
+//	 * @param bKeepOriginalLocalRotation
+//	 */
+//	public void rotateAroundPivot(Spatial sptToRotate, Spatial sptPivot, float fAddAngleRadians, Vector3f v3fUp, boolean bKeepOriginalLocalRotation){
+//		if(v3fUp==null)v3fUp=sptToRotate.getLocalRotation().getRotationColumn(1);
+//		Vector3f v3fPos = sptToRotate.getLocalTranslation();
+//		Vector3f v3fCenter = sptPivot.getLocalTranslation();
+//		Vector3f v3fSub = v3fPos.subtract(v3fCenter);
+//		Vector3f v3fDir = v3fSub.normalize();
+//		float fDist = v3fSub.length();
+//		
+//		if(rhRotAround==null)rhRotAround=new RotateHelper();
+//		
+//		rhRotAround.nodeCenter.setLocalTranslation(v3fCenter);
+//		rhRotAround.nodePos.setLocalTranslation(v3fPos);
+//		rhRotAround.nodePos.setLocalRotation(sptToRotate.getLocalRotation());
+//		
+//		rhRotAround.quaAdd.fromAngleAxis(fAddAngleRadians, v3fUp);
+//		rhRotAround.nodeCenter.setLocalRotation(Quaternion.IDENTITY);
+//		rhRotAround.nodeCenter.rotate(rhRotAround.quaAdd);
+////		if(!bKeepOriginalLocalRotation){
+////			spt.rotate(quaAdd);  //use lookat?
+////		}
+//		
+//		sptToRotate.setLocalTranslation(rhRotAround.nodePos.getWorldTranslation());
+//		
 //		if(!bKeepOriginalLocalRotation){
-//			spt.rotate(quaAdd);  //use lookat?
+//			sptToRotate.setLocalRotation(rhRotAround.nodePos.getWorldRotation());
 //		}
-		
-		sptToRotate.setLocalTranslation(rhRotAround.nodePos.getWorldTranslation());
-		
-		if(!bKeepOriginalLocalRotation){
-			sptToRotate.setLocalRotation(rhRotAround.nodePos.getWorldRotation());
-		}
-		
-	}
+//		
+//	}
 	
 	public float getTPF(){
 		return app.getTimer().getTimePerFrame();
 	}
 
-	public Vector3f rotateVector(Vector3f v3fTipToRotate, Vector3f v3fUp, float fAddAngleRadians) {
-		if(rhRotVec==null)rhRotVec=new RotateHelper();
-		
-		rhRotVec.nodeCenter.setLocalTranslation(0,0,0);
-		rhRotVec.nodePos.setLocalTranslation(v3fTipToRotate);
-		
-		rhRotVec.quaAdd.fromAngleAxis(fAddAngleRadians, v3fUp);
-		rhRotVec.nodeCenter.setLocalRotation(Quaternion.IDENTITY);
-		rhRotVec.nodeCenter.rotate(rhRotVec.quaAdd);
-		
-		return rhRotVec.nodePos.getWorldTranslation();
-	}
+//	public Vector3f rotateVector(Vector3f v3fTipToRotate, Vector3f v3fUp, float fAddAngleRadians) {
+//		if(rhRotVec==null)rhRotVec=new RotateHelper();
+//		
+//		rhRotVec.nodeCenter.setLocalTranslation(0,0,0);
+//		rhRotVec.nodePos.setLocalTranslation(v3fTipToRotate);
+//		
+//		rhRotVec.quaAdd.fromAngleAxis(fAddAngleRadians, v3fUp);
+//		rhRotVec.nodeCenter.setLocalRotation(Quaternion.IDENTITY);
+//		rhRotVec.nodeCenter.rotate(rhRotVec.quaAdd);
+//		
+//		return rhRotVec.nodePos.getWorldTranslation();
+//	}
+//
+//	public void rotateSpinning(Spatial spt, Vector3f v3fSpotToRotate,	Vector3f v3fUp, float fAngleRadians) {
+//		Vector3f v3fNewUp = MiscJmeI.i().rotateVector(v3fSpotToRotate,v3fUp,fAngleRadians);
+//		spt.rotateUpTo(v3fNewUp);
+//	}
 }

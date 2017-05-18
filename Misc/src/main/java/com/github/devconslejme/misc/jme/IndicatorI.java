@@ -315,7 +315,7 @@ public class IndicatorI {
 //		Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSize(sptTarget);
 		
 		if(gi.getBouncingMoveDirection()==null){
-			gi.setBouncingMoveDirection(MiscJmeI.i().randomDirection());
+			gi.setBouncingMoveDirection(RotateI.i().randomDirection());
 		}
 		
 		Vector3f v3fDir = gi.getBouncingMoveDirection();
@@ -358,7 +358,7 @@ public class IndicatorI {
 			}
 			
 			// new direction
-			gi.setBouncingMoveDirection(MiscJmeI.i().randomDirection());
+			gi.setBouncingMoveDirection(RotateI.i().randomDirection());
 		}
 	}
 	

@@ -212,9 +212,10 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		
 		// Orde
 		orde = new OriginDevice();
-		orde.setUnstable(true)
+		orde
+//			.setUnstable(true)
 			.setDestroySpatials(true)
-			.setSourceMode(ETargetMode.Attract)
+//			.setSourceMode(ETargetMode.Attract)
 			.setAutoTargetNearestSpatials(true);
 		JavaScriptI.i().setJSBindingForEnumsOf(OriginDevice.class);
 		getRootNode().attachChild(orde);
@@ -293,7 +294,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 			LoggingI.i().logMarker(""+geom);
 			LoggingI.i().logEntry(""+geom.getWorldBound());
 			LoggingI.i().logEntry("Volume="+geom.getWorldBound().getVolume());
-			orde.setElectricitySource(geom,true);
+			orde.setElectricitySource(geom);
 			return true;
 		}
 		

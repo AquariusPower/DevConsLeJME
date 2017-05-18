@@ -28,6 +28,7 @@
 package com.github.devconslejme.misc;
 
 import java.math.BigInteger;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import com.google.common.base.Strings;
@@ -246,7 +247,12 @@ public class StringI {
 		astrLinesToModify.add(strLine);
 //		strLine="";iWordCountPerLine=0;
 	}
-
+	
+	/**
+	 * scale 2
+	 * @param fValue
+	 * @return
+	 */
 	public String fmtFloat(float fValue) {
 		return fmtFloat(fValue,2);
 	}
@@ -254,5 +260,9 @@ public class StringI {
 		return String.format("%."+iScale+"f", fValue);
 	}
 	
-	
+//	DecimalFormat df = new DecimalFormat("##,##,##,##,##,##,##0.00");
+	DecimalFormat dfLong = new DecimalFormat("##,##,##,##,##,##,##0");
+	public String fmtLong(long l){
+		return String.format(dfLong.format(l));
+	}
 }
