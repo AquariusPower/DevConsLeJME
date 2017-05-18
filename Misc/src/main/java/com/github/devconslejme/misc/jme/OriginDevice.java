@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import com.github.devconslejme.misc.CalcI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.TimedDelay;
@@ -135,8 +136,9 @@ public class OriginDevice extends Node{
 		}
 
 		EAxis ea;
-		protected Geometry	geom;
-		public Geometry	geomWireFrame;
+		Geometry	geom;
+		Geometry	geomWireFrame;
+		Node nodeGeometries;
 	}
 	
 	public OriginDevice(){
@@ -455,23 +457,17 @@ public class OriginDevice extends Node{
 //		createPet(EAxis.Z);
 	}
 	
-//	private void createPet(EAxis ea) {
 	private void preparePet(NodeAxis node) {
-//		NodeAxis node=new NodeAxis("Pet"+ea);
 		MiscJmeI.i().addToName(node, "Pet", false);
-//		node.ea=ea;
 		
 		TimedDelay td = new TimedDelay(1f, "").setActive(true);
 		
 		// Orde's pet
-//		Geometry geom = GeometryI.i().create(MeshI.i().cone(1f),
-//			ColorI.i().colorChangeCopy(ColorRGBA.Cyan, 0f, 0.5f),false,null);
-//		geom.setLocalScale(0.05f, 0.15f, 1);
-//		geom.setLocalTranslation(fRadius+1,0,0);
 		anodeElectricShapesList.add(node);
 		node.geomWireFrame.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(ColorRGBA.Cyan));
-//		node.geom.getMaterial()
-//		node.attachChild(geom);
+		//TODO as the material changed, shouldnt this be required????	node.geomWireFrame.getMaterial().getAdditionalRenderState().setWireframe(true);
+		fixGeomToNotBeWireFrame(node.geom);
+			
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
@@ -487,6 +483,15 @@ public class OriginDevice extends Node{
 				return true;
 			}
 		}).enableLoopMode();//.setDelaySeconds(0.1f);//.setInitialDelay(10));
+	}
+	
+	/**
+	 * TODO my fault? the main geometry was not set as it but is becoming wireframe...
+	 * @param geom
+	 */
+	@Bugfix
+	private void fixGeomToNotBeWireFrame(Geometry geom) {
+		geom.getMaterial().getAdditionalRenderState().setWireframe(false);	
 	}
 
 	protected void petRotateAround(float fTPF,Node node, Geometry geom,TimedDelay td) {
@@ -821,6 +826,9 @@ public class OriginDevice extends Node{
 		NodeAxis node = new NodeAxis("Node");
 		Geometry geom = GeometryI.i().create(mesh, ColorI.i().colorChangeCopy(color,0,fAlpha), true,null);
 		node.geom=geom;
+//		geom.getMaterial().getAdditionalRenderState().setWireframe(false);
+		
+		node.nodeGeometries=new Node();
 		
 		Geometry geomWireFrame=null;
 		if(bAddWireFrame){
