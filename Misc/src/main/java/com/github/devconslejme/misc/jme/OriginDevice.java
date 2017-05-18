@@ -465,6 +465,7 @@ public class OriginDevice extends Node{
 		// Orde's pet
 		anodeElectricShapesList.add(node);
 		node.geomWireFrame.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(ColorRGBA.Cyan));
+		node.rotateUpTo(Vector3f.UNIT_Y); //undo the axis default
 		//TODO as the material changed, shouldnt this be required????	node.geomWireFrame.getMaterial().getAdditionalRenderState().setWireframe(true);
 		fixGeomToNotBeWireFrame(node.geom);
 			
@@ -475,7 +476,7 @@ public class OriginDevice extends Node{
 				
 				if(bUnstable){
 					getParent().attachChild(node);
-					petRotateAround(getTPF(),node,node.geom,td);
+					petRotateAround(getTPF(),node,td);
 				}else{
 					node.removeFromParent();
 				}
@@ -494,14 +495,14 @@ public class OriginDevice extends Node{
 		geom.getMaterial().getAdditionalRenderState().setWireframe(false);	
 	}
 
-	protected void petRotateAround(float fTPF,Node node, Geometry geom,TimedDelay td) {
+	protected void petRotateAround(float fTPF,NodeAxis node, TimedDelay td) {
 		Vector3f v3fNodeUp = node.getLocalRotation().getRotationColumn(1);//y
 		if(td.isReady(true))v3fNodeUp = MiscJmeI.i().randomDirection();
 		float fRotSpeed=250f;
 		MiscJmeI.i().rotateAround(node, this, -(fRotSpeed*fTPF)*FastMath.DEG_TO_RAD,	v3fNodeUp, false);
 		
 		//spin
-		Quaternion qua = geom.getLocalRotation().clone();
+		Quaternion qua = node.nodeGeometries.getLocalRotation().clone();
 		Vector3f v3fGeomUp = qua.getRotationColumn(1); //y
 		float fSpinSpeed=500f;
 		Vector3f v3fNewUp = MiscJmeI.i().rotateVector(
@@ -509,7 +510,7 @@ public class OriginDevice extends Node{
 				qua.getRotationColumn(2), //z
 				fSpinSpeed*fTPF*FastMath.DEG_TO_RAD
 			);
-		geom.rotateUpTo(v3fNewUp);
+		node.nodeGeometries.rotateUpTo(v3fNewUp);
 	}	
 
 	private NodeAxis createEnergyCore() {
@@ -790,7 +791,7 @@ public class OriginDevice extends Node{
 		
 		// pets
 		NodeAxis nodePet = createAxisShape(
-			MeshI.i().cone(1f), color, new Vector3f(fRadius+1,0,0), 1f, v3fUp, true, 
+			MeshI.i().cone(1f), color, new Vector3f(fRadius*1.5f,0,0), 1f, v3fUp, true, 
 			new Vector3f(0.05f, 0.15f, 1));
 		preparePet(nodePet);
 		
@@ -826,7 +827,6 @@ public class OriginDevice extends Node{
 		NodeAxis node = new NodeAxis("Node");
 		Geometry geom = GeometryI.i().create(mesh, ColorI.i().colorChangeCopy(color,0,fAlpha), true,null);
 		node.geom=geom;
-//		geom.getMaterial().getAdditionalRenderState().setWireframe(false);
 		
 		node.nodeGeometries=new Node();
 		
@@ -847,26 +847,21 @@ public class OriginDevice extends Node{
 		if(v3fUp.y==1){node.ea=EAxis.Y;}
 		if(v3fUp.z==1){node.ea=EAxis.Z;}
 		MiscJmeI.i().addToName(geom, node.ea.toString(), false);
-//		if(v3fUp.x==1){MiscJmeI.i().addToName(geom, "X", false);node.ea=EAxis.X;}
-//		if(v3fUp.y==1){MiscJmeI.i().addToName(geom, "Y", false);node.ea=EAxis.Y;}
-//		if(v3fUp.z==1){MiscJmeI.i().addToName(geom, "Z", false);node.ea=EAxis.Z;}
 		if(geomWireFrame!=null){
 			MiscJmeI.i().addToName(geomWireFrame, node.ea.toString(), false);
-//			MiscJmeI.i().addToName(geomWireFrame,"WireFrame",false);
 		}
 		
 		MiscJmeI.i().addToName(node, geom.getName(), false);
 		
 		// hierarchy/pos/scale/rotation
-		geom.setLocalScale(v3fScale);
-		if(geomWireFrame!=null)geomWireFrame.setLocalScale(v3fScale);
+		node.nodeGeometries.setLocalScale(v3fScale);
 		
-		node.attachChild(geom);
-		if(geomWireFrame!=null)node.attachChild(geomWireFrame);
+		node.nodeGeometries.attachChild(geom);
+		if(geomWireFrame!=null)node.nodeGeometries.attachChild(geomWireFrame);
+		node.attachChild(node.nodeGeometries);
 		
 		node.setLocalTranslation(v3fPos);
 		node.rotateUpTo(v3fUp);
-//		node.lookAt(v3fUp, v3fUp);
 		
 		attachChild(node);
 		
