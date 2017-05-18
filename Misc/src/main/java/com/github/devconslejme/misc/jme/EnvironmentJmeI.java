@@ -83,7 +83,7 @@ public class EnvironmentJmeI extends AbstractAppState{
 			}
 		}
 		
-		btInfo = new BitmapText(MiscJmeI.i().loadDefaultFont());
+		btInfo = new BitmapText(TextI.i().loadDefaultFont());
 		btInfo.setSize(12);
 		
 		geomInfoBkg.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(new ColorRGBA(0,0,0,0.25f)));
@@ -231,13 +231,13 @@ public class EnvironmentJmeI extends AbstractAppState{
 		if(bShowFPS)sb.append("FPS="+iFPS+strSep);
 		if(bShowCamPos){
 			sb.append("CamPos="
-				+MiscJmeI.i().fmtVector3f(G.i(Application.class).getCamera().getLocation(),2)
+				+TextI.i().fmtVector3f(G.i(Application.class).getCamera().getLocation(),2)
 				+strSep);
 		}
 		if(bShowCamRot){
 			//TODO show a drawn line about Z at XY plane rotation, and another about up/downwards degrees
 			sb.append("CamRotDeg="
-				+MiscJmeI.i().fmtToDegrees(G.i(Application.class).getCamera().getRotation(),1)
+				+TextI.i().fmtToDegrees(G.i(Application.class).getCamera().getRotation(),1)
 				+strSep);
 		}
 		if(hmCustomInfo.size()>0){

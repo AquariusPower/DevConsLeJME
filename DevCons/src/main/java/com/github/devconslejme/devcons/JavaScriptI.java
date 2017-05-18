@@ -60,7 +60,7 @@ import com.github.devconslejme.misc.MethodX;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.ReportI;
-import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.jme.TextI;
 import com.google.common.collect.HashBiMap;
 import com.jme3.app.Application;
 import com.jme3.input.KeyInput;
@@ -620,11 +620,11 @@ public class JavaScriptI implements IGlobalAddListener {
 				String str="";
 				if (obj instanceof Vector3f) {
 					Vector3f v3f = (Vector3f) obj;
-					str+="new Vector3f("+MiscJmeI.i().fmtVector3f(v3f,2)+")";
+					str+="new Vector3f("+TextI.i().fmtVector3f(v3f,2)+")";
 				}else
 				if (obj instanceof Quaternion) {
 					Quaternion qua = (Quaternion) obj;
-					str+="new Quaternion().fromAngles("+MiscJmeI.i().fmtToDegrees(qua,2)+")";
+					str+="new Quaternion().fromAngles("+TextI.i().fmtToDegrees(qua,2)+")";
 				}else{
 					str+="Return value as String = '"+obj+"'";
 				}

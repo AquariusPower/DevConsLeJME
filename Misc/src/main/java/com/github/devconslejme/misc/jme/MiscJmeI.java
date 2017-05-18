@@ -31,21 +31,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import com.github.devconslejme.misc.Annotations.ToDo;
-import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.AssertionsI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
-import com.github.devconslejme.misc.StringI;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.collision.CollisionResults;
-import com.jme3.font.BitmapFont;
-import com.jme3.font.BitmapText;
-import com.jme3.font.LineWrapMode;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Ray;
@@ -65,21 +60,23 @@ public class MiscJmeI {
 	private Application	app;
 	private Node	nodeVirtualWorld;
 	private SimpleApplication	sappOptional;
+	private RotateHelper	rhRotAround;
+	private RotateHelper	rhRotVec;
 	
-	/** rotateAround() */
-	private Node nodeCenter = new Node();
-	/** rotateAround() */
-	private Node nodePos = new Node();
-	/** rotateAround() */
-	private Quaternion quaAdd=new Quaternion();
-	
+	public static class RotateHelper{
+		private Node nodeCenter = new Node();
+		private Node nodePos = new Node();
+		private Quaternion quaAdd=new Quaternion();
+		public RotateHelper(){
+			nodeCenter.attachChild(nodePos);
+		}
+	}
+		
 	/**
 	 * 
 	 * @param nodeVirtualWorld if null, will try to auto-set from simple application
 	 */
 	public void configure(Node nodeVirtualWorld){
-		nodeCenter.attachChild(nodePos);
-		
 		this.app=GlobalManagerI.i().get(Application.class);
 		if (this.app instanceof SimpleApplication)sappOptional = (SimpleApplication) this.app;
 		
@@ -121,23 +118,23 @@ public class MiscJmeI {
 		return null;
 	}
 	
-	public void recursivelyApplyTextNoWrap(Node nodeParent) {
-		/**
-		 * LineWrapMode.Clip look better than NoWrap
-		 */
-		LineWrapMode e = LineWrapMode.Clip; //TODO could it be a clip only in the height? so it would wrap but would be clipped in the height only if overflowing downwards or outside limits 
-		for(Spatial spt:nodeParent.getChildren()){
-			if(spt instanceof BitmapText){
-//				System.err.println("NoWrapAt:"+((BitmapText)spt).getText());//TODO rm
-				if(!((BitmapText)spt).getLineWrapMode().equals(e)){
-					((BitmapText)spt).setLineWrapMode(e);
-				}
-			}
-			if(spt instanceof Node){
-				recursivelyApplyTextNoWrap((Node)spt);
-			}
-		}
-	}
+//	public void recursivelyApplyTextNoWrap(Node nodeParent) {
+//		/**
+//		 * LineWrapMode.Clip look better than NoWrap
+//		 */
+//		LineWrapMode e = LineWrapMode.Clip; //TODO could it be a clip only in the height? so it would wrap but would be clipped in the height only if overflowing downwards or outside limits 
+//		for(Spatial spt:nodeParent.getChildren()){
+//			if(spt instanceof BitmapText){
+////				System.err.println("NoWrapAt:"+((BitmapText)spt).getText());//TODO rm
+//				if(!((BitmapText)spt).getLineWrapMode().equals(e)){
+//					((BitmapText)spt).setLineWrapMode(e);
+//				}
+//			}
+//			if(spt instanceof Node){
+//				recursivelyApplyTextNoWrap((Node)spt);
+//			}
+//		}
+//	}
 
 	public Vector3f getMouseCursorPosition(){
 		Vector2f v2f = app.getInputManager().getCursorPosition();
@@ -185,15 +182,15 @@ public class MiscJmeI {
 			FastMath.nextRandomFloat()*2f-1f).normalize();
 	}
 	
-  public BitmapFont loadDefaultFont() {
-  	return loadFont("Interface/Fonts/Default.fnt");
-  }
-  public BitmapFont loadDefaultMonoFont() {
-  	return loadFont("Interface/Fonts/Console.fnt");
-  }
-  public BitmapFont loadFont(String strPath) {
-  	return GlobalManagerI.i().get(Application.class).getAssetManager().loadFont(strPath);
-  }
+//  public BitmapFont loadDefaultFont() {
+//  	return loadFont("Interface/Fonts/Default.fnt");
+//  }
+//  public BitmapFont loadDefaultMonoFont() {
+//  	return loadFont("Interface/Fonts/Console.fnt");
+//  }
+//  public BitmapFont loadFont(String strPath) {
+//  	return GlobalManagerI.i().get(Application.class).getAssetManager().loadFont(strPath);
+//  }
   
   public void setAboveAllAtGuiNode(float f){
 		if(this.fAboveAllAtGuiNode!=null)throw new DetailedException("already set");
@@ -317,23 +314,23 @@ public class MiscJmeI {
 		return v3f;
 	}
 	
-	public String fmtVector3f(Vector3f v3f,int iScale){
-		return ""
-			+StringI.i().fmtFloat(v3f.getX(),iScale)+"f,"
-			+StringI.i().fmtFloat(v3f.getY(),iScale)+"f,"
-			+StringI.i().fmtFloat(v3f.getZ(),iScale)+"f"
-			;
-	}
-	
-	public String fmtToDegrees(Quaternion qua,int iScale){
-		float[] afAngles = qua.toAngles(null);
-		return ""
-			+StringI.i().fmtFloat(afAngles[0]*FastMath.RAD_TO_DEG,iScale)+"f,"
-			+StringI.i().fmtFloat(afAngles[1]*FastMath.RAD_TO_DEG,iScale)+"f,"
-			+StringI.i().fmtFloat(afAngles[2]*FastMath.RAD_TO_DEG,iScale)+"f"
-//			+StringI.i().fmtFloat(qua.getW()*FastMath.RAD_TO_DEG,1)+""
-			;
-	}
+//	public String fmtVector3f(Vector3f v3f,int iScale){
+//		return ""
+//			+StringI.i().fmtFloat(v3f.getX(),iScale)+"f,"
+//			+StringI.i().fmtFloat(v3f.getY(),iScale)+"f,"
+//			+StringI.i().fmtFloat(v3f.getZ(),iScale)+"f"
+//			;
+//	}
+//	
+//	public String fmtToDegrees(Quaternion qua,int iScale){
+//		float[] afAngles = qua.toAngles(null);
+//		return ""
+//			+StringI.i().fmtFloat(afAngles[0]*FastMath.RAD_TO_DEG,iScale)+"f,"
+//			+StringI.i().fmtFloat(afAngles[1]*FastMath.RAD_TO_DEG,iScale)+"f,"
+//			+StringI.i().fmtFloat(afAngles[2]*FastMath.RAD_TO_DEG,iScale)+"f"
+////			+StringI.i().fmtFloat(qua.getW()*FastMath.RAD_TO_DEG,1)+""
+//			;
+//	}
 	
 	public void rotateAround(Spatial spt, Spatial sptCenter, float fAddAngleRadians){
 		rotateAround(spt,sptCenter,fAddAngleRadians, sptCenter.getLocalRotation().getRotationColumn(1), false);
@@ -355,38 +352,41 @@ public class MiscJmeI {
 		Vector3f v3fDir = v3fSub.normalize();
 		float fDist = v3fSub.length();
 		
-		nodeCenter.setLocalTranslation(v3fCenter);
-		nodePos.setLocalTranslation(v3fPos);
+		if(rhRotAround==null)rhRotAround=new RotateHelper();
 		
-		quaAdd.fromAngleAxis(fAddAngleRadians, v3fUp);
-		nodeCenter.setLocalRotation(Quaternion.IDENTITY);
-		nodeCenter.rotate(quaAdd);
+		rhRotAround.nodeCenter.setLocalTranslation(v3fCenter);
+		rhRotAround.nodePos.setLocalTranslation(v3fPos);
+		rhRotAround.nodePos.setLocalRotation(spt.getLocalRotation());
+		
+		rhRotAround.quaAdd.fromAngleAxis(fAddAngleRadians, v3fUp);
+		rhRotAround.nodeCenter.setLocalRotation(Quaternion.IDENTITY);
+		rhRotAround.nodeCenter.rotate(rhRotAround.quaAdd);
 //		if(!bKeepOriginalLocalRotation){
 //			spt.rotate(quaAdd);  //use lookat?
 //		}
 		
-		spt.setLocalTranslation(nodePos.getWorldTranslation());
+		spt.setLocalTranslation(rhRotAround.nodePos.getWorldTranslation());
 		
 		if(!bKeepOriginalLocalRotation){
-//			spt.lookAt(v3fPos, v3fUp);
-			spt.rotate(quaAdd);  //TODO use lookat?
+			spt.setLocalRotation(rhRotAround.nodePos.getWorldRotation());
 		}
 		
-		if(false){ //???
-			Quaternion qua = new Quaternion();
-			qua.lookAt(v3fDir, v3fUp);
-			qua.addLocal(quaAdd);
-			if(!bKeepOriginalLocalRotation){
-				spt.getLocalRotation().addLocal(quaAdd);
-			}
-			Vector3f v3fLookAt = qua.getRotationColumn(2,null).normalize();
-			Vector3f v3fStretched = v3fLookAt.clone().scaleAdd(fDist, new Vector3f());
-			
-			spt.setLocalTranslation(v3fCenter.add(v3fStretched));
-		}
 	}
 	
 	public float getTPF(){
 		return app.getTimer().getTimePerFrame();
+	}
+
+	public Vector3f rotateVector(Vector3f v3fTipToRotate, Vector3f v3fUp, float fAddAngleRadians) {
+		if(rhRotVec==null)rhRotVec=new RotateHelper();
+		
+		rhRotVec.nodeCenter.setLocalTranslation(0,0,0);
+		rhRotVec.nodePos.setLocalTranslation(v3fTipToRotate);
+		
+		rhRotVec.quaAdd.fromAngleAxis(fAddAngleRadians, v3fUp);
+		rhRotVec.nodeCenter.setLocalRotation(Quaternion.IDENTITY);
+		rhRotVec.nodeCenter.rotate(rhRotVec.quaAdd);
+		
+		return rhRotVec.nodePos.getWorldTranslation();
 	}
 }

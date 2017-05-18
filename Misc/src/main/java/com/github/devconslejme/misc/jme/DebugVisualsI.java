@@ -30,24 +30,17 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 import com.github.devconslejme.misc.Annotations.Bean;
-import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
-import com.github.devconslejme.misc.jme.DebugVisualsI.ArrowGeometry.EFollowMode;
-import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
+import com.jme3.bullet.debug.BulletDebugAppState.DebugAppStateFilter;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.Vector2f;
-import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.debug.Arrow;
-import com.jme3.scene.debug.WireBox;
 import com.jme3.scene.shape.Box;
 
 /**
@@ -62,7 +55,7 @@ public class DebugVisualsI {
 	private boolean bVisualsEnabled=false;
 	private boolean bShowWorldBound=false;
 	private float fUpdateDelay=1f;
-	HashMap<Spatial,GeometryBVolDbg> ahmShowWorldBound = new HashMap<Spatial,GeometryBVolDbg>();
+	HashMap<Spatial,NodeDbg> ahmShowWorldBound = new HashMap<Spatial,NodeDbg>();
 	
 	public void configure(){
 		QueueI.i().enqueue(new CallableXAnon() {
@@ -79,8 +72,67 @@ public class DebugVisualsI {
 		updateShowWorldBound(tpf);
 	}
 	
-	public static class GeometryBVolDbg extends Geometry{
+	public static class NodeAxesDbg extends Node implements IDbg{
+		private Spatial	sptTarget;
 
+		public NodeAxesDbg(Spatial spt) {
+			this.sptTarget=spt;
+		}
+		public void setShow(boolean b) {
+			DebugVisualsI.i().setShow(this,b);
+		}
+		@Override
+		public void setTarget(Spatial spt) {
+			this.sptTarget=spt;
+		}
+
+		@Override
+		public Spatial getTarget() {
+			return sptTarget;
+		}
+	}
+	
+	public static class NodeDbg extends Node implements IDbg{
+		private GeometryBVolDbg geombv;
+		private NodeAxesDbg	axes;
+		private boolean	bShowAxes;
+		private Spatial	sptTarget;
+		
+		public NodeDbg(Spatial spt) {
+			this.sptTarget = spt;
+		}
+		
+		public void updateAxesScale() {
+			float fMult=2.2f;//10% beyond limits to be surely visible
+			if(geombv.bb!=null){
+				axes.setLocalScale(geombv.bb.getExtent(null).mult(fMult));
+			}else
+			if(geombv.bs!=null){
+				axes.setLocalScale(geombv.bs.getRadius()*fMult);
+			}
+		}
+		public NodeDbg setShow(boolean b) {
+//			geombv.setTarget(getTarget());
+			geombv.setShow(b);
+			
+//			axes.setTarget(getTarget());
+			axes.setShow(b);
+			
+			return this;
+		}
+
+		@Override
+		public void setTarget(Spatial spt) {
+			this.sptTarget=spt;
+		}
+
+		@Override
+		public Spatial getTarget() {
+			return sptTarget;
+		}
+	}
+	
+	public static class GeometryBVolDbg extends Geometry implements IDbg{
 		private BoundingBox	bb;
 		private BoundingSphere	bs;
 		private Spatial	sptTarget;
@@ -106,57 +158,104 @@ public class DebugVisualsI {
 			return bs;
 		}
 
-		public GeometryBVolDbg setShow(boolean bShowWorldBound) {
-			this.bShowWorldBound=bShowWorldBound;
-			
-			if(!bShowWorldBound){
-				removeFromParent();
-			}else{
-				if(sptTarget.getParent()!=null){
-					sptTarget.getParent().attachChild(this);
-				}
-			}
-			
-			return this;
+		public void setShow(boolean b) {
+			DebugVisualsI.i().setShow(this,b);
 		}
+//		public GeometryBVolDbg setShow(boolean bShowWorldBound) {
+//			this.bShowWorldBound=bShowWorldBound;
+//			
+//			if(!bShowWorldBound){
+//				removeFromParent();
+//			}else{
+//				if(sptTarget.getParent()!=null){
+//					sptTarget.getParent().attachChild(this);
+//				}
+//			}
+//			
+//			return this;
+//		}
 
 		public boolean isShow() {
 			return bShowWorldBound;
 		}
 
+		@Override
+		public void setTarget(Spatial spt) {
+			this.sptTarget=spt;
+		}
+
+		@Override
+		public Spatial getTarget() {
+			return sptTarget;
+		}
+
 	}
 	
-	private void updateShowWorldBound(float tpf) {
-		for(Entry<Spatial, GeometryBVolDbg> entry:ahmShowWorldBound.entrySet()){
-			Spatial spt = entry.getKey();
-			GeometryBVolDbg geomBV = entry.getValue();
-			if(spt.getParent()==null && geomBV.getParent()!=null){
-				geomBV.removeFromParent();
-				continue;
+	public static interface IDbg{
+		void setTarget(Spatial spt);
+		Spatial getTarget();
+	}
+	
+//	protected void setShow(NodeDbg nd, boolean bShowWorldBound, boolean bShowAxis) {
+//		this.bShowWorldBound=bShowWorldBound;
+//		
+//		if(!bShowWorldBound){
+//			removeFromParent();
+//		}else{
+//			if(sptTarget.getParent()!=null){
+//				sptTarget.getParent().attachChild(this);
+//			}
+//		}
+//	}
+	protected void setShow(Spatial spt, boolean b) {
+		if(b){
+			Node parent = ((IDbg)spt).getTarget().getParent();
+			if(parent!=null){
+				parent.attachChild(spt);
 			}
-			
-			if(spt.getParent()!=null && geomBV.getParent()==null && geomBV.isShow()){
-				geomBV.setShow(true);
-			}
-			
-			updateWorldBoundGeom(spt,geomBV);
-			geomBV.setLocalTranslation(spt.getLocalTranslation());
+		}else{
+			spt.removeFromParent();
 		}
 	}
 	
-	public GeometryBVolDbg createWorldBoundGeom(Spatial spt){
-		return updateWorldBoundGeom(spt,null);
+	protected void updateShowWorldBound(float tpf) {
+		for(Entry<Spatial, NodeDbg> entry:ahmShowWorldBound.entrySet()){
+			Spatial spt = entry.getKey();
+//			GeometryBVolDbg geomBV = entry.getValue().geombv;
+//			if(spt.getParent()==null && geomBV.getParent()!=null){
+			NodeDbg nd = entry.getValue();
+			if(spt.getParent()==null && nd.getParent()!=null){
+				nd.removeFromParent();
+				continue;
+			}
+			
+			if(spt.getParent()!=null && nd.getParent()==null && nd.isShow()){
+				nd.setShow(true);
+			}
+			
+			updateWorldBoundGeom(spt,nd);
+			nd.setLocalTranslation(spt.getLocalTranslation());
+		}
 	}
-	public GeometryBVolDbg updateWorldBoundGeom(Spatial spt,GeometryBVolDbg geomBound){
+	
+	protected NodeDbg createWorldBoundGeomAndAxes(Spatial spt){
+		NodeDbg nd = ahmShowWorldBound.get(spt);
+		if(nd==null)nd=new NodeDbg(spt);
+		return updateWorldBoundGeom(spt,nd);
+	}
+	protected NodeDbg updateWorldBoundGeom(Spatial spt,NodeDbg nd){
+		GeometryBVolDbg geomBound = nd.geombv;
 		BoundingVolume bv = spt.getWorldBound();
 		GeometryBVolDbg geomBoundNew=null;
 		ColorRGBA color=ColorRGBA.Blue;
+		boolean bCreating=false;
 		//TODO if it was already created, could just modify it?
 		if (bv instanceof BoundingBox) {
 			BoundingBox bb = (BoundingBox) bv;
 			if(geomBound==null || !bb.getExtent(null).equals(geomBound.getTargetBB().getExtent(null))){
 				geomBoundNew = GeometryI.i().create(new Box(bb.getXExtent(),bb.getYExtent(),bb.getZExtent()), 
 					color, false,	createGeomBVolDbg(spt) );
+				bCreating=true;
 				geomBoundNew.setTargetBB(bb);
 			}
 		}else
@@ -165,50 +264,70 @@ public class DebugVisualsI {
 			if(geomBound==null || bs.getRadius()!=geomBound.getTargetBS().getRadius()){
 				geomBoundNew = GeometryI.i().create(MeshI.i().sphere(bs.getRadius()), 
 					color, false, createGeomBVolDbg(spt));
+				bCreating=true;
 				geomBoundNew.setTargetBS(bs);
 			}
 		}else{
 			throw new UnsupportedOperationException("unsupported "+bv.getClass());
 		}
 		
-		if(geomBoundNew!=null)geomBoundNew.getMaterial().getAdditionalRenderState().setWireframe(true);
-		return geomBoundNew;
+		if(geomBoundNew!=null){
+			geomBoundNew.getMaterial().getAdditionalRenderState().setWireframe(true);
+			nd.geombv=geomBoundNew;
+		}
+		
+		if(bCreating){
+//			nd = new NodeDbg(spt);
+			nd.axes = NodeI.i().createRotationAxes(new NodeAxesDbg(spt));
+		}
+		
+		nd.updateAxesScale();
+		
+		return nd;
 	}
 
-	private GeometryBVolDbg createGeomBVolDbg(Spatial spt) {
+	protected GeometryBVolDbg createGeomBVolDbg(Spatial spt) {
 		GeometryBVolDbg geom = new GeometryBVolDbg(spt);
 		WorldPickingI.i().addSkip(geom);
 		return geom;
 	}
-
-	public ArrowGeometry createArrowFollowing(Node nodeBase, Spatial sptFrom, Spatial sptTo, ColorRGBA color){
-		ArrowGeometry ga = createArrow(color);
-//		MiscJmeI.i().addToName(ga, DebugVisualsI.class.getSimpleName(), true);
-		
-		ga.setFromToCenterMode(EFollowMode.Edge, EFollowMode.Edge);
-		
-		ga.setControllingQueue(
-			QueueI.i().enqueue(new CallableXAnon() {
-//				private Spatial	sptBeingFollowed=sptTarget;
-				@Override	public Boolean call() {
-					if(ga.isDestroy()){
-						ga.removeFromParent();
-						endLoopMode();
-					}else{
-						if(isVisualsEnabled()){
-							if(ga.getParent()==null)nodeBase.attachChild(ga);
-							ga.setFromTo(sptFrom, sptTo);
-						}else{
-							if(ga.getParent()!=null)ga.removeFromParent();
-						}
-					}
-					
-					return true;
-				}}.enableLoopMode().setDelaySeconds(getUpdateDelay()))
-		);
 	
-		return ga;
-	}
+//	/**
+//	 * TODO couldnt this just be the existing arrow effect? duplicated concepts?
+//	 * @param nodeBase
+//	 * @param sptFrom
+//	 * @param sptTo
+//	 * @param color
+//	 * @return
+//	 */
+//	public ArrowGeometry createArrowFollowing(Node nodeBase, Spatial sptFrom, Spatial sptTo, ColorRGBA color){
+//		ArrowGeometry ga = createArrow(color);
+////		MiscJmeI.i().addToName(ga, DebugVisualsI.class.getSimpleName(), true);
+//		
+//		ga.setFromToCenterMode(EFollowMode.Edge, EFollowMode.Edge);
+//		
+//		ga.setControllingQueue(
+//			QueueI.i().enqueue(new CallableXAnon() {
+////				private Spatial	sptBeingFollowed=sptTarget;
+//				@Override	public Boolean call() {
+//					if(ga.isDestroy()){
+//						ga.removeFromParent();
+//						endLoopMode();
+//					}else{
+//						if(isVisualsEnabled()){
+//							if(ga.getParent()==null)nodeBase.attachChild(ga);
+//							ga.setFromTo(sptFrom, sptTo);
+//						}else{
+//							if(ga.getParent()!=null)ga.removeFromParent();
+//						}
+//					}
+//					
+//					return true;
+//				}}.enableLoopMode().setDelaySeconds(getUpdateDelay()))
+//		);
+//	
+//		return ga;
+//	}
 	
 	@Bean
 	public float getUpdateDelay() {
@@ -234,203 +353,35 @@ public class DebugVisualsI {
 		this.bVisualsEnabled = bVisualsEnabled;
 	}
 	
-	public static class ArrowGeometry extends Geometry {
-		private float	fScaleArrowTip= 0.025f;
-		private boolean bDestroy=false;
-//		private float	fScaleX = getScaleArrowTip();
-//		private float	fScaleY = getScaleArrowTip();
-		private CallableX	cx;
-		
-		private EFollowMode efmFrom;
-		private EFollowMode efmTo;
-		private Float	fOverrideLength;
-		private Float	fOverrideZ;
-		
-		public static enum EFollowMode{
-			Location,
-			Center,
-			Edge,
-			;
-		}
-		
-		public ArrowGeometry() {
-			MiscJmeI.i().addToName(this, ArrowGeometry.class.getSimpleName(), true);
-		}
-		
-		public ArrowGeometry setColor(ColorRGBA color){
-			setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
-			return this;
-		}
-		
-		public ArrowGeometry setFromToCenterMode(EFollowMode eFrom, EFollowMode eTo){
-			this.efmFrom=eFrom;
-			this.efmTo=eTo;
-			return this;
-		}
-		
-		private Vector3f modePos(Spatial spt){
-			Vector3f v3f = null;
-			switch(efmFrom){
-				case Edge: //TODO edge is special
-				case Center:
-					v3f = spt.getWorldBound().getCenter();
-					break;
-				case Location:
-					v3f = spt.getLocalTranslation();
-					break;
-			}
-			
-			if(fOverrideZ!=null)v3f.z=fOverrideZ;
-			
-			return v3f;
-		}
-		
-		public ArrowGeometry setFromTo(Spatial sptFrom, Spatial sptTo){
-			Vector3f v3fFrom = modePos(sptFrom);
-			Vector3f v3fTo = modePos(sptTo);
-			setFromTo(v3fFrom, v3fTo);
-			return this;
-		}
-		public ArrowGeometry setFromTo(Spatial spt, Vector2f v2fTo){
-			setFromTo(spt, MiscLemurI.i().toV3f(v2fTo));
-			return this;
-		}
-		public ArrowGeometry setFromTo(Spatial sptFrom, Vector3f v3fTo){
-			Vector3f v3fFrom = modePos(sptFrom);
-			setFromTo(v3fFrom, v3fTo);
-			return this;
-		}
-		
-		/**
-		 * override length must be set<br>
-		 * the v3fTo will be at the direction the spatial is rotated at Z column
-		 * @param spt
-		 * @return
-		 */
-		public ArrowGeometry setFrom(Spatial spt){
-			DetailedException.assertNotNull(getOverrideLength());
-			setFromTo(spt,
-				spt.getLocalTranslation().add(
-					spt.getWorldRotation().getRotationColumn(2)) //Z is to where it is looking at
-			); 
-			return this;
-		}
-		
-		/**
-		 * see {@link #setFromTo(Vector3f, Vector3f)}
-		 * @param v3fTo
-		 * @return
-		 */
-		public ArrowGeometry setTo(Vector3f v3fTo){
-			setFromTo((Vector3f)null, v3fTo);
-			return this;
-		}
-		/**
-		 * 
-		 * @param v3fFrom if null will keep its current from location
-		 * @param v3fTo
-		 * @return
-		 */
-		public ArrowGeometry setFromTo(Vector3f v3fFrom,Vector3f v3fTo){
-			DetailedException.assertNotNull(v3fTo,this,v3fFrom);
-			
-			if(v3fFrom!=null){
-				setLocalTranslation(v3fFrom);
-			}else{
-				v3fFrom=getLocalTranslation();
-			}
-			
-			float fLength = getOverrideLength()!=null ? getOverrideLength() : v3fTo.distance(v3fFrom);
-			
-			setLocalScale(fScaleArrowTip , fScaleArrowTip, fLength);
-			
-			lookAt(v3fTo, Vector3f.UNIT_Y);
-			
-			return this;
-		}
-
-		public float getScaleArrowTip() {
-			return fScaleArrowTip;
-		}
-
-		public ArrowGeometry setScaleArrowTip(float fScaleArrowTip) {
-			this.fScaleArrowTip = fScaleArrowTip;
-			return this;
-		}
-
-		public boolean isDestroy() {
-			return bDestroy;
-		}
-
-		public void setDestroy() {
-			this.bDestroy = true;
-		}
-		
-		public CallableX getControllingQueue(){
-			return cx;
-		}
-		public ArrowGeometry setControllingQueue(CallableX cx) {
-			this.cx=cx;
-			return this;
-		}
-
-		public Float getOverrideLength() {
-			return fOverrideLength;
-		}
-
-		public ArrowGeometry setOverrideLength(Float fOverrideLength) {
-			this.fOverrideLength = fOverrideLength;
-			return this;
-		}
-
-		@Override
-		public String toString() {
-			StringBuilder builder = new StringBuilder();
-			builder.append("ArrowGeometry [fScaleArrowTip=");
-			builder.append(fScaleArrowTip);
-			builder.append(", bDestroy=");
-			builder.append(bDestroy);
-			builder.append(", cx=");
-			builder.append(cx);
-			builder.append(", fOverrideLength=");
-			builder.append(fOverrideLength);
-			builder.append("]");
-			return builder.toString();
-		}
-
-		public ArrowGeometry setOverrideZ(float fZ) {
-			this.fOverrideZ=fZ;
-			return this;
-		}
-		
-	}
+//	public ArrowGeometry createArrow(ColorRGBA color){
+//		ArrowGeometry geom = new ArrowGeometry();
+//		MiscJmeI.i().addToName(geom, DebugVisualsI.class.getSimpleName(), true);
+//		geom.setMesh(new Arrow(new Vector3f(0,0,1f))); //its size will be controled by z scale
+//		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
+//		return geom;
+//	}
 	
-	public ArrowGeometry createArrow(ColorRGBA color){
-		ArrowGeometry geom = new ArrowGeometry();
-		MiscJmeI.i().addToName(geom, DebugVisualsI.class.getSimpleName(), true);
-		geom.setMesh(new Arrow(new Vector3f(0,0,1f))); //its size will be controled by z scale
-		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
-		return geom;
-	}
-	
-	public void showWorldBound(Spatial spt) {
-		ahmShowWorldBound.put(spt, createWorldBoundGeom(spt).setShow(true));
+	public void showWorldBoundAndRotAxes(Spatial spt) {
+		ahmShowWorldBound.put(spt, createWorldBoundGeomAndAxes(spt).setShow(true));
 //		if(!ahmShowWorldBound.get(spt)==null)asptShowWorldBound.add(spt);
 //		setShowWorldBound(true);
 	}
 	
-	public boolean isShowWorldBound() {
+	public boolean isShowSpatialsWorldBoundsEnabled() {
 		return bShowWorldBound;
 	}
 
-	public DebugVisualsI setShowWorldBound(boolean bShowWorldBound) {
+	public DebugVisualsI setShowSpatialsWorldBoundsEnabled(boolean bShowWorldBound) {
 		this.bShowWorldBound = bShowWorldBound;
 		if(!this.bShowWorldBound){
-			for(GeometryBVolDbg spt:ahmShowWorldBound.values()){
-				spt.setShow(bShowWorldBound);
+			for(NodeDbg noded:ahmShowWorldBound.values()){
+				noded.geombv.setShow(bShowWorldBound);
 			}
 		}
 		return this; //for beans setter
 	}
-
+	
+//	public void showRotationAxis(Spatial spt){
+//		ahmShowWorldBound.put(spt, createWorldBoundGeom(spt).setShow(true));
+//	}
 }

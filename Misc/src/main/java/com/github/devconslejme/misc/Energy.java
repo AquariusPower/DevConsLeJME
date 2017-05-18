@@ -26,43 +26,55 @@
 */
 package com.github.devconslejme.misc;
 
-import com.github.devconslejme.misc.jme.ElectricJme;
-import com.jme3.math.FastMath;
-
-
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class Electric {
-	/**
-	 * each 0.01^3 wold volume = 1 watt/miliseconds
-	 * so 1^3 = 100*100*100 w/ms
-	 */
-	private long lVolumeToWattPerMilis = 1000000;
-	private double dWattPerMilisToVolume = 1/((double)lVolumeToWattPerMilis);
+public class Energy {
+	private long lEnergyDensity;
+	private Long	lLowEnergy;
+	private long	lEnergyCapacity;
+	private long lStoredEnergy;
+	public Energy(long lEnergyDensity, long lEnergyCapacity, long lLowEnergy,	long lStoredEnergy) {
+		super();
+		this.lEnergyDensity = lEnergyDensity;
+		this.lLowEnergy = lLowEnergy;
+		this.lEnergyCapacity = lEnergyCapacity;
+		this.lStoredEnergy = lStoredEnergy;
+	}
+	protected void copy(Energy enFrom, Energy enTo) {
+		enTo.lEnergyDensity = enFrom.lEnergyDensity;
+		enTo.lLowEnergy = enFrom.lLowEnergy;
+		enTo.lEnergyCapacity = enFrom.lEnergyCapacity;
+		enTo.lStoredEnergy = enFrom.lStoredEnergy;
+	}
 	
-	private long	lLowEnergy=10000;
-	private long	lEnergyCapacity=100000;
-	private long lEnergyWattsPerMilis=0;
-
+	public Energy(Energy enCopyFrom){
+		copy(enCopyFrom,this);
+	}
+	
+	/**
+	 * special instances
+	 */
+	protected Energy(){}
+	
 	public long volumeToEnergy(double dVolume) {
-		return (long)(dVolume*lVolumeToWattPerMilis);
+		return (long)(dVolume*lEnergyDensity);
 	}
 	
 	public double energyToVolume(){
-		return energyToVolume(lEnergyWattsPerMilis);
+		return energyToVolume(lStoredEnergy);
 	}
 	public double energyToVolume(long lEnergyWpMs){
 //		return ((double)lEnergyWpMs)/((double)lVolumeToWattPerMilis);
-		return lEnergyWpMs*dWattPerMilisToVolume;
+		return lEnergyWpMs/((double)lEnergyDensity);
 	}
 	
-	public long getEnergyWattsPerMilis() {
-		return lEnergyWattsPerMilis;
+	public long getEnergy() {
+		return lStoredEnergy;
 	}
 
-	public Electric setEnergyWattsPerMilis(long lEnergyWattsPerMilis) {
-		this.lEnergyWattsPerMilis = lEnergyWattsPerMilis;
+	public Energy setEnergy(long lEnergyWattsPerMilis) {
+		this.lStoredEnergy = lEnergyWattsPerMilis;
 		return this; //for beans setter
 	}
 
@@ -70,7 +82,7 @@ public class Electric {
 		return lLowEnergy;
 	}
 
-	public Electric setLowEnergy(long lLowEnergy) {
+	public Energy setLowEnergy(long lLowEnergy) {
 		this.lLowEnergy = lLowEnergy;
 		return this; //for beans setter
 	}
@@ -79,52 +91,52 @@ public class Electric {
 		return lEnergyCapacity;
 	}
 
-	public Electric setEnergyCapacity(long lEnergyCapacity) {
+	public Energy setEnergyCapacity(long lEnergyCapacity) {
 		this.lEnergyCapacity = lEnergyCapacity;
 		return this; //for beans setter
 	}
 
 	public long consumeEnergy(long lConsume) {
-		if(lEnergyWattsPerMilis>=lConsume){
-			lEnergyWattsPerMilis-=lConsume;
+		if(lStoredEnergy>=lConsume){
+			lStoredEnergy-=lConsume;
 			return lConsume;
 		}
 		return 0; //TODO consume partial and resulting bevarior is erratic/sluggish 
 	}
 
-	public boolean isHasEnergyWattsPerMilis() {
-		return lEnergyWattsPerMilis>0;
+	public boolean isHasEnergy() {
+		return lStoredEnergy>0;
 	}
 
 	public boolean isOvercharged(){
 	//	if(fEnergyCoreRadius < (fRadius/2f))return false;
 	//	return true;
-		return lEnergyWattsPerMilis>lEnergyCapacity;
+		return lStoredEnergy>lEnergyCapacity;
 	}
 	public String energyInfo(){
 		StringBuilder sb = new StringBuilder();
-		sb.append("("+lEnergyWattsPerMilis+">"+lLowEnergy+")w/ms, ");
+		sb.append("("+lStoredEnergy+">"+lLowEnergy+")w/ms, ");
 		return sb.toString();
 	}
 
 	public boolean isLowEnergy(){
-		return lEnergyWattsPerMilis<lLowEnergy; //this was based on the tractor energy 
+		return lStoredEnergy<lLowEnergy; //this was based on the tractor energy 
 	}
 
 	public void addEnergy(long l) {
-		lEnergyWattsPerMilis+=l;
+		lStoredEnergy+=l;
 	}
 	
 	/**
 	 * 
-	 * @param elecOther
+	 * @param enOther
 	 * @param lAbso
 	 * @return actually absorbed
 	 */
-	public long absorb(Electric elecOther, long lAbso) {
-		lAbso = Math.min(lAbso, elecOther.lEnergyWattsPerMilis);
-		lEnergyWattsPerMilis+=lAbso;
-		elecOther.lEnergyWattsPerMilis-=lAbso;
+	public long absorb(Energy enOther, long lAbso) {
+		lAbso = Math.min(lAbso, enOther.lStoredEnergy);
+		lStoredEnergy+=lAbso;
+		enOther.lStoredEnergy-=lAbso;
 		return lAbso;
 	}
 }

@@ -28,17 +28,14 @@ package com.github.devconslejme.gendiag;
 
 import java.util.ArrayList;
 
-import javax.swing.PopupFactory;
-
 import com.github.devconslejme.es.DialogHierarchyComp.DiagCompBean;
 import com.github.devconslejme.es.DialogHierarchySystemI;
-import com.github.devconslejme.gendiag.ContextMenuI.HintUpdaterPerCtxtBtn;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI;
-import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.jme.TextI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.github.devconslejme.misc.lemur.ResizablePanel.IResizableListener;
@@ -109,7 +106,7 @@ public class MinimizedDialogsPanelI implements IResizableListener{
 		
 		Button btn = new Button(sgd.getTitle());
 		PopupHintHelpListenerI.i().setPopupHintHelp(btn, btn.getText());
-		MiscJmeI.i().recursivelyApplyTextNoWrap(btn);
+		TextI.i().recursivelyApplyTextNoWrap(btn);
 		//TODO rotate text 90degreess if in the vertical?
 		
 		addMinimized(btn, cntrMinimized.getLayout().getChildren().size());

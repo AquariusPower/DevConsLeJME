@@ -57,19 +57,25 @@ import com.jme3.scene.shape.Torus;
 public class OriginDevice extends Node{
 	public class TargetToken {
 	//	long lEnergyWattsPerMilis;
-		private ElectricJme elecj = new ElectricJme();
+		private EnergyJme elecj;
 		private OriginDevice ordeApplier;
 	
 		public TargetToken(OriginDevice ordeApplier, long lEnergyWattsPerMilis) {
 			this.ordeApplier=ordeApplier;
-			elecj.addEnergy(lEnergyWattsPerMilis);
+			this.elecj = new EnergyJme(ordeApplier.elecj);
+			this.elecj.addEnergy(lEnergyWattsPerMilis);
 //			this.lEnergyWattsPerMilis=lEnergyWattsPerMilis;
-			assert(elecj.getEnergyWattsPerMilis()>=0);
+			assert(elecj.getEnergy()>=0);
 		}
 		
 	}
 	
-	private ElectricJme elecj = new ElectricJme();
+	/**
+	 * each 0.01^3 wold volume = 1 watt/miliseconds
+	 * so 1^3 = 100*100*100 w/ms
+	 */
+	private EnergyJme elecj = new EnergyJme(1000000,100000,10000,0);
+	
 	private NodeAxis	nodeTorX;
 	private NodeAxis	nodeTorY;
 	private NodeAxis	nodeTorZ;
@@ -164,7 +170,7 @@ public class OriginDevice extends Node{
 	
 	private void updateEnergyCore() {
 		float fECScale=0.01f;
-		if(elecj.isHasEnergyWattsPerMilis()){
+		if(elecj.isHasEnergy()){
 //			fECScale=((float)Math.cbrt(lEnergyWattsPerMilis/1000L));
 			double dV=elecj.energyToVolume();
 			fEnergyCoreRadius = (float) CalcI.i().radiusFromVolume(dV);
@@ -186,7 +192,7 @@ public class OriginDevice extends Node{
 		sb.append("r=("+StringI.i().fmtFloat(fEnergyCoreRadius)+"/");
 		sb.append(StringI.i().fmtFloat(fRadius/2f)+")");
 		if(sptTarget!=null){
-			sb.append("tgt="+sptTarget.getName()+getTargetToken(sptTarget).elecj.getEnergyWattsPerMilis());
+			sb.append("tgt="+sptTarget.getName()+getTargetToken(sptTarget).elecj.getEnergy());
 		}
 		return sb.toString();
 	}
@@ -209,7 +215,7 @@ public class OriginDevice extends Node{
 					if(!isRequireTargetsToken() || !hasTargetToken(spt))continue; //TODO "heavier?" is after
 					if(
 							fDist<=fSafeMinDist && //destruction area 
-							elecj.getEnergyWattsPerMilis() >= calcEnergyToDisintegrate(spt) //&&
+							elecj.getEnergy() >= calcEnergyToDisintegrate(spt) //&&
 //							getTargetToken(spt).lEnergyWattsPerMilis >=
 //							isLowEnergy()
 					)continue; //needs more energy
@@ -355,7 +361,7 @@ public class OriginDevice extends Node{
 		if(tt!=null){
 			if(!bRemotely){ //it all
 //				lAbso=tt.elecj.getEnergyWattsPerMilis();
-				lAbso=elecj.absorb(tt.elecj,tt.elecj.getEnergyWattsPerMilis());
+				lAbso=elecj.absorb(tt.elecj,tt.elecj.getEnergy());
 				
 				bForceAbsorptionOnce=false;
 				
@@ -398,12 +404,13 @@ public class OriginDevice extends Node{
 
 	protected void init(){
 		// origin
-		attachChild(DebugVisualsI.i()
-			.createArrow(ColorRGBA.Red).setFromTo(Vector3f.ZERO, Vector3f.UNIT_X));
-		attachChild(DebugVisualsI.i()
-			.createArrow(ColorRGBA.Green).setFromTo(Vector3f.ZERO, Vector3f.UNIT_Y));
-		attachChild(DebugVisualsI.i()
-			.createArrow(ColorRGBA.Blue).setFromTo(Vector3f.ZERO, Vector3f.UNIT_Z));
+		attachChild(NodeI.i().createRotationAxes(null));
+//		attachChild(GeometryI.i()
+//			.createArrow(ColorRGBA.Red).setFromTo(Vector3f.ZERO, Vector3f.UNIT_X));
+//		attachChild(GeometryI.i()
+//			.createArrow(ColorRGBA.Green).setFromTo(Vector3f.ZERO, Vector3f.UNIT_Y));
+//		attachChild(GeometryI.i()
+//			.createArrow(ColorRGBA.Blue).setFromTo(Vector3f.ZERO, Vector3f.UNIT_Z));
 		
 		// energy core
 		nodeEnergyCore=createEnergyCore();
@@ -440,8 +447,49 @@ public class OriginDevice extends Node{
 				return true;
 			}
 		});
+		
+		initPet();
 	}
 	
+	private void initPet() {
+		Node node=new Node();
+		
+		// Orde's pet
+		Geometry geom = GeometryI.i().create(MeshI.i().cone(1f),
+			ColorI.i().colorChangeCopy(ColorRGBA.Cyan, 0f, 0.5f),false,null);
+		geom.setLocalScale(0.05f, 0.15f, 1);
+		geom.setLocalTranslation(10,0,0);
+		
+		node.attachChild(geom);
+//		DebugVisualsI.i().showWorldBound(geom);
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				if(getParent()==null)return false;
+				getParent().attachChild(node);
+				petRotateAround(getTPF(),node,geom);
+				return true;
+			}
+		}).enableLoopMode();//.setDelaySeconds(0.1f);//.setInitialDelay(10));
+	}
+
+	TimedDelay td = new TimedDelay(1f, "").setActive(true);
+	protected void petRotateAround(float fTPF,Node node, Geometry geom) {
+		Vector3f v3fUp = node.getLocalRotation().getRotationColumn(1);
+//		if(td.isReady(true))v3fUp = MiscJmeI.i().randomDirection();
+		float fRotSpeed=1f;
+		MiscJmeI.i().rotateAround(node, this, -(fRotSpeed*fTPF)*FastMath.DEG_TO_RAD,	v3fUp, false);
+		
+		//spin
+		if(true){
+		Vector3f v3fLookAt=geom.getLocalRotation().getRotationColumn(2);
+		float fSpinSpeed=50f;
+		geom.getLocalRotation().lookAt(v3fLookAt, 
+			MiscJmeI.i().rotateVector(v3fUp,Vector3f.UNIT_X,fSpinSpeed*fTPF*FastMath.DEG_TO_RAD));
+//		MiscJmeI.i().rotateAround(geom, geom, -1f*FastMath.DEG_TO_RAD,	Vector3f.UNIT_Z, true);
+		}
+	}
+
 	private NodeAxis createEnergyCore() {
 		NodeAxis node=createAxisShape(new Sphere(10,10,0.5f), //diameter 1f to be scaled
 			ColorRGBA.Cyan, new Vector3f(), 0.05f, Vector3f.UNIT_Y, true, null);
@@ -923,7 +971,7 @@ public class OriginDevice extends Node{
 	 * @return target's energy
 	 */
 	public long applyTargetTokenLater(Spatial spt){
-		long lEnergy = elecj.volumeToEnergy(spt);
+		long lEnergy = elecj.calcVolumeToEnergy(spt);
 		if(lEnergy==0)return 0;
 //			throw new DetailedException("target has no energy",spt);
 		

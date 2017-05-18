@@ -32,7 +32,6 @@ import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
-import com.github.devconslejme.misc.jme.DebugVisualsI.ArrowGeometry;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
@@ -71,7 +70,6 @@ public class IndicatorI {
 		private long	lStartNano;
 		private boolean bScalingUp = true;
 		private boolean bEnableTractorEffect = false;
-		private ArrowGeometry	garrowDbg;
 		private EffectElectricity	efTractor = new EffectElectricity();
 		
 

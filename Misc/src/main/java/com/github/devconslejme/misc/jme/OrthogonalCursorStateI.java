@@ -27,11 +27,9 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.github.devconslejme.misc.jme;
 
-import com.github.devconslejme.misc.Annotations.Bean;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.StringI;
 import com.jme3.app.Application;
-import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.font.BitmapFont.Align;
@@ -106,7 +104,7 @@ public class OrthogonalCursorStateI extends AbstractAppState{
 		nodeParent.attachChild(geom);
 		
 		// info
-		bt = MiscJmeI.i().loadDefaultMonoFont().createLabel("");
+		bt = TextI.i().loadDefaultMonoFont().createLabel("");
 		bt.setColor(ColorI.i().colorChangeCopy(color, 0f, 0.3f));
 		bt.setSize(13);
 		nodeInfo=new Node();

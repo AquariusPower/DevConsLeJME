@@ -27,10 +27,17 @@
 package com.github.devconslejme.misc.jme;
 
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.jme.ArrowGeometry.EFollowMode;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
+import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
+import com.jme3.scene.debug.Arrow;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -61,4 +68,51 @@ public class GeometryI {
 		if(bTransparent)geomStore.setQueueBucket(Bucket.Transparent);
 		return geomStore;
 	}
+	
+	public ArrowGeometry createArrow(ColorRGBA color){
+		ArrowGeometry geom = new ArrowGeometry();
+		MiscJmeI.i().addToName(geom, DebugVisualsI.class.getSimpleName(), true);
+		geom.setMesh(new Arrow(new Vector3f(0,0,1f))); //its size will be controled by z scale
+		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
+		return geom;
+	}
+	/**
+	 * TODO couldnt this just be the existing arrow effect? duplicated concepts?
+	 * @param nodeBase
+	 * @param sptFrom
+	 * @param sptTo
+	 * @param color
+	 * @return
+	 */
+	public ArrowGeometry createArrowFollowing(Node nodeBase, Spatial sptFrom, Spatial sptTo, ColorRGBA color){
+		ArrowGeometry ga = createArrow(color);
+//		MiscJmeI.i().addToName(ga, DebugVisualsI.class.getSimpleName(), true);
+		
+		ga.setFromToCenterMode(EFollowMode.Edge, EFollowMode.Edge);
+		
+		ga.setControllingQueue(
+			QueueI.i().enqueue(new CallableXAnon() {
+//				private Spatial	sptBeingFollowed=sptTarget;
+				@Override	public Boolean call() {
+					if(ga.isDestroy()){
+						ga.removeFromParent();
+						endLoopMode();
+					}else{
+						if(ga.isEnabled()){
+							if(ga.getParent()==null)nodeBase.attachChild(ga);
+							ga.setFromTo(sptFrom, sptTo);
+						}else{
+							if(ga.getParent()!=null)ga.removeFromParent();
+						}
+					}
+					
+					setDelaySeconds(ga.getUpdateDelay());
+					
+					return true;
+				}}.enableLoopMode())//.setDelaySeconds(getUpdateDelay()))
+		);
+	
+		return ga;
+	}
+	
 }

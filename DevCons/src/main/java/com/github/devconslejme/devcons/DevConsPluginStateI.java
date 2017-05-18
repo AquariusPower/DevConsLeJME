@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 
 import com.github.devconslejme.es.DialogHierarchyComp.DiagCompBean;
 import com.github.devconslejme.es.DialogHierarchySystemI;
@@ -53,7 +52,6 @@ import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.JavaLangI.FuncIn;
-import com.github.devconslejme.misc.JavaLangI.FunctionX.FI;
 import com.github.devconslejme.misc.KeyBind;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
@@ -61,7 +59,7 @@ import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI;
-import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.jme.TextI;
 import com.github.devconslejme.misc.lemur.CaratAutoPositionListenerI;
 import com.github.devconslejme.misc.lemur.CursorListenerX;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
@@ -668,7 +666,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		super.update(tpf);
 		
 		if(bRequestUpdateNoWrap){
-			MiscJmeI.i().recursivelyApplyTextNoWrap(rzpMain);
+			TextI.i().recursivelyApplyTextNoWrap(rzpMain);
 			bRequestUpdateNoWrap=false;
 		}
 	}

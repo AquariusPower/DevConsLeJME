@@ -26,15 +26,26 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.github.devconslejme.misc.jme;
 
-import com.github.devconslejme.misc.Electric;
+import com.github.devconslejme.misc.Energy;
 import com.jme3.scene.Spatial;
 
 /**
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
-public class ElectricJme extends Electric {
+public class EnergyJme extends Energy {
 
-	public long volumeToEnergy(Spatial spt) {
+	public EnergyJme(long lEnergyDensity, long lEnergyCapacity,
+			long lLowEnergy, long lStoredEnergy) {
+		super(lEnergyDensity, lEnergyCapacity, lLowEnergy, lStoredEnergy);
+		// TODO Auto-generated constructor stub
+	}
+	
+	public EnergyJme(EnergyJme enCopyFrom) {
+		super(enCopyFrom);
+		// TODO Auto-generated constructor stub
+	}
+
+	public long calcVolumeToEnergy(Spatial spt) {
 		return super.volumeToEnergy(MeshI.i().volumeOf(spt));
 	}
 
