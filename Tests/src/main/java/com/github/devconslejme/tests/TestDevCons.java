@@ -230,7 +230,10 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 			MiscJmeI.i().addToName(geom, strOrdeFood+i, false);
 			MiscJmeI.i().addToName(geom, "Extent="+StringI.i().fmtFloat(fExtent), false);
 			
-			geom.setLocalTranslation(new Vector3f(i, (i*i)/3f, i));
+			geom.setLocalTranslation(
+				new Vector3f(i, (i*i)/3f, i) //move them around spreading
+					.mult(1.2f) //spread a bit more
+			); 
 			
 			float fRot=i*15*FastMath.DEG_TO_RAD;
 			geom.rotate(fRot,fRot,fRot);
@@ -253,42 +256,10 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 			
 			orde.applyTargetTokenLater(geom);
 		}
-//		QueueI.i().enqueue(new CallableXAnon() {
-//			@Override
-//			public Boolean call() {
-//				for(Spatial spt:getRootNode().getChildren()){
-//					if(spt.getName().contains(strOrdeFood)){
-//						DebugVisualsI.i().showWorldBound(spt);
-//					}
-//				}
-//				return true;
-//			}
-//		});
-		
-//		// Orde's pet
-//		Geometry geom = GeometryI.i().create(MeshI.i().cone(1f),
-//			ColorI.i().colorChangeCopy(ColorRGBA.Yellow, 0f, 0.25f),false,null);
-//		geom.setLocalScale(0.15f, 0.15f, 1);
-//		geom.setLocalTranslation(10,0,0);
-////		DebugVisualsI.i().showWorldBound(geom);
-//		getRootNode().attachChild(geom);
-//		QueueI.i().enqueue(new CallableXAnon() {
-//			@Override
-//			public Boolean call() {
-//				rotAround(geom);
-//				return true;
-//			}
-//		}).enableLoopMode();//.setDelaySeconds(0.1f);//.setInitialDelay(10));
 		
 		// picking 
     WorldPickingI.i().addListener(this);
 	}
-//	TimedDelay td = new TimedDelay(1f, "").setActive(true);
-//	protected void rotAround(Geometry geom) {
-//		Vector3f v3fUp = null; //geom.getLocalRotation().getRotationColumn(1);
-//		if(td.isReady(true))v3fUp = MiscJmeI.i().randomDirection();
-//		MiscJmeI.i().rotateAround(geom, orde, -1f*FastMath.DEG_TO_RAD,	v3fUp, false);
-//	}
 	
 	public TestDevCons setSpeed(float f){
 		if(f<0){

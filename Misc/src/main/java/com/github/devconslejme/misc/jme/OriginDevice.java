@@ -41,7 +41,6 @@ import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
-import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
@@ -193,7 +192,7 @@ public class OriginDevice extends Node{
 		sb.append("r=("+StringI.i().fmtFloat(fEnergyCoreRadius)+"/");
 		sb.append(StringI.i().fmtFloat(fRadius/2f)+")");
 		if(sptTarget!=null){
-			sb.append("tgt="+sptTarget.getName()+getTargetToken(sptTarget).elecj.getEnergy());
+			sb.append("tgt="+sptTarget.getName()+getTargetToken(sptTarget).elecj.energyInfo());
 		}
 		return sb.toString();
 	}
@@ -370,7 +369,7 @@ public class OriginDevice extends Node{
 					disintegrate(spt);
 				}
 			}else{
-				lAbso=elecj.absorb(tt.elecj,calcEnergyPF(EEnergyConsumpWpM.Remotely));
+				lAbso=elecj.absorb(tt.elecj,calcEnergyPF(EEnergyConsumpWpM.RemoteAbsorption));
 			}
 			
 		}
@@ -381,10 +380,10 @@ public class OriginDevice extends Node{
 	public static enum EEnergyConsumpWpM{
 		Tractor(10), 
 		RotateMin(3), 
-		StandBy(1), 
+		SmoothActive(1), 
 		Move(5),
 		Disintegrate(7), 
-		Remotely(2),
+		RemoteAbsorption(2), //inverse of consumtion
 		;
 		
 		protected long	l;
@@ -476,22 +475,22 @@ public class OriginDevice extends Node{
 
 	TimedDelay td = new TimedDelay(1f, "").setActive(true);
 	protected void petRotateAround(float fTPF,Node node, Geometry geom) {
-		Vector3f v3fNodeUp = node.getLocalRotation().getRotationColumn(1);
+		Vector3f v3fUp = node.getLocalRotation().getRotationColumn(1);
 //		if(td.isReady(true))v3fUp = MiscJmeI.i().randomDirection();
-		float fRotSpeed=100f;
-		MiscJmeI.i().rotateAround(node, this, -(fRotSpeed*fTPF)*FastMath.DEG_TO_RAD,	v3fNodeUp, false);
+		float fRotSpeed=1f;
+		MiscJmeI.i().rotateAround(node, this, -(fRotSpeed*fTPF)*FastMath.DEG_TO_RAD,	v3fUp, false);
 		
 		//spin
-		Quaternion qua = geom.getLocalRotation().clone();
-		Vector3f v3fGeomUp = qua.getRotationColumn(1);
-		Vector3f v3fGeomLookAt=qua.getRotationColumn(2);
-		float fSpinSpeed=100f;
-		Vector3f v3fNewUp = MiscJmeI.i().rotateVector(
-				v3fGeomUp, //the up will be rotated
-				qua.getRotationColumn(0), //around Z (2) so we need to modify only Y (1) anx X (0)
-				fSpinSpeed*fTPF*FastMath.DEG_TO_RAD
-			);
-		geom.rotateUpTo(v3fNewUp);
+		if(true){
+		Vector3f v3fLookAt=geom.getLocalRotation().getRotationColumn(2);
+		float fSpinSpeed=50f;
+		geom.getLocalRotation().lookAt(v3fLookAt, 
+			MiscJmeI.i().rotateVector(
+				v3fUp,
+				geom.getLocalRotation().getRotationColumn(0),
+				fSpinSpeed*fTPF*FastMath.DEG_TO_RAD));
+//		MiscJmeI.i().rotateAround(geom, geom, -1f*FastMath.DEG_TO_RAD,	Vector3f.UNIT_Z, true);
+		}
 	}
 
 	private NodeAxis createEnergyCore() {
@@ -530,7 +529,7 @@ public class OriginDevice extends Node{
 
 	protected void updateElectricalEffects() {
 		efElec.setPlay(bUnstable);
-		consumeEnergyPF(EEnergyConsumpWpM.StandBy, bUnstable ? FastMath.nextRandomFloat()*13f : 1f); //13 is arbitrary luck :)
+		consumeEnergyPF(EEnergyConsumpWpM.SmoothActive, bUnstable ? FastMath.nextRandomFloat()*13f : 1f); //13 is arbitrary luck :)
 //		if(!bUnstable){return;}
 		
 //		efElec.setNodeParent(this.getParent());
