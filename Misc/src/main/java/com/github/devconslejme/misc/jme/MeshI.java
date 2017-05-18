@@ -158,7 +158,6 @@ public class MeshI {
 	}
 	
 	public float triangleSVol(Triangle tri, Vector3f v3fWScale) {
-//		return triangleSVol(tri.get1(),tri.get2(),tri.get3());
 		return triangleSVolJme(
 				tri.get1().mult(v3fWScale),
 				tri.get2().mult(v3fWScale),
@@ -167,13 +166,6 @@ public class MeshI {
 	public float triangleSVolJme(Vector3f v3fA, Vector3f v3fB, Vector3f v3fC){
 		return v3fA.dot(v3fB.cross(v3fC))/6.0f;
   }
-	public float triangleSVol(Vector3f v3fA, Vector3f v3fB, Vector3f v3fC) {
-		return CalcI.i().triangleSVol(
-			v3fA.x,v3fA.y,v3fA.z,
-			v3fB.x,v3fB.y,v3fB.z,
-			v3fC.x,v3fC.y,v3fC.z
-		);
-	}
 	
 	public Mesh box(float fExtent) {
 		return new Box(fExtent,fExtent,fExtent);
