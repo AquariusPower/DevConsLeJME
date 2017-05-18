@@ -202,6 +202,11 @@ public class MeshI {
 //		mesh.setStreamed();
 		mesh.setMode(Mode.LineStrip);
 		
+		if(av3f.length>10000){
+			//TODO determine how much is a good max amount of dots...
+			MessagesI.i().warnMsg(this, "this is a lot of dots! is it ok?", av3f.length);
+		}
+		
 		FloatBuffer fbuf = BufferUtils.createFloatBuffer(av3f);
 		mesh.setBuffer(Type.Position,3,fbuf);
 		

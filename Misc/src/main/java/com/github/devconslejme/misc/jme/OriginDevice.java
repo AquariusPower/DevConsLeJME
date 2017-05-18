@@ -110,9 +110,9 @@ public class OriginDevice extends Node{
 	private boolean	bSameAxis;
 //	private ETargetMode esm = ETargetMode.JustStay;
 	private ETargetMode esm = ETargetMode.MoveOver;
-	private float	fInitialDistToSrc;
+//	private float	fInitialDistToSrc;
 	private float	fMoveBaseSpeed=0.01f;
-	private boolean	bUpdateElectricalEffectForNewSourceOnce;
+//	private boolean	bUpdateElectricalEffectForNewSourceOnce;
 	private boolean	bDestroySpatials;
 	private boolean	bAutoTargetNearestSpatials;
 	private boolean	bRequireTargetsToken=true;
@@ -277,7 +277,8 @@ public class OriginDevice extends Node{
 		float fDist = v3fDist.length();
 		
 		if(fDist > fMaxTractionDist && sptUserChosenTarget==null){
-			sptTarget=null;
+			setElectricitySource(null);
+//			sptTarget=null;
 			return; //disconnected
 		}
 		
@@ -412,7 +413,7 @@ public class OriginDevice extends Node{
 //				lAbso=tt.elecj.getEnergyWattsPerMilis();
 				lAbso=energy.absorb(tt.elecj,tt.elecj.getEnergyStored());
 				
-				bForceAbsorptionOnce=false;
+//				bForceAbsorptionOnce=false;
 				
 				if(canDestroy(spt)){
 					disintegrate(spt);
@@ -548,7 +549,8 @@ public class OriginDevice extends Node{
 	}
 	
 	protected void updatePet(float fTPF,NodeAxis nodePet, TimedDelay td) {
-		if(energy.getPerc()<=1f)return;
+		if(!isUnstable())return;
+//		if(energy.getPerc()<=1f)return;
 		
 		///////////// pull/push the pet
 		float fDist = nodePet.getLocalTranslation().length(); //is child of Orde, the dist is relative
@@ -562,6 +564,7 @@ public class OriginDevice extends Node{
 		// the new perc position will be relative to the current perc distance
 		float fNewRelativePerc = fEnerUnstablePercLimited/fDistPerc;
 		
+		if(false)
 		nodePet.setLocalTranslation(
 			new Vector3f().interpolateLocal( //from world origin
 				nodePet.getLocalTranslation(), 
@@ -575,12 +578,14 @@ public class OriginDevice extends Node{
 		Vector3f v3fNodeUp = nodePet.getLocalRotation().getRotationColumn(1);//y
 		if(td.isReady(true))v3fNodeUp = RotateI.i().randomDirection();
 		float fRotSpeed=250f;
+		if(false)
 		RotateI.i().rotateAroundPivot(nodePet, this, -(fRotSpeed*fTPF)*FastMath.DEG_TO_RAD,	v3fNodeUp, false);
 		
 		////////////////// spin 
 		Quaternion qua = nodePet.nodeGeometries.getLocalRotation().clone();
 		Vector3f v3fGeomUp = qua.getRotationColumn(1); //y
 		float fSpinSpeed=500f;
+		if(false)
 		RotateI.i().rotateSpinning(
 			nodePet.nodeGeometries,
 			v3fGeomUp,
@@ -652,8 +657,9 @@ public class OriginDevice extends Node{
 //		efHook.setNodeParent(this.getParent());
 //		efHook.setFromTo(v3fWorldA,nodeElectricB.getWorldTranslation());
 		
-		if(tdEffectRetarget.isReady(true) || bUpdateElectricalEffectForNewSourceOnce){
-			bUpdateElectricalEffectForNewSourceOnce=false;
+//		if(tdEffectRetarget.isReady(true) || bUpdateElectricalEffectForNewSourceOnce){
+		if(tdEffectRetarget.isReady(true)){
+//			bUpdateElectricalEffectForNewSourceOnce=false;
 			nodeSelfElectrocute=null;
 			if(iMaxHoldMilisBkp!=null){
 				efElec.getElectricalPath().setMaxHoldMilis(iMaxHoldMilisBkp);
@@ -1051,20 +1057,26 @@ public class OriginDevice extends Node{
 			return this; //skip
 		}
 		
-		this.sptTarget = sptElectricSrc;
+		setTargetRaw(sptElectricSrc);
+//		this.sptTarget = sptElectricSrc;
 		this.sptUserChosenTarget = sptElectricSrc;
 		if(bForceAbsorptionOnce)sptForceAbsorption=sptElectricSrc;
-		nodeaxisUserChosen = electricNodeFor(sptElectricSrc);
+		if(sptElectricSrc!=null)nodeaxisUserChosen = electricNodeFor(sptElectricSrc);
 		
-		if(sptElectricSrc!=null){
-			fInitialDistToSrc=sptElectricSrc.getWorldTranslation().subtract(getWorldTranslation()).length();
-//			tdEffectRetarget.reactivate();
-			bUpdateElectricalEffectForNewSourceOnce=true;
-//			this.bForceAbsorptionOnce=bForceAbsorptionOnce;
-		}
+//		if(sptElectricSrc!=null){
+////			fInitialDistToSrc=sptElectricSrc.getWorldTranslation().subtract(getWorldTranslation()).length();
+////			tdEffectRetarget.reactivate();
+//			bUpdateElectricalEffectForNewSourceOnce=true;
+////			this.bForceAbsorptionOnce=bForceAbsorptionOnce;
+//		}
 		return this; //for beans setter
 	}
 	
+	private void setTargetRaw(Spatial sptElectricSrc) {
+		this.sptTarget = sptElectricSrc;
+		tdEffectRetarget.setAsReadyOnce(true); //will promptly update the effect
+	}
+
 	public ETargetMode getSourceMode() {
 		return esm;
 	}
@@ -1171,7 +1183,7 @@ public class OriginDevice extends Node{
 	 */
 	public Object debugTest(Object... aobj){
 		energy.setEnergyStored(900000);
-		setLocalTranslation(1000,0,0);
+		setLocalTranslation((int)aobj[0],(int)aobj[1],(int)aobj[2]);
 		return null;
 	}
 }

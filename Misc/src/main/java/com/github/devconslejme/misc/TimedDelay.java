@@ -50,6 +50,8 @@ public class TimedDelay {
 
 	private String	strHelp;
 
+	private boolean	bInstaReadyOnce;
+
 	/**
 	 * This constructor is exclusively for methods local variables.
 	 * Such variables will not be stored neither easily accessible at console.
@@ -104,9 +106,14 @@ public class TimedDelay {
 	}
 	public boolean isReady(boolean bIfReadyWillAlsoUpdate) {
 		boolean bReady = getCurrentDelayNano() >= getDelayLimitNano();
-		if(bIfReadyWillAlsoUpdate){
-			if(bReady)updateTime();
+		
+		if(bInstaReadyOnce){
+			bReady=true;
+			bInstaReadyOnce=false;
 		}
+		
+		if(bIfReadyWillAlsoUpdate && bReady)updateTime();
+		
 		return bReady;
 	}
 	public long getDelayLimitMilis(){
@@ -236,5 +243,10 @@ public class TimedDelay {
 		resetTime();
 		fDelay=(fDelaySeconds);
 		return this;
+	}
+
+	public void setAsReadyOnce(boolean bIfReadyWillAlsoUpdate) {
+		bInstaReadyOnce=true;
+		if(bIfReadyWillAlsoUpdate)updateTime();
 	}
 }

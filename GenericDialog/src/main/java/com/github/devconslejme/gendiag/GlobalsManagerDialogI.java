@@ -56,7 +56,7 @@ public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 	
 	public void configure(){
 		QueueI.i().enqueue(new CallableXAnon() {
-			private VersionedReference<String>	vfNewInputTextFilterSubmitted;
+//			private VersionedReference<String>	vfNewInputTextFilterSubmitted;
 
 			@Override
 			public Boolean call() {
@@ -85,7 +85,7 @@ public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 					}
 				}).setMultiStatusMode(bShowPackagesPrepended?0:1,"after","prepend"));
 				
-				vfNewInputTextFilterSubmitted = diagMaint.createInputTextSubmitedVersionedReference();
+//				vfNewInputTextFilterSubmitted = diagMaint.createInputTextSubmitedVersionedReference();
 				
 				return true;
 			}

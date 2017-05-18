@@ -118,6 +118,12 @@ public class SpatialHierarchyI {
 		}
 	}
 	
+	/**
+	 * TODO see {@link Node#descendantMatches(Class,String)}, may be this can deprecate..
+	 * @param nodeParentestToChk
+	 * @param clFilter
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public <T extends Spatial> T getChildRecursiveExactMatch(Node nodeParentestToChk, Class<T> clFilter){
 		return (T)getChildRecursiveExactMatch(

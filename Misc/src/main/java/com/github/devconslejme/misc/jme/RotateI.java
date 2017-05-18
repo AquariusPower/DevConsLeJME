@@ -68,7 +68,7 @@ public class RotateI {
 		spt.rotateUpTo(v3fNewUp);
 	}
 
-	public void rotateAround(Spatial spt, Spatial sptCenter, float fAddAngleRadians){
+	public void rotateAroundPivot(Spatial spt, Spatial sptCenter, float fAddAngleRadians){
 		rotateAroundPivot(spt,sptCenter,fAddAngleRadians, sptCenter.getLocalRotation().getRotationColumn(1), false);
 	}
 	
@@ -106,7 +106,8 @@ public class RotateI {
 //			spt.rotate(quaAdd);  //use lookat?
 //		}
 		
-		sptToRotate.setLocalTranslation(rhRotAround.nodePos.getWorldTranslation());
+		sptToRotate.setLocalTranslation(
+			sptToRotate.worldToLocal(rhRotAround.nodePos.getWorldTranslation(),null) );
 		
 		if(!bKeepOriginalLocalRotation){
 			sptToRotate.setLocalRotation(rhRotAround.nodePos.getWorldRotation());

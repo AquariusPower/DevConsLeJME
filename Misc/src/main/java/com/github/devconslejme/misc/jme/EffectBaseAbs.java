@@ -27,6 +27,8 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.github.devconslejme.misc.jme;
 
 import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.Annotations.Workaround;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
@@ -64,6 +66,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 	private boolean	bWaitParentBeSet=false;
 	private boolean	bUseFollowToPosZ = false;
 	private Float	fZAboveAllAtGuiNode;
+	private boolean	bBugOverrideDisablePlay;
 	
 	public EffectBaseAbs(Spatial sptOwner){
 		this();
@@ -116,6 +119,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 //
 	public THIS setFrom(Vector3f v3fFrom) {
 		this.v3fFrom = v3fFrom;
+		validateDistance();
 		return getThis();
 	}
 //
@@ -166,6 +170,19 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 //	public void setbToMouse(boolean bToMouse) {
 //		this.bToMouse = bToMouse;
 //	}
+	
+	float lMaxDist=10000;
+	private void validateDistance() {
+		if(getLocationFrom()!=null && getLocationTo()!=null){
+			if(getLocationFrom().distance(getLocationTo())>lMaxDist){ //TODO determine a good max distance...
+				//just to not break the application with like buffer overflow (ex.: when creating a big line)
+				MessagesI.i().warnMsg(this, "dist > "+lMaxDist, this, getLocationFrom(), getLocationTo(), sptFollowFrom, sptFollowTo);
+				bBugOverrideDisablePlay=true;
+			}else{
+				bBugOverrideDisablePlay=false;
+			}
+		}
+	}
 
 	@Override
 	public void assertNotDiscarded(){
@@ -179,6 +196,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 		assertNotDiscarded();
 		this.v3fFrom=DetailedException.throwIfNull(v3fFrom); 
 		this.v3fTo=DetailedException.throwIfNull(v3fTo);
+		validateDistance();
 		return getThis();
 	}
 	
@@ -186,6 +204,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 	public THIS setFollowToMouse(boolean b){
 		assertNotDiscarded();
 		this.bToMouse=b;
+		validateDistance();
 		return getThis();
 	}
 	
@@ -194,6 +213,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 		assertNotDiscarded();
 		sptFollowFrom=spt;
 		v3fFollowFromDisplacement = v3fDisplacement==null?new Vector3f():v3fDisplacement;
+		validateDistance();
 		return getThis();
 	}
 	
@@ -221,6 +241,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 		assertNotDiscarded();
 		sptFollowTo=spt;
 		v3fFollowToDisplacement = v3fDisplacement==null?new Vector3f():v3fDisplacement;
+		validateDistance();
 		return getThis();
 	}
 	
@@ -387,6 +408,9 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 	@Override
 	public void play(float tpf) {
 		assertNotDiscarded();
+		
+		if(bBugOverrideDisablePlay)return;
+		
 		if(!isPlaying())return;
 		
 		if(!getNodeParent().hasChild(getGeom())){
