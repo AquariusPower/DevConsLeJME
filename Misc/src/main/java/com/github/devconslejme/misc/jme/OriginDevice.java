@@ -499,7 +499,7 @@ public class OriginDevice extends Node{
 		Vector3f v3fNodeUp = node.getLocalRotation().getRotationColumn(1);//y
 		if(td.isReady(true))v3fNodeUp = MiscJmeI.i().randomDirection();
 		float fRotSpeed=250f;
-		MiscJmeI.i().rotateAround(node, this, -(fRotSpeed*fTPF)*FastMath.DEG_TO_RAD,	v3fNodeUp, false);
+		MiscJmeI.i().rotateAroundPivot(node, this, -(fRotSpeed*fTPF)*FastMath.DEG_TO_RAD,	v3fNodeUp, false);
 		
 		//spin
 		Quaternion qua = node.nodeGeometries.getLocalRotation().clone();

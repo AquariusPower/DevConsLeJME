@@ -26,6 +26,8 @@
 */
 package com.github.devconslejme.misc;
 
+import com.jme3.math.Vector3f;
+
 
 
 /**
@@ -65,5 +67,24 @@ public class CalcI {
 				dRadiusY *
 				dRadiusZ
 			);
+	}
+
+	float f1six=1f/6f;
+	/**
+	 * Mesh pre-conditions:
+	 * 1) The mesh containing the triangles must be centralized.
+	 * 2) The vertices must be ordered in a way that results in a normal that will make the 
+	 * triangle point towards the center.
+	 * @return
+	 */
+	public float triangleSVol(
+		float fAx, float fAy, float fAz,
+		float fBx, float fBy, float fBz,
+		float fCx, float fCy, float fCz
+	){
+		return f1six * (
+			-(fCx*fBy*fAz)+(fBx*fCy*fAz)+(fCx*fAy*fBz)
+		  -(fAx*fCy*fBz)-(fBx*fAy*fCz)+(fAx*fBy*fCz)
+		);
 	}
 }

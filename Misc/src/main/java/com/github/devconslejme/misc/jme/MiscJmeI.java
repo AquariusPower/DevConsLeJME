@@ -333,21 +333,21 @@ public class MiscJmeI {
 //	}
 	
 	public void rotateAround(Spatial spt, Spatial sptCenter, float fAddAngleRadians){
-		rotateAround(spt,sptCenter,fAddAngleRadians, sptCenter.getLocalRotation().getRotationColumn(1), false);
+		rotateAroundPivot(spt,sptCenter,fAddAngleRadians, sptCenter.getLocalRotation().getRotationColumn(1), false);
 	}
 	
 	/**
 	 * 
-	 * @param spt
-	 * @param sptCenter
+	 * @param sptToRotate
+	 * @param sptPivot
 	 * @param fAddAngleRadians (remember u can use f*FastMath.DEG_TO_RAD too)
 	 * @param v3fUp if will will be Y
 	 * @param bKeepOriginalLocalRotation
 	 */
-	public void rotateAround(Spatial spt, Spatial sptCenter, float fAddAngleRadians, Vector3f v3fUp, boolean bKeepOriginalLocalRotation){
-		if(v3fUp==null)v3fUp=spt.getLocalRotation().getRotationColumn(1);
-		Vector3f v3fPos = spt.getLocalTranslation();
-		Vector3f v3fCenter = sptCenter.getLocalTranslation();
+	public void rotateAroundPivot(Spatial sptToRotate, Spatial sptPivot, float fAddAngleRadians, Vector3f v3fUp, boolean bKeepOriginalLocalRotation){
+		if(v3fUp==null)v3fUp=sptToRotate.getLocalRotation().getRotationColumn(1);
+		Vector3f v3fPos = sptToRotate.getLocalTranslation();
+		Vector3f v3fCenter = sptPivot.getLocalTranslation();
 		Vector3f v3fSub = v3fPos.subtract(v3fCenter);
 		Vector3f v3fDir = v3fSub.normalize();
 		float fDist = v3fSub.length();
@@ -356,7 +356,7 @@ public class MiscJmeI {
 		
 		rhRotAround.nodeCenter.setLocalTranslation(v3fCenter);
 		rhRotAround.nodePos.setLocalTranslation(v3fPos);
-		rhRotAround.nodePos.setLocalRotation(spt.getLocalRotation());
+		rhRotAround.nodePos.setLocalRotation(sptToRotate.getLocalRotation());
 		
 		rhRotAround.quaAdd.fromAngleAxis(fAddAngleRadians, v3fUp);
 		rhRotAround.nodeCenter.setLocalRotation(Quaternion.IDENTITY);
@@ -365,10 +365,10 @@ public class MiscJmeI {
 //			spt.rotate(quaAdd);  //use lookat?
 //		}
 		
-		spt.setLocalTranslation(rhRotAround.nodePos.getWorldTranslation());
+		sptToRotate.setLocalTranslation(rhRotAround.nodePos.getWorldTranslation());
 		
 		if(!bKeepOriginalLocalRotation){
-			spt.setLocalRotation(rhRotAround.nodePos.getWorldRotation());
+			sptToRotate.setLocalRotation(rhRotAround.nodePos.getWorldRotation());
 		}
 		
 	}

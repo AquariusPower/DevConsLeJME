@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import com.github.devconslejme.misc.CalcI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.math.FastMath;
+import com.jme3.math.Triangle;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
@@ -101,6 +102,8 @@ public class MeshI {
 		
 		double dVolume=0;
 		for(Geometry geom:ageom){
+			System.out.println(volumeOf(geom)+"//"+geom);
+			System.out.println(volumeOf(geom)+"//"+geom);
 			dVolume += volumeOf(geom);
 		}
 		
@@ -110,34 +113,51 @@ public class MeshI {
 	/**
 	 * @return in cubic world units
 	 */
-	public Double volumeOf(Geometry geom){
+	public double volumeOf(Geometry geom){
 		Mesh mesh=geom.getMesh();
 		Vector3f v3fWScale = geom.getWorldScale();
-		
-		if (mesh instanceof Box) {
-			Box box = (Box) mesh;
-			return (double) (
-				box.getXExtent()*2f * v3fWScale.x *
-				box.getYExtent()*2f * v3fWScale.y *
-				box.getZExtent()*2f * v3fWScale.z
-			);
+		if (mesh instanceof Box)return volOf((Box)mesh,v3fWScale);
+		if (mesh instanceof Sphere)return volOf((Sphere)mesh,v3fWScale);
+		return volOf(mesh,v3fWScale);
+//		throw new UnsupportedOperationException("mesh type not supported yet "+mesh.getClass());
+	}
+	
+	private double volOf(Mesh mesh, Vector3f v3fWScale) {
+		// regular closed meshes
+		double d=0;
+		for(int i=0;i<mesh.getTriangleCount();i++){
+			Triangle tri = new Triangle();
+			mesh.getTriangle(i, tri);
+			d+=triangleSVol(tri);
 		}
-		
-		if (mesh instanceof Sphere) {
-			Sphere s = (Sphere) mesh;
-			return CalcI.i().sphereVolume(
+    return Math.abs(d);
+	}
+
+	private Double volOf(Sphere s, Vector3f v3fWScale) {
+		return CalcI.i().sphereVolume(
 				s.radius * v3fWScale.x,
 				s.radius * v3fWScale.y,
 				s.radius * v3fWScale.z
 			);
-//			return (double) ( fSphereVolBaseMul *
-//				s.radius * v3fWScale.x *
-//				s.radius * v3fWScale.y *
-//				s.radius * v3fWScale.z
-//			);
-		}
-		
-		throw new UnsupportedOperationException("mesh type not supported yet "+mesh.getClass());
+	}
+
+	public double volOf(Box box, Vector3f v3fWScale){
+		return (double) (
+				box.getXExtent()*2f * v3fWScale.x *
+				box.getYExtent()*2f * v3fWScale.y *
+				box.getZExtent()*2f * v3fWScale.z
+			);
+	}
+	
+	public float triangleSVol(Triangle tri) {
+		return triangleSVol(tri.get1(),tri.get2(),tri.get3());
+	}
+	public float triangleSVol(Vector3f v3fA, Vector3f v3fB, Vector3f v3fC) {
+		return CalcI.i().triangleSVol(
+			v3fA.x,v3fA.y,v3fA.z,
+			v3fB.x,v3fB.y,v3fB.z,
+			v3fC.x,v3fC.y,v3fC.z
+		);
 	}
 	
 	public Mesh box(float fExtent) {
