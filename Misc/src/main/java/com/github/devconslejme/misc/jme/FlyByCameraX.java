@@ -34,10 +34,12 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.jme3.app.Application;
+import com.jme3.collision.MotionAllowedListener;
 import com.jme3.input.CameraInput;
 import com.jme3.input.FlyByCamera;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.MouseAxisTrigger;
+import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 
 /**
@@ -45,12 +47,13 @@ import com.jme3.renderer.Camera;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class FlyByCameraX extends FlyByCamera{
+public class FlyByCameraX extends FlyByCamera {
 	private boolean	bAllowZooming=false; //only with scope or eagle eye
 	private boolean	bAllowMove=true; //as it is a flycam, must be default true
 	private boolean	bOverrideKeepFlyCamDisabled;
 	private float	fAccMvTm = 0.05f;
 	private ArrayList<CallableX> acxList=new ArrayList<CallableX>();
+	private boolean	bRotationAllowed=true;
 	
 	public void reBindKeys(){
     MiscJmeI.i().enqueueUnregisterKeyMappings( //these were set at super
@@ -107,6 +110,12 @@ public class FlyByCameraX extends FlyByCamera{
 		
 	}
 	
+	@Override
+	protected void rotateCamera(float value, Vector3f axis) {
+		if(!isRotationAllowed())return;
+		super.rotateCamera(value, axis);
+	}
+	
 	protected void resetMvTm(CallableXAnon cx) {
 		acxList.remove(cx);
 		if(acxList.size()==0)fAccMvTm=0f;
@@ -143,6 +152,8 @@ public class FlyByCameraX extends FlyByCamera{
 
 	public FlyByCameraX(Camera cam) {
 		super(cam);
+		
+//		setMoveSpeed(1f);
 		
 		reBindKeys();
 //		QueueI.i().enqueue(new CallableXAnon() {
@@ -255,5 +266,26 @@ public class FlyByCameraX extends FlyByCamera{
 		this.fAcceleration = fAcceleration;
 		return this; //for beans setter
 	}
+	
+	/**
+	 * This actually sets a custom motion listener that can use the current position
+	 * and the current velocity to move the camera in a customized way. 
+	 * @param listener
+	 */
+	@Override
+	public void setMotionAllowedListener(MotionAllowedListener listener) {
+		/**
+		 * KEEP because of the javadoc explanation!
+		 */
+		super.setMotionAllowedListener(listener);
+	}
 
+	public boolean isRotationAllowed() {
+		return bRotationAllowed;
+	}
+
+	public FlyByCameraX setRotationAllowed(boolean bRotationAllowed) {
+		this.bRotationAllowed = bRotationAllowed;
+		return this; //for beans setter
+	}
 }
