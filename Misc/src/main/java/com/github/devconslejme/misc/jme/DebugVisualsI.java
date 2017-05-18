@@ -38,6 +38,7 @@ import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.bullet.debug.BulletDebugAppState.DebugAppStateFilter;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -244,7 +245,9 @@ public class DebugVisualsI {
 			}
 			
 			updateWorldBoundAndAxes(spt,nd);
-			nd.setLocalTranslation(spt.getLocalTranslation());
+			System.out.println("B:"+nd.getLocalTranslation());
+			nd.setLocalTranslation(spt.getLocalTranslation().clone());
+			System.out.println("A:"+nd.getLocalTranslation());
 		}
 	}
 	
