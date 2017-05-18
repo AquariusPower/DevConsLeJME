@@ -53,12 +53,7 @@ import com.jme3.util.BufferUtils;
 public class MeshI {
 	public static MeshI i(){return GlobalManagerI.i().get(MeshI.class);}
 	
-//	/**
-//	 *     <- here ->
-//	 * v = ((4/3)*pi) * r^3
-//	 */
-//	float fSphereVolBaseMul = (4f/3f)*FastMath.PI; //see BoundingSphere.getVolume()
-//float fSphereVolBaseMul = (4 * FastMath.ONE_THIRD) * FastMath.PI; //see BoundingSphere.getVolume()
+	private boolean	bDebug;
 	
 	/**
 	 * tip at Z=0
@@ -85,8 +80,6 @@ public class MeshI {
 			super(axisSamples, radialSamples, fRadius1Default, radius2, height, closed, inverted);
 		}
 	}
-
-	private boolean	bDebug;
 	
 	/**
 	 * TODO ignore intersections? but if they de-intersect (move away each other)... too much trouble?
@@ -108,7 +101,7 @@ public class MeshI {
 			if(isDebug()){
 				MessagesI.i().output(true, System.out, "MeshVolume", this, "\n"+ 
 					volumeOf(geom)+"//"+geom+"\n"+
-					volOf((Mesh)geom.getMesh(),geom.getWorldScale())+"//MESH//"+geom);
+					volOfMesh(geom.getMesh(),geom.getWorldScale())+"//MESH//"+geom);
 			}
 			dVolume += volumeOf(geom);
 		}
@@ -122,24 +115,33 @@ public class MeshI {
 	public double volumeOf(Geometry geom){
 		Mesh mesh=geom.getMesh();
 		Vector3f v3fWScale = geom.getWorldScale();
-		if (mesh instanceof Box)return volOf((Box)mesh,v3fWScale);
-		if (mesh instanceof Sphere)return volOf((Sphere)mesh,v3fWScale);
-		return volOf(mesh,v3fWScale);
-//		throw new UnsupportedOperationException("mesh type not supported yet "+mesh.getClass());
+		return volumeOf(mesh,v3fWScale);
 	}
 	
-	private double volOf(Mesh mesh, Vector3f v3fWScale) {
+	public double volumeOf(Mesh mesh, Vector3f v3fWScale) {
+		if (mesh instanceof Box)return volOfBox((Box)mesh,v3fWScale);
+		if (mesh instanceof Sphere)return volOfSphere((Sphere)mesh,v3fWScale);
+		return volOfMesh(mesh,v3fWScale);
+//		throw new UnsupportedOperationException("mesh type not supported yet "+mesh.getClass());
+	}
+	public double volOfMesh(Mesh mesh, Vector3f v3fWScale) {
 		// regular closed meshes
 		double d=0;
 		for(int i=0;i<mesh.getTriangleCount();i++){
 			Triangle tri = new Triangle();
 			mesh.getTriangle(i, tri);
-			d+=triangleSVol(tri);
+			d+=triangleSVol(tri,v3fWScale);
 		}
     return Math.abs(d);
 	}
 
-	private Double volOf(Sphere s, Vector3f v3fWScale) {
+	/**
+	 * this one does not depend on the mesh, and will be highly precise
+	 * @param s
+	 * @param v3fWScale
+	 * @return
+	 */
+	public Double volOfSphere(Sphere s, Vector3f v3fWScale) {
 		return CalcI.i().sphereVolume(
 				s.radius * v3fWScale.x,
 				s.radius * v3fWScale.y,
@@ -147,7 +149,7 @@ public class MeshI {
 			);
 	}
 
-	public double volOf(Box box, Vector3f v3fWScale){
+	public double volOfBox(Box box, Vector3f v3fWScale){
 		return (double) (
 				box.getXExtent()*2f * v3fWScale.x *
 				box.getYExtent()*2f * v3fWScale.y *
@@ -155,9 +157,16 @@ public class MeshI {
 			);
 	}
 	
-	public float triangleSVol(Triangle tri) {
-		return triangleSVol(tri.get1(),tri.get2(),tri.get3());
+	public float triangleSVol(Triangle tri, Vector3f v3fWScale) {
+//		return triangleSVol(tri.get1(),tri.get2(),tri.get3());
+		return triangleSVolJme(
+				tri.get1().mult(v3fWScale),
+				tri.get2().mult(v3fWScale),
+				tri.get3().mult(v3fWScale));
 	}
+	public float triangleSVolJme(Vector3f v3fA, Vector3f v3fB, Vector3f v3fC){
+		return v3fA.dot(v3fB.cross(v3fC))/6.0f;
+  }
 	public float triangleSVol(Vector3f v3fA, Vector3f v3fB, Vector3f v3fC) {
 		return CalcI.i().triangleSVol(
 			v3fA.x,v3fA.y,v3fA.z,

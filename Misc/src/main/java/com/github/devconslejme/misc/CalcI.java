@@ -55,7 +55,7 @@ public class CalcI {
 		return sphereVolume(dRadius,dRadius,dRadius);
 	}
 	/**
-	 * scaled TODO this works precise?
+	 * if each is scaled will work precisely too
 	 * @param dRadiusX
 	 * @param dRadiusY
 	 * @param dRadiusZ
@@ -69,7 +69,6 @@ public class CalcI {
 			);
 	}
 
-	float f1six=1f/6f;
 	/**
 	 * Mesh pre-conditions:
 	 * 1) The mesh containing the triangles must be centralized.
@@ -82,9 +81,9 @@ public class CalcI {
 		float fBx, float fBy, float fBz,
 		float fCx, float fCy, float fCz
 	){
-		return f1six * (
+		return (
 			-(fCx*fBy*fAz)+(fBx*fCy*fAz)+(fCx*fAy*fBz)
 		  -(fAx*fCy*fBz)-(fBx*fAy*fCz)+(fAx*fBy*fCz)
-		);
+		)/6f;
 	}
 }
