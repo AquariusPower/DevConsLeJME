@@ -245,8 +245,9 @@ public class TimedDelay {
 		return this;
 	}
 
-	public void setAsReadyOnce(boolean bIfReadyWillAlsoUpdate) {
+	public TimedDelay setAsReadyOnce(boolean bIfReadyWillAlsoUpdate) {
 		bInstaReadyOnce=true;
 		if(bIfReadyWillAlsoUpdate)updateTime();
+		return this;
 	}
 }

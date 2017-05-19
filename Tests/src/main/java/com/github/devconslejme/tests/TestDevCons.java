@@ -213,6 +213,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		
 		// Orde
 		orde = new OriginDevice();
+		DebugVisualsI.i().showWorldBoundAndRotAxes(orde);//TODO rm
 		orde
 //			.setUnstable(true)
 			.setDestroySpatials(true)
@@ -224,7 +225,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		// Orde's food
 		Node nodeRef=new Node();
 		String strOrdeFood="OrdeFood";
-		for(int i=1;i<=10;i++){
+		for(int i=1;i<=20;i++){
 			nodeRef.rotate(i*30*FastMath.DEG_TO_RAD, 0, 0);
 			
 			float fExtent=0.1f*i;
@@ -433,33 +434,6 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		
 	}
 	
-//	private void updateOriginObjects() {
-//		float fSpeed=0.0025f;
-//		torX.rotate(0,fSpeed,0);
-//		torY.rotate(0,fSpeed,0);
-//		torZ.rotate(0,fSpeed,0);
-//		
-//		if(tdEffectRetarget.isReady(true)){
-//			tdEffectRetarget.resetAndChangeDelayTo(fRetargetDefaultDelay*FastMath.nextRandomFloat()).setActive(true);
-//			int iA=FastMath.nextRandomInt(0, ageomList.size()-1);
-//			int iB=FastMath.nextRandomInt(0, ageomList.size()-1);
-//			if(iA!=iB){
-//				ef.getElectricalPath().setMinMaxPerc(0.05f, 0.1f);
-////				ef.getElectricalPath().setMaxHoldMilis(iMaxHoldMilis);
-//				
-//				ef.setPlay(true);
-//				ef.setAmplitudePerc(0.05f);
-////				ef.setMinMaxPerc(5,15);
-//				ef.setFromTo(
-//					ageomList.get(iA).getLocalTranslation(),
-//					ageomList.get(iB).getLocalTranslation()
-//				);
-//			}else{
-//				ef.setPlay(false);
-//			}
-//		}
-//	}
-
 	/**
 	 * Linux only: raise application window as easy workaround to make strict focus policy painless
 	 */

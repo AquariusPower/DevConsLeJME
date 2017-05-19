@@ -126,7 +126,11 @@ public class RotateI {
 	 * @param bKeepOriginalLocalRotation
 	 */
 	public void rotateAroundPivot(Spatial sptTargetToRotate, Spatial sptPivot, float fAddAngleRadians, Vector3f v3fUp, boolean bKeepOriginalLocalRotation){
-		if(v3fUp==null)v3fUp=sptTargetToRotate.getLocalRotation().getRotationColumn(1);
+		if(v3fUp==null){
+			v3fUp=sptTargetToRotate.getLocalRotation().getRotationColumn(1);
+		}else{
+			v3fUp=v3fUp.normalize();//copy
+		}
 			
 		/**
 		 * we need to know where they are in the world
@@ -152,9 +156,11 @@ public class RotateI {
 //		if(!bKeepOriginalLocalRotation){
 //			spt.rotate(quaAdd);  //use lookat?
 //		}
-		
+//		sptTargetToRotate.localToWorld(rhRotAround.nodeChild.getWorldTranslation(), null)
 		sptTargetToRotate.setLocalTranslation(
-			sptTargetToRotate.worldToLocal(rhRotAround.nodeChild.getWorldTranslation(),null) );
+//				sptTargetToRotate.worldToLocal(rhRotAround.nodeChild.getWorldTranslation(),null)
+			rhRotAround.nodeChild.getWorldTranslation().subtract(v3fWPivot)
+		);
 		
 		if(!bKeepOriginalLocalRotation){
 			sptTargetToRotate.setLocalRotation(rhRotAround.nodeChild.getWorldRotation());

@@ -93,9 +93,18 @@ public class Energy {
 	public long getEnergyCapacity() {
 		return lEnergyCapacity;
 	}
-
+	
+	/**
+	 * 
+	 * @param lEnergyCapacity min 1
+	 * @return
+	 */
 	public Energy setEnergyCapacity(long lEnergyCapacity) {
 		this.lEnergyCapacity = lEnergyCapacity;
+		if(this.lEnergyCapacity<=0){
+			this.lEnergyCapacity=1;
+			MessagesI.i().warnMsg(this, "invalid energy capacity", lEnergyCapacity);
+		}
 		return this; //for beans setter
 	}
 

@@ -62,15 +62,15 @@ import com.jme3.scene.shape.Torus;
 public class OriginDevice extends Node{
 	public class TargetToken {
 	//	long lEnergyWattsPerMilis;
-		private EnergyJme elecj;
+		private EnergyJme en;
 		private OriginDevice ordeApplier;
 	
 		public TargetToken(OriginDevice ordeApplier, long lEnergyWattsPerMilis) {
 			this.ordeApplier=ordeApplier;
-			this.elecj = new EnergyJme(ordeApplier.energy);
-			this.elecj.addEnergy(lEnergyWattsPerMilis);
+			this.en = new EnergyJme(ordeApplier.energy);
+			this.en.addEnergy(lEnergyWattsPerMilis);
 //			this.lEnergyWattsPerMilis=lEnergyWattsPerMilis;
-			assert(elecj.getEnergyStored()>=0);
+			assert(en.getEnergyStored()>=0);
 		}
 		
 	}
@@ -106,7 +106,7 @@ public class OriginDevice extends Node{
 //	private boolean	bUnstable;
 	private ERotMode erm = ERotMode.Disaligned;
 	private Spatial	sptTarget;
-	private NodeAxis	nodeaxisUserChosen;
+//	private NodeAxis	nodeaxisUserChosen;
 	private boolean	bSameAxis;
 //	private ETargetMode esm = ETargetMode.JustStay;
 	private ETargetMode esm = ETargetMode.MoveOver;
@@ -121,7 +121,8 @@ public class OriginDevice extends Node{
 //	private float	fPseudoDiameter;
 	private float	fTractionForceBasedOnDiameterMult = 3f;
 	private float	fMaxTractionDist;
-	private float	fSafeMinDist=0.01f;
+//	private float	fSafeMinDist=0.01f;
+	private float	fSafeMinDist=0.1f;
 	private float	fEnergyCoreRadius;
 //	private float	fPseudoEnergyCoreRadius;
 //	private float	fPseudoDeviceRadius;
@@ -130,7 +131,7 @@ public class OriginDevice extends Node{
 //	private Geometry	geomEnergyCore;
 //	private boolean	bForceAbsorptionOnce;
 
-	private float	fPetMaxDist;
+	private float	fPetMaxRadiusPercDist=1.1f;
 	
 //	/**
 //	 * each 0.01^3 wold volume = 1 watt/miliseconds
@@ -147,6 +148,8 @@ public class OriginDevice extends Node{
 		Geometry	geomWireFrame;
 		Node nodeGeometries;
 		public EffectElectricity	ef;
+		public Vector3f	v3fAdd = Vector3f.UNIT_Y.clone();
+		EnergyJme en;
 	}
 	
 	public OriginDevice(){
@@ -162,6 +165,14 @@ public class OriginDevice extends Node{
 		init();
 	}
 	
+	public Vector3f moveVelocity(){
+		Vector3f v3f=getWorldTranslation()
+			.normalize()
+			.mult(fMoveBaseSpeed*getWorldTranslation().length());
+		if(v3f.length()<fMoveBaseSpeed)v3f.set(fMoveBaseSpeed,0,0);
+		return v3f;
+	}
+	
 	public void update(float fTPF){
 		this.fTPF=fTPF;
 		
@@ -170,20 +181,16 @@ public class OriginDevice extends Node{
 //		fPseudoDeviceRadius=fDiameter/2f;
 //		bUnstable=(energy.isOvercharged());
 //		fTractionForceBasedOnDiameterMult = 3f;
-		fMaxTractionDist=(fRadius*2f)*fTractionForceBasedOnDiameterMult;
+		fMaxTractionDist=(getRadius()*2f)*fTractionForceBasedOnDiameterMult;
 		
 		// moves back to world origin
 		if(sptTarget==null){
 			if(getWorldTranslation().length()>0){
-				move(getWorldTranslation()
-					.normalize()
-					.mult(fMoveBaseSpeed*getWorldTranslation().length())
-					.negate()
-				);
+				move(moveVelocity().negate());
 			}
 		}
 		
-		updateCheckGrow(); //evolve
+		updateCheckGrowShrink(); //evolve
 		updateEnergyCore();
 		updateAutoTarget();
 		updateTorusRotations();
@@ -214,16 +221,21 @@ public class OriginDevice extends Node{
 		StringBuilder sb = new StringBuilder(energy.energyInfo());
 //		sb.append("("+lEnergyWattsPerMilis+">"+lLowEnergy+")w/ms, ");
 		sb.append("r=("+StringI.i().fmtFloat(fEnergyCoreRadius)+"/"
-			+StringI.i().fmtFloat(fRadius/2f)+")");
+			+StringI.i().fmtFloat(getRadius()/2f)+")");
 		sb.append("v3f="+TextI.i().fmtVector3f(getWorldTranslation(),2)+", ");
 		
 		if(sptTarget!=null){
-			sb.append("tgt="+sptTarget.getName()+getTargetToken(sptTarget).elecj.energyInfo());
+			TargetToken tt = getTargetToken(sptTarget);
+			if(tt!=null)sb.append("tgt="+sptTarget.getName()+tt.en.energyInfo());
 		}
 		
 		return sb.toString();
 	}
 	
+	private float getRadius() {
+		return fRadius*getLocalScale().x; //TODO the main node should not scale differently from y z
+	}
+
 	private void updateAutoTarget() {
 		if(bAutoTargetNearestSpatials){
 			if(sptTarget==null){
@@ -239,7 +251,7 @@ public class OriginDevice extends Node{
 					float fDist = getWorldTranslation().distance(spt.getWorldTranslation());
 					if(fDist > fMaxTractionDist)continue;
 					
-					if(!isRequireTargetsToken() || !hasTargetToken(spt))continue; //TODO "heavier?" is after
+					if(!isRequireTargetsToken() || !hasTargetTokenParentRecursive(spt))continue; //TODO "heavier?" is after
 					if(
 							fDist<=fSafeMinDist && //destruction area 
 							energy.getEnergyStored() >= calcEnergyToDisintegrate(spt) //&&
@@ -264,17 +276,26 @@ public class OriginDevice extends Node{
 		}
 	}
 	
+	public NodeAxis getNodeaxisUserChosen(){
+		if(sptTarget==null)return null;
+		return electricNodeFor(sptTarget);
+//		if(sptTarget instanceof NodeAxis){
+//			return (NodeAxis)sptTarget;
+//		}
+//		return null;
+	}
+	
 	/**
 	 * TODO deplet energy sources
 	 */
 	protected void updateEnergySourceInteraction(ETargetMode etmToUse) {
 		if(sptTarget==null)return;
-		if(nodeaxisUserChosen!=null)return; //dont mess with self
+		if(getNodeaxisUserChosen()!=null)return; //dont mess with self
 		
-		Vector3f v3fSrcWPos = sptTarget.getWorldTranslation();
+		Vector3f v3fWTargetPos = sptTarget.getWorldTranslation();
 		
-		Vector3f v3fDist=v3fSrcWPos.subtract(getWorldTranslation());
-		float fDist = v3fDist.length();
+		Vector3f v3fDistToTarget=v3fWTargetPos.subtract(getWorldTranslation());
+		float fDist = v3fDistToTarget.length();
 		
 		if(fDist > fMaxTractionDist && sptUserChosenTarget==null){
 			setElectricitySource(null);
@@ -282,28 +303,32 @@ public class OriginDevice extends Node{
 			return; //disconnected
 		}
 		
-		float fMoveSpeed=fMoveBaseSpeed;
+//		float fMoveSpeed=fMoveBaseSpeed;//moveVelocity().length();
+		float fMoveSpeed=moveVelocity().length();
 		float fFollowDist = fMaxTractionDist/2f;
-		float fFollowBoostMult=10f;
-		if(etmToUse==ETargetMode.Follow || etmToUse==ETargetMode.MoveOver){
-			if(etmToUse==ETargetMode.Follow){
-				fMoveSpeed*=fDist/fFollowDist;
-				fMoveSpeed*=fFollowBoostMult;
-			}else
-			if(etmToUse==ETargetMode.MoveOver){
-				fMoveSpeed*=fDist/fMaxTractionDist;
-			}
-		}else{
-			fMoveSpeed*=fMaxTractionDist/fDist;
-			
-			if(fDist < fRadius){
-				fMoveSpeed=fMoveBaseSpeed*fDist;
-			}
+//		float fFollowBoostMult=10f;
+//		if(etmToUse==ETargetMode.Follow || etmToUse==ETargetMode.MoveOver){
+//			if(etmToUse==ETargetMode.Follow){
+//				fMoveSpeed*=fDist/fFollowDist;
+//				fMoveSpeed*=fFollowBoostMult;
+//			}else
+//			if(etmToUse==ETargetMode.MoveOver){
+//				fMoveSpeed*=fDist/fMaxTractionDist;
+//			}
+//		}else{
+//			fMoveSpeed*=fMaxTractionDist/fDist;
+//			
+//			if(fDist < fRadius){
+//				fMoveSpeed=fMoveBaseSpeed*fDist;
+//			}
+//		}
+//		
+//		if(fMoveSpeed<fMoveBaseSpeed)fMoveSpeed=fMoveBaseSpeed;
+		if(fDist < getRadius()){
+			fMoveSpeed=fMoveBaseSpeed*fDist;
 		}
 		
-		if(fMoveSpeed<fMoveBaseSpeed)fMoveSpeed=fMoveBaseSpeed;
-		
-		Vector3f v3fDir = v3fDist.normalize();
+		Vector3f v3fDir = v3fDistToTarget.normalize();
 		Vector3f v3fSpeed = v3fDir.mult(fMoveSpeed);
 //		ETargetMode esmChosen=esm;
 //		if(esm==ETargetMode.MoveOver && bTmpAttract)esmChosen=ETargetMode.Attract;
@@ -411,7 +436,7 @@ public class OriginDevice extends Node{
 		if(tt!=null){
 			if(!bRemotely){ //it all
 //				lAbso=tt.elecj.getEnergyWattsPerMilis();
-				lAbso=energy.absorb(tt.elecj,tt.elecj.getEnergyStored());
+				lAbso=energy.absorb(tt.en,tt.en.getEnergyStored());
 				
 //				bForceAbsorptionOnce=false;
 				
@@ -419,7 +444,7 @@ public class OriginDevice extends Node{
 					disintegrate(spt);
 				}
 			}else{
-				lAbso=energy.absorb(tt.elecj,calcEnergyPF(EEnergyConsumpWpM.RemoteAbsorption));
+				lAbso=energy.absorb(tt.en,calcEnergyPF(EEnergyConsumpWpM.RemoteAbsorption));
 			}
 			
 		}
@@ -512,7 +537,7 @@ public class OriginDevice extends Node{
 	private void preparePet(NodeAxis nodePet) {
 		MiscJmeI.i().addToName(nodePet, "Pet", false);
 		
-		TimedDelay td = new TimedDelay(1f, "").setActive(true);
+		TimedDelay td = new TimedDelay(10f, "change direction").setActive(true).setAsReadyOnce(true);
 		
 		// Orde's pet
 		anodeElectricShapesList.add(nodePet);
@@ -554,7 +579,7 @@ public class OriginDevice extends Node{
 		
 		///////////// pull/push the pet
 		float fDist = nodePet.getLocalTranslation().length(); //is child of Orde, the dist is relative
-		float fDistPerc = fDist/fPetMaxDist;
+		float fDistPerc = fDist/getPetMaxDist();
 		
 		consumeEnergyPF(EEnergyConsumpWpM.PetFlyExpelsEnergy,energy.getUnstablePerc()/3f); //3f is just to last more, then ending lasts 5 full loops this way, no "real" energy reason tho..
 		
@@ -564,20 +589,55 @@ public class OriginDevice extends Node{
 		// the new perc position will be relative to the current perc distance
 		float fNewRelativePerc = fEnerUnstablePercLimited/fDistPerc;
 		
-		if(false)
+//		if(false)
 		nodePet.setLocalTranslation(
 			new Vector3f().interpolateLocal( //from world origin
 				nodePet.getLocalTranslation(), 
 				fNewRelativePerc
-			)
+			).divide(nodePet.getLocalScale())
 		);
 		
 		nodePet.setLocalScale(fEnerUnstablePercLimited);
 		
 		///////////////// rotate around Orde
 		Vector3f v3fNodeUp = nodePet.getLocalRotation().getRotationColumn(1);//y
-		if(td.isReady(true))v3fNodeUp = RotateI.i().randomDirection();
+//		float f=0.25f*FastMath.nextRandomFloat();
+//		if(td.isReady(true)){
+////			fMult=FastMath.nextRandomFloat()*4f;
+//			v3fNodeUp = RotateI.i().randomDirection();
+//////		}else{
+//////			v3fNodeUp.addLocal(Vector3f.UNIT_X.mult(0.25f));
+//////			float fDirSpeed=100;
+//////			v3fNodeUp = RotateI.i().rotateVector(v3fNodeUp, 
+//////				nodePet.getLocalRotation().getRotationColumn(0), 
+//////				(fDirSpeed*fTPF)*FastMath.DEG_TO_RAD);
+//		}
+		if(td.isReady(true)){
+			nodePet.v3fAdd.set(
+					FastMath.nextRandomInt(0,1),
+					FastMath.nextRandomInt(0,1),
+					FastMath.nextRandomInt(0,1));
+		}
+		
+		float f=0.25f;
 		float fRotSpeed=250f;
+//		Vector3f v3fAdd = null;
+//		switch(nodePet.ea){
+//			case X:
+////				v3fAdd=Vector3f.UNIT_X;
+//				break;
+//			case Y:
+//				f+=0.1f;
+//				fRotSpeed*=1.1f;
+////				v3fAdd=Vector3f.UNIT_Y;
+//				break;
+//			case Z:
+//				f+=0.2f;
+//				fRotSpeed*=1.2f;
+////				v3fAdd=Vector3f.UNIT_Z;
+//				break;
+//		}
+		v3fNodeUp.addLocal(nodePet.v3fAdd.mult(f));//.normalizeLocal();
 //		if(false)
 		RotateI.i().rotateAroundPivot(nodePet, this, -(fRotSpeed*fTPF)*FastMath.DEG_TO_RAD,	v3fNodeUp, false);
 		
@@ -585,31 +645,36 @@ public class OriginDevice extends Node{
 		Quaternion qua = nodePet.nodeGeometries.getLocalRotation().clone();
 		Vector3f v3fGeomUp = qua.getRotationColumn(1); //y
 		float fSpinSpeed=500f;
-		if(false)
+//		if(false)
 		RotateI.i().rotateSpinning(
 			nodePet.nodeGeometries,
 			v3fGeomUp,
 			qua.getRotationColumn(2),
-			fSpinSpeed*fTPF*FastMath.DEG_TO_RAD
+			(fSpinSpeed*fTPF)*FastMath.DEG_TO_RAD
 		);
 	}
 	
-	private void updateCheckGrow() {
+	private void updateCheckGrowShrink() {
+		Float fPerc=null;
 		long lConsumeToGrow=energy.getEnergyCapacity()*10;
-		if(energy.getEnergyStored()<(lConsumeToGrow))return;
 		
-		if(energy.consumeEnergy(lConsumeToGrow)>0){
-			float fGrowPerc=1.1f;//slow/step grow
-			scale(fGrowPerc);
-			energy.setEnergyCapacity((long) (energy.getEnergyCapacity()*((double)fGrowPerc)));
+//		if(energy.isLowEnergy() && getNodeaxisUserChosen()!=null){
+		if(getNodeaxisUserChosen()!=null){
+			fPerc=0.9f;//slow/step
+			energy.addEnergy((long)Math.round(lConsumeToGrow*fPerc));
+			setTargetRaw(null);
+		}else{
+			if(energy.getEnergyStored()>(lConsumeToGrow)){
+				if(energy.consumeEnergy(lConsumeToGrow)>0){
+					fPerc=1.1f;//slow/step grow
+				}
+			}
 		}
 		
-//		float fGrowPerc = energy.getUnstablePerc()/10f;
-//		if(fGrowPerc<1f)return;
-//		if(fGrowPerc>1.1f)fGrowPerc=1.1f;//slow/step grow
-//		scale(fGrowPerc);
-//		energy.setEnergyCapacity((long) (energy.getEnergyCapacity()*((double)fGrowPerc)));
-//		energy.consumeEnergy(energy.getEnergyStored());
+		if(fPerc!=null){
+			scale(fPerc);
+			energy.setEnergyCapacity((long)Math.round(energy.getEnergyCapacity()*((double)fPerc)));
+		}
 	}
 
 	private NodeAxis createEnergyCore() {
@@ -673,7 +738,7 @@ public class OriginDevice extends Node{
 			nodeElectricA = null;
 			Vector3f v3fWorldA = null;
 			if(sptTarget!=null){ // if target is set, it will always be A
-				nodeElectricA=nodeaxisUserChosen;
+				nodeElectricA=getNodeaxisUserChosen();
 				iA=anodeElectricShapesList.indexOf(nodeElectricA); //external spatial will be -1
 //				iA=anodeElectricShapesList.indexOf(sptElectricSrc); //external spatial will be -1
 //				if(iA>-1)nodeElectricA=(NodeAxis) sptElectricSrc;
@@ -725,9 +790,9 @@ public class OriginDevice extends Node{
 	
 	protected NodeAxis electricNodeFor(Spatial spt) {
 		ArrayList<Node> anode = SpatialHierarchyI.i().getAllParents(spt, false);
-		for(Node node:anode){
+		for(Node node:anode){ //nodes may not be NodeAxis
 			if(anodeElectricShapesList.contains(node)){
-				return (NodeAxis)node; //must cast as nodes may not be NodeAxis
+				return (NodeAxis)node; //must cast 
 			}
 		}
 		return null;
@@ -905,15 +970,20 @@ public class OriginDevice extends Node{
 		createTorusIntersections(nodeRotating,color,fDisplacementTorus,v3fUp);
 		
 		// pets
-		fPetMaxDist=fRadius*1.5f;
+//		fPetMaxDist=fRadius*1.5f;
+//		fPetMaxDist=fRadius*1.2f;
 		NodeAxis nodePet = createAxisShape(
-			MeshI.i().cone(1f), color, new Vector3f(fPetMaxDist,0,0), 1f, v3fUp, true, 
+			MeshI.i().cone(1f), color, new Vector3f(getPetMaxDist(),0,0), 1f, v3fUp, true, 
 			new Vector3f(0.05f, 0.15f, 1));
 		preparePet(nodePet);
 		
 		return nodeRotating;
 	}
 	
+	private float getPetMaxDist() {
+		return fPetMaxRadiusPercDist*getRadius();
+	}
+
 	protected void createTorusIntersections(Node nodeTor, ColorRGBA color, float fDisplacementTorus, Vector3f v3fUp) {
 		float fIRa=fIR*1.5f;
 		float fAlpha=fRotTorOpac+0.25f;
@@ -941,6 +1011,8 @@ public class OriginDevice extends Node{
 	protected NodeAxis createAxisShape(Mesh mesh, ColorRGBA color, Vector3f v3fPos, float fAlpha, Vector3f v3fUp, boolean bAddWireFrame, Vector3f v3fScale) {
 		if(v3fScale==null)v3fScale=new Vector3f(1,1,1);
 		NodeAxis node = new NodeAxis("Node");
+		applyTargetTokenLater(node);
+//		node.en=new EnergyJme(energy);
 		Geometry geom = GeometryI.i().create(mesh, ColorI.i().colorChangeCopy(color,0,fAlpha), true,null);
 		node.geom=geom;
 		
@@ -1056,7 +1128,7 @@ public class OriginDevice extends Node{
 		return setElectricitySource(sptElectricSrc,true);
 	}
 	public OriginDevice setElectricitySource(Spatial sptElectricSrc, boolean bForceAbsorptionOnce) {
-		if(sptElectricSrc!=null && getTargetToken(sptElectricSrc)==null){
+		if(sptElectricSrc!=null && !hasTargetTokenParentRecursive(sptElectricSrc)){
 			MessagesI.i().warnMsg(this, "has no energy, skipping", sptElectricSrc, bForceAbsorptionOnce);
 			return this; //skip
 		}
@@ -1065,7 +1137,7 @@ public class OriginDevice extends Node{
 //		this.sptTarget = sptElectricSrc;
 		this.sptUserChosenTarget = sptElectricSrc;
 		if(bForceAbsorptionOnce)sptForceAbsorption=sptElectricSrc;
-		if(sptElectricSrc!=null)nodeaxisUserChosen = electricNodeFor(sptElectricSrc);
+//		if(sptElectricSrc!=null)nodeaxisUserChosen = electricNodeFor(sptElectricSrc);
 		
 //		if(sptElectricSrc!=null){
 ////			fInitialDistToSrc=sptElectricSrc.getWorldTranslation().subtract(getWorldTranslation()).length();
@@ -1107,22 +1179,29 @@ public class OriginDevice extends Node{
 		if(!bDestroySpatials)return false;
 		
 		if(isRequireTargetsToken()){
-			if(!hasTargetToken(spt))return false;
+			if(!hasTargetTokenParentRecursive(spt))return false;
 		}
 		
 		return true;
 	}
 	
-	public boolean hasTargetToken(Spatial spt){
-		if(UserDataI.i().retrieve(spt, TargetToken.class, false)!=null){
-			return true;
+	protected boolean hasTargetToken(Spatial spt){
+		return (UserDataI.i().retrieve(spt, TargetToken.class, false)!=null);
+	}
+	
+	public boolean hasTargetTokenParentRecursive(Spatial spt){
+		if(hasTargetToken(spt))return true;
+		
+		for(Node node:SpatialHierarchyI.i().getAllParents(spt, false)){
+			if(hasTargetToken(spt))return true;
 		}
+		
 		return false;
 	}
 	
 	public boolean canTarget(Spatial spt){
 		if(!isRequireTargetsToken())return true;
-		if(hasTargetToken(spt))return true;
+		if(hasTargetTokenParentRecursive(spt))return true;
 		return false;
 	}
 	
