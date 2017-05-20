@@ -150,7 +150,7 @@ public class OriginDevice<NODEXS extends NodeAxis> extends Node{
 		updateAxisMainShapes();
 	}
 	
-	private float getRadius() {
+	protected float getRadius() {
 		return fRadius*getLocalScale().x; //TODO the main node should not scale differently from y z
 	}
 
@@ -370,7 +370,7 @@ public class OriginDevice<NODEXS extends NodeAxis> extends Node{
 	protected NODEXS createAxisShape(EAxis ea, Mesh mesh, Vector3f v3fPos, float fAlpha, Vector3f v3fUp, boolean bAddWireFrame, Vector3f v3fScale) {
 		if(v3fScale==null)v3fScale=new Vector3f(1,1,1);
 		NODEXS node = createNodeAxis("Node");
-		node.ea=ea;
+		node.setEAxis(ea);
 		Geometry geom = GeometryI.i().create(mesh, ColorI.i().colorChangeCopy(ea.get().getColor(),0,fAlpha), true,null);
 		node.setGeom(geom);
 		

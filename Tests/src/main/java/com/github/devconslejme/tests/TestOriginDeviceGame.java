@@ -350,10 +350,6 @@ public class TestOriginDeviceGame extends SimpleApplication implements IPickList
 			return sb.toString();
 		}
 		
-		private float getRadius() {
-			return fRadius*getLocalScale().x; //TODO the main node should not scale differently from y z
-		}
-
 		private void updateAutoTarget() {
 			if(bAutoTargetNearestSpatials){
 				if(sptTarget==null){
