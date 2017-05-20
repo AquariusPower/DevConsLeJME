@@ -64,9 +64,8 @@ public class OSCmd {
 		if(strOSName.equalsIgnoreCase("linux")){
 			astrOSCmd.add("bash");
 			astrOSCmd.add("-c");
+			astrOSCmd.addAll(ccl.getAllParamsStrCopy());
 		}
-//		astrOSCmd.add(ccl.getParam(1,String.class));
-		astrOSCmd.add(ccl.getParam(1));
 		
 		try {
 //			LoggingI.i().logMarker("Running OS command:Begin");

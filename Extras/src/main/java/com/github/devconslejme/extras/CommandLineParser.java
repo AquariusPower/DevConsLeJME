@@ -36,8 +36,11 @@ import com.github.devconslejme.misc.DetailedException;
  */
 public class CommandLineParser {
 	private String strLine;
-	private String strCommand;
+	
 	private ArrayList<Object>	aobjList;
+	
+	private String strCommand;
+	private ArrayList<Object>	aobjParamsList;
 	
 	enum EType{
 		Command, //unquoted string
@@ -50,8 +53,13 @@ public class CommandLineParser {
 	
 	public CommandLineParser(String strLine){
 		this.strLine=strLine;
+		
 		parse();
+		
 		strCommand = (String)aobjList.get(0);
+		
+		aobjParamsList=new ArrayList<Object>(aobjList);
+		aobjParamsList.remove(0);
 	}
 	
 	/**
@@ -62,27 +70,54 @@ public class CommandLineParser {
 		return strCommand;
 	}
 	
-//	public <T> T getParam(int iIndex, Class<T> cl){
-//		return (T)aobjList.get(iIndex);
-//	}
-	public <T> T getParam(int iIndex){
+	@SuppressWarnings("unchecked")
+	public <T> T getPart(int iIndex){
 		return (T)aobjList.get(iIndex);
 	}
 	
-	public String getAllParamsFrom(int iIndexFrom){
-		String str="";
-		for(Object obj:aobjList){
-			if(!str.isEmpty())str+=" ";
-			
-			if(obj instanceof String){
-				str+="\""+obj+"\"";
+	@SuppressWarnings("unchecked")
+	public <T> T getParam(int iIndex){
+		return (T)aobjParamsList.get(iIndex);
+	}
+	
+	public ArrayList<Object> getAllParamsCopy(){
+		return new ArrayList<Object>(aobjParamsList); 
+	}
+	public ArrayList<String> getAllParamsStrCopy(){
+		return getAllParamsStrCopy(3);
+	}
+	public ArrayList<String> getAllParamsStrCopy(int iFloatPrecision){
+		ArrayList<String> astr= new ArrayList<String>();
+		
+		for(Object obj:aobjParamsList){
+			if(Float.class.isInstance(obj) || Double.class.isInstance(obj)){
+				astr.add(String.format("%."+iFloatPrecision+"f", obj));
 			}else{
-				str+=obj.toString()+"";
+				astr.add(obj.toString());
 			}
 		}
 		
-		return str; 
+		return astr; 
 	}
+//	public String getAllParamsStr(int iFloatPrecision){
+//		ArrayList<String> astr= new ArrayList<String>();
+//		
+//		String str="";
+//		for(Object obj:aobjList){
+//			if(!str.isEmpty())str+=" ";
+//			
+//			if(obj instanceof String){
+//				str+="\""+obj.toString().replace("\"","\\\"")+"\"";
+//			}else
+//				if(Float.class.isInstance(obj) || Double.class.isInstance(obj)){
+//					str+=String.format("%."+iFloatPrecision+"f", obj);
+//				}else{
+//					str+=obj.toString()+"";
+//				}
+//		}
+//		
+//		return str; 
+//	}
 	
 	public void parse(){
 		strLine=strLine.trim();
