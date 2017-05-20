@@ -281,7 +281,6 @@ public class TestOriginDeviceGame extends SimpleApplication implements IPickList
 			fRadius=5;
 			iCS=50;
 			iRS=15;
-//			v3fSpeed.set(fBaseSpeed,fBaseSpeed,fBaseSpeed);
 			v3fSpeed.set(v3fBaseSpeed);
 			
 			init();
