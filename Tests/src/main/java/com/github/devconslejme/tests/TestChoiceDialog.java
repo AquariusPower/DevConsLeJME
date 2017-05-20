@@ -33,6 +33,7 @@ import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
+import com.github.devconslejme.projman.SimpleAppStateAbs;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
@@ -41,7 +42,7 @@ import com.simsilica.lemur.Command;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestChoiceDialog extends SimpleApplication {
+public class TestChoiceDialog extends SimpleAppStateAbs {
 	public static void main(String[] args) {
 		TestChoiceDialog tst = new TestChoiceDialog();
 		tst.start();
@@ -53,13 +54,13 @@ public class TestChoiceDialog extends SimpleApplication {
 	
 	@Override
 	public void simpleInitApp() {
-//		ConfigureTestsI.i().configure(this, getGuiNode());
 		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode(), getRootNode());
-		
 		initTest();
 	}
 	
+	@Override
 	public void initTest() {
+		super.initTest();
 		prepareDialog();
 		prepareButtonThatCallsDiag();
 	}
@@ -119,12 +120,11 @@ public class TestChoiceDialog extends SimpleApplication {
 	}
 
 	@Override
-	public void update() {
-		super.update();
-		
+	public void update(float tpf) {
 		if(!gdc.getDialog().isOpened() && gdc.isOptionSelected()){
 			Object objSelectedOption = gdc.extractSelectedOption();
 			btnChosenOption.setText("Chosen="+objSelectedOption);
 		}
 	}
+
 }

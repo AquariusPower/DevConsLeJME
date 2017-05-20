@@ -29,19 +29,21 @@ package com.github.devconslejme.misc.lemur;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.devconslejme.gendiag.DialogHierarchyStateI;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.Visuals;
 import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.JavaLangI;
+import com.github.devconslejme.misc.GlobalManagerI.G;
+import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.UserDataI;
-import com.github.devconslejme.misc.jme.UserDataI.IUDKey;
-import com.google.common.base.Function;
+import com.jme3.app.SimpleApplication;
+import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
 import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
-import com.simsilica.lemur.event.CursorListener;
 import com.simsilica.lemur.event.CursorMotionEvent;
 
 /**
@@ -49,7 +51,7 @@ import com.simsilica.lemur.event.CursorMotionEvent;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class AbsorbClickCommandsI implements CursorListener{
+public class AbsorbClickCommandsI extends CursorListenerX{
 	public static AbsorbClickCommandsI i(){return GlobalManagerI.i().get(AbsorbClickCommandsI.class);}
 	
 	private boolean	bDelegateClickCommands=true;
@@ -152,25 +154,65 @@ public class AbsorbClickCommandsI implements CursorListener{
 		this.bDelegateClickCommands = false;
 	}
 
+//	@Override
+//	public void cursorButtonEvent(CursorButtonEvent event, Spatial target,			Spatial capture) {
+//		Visuals vs = DialogHierarchyStateI.i().getVisuals(SpatialHierarchyI.i().getParentest(
+//			capture, ResizablePanel.class, true));
+//		if(vs!=null)DialogHierarchyStateI.i().setFocusRecursively(vs.getEntityId()); //TODO useless?
+//		
+//		if(event.isConsumed())return; // ex.: by drag parentest listener
+//		if(event.getButtonIndex()!=0)return; //left mouse button
+//		if(!event.isPressed()){ //button up
+//			if(delegateClickCommands(capture)>0)event.setConsumed();
+//		}
+//	}
 	@Override
-	public void cursorButtonEvent(CursorButtonEvent event, Spatial target,			Spatial capture) {
-		if(event.isConsumed())return; // ex.: by drag parentest listener
-		if(event.getButtonIndex()!=0)return; //left mouse button
-		if(!event.isPressed()){ //button up
-			if(delegateClickCommands(capture)>0)event.setConsumed();
+	protected boolean click(CursorButtonEvent event, Spatial target, Spatial capture) {
+		if(event.isConsumed())return false; // ex.: by drag parentest listener
+		if(event.getButtonIndex()!=0)return false; //left mouse button
+//		MiscLemurI.i().clickGlobalListeners(event,target,capture);
+		if(delegateClickCommands(capture)>0){
+			event.setConsumed();
+			return true;
 		}
+		return false;
 	}
+	
 
-	@Override
-	public void cursorEntered(CursorMotionEvent event, Spatial target,			Spatial capture) {
+//	@Override
+//	public void cursorEntered(CursorMotionEvent event, Spatial target,			Spatial capture) {
+//	}
+//
+//	@Override
+//	public void cursorExited(CursorMotionEvent event, Spatial target,			Spatial capture) {
+//	}
+//
+//	@Override
+//	public void cursorMoved(CursorMotionEvent event, Spatial target,			Spatial capture) {
+//	}
+	
+	public void addClickCommands(Button btn, Command<? super Button>... acmd) {
+		btn.addClickCommands(acmd);
+		absorbClickCommands(btn);
 	}
-
-	@Override
-	public void cursorExited(CursorMotionEvent event, Spatial target,			Spatial capture) {
-	}
-
-	@Override
-	public void cursorMoved(CursorMotionEvent event, Spatial target,			Spatial capture) {
+	
+	public ArrayList<Button> containsClickCommandsRecursively(Node nodeParentest, boolean bAbsorb){
+		if(nodeParentest==null){
+			SimpleApplication sapp = G.i(SimpleApplication.class);
+			if(sapp!=null)nodeParentest=sapp.getGuiNode();
+		}
+		
+		ArrayList<Button> abtn = new ArrayList<Button>();
+		for(Button btn:SpatialHierarchyI.i().getAllChildrenOfTypeRecursiveFrom(nodeParentest, Button.class, null)){
+			if(btn.getClickCommands()!=null && btn.getClickCommands().size()>0){
+				abtn.add(btn);
+				if(bAbsorb){
+					absorbClickCommands(btn);
+				}
+			}
+		}
+		
+		return abtn;
 	}
 
 }

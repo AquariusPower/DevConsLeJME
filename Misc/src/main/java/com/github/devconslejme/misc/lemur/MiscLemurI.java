@@ -32,7 +32,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.function.Function;
 
-import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
@@ -67,6 +66,7 @@ import com.simsilica.lemur.core.GuiComponent;
 import com.simsilica.lemur.core.GuiControl;
 import com.simsilica.lemur.core.VersionedReference;
 import com.simsilica.lemur.event.AbstractCursorEvent;
+import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.grid.GridModel;
 import com.simsilica.lemur.style.ElementId;
 
@@ -469,5 +469,26 @@ public class MiscLemurI {
 		if(this.fMinSizeZ!=null)throw new DetailedException("already set");
 		this.fMinSizeZ=fZ;
 		return this;
+	}
+	
+	private ArrayList<CursorListenerX> aclxGlobal = new ArrayList<CursorListenerX>();
+	/**
+	 * cannot consume the event, mainly for auto focus
+	 * @param clxGlobal
+	 */
+	public void addGlobalClickListener(CursorListenerX clxGlobal){
+//		DetailedException.assertNotAlreadySet(this.clxGlobal, clxGlobal);
+		if(!aclxGlobal.contains(clxGlobal))aclxGlobal.add(clxGlobal);
+	}
+	
+	public void clickGlobalListeners(CursorButtonEvent event, Spatial target, Spatial capture) {
+//		if(clxGlobal==null)return;
+		for(CursorListenerX clx:aclxGlobal){
+			boolean bWasConsumed=event.isConsumed();
+			clx.click(event, target, capture);
+			if(!bWasConsumed && event.isConsumed()){
+				throw new DetailedException("must not consume the event!",clx,event,target,capture,this);
+			}
+		}
 	}
 }

@@ -30,6 +30,7 @@ package com.github.devconslejme.tests;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
+import com.github.devconslejme.projman.SimpleAppStateAbs;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
@@ -38,7 +39,7 @@ import com.simsilica.lemur.component.QuadBackgroundComponent;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestResizablePanel extends SimpleApplication {
+public class TestResizablePanel extends SimpleAppStateAbs {
 	public static void main(String[] args) {
 		TestResizablePanel tst = new TestResizablePanel();
 		tst.start();
@@ -48,18 +49,18 @@ public class TestResizablePanel extends SimpleApplication {
 	
 	@Override
 	public void simpleInitApp() {
-//		GuiGlobals.initialize(this);
-//		BaseStyles.loadGlassStyle();
-//		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
-//		
-//		ConfigureTestsI.i().configure(this, getGuiNode());
 		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(this, getGuiNode(), getRootNode());
-		
 		initTest();
 	}
 	
+	@Override
+	public void update(float tpf) {}
+	
+	@Override
 	public void initTest() {
-		sapp = GlobalManagerI.i().get(SimpleApplication.class);
+		super.initTest();
+		
+		sapp = GlobalManagerI.i().get(SimpleApplication.class); // may not be this
 		
 		int i=300;
 		test(new Vector3f(100,i+100,10));
@@ -79,4 +80,5 @@ public class TestResizablePanel extends SimpleApplication {
 //		btn.setBackground(new QuadBackgroundComponent(ColorRGBA.Red.clone()));//,5,5, 0.02f, false));
 		rzp.setContents(btn);
 	}
+
 }

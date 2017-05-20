@@ -32,15 +32,13 @@ import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
-import com.jme3.app.SimpleApplication;
+import com.github.devconslejme.projman.SimpleAppStateAbs;
 import com.simsilica.lemur.Button;
-import com.simsilica.lemur.GuiGlobals;
-import com.simsilica.lemur.style.BaseStyles;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestContextMenu extends SimpleApplication{
+public class TestContextMenu extends SimpleAppStateAbs{
 	public static void main(String[] args) {
 		assert(true);
 		TestContextMenu test = new TestContextMenu();
@@ -49,15 +47,14 @@ public class TestContextMenu extends SimpleApplication{
 
 	@Override
 	public void simpleInitApp() {
-		GuiGlobals.initialize(this);
-		BaseStyles.loadGlassStyle();
-		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
 		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode(), getRootNode());
-		
 		initTest();
 	}
 
+	@Override
 	public void initTest() {
+		super.initTest();
+		
 		ResizablePanel rzp = DialogHierarchyStateI.i().createDialog(TestContextMenu.class.getSimpleName(), null);
 		rzp.setContents(new Button("context click me"));
 		DialogHierarchyStateI.i().showDialog(rzp);
@@ -82,4 +79,7 @@ public class TestContextMenu extends SimpleApplication{
 		
 		ContextMenuI.i().applyContextMenuAtSource(rzp.getContents(), cm);
 	}
+
+	@Override
+	public void update(float tpf) {}
 }

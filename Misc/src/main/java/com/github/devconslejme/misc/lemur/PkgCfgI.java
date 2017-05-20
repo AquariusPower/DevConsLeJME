@@ -48,9 +48,10 @@ public class PkgCfgI {
 	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
 	private boolean	bConfigured;
-	
+	public boolean isConfigured() {return bConfigured;}
+
 	public void configure(Application app, Node nodeGui, Node nodeVirtualWorld){
-		DetailedException.assertIsFalse("configured", bConfigured, this);
+		DetailedException.assertIsFalse("configured", isConfigured(), this);
 		SystemAlertLemurI.i().configure(); //this is a global overrider
 		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app,nodeGui, nodeVirtualWorld);
 		
@@ -67,7 +68,7 @@ public class PkgCfgI {
 		SystemAlertLemurI.i().configure(nodeGui);
 		EffectsLemurI.i().configure();
 		
-		bConfigured=true;
+		bConfigured=(true);
 	}
 
 	/**
@@ -88,5 +89,5 @@ public class PkgCfgI {
 
 		MiscLemurI.i().setMinSizeZ(new QuadBackgroundComponent().getZOffset());
 	}
-	
+
 }

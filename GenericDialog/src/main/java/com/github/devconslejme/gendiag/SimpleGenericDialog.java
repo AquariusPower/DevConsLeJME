@@ -534,7 +534,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			
 			// cfg all buttons
 			for(Button btn:abtnInfoSection){
-				btn.addClickCommands(cmdInfoSectionTitleButtons);
+//				btn.addClickCommands(cmdInfoSectionTitleButtons);
+				AbsorbClickCommandsI.i().addClickCommands(btn,cmdInfoSectionTitleButtons);
 			}
 			
 			// info section

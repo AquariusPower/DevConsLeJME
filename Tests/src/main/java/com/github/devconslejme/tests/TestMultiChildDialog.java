@@ -27,6 +27,8 @@
 
 package com.github.devconslejme.tests;
 
+import com.github.devconslejme.projman.SimpleAppStateAbs;
+import com.github.devconslejme.projman._TestBasicCodeToCopyFrom_;
 import com.jme3.app.SimpleApplication;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.style.BaseStyles;
@@ -36,7 +38,7 @@ import com.simsilica.lemur.style.BaseStyles;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestMultiChildDialog extends SimpleApplication {
+public class TestMultiChildDialog extends SimpleAppStateAbs {
 	public static void main(String[] args) {
 		TestMultiChildDialog test = new TestMultiChildDialog();
 		test.start();
@@ -44,15 +46,21 @@ public class TestMultiChildDialog extends SimpleApplication {
 
 	@Override
 	public void simpleInitApp() {
-		GuiGlobals.initialize(this);
-		BaseStyles.loadGlassStyle();
-		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
-		
+		//TODO com.github.devconslejme.misc.TODO.PkgCfgI.i().configure();
 		initTest();
 	}
-
+	
+	/**
+	 * public so can be called from devcons user cmds
+	 */
+	@Override
 	public void initTest() {
-		// TODO Auto-generated method stub
+		super.initTest();
 		throw new UnsupportedOperationException("method not implemented yet");
+	}
+
+	@Override
+	public void update(float tpf) {
+		throw new UnsupportedOperationException("method not implemented");
 	}
 }

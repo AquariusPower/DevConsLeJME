@@ -4,12 +4,19 @@ import com.github.devconslejme.misc.StringI;
 
 public class TestSimpleThings {
 	public static void main(String[] args) {
-		tst4();
+		tst5();
+//		tst4();
 //		tst3();
 //		tst2();
 //		tst1();
 	}
 	
+	private static void tst5() {
+		int i=10;
+//		new Object(){{i++;}};
+		
+	}
+
 	public static class Tst{
 		public void a(){}
 		public int b(){return 0;}

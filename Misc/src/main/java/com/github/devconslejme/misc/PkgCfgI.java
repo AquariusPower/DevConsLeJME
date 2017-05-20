@@ -37,6 +37,8 @@ public class PkgCfgI {
 	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
 	private boolean	bConfigured;
+	public boolean isConfigured() {return bConfigured;}
+
 	public void configure(File flAppBaseUserDataFolder, Class clAppMainClass){
 		DetailedException.assertIsFalse("configured", bConfigured, this);
 		MainThreadI.i().configure();

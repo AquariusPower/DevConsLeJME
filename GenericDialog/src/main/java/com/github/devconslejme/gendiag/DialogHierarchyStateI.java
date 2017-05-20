@@ -48,6 +48,7 @@ import com.github.devconslejme.misc.jme.IEffect;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.UserDataI;
+import com.github.devconslejme.misc.lemur.AbsorbClickCommandsI;
 import com.github.devconslejme.misc.lemur.CursorListenerX;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
@@ -120,16 +121,39 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			 */
 //			super.click(event, target, capture);
 			
-			Visuals vs = DialogHierarchyStateI.i().getVisuals(capture);
-			DialogHierarchyComp hc = DialogHierarchySystemI.i().getHierarchyComp(vs.getEntityId());
-			if(hc.isBlocked()){
-				DialogHierarchyStateI.i().setFocusRecursively(vs.getEntityId());
-//				return true;
-			}
+//			Visuals vs = DialogHierarchyStateI.i().getVisuals(capture);
+//			DialogHierarchyComp hc = DialogHierarchySystemI.i().getHierarchyComp(vs.getEntityId());
+//			if(hc.isBlocked()){
+//				DialogHierarchyStateI.i().setFocusRecursively(vs.getEntityId());
+////				return true;
+//			}
+			DialogHierarchyStateI.i().clickToRaise(event, target, capture, true);
 			
 			return false; //do not consume this click, it is just a focus raiser, the blocker may have some functionality one day..
 		}
 	}
+	
+	private void clickToRaise(CursorButtonEvent event, Spatial target,				Spatial capture, boolean bBlockerCheck) {
+		Visuals vs = DialogHierarchyStateI.i().getVisuals(
+				SpatialHierarchyI.i().getParentest(capture, ResizablePanel.class, true));
+			
+		if(vs!=null){
+			if(bBlockerCheck){
+				DialogHierarchyComp hc = DialogHierarchySystemI.i().getHierarchyComp(vs.getEntityId());
+				if(!hc.isBlocked())return;
+			}
+			DialogHierarchyStateI.i().setFocusRecursively(vs.getEntityId());
+		}
+	}
+	
+	public static class GlobalListenerX extends CursorListenerX{
+		@Override
+		protected boolean click(CursorButtonEvent event, Spatial target,				Spatial capture) {
+			DialogHierarchyStateI.i().clickToRaise(event,target,capture,false);
+			return false;
+		}
+	}
+	private GlobalListenerX glx = new GlobalListenerX();
 	
 	/**
 	 * keep setters private
@@ -201,6 +225,8 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	}
 
 	public void configure(Node nodeToMonitor,float fBeginOrderZ){
+		MiscLemurI.i().addGlobalClickListener(glx);
+		
 		this.fBeginOrderPosZ=fBeginOrderZ;
 		this.nodeToMonitor=nodeToMonitor;
 		
@@ -349,6 +375,14 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		);
 		
 		setFocusRecursively(entid);
+		
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				AbsorbClickCommandsI.i().containsClickCommandsRecursively(rzp,true);
+				return true;
+			}
+		}).setName("AbsorbClickCommands");
 	}
 
 	public void showDialogAsModeless(ResizablePanel rzpParent, ResizablePanel rzpChild) {
@@ -544,7 +578,8 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 			sys.enableBlockingLayer(vs.getEntityId(),iModalCount>0);
 			
 			// z order
-			Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSizeCopy(vs.getDialog());
+			Vector3f v3fSize = vs.getDialog().getSize().clone();
+//			Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSizeCopy(vs.getDialog());
 			if(v3fSize!=null){
 				if(Float.compare(v3fSize.length(),0f)!=0){ //waiting top panel be updated by lemur
 					Vector3f v3fPos = vs.getDialog().getLocalTranslation().clone();

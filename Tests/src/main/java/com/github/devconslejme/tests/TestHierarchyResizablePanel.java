@@ -33,6 +33,7 @@ import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
+import com.github.devconslejme.projman.SimpleAppStateAbs;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.es.EntityId;
@@ -44,7 +45,7 @@ import com.simsilica.lemur.event.MouseEventControl;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestHierarchyResizablePanel extends SimpleApplication {
+public class TestHierarchyResizablePanel extends SimpleAppStateAbs {
 	public static void main(String[] args) {
 		TestHierarchyResizablePanel tst = new TestHierarchyResizablePanel();
 		tst.setPauseOnLostFocus(false); //good for outside monitoring
@@ -54,11 +55,26 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 	@Override
 	public void simpleInitApp() {
 		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode(), getRootNode());
-		
 		initTest();
 	}
 	
+	@Override
+	public void update(float tpf) {
+		for(ResizablePanel rzp:DialogHierarchyStateI.i().getAllOpenedDialogs()){
+			if(rzp.getContents() instanceof Button){ //TODO this is a bad guess...
+				Button btn = (Button)rzp.getContents();
+				String str = UserDataI.i().retrieve(btn, BaseTextUD.class, false).getBaseText();
+				btn.setText(str+"\n"
+					+DialogHierarchyStateI.i().getHierarchyComp(rzp).toString().replace(",", "\n")
+				);
+			}
+		}
+	}
+	
+	@Override
 	public void initTest() {
+		super.initTest();
+		
 		createParentChild(100);
 		
 		boolean bMore=true;
@@ -156,17 +172,4 @@ public class TestHierarchyResizablePanel extends SimpleApplication {
 		return rzp;
 	}
 	
-	@Override
-	public void update() {
-		super.update();
-		
-		for(ResizablePanel rzp:DialogHierarchyStateI.i().getAllOpenedDialogs()){
-			Button btn = (Button)rzp.getContents();
-			String str = UserDataI.i().retrieve(btn, BaseTextUD.class, false).getBaseText();
-			btn.setText(str+"\n"
-				+DialogHierarchyStateI.i().getHierarchyComp(rzp).toString().replace(",", "\n")
-			);
-//				+DialogHierarchyStateI.i().getReport(rzp).replace(",", "\n"));
-		}
-	}
 }

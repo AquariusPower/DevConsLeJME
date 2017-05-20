@@ -30,6 +30,7 @@ import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.gendiag.SimpleMaintenanceGenericDialog;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.projman.SimpleAppStateAbs;
 import com.jme3.app.SimpleApplication;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -39,7 +40,7 @@ import com.simsilica.lemur.style.BaseStyles;
 /**
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
-public class TestMaintenanceDialog extends SimpleApplication{
+public class TestMaintenanceDialog extends SimpleAppStateAbs{
 	private SimpleMaintenanceGenericDialog	smd;
 	private SimpleApplication	sapp;
 	
@@ -51,15 +52,18 @@ public class TestMaintenanceDialog extends SimpleApplication{
 
 	@Override
 	public void simpleInitApp() {
-		GuiGlobals.initialize(this);
-		BaseStyles.loadGlassStyle();
-		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
 		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this,getGuiNode(), getRootNode());
-		
 		initTest();
 	}
 	
+	@Override
+	public void update(float tpf) {
+	}
+	
+	@Override
 	public void initTest() {
+		super.initTest();
+		
 		sapp = GlobalManagerI.i().get(SimpleApplication.class);
 		
 		smd = new SimpleMaintenanceGenericDialog(TestMaintenanceDialog.class.getSimpleName()){
@@ -103,9 +107,4 @@ public class TestMaintenanceDialog extends SimpleApplication{
 		}
 	}
 	
-	@Override
-	public void simpleUpdate(float tpf) {
-		super.simpleUpdate(tpf);
-		
-	}
 }

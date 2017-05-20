@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import com.github.devconslejme.debug.DebugTrackProblemsJME;
 import com.github.devconslejme.debug.UnsafeDebugHacksI;
 import com.github.devconslejme.devcons.DevConsPluginStateI;
+import com.github.devconslejme.devcons.LoggingI;
 import com.github.devconslejme.extras.DynamicFPSLimiter;
 import com.github.devconslejme.extras.OSCmd;
 import com.github.devconslejme.extras.SingleAppInstance;
@@ -54,6 +55,7 @@ import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.OriginDevice;
 import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
 import com.github.devconslejme.misc.lemur.SystemAlertLemurI;
+import com.github.devconslejme.projman.SimpleAppStateAbs;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
@@ -123,7 +125,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	 ******************************************************************************************/
 	private static boolean	bEnableOpt = true;
 	
-	ArrayList<SimpleApplication> aoUpdOpts = new ArrayList<SimpleApplication>();
+//	ArrayList<SimpleAppStateAbs> aoUpdOpts = new ArrayList<SimpleAppStateAbs>();
 	private FlyByCameraX	flycam;
 
 	private OriginDevice	orde;
@@ -322,18 +324,32 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 			UnsafeDebugHacksI.i().hackXRandRpreventResolutionRestore();
 		}
 	}
-
+	
+	private void addTest(Class<? extends SimpleAppStateAbs> cl){
+		LoggingI.i().logSubEntry(
+			GlobalManagerI.i().get(cl) //will be auto instanced
+				.getClass().getSimpleName()+".initTest()");
+	}
+	
 	/**
 	 * so thru devcons user commands can instantiate the other tests
 	 */
 	private void opt_initIntegrateAllOtherTests() {
-		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestContextMenu()));
-		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestChoiceDialog()));
-		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestMultiChildDialog()));
-		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestHierarchyResizablePanel()));
-		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestMaintenanceDialog()));
-		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestResizablePanel()));
-		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestOriginDeviceGame()));
+		LoggingI.i().logMarker("Can init these tests:");
+		addTest(TestContextMenu.class);
+		addTest(TestChoiceDialog.class);
+		addTest(TestMultiChildDialog.class);
+		addTest(TestHierarchyResizablePanel.class);
+		addTest(TestMaintenanceDialog.class);
+		addTest(TestResizablePanel.class);
+		addTest(TestOriginDeviceGame.class);
+//		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestContextMenu()));
+//		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestChoiceDialog()));
+//		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestMultiChildDialog()));
+//		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestHierarchyResizablePanel()));
+//		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestMaintenanceDialog()));
+//		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestResizablePanel()));
+//		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestOriginDeviceGame()));
 	}
 	
 	@Override
@@ -341,9 +357,9 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		super.simpleUpdate(fTPF);
 		
 		if(bEnableOpt){
-			for(SimpleApplication obj:aoUpdOpts){
-				obj.simpleUpdate(fTPF);
-			}
+//			for(SimpleApplication obj:aoUpdOpts){
+//				obj.simpleUpdate(fTPF);
+//			}
 			
 			orde.update(fTPF);
 		}

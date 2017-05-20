@@ -49,8 +49,6 @@ import com.jme3.scene.shape.Torus;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class OriginDevice<NODEXS extends NodeAxis> extends Node{
-//	private ArrayList<NODEXS> anodeMainShapes=new ArrayList<NODEXS>();
-//	private ArrayList<NODEXS> anodeHotShapesList=new ArrayList<NODEXS>();
 	private float fRadius;
 	private int	iCS;
 	private int	iRS;

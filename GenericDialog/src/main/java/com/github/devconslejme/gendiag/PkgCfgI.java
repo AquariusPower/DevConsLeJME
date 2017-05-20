@@ -40,7 +40,8 @@ public class PkgCfgI {
 	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
 	private boolean	bConfigured;
-	
+	public boolean isConfigured() {return bConfigured;}
+
 	public void configure(Application app, Node nodeGui, Node nodeVirtualWorld){
 		DetailedException.assertIsFalse("configured", bConfigured, this);
 		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(app, nodeGui, nodeVirtualWorld);

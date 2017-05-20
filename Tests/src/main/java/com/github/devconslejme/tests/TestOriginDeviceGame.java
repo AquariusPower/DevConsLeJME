@@ -56,8 +56,8 @@ import com.github.devconslejme.misc.jme.TextI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.jme.WorldPickingI;
 import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
+import com.github.devconslejme.projman.SimpleAppStateAbs;
 import com.github.devconslejme.tests.TestDevCons.GeometryVolDbg;
-import com.jme3.app.SimpleApplication;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
@@ -82,7 +82,7 @@ import com.simsilica.lemur.style.BaseStyles;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestOriginDeviceGame extends SimpleApplication implements IPickListener{
+public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickListener{
 	public static void main(String[] args) {
 		TestOriginDeviceGame test = new TestOriginDeviceGame();
 		test.start();
@@ -92,11 +92,7 @@ public class TestOriginDeviceGame extends SimpleApplication implements IPickList
 
 	@Override
 	public void simpleInitApp() {
-		GuiGlobals.initialize(this);
-		BaseStyles.loadGlassStyle();
-		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
 		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(this,getGuiNode(),getRootNode());
-		
 		initTest();
 	}
 	
@@ -105,17 +101,18 @@ public class TestOriginDeviceGame extends SimpleApplication implements IPickList
 	}
 	
 	@Override
-	public void simpleUpdate(float tpf) {
+	public void update(float tpf) {
 		orde.update(tpf);
-//	EnvironmentJmeI.i().putCustomInfo("OrdeEnergy", ""+orde.getEnergyWattsPerMilis());
 		EnvironmentJmeI.i().putCustomInfo("OrdeEnergy", ""+orde.energyInfo());
-//	updateOriginObjects();
 	}
 	
 	/**
 	 * public so can be called from devcons user cmds
 	 */
+	@Override
 	public void initTest() {
+		super.initTest();
+		
 		// good position related to these objects
 		getCamera().setLocation(new Vector3f(9.787677f, 6.957723f, 11.003839f)); //taken from devcons
 		getCamera().setRotation(new Quaternion(-0.068618454f, 0.91919893f, -0.18511744f, -0.34072912f)); //taken from devcons
