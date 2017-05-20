@@ -253,16 +253,9 @@ public class TestOriginDeviceGame extends SimpleApplication implements IPickList
 //		private float	fPseudoDiameter;
 		private float	fTractionForceBasedOnDiameterMult = 3f;
 		private float	fMaxTractionDist;
-//		private float	fSafeMinDist=0.01f;
 		private float	fSafeMinDist=0.1f;
 		private float	fEnergyCoreRadius;
-//		private float	fPseudoEnergyCoreRadius;
-//		private float	fPseudoDeviceRadius;
-//		private boolean	bTmpAttract;
 		private EffectArrow	efHook;
-//		private Geometry	geomEnergyCore;
-//		private boolean	bForceAbsorptionOnce;
-
 		private float	fPetMaxRadiusPercDist=1.1f;
 		
 		@Override
