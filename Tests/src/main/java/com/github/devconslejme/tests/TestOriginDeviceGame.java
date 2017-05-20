@@ -331,7 +331,6 @@ public class TestOriginDeviceGame extends SimpleApplication implements IPickList
 			nodeEnergyCore.rotate(fRotSpeed,fRotSpeed,fRotSpeed);
 			
 //			fPseudoEnergyCoreRadius = (float) (Math.cbrt(nodeEnergyCore.getWorldBound().getVolume())/2f);
-			
 //			bUnstable=(elecj.isOvercharged());
 		}
 		
