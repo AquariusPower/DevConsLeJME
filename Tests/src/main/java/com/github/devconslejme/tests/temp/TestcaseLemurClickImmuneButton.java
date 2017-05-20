@@ -3,6 +3,7 @@ package com.github.devconslejme.tests.temp;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
+import com.github.devconslejme.misc.lemur.AbsorbClickCommandsI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.github.devconslejme.tests.TestHierarchyResizablePanel.BaseTextUD;
 import com.jme3.app.SimpleApplication;
@@ -44,7 +45,7 @@ public class TestcaseLemurClickImmuneButton extends SimpleApplication{
 	@SuppressWarnings("unchecked")
 	private void createParentChild(int iBaseY) {
 		ResizablePanel rzpChild = createDialog(new Vector3f(200,iBaseY+200,20), "child"+iBaseY, "click to close");
-		((Button)rzpChild.getContents()).addClickCommands(new Command<Button>(){ //FIXME this is not compatible with CursorListener!
+		AbsorbClickCommandsI.i().addClickCommands(((Button)rzpChild.getContents()),new Command<Button>(){
 			@Override
 			public void execute(Button source) {
 				rzpChild.close(); 
@@ -52,7 +53,7 @@ public class TestcaseLemurClickImmuneButton extends SimpleApplication{
 		});
 		
 		ResizablePanel rzpParent = createDialog(new Vector3f(100,iBaseY+100,10), "parent"+iBaseY, "click to open modal");
-		((Button)rzpParent.getContents()).addClickCommands(new Command<Button>(){ //FIXME this is not compatible with CursorListener!
+		AbsorbClickCommandsI.i().addClickCommands(((Button)rzpParent.getContents()),new Command<Button>(){
 			@Override
 			public void execute(Button source) { 
 				DialogHierarchyStateI.i().showDialogAsModal(rzpParent,rzpChild);
@@ -107,7 +108,8 @@ public class TestcaseLemurClickImmuneButton extends SimpleApplication{
 //		btn.setLocalTranslation(fX, Display.getHeight()/2f, 0);
 //	getGuiNode().attachChild(btn);
 		if(parent!=null){
-			btn.addClickCommands(new Command<Button>(){
+//			btn.addClickCommands(new Command<Button>(){
+			AbsorbClickCommandsI.i().addClickCommands(btn,new Command<Button>(){
 				@Override
 				public void execute(Button source) {
 //					source.removeFromParent();
@@ -115,7 +117,7 @@ public class TestcaseLemurClickImmuneButton extends SimpleApplication{
 				}
 			});
 			
-			((Button)parent.getContents()).addClickCommands(new Command<Button>(){
+			AbsorbClickCommandsI.i().addClickCommands(((Button)parent.getContents()),new Command<Button>(){
 				@Override
 				public void execute(Button source) {
 					DialogHierarchyStateI.i().showDialogAsModal(parent, rzp);

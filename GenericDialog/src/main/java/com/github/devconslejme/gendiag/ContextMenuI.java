@@ -622,7 +622,8 @@ public class ContextMenuI implements IResizableListener{
 		for(Entry<String, ContextButton> entry : (cm.hmContextOptions).entrySet()){
 			ContextButton cbChoice = entry.getValue();
 			
-			cbChoice.addClickCommands(cm.cmdCloseOnClick);
+			AbsorbClickCommandsI.i().addClickCommands(cbChoice, cm.cmdCloseOnClick);
+//			cbChoice.addClickCommands(cm.cmdCloseOnClick);
 			
 			// popup hint help
 			PopupHintHelpListenerI.i().resetPopupHelp(cbChoice); //clear

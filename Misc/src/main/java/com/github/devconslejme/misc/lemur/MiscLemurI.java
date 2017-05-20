@@ -471,21 +471,27 @@ public class MiscLemurI {
 		return this;
 	}
 	
-	private ArrayList<CursorListenerX> aclxGlobal = new ArrayList<CursorListenerX>();
 	/**
-	 * cannot consume the event, mainly for auto focus
+	 * must not be CursorListener to avoid being used elsewhere...
+	 */
+	public static interface IGlobalClickListener{
+		public void clickEvent(CursorButtonEvent event, Spatial target, Spatial capture);
+	}
+	private ArrayList<IGlobalClickListener> aclxGlobal = new ArrayList<IGlobalClickListener>();
+	/**
+	 * cannot consume the event. mainly for auto focus
 	 * @param clxGlobal
 	 */
-	public void addGlobalClickListener(CursorListenerX clxGlobal){
+	public void addGlobalClickListener(IGlobalClickListener clxGlobal){
 //		DetailedException.assertNotAlreadySet(this.clxGlobal, clxGlobal);
 		if(!aclxGlobal.contains(clxGlobal))aclxGlobal.add(clxGlobal);
 	}
 	
 	public void clickGlobalListeners(CursorButtonEvent event, Spatial target, Spatial capture) {
 //		if(clxGlobal==null)return;
-		for(CursorListenerX clx:aclxGlobal){
+		for(IGlobalClickListener clx:aclxGlobal){
 			boolean bWasConsumed=event.isConsumed();
-			clx.click(event, target, capture);
+			clx.clickEvent(event, target, capture);
 			if(!bWasConsumed && event.isConsumed()){
 				throw new DetailedException("must not consume the event!",clx,event,target,capture,this);
 			}

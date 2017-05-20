@@ -29,17 +29,16 @@ package com.github.devconslejme.gendiag;
 
 import java.util.ArrayList;
 
-import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.es.DialogHierarchyComp;
 import com.github.devconslejme.es.DialogHierarchyComp.DiagCompBean;
+import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.SystemAlertI;
-import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.SystemAlertI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.EffectArrow;
 import com.github.devconslejme.misc.jme.EffectElectricity;
@@ -53,6 +52,7 @@ import com.github.devconslejme.misc.lemur.CursorListenerX;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
+import com.github.devconslejme.misc.lemur.MiscLemurI.IGlobalClickListener;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.github.devconslejme.misc.lemur.ResizablePanel.IResizableListener;
 import com.jme3.app.Application;
@@ -66,9 +66,6 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.simsilica.es.Entity;
 import com.simsilica.es.EntityId;
-import com.simsilica.lemur.Button;
-import com.simsilica.lemur.Command;
-import com.simsilica.lemur.Container;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.component.QuadBackgroundComponent;
@@ -146,11 +143,10 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 		}
 	}
 	
-	public static class GlobalListenerX extends CursorListenerX{
+	public static class GlobalListenerX implements IGlobalClickListener{
 		@Override
-		protected boolean click(CursorButtonEvent event, Spatial target,				Spatial capture) {
+		public void clickEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
 			DialogHierarchyStateI.i().clickToRaise(event,target,capture,false);
-			return false;
 		}
 	}
 	private GlobalListenerX glx = new GlobalListenerX();

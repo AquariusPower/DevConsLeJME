@@ -31,6 +31,7 @@ import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.UserDataI;
+import com.github.devconslejme.misc.lemur.AbsorbClickCommandsI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.github.devconslejme.projman.SimpleAppStateAbs;
@@ -107,7 +108,7 @@ public class TestHierarchyResizablePanel extends SimpleAppStateAbs {
 	@SuppressWarnings("unchecked")
 	private void createParentChild(int iBaseY) {
 		ResizablePanel rzpChild = createDialog(new Vector3f(200,iBaseY+200,20), "child"+iBaseY, "click to close");
-		((Button)rzpChild.getContents()).addClickCommands(new Command<Button>(){ //FIXME this is not compatible with CursorListener!
+		AbsorbClickCommandsI.i().addClickCommands(((Button)rzpChild.getContents()),new Command<Button>(){ //FIXME this is not compatible with CursorListener!
 			@Override
 			public void execute(Button source) {
 				rzpChild.close(); 
@@ -115,7 +116,7 @@ public class TestHierarchyResizablePanel extends SimpleAppStateAbs {
 		});
 		
 		ResizablePanel rzpParent = createDialog(new Vector3f(100,iBaseY+100,10), "parent"+iBaseY, "click to open modal");
-		((Button)rzpParent.getContents()).addClickCommands(new Command<Button>(){ //FIXME this is not compatible with CursorListener!
+		AbsorbClickCommandsI.i().addClickCommands(((Button)rzpParent.getContents()),new Command<Button>(){ //FIXME this is not compatible with CursorListener!
 			@Override
 			public void execute(Button source) { 
 				QueueI.i().enqueue(new CallableX() {

@@ -703,11 +703,12 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			super(s, elementId, style);
 		}
 		
-		@Override
-		public void addClickCommands(Command<? super Button>... commands) {
-			super.addClickCommands(commands);
-			AbsorbClickCommandsI.i().absorbClickCommands(this);
-		}
+//		@Override
+//		public void addClickCommands(Command<? super Button>... commands) {
+//			AbsorbClickCommandsI.i().addClickCommands(this, commands);
+////			super.addClickCommands(commands);
+////			AbsorbClickCommandsI.i().absorbClickCommands(this);
+//		}
 	}
 	
 	private class ContainerCell extends Container{
@@ -744,7 +745,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
         	cntr.cp.btnNesting = new Button("", getDialog().getStyle());
 					cntr.addChild(cntr.cp.btnNesting, Position.West);
 					
-        	cntr.cp.btnItemText.addClickCommands(cmdOption);
+        	AbsorbClickCommandsI.i().addClickCommands(cntr.cp.btnItemText,cmdOption);
 					cntr.addChild(cntr.cp.btnItemText, Position.Center);
 	      } else {
 	      	cntr = (ContainerCell)existing;
@@ -788,7 +789,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
         ta.updateHintHelp(btnItemText);
         
         btnItemText.ta = ta;
-				btnItemText.addClickCommands(btnItemText.ta.cmdAction);
+				AbsorbClickCommandsI.i().addClickCommands(btnItemText,btnItemText.ta.cmdAction);
 				
 				return btnItemText;
 			}
@@ -837,7 +838,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 //		Command<? super Button> cmd = od.getCmdCfgList();
 //		if(cmd!=null){
 			Button btnCfg = new Button(cc.getTextUniqueKey(), getDialog().getStyle());
-			btnCfg.addClickCommands(cc);
+			AbsorbClickCommandsI.i().addClickCommands(btnCfg, cc);// btnCfg.addClickCommands(cc);
 			if(cc.getHintHelp()!=null)PopupHintHelpListenerI.i().setPopupHintHelp(btnCfg, cc.getHintHelp());
 			cntr.addChild(btnCfg, i++);
 //			return btnCfg;
@@ -936,7 +937,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 				};
 				ce.getTFInput().getActionMap().put(new KeyAction(KeyInput.KEY_RETURN), kalApplyEditedValue);
 				
-				ce.getBtnShowVal().addClickCommands(new Command<Button>(){
+//				ce.getBtnShowVal().addClickCommands(new Command<Button>(){
+				AbsorbClickCommandsI.i().addClickCommands(ce.getBtnShowVal(),new Command<Button>(){
 					@Override
 					public void execute(Button source) {
 						if(ESimpleType.Boolean.is(etypeGetterRet)){

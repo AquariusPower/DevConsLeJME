@@ -31,6 +31,7 @@ import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.gendiag.SimpleGenericDialog;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI;
+import com.github.devconslejme.misc.lemur.AbsorbClickCommandsI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.github.devconslejme.projman.SimpleAppStateAbs;
@@ -70,7 +71,7 @@ public class TestChoiceDialog extends SimpleAppStateAbs {
 		ResizablePanel diagParent = DialogHierarchyStateI.i().createDialog("main", null);
 		
 		btnChosenOption = new Button("Click to change option");
-		btnChosenOption.addClickCommands(new Command<Button>(){
+		AbsorbClickCommandsI.i().addClickCommands(btnChosenOption,new Command<Button>(){
 			@Override
 			public void execute(Button source) {
 				DialogHierarchyStateI.i().showDialogAsModal(diagParent, gdc.getDialog());

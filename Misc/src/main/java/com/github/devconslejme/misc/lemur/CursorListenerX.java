@@ -91,6 +91,7 @@ public abstract class CursorListenerX implements CursorListener{
 	
 	@Override
 	public void cursorButtonEvent(CursorButtonEvent event, Spatial target,			Spatial capture) {
+		MiscLemurI.i().clickGlobalListeners(event,target,capture);
 		event = refreshesEventForListBoxItem(event,capture);
 		if(event.isConsumed())return;
 		
@@ -103,7 +104,7 @@ public abstract class CursorListenerX implements CursorListener{
 			if(sptPrepareToWorkWith!=null && sptPrepareToWorkWith==capture){
 				if(!DragParentestPanelListenerI.i().isDragOverridingButtonUpClickEvent(event)){
 //					MiscLemurI.i().cursorButtonEvent(event, target, capture);
-					MiscLemurI.i().clickGlobalListeners(event,target,capture);
+//					MiscLemurI.i().clickGlobalListeners(event,target,capture);
 					if(click(event, target, capture)){
 						event.setConsumed();
 					}

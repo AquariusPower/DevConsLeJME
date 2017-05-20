@@ -191,6 +191,11 @@ public class AbsorbClickCommandsI extends CursorListenerX{
 //	public void cursorMoved(CursorMotionEvent event, Spatial target,			Spatial capture) {
 //	}
 	
+	/**
+	 * use this instead of {@link Button#addClickCommands(Command...)}
+	 * @param btn
+	 * @param acmd
+	 */
 	public void addClickCommands(Button btn, Command<? super Button>... acmd) {
 		btn.addClickCommands(acmd);
 		absorbClickCommands(btn);

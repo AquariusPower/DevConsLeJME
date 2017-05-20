@@ -36,6 +36,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI;
 import com.github.devconslejme.misc.jme.TextI;
+import com.github.devconslejme.misc.lemur.AbsorbClickCommandsI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.github.devconslejme.misc.lemur.ResizablePanel.IResizableListener;
@@ -111,7 +112,8 @@ public class MinimizedDialogsPanelI implements IResizableListener{
 		
 		addMinimized(btn, cntrMinimized.getLayout().getChildren().size());
 //		cntrMinimized.addChild(btn, cntrMinimized.getLayout().getChildren().size());
-		btn.addClickCommands(new Command<Button>() {
+//		btn.addClickCommands(new Command<Button>() {
+		AbsorbClickCommandsI.i().addClickCommands(btn,new Command<Button>() {
 			@Override
 			public void execute(Button source) {
 				DialogHierarchyStateI.i().showDialog(sgd.getDialog());
