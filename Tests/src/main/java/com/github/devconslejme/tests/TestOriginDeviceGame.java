@@ -265,11 +265,6 @@ public class TestOriginDeviceGame extends SimpleApplication implements IPickList
 
 		private float	fPetMaxRadiusPercDist=1.1f;
 		
-//		/**
-//		 * each 0.01^3 wold volume = 1 watt/miliseconds
-//		 */
-//		private long lVolumeToWattPerMilis = 1000000;
-		
 		@Override
 		public NodeAxisGm createNodeAxis(String strName) {
 			return new NodeAxisGm(strName);
