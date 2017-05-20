@@ -26,6 +26,7 @@
 */
 package com.github.devconslejme.misc.jme;
 
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.jme.MeshI.Cone;
 import com.github.devconslejme.misc.jme.OriginDevice.NodeAxis;
 import com.jme3.math.ColorRGBA;
@@ -59,19 +60,7 @@ public class OriginDevice<NODEXS extends NodeAxis> extends Node{
 	private Vector3f v3fSpeed=new Vector3f();
 	private float	fTPF;
 	private boolean bEnabled=false;
-	/*
-	private NODEXS	nodeElectricA;
-	private NODEXS	nodeElectricB;
-	private boolean	bSameAxis;
-	private NODEXS	nodeSelfElectrocute;
-	private Integer	iMaxHoldMilisBkp = null;
-	private NODEXS	nodeEnergyCore;
-	private float	fTractionForceBasedOnDiameterMult = 3f;
-	private float	fMaxTractionDist;
-	private float	fSafeMinDist=0.1f;
-	private float	fEnergyCoreRadius;
-	private EffectArrow	efHook;
-	*/
+	private Node	nodeLastParent;
 	
 	public static class NodeAxis<SELF extends NodeAxis> extends Node{
 		public NodeAxis(String str) {
@@ -89,10 +78,10 @@ public class OriginDevice<NODEXS extends NodeAxis> extends Node{
 			return (SELF)this;
 		}
 		
-		public EAxis getEa() {
+		public EAxis getEAxis() {
 			return ea;
 		}
-		public SELF setEa(EAxis ea) {
+		public SELF setEAxis(EAxis ea) {
 			this.ea = ea;
 			return getThis();
 		}
@@ -143,6 +132,20 @@ public class OriginDevice<NODEXS extends NodeAxis> extends Node{
 	public void update(float fTPF){
 		this.fTPF=fTPF;
 		
+		if(bEnabled){
+			if(getParent()!=null){
+				nodeLastParent=getParent();
+			}else{
+				if(nodeLastParent!=null){
+					nodeLastParent.attachChild(this);
+				}else{
+					MessagesI.i().warnMsg(this, "has no last parent", this);
+				}
+			}
+		}else{
+			if(getParent()!=null)removeFromParent();
+		}
+		
 		updateTorusRotations();
 		updateAxisMainShapes();
 	}
@@ -165,6 +168,7 @@ public class OriginDevice<NODEXS extends NodeAxis> extends Node{
 		
 		// toruses
 		createAxis(Vector3f.UNIT_X, MeshI.i().box(0.5f));
+//		rotate(EAxis.X.get().getRepresentationShape(), 90, false);//TODO wrong
 		
 		createAxis(Vector3f.UNIT_Y, new Sphere(10,10,0.5f));
 		rotate(EAxis.Y.get().getRotatingTorus(), 90, false);
@@ -290,9 +294,9 @@ public class OriginDevice<NODEXS extends NodeAxis> extends Node{
 	
 	protected void rotate(NODEXS node, float fAngleDegrees, boolean bZOnly){
 		float fRotRad=FastMath.DEG_TO_RAD*fAngleDegrees;
-		if(!bZOnly && node.ea==EAxis.X)node.rotate(0, fRotRad, 0);
-		if(!bZOnly && node.ea==EAxis.Y)node.rotate(0, fRotRad, 0);
-		if(node.ea==EAxis.Z)node.rotate(-fRotRad, fRotRad, 0);
+		if(!bZOnly && node.ea==EAxis.X)node.rotate(       0, fRotRad, 0);
+		if(!bZOnly && node.ea==EAxis.Y)node.rotate(       0, fRotRad, 0);
+		if(           node.ea==EAxis.Z)node.rotate(-fRotRad, fRotRad, 0);
 	}
 	
 	protected EAxis createAxis(Vector3f v3fUp, Mesh mesh) {
@@ -312,16 +316,14 @@ public class OriginDevice<NODEXS extends NodeAxis> extends Node{
 		
 		// axis representation shape
 		axisi.nodeRepresentationShape=createAxisShape(ea,mesh, v3fUp.mult(fRadius), 0.5f, v3fUp, true, null);
-//		anodeHotShapesList.add(axisi.getNodeRepresentationShape());
-//		anodeMainShapes.add(axisi.getNodeRepresentationShape());
-		axisi.torus.attachChild(axisi.getRepresentationShape());
+//		axisi.torus.attachChild(axisi.getRepresentationShape());
 		
 		// static rotation track
 		NODEXS nodeTrack=createAxisShape(ea,new Torus(iCS,iRS,0.01f,fDisplacementTorus), 
 			new Vector3f(0,0,0), 0.15f, v3fUp);
 		MiscJmeI.i().addToName(nodeTrack, "Track", false);
 		nodeTrack.lookAt(v3fUp, v3fUp);
-		axisi.torus.attachChild(nodeTrack);
+//		axisi.torus.attachChild(nodeTrack);
 		
 		// torus core
 		NODEXS nodeCore=createAxisShape(ea,new Torus(iCS,iRS,fIR*0.35f,fDisplacementTorus), 
@@ -368,6 +370,7 @@ public class OriginDevice<NODEXS extends NodeAxis> extends Node{
 	protected NODEXS createAxisShape(EAxis ea, Mesh mesh, Vector3f v3fPos, float fAlpha, Vector3f v3fUp, boolean bAddWireFrame, Vector3f v3fScale) {
 		if(v3fScale==null)v3fScale=new Vector3f(1,1,1);
 		NODEXS node = createNodeAxis("Node");
+		node.ea=ea;
 		Geometry geom = GeometryI.i().create(mesh, ColorI.i().colorChangeCopy(ea.get().getColor(),0,fAlpha), true,null);
 		node.setGeom(geom);
 		
@@ -429,4 +432,14 @@ public class OriginDevice<NODEXS extends NodeAxis> extends Node{
 		return this; 
 	}
 
+	/**
+	 * keep even if empty!
+	 * @param aobj
+	 * @return
+	 */
+	public Object debugTest(Object... aobj){
+		rotate(EAxis.X.get().getRepresentationShape(), 90, false);//TODO wrong
+		return null;
+	}
+	
 }

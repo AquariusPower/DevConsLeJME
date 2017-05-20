@@ -60,6 +60,8 @@ import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppState;
 import com.jme3.audio.AudioListenerState;
 import com.jme3.collision.CollisionResult;
+import com.jme3.math.Quaternion;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
 import com.jme3.system.AppSettings;
@@ -155,6 +157,10 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	
 	private void opt_initAll() {
 		orde = new OriginDevice().setEnabled(true);
+		getRootNode().attachChild(orde);
+		// good position related to these objects
+		getCamera().setLocation(new Vector3f(9.787677f, 6.957723f, 11.003839f)); //taken from devcons
+		getCamera().setRotation(new Quaternion(-0.068618454f, 0.91919893f, -0.18511744f, -0.34072912f)); //taken from devcons
 		
 		opt_initExtras();
 		
@@ -327,6 +333,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestHierarchyResizablePanel()));
 		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestMaintenanceDialog()));
 		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestResizablePanel()));
+		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestOriginDeviceGame()));
 	}
 	
 	@Override

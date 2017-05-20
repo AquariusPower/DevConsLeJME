@@ -889,7 +889,7 @@ public class TestOriginDeviceGame extends SimpleApplication implements IPickList
 				}
 			}
 			
-			bSameAxis = (nodeElectricA!=null && nodeElectricB!=null && nodeElectricA.getEa()==nodeElectricB.getEa());
+			bSameAxis = (nodeElectricA!=null && nodeElectricB!=null && nodeElectricA.getEAxis()==nodeElectricB.getEAxis());
 		}
 		
 		protected NodeAxisGm electricNodeFor(Spatial spt) {
@@ -911,7 +911,7 @@ public class TestOriginDeviceGame extends SimpleApplication implements IPickList
 			float fMult=1f;
 			float fEnergySpentMultExtra=1f;
 			if(isUnstable()){
-				if(nodeSelfElectrocute!=null && nodeTor.getEa()==nodeSelfElectrocute.getEa()){
+				if(nodeSelfElectrocute!=null && nodeTor.getEAxis()==nodeSelfElectrocute.getEAxis()){
 					if(anodeMainShapes.contains(nodeSelfElectrocute)){
 						/**
 						 * main shape electrocuting self, will boost related torus spin
@@ -927,7 +927,7 @@ public class TestOriginDeviceGame extends SimpleApplication implements IPickList
 					}
 				}else{
 					if(anodeMainShapes.contains(nodeElectricA) && anodeMainShapes.contains(nodeElectricB)){
-						if(nodeTor.getEa()==nodeElectricA.getEa() || nodeTor.getEa()==nodeElectricB.getEa()){
+						if(nodeTor.getEAxis()==nodeElectricA.getEAxis() || nodeTor.getEAxis()==nodeElectricB.getEAxis()){
 							/**
 							 * both are main shapes (always mismatching axis), spin fast reversed, only related torus
 							 */
