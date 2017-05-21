@@ -1,16 +1,32 @@
 package com.github.devconslejme.tests.temp;
 
+import com.github.devconslejme.misc.CommandLineParser;
+import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.StringI;
 
 public class TestSimpleThings {
 	public static void main(String[] args) {
-		tst5();
+		tst6();
+//		tst5();
 //		tst4();
 //		tst3();
 //		tst2();
 //		tst1();
 	}
 	
+	public static enum ETest{
+		TestA,
+		TestB
+	}
+	private static void tst6() {
+		GlobalManagerI.i().putConcrete(new TestSimpleThings()); //will auto add the enum too
+		CommandLineParser clp = new CommandLineParser("cmdTest 'testString' "
+			+JavaLangI.i().enumUId(ETest.TestB)
+			+" 123");
+		System.out.println(clp.getAllPartsStrListCopy());
+	}
+
 	private static void tst5() {
 		int i=10;
 //		new Object(){{i++;}};

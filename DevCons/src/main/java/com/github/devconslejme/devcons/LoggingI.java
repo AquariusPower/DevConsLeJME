@@ -32,6 +32,7 @@ import java.io.PrintStream;
 
 import com.github.devconslejme.devcons.DevConsPluginStateI.CallableVarMonX;
 import com.github.devconslejme.devcons.DevConsPluginStateI.EStatPriority;
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.FileI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
@@ -139,23 +140,39 @@ public class LoggingI {
 		logEntry(" "+string);
 	}
 	
-	public void logMarker(String strInfo){
-//		dateRealTimeForMarker.setTime(System.currentTimeMillis());
-//		strInfo = "[R="+dateFormat.format(dateRealTimeForMarker)+"] "+strInfo;
+	public String prepareLogMarkerText(String strInfo){ //center
 		strInfo = "[R="+TimeFormatI.i().getRealTimeFormatted(null,"HH:mm:ss")+"] "+strInfo;
-		
-		
-//		Duration durAppElapsed = Duration.ZERO.plusNanos(
-//			TimeConvertI.i().getNanosFrom(DCGlobal.app().getTimer()));
 		//TODO start app time at year0 month0 day0 ... 
-//		dateForMarker.setTime(TimeConvertI.i().getMilisFrom(DCGlobal.app().getTimer())); //this is a delay from the start of the app
-//		strInfo = strInfo+" [A="+dateFormat.format(dateForMarker)+"]";
 		Timer tm=GlobalManagerI.i().get(Application.class).getTimer();
 		strInfo = strInfo+" [A="+TimeFormatI.i().formatElapsed(tm.getResolution(),tm.getTime())+"]";
+		return strInfo;
+	}
+	/**
+	 * 
+	 * @param strInfo
+	 * @param iAlign -1 left, 0 center,  1 right
+	 */
+	public void logMarker(String strInfo, int iAlign){
+		strInfo = prepareLogMarkerText(strInfo);
+		switch(iAlign){
+			case -1:
+				strInfo = Strings.padEnd(strInfo, iWrapAtColumn, '_');
+				break;
+			case 0:
+				strInfo = Strings.padStart(strInfo, iWrapAtColumn/2 +strInfo.length()/2, '_');
+				strInfo = Strings.padEnd(strInfo, iWrapAtColumn, '_');
+				break;
+			case 1:
+				strInfo = Strings.padStart(strInfo, iWrapAtColumn, '_');
+				break;
+			default:
+				throw new DetailedException("invalid alignment", iAlign, strInfo);
+		}
 		
-		strInfo = Strings.padStart(strInfo, iWrapAtColumn/2 +strInfo.length()/2, '_');
-		strInfo = Strings.padEnd(strInfo, iWrapAtColumn, '_');
 		logEntry(strInfo);
+	}
+	public void logMarker(String strInfo){
+		logMarker(strInfo,0);
 	}
 
 	public void setModelAt(ListBox<String> lstbx) {

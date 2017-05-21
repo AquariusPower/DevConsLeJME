@@ -30,11 +30,19 @@ package com.github.devconslejme.extras;
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.function.Function;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class OSCmd {
+	
+	private Function<String, ArrayList<String>>	funcToCmdParams;
+
+	public void configure(Function<String,ArrayList<String>> funcToCmdParams){
+		this.funcToCmdParams = funcToCmdParams;
+	}
 	
 	public Boolean runLinuxCmd(String strCmd){
 		return runOSCommand("linux '"+strCmd+"'");
@@ -50,10 +58,10 @@ public class OSCmd {
 	public Boolean runOSCommand(String strLine){
 		boolean bOk=true;
 		
-		CommandLineParser ccl = new CommandLineParser(strLine);
+		ArrayList<String> astrCmdParams = funcToCmdParams.apply(strLine);
 		
 		String strOSName=System.getProperty("os.name");
-		if(!strOSName.equalsIgnoreCase(ccl.getCommand())){
+		if(!strOSName.equalsIgnoreCase(astrCmdParams.get(0))){
 			/**
 			 * skip message would be just annoying...
 			 */
@@ -62,9 +70,13 @@ public class OSCmd {
 		
 		ArrayList<String> astrOSCmd = new ArrayList<String>();
 		if(strOSName.equalsIgnoreCase("linux")){
+			// works better/easier using bash
 			astrOSCmd.add("bash");
 			astrOSCmd.add("-c");
-			astrOSCmd.addAll(ccl.getAllParamsStrCopy());
+//			astrOSCmd.addAll(getAllParamsStrCopy(astrCmdParams));
+			astrOSCmd.addAll(Arrays.asList(
+				Arrays.copyOfRange(astrCmdParams.toArray(new String[0]), 1, astrCmdParams.size())
+			));
 		}
 		
 		try {
@@ -74,6 +86,7 @@ public class OSCmd {
 //			Process p = Runtime.getRuntime().exec(astrOSCmd.toArray(new String[0]));
 //			InputStream isErr = p.getErrorStream();
 			
+			// the process builder accepts each param separated
 			ProcessBuilder pb = new ProcessBuilder(astrOSCmd);
 			pb.redirectOutput(Redirect.INHERIT);
 			pb.redirectError(Redirect.INHERIT);
@@ -89,5 +102,25 @@ public class OSCmd {
 		
 		return bOk;
 	}
+
+//	private Collection<? extends String> getAllParamsStrCopy(			ArrayList<String> astrCmdParams) {
+//		String.join(" ", astrCmdParams);
+//		;
+//		
+//		ArrayList<String> astr= new ArrayList<String>();
+//		
+//		for(Object obj:aobjParamsList){
+//			if(Float.class.isInstance(obj) || Double.class.isInstance(obj)){
+//				astr.add(String.format("%."+iFloatPrecision+"f", obj));
+//			}else{
+//				astr.add(obj.toString());
+//			}
+//		}
+//		
+//		return astr; 
+//
+//		
+//		return null;
+//	}
 	
 }

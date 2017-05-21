@@ -301,8 +301,8 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		
 		app.getStateManager().attach(this);
 		
-		JavaScriptI.i().configure(); //before all others
 		LoggingI.i().configure();
+		JavaScriptI.i().configure(); //before all others TODO why? it is already a globals listener...
 		
 		ManagerHelperI.i().setHandleCallRetVal(new FuncIn<RetVal>(){@Override public void applyIn(RetVal rv){
 			LoggingI.i().logEntry(rv.getDescription());

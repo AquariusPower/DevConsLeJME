@@ -265,4 +265,10 @@ public class StringI {
 	public String fmtLong(long l){
 		return String.format(dfLong.format(l));
 	}
+
+	public String extractPart(String strCmd, String strSeparator, int iIndex) {
+		String[] astr = strCmd.split(strSeparator);
+		String strPart = astr[iIndex];
+		return strPart;
+	}
 }

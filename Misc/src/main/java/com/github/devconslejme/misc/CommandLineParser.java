@@ -25,11 +25,9 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.extras;
+package com.github.devconslejme.misc;
 
 import java.util.ArrayList;
-
-import com.github.devconslejme.misc.DetailedException;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -48,9 +46,14 @@ public class CommandLineParser {
 		StringSQ, 
 		Boolean, 
 		Number,
+		Enum, //TODO add Enum type support? will required list of known enums (from globals should suffice) and each unique id JavaLangI.i().enumUId(e)
 		;
 	}
 	
+	/**
+	 * strings must be enclosed in single or double quotes, otherwise a parse number will be tried
+	 * @param strLine
+	 */
 	public CommandLineParser(String strLine){
 		this.strLine=strLine;
 		
@@ -71,22 +74,22 @@ public class CommandLineParser {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public <T> T getPart(int iIndex){
+	public <T> T getParsedPart(int iIndex){
 		return (T)aobjList.get(iIndex);
 	}
 	
 	@SuppressWarnings("unchecked")
-	public <T> T getParam(int iIndex){
+	public <T> T getParsedParam(int iIndex){
 		return (T)aobjParamsList.get(iIndex);
 	}
 	
-	public ArrayList<Object> getAllParamsCopy(){
+	public ArrayList<Object> getAllParamsParsedListCopy(){
 		return new ArrayList<Object>(aobjParamsList); 
 	}
-	public ArrayList<String> getAllParamsStrCopy(){
-		return getAllParamsStrCopy(3);
+	public ArrayList<String> getAllParamsStrListCopy(){
+		return getAllParamsStrListCopy(3);
 	}
-	public ArrayList<String> getAllParamsStrCopy(int iFloatPrecision){
+	public ArrayList<String> getAllParamsStrListCopy(int iFloatPrecision){
 		ArrayList<String> astr= new ArrayList<String>();
 		
 		for(Object obj:aobjParamsList){
@@ -119,19 +122,52 @@ public class CommandLineParser {
 //		return str; 
 //	}
 	
+	@SuppressWarnings("unchecked")
 	public void parse(){
 		strLine=strLine.trim();
+		strLine+=" "; // a blank at the end will easify the finalization of the last part fill/detection
 		String strParam="";
-		EType et=EType.Command;
+		EType et=EType.Command; //always use the first unquoted string as the command (that is the main thing)
 		boolean bEscaped=false;
 		aobjList = new ArrayList<Object>();
+//		boolean bPartDetected=false;
 		for(char ch:strLine.toCharArray()){
-			if(et!=null){ // fill the param by type 
+			/**
+			 * detect and initialize part/substring type
+			 */
+			if(et==null){
+				switch(ch){ 
+					case '"' : 
+						et=EType.StringDQ;
+						continue;
+					case '\'': 
+						et=EType.StringSQ; 
+						continue;
+					case 't' : case 'f' : 
+						et=EType.Boolean; 
+						break; //the 1st char is not a part delimiter
+					case '\t': case ' ' : 
+						continue; //still seeking non blank
+					default:
+						if("+-.0123456789".contains(""+ch)){
+							et=EType.Number; //will be parsed to confirm later TODO (of couse right?)
+							break; //the 1st char is not a part delimiter
+						}else{
+							et=EType.Enum;
+							break; //the 1st char is not a part delimiter
+						}
+				}
+			}
+			
+			/**
+			 * fill the param by type
+			 */
+//			if(et!=null){  
 				switch (et) {
 					case Command:
 						if(isBlank(ch)){ //finalize
-							aobjList.add(strParam);
-							strParam="";et=null;continue; //reset
+							//it is equivalent to already trimmed
+							aobjList.add(strParam);strParam="";et=null;continue; //add&reset
 						}
 						
 						strParam+=ch;
@@ -143,8 +179,7 @@ public class CommandLineParser {
 						}
 						
 						if(!bEscaped && ch=='"'){ //finalize
-							aobjList.add(strParam);
-							strParam="";et=null;continue; //reset
+							aobjList.add(strParam);strParam="";et=null;continue; //add&reset
 						}
 						
 						if(bEscaped){
@@ -175,23 +210,23 @@ public class CommandLineParser {
 						continue;
 					case StringSQ:
 						if(ch=='\''){ //finalize
-							aobjList.add(strParam);
-							strParam="";et=null;continue; //reset
+							aobjList.add(strParam);strParam="";et=null;continue; //add&reset
 						}
 						
 						strParam+=ch;
 						continue;
 					case Boolean:
 						if(isBlank(ch)){ //finalize
+							boolean b=false;
 							if(strParam.equals("true")){
-								aobjList.add(true);
+								b=(true);
 							}else
 							if(strParam.equals("false")){
-								aobjList.add(false);
+								b=(false);
 							}else{
 								throw new DetailedException("invalid boolean parsing: "+strParam);
 							}
-							strParam="";et=null;continue; //reset
+							aobjList.add(b);strParam="";et=null;continue; //add&reset
 						}
 							
 						strParam+=ch;
@@ -202,28 +237,45 @@ public class CommandLineParser {
 							if(objConv==null)try{objConv=Long  .parseLong  (strParam);}catch(NumberFormatException e){}
 							if(objConv==null)try{objConv=Double.parseDouble(strParam);}catch(NumberFormatException e){}
 							if(objConv==null)throw new DetailedException("invalid number parsing: "+strParam);
-							aobjList.add(objConv);
-							strParam="";et=null;continue; //reset
+							aobjList.add(objConv);strParam="";et=null;continue; //add&reset
 						}
 							
 						strParam+=ch;
 						continue;
+					case Enum:
+						if(isBlank(ch)){ //finalize
+							Object objEnumValue=null;
+							for(Object obj:GlobalManagerI.i().getListCopy()){
+								if(obj instanceof Enum){
+									Enum e = (Enum)obj;
+									if(strParam.startsWith(e.getClass().getName())){
+										String strEnumId=strParam.substring(e.getClass().getName().length()+1);
+										objEnumValue = Enum.valueOf(e.getClass(), strEnumId);
+									}
+								}
+							}
+							if(objEnumValue==null)DetailedException.assertNotNull(objEnumValue, strParam, strLine);
+							aobjList.add(objEnumValue);strParam="";et=null;continue; //add&reset
+						}
+						
+						strParam+=ch;
+						continue;
 				}
-			}
+//			}
 			
-			// detect and initialize type
-			switch(ch){ 
-				case '"' : 
-					et=EType.StringDQ; continue;
-				case '\'': 
-					et=EType.StringSQ; continue;
-				case 't' : case 'f' : 
-					et=EType.Boolean; continue;
-				case '\t': case ' ' : 
-					continue; //still seeking non blank
-				default: 
-					et=EType.Number; continue; //will be parsed to confirm later
-			}
+//			// detect and initialize type
+//			switch(ch){ 
+//				case '"' : 
+//					et=EType.StringDQ; continue;
+//				case '\'': 
+//					et=EType.StringSQ; continue;
+//				case 't' : case 'f' : 
+//					et=EType.Boolean; continue;
+//				case '\t': case ' ' : 
+//					continue; //still seeking non blank
+//				default: 
+//					et=EType.Number; continue; //will be parsed to confirm later
+//			}
 		}
 	}
 	
@@ -233,6 +285,16 @@ public class CommandLineParser {
 			case '\t':return true;
 		}
 		return false;
+	}
+
+	public ArrayList<String> getAllPartsStrListCopy() {
+		ArrayList<String> astrList = getAllParamsStrListCopy();
+		astrList.add(0,getCommand());
+		return astrList;
+	}
+
+	public String getAllParamsJoinedStrCopy() {
+		return String.join(" ", getAllParamsStrListCopy());
 	}
 	
 }

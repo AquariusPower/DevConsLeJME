@@ -28,6 +28,7 @@
 package com.github.devconslejme.tests;
 
 import java.util.ArrayList;
+import java.util.function.Function;
 
 import com.github.devconslejme.debug.DebugTrackProblemsJME;
 import com.github.devconslejme.debug.UnsafeDebugHacksI;
@@ -42,6 +43,8 @@ import com.github.devconslejme.gendiag.KeyBindManagerDialogI;
 import com.github.devconslejme.gendiag.QueueManagerDialogI;
 import com.github.devconslejme.gendiag.SpatialsManagerI;
 import com.github.devconslejme.misc.Annotations.Workaround;
+import com.github.devconslejme.misc.CommandLineParser;
+import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.CheckProblemsI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
@@ -50,9 +53,8 @@ import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI.IEnvironmentListener;
-import com.github.devconslejme.misc.jme.GeometryI;
-import com.github.devconslejme.misc.jme.IndicatorI.GeomIndicator;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
+import com.github.devconslejme.misc.jme.GeometryI;
 import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.OriginDevice;
@@ -60,7 +62,6 @@ import com.github.devconslejme.misc.jme.RotateI;
 import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
 import com.github.devconslejme.misc.lemur.SystemAlertLemurI;
 import com.github.devconslejme.projman.SimpleAppStateAbs;
-import com.github.devconslejme.tests.TestOriginDeviceGame.OriginDeviceMonster;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
@@ -314,6 +315,14 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 				SpatialsManagerI.i().show();
 			}}, null
 		);
+		
+		//// OS Cmds
+		G.i(OSCmd.class).configure(new Function<String, ArrayList<String>>() {
+			@Override
+			public ArrayList<String> apply(String strLine) {
+				return new CommandLineParser(strLine).getAllPartsStrListCopy();
+			}
+		});
 	}
 
 	private void opt_initOtherStuff() {

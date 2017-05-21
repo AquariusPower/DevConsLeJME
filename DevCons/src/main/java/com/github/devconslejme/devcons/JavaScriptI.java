@@ -48,6 +48,7 @@ import javax.script.ScriptException;
 
 import com.github.devconslejme.misc.AutoCompleteI;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
+import com.github.devconslejme.misc.CommandLineParser;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.FileI;
 import com.github.devconslejme.misc.GlobalManagerI;
@@ -58,6 +59,7 @@ import com.github.devconslejme.misc.JavadocI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.MethodX;
 import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.ReportI;
 import com.github.devconslejme.misc.jme.TextI;
@@ -101,6 +103,11 @@ public class JavaScriptI implements IGlobalAddListener {
 		}
 	};
 	
+	private String	strCustomVarPrefix="$";
+	private String strLastRetValId=strCustomVarPrefix+"LastRetVal";
+	
+	private String strCommentLineToken="//";
+	
 //	enum EJSObjectBind {
 //		selfScript,
 //		;
@@ -117,6 +124,8 @@ public class JavaScriptI implements IGlobalAddListener {
 		history("[filter] show commands history"),
 		ini("append to user init file"),
 		kill("kill running queue by UId"),
+		quit,
+		set("<JSBindId> <CommandReturningNonVoid>"),
 		showIni,
 		;
 		
@@ -147,13 +156,14 @@ public class JavaScriptI implements IGlobalAddListener {
 			return false;
 		}
 		
-		String[] astr = strCmd.split(" ");
-		String strBase = astr[0];
+		String strBase = StringI.i().extractPart(strCmd," ",0);
+//		String[] astr = strCmd.split(" ");
+//		String strBase = astr[0];
 		String strParams = "";
 		if(!strCmd.equals(strBase))strParams=strCmd.substring(strBase.length()+1);
 		strParams=strParams.trim();
 		
-		if(strParams.startsWith("//"))strParams=""; //remove comments
+		if(strParams.startsWith(strCommentLineToken))strParams=""; //clear if is comment
 		
 		EBaseCommand ebc = null;
 		try{
@@ -186,11 +196,16 @@ public class JavaScriptI implements IGlobalAddListener {
 			case ini:
 				appendUserInitCommand(strParams);
 				return true;
+			case quit:
 			case exit:
+				LoggingI.i().logMarker("exiting by user request");
 				G.i(Application.class).stop();
 				return true;
 			case exec:
 				execFileAndShowRetVal(strParams);
+				return true;
+			case set:
+				setCustomUserVar(strParams);
 				return true;
 			case showIni:
 				LoggingI.i().logMarker("Showing User Init");
@@ -199,11 +214,34 @@ public class JavaScriptI implements IGlobalAddListener {
 					LoggingI.i().logEntry(str);
 				}
 				return true;
+			default:
+				throw new UnsupportedOperationException("not implemented yet "+ebc);
 		}
 		
-		return false;
 	}
 	
+	/**
+	 * 
+	 * @param strParams <[$]customJSVarBindId> <CommandToCaptureReturnValueFrom>
+	 */
+	public void setCustomUserVar(String strParams) {
+//		CommandLineParser clp = new CommandLineParser(strParams);
+//		String strCustomUserBind = clp.getCommand();
+		String strCustomUserBind = StringI.i().extractPart(strParams, " ", 0);
+		String strJS = strParams.substring(strCustomUserBind.length()+1);
+		
+		// prefix
+		if(!strCustomUserBind.startsWith(strCustomVarPrefix))strCustomUserBind=strCustomVarPrefix+strCustomUserBind;
+		
+		if(strCustomUserBind.equals(strLastRetValId)){
+			LoggingI.i().logWarn("this var id is volatile, will be replaced often");
+		}
+		
+		if(execScript(strJS, false)){
+			setJSBindingRaw(strCustomUserBind,objRetValUser);
+		}
+	}
+
 	private void showJavadoc(String strFullMethodHelp) {
 		MethodX mh = retrieveMethodHelp(strFullMethodHelp);
 		if(mh!=null){
@@ -216,7 +254,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		str=str.trim();
 		
 		// remove comments
-		int iComment = str.indexOf("//");
+		int iComment = str.indexOf(strCommentLineToken);
 		if(iComment>-1)str=str.substring(0,iComment);
 		
 		return str.trim();
@@ -235,7 +273,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	
 	public MethodX retrieveMethodHelp(String strFullMethodHelp){
 //		// remove comments
-//		int iComment = strFullMethodHelp.indexOf("//");
+//		int iComment = strFullMethodHelp.indexOf(strCommentLineToken);
 //		if(iComment>-1)strFullMethodHelp=strFullMethodHelp.substring(0,iComment);
 		strFullMethodHelp=strFullMethodHelp.trim();
 		
@@ -336,7 +374,12 @@ public class JavaScriptI implements IGlobalAddListener {
 		GlobalManagerI.i().addGlobalAddListener(this);
 	}
 	
-	private String genKeyFor(Object obj){
+	/**
+	 * 
+	 * @param obj
+	 * @return basically the simple name or the simple enclosing name $ the simple type name, works for enums too.
+	 */
+	public String genKeyFor(Object obj){
 		if(JavaLangI.i().isEnumClass(obj)){
 			Class cl = (Class)obj;
 			String[] astr = cl.getName().split("[.]");
@@ -357,7 +400,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	 */
 //	private void setJSBinding(String strBindId, Object objBindValue){
 	public void setJSBinding(Object objBindValue){
-		if(isForbidAccess(objBindValue))return;
+		if(isAccessForbidden(objBindValue))return;
 		
 		Class clEnum = (JavaLangI.i().isEnumClass(objBindValue)) ? (Class)objBindValue : null;
 		
@@ -375,18 +418,31 @@ public class JavaScriptI implements IGlobalAddListener {
 			}
 		}
 		
-		
-		bndJSE.put(strBindId,objBindValue);
-		MessagesI.i().debugInfo(this,"created JS bind: "+strBindId,objBindValue);
+		setJSBindingRaw(strBindId,objBindValue);
 		
 		setJSBindingForEnumsOf(objBindValue.getClass());
-//		Class<?>[] acl = objBindValue.getClass().getDeclaredClasses();
-//		for(Class<?> cl:acl){
-//			if(JavaLangI.i().isEnumClass(cl)){
-////				QueueI.i().enqueue(cx);
-//				setJSBinding(cl);
-//			}
-//		}
+	}
+	
+	private void setJSBindingRaw(String strBindId,Object objBindValue){
+		if(isAccessForbidden(objBindValue)){ //restrictions still apply
+			throw new DetailedException("forbidden bind type", objBindValue);
+		}
+		
+		String strMode="created";
+		if(bndJSE.get(strBindId)!=null)strMode="replaced";//LoggingI.i().logSubEntry("replacing "+strBindId);
+		
+		// do it
+		bndJSE.put(strBindId,objBindValue);
+		
+		// logs
+		String strMsg=strMode+" JS bind: "+strBindId;
+		
+		if(!strBindId.equals(strLastRetValId)){
+			LoggingI.i().logMarker(strMsg,-1);
+			if(!strBindId.startsWith(strCustomVarPrefix)){
+				MessagesI.i().debugInfo(this,strMsg,objBindValue); //intended mainly for globals
+			}
+		}
 	}
 	
 	public void setJSBindingForEnumsOf(Class clWithEnums){
@@ -399,7 +455,8 @@ public class JavaScriptI implements IGlobalAddListener {
 		}
 	}
 	
-	private boolean isForbidAccess(Object objBindValue) {
+	private boolean isAccessForbidden(Object objBindValue) {
+		DetailedException.assertNotNull(objBindValue);
 		if(aclForbidJS.contains(objBindValue.getClass())){
 			MessagesI.i().warnMsg(this, "forbidden JS access to class", objBindValue.getClass());
 			return true;
@@ -504,8 +561,8 @@ public class JavaScriptI implements IGlobalAddListener {
 			if(!flJS.exists()){
 				flJS.createNewFile();
 				FileI.i().appendLine(flJS, "//Classes: "+bndJSE.keySet());
-//				FileI.i().appendLine(flJS, "//"+EJSObjectBind.class.getSimpleName()+": "+Arrays.toString(EJSObjectBind.values()));
-				FileI.i().appendLine(flJS, "//"+genKeyFor(flJS));
+//				FileI.i().appendLine(flJS, strCommentLineToken+EJSObjectBind.class.getSimpleName()+": "+Arrays.toString(EJSObjectBind.values()));
+				FileI.i().appendLine(flJS, strCommentLineToken+genKeyFor(flJS));
 				LoggingI.i().logWarn("created file "+flJS.getAbsoluteFile());
 				return null;
 			}
@@ -580,8 +637,6 @@ public class JavaScriptI implements IGlobalAddListener {
 			bndJSE.remove(genKeyFor(flsc));
 //			setJSBinding(EJSObjectBind.selfScript.s(), flJS);
 			setJSBinding(flsc);
-//			bndJSE.put(EJSObjectBind.selfScript.s(), flJS);
-//			rd.reset();
 			objRetValFile = jse.eval(new FileReader(flJS),bndJSE);
 			return true;
 		} catch (ScriptException | IOException e) {
@@ -593,8 +648,10 @@ public class JavaScriptI implements IGlobalAddListener {
 	}
 	
 	public boolean execScript(String strJS,boolean bShowRetVal){
+		DetailedException.assertNotEmpty("Javascript", strJS, bShowRetVal);
 		try {
 			objRetValUser=jse.eval(strJS,bndJSE);
+			if(objRetValUser!=null)setJSBindingRaw(strLastRetValId, objRetValUser);
 			if(bShowRetVal)showRetVal(objRetValUser);
 			return true;
 		} catch (ScriptException e) {
@@ -820,8 +877,8 @@ public class JavaScriptI implements IGlobalAddListener {
 			}
 		}
 		
-//		int i = strNewInput.indexOf("//");if(i>-1)strNewInput=strNewInput.substring(0,i).trim()+" "; //remove trailing comments
-		int i = strNewInput.indexOf("//");if(i>-1)strNewInput=strNewInput.substring(0,i).trim(); //remove trailing comments
+//		int i = strNewInput.indexOf(strCommentLineToken);if(i>-1)strNewInput=strNewInput.substring(0,i).trim()+" "; //remove trailing comments
+		int i = strNewInput.indexOf(strCommentLineToken);if(i>-1)strNewInput=strNewInput.substring(0,i).trim(); //remove trailing comments
 //		DevConsPluginStateI.i().setInputText(strNewInput);
 		if(ar.isImprovedAnExactMatch())strNewInput+=" ";
 		DevConsPluginStateI.i().insertAtInputTextCaratPos(
