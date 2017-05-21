@@ -48,7 +48,7 @@ import com.jme3.scene.shape.Torus;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class OriginDevice<NODEXS extends NodeAxis> extends Node{
+public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> extends Node{
 	private float fRadius;
 	private int	iCS;
 	private int	iRS;
@@ -59,6 +59,11 @@ public class OriginDevice<NODEXS extends NodeAxis> extends Node{
 	private float	fTPF;
 	private boolean bEnabled=false;
 	private Node	nodeLastParent;
+	
+	@SuppressWarnings("unchecked")
+	public SELF getThis(){
+		return (SELF)this;
+	}
 	
 	public static class NodeAxis<SELF extends NodeAxis> extends Node{
 		public NodeAxis(String str) {
@@ -115,7 +120,7 @@ public class OriginDevice<NODEXS extends NodeAxis> extends Node{
 	}
 	
 	public OriginDevice(){
-		setName(OriginDevice.class.getSimpleName());
+		setName(this.getClass().getSimpleName());
 		
 		fRadius=5;
 		iCS=50;
@@ -365,7 +370,9 @@ public class OriginDevice<NODEXS extends NodeAxis> extends Node{
 	protected NODEXS createAxisShape(EAxis ea, Mesh mesh, Vector3f v3fPos, float fAlpha, Vector3f v3fUp) {
 		return createAxisShape(ea, mesh, v3fPos,  fAlpha,  v3fUp, false, null);
 	}
-	protected NODEXS createAxisShape(EAxis ea, Mesh mesh, Vector3f v3fPos, float fAlpha, Vector3f v3fUp, boolean bAddWireFrame, Vector3f v3fScale) {
+	protected NODEXS createAxisShape(EAxis ea, Mesh mesh, Vector3f v3fPos, float fAlpha, Vector3f v3fUp, 
+			boolean bAddWireFrame, Vector3f v3fScale
+	) {
 		if(v3fScale==null)v3fScale=new Vector3f(1,1,1);
 		NODEXS node = createNodeAxis("Node");
 		node.setEAxis(ea);
@@ -416,18 +423,18 @@ public class OriginDevice<NODEXS extends NodeAxis> extends Node{
 		return v3fSpeed.clone();
 	}
 
-	public OriginDevice setRotSpeed(Vector3f v3f) {
+	public SELF setRotSpeed(Vector3f v3f) {
 		this.v3fSpeed.set(v3fBaseSpeed.mult(v3f));
-		return this; //for beans setter
+		return getThis(); //for beans setter
 	}
 
 	public boolean isEnabled() {
 		return bEnabled;
 	}
 
-	public OriginDevice<NODEXS> setEnabled(boolean bEnabled) {
+	public SELF setEnabled(boolean bEnabled) {
 		this.bEnabled = bEnabled;
-		return this; 
+		return getThis();
 	}
 
 	/**

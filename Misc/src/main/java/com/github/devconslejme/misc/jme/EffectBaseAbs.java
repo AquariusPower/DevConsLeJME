@@ -302,17 +302,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 		if(sptOwner==null)sptOwner=sptFollowTo;
 		
 		if(nodeParent==null){
-//			if (objOwner instanceof ILinkedSpatial) {
-//				ILinkedSpatial ils = (ILinkedSpatial) objOwner;
-//				// the top node
-//				nodeParent=MiscJmeI.i().getParentest(ils.getLinkedSpatial(),Node.class,false); 
-//			}else{
-//				if (objOwner instanceof Spatial) {
-//					Spatial spt = (Spatial) objOwner;
-					nodeParent=SpatialHierarchyI.i().getParentest(sptOwner,Node.class,false); //expectedly gui or virtual world root nodes
-//				}
-//			}
-			
+			nodeParent=SpatialHierarchyI.i().getParentest(sptOwner, Node.class, false); //expectedly gui or virtual world root nodes
 		}
 		
 		if(bSimplyWaitParentIfNull){

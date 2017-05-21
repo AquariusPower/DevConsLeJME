@@ -32,7 +32,9 @@ import com.github.devconslejme.devcons.JavaScriptI;
 import com.github.devconslejme.devcons.LoggingI;
 import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.ToDo;
+import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.CalcI;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
@@ -58,6 +60,7 @@ import com.github.devconslejme.misc.jme.WorldPickingI;
 import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
 import com.github.devconslejme.projman.SimpleAppStateAbs;
 import com.github.devconslejme.tests.TestDevCons.GeometryVolDbg;
+import com.jme3.app.Application;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
@@ -114,19 +117,20 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 		super.initTest();
 		
 		// good position related to these objects
-		getCamera().setLocation(new Vector3f(9.787677f, 6.957723f, 11.003839f)); //taken from devcons
-		getCamera().setRotation(new Quaternion(-0.068618454f, 0.91919893f, -0.18511744f, -0.34072912f)); //taken from devcons
+		getApp().getCamera().setLocation(new Vector3f(9.787677f, 6.957723f, 11.003839f)); //taken from devcons
+		getApp().getCamera().setRotation(new Quaternion(-0.068618454f, 0.91919893f, -0.18511744f, -0.34072912f)); //taken from devcons
 		
 		// Orde
-		orde = new OriginDeviceMonster();
+		orde = new OriginDeviceMonster().setEnabled(true);
 		DebugVisualsI.i().showWorldBoundAndRotAxes(orde);//TODO rm
 		orde
 //			.setUnstable(true)
 			.setDestroySpatials(true)
 //			.setSourceMode(ETargetMode.Attract)
 			.setAutoTargetNearestSpatials(true);
-		JavaScriptI.i().setJSBindingForEnumsOf(OriginDevice.class);
-		getRootNode().attachChild(orde);
+		GlobalManagerI.i().put(OriginDeviceMonster.class,orde);
+//		JavaScriptI.i().setJSBindingForEnumsOf(OriginDevice.class);
+		getSApp().getRootNode().attachChild(orde);
 		
 		// Orde's food
 		Node nodeRef=new Node();
@@ -150,14 +154,14 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 			nodeRef.attachChild(geom);
 			Vector3f v3fWorld = geom.getWorldTranslation(); //rotated position
 			geom.setLocalTranslation(v3fWorld);
-			getRootNode().attachChild(geom);
+			getSApp().getRootNode().attachChild(geom);
 			
 			// wont move, just for debug 
 			if(false){
 				GeometryVolDbg geomVolume = GeometryI.i().create(MeshI.i().sphereFromVolumeOf(geom), ColorRGBA.Red,false,new GeometryVolDbg());
 				geomVolume.getMaterial().getAdditionalRenderState().setWireframe(true);
 				geomVolume.setLocalTranslation(v3fWorld);
-				getRootNode().attachChild(geomVolume);
+				getSApp().getRootNode().attachChild(geomVolume);
 		    WorldPickingI.i().addSkip(geomVolume);
 			}
 		    
@@ -206,18 +210,18 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 		}
 		
 	}
-	public static class OriginDeviceMonster extends OriginDevice<NodeAxisGm>{
+	public static class OriginDeviceMonster extends OriginDevice<OriginDeviceMonster,NodeAxisGm>{
 		/**
 		 * each 0.01^3 wold volume = 1 watt/miliseconds
 		 * so 1^3 = 100*100*100 w/ms
 		 */
-		private EnergyJme energy = new EnergyJme(1000000,100000,10000,0);
+		private EnergyJme energy;
 		
 		private EffectElectricity	efElec;
 		private TimedDelay	tdEffectRetarget;
 		private float	fRetargetDefaultDelay=3;
-		private ArrayList<NodeAxis> anodeMainShapes=new ArrayList<NodeAxis>();
-		private ArrayList<NodeAxis> anodeElectricShapesList=new ArrayList<NodeAxis>();
+		private ArrayList<NodeAxis> anodeMainShapes;
+		private ArrayList<NodeAxis> anodeElectricShapesList;
 //		private Node	nodeBase = new Node(OriginDevice.class.getSimpleName());
 		private Integer	iMaxHoldMilisBkp = null;
 //		private Integer	iThicknessBkp = null;
@@ -261,14 +265,7 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 		}
 		
 		public OriginDeviceMonster(){
-			setName(OriginDeviceMonster.class.getSimpleName());
-			
-			fRadius=5;
-			iCS=50;
-			iRS=15;
-			v3fSpeed.set(v3fBaseSpeed);
-			
-			init();
+			super();
 		}
 		
 		public Vector3f moveVelocity(){
@@ -333,43 +330,44 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 		}
 		
 		private void updateAutoTarget() {
-			if(bAutoTargetNearestSpatials){
-				if(sptTarget==null){
-					Spatial sptNearest=null;
-					Float fDistNearest=null;
-					for(Spatial spt:getParent().getChildren()){
-						if(spt==this)continue;
-						
+			if(getParent()==null)return;
+			if(!bAutoTargetNearestSpatials)return;
+			
+			if(sptTarget==null){
+				Spatial sptNearest=null;
+				Float fDistNearest=null;
+				for(Spatial spt:getParent().getChildren()){
+					if(spt==this)continue;
+					
 //						if(fPseudoEnergCoreRadius>=fPseudoRadius/2f)continue;
-						if(energy.isOvercharged())continue;
-						if(!energy.isLowEnergy())continue;
-						
-						float fDist = getWorldTranslation().distance(spt.getWorldTranslation());
-						if(fDist > fMaxTractionDist)continue;
-						
-						if(!isRequireTargetsToken() || !hasTargetTokenParentRecursive(spt))continue; //TODO "heavier?" is after
-						if(
-								fDist<=fSafeMinDist && //destruction area 
-								energy.getEnergyStored() >= calcEnergyToDisintegrate(spt) //&&
+					if(energy.isOvercharged())continue;
+					if(!energy.isLowEnergy())continue;
+					
+					float fDist = getWorldTranslation().distance(spt.getWorldTranslation());
+					if(fDist > fMaxTractionDist)continue;
+					
+					if(!isRequireTargetsToken() || !hasTargetTokenParentRecursive(spt))continue; //TODO "heavier?" is after
+					if(
+							fDist<=fSafeMinDist && //destruction area 
+							energy.getEnergyStored() >= calcEnergyToDisintegrate(spt) //&&
 //								getTargetToken(spt).lEnergyWattsPerMilis >=
 //								isLowEnergy()
-						)continue; //needs more energy
-						
-						//TODO use pseudoRadius=(bounding.volume^3)/2f to lower the distance based on its limits/edges/extents
-						if(sptNearest==null || fDist<fDistNearest){
-							sptNearest=spt;
-							fDistNearest = getWorldTranslation().distance(sptNearest.getWorldTranslation());
-						}
+					)continue; //needs more energy
+					
+					//TODO use pseudoRadius=(bounding.volume^3)/2f to lower the distance based on its limits/edges/extents
+					if(sptNearest==null || fDist<fDistNearest){
+						sptNearest=spt;
+						fDistNearest = getWorldTranslation().distance(sptNearest.getWorldTranslation());
 					}
-					sptTarget=sptNearest;
 				}
-				
-				if(sptTarget!=null){
-					efHook.setFromTo(nodeEnergyCore.getWorldTranslation(), sptTarget.getWorldTranslation());
-				}
-				
-				efHook.setPlay(sptTarget!=null);
+				sptTarget=sptNearest;
 			}
+			
+			if(sptTarget!=null){
+				efHook.setFromTo(nodeEnergyCore.getWorldTranslation(), sptTarget.getWorldTranslation());
+			}
+			
+			efHook.setPlay(sptTarget!=null);
 		}
 		
 		public NodeAxisGm getNodeaxisUserChosen(){
@@ -572,6 +570,10 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 
 		@Override
 		protected void init(){
+			anodeElectricShapesList=new ArrayList<NodeAxis>();
+			anodeMainShapes=new ArrayList<NodeAxis>();
+			energy = new EnergyJme(1000000,100000,10000,0);
+			
 			super.init();
 			
 			for(EAxis ea:EAxis.values()){
@@ -993,10 +995,8 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 		}
 		
 		@Override
-		protected NodeAxisGm createAxisShape(
-				com.github.devconslejme.misc.jme.OriginDevice.EAxis ea, Mesh mesh,
-				Vector3f v3fPos, float fAlpha, Vector3f v3fUp, boolean bAddWireFrame,
-				Vector3f v3fScale
+		protected NodeAxisGm createAxisShape(EAxis ea, Mesh mesh,	Vector3f v3fPos, float fAlpha, 
+				Vector3f v3fUp, boolean bAddWireFrame,	Vector3f v3fScale
 		) {
 			NodeAxisGm nd = super.createAxisShape(ea, mesh, v3fPos, fAlpha, v3fUp, bAddWireFrame,	v3fScale);
 			applyTargetTokenLater(nd);

@@ -44,6 +44,8 @@ import com.simsilica.lemur.style.BaseStyles;
 public abstract class SimpleAppStateAbs extends SimpleApplication implements AppState{
   private boolean bInit = false;
   private boolean bEnabled = false;
+  private Application	app;
+  private SimpleApplication	sapp;
 
 	/**
 	 * TODO this code below can only be used when overriding this method!   
@@ -72,7 +74,9 @@ public abstract class SimpleAppStateAbs extends SimpleApplication implements App
 //  protected abstract void initTest();
   protected void initTest(){
 		bEnabled=true;
-		G.i(Application.class).getStateManager().attach(this); //can be another applicaiton using this as a app state only
+		this.app=(G.i(Application.class));
+		this.sapp=G.i(SimpleApplication.class);
+		getApp().getStateManager().attach(this); //can be another applicaiton using this as a app state only
   }
 
 	@Override
@@ -99,5 +103,13 @@ public abstract class SimpleAppStateAbs extends SimpleApplication implements App
 	public void cleanup() {
       bInit = false;
   }
+
+	public Application getApp() {
+		return app;
+	}
+
+	public SimpleApplication getSApp() {
+		return sapp;
+	}
   
 }
