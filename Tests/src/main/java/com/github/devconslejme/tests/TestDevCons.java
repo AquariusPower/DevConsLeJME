@@ -408,9 +408,9 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	}
 	/** @DevSelfNote keep even if emtpy */ 
 	public void updateDebugTest(float fTPF){
-//		Geometry geom = ((Geometry)aobjDebugTest[0]);
-//		if(false)
-//			geom.setLocalTranslation(0,3,0);
-//		RotateI.i().rotateAroundPivot(geom, orde, 0.01f, Vector3f.UNIT_Z, true);
+		Geometry geom = ((Geometry)aobjDebugTest[0]);
+		if(false)
+			geom.setLocalTranslation(3,1,0);
+		RotateI.i().rotateAroundPivot(geom, orde, 0.01f, true);
 	}
 }

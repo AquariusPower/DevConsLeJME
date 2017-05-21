@@ -619,6 +619,7 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 			nodePet.getGeomWireFrame().setMaterial(ColorI.i().retrieveMaterialUnshadedColor(ColorRGBA.Cyan));
 			nodePet.getGeomWireFrame().getMaterial().getAdditionalRenderState().setWireframe(true);
 			nodePet.rotateUpTo(Vector3f.UNIT_Y); //undo the axis default
+			nodePet.removeFromParent(); //independent
 				
 			QueueI.i().enqueue(new CallableXAnon() {
 				@Override
@@ -633,7 +634,7 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 		protected void updatePet(float fTPF,NodeAxisGm nodePet, TimedDelay td) {
 			if(true){ //TODO false
 			bPetUnstableDist=false;
-			bPetOrbit=true;
+			bPetOrbit=false;
 			bPetSpin=false;
 			bPetScale=false;
 			nodePet.attachChild(nodePet.getNodeGeometries());
@@ -674,7 +675,6 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 						nodePet, 
 						this, 
 						-(fRotSpeed*fTPF)*FastMath.DEG_TO_RAD,	
-						v3fNodeUp, 
 						true);
 			}
 			
