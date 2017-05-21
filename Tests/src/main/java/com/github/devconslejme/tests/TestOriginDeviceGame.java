@@ -190,6 +190,7 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 		}
 		EffectElectricity	ef;
 		EnergyJme en;
+		public Node	nodeOrdeRefLike = new Node();
 	}
 	public static class TargetToken {
 	//	long lEnergyWattsPerMilis;
@@ -633,28 +634,43 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 		}
 		
 		protected void updatePet(float fTPF,NodeAxisGm nodePet, TimedDelay td) {
-			if(true){ //TODO false
-				bPetUnstableDist=false;
-				bPetOrbit=false;
-				bPetSpin=false;
-				bPetScale=false;
-				if(nodePet.getParent()==null)this.getParent().attachChild(nodePet);
-			}
+//			if(true){ //TODO false
+//				bPetOrbit=true;
+//				bPetSpin=true;
+//				bPetScale=true;
+//				bPetUnstableDist=true;
+//				if(nodePet.getParent()==null)this.getParent().attachChild(nodePet);
+//			}
 			
-			if(false) //TODO rm
-			{
+//			if(false) //TODO rm
+//			{
 				if(isUnstable()){
 					if(nodePet.getParent()==null)this.getParent().attachChild(nodePet);
 				}else{
 					if(nodePet.getParent()!=null)nodePet.removeFromParent();
 					return;
 				}
+//			}
+			
+			/////////////  pet distance
+			Vector3f v3fDir = nodePet.getLocalTranslation().subtract(this.getLocalTranslation()).normalize();
+			if(v3fDir.length()==0){ // may happen after reaching Orde origin
+				v3fDir=RotateI.i().randomDirection();
+				//TODO fix the initial rotation too?
 			}
+			
+			float fPercDist = bPetUnstableDist ? energy.getUnstablePerc() : 1f;
+			if(fPercDist>1f)fPercDist=1f; //so the max dist will be at max for a 200% energy
+			
+			Vector3f v3fDist = v3fDir.mult(fPercDist*getPetMaxDist()); //getLocalScale()
+			
+			nodePet.setLocalTranslation(getLocalTranslation().add(v3fDist));
 			
 			///////////////// rotate around Orde
 			if(bPetOrbit){
-				Vector3f v3fNodeUp = nodePet.getLocalRotation().getRotationColumn(1);//y
-				boolean bIrregular=false; //TODO true
+				// irregularity
+				Vector3f v3fNodeUp = nodePet.nodeOrdeRefLike.getLocalRotation().getRotationColumn(1);//y
+				boolean bIrregular=true; //TODO true
 				if(bIrregular){
 					if(td.isReady(true)){
 						nodePet.getV3fAdd().set(
@@ -663,16 +679,19 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 								FastMath.nextRandomInt(0,1));
 					}
 					
-					boolean bIrregular2=false; //TODO true
-					if(bIrregular2){
-						float f=0.25f;
-						v3fNodeUp.addLocal(nodePet.getV3fAdd().mult(f));//.normalizeLocal();
-					}
+					float f=0.25f;
+					v3fNodeUp.addLocal(nodePet.getV3fAdd().mult(f)).normalizeLocal();
 				}
-				float fRotSpeed=250f;
+				nodePet.nodeOrdeRefLike.setLocalTranslation(getLocalTranslation());
+//				nodePet.nodeOrdeRefLike.setLocalRotation(getLocalRotation());
+				nodePet.nodeOrdeRefLike.rotateUpTo(v3fNodeUp);
+				if(nodePet.nodeOrdeRefLike.getParent()==null)getParent().attachChild(nodePet.nodeOrdeRefLike);
+				
+				// orbit
+				float fRotSpeed=300f;
 				RotateI.i().rotateAroundPivot(
 						nodePet, 
-						this, 
+						nodePet.nodeOrdeRefLike, 
 						-(fRotSpeed*fTPF)*FastMath.DEG_TO_RAD,	
 						true);
 			}
@@ -690,28 +709,16 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 				);
 			}
 			
-			/////////////  pet distance
-			Vector3f v3fDir = nodePet.getLocalTranslation().subtract(this.getLocalTranslation());
-			if(v3fDir.length()==0){
-				v3fDir=RotateI.i().randomDirection();
-				//TODO fix the initial rotation too
-			}
-			
-			float fPercDist = bPetUnstableDist ? energy.getUnstablePerc() : 1f;
-			if(fPercDist>1f)fPercDist=1f; //so the max dist will be at max for a 200% energy
-			
-			Vector3f v3fDist = v3fDir.mult(fPercDist*getPetMaxDist());
-			
-			nodePet.setLocalTranslation(v3fDist);
-			
-			consumeEnergyPF(EEnergyConsumpWpM.PetFlyExpelsEnergy,energy.getUnstablePerc()/3f); //3f is just to last more, then ending lasts 5 full loops this way, no "real" energy reason tho..
-			
 			//////////// scaled based on unstability
 			if(bPetScale){
 				float fPercScale = energy.getUnstablePerc();
 				if(fPercScale>1f)fPercScale=1f; //so the max dist will be at max for a 200% energy
-				nodePet.setLocalScale(fPercScale);
+				nodePet.setLocalScale(getLocalScale().length()*fPercScale);
 			}
+			
+			/////////// energy
+			consumeEnergyPF(EEnergyConsumpWpM.PetFlyExpelsEnergy,energy.getUnstablePerc()/3f); //3f is just to last more, then ending lasts 5 full loops this way, no "real" energy reason tho..
+
 		}
 		
 		private void updateCheckGrowShrink() {
