@@ -56,6 +56,7 @@ import com.github.devconslejme.misc.jme.OriginDevice;
 import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
 import com.github.devconslejme.misc.lemur.SystemAlertLemurI;
 import com.github.devconslejme.projman.SimpleAppStateAbs;
+import com.github.devconslejme.tests.TestOriginDeviceGame.OriginDeviceMonster;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
@@ -159,6 +160,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	
 	private void opt_initAll() {
 		orde = new OriginDevice().setEnabled(true);
+		GlobalManagerI.i().put(OriginDevice.class,orde);
 		getRootNode().attachChild(orde);
 		// good position related to these objects
 		getCamera().setLocation(new Vector3f(9.787677f, 6.957723f, 11.003839f)); //taken from devcons

@@ -59,7 +59,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 	private ColorRGBA	colorRefBase;
 	private Node	nodeParent;
 	private Geometry	geom;
-	private Spatial	sptOwner;
+//	private Spatial	sptOwner;
 	private boolean	bPlay = false;
 	private boolean	bDiscardingByOwner=true;
 	private boolean	bSimplyWaitParentIfNull=true;
@@ -68,10 +68,10 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 	private Float	fZAboveAllAtGuiNode;
 	private boolean	bBugOverrideDisablePlay;
 	
-	public EffectBaseAbs(Spatial sptOwner){
-		this();
-		setOwner(sptOwner);
-	}
+//	public EffectBaseAbs(Spatial sptOwner){
+//		this();
+//		setOwner(sptOwner);
+//	}
 	
 	public EffectBaseAbs() {
 		this.geom = new Geometry("Geom:"+this.getClass().getSimpleName());
@@ -251,17 +251,29 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 		this.geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(colorRef).clone()); //must be a clone or will modify the line thickness of all using the same material
 		return getThis();
 	}
-	@Override
-	public THIS setNodeParent(Node node){
-		this.nodeParent=node;
-		return getThis();
+		
+	public void validateParent(){
+		if(nodeParent!=null && nodeParent.getParent()!=null){
+			throw new DetailedException("the specified parent has parent, so it's world bounds would consider the effect",nodeParent,this);
+		}
 	}
 	
 	@Override
-	public Object getOwner() {
-		assertNotDiscarded();
-		return sptOwner;
+	public THIS setNodeParentest(Node node){
+//		if(node.getParent()!=null){
+////			MessagesI.i().warnMsg(this, "the specified parent has parent, so it's world bounds will consider the effect, what may be a bad thing",node,this);
+//			throw new DetailedException("the specified parent has parent, so it's world bounds would consider the effect",node,this);
+//		}
+		this.nodeParent=node;
+		validateParent();
+		return getThis();
 	}
+	
+//	@Override
+//	public Object getOwner() {
+//		assertNotDiscarded();
+//		return sptOwner;
+//	}
 	
 	@Override
 	public THIS setPlay(boolean b) {
@@ -298,17 +310,22 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 			throw new DetailedException("playing and 'to' not set",this);
 		}
 		
-		if(sptOwner==null)sptOwner=sptFollowFrom;
-		if(sptOwner==null)sptOwner=sptFollowTo;
-		
-		if(nodeParent==null){
-			nodeParent=SpatialHierarchyI.i().getParentest(sptOwner, Node.class, false); //expectedly gui or virtual world root nodes
+		/**
+		 * expectedly gui or virtual world root nodes
+		 */
+		if(nodeParent==null && sptFollowFrom!=null){
+			nodeParent=SpatialHierarchyI.i().getParentest(sptFollowFrom, Node.class, false); 
 		}
+		if(nodeParent==null && sptFollowTo!=null){
+			nodeParent=SpatialHierarchyI.i().getParentest(sptFollowTo, Node.class, false);
+		}
+		
+		validateParent();
 		
 		if(bSimplyWaitParentIfNull){
 			setWaitParent(nodeParent==null);
 		}else{
-			DetailedException.throwIfNull(nodeParent, "parent", sptOwner, this);
+			DetailedException.throwIfNull(nodeParent, "parent", sptFollowFrom, sptFollowTo, this);
 		}
 	}
 	
@@ -339,11 +356,11 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 		return bDiscardingByOwner;
 	}
 	
-	@Override
-	public THIS setOwner(Spatial sptOwner) {
-		this.sptOwner=sptOwner;
-		return getThis();
-	}
+//	@Override
+//	public THIS setOwner(Spatial sptOwner) {
+//		this.sptOwner=sptOwner;
+//		return getThis();
+//	}
 
 	@Override
 	public THIS clone() {

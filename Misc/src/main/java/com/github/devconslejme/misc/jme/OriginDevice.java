@@ -174,7 +174,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 //		rotate(EAxis.X.get().getRepresentationShape(), 90, false);//TODO wrong
 		
 		createAxis(Vector3f.UNIT_Y, new Sphere(10,10,0.5f));
-		rotate(EAxis.Y.get().getRotatingTorus(), 90, false);
+		rotate(getAxisInfo(EAxis.Y).getRotatingTorus(), 90, false);
 		
 		createAxis(Vector3f.UNIT_Z, new Cone());
 	}
@@ -182,7 +182,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 	protected void updateAxisMainShapes() {
 //		for(NODEXS node:anodeMainShapes){
 		for(EAxis ea:EAxis.values()){
-			NODEXS node = ea.get().getRepresentationShape();
+			NODEXS node = getAxisInfo(ea).getRepresentationShape();
 			rotateMainShape(node,getRotSpeedCopy());
 		}
 	}
@@ -248,28 +248,21 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		
 	}
 	
-	public static enum EAxis{
-		X,
-		Y,
-		Z,
-		;
-
-		private AxisInfo	axisi;
-
-		public void set(AxisInfo axisi) {
-			this.axisi = axisi;
-		}
-		
-		public AxisInfo get(){ return axisi; }
-	}
+	public static enum EAxis{X,Y,Z,;}
 	
 	protected void updateTorusRotations() {
 		Vector3f v3fSpeed = getRotSpeedCopy();
-		rotateTor(EAxis.X.get().getRotatingTorus(),v3fSpeed);//,EAxis.X);
-		rotateTor(EAxis.Y.get().getRotatingTorus(),v3fSpeed);//,EAxis.Y);
-		rotateTor(EAxis.Z.get().getRotatingTorus(),v3fSpeed);//,EAxis.Z);
+		rotateTor(getAxisInfo(EAxis.X).getRotatingTorus(),v3fSpeed);//,EAxis.X);
+		rotateTor(getAxisInfo(EAxis.Y).getRotatingTorus(),v3fSpeed);//,EAxis.Y);
+		rotateTor(getAxisInfo(EAxis.Z).getRotatingTorus(),v3fSpeed);//,EAxis.Z);
 	}
 	
+	AxisInfo[] aai = new AxisInfo[EAxis.values().length];
+	
+	public AxisInfo getAxisInfo(EAxis ea) {
+		return aai[ea.ordinal()];
+	}
+
 	protected float rotTorSpeed(NODEXS nodeTor,Vector3f v3fSpeed){
 		float fSpeed=0;
 		switch(nodeTor.ea){
@@ -311,7 +304,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		if(v3fUp.z==1){ea=EAxis.Z;}
 		AxisInfo axisi = new AxisInfo(ea);
 		axisi.setColor(color);
-		ea.set(axisi);
+		aai[ea.ordinal()]=(axisi);
 
 		// rotating torus
 		axisi.torus=createAxisShape(ea,new Torus(iCS,iRS,fIR,fDisplacementTorus), 
@@ -350,7 +343,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		nodePosit.lookAt(v3fUp, v3fUp);
 		rotate(nodePosit,-90,false);
 		nodeTor.attachChild(nodePosit);
-		nodeTor.ea.get().setTorusTip(nodePosit);
+		getAxisInfo(nodeTor.ea).setTorusTip(nodePosit);
 //		anodeHotShapesList.add(nodePosit);
 		
 		// other end
@@ -358,7 +351,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 			new Vector3f(-fDisplacementTorus,0,0), fAlpha, v3fUp);
 		MiscJmeI.i().addToName(nodeNegat, "Intersection", false, true);
 		nodeTor.attachChild(nodeNegat);
-		nodeTor.ea.get().setTorusFeather(nodeNegat);
+		getAxisInfo(nodeTor.ea).setTorusFeather(nodeNegat);
 //		anodeHotShapesList.add(nodeNegat);
 	}
 	
@@ -376,7 +369,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		if(v3fScale==null)v3fScale=new Vector3f(1,1,1);
 		NODEXS node = createNodeAxis("Node");
 		node.setEAxis(ea);
-		Geometry geom = GeometryI.i().create(mesh, ColorI.i().colorChangeCopy(ea.get().getColor(),0,fAlpha), true,null);
+		Geometry geom = GeometryI.i().create(mesh, ColorI.i().colorChangeCopy(getAxisInfo(ea).getColor(),0,fAlpha), true,null);
 		node.setGeom(geom);
 		
 		node.setNodeGeometries(new Node());
@@ -384,7 +377,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		Geometry geomWireFrame=null;
 		if(bAddWireFrame){
 			geomWireFrame = new Geometry("WireFrame",mesh);
-			ColorRGBA colorW = ea.get().getColor().clone();
+			ColorRGBA colorW = getAxisInfo(ea).getColor().clone();
 			colorW.a=1;
 			geomWireFrame.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(colorW));
 			geomWireFrame.getMaterial().getAdditionalRenderState().setWireframe(true);
@@ -443,7 +436,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 	 * @return
 	 */
 	public Object debugTest(Object... aobj){
-		rotate(EAxis.X.get().getRepresentationShape(), 90, false);//TODO wrong
+		rotate(getAxisInfo(EAxis.X).getRepresentationShape(), 90, false);//TODO wrong
 		return null;
 	}
 	

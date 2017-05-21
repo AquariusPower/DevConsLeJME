@@ -208,6 +208,14 @@ public class EnvironmentJmeI extends AbstractAppState{
 		public Vector2f getPos2D() {
 			return inputman.getCursorPosition(); //return new Vector2f(Mouse.getX(), Mouse.getY());
 		}
+		
+		/**
+		 * {@link InputManager#isCursorVisible()} is not insta updated
+		 * @return
+		 */
+		public boolean isCursorVisible() {
+			return !Mouse.isGrabbed();
+		}
 	}
 	
 	public MouseI getMouse() {

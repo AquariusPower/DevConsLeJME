@@ -81,7 +81,7 @@ public class IndicatorI {
 			
 			EffectManagerStateI.i().add(efTractor);
 //			efTractor.setFollowToMouse(true);
-			efTractor.setNodeParent(IndicatorI.i().nodeGui);
+			efTractor.setNodeParentest(IndicatorI.i().nodeGui);
 			efTractor.setColor(ColorI.i().colorChangeCopy(ColorRGBA.Cyan,0f,0.25f));
 //			efTractor.setFollowFromTarget(this,null);
 			efTractor.setZOverride(MiscJmeI.i().getZAboveAllAtGuiNode());

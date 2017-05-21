@@ -122,7 +122,7 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 		
 		// Orde
 		orde = new OriginDeviceMonster().setEnabled(true);
-		DebugVisualsI.i().showWorldBoundAndRotAxes(orde);//TODO rm
+//		DebugVisualsI.i().showWorldBoundAndRotAxes(orde);//TODO rm
 		orde
 //			.setUnstable(true)
 			.setDestroySpatials(true)
@@ -232,7 +232,7 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 		private NodeAxis	nodeSelfElectrocute;
 		private float	fIR=0.1f;
 		private float	fRotTorOpac=0.15f;
-		private Vector3f v3fSpeed=new Vector3f();
+//		private Vector3f v3fSpeed=new Vector3f();
 		private NodeAxis	nodeElectricA;
 		private NodeAxis	nodeElectricB;
 //		private NodeAxis	nodeElectricSrc;
@@ -577,7 +577,7 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 			super.init();
 			
 			for(EAxis ea:EAxis.values()){
-				anodeMainShapes.add(ea.get().getRepresentationShape());
+				anodeMainShapes.add(getAxisInfo(ea).getRepresentationShape());
 			}
 			
 			// energy core
@@ -596,8 +596,8 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 				@Override
 				public Boolean call() {
 					if(OriginDeviceMonster.this.getParent()==null)return false;
-					efElec.setNodeParent(OriginDeviceMonster.this.getParent());
-					efHook.setNodeParent(OriginDeviceMonster.this.getParent());
+					efElec.setNodeParentest(OriginDeviceMonster.this.getParent());
+					efHook.setNodeParentest(OriginDeviceMonster.this.getParent());
 					return true;
 				}
 			});
@@ -762,6 +762,7 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 			NodeAxisGm node=new NodeAxisGm(str);
 			Geometry geom = new Geometry(str,new Sphere(10,10,0.5f)); //diameter 1f to be scaled
 			geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(ColorRGBA.Cyan));
+			geom.getMaterial().getAdditionalRenderState().setWireframe(true);
 			node.attachChild(geom); 
 			
 			attachChild(node);
@@ -975,8 +976,8 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 			EAxis ea = super.createAxis(v3fUp, mesh);
 			
 			// effect to world origin
-			NodeAxisGm nodeRepresentationShape = ea.get().getRepresentationShape();
-			nodeRepresentationShape.ef = prepareEffElec(ea.get().getColor())
+			NodeAxisGm nodeRepresentationShape = getAxisInfo(ea).getRepresentationShape();
+			nodeRepresentationShape.ef = prepareEffElec(getAxisInfo(ea).getColor())
 				.setFrom(new Vector3f())
 				.setFollowToTarget(nodeRepresentationShape,null);
 			EffectManagerStateI.i().add(nodeRepresentationShape.ef);
@@ -1010,33 +1011,28 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 			;
 		}
 		
+		@Override
 		public Vector3f getRotSpeedCopy() {
 			return getRotSpeedCopy(null);
 		}
 		public Vector3f getRotSpeedCopy(ERotMode ermOverride) {
 			switch(ermOverride!=null ? ermOverride : this.erm){
 				case Chaotic:
-					return v3fSpeed.mult(new Vector3f(
+					return super.getRotSpeedCopy().mult(new Vector3f(
 							2f*FastMath.nextRandomFloat()-1f,
 							2f*FastMath.nextRandomFloat()-1f,
 							2f*FastMath.nextRandomFloat()-1f
 						));
 				case Disaligned:
-					return v3fSpeed.mult(new Vector3f(
+					return super.getRotSpeedCopy().mult(new Vector3f(
 							FastMath.nextRandomFloat(),
 							FastMath.nextRandomFloat()*1.5f,
 							FastMath.nextRandomFloat()*2.0f
 						));
 				default: //just to let it compile...
 				case Aligned:
-					return v3fSpeed.clone();
+					return super.getRotSpeedCopy().clone();
 			}
-		}
-
-		public OriginDeviceMonster setRotSpeed(Vector3f v3f) {
-//			this.v3fSpeed.set(v3f.x*fBaseSpeed,v3f.y*fBaseSpeed,v3f.z*fBaseSpeed);
-			this.v3fSpeed.set(v3fBaseSpeed.mult(v3f));
-			return this; //for beans setter
 		}
 
 		public ERotMode getRotMode() {

@@ -153,9 +153,9 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		// I said THIS ORDER!!! not disorder... :)
 		;
 		
-		boolean bDummy=false;
-		EEdge(){}
-		EEdge(boolean bDummy){
+		private boolean bDummy=false;
+		private EEdge(){}
+		private EEdge(boolean bDummy){
 			this.bDummy=bDummy;
 		}
 		public boolean isDummy(){return bDummy;}

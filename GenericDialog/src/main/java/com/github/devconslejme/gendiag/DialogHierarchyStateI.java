@@ -510,7 +510,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 				if(entidParent!=null){
 					ResizablePanel rzpParent = getOpenDialog(entidParent);
 					ieffLinkedDragEffect
-						.setOwner(pnl)
+//						.setParentAsParentestOf(pnl)
 						.setFollowFromTarget(rzpParent, null)
 						.setFollowToTarget(pnl, null)
 						.setUseFollowToPosZ()

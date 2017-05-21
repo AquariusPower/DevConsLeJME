@@ -52,13 +52,16 @@ public interface IEffect<THIS extends IEffect>{
 	 * @param sptOwner
 	 * @return
 	 */
-	THIS setOwner(Spatial sptOwner);
+//	THIS setOwner(Spatial sptOwner);
 	
 	THIS setColor(ColorRGBA colorRef);
 
 	THIS setFromTo(Vector3f v3fFrom, Vector3f v3fTo);
 
-	THIS setNodeParent(Node node);
+	/**
+	 * where the effect geometry will be attached, can be initially null
+	 */
+	THIS setNodeParentest(Node node);
 
 	Node getNodeParent();
 	
@@ -83,7 +86,7 @@ public interface IEffect<THIS extends IEffect>{
 	
 	public void play(float tpf);
 	
-	public Object getOwner();
+//	public Object getOwner();
 	
 	public THIS setSkipDiscardingByOwner();
 

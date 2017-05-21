@@ -374,7 +374,9 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 		Long l = null;if(astr.size()>0){try{l = Long.parseLong(astr.get(0));}catch(NumberFormatException|IndexOutOfBoundsException ex){};}
 		return l;
 	}
+	
 	private enum ERunMode{Debug,Release,Undefined,;}
+	
 	private ERunMode getLockRunModeOfTD(File fl){ //LINE 2
 		ArrayList<String> astr = fileLoad(fl);
 		try{return ERunMode.valueOf(astr.get(1));}catch(IllegalArgumentException|IndexOutOfBoundsException e){}

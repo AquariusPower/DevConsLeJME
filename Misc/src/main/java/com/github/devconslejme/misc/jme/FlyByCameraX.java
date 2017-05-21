@@ -28,15 +28,18 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 
+import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.jme3.app.Application;
 import com.jme3.collision.MotionAllowedListener;
 import com.jme3.input.CameraInput;
 import com.jme3.input.FlyByCamera;
+import com.jme3.input.InputManager;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.math.Vector3f;
@@ -178,7 +181,16 @@ public class FlyByCameraX extends FlyByCamera {
 			
 		}.enableLoopMode());
 		
-		setEnabled(!isEnabled());setEnabled(isEnabled()); //trick to setup more things
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				update(getTPF());
+				return true;
+			}
+		}.enableLoopMode().setDelaySeconds(0.5f).setName("EnsureMouseGrab"));
+		
+		setEnabledRaw(isEnabled()); //to initially set it properly
+//		setEnabled(!isEnabled());setEnabled(isEnabled()); //trick to setup more things
 	}
 	
 	@Override
@@ -201,6 +213,7 @@ public class FlyByCameraX extends FlyByCamera {
 	}
 	
 	private float fAcceleration=0.1f;
+	private InputManager	inputman;
 	
 	@Override
 	protected void riseCamera(float value) {
@@ -241,17 +254,60 @@ public class FlyByCameraX extends FlyByCamera {
 		if(bOverrideKeepFlyCamDisabled && bEnable==true)return;
 		
 		if(isEnabled()!=bEnable){
-			super.setEnabled(bEnable); //the super will also show the cursor but not hide it back!
-			
-			QueueI.i().enqueue(new CallableXAnon() {
-				@Override
-				public Boolean call() {
-					if(G.i(Application.class)==null)return false;
-					G.i(Application.class).getInputManager().setCursorVisible(!bEnable);
-					return true;
-				}
-			});
+			setEnabledRaw(bEnable);
 		}
+	}
+	
+	/**
+	 * no other checks will be performed here
+	 * @param bEnable
+	 */
+	protected void setEnabledRaw(boolean bEnable) {
+		super.setEnabled(bEnable); //the super will also show the cursor but not hide it back!
+		
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				if(getInputman()==null)return false;
+				setEnabledRawTrick(bEnable);
+				return true;
+			}
+		});
+	}
+	
+	@Workaround
+	protected void setEnabledRawTrick(boolean bEnable){
+		/**
+		 * Inversed request first!
+		 * this trick is required to grant the cursor visibility state will
+		 * actually be modified/applied/changed, otherwise it would be ignored as 
+		 * the internal boolean would not have changed!
+		 */
+		getInputman().setCursorVisible(bEnable);
+		
+		// apply requested state
+		getInputman().setCursorVisible(!bEnable);
+	}
+
+	protected InputManager getInputman(){
+		if(inputman==null){
+			if(G.i(Application.class)!=null){
+				inputman=G.i(Application.class).getInputManager();
+			}
+		}
+		return inputman;
+	}
+	
+//	TimedDelay td=new TimedDelay(0.5f,"update mouse grab").setActive(true);
+	
+	public void update(float fTPF){
+//		if(td.isReady(true)){
+//		if(isEnabled() && getInputman().isCursorVisible()){
+			if(isEnabled() && EnvironmentJmeI.i().getMouse().isCursorVisible()){
+				//this is useful when debugging thru IDE that has an watch evaluation to ungrab the mouse directly thru lwjgl
+				setEnabledRaw(true); //to grant it is properly set
+			}
+//		}
 	}
 
 	public boolean isOverrideKeepFlyCamDisabled() {

@@ -27,6 +27,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.github.devconslejme.misc.jme;
 
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.debug.Arrow;
 
 
@@ -53,5 +54,5 @@ public class EffectArrow extends EffectBaseAbs<EffectArrow>{
 		getGeom().setLocalScale(0.025f, 0.025f, 1f);
 		getGeom().lookAt(getLocationTo(), Vector3f.UNIT_Y);
 	}
-	
+
 }

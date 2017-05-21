@@ -79,6 +79,7 @@ public class PopupHintHelpListenerI implements CursorListener{
 			return JavaLangI.i().enumUId(this);
 		}
 	}
+	
 	private Label	lblPopupHelp;
 	private String	strPopupHelp;
 	private Node	nodeGui;

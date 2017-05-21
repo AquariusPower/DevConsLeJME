@@ -313,7 +313,8 @@ public class DebugVisualsI {
 		//TODO if it was already created, could just modify it?
 		if (bv instanceof BoundingBox) {
 			BoundingBox bb = (BoundingBox) bv;
-			if(nd.geombv==null || !bb.getExtent(null).equals(nd.geombv.getTargetBB().getExtent(null))){
+//			if(nd.geombv==null || !bb.getExtent(null).equals(nd.geombv.getTargetBB().getExtent(null))){
+			if(nd.geombv==null || !bb.getExtent(null).equals(((BoundingBox)nd.geombv.getWorldBound()).getExtent(null))){
 				geomBoundNew = GeometryI.i().create(new Box(bb.getXExtent(),bb.getYExtent(),bb.getZExtent()), 
 					color, false,	createGeomBVolDbg(sptTarget) );
 //				bCreating=true;
@@ -322,7 +323,8 @@ public class DebugVisualsI {
 		}else
 		if (bv instanceof BoundingSphere) {
 			BoundingSphere bs = (BoundingSphere) bv;
-			if(nd.geombv==null || bs.getRadius()!=nd.geombv.getTargetBS().getRadius()){
+//			if(nd.geombv==null || bs.getRadius()!=nd.geombv.getTargetBS().getRadius()){
+			if(nd.geombv==null || bs.getRadius()!=((BoundingSphere)nd.geombv.getWorldBound()).getRadius()){
 				geomBoundNew = GeometryI.i().create(MeshI.i().sphere(bs.getRadius()), 
 					color, false, createGeomBVolDbg(sptTarget));
 //				bCreating=true;

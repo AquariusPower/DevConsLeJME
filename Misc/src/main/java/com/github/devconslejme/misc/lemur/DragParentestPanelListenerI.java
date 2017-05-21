@@ -95,7 +95,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 			this.nodeGui=nodeGui;
 			EffectManagerStateI.i().add(efDisplaced);
 			efDisplaced.setFollowToMouse(true);
-			efDisplaced.setNodeParent(nodeGui);
+			efDisplaced.setNodeParentest(nodeGui);
 			ColorRGBA color = ColorI.i().colorChangeCopy(ColorRGBA.Blue, 0f, 1f);
 			efDisplaced.setColor(color);
 //			indicatorFrom = IndicatorI.i().createIndicator(ColorI.i().colorChangeCopy(ColorRGBA.Green, 0f, 0.5f));
