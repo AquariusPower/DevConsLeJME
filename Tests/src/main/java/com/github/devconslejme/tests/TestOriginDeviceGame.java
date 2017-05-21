@@ -602,7 +602,8 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 		private EffectElectricity prepareEffElec(ColorRGBA color) {
 			EffectElectricity ef = new EffectElectricity();
 			ef.setColor(color);
-			ef.setAmplitudePerc(0.025f);
+			ef.setAmplitudePerc(0.25f);
+//			ef.setAmplitudePerc(0.025f);
 			ef.getElectricalPath().setMinMaxPerc(0.05f, 0.1f);
 			ef.setFromTo(new Vector3f(),new Vector3f()).setPlay(true); //just to allow started
 			EffectManagerStateI.i().add(ef);
@@ -633,23 +634,21 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 		
 		protected void updatePet(float fTPF,NodeAxisGm nodePet, TimedDelay td) {
 			if(true){ //TODO false
-			bPetUnstableDist=false;
-			bPetOrbit=false;
-			bPetSpin=false;
-			bPetScale=false;
-			nodePet.attachChild(nodePet.getNodeGeometries());
+				bPetUnstableDist=false;
+				bPetOrbit=false;
+				bPetSpin=false;
+				bPetScale=false;
+				if(nodePet.getParent()==null)this.getParent().attachChild(nodePet);
 			}
 			
 			if(false) //TODO rm
 			{
-			if(isUnstable()){
-				if(nodePet.getNodeGeometries().getParent()==null){
-					nodePet.attachChild(nodePet.getNodeGeometries());
+				if(isUnstable()){
+					if(nodePet.getParent()==null)this.getParent().attachChild(nodePet);
+				}else{
+					if(nodePet.getParent()!=null)nodePet.removeFromParent();
+					return;
 				}
-			}else{
-				nodePet.getNodeGeometries().removeFromParent();
-				return;
-			}
 			}
 			
 			///////////////// rotate around Orde
@@ -692,7 +691,7 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 			}
 			
 			/////////////  pet distance
-			Vector3f v3fDir = nodePet.getLocalTranslation().normalize(); //is child of Orde, the dist is relative
+			Vector3f v3fDir = nodePet.getLocalTranslation().subtract(this.getLocalTranslation());
 			if(v3fDir.length()==0){
 				v3fDir=RotateI.i().randomDirection();
 				//TODO fix the initial rotation too

@@ -38,19 +38,15 @@ import com.jme3.math.Vector3f;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class ElectricalPath {
-	private ArrayList<Vector3f>	av3fList  = new ArrayList<Vector3f>() {};
+	private ArrayList<Vector3f>	av3fList  = new ArrayList<Vector3f>();
 	private long	lHoldUntilMilis;
-	private int iPartMaxDots=100;
-	private float	fPartMinPerc=0.20f; // max of 5 parts
-	private float	fPartMaxPerc=1.00f;
-//	private float fDeltaPerc = fPartMaxPerc-fPartMinPerc;
+	private float	fPartMinPerc=1f/5f; // max of 5 parts
+	private float	fPartMaxPerc=1f/3f; // min of 3 parts
 	private int	iMaxHoldMilis = 1000;
 	private Vector3f	v3fHoldPreviousFrom=new Vector3f();
 	private Vector3f	v3fHoldPreviousTo=new Vector3f();
 	private long	lTimeMilis;
 	private boolean	bUseRealTime = false;
-//	private int	iMinPathParts=3;
-//	private int	iMaxPathParts=-1;
 	
 	public Vector3f getHoldPreviousFrom() {
 		return v3fHoldPreviousFrom;
@@ -89,17 +85,17 @@ public class ElectricalPath {
 			float fAmplitudePerc
 	) {
 		updateTime(fTPF);
-		Vector3f v3fTargetSpot=v3fTo.clone();
+		v3fTo=v3fTo.clone();
 		
-		int iPartMaxDotsCurrent = iPartMaxDots;
-		int iDotsMaxDist = (int) v3fFrom.distance(v3fTargetSpot);
-		if(iDotsMaxDist<iPartMaxDots)iPartMaxDotsCurrent=iDotsMaxDist;
+		int iMaxParts = (int) FastMath.ceil(1f/fPartMinPerc);
+		Vector3f v3fTotalDist = v3fTo.subtract(v3fFrom);
+		float fTotalDist = v3fTotalDist.length();//v3fFrom.distance(v3fTo);
+		float fMinPartDist = fTotalDist*fPartMinPerc;
+		float fMaxPartDist = fTotalDist*fPartMaxPerc;
 		
-		Vector3f v3fDirectionNormalized = v3fTargetSpot.subtract(v3fFrom).normalize();
-		Vector3f v3fRelativePartStepMaxPos = v3fDirectionNormalized.mult(iPartMaxDotsCurrent);
-		float fMinDotsLength = (int) (iPartMaxDotsCurrent*fPartMinPerc);
-//		if(iMinDotsLength==0)iMinDotsLength=1;
-		int iMaxAllowedParts = (int) (iDotsMaxDist/fMinDotsLength);
+//		Vector3f v3fDir = v3fTo.subtract(v3fFrom).normalize();
+//		Vector3f v3fDir = v3fTotalDist.normalize();
+//		Vector3f v3fRelativePartMaxPos = v3fDir.mult(fMaxPartDist);
 		
 		boolean bUpdate=false;
 		float fMaxMoveDetectDist=0.01f;
@@ -126,29 +122,32 @@ public class ElectricalPath {
 		while(true){
 			// move a bit towards the end
 			Vector3f v3fPartEnd = new Vector3f(v3fPartStart);
-			float fPerc = fPartMinPerc + (FastMath.nextRandomFloat() * getDeltaPerc());
-			v3fPartEnd.interpolateLocal(v3fPartEnd.add(v3fRelativePartStepMaxPos), fPerc);
+			float fPerc = fPartMinPerc + (FastMath.nextRandomFloat() * (fPartMaxPerc-fPartMinPerc));
+			v3fPartEnd.interpolateLocal(v3fPartEnd.add(v3fTotalDist), fPerc);
+//			float fPerc = fPartMinPerc + (FastMath.nextRandomFloat() * getDeltaPerc());
+//			v3fPartEnd.interpolateLocal(v3fPartEnd.add(v3fRelativePartMaxPos), fPerc);
 			
 			// random coolness missplacement
-			float fDots=iPartMaxDotsCurrent*fAmplitudePerc;
-			v3fPartEnd.x+=((FastMath.nextRandomFloat()*2f)-1f)*fDots;
-			v3fPartEnd.y+=((FastMath.nextRandomFloat()*2f)-1f)*fDots;
-			v3fPartEnd.z+=((FastMath.nextRandomFloat()*2f)-1f)*fDots;
+			float fMaxMissplaceDist=fMinPartDist*fAmplitudePerc;
+			v3fPartEnd.x+=((FastMath.nextRandomFloat()*2f)-1f)*fMaxMissplaceDist;
+			v3fPartEnd.y+=((FastMath.nextRandomFloat()*2f)-1f)*fMaxMissplaceDist;
+			v3fPartEnd.z+=((FastMath.nextRandomFloat()*2f)-1f)*fMaxMissplaceDist;
 			
-			int iDotsCurrentDist = (int) v3fFrom.distance(v3fPartEnd);
 			boolean bBreak = false;
-			if(!bBreak && av3fList.size()==iMaxAllowedParts-1){
-				MessagesI.i().debugInfo(this,"max parts reached, is the code well implemented?");//,getUId());
-				bBreak=true; //max parts reached 
+			if(!bBreak && v3fFrom.distance(v3fPartEnd)>fTotalDist)bBreak=true; //max distance reached 
+//			if(!bBreak && av3fList.size()==iMaxParts-1){
+			if(!bBreak && av3fList.size()==iMaxParts){
+				MessagesI.i().warnMsg(this,"max parts reached before reaching the total distance, is the code well implemented?");
+				bBreak=true; //max parts reached break for "quality" 
 			}
-			if(!bBreak && (iDotsCurrentDist>=iDotsMaxDist))bBreak=true; //max parts reached 
-			if(bBreak){
-				v3fPartEnd=v3fTargetSpot.clone();
-			}
+			
+			if(bBreak)v3fPartEnd=v3fTo.clone();
 			
 			av3fList.add(v3fPartEnd.clone());
 			
-			if(bBreak)break;
+			if(bBreak){
+				break;
+			}
 			
 			v3fPartStart = v3fPartEnd.clone();
 		}
@@ -209,20 +208,6 @@ public class ElectricalPath {
 	public ElectricalPath setUseRealTime(boolean bUseRealTime) {
 		this.bUseRealTime = bUseRealTime;
 		return this;
-	}
-
-//	public void setPathParts(int iMin, int iMax) {
-//		this.iMinPathParts=iMin;
-//		this.iMaxPathParts=iMax;
-//	}
-
-	public int getPartMaxDots() {
-		return iPartMaxDots;
-	}
-
-	public ElectricalPath setPartMaxDots(int iPartMaxDots) {
-		this.iPartMaxDots = iPartMaxDots;
-		return this; //for beans setter
 	}
 
 	public float getPartMinPerc() {

@@ -408,6 +408,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	}
 	/** @DevSelfNote keep even if emtpy */ 
 	public void updateDebugTest(float fTPF){
+		if(aobjDebugTest==null)return;
 		Geometry geom = ((Geometry)aobjDebugTest[0]);
 		if(false)
 			geom.setLocalTranslation(3,1,0);
