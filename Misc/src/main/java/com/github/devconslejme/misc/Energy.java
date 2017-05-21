@@ -159,6 +159,10 @@ public class Energy {
 	public float getPerc() {
 		return (float) (lStoredEnergy / (double)lEnergyCapacity); 
 	}
+	/**
+	 * perc beyond 100%
+	 * @return
+	 */
 	public float getUnstablePerc() {
 		float f = getPerc()-1f;
 		return fEnerUnstablePerc = f>=0 ? f : 0;

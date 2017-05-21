@@ -366,7 +366,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 				i++;
 			}
 		}
-		msgOutputTD("Problems found: "+i);
+		msgOutputTD("Non obvious problems found: "+i);
 	}
 	
 	private Long getCreationTimeOfTD(File fl){ //LINE 1

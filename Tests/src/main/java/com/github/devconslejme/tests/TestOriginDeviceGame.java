@@ -655,10 +655,16 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 		
 		protected void updatePet(float fTPF,NodeAxisGm nodePet, TimedDelay td) {
 			if(!isUnstable())return;
-//			if(energy.getPerc()<=1f)return;
 			
 			///////////// pull/push the pet
 			float fDist = nodePet.getLocalTranslation().length(); //is child of Orde, the dist is relative
+			assert(!Float.isInfinite(fDist));
+			assert(!Float.isNaN(fDist));
+//			if(fDist==0 || Float.isFinite(fDist) || Float.isNaN(fDist))fDist=getPetMaxDist();
+			if(fDist==0 || fDist>getPetMaxDist()){
+				fDist=getPetMaxDist();
+				nodePet.setLocalTranslation(fDist,0,0);
+			}
 			float fDistPerc = fDist/getPetMaxDist();
 			
 			consumeEnergyPF(EEnergyConsumpWpM.PetFlyExpelsEnergy,energy.getUnstablePerc()/3f); //3f is just to last more, then ending lasts 5 full loops this way, no "real" energy reason tho..
@@ -669,29 +675,18 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 			// the new perc position will be relative to the current perc distance
 			float fNewRelativePerc = fEnerUnstablePercLimited/fDistPerc;
 			
-//			if(false)
 			nodePet.setLocalTranslation(
-				new Vector3f().interpolateLocal( //from world origin
+				new Vector3f().interpolateLocal( //from Orde origin
 					nodePet.getLocalTranslation(), 
 					fNewRelativePerc
-				).divide(nodePet.getLocalScale())
+				)
+				//.divide(nodePet.getLocalScale())
 			);
 			
 			nodePet.setLocalScale(fEnerUnstablePercLimited);
 			
 			///////////////// rotate around Orde
 			Vector3f v3fNodeUp = nodePet.getLocalRotation().getRotationColumn(1);//y
-//			float f=0.25f*FastMath.nextRandomFloat();
-//			if(td.isReady(true)){
-////				fMult=FastMath.nextRandomFloat()*4f;
-//				v3fNodeUp = RotateI.i().randomDirection();
-//////			}else{
-//////				v3fNodeUp.addLocal(Vector3f.UNIT_X.mult(0.25f));
-//////				float fDirSpeed=100;
-//////				v3fNodeUp = RotateI.i().rotateVector(v3fNodeUp, 
-//////					nodePet.getLocalRotation().getRotationColumn(0), 
-//////					(fDirSpeed*fTPF)*FastMath.DEG_TO_RAD);
-//			}
 			if(td.isReady(true)){
 				nodePet.getV3fAdd().set(
 						FastMath.nextRandomInt(0,1),
@@ -701,31 +696,13 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 			
 			float f=0.25f;
 			float fRotSpeed=250f;
-//			Vector3f v3fAdd = null;
-//			switch(nodePet.ea){
-//				case X:
-////					v3fAdd=Vector3f.UNIT_X;
-//					break;
-//				case Y:
-//					f+=0.1f;
-//					fRotSpeed*=1.1f;
-////					v3fAdd=Vector3f.UNIT_Y;
-//					break;
-//				case Z:
-//					f+=0.2f;
-//					fRotSpeed*=1.2f;
-////					v3fAdd=Vector3f.UNIT_Z;
-//					break;
-//			}
 			v3fNodeUp.addLocal(nodePet.getV3fAdd().mult(f));//.normalizeLocal();
-//			if(false)
 			RotateI.i().rotateAroundPivot(nodePet, this, -(fRotSpeed*fTPF)*FastMath.DEG_TO_RAD,	v3fNodeUp, false);
 			
 			////////////////// spin around self
 			Quaternion qua = nodePet.getNodeGeometries().getLocalRotation().clone();
 			Vector3f v3fGeomUp = qua.getRotationColumn(1); //y
 			float fSpinSpeed=500f;
-//			if(false)
 			RotateI.i().rotateSpinning(
 				nodePet.getNodeGeometries(),
 				v3fGeomUp,
