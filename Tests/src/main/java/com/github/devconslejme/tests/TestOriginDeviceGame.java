@@ -28,11 +28,9 @@ package com.github.devconslejme.tests;
 
 import java.util.ArrayList;
 
-import com.github.devconslejme.devcons.JavaScriptI;
 import com.github.devconslejme.devcons.LoggingI;
 import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.ToDo;
-import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.CalcI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
@@ -60,7 +58,6 @@ import com.github.devconslejme.misc.jme.WorldPickingI;
 import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
 import com.github.devconslejme.projman.SimpleAppStateAbs;
 import com.github.devconslejme.tests.TestDevCons.GeometryVolDbg;
-import com.jme3.app.Application;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
@@ -75,8 +72,6 @@ import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Sphere;
-import com.simsilica.lemur.GuiGlobals;
-import com.simsilica.lemur.style.BaseStyles;
 
 /**
  * Improve with fancyness (shaders, lighting, shadows, sfx and voices hehe).
@@ -87,8 +82,8 @@ import com.simsilica.lemur.style.BaseStyles;
  */
 public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickListener{
 	public static void main(String[] args) {
-		TestOriginDeviceGame test = new TestOriginDeviceGame();
-		test.start();
+		TestDevCons.main(args); //TODO rm
+		if(false){TestOriginDeviceGame test = new TestOriginDeviceGame();test.start();}//TODO re-enable
 	}
 
 	private OriginDeviceMonster	orde;
@@ -216,54 +211,69 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 		 * so 1^3 = 100*100*100 w/ms
 		 */
 		private EnergyJme energy;
-		
 		private EffectElectricity	efElec;
 		private TimedDelay	tdEffectRetarget;
-		private float	fRetargetDefaultDelay=3;
 		private ArrayList<NodeAxis> anodeMainShapes;
 		private ArrayList<NodeAxis> anodeElectricShapesList;
-//		private Node	nodeBase = new Node(OriginDevice.class.getSimpleName());
-		private Integer	iMaxHoldMilisBkp = null;
-//		private Integer	iThicknessBkp = null;
-		private float fRadius;
-		private int	iCS;
-		private int	iRS;
-		private Vector3f	v3fBaseSpeed=new Vector3f(1,1,1).mult(0.0025f);
+		private Integer	iMaxHoldMilisBkp;
 		private NodeAxis	nodeSelfElectrocute;
-		private float	fIR=0.1f;
-		private float	fRotTorOpac=0.15f;
-//		private Vector3f v3fSpeed=new Vector3f();
 		private NodeAxis	nodeElectricA;
 		private NodeAxis	nodeElectricB;
-//		private NodeAxis	nodeElectricSrc;
-//		private boolean	bUnstable;
-		private ERotMode erm = ERotMode.Disaligned;
 		private Spatial	sptTarget;
-//		private NodeAxis	nodeaxisUserChosen;
 		private boolean	bSameAxis;
-//		private ETargetMode esm = ETargetMode.JustStay;
-		private ETargetMode esm = ETargetMode.MoveOver;
-//		private float	fInitialDistToSrc;
-		private float	fMoveBaseSpeed=0.01f;
-//		private boolean	bUpdateElectricalEffectForNewSourceOnce;
 		private boolean	bDestroySpatials;
 		private boolean	bAutoTargetNearestSpatials;
-		private boolean	bRequireTargetsToken=true;
-		private float	fTPF;
 		private NodeAxis	nodeEnergyCore;
-//		private float	fPseudoDiameter;
-		private float	fTractionForceBasedOnDiameterMult = 3f;
 		private float	fMaxTractionDist;
-		private float	fSafeMinDist=0.1f;
 		private float	fEnergyCoreRadius;
 		private EffectArrow	efHook;
-		private float	fPetMaxRadiusPercDist=1.1f;
+		private Spatial	sptUserChosenTarget;
+		private Spatial	sptForceAbsorption;
+		private float	fPetMaxRadiusPercDist;
+		private float	fSafeMinDist;
+		private float	fTractionForceBasedOnDiameterMult;
+		private ETargetMode esm;
+		private float	fRetargetDefaultDelay;
+		private ERotMode erm;
+		private float	fMoveBaseSpeed;
+		private String strMsgError;
+		private boolean	bPetSpin;
+		private boolean	bPetOrbit;
+		private boolean	bPetUnstableDist;
+		private boolean	bRequireTargetsToken;
+		private boolean	bPetScale;
+
+		@Deprecated	@Override	public void lookAt(Vector3f position, Vector3f upVector) {		throw new UnsupportedOperationException(strMsgError);	}
+		@Deprecated	@Override	public void setLocalRotation(Matrix3f rotation) {		throw new UnsupportedOperationException(strMsgError);	}
+		@Deprecated @Override	public void setLocalRotation(Quaternion quaternion) {		throw new UnsupportedOperationException("method not implemented");	}
+		@Deprecated	@Override	public Spatial rotate(float xAngle, float yAngle, float zAngle) {		throw new UnsupportedOperationException(strMsgError);	}
+		@Deprecated @Override	public Spatial rotate(Quaternion rot) {		throw new UnsupportedOperationException(strMsgError);	}
+		@Deprecated @Override	public void rotateUpTo(Vector3f newUp) {		throw new UnsupportedOperationException(strMsgError);	}
 		
 		@Override
 		public NodeAxisGm createNodeAxis(String strName) {
 			return new NodeAxisGm(strName);
 		}
 		
+		@Override
+		protected void constructorPreInitFields() {
+			super.constructorPreInitFields();
+			
+			bPetSpin=true;
+			bPetOrbit =true;
+			bPetUnstableDist=true;
+			bPetScale=true;
+			
+			bRequireTargetsToken=true;
+			fPetMaxRadiusPercDist=1.1f;
+			fSafeMinDist=0.1f;
+			fTractionForceBasedOnDiameterMult = 3f;
+			esm = ETargetMode.MoveOver;
+			fRetargetDefaultDelay=3;
+			erm = ERotMode.Disaligned;
+			fMoveBaseSpeed=0.01f;
+			strMsgError="The origin rotation must not be modified as it is a world reference.";
+		}
 		public OriginDeviceMonster(){
 			super();
 		}
@@ -481,21 +491,6 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 			}
 		}
 		
-		
-		String strMsgError="The origin rotation must not be modified as it is a world reference.";
-
-		private EffectElectricity	setFollowToTarget;
-
-		private Spatial	sptUserChosenTarget;
-
-		private Spatial	sptForceAbsorption;
-		@Deprecated	@Override	public void lookAt(Vector3f position, Vector3f upVector) {		throw new UnsupportedOperationException(strMsgError);	}
-		@Deprecated	@Override	public void setLocalRotation(Matrix3f rotation) {		throw new UnsupportedOperationException(strMsgError);	}
-		@Deprecated @Override	public void setLocalRotation(Quaternion quaternion) {		throw new UnsupportedOperationException("method not implemented");	}
-		@Deprecated	@Override	public Spatial rotate(float xAngle, float yAngle, float zAngle) {		throw new UnsupportedOperationException(strMsgError);	}
-		@Deprecated @Override	public Spatial rotate(Quaternion rot) {		throw new UnsupportedOperationException(strMsgError);	}
-		@Deprecated @Override	public void rotateUpTo(Vector3f newUp) {		throw new UnsupportedOperationException(strMsgError);	}
-		
 		public long calcEnergyToDisintegrate(Spatial spt){
 			return (long) (calcEnergyPF(EEnergyConsumpWpM.Disintegrate)*spt.getWorldBound().getVolume());
 		}
@@ -622,93 +617,102 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 			// Orde's pet
 			anodeElectricShapesList.add(nodePet);
 			nodePet.getGeomWireFrame().setMaterial(ColorI.i().retrieveMaterialUnshadedColor(ColorRGBA.Cyan));
+			nodePet.getGeomWireFrame().getMaterial().getAdditionalRenderState().setWireframe(true);
 			nodePet.rotateUpTo(Vector3f.UNIT_Y); //undo the axis default
-			//TODO as the material changed, shouldnt this be required????	node.geomWireFrame.getMaterial().getAdditionalRenderState().setWireframe(true);
-			fixGeomToNotBeWireFrame(nodePet.getGeom());
 				
 			QueueI.i().enqueue(new CallableXAnon() {
 				@Override
 				public Boolean call() {
 					if(getParent()==null)return false;
-					
-					if(isUnstable()){
-						if(nodePet.getNodeGeometries().getParent()==null)nodePet.attachChild(nodePet.getNodeGeometries());
-						updatePet(getTPF(),nodePet,td);
-					}else{
-						nodePet.getNodeGeometries().removeFromParent();
-					}
-					
+					updatePet(getTPF(),nodePet,td);
 					return true;
 				}
 			}).enableLoopMode();//.setDelaySeconds(0.1f);//.setInitialDelay(10));
 		}
 		
-		/**
-		 * TODO my fault? the main geometry was not set as it but is becoming wireframe...
-		 * @param geom
-		 */
-		@Bugfix
-		@ToDo //because can be my fault
-		private void fixGeomToNotBeWireFrame(Geometry geom) {
-			geom.getMaterial().getAdditionalRenderState().setWireframe(false);	
-		}
-		
 		protected void updatePet(float fTPF,NodeAxisGm nodePet, TimedDelay td) {
-			if(!isUnstable())return;
-			
-			///////////// pull/push the pet
-			float fDist = nodePet.getLocalTranslation().length(); //is child of Orde, the dist is relative
-			assert(!Float.isInfinite(fDist));
-			assert(!Float.isNaN(fDist));
-//			if(fDist==0 || Float.isFinite(fDist) || Float.isNaN(fDist))fDist=getPetMaxDist();
-			if(fDist==0 || fDist>getPetMaxDist()){
-				fDist=getPetMaxDist();
-				nodePet.setLocalTranslation(fDist,0,0);
+			if(true){ //TODO false
+			bPetUnstableDist=false;
+			bPetOrbit=true;
+			bPetSpin=false;
+			bPetScale=false;
+			nodePet.attachChild(nodePet.getNodeGeometries());
 			}
-			float fDistPerc = fDist/getPetMaxDist();
+			
+			if(false) //TODO rm
+			{
+			if(isUnstable()){
+				if(nodePet.getNodeGeometries().getParent()==null){
+					nodePet.attachChild(nodePet.getNodeGeometries());
+				}
+			}else{
+				nodePet.getNodeGeometries().removeFromParent();
+				return;
+			}
+			}
+			
+			///////////////// rotate around Orde
+			if(bPetOrbit){
+				Vector3f v3fNodeUp = nodePet.getLocalRotation().getRotationColumn(1);//y
+				boolean bIrregular=false; //TODO true
+				if(bIrregular){
+					if(td.isReady(true)){
+						nodePet.getV3fAdd().set(
+								FastMath.nextRandomInt(0,1),
+								FastMath.nextRandomInt(0,1),
+								FastMath.nextRandomInt(0,1));
+					}
+					
+					boolean bIrregular2=false; //TODO true
+					if(bIrregular2){
+						float f=0.25f;
+						v3fNodeUp.addLocal(nodePet.getV3fAdd().mult(f));//.normalizeLocal();
+					}
+				}
+				float fRotSpeed=250f;
+				RotateI.i().rotateAroundPivot(
+						nodePet, 
+						this, 
+						-(fRotSpeed*fTPF)*FastMath.DEG_TO_RAD,	
+						v3fNodeUp, 
+						true);
+			}
+			
+			////////////////// spin around self
+			if(bPetSpin){
+				Quaternion qua = nodePet.getNodeGeometries().getLocalRotation().clone();
+				Vector3f v3fGeomUp = qua.getRotationColumn(1); //y
+				float fSpinSpeed=500f;
+				RotateI.i().rotateSpinning(
+					nodePet.getNodeGeometries(),
+					v3fGeomUp,
+					qua.getRotationColumn(2),
+					(fSpinSpeed*fTPF)*FastMath.DEG_TO_RAD
+				);
+			}
+			
+			/////////////  pet distance
+			Vector3f v3fDir = nodePet.getLocalTranslation().normalize(); //is child of Orde, the dist is relative
+			if(v3fDir.length()==0){
+				v3fDir=RotateI.i().randomDirection();
+				//TODO fix the initial rotation too
+			}
+			
+			float fPercDist = bPetUnstableDist ? energy.getUnstablePerc() : 1f;
+			if(fPercDist>1f)fPercDist=1f; //so the max dist will be at max for a 200% energy
+			
+			Vector3f v3fDist = v3fDir.mult(fPercDist*getPetMaxDist());
+			
+			nodePet.setLocalTranslation(v3fDist);
 			
 			consumeEnergyPF(EEnergyConsumpWpM.PetFlyExpelsEnergy,energy.getUnstablePerc()/3f); //3f is just to last more, then ending lasts 5 full loops this way, no "real" energy reason tho..
 			
-			float fEnerUnstablePercLimited=energy.getUnstablePerc();
-			if(fEnerUnstablePercLimited>1f)fEnerUnstablePercLimited=1f; //so the max dist will be at max for a 200% energy
-			
-			// the new perc position will be relative to the current perc distance
-			float fNewRelativePerc = fEnerUnstablePercLimited/fDistPerc;
-			
-			nodePet.setLocalTranslation(
-				new Vector3f().interpolateLocal( //from Orde origin
-					nodePet.getLocalTranslation(), 
-					fNewRelativePerc
-				)
-				//.divide(nodePet.getLocalScale())
-			);
-			
-			nodePet.setLocalScale(fEnerUnstablePercLimited);
-			
-			///////////////// rotate around Orde
-			Vector3f v3fNodeUp = nodePet.getLocalRotation().getRotationColumn(1);//y
-			if(td.isReady(true)){
-				nodePet.getV3fAdd().set(
-						FastMath.nextRandomInt(0,1),
-						FastMath.nextRandomInt(0,1),
-						FastMath.nextRandomInt(0,1));
+			//////////// scaled based on unstability
+			if(bPetScale){
+				float fPercScale = energy.getUnstablePerc();
+				if(fPercScale>1f)fPercScale=1f; //so the max dist will be at max for a 200% energy
+				nodePet.setLocalScale(fPercScale);
 			}
-			
-			float f=0.25f;
-			float fRotSpeed=250f;
-			v3fNodeUp.addLocal(nodePet.getV3fAdd().mult(f));//.normalizeLocal();
-			RotateI.i().rotateAroundPivot(nodePet, this, -(fRotSpeed*fTPF)*FastMath.DEG_TO_RAD,	v3fNodeUp, false);
-			
-			////////////////// spin around self
-			Quaternion qua = nodePet.getNodeGeometries().getLocalRotation().clone();
-			Vector3f v3fGeomUp = qua.getRotationColumn(1); //y
-			float fSpinSpeed=500f;
-			RotateI.i().rotateSpinning(
-				nodePet.getNodeGeometries(),
-				v3fGeomUp,
-				qua.getRotationColumn(2),
-				(fSpinSpeed*fTPF)*FastMath.DEG_TO_RAD
-			);
 		}
 		
 		private void updateCheckGrowShrink() {
@@ -796,6 +800,8 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 				
 				tdEffectRetarget.resetAndChangeDelayTo(fRetargetDefaultDelay*FastMath.nextRandomFloat()).setActive(true);
 				
+				ArrayList<NodeAxis> aelecVis = getVisibleElectricShapes();
+				
 				int iA=-1;
 				nodeElectricA = null;
 				Vector3f v3fWorldA = null;
@@ -806,15 +812,15 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 //					if(iA>-1)nodeElectricA=(NodeAxis) sptElectricSrc;
 					v3fWorldA = sptTarget.getWorldTranslation();
 				}else{
-					iA=FastMath.nextRandomInt(0, anodeElectricShapesList.size()-1);
-					nodeElectricA = anodeElectricShapesList.get(iA);
+					iA=FastMath.nextRandomInt(0, aelecVis.size()-1);
+					nodeElectricA = aelecVis.get(iA);
 					v3fWorldA = nodeElectricA.getWorldTranslation();
 				}
 				
 //				bSameAxis = (nodeElectricA!=null && nodeElectricB!=null && nodeElectricA.ea==nodeElectricB.ea);
 				
-				int iB=FastMath.nextRandomInt(0, anodeElectricShapesList.size()-1);
-				nodeElectricB = anodeElectricShapesList.get(iB);
+				int iB=FastMath.nextRandomInt(0, aelecVis.size()-1);
+				nodeElectricB = aelecVis.get(iB);
 				if(iA!=iB){
 					efElec.setFromTo(v3fWorldA,nodeElectricB.getWorldTranslation());
 //					efHook.setFromTo(v3fWorldA,nodeElectricB.getWorldTranslation());
@@ -848,6 +854,14 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 			}
 			
 			bSameAxis = (nodeElectricA!=null && nodeElectricB!=null && nodeElectricA.getEAxis()==nodeElectricB.getEAxis());
+		}
+		
+		protected ArrayList<NodeAxis> getVisibleElectricShapes(){
+			ArrayList<NodeAxis> anode = new ArrayList<NodeAxis>();
+			for(NodeAxis node:anodeElectricShapesList){
+				if(node.getParent()!=null)anode.add(node);
+			}
+			return anode;
 		}
 		
 		protected NodeAxisGm electricNodeFor(Spatial spt) {

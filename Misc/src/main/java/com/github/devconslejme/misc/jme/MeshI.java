@@ -56,7 +56,8 @@ public class MeshI {
 	private boolean	bDebug;
 	
 	/**
-	 * tip at Z=0
+	 * origin 0,0,0 at mesh's center
+	 * cone tip at Z=0.5f
 	 */
 	public static class Cone extends Cylinder{
 		static float fRadius1Default=0.01f;//TODO can be 0f?

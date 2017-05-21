@@ -52,13 +52,13 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 	private float fRadius;
 	private int	iCS;
 	private int	iRS;
-	private Vector3f	v3fBaseSpeed=new Vector3f(1,1,1).mult(0.0025f);
-	private float	fIR=0.1f;
-	private float	fRotTorOpac=0.15f;
-	private Vector3f v3fSpeed=new Vector3f();
 	private float	fTPF;
-	private boolean bEnabled=false;
 	private Node	nodeLastParent;
+	private boolean bEnabled;
+	private Vector3f	v3fBaseSpeed;
+	private float	fIR;
+	private float	fRotTorOpac;
+	private Vector3f v3fSpeed;
 	
 	@SuppressWarnings("unchecked")
 	public SELF getThis(){
@@ -119,16 +119,24 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 
 	}
 	
-	public OriginDevice(){
-		setName(this.getClass().getSimpleName());
-		
+	/**
+	 * to be overriden to prepare values to use on methods called on the constructor
+	 * call this one too of course
+	 */
+	protected void constructorPreInitFields() {
 		fRadius=5;
 		iCS=50;
 		iRS=15;
-//		fBaseSpeed=0.0025f;
-//		v3fSpeed.set(fBaseSpeed,fBaseSpeed,fBaseSpeed);
-		v3fSpeed.set(v3fBaseSpeed);
+		bEnabled=false;
+		fIR=0.1f;
+		fRotTorOpac=0.15f;
 		
+		v3fBaseSpeed=Vector3f.UNIT_XYZ.mult(0.0025f);
+		v3fSpeed=new Vector3f(v3fBaseSpeed);
+	}
+	public OriginDevice(){
+		constructorPreInitFields();
+		setName(this.getClass().getSimpleName());
 		init();
 	}
 	

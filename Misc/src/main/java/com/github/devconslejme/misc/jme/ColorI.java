@@ -99,36 +99,9 @@ public class ColorI {
 		color.r=Math.abs( (color.r + (0.5f*fIntensity)) % 1.0f);
 		color.g=Math.abs( (color.g + (0.5f*fIntensity)) % 1.0f);
 		color.b=Math.abs( (color.b + (0.5f*fIntensity)) % 1.0f);
-//		color.r=neglightColorComponent(color.r);
-//		color.g=neglightColorComponent(color.g);
-//		color.b=neglightColorComponent(color.b);
 		
 		return color;
 	}
-	
-//	private float neglightColorComponent(float f){
-//		return Math.abs(
-//			(f+
-//				(
-//					((FastMath.nextRandomFloat()*2f)-1f) //from >= -1f to < 1f
-//					*
-//					0.5f
-//				)
-//			)%1.0f
-//		);
-//	}
-	
-//	private float neglightColorComponent(float f){
-//		if(f>0.5f){
-//			f-=0.5f;
-//		}else{
-//			f+=0.5f;
-//		}
-//		
-//		if(f<0)f=0;if(f>1)f=1; //useless??
-//		
-//		return f;
-//	}
 	
 	/**
 	 * TODO apply it everywhere
@@ -162,7 +135,7 @@ public class ColorI {
       //			mat.setTransparent(color.a<1f);
 			hmMatUnshadedColor.put(i,mat);
 		}
-		return mat;
+		return mat.clone(); //so it can be further tweaked (like wireframe) after here without messing the cache
 	}
 	
 	public void updateColorFading(TimedDelay td, ColorRGBA color, boolean bFadeInAndOut){

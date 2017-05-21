@@ -50,9 +50,13 @@ import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI.IEnvironmentListener;
+import com.github.devconslejme.misc.jme.GeometryI;
+import com.github.devconslejme.misc.jme.IndicatorI.GeomIndicator;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
+import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.OriginDevice;
+import com.github.devconslejme.misc.jme.RotateI;
 import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
 import com.github.devconslejme.misc.lemur.SystemAlertLemurI;
 import com.github.devconslejme.projman.SimpleAppStateAbs;
@@ -63,6 +67,7 @@ import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppState;
 import com.jme3.audio.AudioListenerState;
 import com.jme3.collision.CollisionResult;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
@@ -364,6 +369,8 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 //			}
 			
 			orde.update(fTPF);
+			
+			updateDebugTest(fTPF);
 		}
 		
 	}
@@ -390,5 +397,20 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	public void displayResizedEvent(int iW, int iH) {
 		reshape( Math.max(iW,1), Math.max(iH,1) );
 	}
-
+	
+	/** @DevSelfNote keep even if emtpy */ Object[] aobjDebugTest;
+	/** @DevSelfNote keep even if emtpy */ 
+	public Object debugTest(Object... aobj){
+		Geometry geom = GeometryI.i().create(MeshI.i().cone(1f), ColorRGBA.Blue);
+		aobjDebugTest=new Object[]{geom};
+		getRootNode().attachChild(geom);
+		return null;
+	}
+	/** @DevSelfNote keep even if emtpy */ 
+	public void updateDebugTest(float fTPF){
+//		Geometry geom = ((Geometry)aobjDebugTest[0]);
+//		if(false)
+//			geom.setLocalTranslation(0,3,0);
+//		RotateI.i().rotateAroundPivot(geom, orde, 0.01f, Vector3f.UNIT_Z, true);
+	}
 }

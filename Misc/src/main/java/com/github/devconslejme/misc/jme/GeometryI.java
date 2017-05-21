@@ -54,7 +54,7 @@ public class GeometryI {
 	 * @param mesh
 	 * @param color
 	 * @param bTransparent null will be auto if alpha<1f
-	 * @param geomStore
+	 * @param geomStore custom subclass to setup
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
