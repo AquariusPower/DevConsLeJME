@@ -155,7 +155,7 @@ public class JavaScriptI implements IGlobalAddListener {
 			return false;
 		}
 		
-		String strBase = StringI.i().extractPart(strCmd," ",0,false);
+		String strBase = StringI.i().extractPart(strCmd," ",0);
 //		String[] astr = strCmd.split(" ");
 //		String strBase = astr[0];
 		String strParams = "";
@@ -226,7 +226,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	public void setCustomUserVar(String strParams) {
 //		CommandLineParser clp = new CommandLineParser(strParams);
 //		String strCustomUserBind = clp.getCommand();
-		String strCustomUserBind = StringI.i().extractPart(strParams, " ", 0, false);
+		String strCustomUserBind = StringI.i().extractPart(strParams, " ", 0);
 		String strJS = strParams.substring(strCustomUserBind.length()+1);
 		
 		// prefix
@@ -861,7 +861,7 @@ public class JavaScriptI implements IGlobalAddListener {
 				String strConcreteTypeFilter = objInstance.getClass().getSimpleName();
 				AutoCompleteResult arConverted = JavaScriptI.i().showHelp(strConcreteTypeFilter+"."+strAfterDot);
 				if(arConverted.isPartGotImproved()){
-					strAfterDot=StringI.i().extractPart(arConverted.getImprovedPart(), ".", 1, true);
+					strAfterDot=StringI.i().extractPart(arConverted.getImprovedPart(), ".", 1, -1);
 				}
 //					strNewInput=arConverted.getImprovedPart().replaceFirst("^"+strConcreteTypeFilter, strJSBindId);
 					arConverted.setNewCustomImprovedPart(strJSBindId+"."+strAfterDot);

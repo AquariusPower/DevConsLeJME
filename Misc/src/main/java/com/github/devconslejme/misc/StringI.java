@@ -266,23 +266,26 @@ public class StringI {
 		return String.format(dfLong.format(l));
 	}
 
+	public String extractPart(String strText, String strSeparator, int iStartIndexInclusive) {
+		return extractPart(strText, strSeparator, iStartIndexInclusive, iStartIndexInclusive+1);
+	}
 	/**
 	 * 
 	 * @param strText
 	 * @param strSeparator
-	 * @param iStartIndex
-	 * @param iEndIndex can be -1 to go till the end
+	 * @param iStartIndexInclusive
+	 * @param iEndIndexExclusive can be -1 to go till the end
 	 * @return
 	 */
-	public String extractPart(String strText, String strSeparator, int iStartIndex, int iEndIndex) {
+	public String extractPart(String strText, String strSeparator, int iStartIndexInclusive, int iEndIndexExclusive) {
 		String strSeparatorRegex="";
 		for(char ch:strSeparator.toCharArray()){
 			strSeparatorRegex+="["+ch+"]";
 		}
 		String[] astr = strText.split(strSeparatorRegex);
 		
-		if(iEndIndex==-1){
-			iEndIndex=astr.length;
+		if(iEndIndexExclusive==-1){
+			iEndIndexExclusive=astr.length;
 		}
 		
 		String strRet="";
@@ -291,16 +294,20 @@ public class StringI {
 			
 			if(!strRet.isEmpty())strRet+=strSeparator;
 			
-			if(iEndIndex==-1){
-				if(i>=iStartIndex){
-					strRet+=str;
-				}
-			}else{
-				if(i==iStartIndex){
-					strRet+=str;
-					break;
-				}
+			if(i>=iStartIndexInclusive && i<iEndIndexExclusive){
+				strRet+=str;
 			}
+			
+//			if(iEndIndex==-1){
+//				if(i>=iStartIndex){
+//					strRet+=str;
+//				}
+//			}else{
+//				if(i==iStartIndex){
+//					strRet+=str;
+//					break;
+//				}
+//			}
 			
 //			if(!bTilEnd && i==iIndex){
 //				strRet+=str;
