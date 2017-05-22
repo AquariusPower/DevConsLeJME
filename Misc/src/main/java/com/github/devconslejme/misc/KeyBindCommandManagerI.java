@@ -183,6 +183,19 @@ public class KeyBindCommandManagerI {
 		tmbindList.remove(strBindCfg);
 	}
 	
+	public static abstract class CallBoundKeyCmd extends CallableX<CallBoundKeyCmd>{
+		public StackTraceElement[]	asteConfiguredAt;
+
+		/**
+		 * mainly for clarification
+		 * @return 
+		 */
+		public CallBoundKeyCmd holdKeyForContinuousCmd(){
+			enableLoopMode();
+			return getThis();
+		}
+	}
+	
 	/**
 	 * see {@link #putBindCommand(String, String, CallableX)}
 	 * @param strKeyBindCfg
@@ -190,7 +203,8 @@ public class KeyBindCommandManagerI {
 	 * @param cx
 	 * @return
 	 */
-	public void putBindCommandLater(String strKeyBindCfg, String strName, CallableX cx){
+	public void putBindCommandLater(String strKeyBindCfg, String strName, CallBoundKeyCmd cx){
+		cx.asteConfiguredAt=Thread.currentThread().getStackTrace();
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
@@ -207,7 +221,7 @@ public class KeyBindCommandManagerI {
 	 * @param cx
 	 * @return
 	 */
-	public BindCommand putBindCommand(String strKeyBindCfg, String strName, CallableX cx){
+	public BindCommand putBindCommand(String strKeyBindCfg, String strName, CallBoundKeyCmd cx){
 		return putBindCommand(
 			new BindCommand()
 				.setKeyBind(new KeyBind().setFromKeyCfg(strKeyBindCfg))
@@ -327,6 +341,7 @@ public class KeyBindCommandManagerI {
 	
 	public void update(float fTpf){
 		if(updateCaptureKey())return;
+		if(SystemAlertI.i().isShowingAlert())return;
 		
 		runActiveBinds();
 	}

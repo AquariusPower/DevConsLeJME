@@ -56,11 +56,11 @@ import com.github.devconslejme.misc.GlobalManagerI.IGlobalAddListener;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.JavadocI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
+import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.MethodX;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
-import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.ReportI;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.SystemAlertI;
@@ -71,7 +71,6 @@ import com.google.common.collect.HashBiMap;
 import com.jme3.app.Application;
 import com.jme3.input.KeyInput;
 import com.jme3.math.Quaternion;
-import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 
 /**
@@ -405,7 +404,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		
 		for(int iCount=1;iCount<=10;iCount++){
 			final int i=iCount;
-			KeyBindCommandManagerI.i().putBindCommandLater("Ctrl+Shift+"+(i%10),"RepeatLastConsCmd"+i,new CallableXAnon(){@Override	public Boolean call(){
+			KeyBindCommandManagerI.i().putBindCommandLater("Ctrl+Shift+"+(i%10),"RepeatLastConsCmd"+i,new CallBoundKeyCmd(){@Override	public Boolean call(){
 				repeatLastCommand(i-1);return true;}});
 		}
 	}

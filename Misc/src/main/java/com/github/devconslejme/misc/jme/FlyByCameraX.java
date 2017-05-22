@@ -32,6 +32,7 @@ import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
+import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
@@ -94,14 +95,14 @@ public class FlyByCameraX extends FlyByCamera {
     );
     
     // rotation
-		KeyBindCommandManagerI.i().putBindCommandLater("Left",CameraInput.FLYCAM_LEFT,new CallableXAnon(){@Override	public Boolean call(){
-			rotateCamera( getTPF(),initialUpVec);return true;}}.enableLoopMode());
-		KeyBindCommandManagerI.i().putBindCommandLater("Right",CameraInput.FLYCAM_RIGHT,new CallableXAnon(){@Override	public Boolean call(){
-			rotateCamera(-getTPF(),initialUpVec);return true;}}.enableLoopMode());
-		KeyBindCommandManagerI.i().putBindCommandLater("Up",CameraInput.FLYCAM_UP,new CallableXAnon(){@Override	public Boolean call(){
-			rotateCamera(-getTPF() * (invertY ? -1 : 1), cam.getLeft());return true;}}.enableLoopMode());
-		KeyBindCommandManagerI.i().putBindCommandLater("Down",CameraInput.FLYCAM_DOWN,new CallableXAnon(){@Override	public Boolean call(){
-			rotateCamera( getTPF() * (invertY ? -1 : 1), cam.getLeft());return true;}}.enableLoopMode());
+		KeyBindCommandManagerI.i().putBindCommandLater("Left",CameraInput.FLYCAM_LEFT,new CallBoundKeyCmd(){@Override	public Boolean call(){
+			rotateCamera( getTPF(),initialUpVec);return true;}}.holdKeyForContinuousCmd());
+		KeyBindCommandManagerI.i().putBindCommandLater("Right",CameraInput.FLYCAM_RIGHT,new CallBoundKeyCmd(){@Override	public Boolean call(){
+			rotateCamera(-getTPF(),initialUpVec);return true;}}.holdKeyForContinuousCmd());
+		KeyBindCommandManagerI.i().putBindCommandLater("Up",CameraInput.FLYCAM_UP,new CallBoundKeyCmd(){@Override	public Boolean call(){
+			rotateCamera(-getTPF() * (invertY ? -1 : 1), cam.getLeft());return true;}}.holdKeyForContinuousCmd());
+		KeyBindCommandManagerI.i().putBindCommandLater("Down",CameraInput.FLYCAM_DOWN,new CallBoundKeyCmd(){@Override	public Boolean call(){
+			rotateCamera( getTPF() * (invertY ? -1 : 1), cam.getLeft());return true;}}.holdKeyForContinuousCmd());
 		
 		// re-add later the mouse rotation JME native mappings config
 		restoreMouseAxisLater(CameraInput.FLYCAM_LEFT,MouseInput.AXIS_X,true);
@@ -110,26 +111,26 @@ public class FlyByCameraX extends FlyByCamera {
 		restoreMouseAxisLater(CameraInput.FLYCAM_DOWN,MouseInput.AXIS_Y,true);
 		
     // movement, each key requires an independent queue object instance as they can be combined
-		KeyBindCommandManagerI.i().putBindCommandLater("A",CameraInput.FLYCAM_STRAFELEFT ,new CallableXAnon(){@Override	public Boolean call(){
+		KeyBindCommandManagerI.i().putBindCommandLater("A",CameraInput.FLYCAM_STRAFELEFT ,new CallBoundKeyCmd(){@Override	public Boolean call(){
 			moveCamera( getTPF(),true );accMvTrsTm(this);return true;}
-			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.enableLoopMode());
-		KeyBindCommandManagerI.i().putBindCommandLater("D",CameraInput.FLYCAM_STRAFERIGHT,new CallableXAnon(){@Override	public Boolean call(){
+			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.holdKeyForContinuousCmd());
+		KeyBindCommandManagerI.i().putBindCommandLater("D",CameraInput.FLYCAM_STRAFERIGHT,new CallBoundKeyCmd(){@Override	public Boolean call(){
 			moveCamera(-getTPF(),true );accMvTrsTm(this);return true;}
-			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.enableLoopMode());
+			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.holdKeyForContinuousCmd());
 		
-		KeyBindCommandManagerI.i().putBindCommandLater("W",CameraInput.FLYCAM_FORWARD    ,new CallableXAnon(){@Override	public Boolean call(){
+		KeyBindCommandManagerI.i().putBindCommandLater("W",CameraInput.FLYCAM_FORWARD    ,new CallBoundKeyCmd(){@Override	public Boolean call(){
 			moveCamera( getTPF(),false);accMvTrsTm(this);return true;}
-			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.enableLoopMode());
-		KeyBindCommandManagerI.i().putBindCommandLater("S",CameraInput.FLYCAM_BACKWARD   ,new CallableXAnon(){@Override	public Boolean call(){
+			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.holdKeyForContinuousCmd());
+		KeyBindCommandManagerI.i().putBindCommandLater("S",CameraInput.FLYCAM_BACKWARD   ,new CallBoundKeyCmd(){@Override	public Boolean call(){
 			moveCamera(-getTPF(),false);accMvTrsTm(this);return true;}
-			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.enableLoopMode());
+			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.holdKeyForContinuousCmd());
 		
-		KeyBindCommandManagerI.i().putBindCommandLater("Q",CameraInput.FLYCAM_RISE       ,new CallableXAnon(){@Override	public Boolean call(){
+		KeyBindCommandManagerI.i().putBindCommandLater("Q",CameraInput.FLYCAM_RISE       ,new CallBoundKeyCmd(){@Override	public Boolean call(){
 			riseCamera( getTPF()      );accMvTrsTm(this);return true;}
-			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.enableLoopMode());
-		KeyBindCommandManagerI.i().putBindCommandLater("Z",CameraInput.FLYCAM_LOWER      ,new CallableXAnon(){@Override	public Boolean call(){
+			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.holdKeyForContinuousCmd());
+		KeyBindCommandManagerI.i().putBindCommandLater("Z",CameraInput.FLYCAM_LOWER      ,new CallBoundKeyCmd(){@Override	public Boolean call(){
 			riseCamera(-getTPF()      );accMvTrsTm(this);return true;}
-			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.enableLoopMode());
+			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.holdKeyForContinuousCmd());
 		
 	}
 	
@@ -143,7 +144,7 @@ public class FlyByCameraX extends FlyByCamera {
 	 * reset acceleration for constant fly
 	 * @param cx
 	 */
-	protected void resetMvTm(CallableXAnon cx) {
+	protected void resetMvTm(CallBoundKeyCmd cx) {
 		acxList.remove(cx);
 		if(acxList.size()==0)fAccMvTm=0f;
 	}
@@ -151,7 +152,7 @@ public class FlyByCameraX extends FlyByCamera {
 	 * accumulates user constantly holding flying controls to accelerate
 	 * @param cx
 	 */
-	protected void accMvTrsTm(CallableXAnon cx){
+	protected void accMvTrsTm(CallBoundKeyCmd cx){
 		if(!acxList.contains(cx))acxList.add(cx);
 		fAccMvTm+=cx.getTPF();
 	}
@@ -196,7 +197,7 @@ public class FlyByCameraX extends FlyByCamera {
 //			}
 //		});
 		
-		KeyBindCommandManagerI.i().putBindCommandLater("F5","hold to keep mouse cursor visible",new CallableXAnon(){
+		KeyBindCommandManagerI.i().putBindCommandLater("F5","hold to keep mouse cursor visible",new CallBoundKeyCmd(){
 			@Override	public Boolean call(){
 				bOverrideKeepFlyCamDisabled=true;
 				setEnabled(false);
@@ -207,7 +208,7 @@ public class FlyByCameraX extends FlyByCamera {
 				bOverrideKeepFlyCamDisabled=false;
 			};
 			
-		}.enableLoopMode());
+		}.holdKeyForContinuousCmd());
 		
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override

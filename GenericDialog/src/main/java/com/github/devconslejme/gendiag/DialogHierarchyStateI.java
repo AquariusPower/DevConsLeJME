@@ -52,6 +52,7 @@ import com.github.devconslejme.misc.lemur.CursorListenerX;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
+import com.github.devconslejme.misc.lemur.SystemAlertLemurI;
 import com.github.devconslejme.misc.lemur.MiscLemurI.IGlobalClickListener;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.github.devconslejme.misc.lemur.ResizablePanel.IResizableListener;
@@ -260,7 +261,10 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 					ResizablePanel rzp = SpatialHierarchyI.i().getParentest(pnl, ResizablePanel.class, true);
 					DialogHierarchyComp hc = DialogHierarchyStateI.i().getHierarchyComp(rzp);
 					if(!hc.isOpened())continue;
-					if(SystemAlertI.i().isShowingAlert())continue;
+					if(SystemAlertI.i().isShowingAlert()){
+						GuiGlobals.getInstance().requestFocus(SystemAlertLemurI.i().getAlertAsPanel());
+						continue;
+					}
 					
 					if(!hc.isBlocked()){
 						GuiGlobals.getInstance().requestFocus(pnl);

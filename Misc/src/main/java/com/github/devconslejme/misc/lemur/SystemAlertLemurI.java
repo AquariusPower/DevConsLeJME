@@ -194,13 +194,14 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 		
 		//yellow background with border margin
 		lblAlertMsg = new Label("",getStyle());
-		lblAlertMsg.setColor(ColorRGBA.Blue.clone());
-		lblAlertMsg.setShadowColor(ColorRGBA.Black.clone());
+		lblAlertMsg.setColor(ColorRGBA.Cyan.clone());
+		lblAlertMsg.setShadowColor(ColorRGBA.Yellow.clone());
 		lblAlertMsg.setShadowOffset(new Vector3f(1,1,0));
 		lblAlertMsg.setBackground(null);
-		qbc=new QuadBackgroundComponent(new ColorRGBA(1,1,0,0.75f));
+		qbc=new QuadBackgroundComponent(ColorI.i().colorChangeCopy(ColorRGBA.Blue, 0f, 0.75f));
 		qbc.setMargin(10f, 10f);
 		lblAlertMsg.setBorder(qbc);
+		lblAlertMsg.setFontSize(18);
 		cntrAlert.addChild(lblAlertMsg, BorderLayout.Position.Center);
 		
 		//edges countour in red
