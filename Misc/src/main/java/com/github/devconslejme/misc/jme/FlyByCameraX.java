@@ -28,10 +28,14 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 
+import javax.swing.text.html.HTMLDocument.HTMLReader.IsindexAction;
+
 import com.github.devconslejme.misc.Annotations.Workaround;
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
@@ -42,6 +46,7 @@ import com.jme3.input.FlyByCamera;
 import com.jme3.input.InputManager;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.MouseAxisTrigger;
+import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 
@@ -57,6 +62,18 @@ public class FlyByCameraX extends FlyByCamera {
 	private float	fAccMvTm = 0.05f;
 	private ArrayList<CallableX> acxList=new ArrayList<CallableX>();
 	private boolean	bRotationAllowed=true;
+	private float fAcceleration=0.1f;
+	private InputManager	inputman;
+	private float	fMinFOVdeg;
+	private float	fMaxFOVdeg;
+//	private Float	fFOVstep;
+	private int	iZoomSteps;
+	ArrayList<Float> afListZoom = new ArrayList<Float>();
+	private int iCurrentZoomStep;
+	private boolean	bEnableZoomStepsAndLimits;
+	private TimedDelay tdMG=new TimedDelay(0.5f,"update mouse grab").setActive(true);
+	private TimedDelay tdMI=new TimedDelay(1f,"update mouse info").setActive(true);
+	private float fChangeZoomStepSpeed=500f;
 	
 	public void reBindKeys(){
     MiscJmeI.i().enqueueUnregisterKeyMappings( //these were set at super
@@ -187,16 +204,43 @@ public class FlyByCameraX extends FlyByCamera {
 				update(getTPF());
 				return true;
 			}
-		}.enableLoopMode().setDelaySeconds(0.5f).setName("EnsureMouseGrab"));
+		}.enableLoopMode().setName("EnsureMouseGrab"));
 		
 		setEnabledRaw(isEnabled()); //to initially set it properly
 //		setEnabled(!isEnabled());setEnabled(isEnabled()); //trick to setup more things
+		
+		/**
+		 * min is some default that is not so random... 
+		 * it is not necessarily useful tho 
+		 * TODO improve this concept?
+		 */
+		setZoomLimits(getFOV()/2f, getFOV(), 2); // default 2 steps: min and max
 	}
 	
 	@Override
 	protected void zoomCamera(float value) {
 		if(!isAllowZooming())return;
-		super.zoomCamera(value);
+		
+		if(bEnableZoomStepsAndLimits){
+			if(value>0){
+				iCurrentZoomStep+=(isZoomInverted()?-1:1);
+			}else{
+				iCurrentZoomStep+=(isZoomInverted()?1:-1);
+			}
+		}else{ //direct controls it
+			super.zoomCamera(value);
+		}
+	}
+	
+	/**
+	 * 
+	 * @return degrees
+	 */
+	public float getFOV(){
+    return 
+    	FastMath.atan(cam.getFrustumTop() / cam.getFrustumNear()) 
+    	/ 
+    	(FastMath.DEG_TO_RAD * .5f);
 	}
 	
 	@Override
@@ -211,9 +255,6 @@ public class FlyByCameraX extends FlyByCamera {
 		if(value<0)f=-1;
 		return value+(f*fAccMvTm*fAcceleration);
 	}
-	
-	private float fAcceleration=0.1f;
-	private InputManager	inputman;
 	
 	@Override
 	protected void riseCamera(float value) {
@@ -230,8 +271,39 @@ public class FlyByCameraX extends FlyByCamera {
 	 * @param bAllowZooming
 	 * @return
 	 */
+	/**
+	 * 
+	 * @param bAllowZooming
+	 * @return
+	 */
 	public FlyByCameraX setAllowZooming(boolean bAllowZooming) {
 		this.bAllowZooming = bAllowZooming;
+		return this; //for beans setter
+	}
+	/**
+	 * 
+	 * @param fMinFOVdeg
+	 * @param fMaxFOVdeg
+	 * @param fFOVstep min of 2 steps (min fov, max fov)
+	 * @return
+	 */
+	public FlyByCameraX setZoomLimits(float fMinFOVdeg, float fMaxFOVdeg, int iZoomSteps) {
+		DetailedException.assertIsTrue("min steps", iZoomSteps>=2, iZoomSteps, fMinFOVdeg, fMaxFOVdeg);
+		this.bEnableZoomStepsAndLimits=true;
+		
+		this.fMinFOVdeg = fMinFOVdeg;
+		this.fMaxFOVdeg = fMaxFOVdeg;
+		this.iZoomSteps = iZoomSteps;
+		
+		afListZoom.clear();
+		iZoomSteps--;
+		float fZoomMaxDelta=fMaxFOVdeg-fMinFOVdeg;
+		float fZoomStep=fZoomMaxDelta/iZoomSteps;
+		for(int i=0;i<=iZoomSteps;i++){
+			afListZoom.add(fMinFOVdeg+(i*fZoomStep));
+		}
+		iCurrentZoomStep=afListZoom.size()-1; // last/max one = no zoom
+		
 		return this; //for beans setter
 	}
 	
@@ -298,16 +370,39 @@ public class FlyByCameraX extends FlyByCamera {
 		return inputman;
 	}
 	
-//	TimedDelay td=new TimedDelay(0.5f,"update mouse grab").setActive(true);
-	
 	public void update(float fTPF){
-//		if(td.isReady(true)){
-//		if(isEnabled() && getInputman().isCursorVisible()){
+		if(tdMG.isReady(true)){
 			if(isEnabled() && EnvironmentJmeI.i().getMouse().isCursorVisible()){
 				//this is useful when debugging thru IDE that has an watch evaluation to ungrab the mouse directly thru lwjgl
 				setEnabledRaw(true); //to grant it is properly set
 			}
-//		}
+		}
+		
+		// fix/apply fov
+		if(bEnableZoomStepsAndLimits){
+			if(iCurrentZoomStep<0)iCurrentZoomStep=0;
+			if(iCurrentZoomStep>afListZoom.size()-1)iCurrentZoomStep=afListZoom.size()-1;
+			if(Math.abs(getFOV() - afListZoom.get(iCurrentZoomStep)) > 1f){ //compare with error margin
+				float fZooming = (isZoomInverted()?1:-1)*(fChangeZoomStepSpeed*fTPF);
+				if(getFOV() < afListZoom.get(iCurrentZoomStep)){
+					fZooming*=-1f;
+				}
+				super.zoomCamera(fZooming);
+			}
+		}
+		
+		if(tdMI.isReady(true)){
+			String strFOV="(";
+			strFOV+="cur="+StringI.i().fmtFloat(getFOV(),2);
+			if(bEnableZoomStepsAndLimits){
+				strFOV+=",min="+StringI.i().fmtFloat(fMinFOVdeg,2);
+				strFOV+=",max="+StringI.i().fmtFloat(fMaxFOVdeg,2);
+				strFOV+=",steps="+iZoomSteps;
+				strFOV+=",stepsFOVs="+afListZoom.toString();
+			}
+			strFOV+=")";
+			EnvironmentJmeI.i().putCustomInfo("CamFOVdeg", strFOV);
+		}
 	}
 
 	public boolean isOverrideKeepFlyCamDisabled() {
@@ -343,5 +438,47 @@ public class FlyByCameraX extends FlyByCamera {
 	public FlyByCameraX setRotationAllowed(boolean bRotationAllowed) {
 		this.bRotationAllowed = bRotationAllowed;
 		return this; //for beans setter
+	}
+	
+	/**
+	 * if negative, will invert how the mouse wheel works
+	 */
+	@Override
+	public void setZoomSpeed(float zoomSpeed) {
+		/**
+		 * keep this at least for the java doc
+		 */
+		super.setZoomSpeed(zoomSpeed);
+	}
+	
+	/**
+	 * 
+	 * @return is control inverted
+	 */
+	public boolean toggleZoomInvert(){
+		setZoomSpeed(-getZoomSpeed());
+		return isZoomInverted();
+	}
+	
+	public boolean isZoomInverted(){
+		return getZoomSpeed()<0;
+	}
+
+	public float getChangeZoomStepSpeed() {
+		return fChangeZoomStepSpeed;
+	}
+
+	public FlyByCameraX setChangeZoomStepSpeed(float fChangeZoomStepSpeed) {
+		this.fChangeZoomStepSpeed = fChangeZoomStepSpeed;
+		return this; 
+	}
+
+	public boolean isEnableZoomLimits() {
+		return bEnableZoomStepsAndLimits;
+	}
+
+	public FlyByCameraX setEnableZoomLimits(boolean bEnableZoomLimits) {
+		this.bEnableZoomStepsAndLimits = bEnableZoomLimits;
+		return this; 
 	}
 }

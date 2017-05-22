@@ -294,9 +294,9 @@ public class StringI {
 			
 			if(!strRet.isEmpty())strRet+=strSeparator;
 			
-			if(i>=iStartIndexInclusive && i<iEndIndexExclusive){
-				strRet+=str;
-			}
+			if(i>=iStartIndexInclusive)strRet+=str;
+			
+			if(i==(iEndIndexExclusive-1))break;
 			
 //			if(iEndIndex==-1){
 //				if(i>=iStartIndex){

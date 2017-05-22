@@ -91,7 +91,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	private int iNavigateCmdHistoryIndex = 0;
 	private HashBiMap<String,File> hmFileReaderExecJS = HashBiMap.create(); 
 	WriterCapture wrc = new WriterCapture();
-	private String	strCmdChar = "/";
+	private String	strBaseCmdToken = "/";
 	private HashMap<Object,ArrayList<MethodX>> hmMethodsHelp = new HashMap<Object,ArrayList<MethodX>>();
 	private Comparator	cmpMethodX = new Comparator<MethodX>() {
 		@Override
@@ -142,28 +142,24 @@ public class JavaScriptI implements IGlobalAddListener {
 		String[] astrBaseCommands = new String[EBaseCommand.values().length];
 		int i=0;
 		for(EBaseCommand ebc:EBaseCommand.values()){
-			astrBaseCommands[i++]=(strCmdChar+ebc.s()+" // "+ebc.strInfo+" ("+EBaseCommand.class.getSimpleName()+")");
+			astrBaseCommands[i++]=(strBaseCmdToken+ebc.s()+" // "+ebc.strInfo+" ("+EBaseCommand.class.getSimpleName()+")");
 		}
 		return astrBaseCommands;
 	}
 	
-	public boolean isAndExecBaseCommand(String strCmd){
+	public boolean isBaseCommand(String strCmd){
+		return getBaseCommand(strCmd)!=null;
+	}
+	
+	public EBaseCommand getBaseCommand(String strCmd){
 		strCmd=strCmd.trim();
-		if(strCmd.startsWith(strCmdChar)){
-			strCmd=strCmd.substring(1);
+		if(strCmd.startsWith(strBaseCmdToken)){
+			strCmd=strCmd.substring(strBaseCmdToken.length());
 		}else{
-			return false;
+			return null;
 		}
 		
 		String strBase = StringI.i().extractPart(strCmd," ",0);
-//		String[] astr = strCmd.split(" ");
-//		String strBase = astr[0];
-		String strParams = "";
-		if(!strCmd.equals(strBase))strParams=strCmd.substring(strBase.length()+1);
-		strParams=strParams.trim();
-		
-		if(strParams.startsWith(strCommentLineToken))strParams=""; //clear if is comment
-		
 		EBaseCommand ebc = null;
 		try{
 			ebc=EBaseCommand.valueOf(strBase);
@@ -171,7 +167,26 @@ public class JavaScriptI implements IGlobalAddListener {
 			//ignore
 		}
 		
-		if(ebc==null)return false;
+//		if(ebc==null)return false;
+		return ebc;
+		
+	}
+	
+	/**
+	 * TODO allow each base command to fail and return false
+	 * @param strCmd
+	 * @return
+	 */
+	public boolean execBaseCommand(String strCmd){
+		EBaseCommand ebc = getBaseCommand(strCmd);
+		
+//		String strBase=ebc.toString();
+//		String strParams = "";
+		String strParams = StringI.i().extractPart(strCmd," ",1,-1);
+//		if(!strCmd.equals(strBase))strParams=strCmd.substring(strBase.length()+1);
+		strParams=strParams.trim();
+		
+		if(strParams.startsWith(strCommentLineToken))strParams=""; //clear if is comment
 		
 		switch(ebc){
 			case help:
@@ -214,9 +229,11 @@ public class JavaScriptI implements IGlobalAddListener {
 				}
 				return true;
 			default:
-				throw new UnsupportedOperationException("not implemented yet "+ebc);
+//				throw new UnsupportedOperationException("not implemented yet "+ebc);
+				LoggingI.i().logWarn("not implemented yet "+ebc);
 		}
 		
+		return false;
 	}
 	
 	/**
@@ -479,14 +496,25 @@ public class JavaScriptI implements IGlobalAddListener {
 		LoggingI.i().logMarker("User Command");
 		LoggingI.i().logEntry(strJS);
 		
-		if(!isAndExecBaseCommand(strJS)){
-			execScript(strJS,true);
-		}
+		execCommand(strJS,true);
 		
 		DevConsPluginStateI.i().scrollKeepAtBottom();
 		DevConsPluginStateI.i().clearInput();
 	}
 	
+	protected boolean execCommand(String strJS,boolean bShowRetVal) {
+		if(isBaseCommand(strJS)){
+			return execBaseCommand(strJS);
+		}else{
+			return execScript(strJS,bShowRetVal);
+		}
+		
+//		if(!isAndExecBaseCommand(strJS)){
+//			return execScript(strJS,bShowRetVal);
+//		}
+//		return true;
+	}
+
 	/**
 	 * Initially, a short help will be shown with {@link EBaseCommand} and JS bindings.
 	 * Only if a full JS class bind id is the filter, its methods will be shown. 
@@ -791,7 +819,8 @@ public class JavaScriptI implements IGlobalAddListener {
 			for(String strJS:astrUserInit){
 				if(strJS.isEmpty())continue;
 				LoggingI.i().logSubEntry(strJS);
-				if(!execScript(strJS,false)){
+//				if(!execScript(strJS,false)){
+				if(!execCommand(strJS,false)){
 					bFail=true;
 					LoggingI.i().logMarker("UserInit:FAIL");
 					break;
@@ -910,13 +939,13 @@ public class JavaScriptI implements IGlobalAddListener {
 	private AutoCompleteResult autoCompleteBaseCmd(String strInputTilCarat,			AutoCompleteResult ar) {
 		if( // is to auto guess and complete with a base command?
 				!strInputTilCarat.isEmpty() && 
-				!strInputTilCarat.startsWith(strCmdChar) && 
+				!strInputTilCarat.startsWith(strBaseCmdToken) && 
 				!ar.isPartGotImproved() && //ar.getImprovedPart().equals(strInput) && //so if it was not improved
 				!ar.getImprovedPart().contains(".") && //skips an object looking for methods
 				!ar.isImprovedAnExactMatch() && 
 				ar.getResultList().size()==1
 		){ //if nothing changed, try again as base command
-			AutoCompleteResult arBaseCmds = JavaScriptI.i().showHelp(strCmdChar+strInputTilCarat);
+			AutoCompleteResult arBaseCmds = JavaScriptI.i().showHelp(strBaseCmdToken+strInputTilCarat);
 			if(arBaseCmds.isPartGotImproved()){
 				arBaseCmds.setNewCustomImprovedPart(arBaseCmds.getImprovedPart());
 				return arBaseCmds;
