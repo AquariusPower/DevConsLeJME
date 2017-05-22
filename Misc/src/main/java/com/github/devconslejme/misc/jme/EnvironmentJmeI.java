@@ -78,6 +78,8 @@ public class EnvironmentJmeI extends AbstractAppState{
 	private Application	app;
 	private InputManager	inputman;
 	private Camera	cam;
+	private LinkedHashMap<String,String> hmCustomInfo = new LinkedHashMap<String,String>();
+	private boolean	bShowMouseCursorPos; 
 	
 	public void configure(Node nodeGui){
 		app=G.i(Application.class);
@@ -240,7 +242,6 @@ public class EnvironmentJmeI extends AbstractAppState{
 //		this.bShowFPS = bShowFPS;
 //	}
 	
-	LinkedHashMap<String,String> hmCustomInfo = new LinkedHashMap<String,String>(); 
 	public void putCustomInfo(String strKey,String strValue){
 		hmCustomInfo.put(strKey, strValue);
 	}
@@ -259,6 +260,7 @@ public class EnvironmentJmeI extends AbstractAppState{
 		String strSep="\n";
 		
 		if(bShowFPS)sb.append("FPS="+iFPS+strSep);
+		if(bShowMouseCursorPos)sb.append("MouseXY="+getMouse().getPos2D()+strSep);
 		if(bShowCamPos){
 			sb.append("CamPos="
 				+TextI.i().fmtVector3f(cam.getLocation(),2)
@@ -272,7 +274,7 @@ public class EnvironmentJmeI extends AbstractAppState{
 		}
 		if(hmCustomInfo.size()>0){
 			for(Entry<String, String> entry:hmCustomInfo.entrySet()){
-				sb.append(entry.getKey()+"="+entry.getValue());
+				sb.append(entry.getKey()+"="+entry.getValue()+strSep);
 			}
 		}
 		
@@ -288,7 +290,11 @@ public class EnvironmentJmeI extends AbstractAppState{
 		
 		if(nodeInfo.getParent()==null)nodeGui.attachChild(nodeInfo);
 	}
-
+	
+	public String getInfo(){
+		return btInfo.getText();
+	}
+	
 	public boolean isShowFPS() {
 		return bShowFPS;
 	}
@@ -328,6 +334,15 @@ public class EnvironmentJmeI extends AbstractAppState{
 	public EnvironmentJmeI setShowCamRot(boolean bShowCamRot) {
 		this.bShowCamRot = bShowCamRot;
 		return this; //for beans setter
+	}
+
+	public boolean isShowMouseCursorPos() {
+		return bShowMouseCursorPos;
+	}
+
+	public EnvironmentJmeI setShowMouseCursorPos(boolean bShowMouseCursorPos) {
+		this.bShowMouseCursorPos = bShowMouseCursorPos;
+		return this; 
 	}
 	
 }

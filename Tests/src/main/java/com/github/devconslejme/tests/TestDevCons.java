@@ -43,14 +43,12 @@ import com.github.devconslejme.gendiag.KeyBindManagerDialogI;
 import com.github.devconslejme.gendiag.QueueManagerDialogI;
 import com.github.devconslejme.gendiag.SpatialsManagerI;
 import com.github.devconslejme.misc.Annotations.Workaround;
-import com.github.devconslejme.misc.CommandLineParser;
-import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.CheckProblemsI;
+import com.github.devconslejme.misc.CommandLineParser;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.MessagesI;
-import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.QueueI.CallableXAnon;
-import com.github.devconslejme.misc.TimedDelay;
+import com.github.devconslejme.misc.SystemAlertI;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI.IEnvironmentListener;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
@@ -60,7 +58,6 @@ import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.OriginDevice;
 import com.github.devconslejme.misc.jme.RotateI;
 import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
-import com.github.devconslejme.misc.lemur.SystemAlertLemurI;
 import com.github.devconslejme.projman.SimpleAppStateAbs;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
@@ -184,29 +181,34 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	}
 	
 	private void opt_initAlertConsoleKey() {
-		QueueI.i().enqueue(new CallableXAnon() {
-			TimedDelay td = new TimedDelay(3f, "wait user read it");
-			private StackTraceElement[]	aste;
-			@Override
-			public Boolean call() {
-				if(!SystemAlertLemurI.i().isShowingAlert()){
-					aste=SystemAlertLemurI.i().showSystemAlert("hit F10 to open console", null);
-					SystemAlertLemurI.i().setAlertStayOnCenter(true);
-					td.setActive(true);
-				}else{
-					if(td.isReady()){
-						SystemAlertLemurI.i().hideSystemAlert(aste);
-						return true;//end
-					}
-				}
-				
-				return false;
-			}
-		});
+		SystemAlertI.i().showTemporarySystemAlert("hit F10 to open console", 3f);
+//		QueueI.i().enqueue(new CallableXAnon() {
+//			TimedDelay td = new TimedDelay(3f, "wait user read it");
+//			private StackTraceElement[]	aste;
+//			@Override
+//			public Boolean call() {
+//				if(!SystemAlertLemurI.i().isShowingAlert()){
+//					aste=SystemAlertLemurI.i().showSystemAlert("hit F10 to open console", null);
+//					SystemAlertLemurI.i().setAlertStayOnCenter(true);
+//					td.setActive(true);
+//				}else{
+//					if(td.isReady()){
+//						SystemAlertLemurI.i().hideSystemAlert(aste);
+//						return true;//end
+//					}
+//				}
+//				
+//				return false;
+//			}
+//		});
 	}
 
 	private void opt_initShowFPS() {
-		EnvironmentJmeI.i().setShowFPS(true).setShowCamPos(true).setShowCamRot(true);
+		EnvironmentJmeI.i()
+			.setShowFPS(true)
+			.setShowCamPos(true)
+			.setShowCamRot(true)
+			.setShowMouseCursorPos(true);
 	}
 
 	public TestDevCons setSpeed(float f){

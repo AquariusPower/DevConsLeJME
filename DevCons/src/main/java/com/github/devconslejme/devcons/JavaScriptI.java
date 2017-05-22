@@ -55,17 +55,23 @@ import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.GlobalManagerI.IGlobalAddListener;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.JavadocI;
+import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.MethodX;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.ReportI;
 import com.github.devconslejme.misc.StringI;
+import com.github.devconslejme.misc.SystemAlertI;
+import com.github.devconslejme.misc.TimeFormatI;
+import com.github.devconslejme.misc.jme.EnvironmentJmeI;
 import com.github.devconslejme.misc.jme.TextI;
 import com.google.common.collect.HashBiMap;
 import com.jme3.app.Application;
 import com.jme3.input.KeyInput;
 import com.jme3.math.Quaternion;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 
 /**
@@ -386,12 +392,27 @@ public class JavaScriptI implements IGlobalAddListener {
 			if(bndJSE.get(genKeyFor(obj))==null)setJSBinding(obj);
 		}
 //		setJSBinding(Vector3f.class.getSimpleName(), new Vector3f());
-		setJSBinding(new Vector3f());
+//		setJSBinding(new Vector3f());
+//		setJSBindingRaw(strCustomVarPrefix+"tmp"+Vector2f.class.getSimpleName(), new Vector2f());
+//		setJSBindingRaw(strCustomVarPrefix+"new"+Vector3f.class.getSimpleName(), new Vector3f());
+//		setJSBindingRaw(strCustomVarPrefix+"new"+Quaternion.class.getSimpleName(), new Quaternion());
+		setJSBindingRaw("New", new New());
 		
 		/**
 		 * listen for new ones
 		 */
 		GlobalManagerI.i().addGlobalAddListener(this);
+		
+		for(int iCount=1;iCount<=10;iCount++){
+			final int i=iCount;
+			KeyBindCommandManagerI.i().putBindCommandLater("Ctrl+Shift+"+(i%10),"RepeatLastConsCmd"+i,new CallableXAnon(){@Override	public Boolean call(){
+				repeatLastCommand(i-1);return true;}});
+		}
+	}
+	
+	public static class New{
+		public Vector3f Vector3f(){return new Vector3f();}
+		public Quaternion Quaternion(){return new Quaternion();}
 	}
 	
 	/**
@@ -486,27 +507,47 @@ public class JavaScriptI implements IGlobalAddListener {
 //	}
 	
 	protected void submitUserCommand() {
-		String strJS = DevConsPluginStateI.i().getInputText();
+		String strCmd = DevConsPluginStateI.i().getInputText();
 		
-		strJS=strJS.trim();
-		if(strJS.isEmpty())return;
-		
-		addCmdToHistory(strJS);
+		strCmd=strCmd.trim();
+		if(strCmd.isEmpty())return;
 		
 		LoggingI.i().logMarker("User Command");
-		LoggingI.i().logEntry(strJS);
+		LoggingI.i().logEntry(strCmd);
 		
-		execCommand(strJS,true);
+		execCommand(strCmd,true);
 		
 		DevConsPluginStateI.i().scrollKeepAtBottom();
 		DevConsPluginStateI.i().clearInput();
 	}
 	
-	protected boolean execCommand(String strJS,boolean bShowRetVal) {
-		if(isBaseCommand(strJS)){
-			return execBaseCommand(strJS);
+	/**
+	 * 
+	 * @param iIndexFromLast 0=last, 1=last-1, 2=last-2, ... 
+	 */
+	public void repeatLastCommand(int iIndexFromLast){
+		int i=astrCmdHistory.size()-iIndexFromLast-1;
+		if(i<0)i=0;
+		String strCmd = astrCmdHistory.get(i);
+		execCommand(strCmd, true);
+	}
+	
+	protected boolean execCommand(String strCmd,boolean bShowRetVal) {
+		addCmdToHistory(strCmd);
+		
+		String strLastCmds="";
+		int iTot=10;
+		int iCount=1;
+		for(int i=astrCmdHistory.size()-1;i>=0 && i>astrCmdHistory.size()-1-iTot;i--){
+			strLastCmds+=" ["+(iCount++)+"]"+astrCmdHistory.get(i)+";";
+		}
+		EnvironmentJmeI.i().putCustomInfo("Ctrl+Shift+N", 
+			"{(last@"+TimeFormatI.i().getRealTimeFormatted(null,"HH:mm:ss")+")"+strLastCmds+"}");
+		
+		if(isBaseCommand(strCmd)){
+			return execBaseCommand(strCmd);
 		}else{
-			return execScript(strJS,bShowRetVal);
+			return execScript(strCmd,bShowRetVal);
 		}
 		
 //		if(!isAndExecBaseCommand(strJS)){
@@ -816,13 +857,36 @@ public class JavaScriptI implements IGlobalAddListener {
 		if(astrUserInit.size()>0){
 			LoggingI.i().logMarker("UserInit:Begin");
 			boolean bFail=false;
-			for(String strJS:astrUserInit){
-				if(strJS.isEmpty())continue;
-				LoggingI.i().logSubEntry(strJS);
+			for(String strCmd:astrUserInit){
+				if(strCmd.isEmpty())continue;
+				LoggingI.i().logSubEntry(strCmd);
 //				if(!execScript(strJS,false)){
-				if(!execCommand(strJS,false)){
+				if(!execCommand(strCmd,false)){
 					bFail=true;
-					LoggingI.i().logMarker("UserInit:FAIL");
+					String strMsg="UserInit:FAIL";
+					LoggingI.i().logMarker(strMsg);
+					
+					SystemAlertI.i().showTemporarySystemAlert(strMsg+"\n"+strCmd, 5f);
+//					QueueI.i().enqueue(new CallableXAnon() {
+//						TimedDelay td = new TimedDelay(3f, "wait user read it");
+//						private StackTraceElement[]	aste;
+//						@Override
+//						public Boolean call() {
+//							if(!SystemAlertLemurI.i().isShowingAlert()){
+//								aste=SystemAlertLemurI.i().showSystemAlert(strMsg, null);
+//								SystemAlertLemurI.i().setAlertStayOnCenter(true);
+//								td.setActive(true);
+//							}else{
+//								if(td.isReady()){
+//									SystemAlertLemurI.i().hideSystemAlert(aste);
+//									return true;//end
+//								}
+//							}
+//							
+//							return false;
+//						}
+//					});
+					
 					break;
 				}
 			}

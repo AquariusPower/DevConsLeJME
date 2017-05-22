@@ -32,6 +32,7 @@ import java.nio.channels.UnsupportedAddressTypeException;
 
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.lemur.SystemAlertLemurI;
 
 
 /**
@@ -68,6 +69,10 @@ public class SystemAlertI {
 	}
 	public void hideSystemAlert(StackTraceElement[] asteFrom){
 		hideSystemAlert(asteFrom, false);
+	}
+	
+	public boolean isValidRequestOriginKey(StackTraceElement[] asteStackKeyRequestOrigin){
+		return this.asteStackKeyRequestOrigin==asteStackKeyRequestOrigin;
 	}
 	
 	/**
@@ -161,6 +166,31 @@ public class SystemAlertI {
 	
 	public Object getActionSourceElement() {
 		return objActionSourceElement;
+	}
+	
+	public void showTemporarySystemAlert(String strMsg, float fDelay){
+		String strName="TemporarySystemAlert";
+		QueueI.i().enqueue(new CallableXAnon() {
+			TimedDelay td = new TimedDelay(fDelay, strName);
+			private StackTraceElement[]	aste;
+			@Override
+			public Boolean call() {
+				if(!SystemAlertLemurI.i().isShowingAlert()){
+					aste=SystemAlertLemurI.i().showSystemAlert(strMsg, null);
+					SystemAlertLemurI.i().setAlertStayOnCenter(true);
+					td.setActive(true);
+				}else{
+					if(!isValidRequestOriginKey(aste))return false; //there is some other alert going on, wait it end
+					
+					if(td.isReady()){
+						SystemAlertLemurI.i().hideSystemAlert(aste);
+						return true;//end
+					}
+				}
+				
+				return false;
+			}
+		}.setName("TemporarySystemAlert"));
 	}
 }
 

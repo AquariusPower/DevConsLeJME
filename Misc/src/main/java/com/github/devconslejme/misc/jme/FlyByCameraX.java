@@ -28,17 +28,15 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 
-import javax.swing.text.html.HTMLDocument.HTMLReader.IsindexAction;
-
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.StringI;
-import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.StringI;
+import com.github.devconslejme.misc.TimedDelay;
 import com.jme3.app.Application;
 import com.jme3.collision.MotionAllowedListener;
 import com.jme3.input.CameraInput;
@@ -59,10 +57,14 @@ public class FlyByCameraX extends FlyByCamera {
 	private boolean	bAllowZooming=false; //only with scope or eagle eye
 	private boolean	bAllowMove=true; //as it is a flycam, must be default true
 	private boolean	bOverrideKeepFlyCamDisabled;
-	private float	fAccMvTm = 0.05f;
+	
+	/** stores user is constantly flying for how much time, until keys are released */
+	private float	fAccMvTm;
+//	private float	fAccMvTm = 0.05f;
+	
 	private ArrayList<CallableX> acxList=new ArrayList<CallableX>();
 	private boolean	bRotationAllowed=true;
-	private float fAcceleration=0.1f;
+	private float fFlyAcceleration=0.1f;
 	private InputManager	inputman;
 	private float	fMinFOVdeg;
 	private float	fMaxFOVdeg;
@@ -74,6 +76,7 @@ public class FlyByCameraX extends FlyByCamera {
 	private TimedDelay tdMG=new TimedDelay(0.5f,"update mouse grab").setActive(true);
 	private TimedDelay tdMI=new TimedDelay(1f,"update mouse info").setActive(true);
 	private float fChangeZoomStepSpeed=500f;
+	private float	fZoomedRotationSpeed=1f; //no zoom
 	
 	public void reBindKeys(){
     MiscJmeI.i().enqueueUnregisterKeyMappings( //these were set at super
@@ -133,13 +136,21 @@ public class FlyByCameraX extends FlyByCamera {
 	@Override
 	protected void rotateCamera(float value, Vector3f axis) {
 		if(!isRotationAllowed())return;
-		super.rotateCamera(value, axis);
+		super.rotateCamera(value*fZoomedRotationSpeed, axis);
 	}
 	
+	/**
+	 * reset acceleration for constant fly
+	 * @param cx
+	 */
 	protected void resetMvTm(CallableXAnon cx) {
 		acxList.remove(cx);
 		if(acxList.size()==0)fAccMvTm=0f;
 	}
+	/**
+	 * accumulates user constantly holding flying controls to accelerate
+	 * @param cx
+	 */
 	protected void accMvTrsTm(CallableXAnon cx){
 		if(!acxList.contains(cx))acxList.add(cx);
 		fAccMvTm+=cx.getTPF();
@@ -253,7 +264,7 @@ public class FlyByCameraX extends FlyByCamera {
 	protected float getCurrentVelocity(float value){
 		float f=1;
 		if(value<0)f=-1;
-		return value+(f*fAccMvTm*fAcceleration);
+		return value+(f*fAccMvTm*fFlyAcceleration);
 	}
 	
 	@Override
@@ -292,7 +303,10 @@ public class FlyByCameraX extends FlyByCamera {
 		this.bEnableZoomStepsAndLimits=true;
 		
 		this.fMinFOVdeg = fMinFOVdeg;
+		if(this.fMinFOVdeg<0.01f)this.fMinFOVdeg=0.01f; //TODO find a better value?
+		
 		this.fMaxFOVdeg = fMaxFOVdeg;
+		
 		this.iZoomSteps = iZoomSteps;
 		
 		afListZoom.clear();
@@ -382,6 +396,10 @@ public class FlyByCameraX extends FlyByCamera {
 		if(bEnableZoomStepsAndLimits){
 			if(iCurrentZoomStep<0)iCurrentZoomStep=0;
 			if(iCurrentZoomStep>afListZoom.size()-1)iCurrentZoomStep=afListZoom.size()-1;
+			
+			/**
+			 * automatically zoom in/out to reach the requested zoom step value
+			 */
 			if(Math.abs(getFOV() - afListZoom.get(iCurrentZoomStep)) > 1f){ //compare with error margin
 				float fZooming = (isZoomInverted()?1:-1)*(fChangeZoomStepSpeed*fTPF);
 				if(getFOV() < afListZoom.get(iCurrentZoomStep)){
@@ -389,18 +407,27 @@ public class FlyByCameraX extends FlyByCamera {
 				}
 				super.zoomCamera(fZooming);
 			}
+			
+			fZoomedRotationSpeed=afListZoom.get(iCurrentZoomStep)/fMaxFOVdeg;
+			
+//			float fDefaultZRS=1f; //at no zoom (last/min)
+//			float fMinZRS=fMinFOVdeg/20f;//0.5f;
+//			float fDeltaZRS=fDefaultZRS-fMinZRS;
+//			float fStepZRS=fDeltaZRS/afListZoom.size();
+//			fZoomedRotationSpeed=fMinZRS+(fStepZRS*(iCurrentZoomStep+1));
+			
+//			if(iCurrentZoomStep==afListZoom.size()-1)fZoomedRotationSpeed=1f;
+//			if(iCurrentZoomStep==0)fZoomedRotationSpeed=0.5f;
 		}
 		
 		if(tdMI.isReady(true)){
-			String strFOV="(";
-			strFOV+="cur="+StringI.i().fmtFloat(getFOV(),2);
+			String strFOV="{ ";
+			strFOV+="fov="+StringI.i().fmtFloat(getFOV(),2);
 			if(bEnableZoomStepsAndLimits){
-				strFOV+=",min="+StringI.i().fmtFloat(fMinFOVdeg,2);
-				strFOV+=",max="+StringI.i().fmtFloat(fMaxFOVdeg,2);
-				strFOV+=",steps="+iZoomSteps;
-				strFOV+=",stepsFOVs="+afListZoom.toString();
+				strFOV+="("+StringI.i().fmtFloat(afListZoom.get(iCurrentZoomStep),2)+") "+afListZoom.toString();
+				strFOV+=", zmRtSpd="+fZoomedRotationSpeed;
 			}
-			strFOV+=")";
+			strFOV+=" }";
 			EnvironmentJmeI.i().putCustomInfo("CamFOVdeg", strFOV);
 		}
 	}
@@ -410,11 +437,11 @@ public class FlyByCameraX extends FlyByCamera {
 	}
 
 	public float getAcceleration() {
-		return fAcceleration;
+		return fFlyAcceleration;
 	}
 
 	public FlyByCameraX setAcceleration(float fAcceleration) {
-		this.fAcceleration = fAcceleration;
+		this.fFlyAcceleration = fAcceleration;
 		return this; //for beans setter
 	}
 	
