@@ -266,13 +266,51 @@ public class StringI {
 		return String.format(dfLong.format(l));
 	}
 
-	public String extractPart(String strText, String strSeparator, int iIndex) {
+	/**
+	 * 
+	 * @param strText
+	 * @param strSeparator
+	 * @param iStartIndex
+	 * @param iEndIndex can be -1 to go till the end
+	 * @return
+	 */
+	public String extractPart(String strText, String strSeparator, int iStartIndex, int iEndIndex) {
 		String strSeparatorRegex="";
 		for(char ch:strSeparator.toCharArray()){
 			strSeparatorRegex+="["+ch+"]";
 		}
 		String[] astr = strText.split(strSeparatorRegex);
-		String strPart = astr[iIndex];
-		return strPart;
+		
+		if(iEndIndex==-1){
+			iEndIndex=astr.length;
+		}
+		
+		String strRet="";
+		for(int i=0;i<astr.length;i++){
+			String str=astr[i];
+			
+			if(!strRet.isEmpty())strRet+=strSeparator;
+			
+			if(iEndIndex==-1){
+				if(i>=iStartIndex){
+					strRet+=str;
+				}
+			}else{
+				if(i==iStartIndex){
+					strRet+=str;
+					break;
+				}
+			}
+			
+//			if(!bTilEnd && i==iIndex){
+//				strRet+=str;
+//				break;
+//			}else
+//			if(bTilEnd && i>=iIndex){
+//				strRet+=str;
+//			}
+		}
+		
+		return strRet;
 	}
 }
