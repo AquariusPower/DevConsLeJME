@@ -30,6 +30,8 @@ package com.github.devconslejme.misc;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import com.google.common.collect.HashBiMap;
+
 /**
  * This makes it easy to:
  * - override a global instance.
@@ -56,7 +58,9 @@ public class GlobalManagerI {
   public static GlobalManagerI i (){return instance;}
   
   public static interface IGlobalAddListener{
-  	void globalAddedEvent(Object objInst);
+  	void globalInstanceAddedEvent(Class clType, Object objValue);
+
+		void globalEnumAddedEvent(Class<Enum> cle, Enum[] ae);
   }
   private ArrayList<IGlobalAddListener> aigalList = new ArrayList<IGlobalAddListener>();
   public void addGlobalAddListener(IGlobalAddListener igal){
@@ -108,7 +112,7 @@ public class GlobalManagerI {
     }
     
     hmInst.put(cl,obj);
-    callListeners(obj);
+    callListeners(cl,obj);
     
 		MessagesI.i().debugInfo(this,"created global instance: "+cl.getName(),obj);
 		
@@ -122,37 +126,66 @@ public class GlobalManagerI {
 		for(Class<?> cl:acl){
 			if(JavaLangI.i().isEnumClass(cl)){
 				Class<Enum> cle = (Class<Enum>)cl;
-				addEnumClass(cle);
+				putEnumClass(cle,null); //TODO can enum .values() be collected in some way?
 			}
 		}
 	}
-	public void addEnumClass(Class<Enum> cle){
-		if(!acleList.contains(cle)){
-			acleList.add(cle);
-			callListeners(cle);
+	public void putEnumClass(Class<Enum> cle,Enum[] values){
+		if(hmEnumVals.get(cle)==null){
+			hmEnumVals.forcePut(cle,values);
+			callListeners(cle,values); // if values is null, the listener may help on providing them and setting again this enum here with the values filled up
 		}
 	}
-	protected void callListeners(Object obj) {
+	@SuppressWarnings("unchecked")
+	protected void callListeners(Class cl,Object obj) {
     for(IGlobalAddListener igal:aigalList){
-    	igal.globalAddedEvent(obj);
+			if(JavaLangI.i().isEnumClass(cl)){
+				igal.globalEnumAddedEvent((Class<Enum>)cl,(Enum[])obj);
+			}else{
+				igal.globalInstanceAddedEvent(cl,obj);
+			}
     }
 	}
 	public Enum parseToEnum(String strFullEnumId){
-		for(Class<Enum> cle:acleList){
+		for(Class<Enum> cle:hmEnumVals.inverse().values()){ //keys
 			Enum e = JavaLangI.i().parseToEnum(cle,strFullEnumId);
 			if(e!=null)return e;
 		}
 		return null;
 	}
-//	private HashMap<Class<Enum>,Enum[]> acleList = new HashMap<Class<Enum>,Enum[]>();
-	private ArrayList<Class<Enum>> acleList = new ArrayList<Class<Enum>>();
+	private HashBiMap<Class<Enum>,Enum[]> hmEnumVals = HashBiMap.create();
+//	private ArrayList<Class<Enum>> acleList = new ArrayList<Class<Enum>>();
 	
-	public ArrayList<Class<Enum>> getGlobalEnumsListCopy(){
-		return new ArrayList<Class<Enum>>(acleList);
-//		return new HashMap<Class<Enum>,Enum[]>(acleList);
+	public HashBiMap<Class<Enum>,Enum[]> getGlobalEnumsListCopy(){
+//		return new ArrayList<Class<Enum>>(acleList);
+		return HashBiMap.create(hmEnumVals);
+//		return new HashBiMap<Class<Enum>,Enum[]>(hmEnumVals);
 	}
 	
   public ArrayList<Object> getListCopy(){
   	return new ArrayList<Object>(hmInst.values());
   }
+	@SuppressWarnings("unchecked")
+	public <T extends Enum> T[] getGlobalEnumValuesClNm(String strClassName) {
+		try {
+			Class cl = Class.forName(strClassName);
+			if(JavaLangI.i().isEnumClass(cl)){
+				return (T[]) getGlobalEnumValuesClE(cl);
+			}
+		} catch (ClassNotFoundException ex) {
+			throw new DetailedException(ex, strClassName);
+		}
+		return null;
+	}
+	@SuppressWarnings("unchecked")
+	public <T extends Enum> T[] getGlobalEnumValuesCl(Class cl) {
+		if(JavaLangI.i().isEnumClass(cl)){
+			return (T[]) getGlobalEnumValuesClE(cl);
+		}
+		return null;
+	}
+	@SuppressWarnings("unchecked")
+	public <T extends Enum> T[] getGlobalEnumValuesClE(Class<T> cle) {
+		return (T[]) hmEnumVals.get(cle);
+	}
 }

@@ -45,6 +45,7 @@ public class AutoCompleteI {
 //		private boolean bExactMatch=false;
 //		private String	strPart="";
 		private String strImprovedPart;
+		private String strNewCustomImprovedPart;
 		private ArrayList<String> astrResultList;
 		private boolean bUsingFuzzy;
 		private boolean bExactMatch;
@@ -55,6 +56,7 @@ public class AutoCompleteI {
 			super();
 			this.strPart=strPart;
 			this.strImprovedPart = strImprovedPart;
+			this.strNewCustomImprovedPart=this.strImprovedPart;
 			this.astrResultList = astrResultList;
 			this.bExactMatch=bExactMatch;
 			this.bUsingFuzzy = bUsingFuzzy;
@@ -83,6 +85,15 @@ public class AutoCompleteI {
 
 		public boolean isbUsingFuzzy() {
 			return bUsingFuzzy;
+		}
+
+		public String getNewCustomImprovedPart() {
+			return strNewCustomImprovedPart;
+		}
+
+		public AutoCompleteResult setNewCustomImprovedPart(String strNewCustomImprovedPart) {
+			this.strNewCustomImprovedPart = strNewCustomImprovedPart;
+			return this; 
 		}
 	}
 	

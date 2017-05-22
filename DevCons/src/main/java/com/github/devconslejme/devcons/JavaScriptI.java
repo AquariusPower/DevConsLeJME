@@ -237,7 +237,11 @@ public class JavaScriptI implements IGlobalAddListener {
 		}
 		
 		if(execScript(strJS, false)){
-			setJSBindingRaw(strCustomUserBind,objRetValUser);
+			if(objRetValUser!=null){
+				setJSBindingRaw(strCustomUserBind,objRetValUser);
+			}else{
+				LoggingI.i().logWarn("not set: return was null");
+			}
 		}
 	}
 
@@ -445,16 +449,6 @@ public class JavaScriptI implements IGlobalAddListener {
 		}
 	}
 	
-//	public void setJSBindingForEnumsOf(Class clWithEnums){
-//		Class<?>[] acl = clWithEnums.getDeclaredClasses();
-//		for(Class<?> cl:acl){
-//			if(JavaLangI.i().isEnumClass(cl)){
-////				QueueI.i().enqueue(cx);
-//				setJSBinding(cl);
-//			}
-//		}
-//	}
-	
 	private boolean isAccessForbidden(Object objBindValue) {
 		DetailedException.assertNotNull(objBindValue);
 		if(aclForbidJS.contains(objBindValue.getClass())){
@@ -510,32 +504,24 @@ public class JavaScriptI implements IGlobalAddListener {
 		
 		String strImprovedPart=strFilter; //still unmodified
 		
-//		ArrayList<String> astrResult = new ArrayList<String>(astr);
 		AutoCompleteResult ar=new AutoCompleteResult(
 			strFilter, strImprovedPart, new ArrayList<String>(astr), false, false);
 		if(!strFilter.isEmpty()){
 			ar = AutoCompleteI.i().autoComplete(strFilter, astr, false, false);
 			
-//			if(!ar.isPartGotImproved() && ar.getResultList().size()==1){
 			if(ar.getResultList().size()==1){
 				astr.addAll(getJSClassBindListFilteredHelp());
 				
 				ar = AutoCompleteI.i().autoComplete(strFilter, astr, false, false);
 			}
-			
-//			astrResult = ar.getResultList();
-			
-//			strImprovedPart = ar.getImprovedPart();
 		}
 		
-//		for(String str:astrResult){
 		for(String str:ar.getResultList()){
 			LoggingI.i().logSubEntry(str);
 		}
 		
 		DevConsPluginStateI.i().scrollKeepAtBottom();
 		
-//		return strImprovedPart;
 		return ar;
 	}
 	
@@ -668,27 +654,18 @@ public class JavaScriptI implements IGlobalAddListener {
 			LoggingI.i().logSubEntry("Return is null or void.");
 		}else{
 			String strCl=obj.toString();
-			strCl=strCl.substring("JavaClassStatics[".length(), strCl.length()-1);
-			try {
-				Class cl = Class.forName(strCl);
-				if(JavaLangI.i().isEnumClass(cl)){
-					Class<Enum> cle = (Class<Enum>)cl;
-					//TODO
-				}
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
+			String strJCS = "JavaClassStatics["; //it is javascript's stuff
+			if(strCl.startsWith(strJCS)){
+				strCl=strCl.substring(strJCS.length(), strCl.length()-1);
+				Enum[] ae = GlobalManagerI.i().getGlobalEnumValuesClNm(strCl);
+				if(ae!=null)obj=ae;
+//				Class cl = Class.forName(strCl);
+//				obj=GlobalManagerI.i().getGlobalEnumValuesCl(cl);
+//				if(JavaLangI.i().isEnumClass(cl)){
+//					@SuppressWarnings("unchecked") Class<Enum> cle = (Class<Enum>)cl;
+//					obj=GlobalManagerI.i().getGlobalEnumValues(cle);
+//				}
 			}
-//			errr;
-//			obj.toString()
-//			StaticClass sc; 
-//			((StaticClass)obj);
-//			obj.getClass()
-////			jdk.internal.dynalink.beans;
-////			obj.getClass().
-//			if (obj.getClass() instanceof StaticClass) {
-//				StaticClass new_name = (StaticClass) obj;
-//				
-//			}
 			
 			LoggingI.i().logSubEntry("Return type: "+obj.getClass());
 			if(JavaLangI.i().isCanUserTypeIt(obj)){ // simple types result in simple and readable strings
@@ -870,22 +847,67 @@ public class JavaScriptI implements IGlobalAddListener {
 	}
 	
 	public void appendUserInitCommand(String strJS){
-//		if(strJS.startsWith(EBaseCommand.ini.s()+" ")){
-//			strJS=strJS.substring(EBaseCommand.ini.s().length()+1);
 			FileI.i().appendLine(flUserInit, strJS);
-//			return true;
-//		}
-//		return false;
 			LoggingI.i().logMarker("Appended User Init Cmd");
 	}
-
+	
+	protected AutoCompleteResult autoCompleteCustomUserBind(String strInputTilCarat){
+		int iDotAt = strInputTilCarat.indexOf(".");
+		if(iDotAt>-1){
+			String strJSBindId=strInputTilCarat.substring(0, iDotAt);
+			String strAfterDot=strInputTilCarat.substring(iDotAt+1);
+			Object objInstance = bndJSE.get(strJSBindId);
+			if(objInstance!=null){
+				String strConcreteTypeFilter = objInstance.getClass().getSimpleName();
+				AutoCompleteResult arConverted = JavaScriptI.i().showHelp(strConcreteTypeFilter+"."+strAfterDot);
+				if(arConverted.isPartGotImproved()){
+					strAfterDot=StringI.i().extractPart(arConverted.getImprovedPart(), ".", 1);
+				}
+//					strNewInput=arConverted.getImprovedPart().replaceFirst("^"+strConcreteTypeFilter, strJSBindId);
+					arConverted.setNewCustomImprovedPart(strJSBindId+"."+strAfterDot);
+//				}
+				return arConverted;
+			}
+		}
+		return null;
+	}
+	
 	protected void autoComplete() {
 		String strInputTilCarat=DevConsPluginStateI.i().getInputTextBeforeCarat(null);
 		int iInitialLength = strInputTilCarat.length();
-//		String strInput= DevConsPluginStateI.i().getInputText();
 		strInputTilCarat=strInputTilCarat.trim();
+		
 		AutoCompleteResult ar = JavaScriptI.i().showHelp(strInputTilCarat);
+//		String strNewInput=strInputTilCarat;
 		String strNewInput=ar.getImprovedPart();
+		if(strInputTilCarat.startsWith(strCustomVarPrefix)){ //custom user var bound
+			AutoCompleteResult arTmp = autoCompleteCustomUserBind(strInputTilCarat);
+			if(arTmp!=null){
+				strNewInput = arTmp.getNewCustomImprovedPart();
+				ar=arTmp;
+			}
+		}else{
+//			ar = JavaScriptI.i().showHelp(strInputTilCarat);
+//			strNewInput=ar.getImprovedPart();
+			
+			AutoCompleteResult arTmp=autoCompleteBaseCmd(strInputTilCarat,ar);
+			if(arTmp!=null){
+				strNewInput = arTmp.getNewCustomImprovedPart();
+				ar=arTmp;
+			}
+		}
+		
+		int i = strNewInput.indexOf(strCommentLineToken);if(i>-1)strNewInput=strNewInput.substring(0,i).trim(); //remove trailing comments
+		if(ar.isImprovedAnExactMatch())strNewInput+=" ";
+		DevConsPluginStateI.i().insertAtInputTextCaratPos(strNewInput,	iInitialLength);
+		
+		addCmdToHistory(strInputTilCarat);
+		if(ar.isPartGotImproved())addCmdToHistory(strNewInput);
+		
+		DevConsPluginStateI.i().scrollKeepAtBottom();
+	}
+
+	private AutoCompleteResult autoCompleteBaseCmd(String strInputTilCarat,			AutoCompleteResult ar) {
 		if( // is to auto guess and complete with a base command?
 				!strInputTilCarat.isEmpty() && 
 				!strInputTilCarat.startsWith(strCmdChar) && 
@@ -894,25 +916,14 @@ public class JavaScriptI implements IGlobalAddListener {
 				!ar.isImprovedAnExactMatch() && 
 				ar.getResultList().size()==1
 		){ //if nothing changed, try again as base command
-			AutoCompleteResult arTryAgain = JavaScriptI.i().showHelp(strCmdChar+strInputTilCarat);
-			if(arTryAgain.isPartGotImproved()){
-				strNewInput = arTryAgain.getImprovedPart();
-				ar = arTryAgain;
+			AutoCompleteResult arBaseCmds = JavaScriptI.i().showHelp(strCmdChar+strInputTilCarat);
+			if(arBaseCmds.isPartGotImproved()){
+				arBaseCmds.setNewCustomImprovedPart(arBaseCmds.getImprovedPart());
+				return arBaseCmds;
 			}
 		}
 		
-//		int i = strNewInput.indexOf(strCommentLineToken);if(i>-1)strNewInput=strNewInput.substring(0,i).trim()+" "; //remove trailing comments
-		int i = strNewInput.indexOf(strCommentLineToken);if(i>-1)strNewInput=strNewInput.substring(0,i).trim(); //remove trailing comments
-//		DevConsPluginStateI.i().setInputText(strNewInput);
-		if(ar.isImprovedAnExactMatch())strNewInput+=" ";
-		DevConsPluginStateI.i().insertAtInputTextCaratPos(
-				strNewInput,
-				iInitialLength);
-		
-		addCmdToHistory(strInputTilCarat);
-		if(ar.isPartGotImproved())addCmdToHistory(strNewInput);
-		
-		DevConsPluginStateI.i().scrollKeepAtBottom();
+		return null;
 	}
 
 	public void autoCompleteWord() {
@@ -926,9 +937,29 @@ public class JavaScriptI implements IGlobalAddListener {
 		}
 	}
 
+	public void setJSBindingForEnumsOf(Class clWithEnums){
+		Class<?>[] acl = clWithEnums.getDeclaredClasses();
+		for(Class<?> cl:acl){
+			if(JavaLangI.i().isEnumClass(cl)){
+				setJSBinding(cl);
+			}
+		}
+	}
 	@Override
-	public void globalAddedEvent(Object objInst) {
-		setJSBinding(objInst);
+	public void globalEnumAddedEvent(Class<Enum> cle, Enum[] ae) {
+		if(ae==null){ //will help the globals manager providing the values
+			try {
+				ae = (Enum[])jse.eval("Java.type('"+cle.getName()+"').values();");
+				GlobalManagerI.i().putEnumClass(cle, ae);
+				setJSBinding(cle);
+			} catch (ScriptException ex) {
+				throw new DetailedException(ex, cle, ae);
+			}
+		}
+	}
+	@Override
+	public void globalInstanceAddedEvent(Class clType, Object objValue) {
+		setJSBinding(objValue); //TODO use the "specific class"'s name as bind id? 
 	}
 	
 	/**

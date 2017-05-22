@@ -266,8 +266,12 @@ public class StringI {
 		return String.format(dfLong.format(l));
 	}
 
-	public String extractPart(String strCmd, String strSeparator, int iIndex) {
-		String[] astr = strCmd.split(strSeparator);
+	public String extractPart(String strText, String strSeparator, int iIndex) {
+		String strSeparatorRegex="";
+		for(char ch:strSeparator.toCharArray()){
+			strSeparatorRegex+="["+ch+"]";
+		}
+		String[] astr = strText.split(strSeparatorRegex);
 		String strPart = astr[iIndex];
 		return strPart;
 	}
