@@ -108,15 +108,50 @@ public class GlobalManagerI {
     }
     
     hmInst.put(cl,obj);
-    for(IGlobalAddListener igal:aigalList){
-    	igal.globalAddedEvent(obj);
-    }
+    callListeners(obj);
     
 		MessagesI.i().debugInfo(this,"created global instance: "+cl.getName(),obj);
 		
+		prepareEnumsOf(cl);
+		
 		return obj;
   }
-  
+	@SuppressWarnings("unchecked")
+	protected void prepareEnumsOf(Class clWithEnums){
+		Class<?>[] acl = clWithEnums.getDeclaredClasses();
+		for(Class<?> cl:acl){
+			if(JavaLangI.i().isEnumClass(cl)){
+				Class<Enum> cle = (Class<Enum>)cl;
+				addEnumClass(cle);
+			}
+		}
+	}
+	public void addEnumClass(Class<Enum> cle){
+		if(!acleList.contains(cle)){
+			acleList.add(cle);
+			callListeners(cle);
+		}
+	}
+	protected void callListeners(Object obj) {
+    for(IGlobalAddListener igal:aigalList){
+    	igal.globalAddedEvent(obj);
+    }
+	}
+	public Enum parseToEnum(String strFullEnumId){
+		for(Class<Enum> cle:acleList){
+			Enum e = JavaLangI.i().parseToEnum(cle,strFullEnumId);
+			if(e!=null)return e;
+		}
+		return null;
+	}
+//	private HashMap<Class<Enum>,Enum[]> acleList = new HashMap<Class<Enum>,Enum[]>();
+	private ArrayList<Class<Enum>> acleList = new ArrayList<Class<Enum>>();
+	
+	public ArrayList<Class<Enum>> getGlobalEnumsListCopy(){
+		return new ArrayList<Class<Enum>>(acleList);
+//		return new HashMap<Class<Enum>,Enum[]>(acleList);
+	}
+	
   public ArrayList<Object> getListCopy(){
   	return new ArrayList<Object>(hmInst.values());
   }

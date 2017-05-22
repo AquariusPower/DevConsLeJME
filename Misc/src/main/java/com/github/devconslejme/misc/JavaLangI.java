@@ -508,5 +508,14 @@ public class JavaLangI {
 		}
 		return false;
 	}
+
+	@SuppressWarnings("unchecked")
+	public Enum parseToEnum(Class<Enum> cle, String strFullEnumId) {
+		if(strFullEnumId.startsWith(cle.getName())){
+			String strEnumId=strFullEnumId.substring(cle.getName().length()+1);
+			return Enum.valueOf(cle, strEnumId);
+		}
+		return null;
+	}
 	
 }

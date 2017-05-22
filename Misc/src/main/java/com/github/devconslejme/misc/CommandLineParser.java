@@ -122,7 +122,6 @@ public class CommandLineParser {
 //		return str; 
 //	}
 	
-	@SuppressWarnings("unchecked")
 	public void parse(){
 		strLine=strLine.trim();
 		strLine+=" "; // a blank at the end will easify the finalization of the last part fill/detection
@@ -244,18 +243,18 @@ public class CommandLineParser {
 						continue;
 					case Enum:
 						if(isBlank(ch)){ //finalize
-							Object objEnumValue=null;
-							for(Object obj:GlobalManagerI.i().getListCopy()){
-								if(obj instanceof Enum){
-									Enum e = (Enum)obj;
-									if(strParam.startsWith(e.getClass().getName())){
-										String strEnumId=strParam.substring(e.getClass().getName().length()+1);
-										objEnumValue = Enum.valueOf(e.getClass(), strEnumId);
-									}
-								}
-							}
-							if(objEnumValue==null)DetailedException.assertNotNull(objEnumValue, strParam, strLine);
-							aobjList.add(objEnumValue);strParam="";et=null;continue; //add&reset
+							Enum e=GlobalManagerI.i().parseToEnum(strParam);
+//							for(Object obj:GlobalManagerI.i().getListCopy()){
+//								if(JavaLangI.i().isEnumClass(obj)){
+//									Enum e = (Enum)obj;
+//									if(strParam.startsWith(e.getClass().getName())){
+//										String strEnumId=strParam.substring(e.getClass().getName().length()+1);
+//										objEnumValue = Enum.valueOf(e.getClass(), strEnumId);
+//									}
+//								}
+//							}
+							if(e==null)DetailedException.assertNotNull(e, strParam, strLine);
+							aobjList.add(e);strParam="";et=null;continue; //add&reset
 						}
 						
 						strParam+=ch;

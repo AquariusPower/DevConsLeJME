@@ -48,7 +48,6 @@ import javax.script.ScriptException;
 
 import com.github.devconslejme.misc.AutoCompleteI;
 import com.github.devconslejme.misc.AutoCompleteI.AutoCompleteResult;
-import com.github.devconslejme.misc.CommandLineParser;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.FileI;
 import com.github.devconslejme.misc.GlobalManagerI;
@@ -59,9 +58,9 @@ import com.github.devconslejme.misc.JavadocI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.MethodX;
 import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.ReportI;
+import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.jme.TextI;
 import com.google.common.collect.HashBiMap;
 import com.jme3.app.Application;
@@ -402,11 +401,12 @@ public class JavaScriptI implements IGlobalAddListener {
 	public void setJSBinding(Object objBindValue){
 		if(isAccessForbidden(objBindValue))return;
 		
-		Class clEnum = (JavaLangI.i().isEnumClass(objBindValue)) ? (Class)objBindValue : null;
+		@SuppressWarnings("unchecked")
+		Class<Enum> clEnum = (JavaLangI.i().isEnumClass(objBindValue)) ? (Class<Enum>)objBindValue : null;
 		
 		String strBindId = genKeyFor(objBindValue);
 		if(bndJSE.get(strBindId)!=null){
-			if(clEnum!=null)return; //np if already set, just skip/ignore
+			if(clEnum!=null)return; //np if already set, just skip/ignore as enums are global statics (not instances)
 			throw new DetailedException("already set: "+strBindId, bndJSE.get(strBindId));
 		}
 		
@@ -420,7 +420,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		
 		setJSBindingRaw(strBindId,objBindValue);
 		
-		setJSBindingForEnumsOf(objBindValue.getClass());
+//		setJSBindingForEnumsOf(objBindValue.getClass());
 	}
 	
 	private void setJSBindingRaw(String strBindId,Object objBindValue){
@@ -445,15 +445,15 @@ public class JavaScriptI implements IGlobalAddListener {
 		}
 	}
 	
-	public void setJSBindingForEnumsOf(Class clWithEnums){
-		Class<?>[] acl = clWithEnums.getDeclaredClasses();
-		for(Class<?> cl:acl){
-			if(JavaLangI.i().isEnumClass(cl)){
-//				QueueI.i().enqueue(cx);
-				setJSBinding(cl);
-			}
-		}
-	}
+//	public void setJSBindingForEnumsOf(Class clWithEnums){
+//		Class<?>[] acl = clWithEnums.getDeclaredClasses();
+//		for(Class<?> cl:acl){
+//			if(JavaLangI.i().isEnumClass(cl)){
+////				QueueI.i().enqueue(cx);
+//				setJSBinding(cl);
+//			}
+//		}
+//	}
 	
 	private boolean isAccessForbidden(Object objBindValue) {
 		DetailedException.assertNotNull(objBindValue);
@@ -667,6 +667,29 @@ public class JavaScriptI implements IGlobalAddListener {
 		if(obj==null){
 			LoggingI.i().logSubEntry("Return is null or void.");
 		}else{
+			String strCl=obj.toString();
+			strCl=strCl.substring("JavaClassStatics[".length(), strCl.length()-1);
+			try {
+				Class cl = Class.forName(strCl);
+				if(JavaLangI.i().isEnumClass(cl)){
+					Class<Enum> cle = (Class<Enum>)cl;
+					//TODO
+				}
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+//			errr;
+//			obj.toString()
+//			StaticClass sc; 
+//			((StaticClass)obj);
+//			obj.getClass()
+////			jdk.internal.dynalink.beans;
+////			obj.getClass().
+//			if (obj.getClass() instanceof StaticClass) {
+//				StaticClass new_name = (StaticClass) obj;
+//				
+//			}
+			
 			LoggingI.i().logSubEntry("Return type: "+obj.getClass());
 			if(JavaLangI.i().isCanUserTypeIt(obj)){ // simple types result in simple and readable strings
 				String str="";
@@ -789,6 +812,7 @@ public class JavaScriptI implements IGlobalAddListener {
 			LoggingI.i().logMarker("UserInit:Begin");
 			boolean bFail=false;
 			for(String strJS:astrUserInit){
+				if(strJS.isEmpty())continue;
 				LoggingI.i().logSubEntry(strJS);
 				if(!execScript(strJS,false)){
 					bFail=true;
