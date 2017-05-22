@@ -147,7 +147,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private int	iNestingStepDistance=10;
 	private FocusManagerState	focusman;
 	protected boolean	bLockPosSize;
-	private boolean	bMethodCallUnsafely;
+//	private boolean	bMethodCallUnsafely;
 	
 	private static class SectionIndicator{}
 	
@@ -897,11 +897,12 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		boolean bIsBeanGetter=JavaLangI.i().isBeanGetter(mGetter); 
 //		mGetter.getAnnotations()
 		boolean bIsSimpleGetter=mGetter.getAnnotation(SimpleVarReadOnly.class)!=null;
-		boolean bAllowUnsafeCall = 
-			isMethodCallUnsafely() && 
-			JavaLangI.i().isGetterName(mGetter) &&
-			mGetter.getParameterTypes().length==0;
-		if( (bIsBeanGetter || bIsSimpleGetter || bAllowUnsafeCall) && etypeGetterRet!=null ) {
+//		boolean bAllowUnsafeCall = 
+//			isMethodCallUnsafely() && 
+//			JavaLangI.i().isGetterName(mGetter) &&
+//			mGetter.getParameterTypes().length==0;
+//		if( (bIsBeanGetter || bIsSimpleGetter || bAllowUnsafeCall) && etypeGetterRet!=null ) {
+		if( (bIsBeanGetter || bIsSimpleGetter) && etypeGetterRet!=null ) {
 			String strButtonHintHelp="read-only";
 			try {
 				Method mSetter = JavaLangI.i().getBeanSetterFor(mGetter,bIsBeanGetter);
@@ -1602,22 +1603,22 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		return hmBackup;
 	}
 
-	public boolean isMethodCallUnsafely() {
-		return bMethodCallUnsafely;
-	}
-	
-	/**
-	 * For beans, the getter is a safe call, should cause no changes.
-	 * For {@link SimpleVarReadOnly} it should be the same.
-	 * For other methods that return values, a call may be unsafe and modify something when not wanted.
-	 * 
-	 * @param bUsafeCallReadAll use with caution
-	 * @return
-	 */
-	public SimpleGenericDialog setMethodCallUnsafely(boolean bUsafeCallReadAll) {
-		this.bMethodCallUnsafely = bUsafeCallReadAll;
-		return this; 
-	}
+//	public boolean isMethodCallUnsafely() {
+//		return bMethodCallUnsafely;
+//	}
+//	
+//	/**
+//	 * For beans, the getter is a safe call, should cause no changes.
+//	 * For {@link SimpleVarReadOnly} it should be the same.
+//	 * For other methods that return values, a call may be unsafe and modify something when not wanted.
+//	 * 
+//	 * @param bUsafeCallReadAll use with caution
+//	 * @return
+//	 */
+//	public SimpleGenericDialog setMethodCallUnsafely(boolean bUsafeCallReadAll) {
+//		this.bMethodCallUnsafely = bUsafeCallReadAll;
+//		return this; 
+//	}
 
 //	public void putCreateOptionAsMethodsOf(OptionData odParentSection, Object objToExtractMethodsFrom) {
 //		Method[] am = isShowInherited() ? 
