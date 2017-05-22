@@ -26,9 +26,13 @@
 */
 package com.github.devconslejme.misc.jme;
 
+import java.util.ArrayList;
+
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.jme.MeshI.Cone;
 import com.github.devconslejme.misc.jme.OriginDevice.NodeAxis;
+import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
+import com.jme3.collision.CollisionResult;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Matrix3f;
@@ -48,7 +52,7 @@ import com.jme3.scene.shape.Torus;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> extends Node{
+public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> extends Node implements IPickListener{
 	private float fRadius;
 	private int	iCS;
 	private int	iRS;
@@ -185,11 +189,15 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		rotate(getAxisInfo(EAxis.Y).getRotatingTorus(), 90, false);
 		
 		createAxis(Vector3f.UNIT_Z, new Cone());
+		
+		// picking 
+    WorldPickingI.i().addListener(this);
 	}
 	
 	protected void updateAxisMainShapes() {
 //		for(NODEXS node:anodeMainShapes){
 		for(EAxis ea:EAxis.values()){
+			if(eaExclusiveRotations!=null && ea!=eaExclusiveRotations)continue;
 			NODEXS node = getAxisInfo(ea).getRepresentationShape();
 			rotateMainShape(node,getRotSpeedCopy());
 		}
@@ -266,6 +274,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 	}
 	
 	AxisInfo[] aai = new AxisInfo[EAxis.values().length];
+	private EAxis	eaExclusiveRotations;
 	
 	public AxisInfo getAxisInfo(EAxis ea) {
 		return aai[ea.ordinal()];
@@ -289,6 +298,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 	}
 	
 	protected void rotateTor(NODEXS nodeTor,Vector3f v3fSpeed){//, EAxis ea) {
+		if(eaExclusiveRotations!=null && nodeTor.ea!=eaExclusiveRotations)return;
 		nodeTor.rotate(0,rotTorSpeed(nodeTor,v3fSpeed),0);
 	}
 	
@@ -446,6 +456,21 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 	public Object debugTest(Object... aobj){
 		rotate(getAxisInfo(EAxis.X).getRepresentationShape(), 90, false);//TODO wrong
 		return null;
+	}
+	@Override
+	public boolean updatePickingEvent(ArrayList<CollisionResult> acrList,			Geometry geom, Spatial sptParentest) {
+		for(EAxis ea:EAxis.values()){
+			NODEXS node = getAxisInfo(ea).getRepresentationShape();
+			if(node.hasChild(geom)){
+				if(eaExclusiveRotations==ea){
+					eaExclusiveRotations=null;
+				}else{
+					eaExclusiveRotations=ea;
+				}
+				return true;
+			}
+		}
+		return false;
 	}
 	
 }

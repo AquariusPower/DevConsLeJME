@@ -34,6 +34,7 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.Annotations.SimpleVarReadOnly;
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
@@ -79,7 +80,8 @@ public class EnvironmentJmeI extends AbstractAppState{
 	private InputManager	inputman;
 	private Camera	cam;
 	private LinkedHashMap<String,String> hmCustomInfo = new LinkedHashMap<String,String>();
-	private boolean	bShowMouseCursorPos; 
+	private boolean	bShowMouseCursorPos;
+	private long lTotalFrameCount; 
 	
 	public void configure(Node nodeGui){
 		app=G.i(Application.class);
@@ -109,6 +111,8 @@ public class EnvironmentJmeI extends AbstractAppState{
 		super.update(fTPF);
 		
 		this.fTPF=(fTPF);
+		
+		this.lTotalFrameCount++; //TODO can this overflow!? :O
 		
 		this.fSumTPF+=fTPF;
 		this.iFrameCount++;
@@ -345,4 +349,13 @@ public class EnvironmentJmeI extends AbstractAppState{
 		return this; 
 	}
 	
+	@SimpleVarReadOnly
+	public long getCurrentFrameId() {
+		return lTotalFrameCount;
+	}
+
+	public long getFrameId(int iAddOrSub) {
+		return lTotalFrameCount-iAddOrSub;
+	}
+
 }

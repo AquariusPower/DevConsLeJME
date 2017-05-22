@@ -248,7 +248,7 @@ public class KeyBindCommandManagerI {
 		 * this also prevents executing the bind's target command just after capturing its bind!
 		 */
 		if(kbWaitBeReleased!=null){
-			if(kbWaitBeReleased.isActivated()){ 
+			if(kbWaitBeReleased.isActivated()){ // KeyCodeManagerI.i().getAllPressedKeys()
 				//still pressed (with modifiers)
 				MessagesI.i().output(false, System.out, "Info", this, "waiting captured key bind to be released");
 				return true; 
@@ -514,6 +514,7 @@ public class KeyBindCommandManagerI {
 
 	private String prepareConfig(BindCommand bc) {
 		//TODO this is still useless/tmp
+		//TODO also load key binds somewhere...
 		return bc.getKeyBind().getBindCfg()+" "+bc.getCommandsInfo();
 	}
 

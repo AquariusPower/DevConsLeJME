@@ -28,17 +28,23 @@ package com.github.devconslejme.misc.jme;
 
 import java.lang.reflect.Field;
 
+import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.Key;
 import com.github.devconslejme.misc.KeyCodeManagerI;
+import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.KeyCodeManagerI.EKeyMod;
 import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.QueueI.CallableX;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.jme3.app.Application;
 import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
+import com.jme3.input.controls.MouseAxisTrigger;
+import com.jme3.input.controls.MouseButtonTrigger;
 
 /**
  * 
@@ -46,35 +52,102 @@ import com.jme3.input.controls.KeyTrigger;
  *
  */
 public class KeyCodeConfigureForJme {
-	private ActionListener	alGeneralJmeKeyCodeListener;
-	private boolean	bCaptureKeyModifiersMode;
+	private ActionListener	alGeneralJmeTriggerListener;
+//	private boolean	bCaptureKeyModifiersMode;
 	private InputManager	inputman;
+	private ActionListener	alGeneralJmeAnalogListener;
+	private PseudoKeyAxis[]	akax;
 	
-	public void configure() {
+	public void configure(int iMaxMouseButtons) {
 //		if(true)return; //TODO remove this line
 		
 //  	KeyCodeManagerI.i().configure();
   	
 		KeyCodeManagerI.i().setKeyCodeForEnter(KeyInput.KEY_RETURN);
 		KeyCodeManagerI.i().setKeyCodeForEscape(KeyInput.KEY_ESCAPE);
-  	fillKeyIdCodeFrom();
+  	fillKeyIdCode();
   	addSpecialKeys();
   	
   	// JME listener/mapping
   	inputman = GlobalManagerI.i().get(Application.class).getInputManager();
   	
-		alGeneralJmeKeyCodeListener = new ActionListener() {
+		alGeneralJmeTriggerListener = new ActionListener() {
 			@Override
 			public void onAction(String strKeyId, boolean bPressed, float tpf) {
 				KeyCodeManagerI.i().refreshPressedState(strKeyId, bPressed);
 			}
 		};
 		
+		alGeneralJmeAnalogListener = new ActionListener() {
+			@Override
+			public void onAction(String strKeyId, boolean bPressed, float tpf) {
+				KeyCodeManagerI.i().refreshPressedState(strKeyId, bPressed);
+				pseudoReleaseAxisKey(strKeyId,bPressed);
+			}
+		}; 
+		
 		for(Key key:KeyCodeManagerI.i().getKeyListCopy()){
 			addKeyCodeMapping(key);
 		}
+		
+		// mouse
+		for(int i=0;i<iMaxMouseButtons;i++){
+			Key key = KeyCodeManagerI.i().addMouseTriggerCode(i);
+			String strId=key.getFullId();
+			inputman.addMapping(strId, new MouseButtonTrigger(i));
+			inputman.addListener(alGeneralJmeTriggerListener,strId);
+		}
+		
+		akax = new PseudoKeyAxis[3];
+		for(int iAxis=0;iAxis<3;iAxis++){
+			akax[iAxis]=new PseudoKeyAxis();
+			for(int iPositive=0;iPositive<2;iPositive++){
+				boolean bPositive=iPositive==1;
+				Key key=KeyCodeManagerI.i().getMouseAxisKey(iAxis,bPositive);
+				akax[iAxis].key=key;
+				String strId=key.getFullId();
+		    inputman.addMapping(strId, new MouseAxisTrigger(iAxis,!bPositive));
+				inputman.addListener(alGeneralJmeAnalogListener,strId);
+			}
+		}
+		
+		// TODO joystick
 	}
-
+	
+	/**
+	 * the listener only receives the "pressed" event, not the "released"
+	 * as being an axis there it no actual trigger (neither press), but... on mouse stop
+	 * moving on that axis direction, could be a "relase" event... :(
+	 * @param strKeyId
+	 */
+	@Workaround
+	private void pseudoReleaseAxisKey(String strKeyId,boolean bPressed){
+		for(PseudoKeyAxis kax:akax){
+			if(kax.key.getFullId().equals(strKeyId)){
+				if(bPressed){
+					kax.lPseudoPressedLastFrameId=EnvironmentJmeI.i().getCurrentFrameId();
+					
+					/**
+					 * must be on next frame so the "key press" is detected/forwarded by/thru {@link KeyCodeManagerI} 
+					 */
+					QueueI.i().enqueue(kax.cxPseudoRelease);
+				}
+			}
+		}
+	}
+	public static class PseudoKeyAxis{
+		public long	lPseudoPressedLastFrameId;
+		Key key;
+		CallableX cxPseudoRelease = new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				if( lPseudoPressedLastFrameId >= EnvironmentJmeI.i().getFrameId(-1) )return false; //wait a gap (a lacking "pressed event" for the axis)
+				KeyCodeManagerI.i().refreshPressedState(key.getFullId(), false);
+				return true;
+			}
+		};
+	}
+	
 	/** 
 	 * TODO should this be allowed to be called only once? other classes without conflicts would be no problem tho...
 	 * @param iKeyCodeForEscape to setup a generic cancel fail-safe key
@@ -84,7 +157,7 @@ public class KeyCodeConfigureForJme {
 	 * @return
 	 */
 //	public boolean fillKeyIdCodeFrom(int iKeyCodeForEscape, int iKeyCodeForReturn, Class<?> cl, String strKeyIdPrefixFilter){
-	private boolean fillKeyIdCodeFrom(){
+	private boolean fillKeyIdCode(){
 		Class<?> cl = KeyInput.class;
 		String strKeyIdPrefixFilter="KEY_";
 //		this.strKeyIdPrefixFilter=strKeyIdPrefixFilter;
@@ -157,7 +230,7 @@ public class KeyCodeConfigureForJme {
 			/**
 			 * if the "keycode id" mapping already existed, it will just add a listener to it!
 			 */
-			inputman.addListener(alGeneralJmeKeyCodeListener, strMapping);
+			inputman.addListener(alGeneralJmeTriggerListener, strMapping);
 		}else{
 			MessagesI.i().warnMsg(this, "still not supported", key);
 		}

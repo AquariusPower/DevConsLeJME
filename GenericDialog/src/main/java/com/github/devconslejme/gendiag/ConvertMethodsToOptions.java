@@ -159,7 +159,12 @@ public class ConvertMethodsToOptions {
 							MessagesI.i().warnMsg(this, strInfo, mh);
 //							LoggingI.i().logExceptionEntry(ex, strInfo);
 						}
-					}}.setHintHelp("will call this simple (parameters less) method, which may perform more actions than the obvious one, better find out what it does before using it. The return value will go to the text terminal output, and may also be further handled."));
+					}}.setHintHelp( "will call this simple (parameters less) method, "
+							+"which may perform more actions than the obvious one, better find out what "
+							+"it does before using it. The return value will go to the text terminal output, "
+							+"and may also be further handled: "+G.i(ManagerHelperI.class).getHandleCallRetVal()
+						)
+					);
 				}
 			}
 			

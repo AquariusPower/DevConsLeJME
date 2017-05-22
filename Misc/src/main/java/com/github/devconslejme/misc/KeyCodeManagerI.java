@@ -32,6 +32,8 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import com.github.devconslejme.misc.jme.UserDataI.IUDKey;
+
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
@@ -45,6 +47,8 @@ public class KeyCodeManagerI {
 	private int	iKeyCodeForEscape=-1;
 	private int	iKeyCodeForEnter=-1;
 	private boolean	bConfigured;
+	private int	iSpecialCodeStart=Integer.MAX_VALUE;
+	private boolean	bDebug;
 	
 	public Key addKey(String strId, Integer... aiCodeToMonitor){
 		ArrayList<Key> akey = new ArrayList<Key>();
@@ -70,7 +74,7 @@ public class KeyCodeManagerI {
 	 */
 	public Key addKeyWorkFull(String strPrefix, String strId, Integer iCode, Key... akeyToMonitor){
 		if(iCode!=null && akeyToMonitor.length>0){
-			throw new DetailedException("both params were set...", iCode, akeyToMonitor);
+			throw new DetailedException("it can only have a key code or be a key group monitor, not both!", iCode, akeyToMonitor);
 		}
 		
 //		strId=prepareFullKeyId(strId);
@@ -91,7 +95,9 @@ public class KeyCodeManagerI {
 		
 		if(iCode!=null){
 			for(Entry<String,Key> entry:tmKey.entrySet()){
-				if(entry.getValue().getKeyCode()==iCode){
+				Key key = entry.getValue();
+				if(!key.isKeyWithCode())continue;
+				if(key.getKeyCode()==iCode){
 					String strExistingId=entry.getKey();
 					/**
 					 * The source of ids and codes may contain more than one id with the same code.
@@ -186,6 +192,7 @@ public class KeyCodeManagerI {
 	
 	public void refreshPressedState(String strKeyId, boolean bPressed){
 		tmKey.get(strKeyId).setPressed(bPressed);
+		if(bDebug && bPressed)System.out.println(strKeyId);
 	}
 	
 	public void refreshPressedState(int iKeyCode, boolean bPressed){
@@ -213,25 +220,82 @@ public class KeyCodeManagerI {
 		return key;
 	}
 	
+//	public static enum EMouseTrigger implements IUDKey{
+//		;
+//
+//		@Override
+//		public Class getType() {
+//			return Integer.class;
+//		}
+//
+//		@Override
+//		public String getUId() {
+//			return JavaLangI.i().enumUId(this);
+//		}
+//		
+//	}
+	
 	private void addSpecialKeys() {
-		int iSpecialCodeStart=Integer.MAX_VALUE;
-		
-		// a mouse listener can be used to set these
-		addKeyWorkFull("mouseWheelUp",		iSpecialCodeStart--);
-		addKeyWorkFull("mouseWheelDown",	iSpecialCodeStart--);
-		addKeyWorkFull("mouseButton0",		iSpecialCodeStart--);
-		addKeyWorkFull("mouseButton1",		iSpecialCodeStart--);
-		addKeyWorkFull("mouseButton2",		iSpecialCodeStart--);
-		addKeyWorkFull("mouseButton3",		iSpecialCodeStart--);
-		addKeyWorkFull("mouseButton4",		iSpecialCodeStart--);
-		addKeyWorkFull("mouseButton5",		iSpecialCodeStart--);
-		addKeyWorkFull("mouseButton6",		iSpecialCodeStart--);
-		addKeyWorkFull("mouseButton7",		iSpecialCodeStart--);
-		addKeyWorkFull("mouseButton8",		iSpecialCodeStart--);
-		addKeyWorkFull("mouseButton9",		iSpecialCodeStart--);
+//		// a mouse listener can be used to set these 
+//		addKeyWorkFull("mouseWheelUp",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseWheelDown",	iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton0",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton1",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton2",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton3",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton4",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton5",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton6",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton7",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton8",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton9",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton10",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton11",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton12",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton13",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton14",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton15",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton16",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton17",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton18",		iSpecialCodeStart--);
+//		addKeyWorkFull("mouseButton19",		iSpecialCodeStart--);
+		prepareMouseAxisCodes();
 		
 		//TODO joystick
 	}
+	
+	private String strAxisPrefix="mouseAxis";
+	public void prepareMouseAxisCodes(){
+		addKeyWorkFull(strAxisPrefix+0+0+"_XLeft", iSpecialCodeStart--);
+		addKeyWorkFull(strAxisPrefix+0+1+"_XRight", iSpecialCodeStart--);
+		addKeyWorkFull(strAxisPrefix+1+0+"_YDown", iSpecialCodeStart--);
+		addKeyWorkFull(strAxisPrefix+1+1+"_YUp", iSpecialCodeStart--);
+		addKeyWorkFull(strAxisPrefix+2+0+"_WheelDown", iSpecialCodeStart--);
+		addKeyWorkFull(strAxisPrefix+2+1+"_WheelUp", iSpecialCodeStart--);
+	}
+	public Key getMouseAxisKey(int iAxis, boolean bPositive){
+		for(String k:tmKey.keySet()){
+			if(k.startsWith(strAxisPrefix+iAxis+(bPositive?1:0))){
+				return tmKey.get(k);
+			}
+		}
+		return null;
+	}
+	
+	public Key addMouseTriggerCode(int iButtonIndex){
+		String strKeyPrefix="mouseButton";
+		String strId=strKeyPrefix+iButtonIndex;
+		Key key=getKeyForId(strId);
+		if(key!=null){
+			throw new DetailedException("already set "+strId, key);
+		}
+		key=addKeyWorkFull(strId, iSpecialCodeStart--);
+		return key;
+	}
+	
+//	public Key getMouseButtonKey(int iButtonIndex){
+//		return getKeyForId("mouseButton"+iButtonIndex);
+//	}
 	
 	public void configure() {
   	addSpecialKeys();
@@ -323,6 +387,13 @@ public class KeyCodeManagerI {
 	public KeyCodeManagerI setKeyCodeForEnter(int iKeyCodeForEnter) {
 		this.iKeyCodeForEnter = iKeyCodeForEnter;
 		return this;
+	}
+	public boolean isDebug() {
+		return bDebug;
+	}
+	public KeyCodeManagerI setDebug(boolean bDebug) {
+		this.bDebug = bDebug;
+		return this; 
 	}
 	
 }

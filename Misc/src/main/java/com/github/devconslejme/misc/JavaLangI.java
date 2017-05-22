@@ -359,7 +359,7 @@ public class JavaLangI {
 	 */
 	public boolean isBeanGetter(Method m){
 		return 				
-			(m.getName().startsWith("get") || m.getName().startsWith("is"))
+			isGetterName(m)
 			&&
 			JavaLangI.i().isCanUserTypeIt(m.getReturnType())
 			&&
@@ -367,6 +367,9 @@ public class JavaLangI {
 			&&
 			getBeanSetterFor(m,false)!=null
 		;
+	}
+	public boolean isGetterName(Method m){
+		return (m.getName().startsWith("get") || m.getName().startsWith("is"));
 	}
 	
 	/**

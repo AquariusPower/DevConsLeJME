@@ -85,6 +85,13 @@ public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 					}
 				}).setMultiStatusMode(bShowPackagesPrepended?0:1,"after","prepend"));
 				
+				diagMaint.putToolAction(new ToolAction("Unsafe 'getters'", new CmdBtnTA() {
+					@Override	public Integer executeTA(Button source) {
+						diagMaint.setMethodCallUnsafely(!diagMaint.isMethodCallUnsafely());
+						return diagMaint.isMethodCallUnsafely()?0:1;
+					}
+				}).setMultiStatusMode(diagMaint.isMethodCallUnsafely()?0:1,"allow","deny"));//todo;
+				
 //				vfNewInputTextFilterSubmitted = diagMaint.createInputTextSubmitedVersionedReference();
 				
 				return true;

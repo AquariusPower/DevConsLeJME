@@ -80,7 +80,7 @@ import com.jme3.scene.shape.Sphere;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickListener{
+public class TestOriginDeviceGame extends SimpleAppStateAbs {
 	public static void main(String[] args) {
 		TestDevCons.main(args); //TODO rm
 		if(false){TestOriginDeviceGame test = new TestOriginDeviceGame();test.start();}//TODO re-enable
@@ -165,24 +165,24 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 			orde.applyTargetTokenLater(geom);
 		}
 		
-		// picking 
-    WorldPickingI.i().addListener(this);
+//		// picking 
+//    WorldPickingI.i().addListener(this);
 	}
 	
-	@Override
-	public boolean updatePickingEvent(ArrayList<CollisionResult> acrList, Geometry geom, Spatial sptParentest) {
-		if(geom!=null){
-			LoggingI.i().logMarker(""+geom);
-			LoggingI.i().logEntry(""+geom.getWorldBound());
-			LoggingI.i().logEntry("Volume="+geom.getWorldBound().getVolume());
-			orde.setElectricitySource(geom);
-			return true;
-		}
-		
-		orde.setElectricitySource(null);
-		
-		return false;
-	}
+//	@Override
+//	public boolean updatePickingEvent(ArrayList<CollisionResult> acrList, Geometry geom, Spatial sptParentest) {
+//		if(geom!=null){
+//			LoggingI.i().logMarker(""+geom);
+//			LoggingI.i().logEntry(""+geom.getWorldBound());
+//			LoggingI.i().logEntry("Volume="+geom.getWorldBound().getVolume());
+//			orde.setElectricitySource(geom);
+//			return true;
+//		}
+//		
+//		orde.setElectricitySource(null);
+//		
+//		return false;
+//	}
 
 	public static class NodeAxisGm extends NodeAxis{
 		public NodeAxisGm(String str) {
@@ -250,6 +250,21 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs implements IPickList
 		@Deprecated	@Override	public Spatial rotate(float xAngle, float yAngle, float zAngle) {		throw new UnsupportedOperationException(strMsgError);	}
 		@Deprecated @Override	public Spatial rotate(Quaternion rot) {		throw new UnsupportedOperationException(strMsgError);	}
 		@Deprecated @Override	public void rotateUpTo(Vector3f newUp) {		throw new UnsupportedOperationException(strMsgError);	}
+		
+		@Override
+		public boolean updatePickingEvent(ArrayList<CollisionResult> acrList, Geometry geom, Spatial sptParentest) {
+			if(geom!=null){
+				LoggingI.i().logMarker(""+geom);
+				LoggingI.i().logEntry(""+geom.getWorldBound());
+				LoggingI.i().logEntry("Volume="+geom.getWorldBound().getVolume());
+				setElectricitySource(geom);
+				return true;
+			}
+			
+			setElectricitySource(null);
+			
+			return false;
+		}
 		
 		@Override
 		public NodeAxisGm createNodeAxis(String strName) {

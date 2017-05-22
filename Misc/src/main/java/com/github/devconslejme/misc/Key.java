@@ -89,7 +89,7 @@ public class Key{
 	}
 	
 	public ArrayList<Key> getKeysToMonitorCopy(){
-		assert(iKeyCode==null);
+		assert iKeyCode==null : "if it is a keys-monitor, it cannot have a keycode ";
 		return new ArrayList<Key>(akeyMonitoredList);
 	}
 	
@@ -137,7 +137,7 @@ public class Key{
 	}
 	
 	public Integer getKeyCode() {
-		assert(akeyMonitoredList==null);
+		assert akeyMonitoredList==null : "if it has a keycode, it cannot have be a keys-monitor";
 		return iKeyCode;
 	}
 

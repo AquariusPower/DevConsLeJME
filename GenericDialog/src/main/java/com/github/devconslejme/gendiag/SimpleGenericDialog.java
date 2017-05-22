@@ -43,6 +43,7 @@ import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
 import com.github.devconslejme.gendiag.ContextMenuI.HintUpdaterPerCtxtBtn;
 import com.github.devconslejme.misc.Annotations.Bugfix;
+import com.github.devconslejme.misc.Annotations.SimpleVarReadOnly;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.ESimpleType;
@@ -146,6 +147,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	private int	iNestingStepDistance=10;
 	private FocusManagerState	focusman;
 	protected boolean	bLockPosSize;
+	private boolean	bMethodCallUnsafely;
 	
 	private static class SectionIndicator{}
 	
@@ -892,67 +894,77 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		Method mGetter = mh.getMethod();
 		ContainerEdit ce = new ContainerEdit();
 		ESimpleType etypeGetterRet=ESimpleType.forClass(mGetter.getReturnType(),false);
-		if( JavaLangI.i().isBeanGetter(mGetter) && etypeGetterRet!=null ) {
-			String strButtonHintHelp=null;
+		boolean bIsBeanGetter=JavaLangI.i().isBeanGetter(mGetter); 
+//		mGetter.getAnnotations()
+		boolean bIsSimpleGetter=mGetter.getAnnotation(SimpleVarReadOnly.class)!=null;
+		boolean bAllowUnsafeCall = 
+			isMethodCallUnsafely() && 
+			JavaLangI.i().isGetterName(mGetter) &&
+			mGetter.getParameterTypes().length==0;
+		if( (bIsBeanGetter || bIsSimpleGetter || bAllowUnsafeCall) && etypeGetterRet!=null ) {
+			String strButtonHintHelp="read-only";
 			try {
-				Method mSetter = JavaLangI.i().getBeanSetterFor(mGetter,true);//mh.getConcreteObjectInstance(), m.getName());
-				
-				od.setHasBean(); //first thing, so if it fails below the problem will be clearly visible
+				Method mSetter = JavaLangI.i().getBeanSetterFor(mGetter,bIsBeanGetter);
+				if(mSetter!=null)od.setHasBean(); //first thing, so if it fails below the problem will be clearly visible
 				
 				Object objVal = mGetter.invoke(mh.getConcreteObjectInstance()); //collect value from getter method
 				ce.setBtn(new Button(""+objVal, getDialog().getStyle())); //show value
 				ce.addChild(ce.getBtnShowVal(), 0);
 				
-				strButtonHintHelp=ESimpleType.Boolean.is(etypeGetterRet)?"click to toggle":"click to change value";
-				ce.setTf(new TextField(ce.getBtnShowVal().getText(), ce.getBtnShowVal().getStyle()));
-				
-				Function funcApplyEditedValue = new Function() {
-					@Override
-					public Object apply(Object input) {
-						boolean b=JavaLangI.i().setBeanValueAt(
-							mh.getConcreteObjectInstance(), 
-							mSetter, 
-							mGetter.getReturnType(), 
-							ce.getTFInput().getText());
-						
-						if(!b)MessagesI.i().warnMsg(this, "failed to change value", mSetter, mGetter, ce.getTFInput().getText(), mh);
-						
-						try {
-							// retrieves value possibly validated by the setter/getter
-							ce.getBtnShowVal().setText(""+mGetter.invoke(mh.getConcreteObjectInstance()));
-						} catch (IllegalAccessException | IllegalArgumentException| InvocationTargetException e) {
-							throw new DetailedException(e, "value get should not have failed this second time", mGetter, mSetter, mh, od);
-						}
-						
-						ce.addChild(ce.getBtnShowVal(), 0); //will replace the textfield
+				if(mSetter!=null){
+					strButtonHintHelp=ESimpleType.Boolean.is(etypeGetterRet)?"click to toggle":"click to change value";
+					ce.setTf(new TextField(ce.getBtnShowVal().getText(), ce.getBtnShowVal().getStyle()));
+					
+					Function funcApplyEditedValue = new Function() {
+						@Override
+						public Object apply(Object input) {
+							boolean b=JavaLangI.i().setBeanValueAt(
+								mh.getConcreteObjectInstance(), 
+								mSetter, 
+								mGetter.getReturnType(), 
+								ce.getTFInput().getText());
 							
-						return null;
-					}
-				};
-				
-				KeyActionListener kalApplyEditedValue = new KeyActionListener() {
-					@Override public void keyAction(TextEntryComponent source, KeyAction key) {
-						funcApplyEditedValue.apply(null);
-					}
-				};
-				ce.getTFInput().getActionMap().put(new KeyAction(KeyInput.KEY_RETURN), kalApplyEditedValue);
-				
-//				ce.getBtnShowVal().addClickCommands(new Command<Button>(){
-				AbsorbClickCommandsI.i().addClickCommands(ce.getBtnShowVal(),new Command<Button>(){
-					@Override
-					public void execute(Button source) {
-						if(ESimpleType.Boolean.is(etypeGetterRet)){
-							boolean b=ESimpleType.Boolean.parse(source.getText());
-							ce.getTFInput().setText(""+!b); //auto set edited as a toggle
-							funcApplyEditedValue.apply(null);
-						}else{
-							ce.addChild(ce.getTFInput(), 0); //will replace the button
-							ce.getTFInput().setText(ce.getBtnShowVal().getText());
-							focusman.setFocus(ce.getTFInput());
+							if(!b)MessagesI.i().warnMsg(this, "failed to change value", mSetter, mGetter, ce.getTFInput().getText(), mh);
+							
+							try {
+								// retrieves value possibly validated by the setter/getter
+								ce.getBtnShowVal().setText(""+mGetter.invoke(mh.getConcreteObjectInstance()));
+							} catch (IllegalAccessException | IllegalArgumentException| InvocationTargetException e) {
+								throw new DetailedException(e, "value get should not have failed this second time", mGetter, mSetter, mh, od);
+							}
+							
+							ce.addChild(ce.getBtnShowVal(), 0); //will replace the textfield
+								
+							return null;
 						}
-					}});
-				
-				ce.getBtnShowVal().setColor(ColorI.i().colorChangeCopy(ColorRGBA.Green, 0.35f));
+					};
+					
+					KeyActionListener kalApplyEditedValue = new KeyActionListener() {
+						@Override public void keyAction(TextEntryComponent source, KeyAction key) {
+							funcApplyEditedValue.apply(null);
+						}
+					};
+					ce.getTFInput().getActionMap().put(new KeyAction(KeyInput.KEY_RETURN), kalApplyEditedValue);
+					
+	//				ce.getBtnShowVal().addClickCommands(new Command<Button>(){
+					AbsorbClickCommandsI.i().addClickCommands(ce.getBtnShowVal(),new Command<Button>(){
+						@Override
+						public void execute(Button source) {
+							if(ESimpleType.Boolean.is(etypeGetterRet)){
+								boolean b=ESimpleType.Boolean.parse(source.getText());
+								ce.getTFInput().setText(""+!b); //auto set edited as a toggle
+								funcApplyEditedValue.apply(null);
+							}else{
+								ce.addChild(ce.getTFInput(), 0); //will replace the button
+								ce.getTFInput().setText(ce.getBtnShowVal().getText());
+								focusman.setFocus(ce.getTFInput());
+							}
+						}});
+					
+					ce.getBtnShowVal().setColor(ColorI.i().colorChangeCopy(ColorRGBA.Green, 0.35f));
+				}else{
+					ce.getBtnShowVal().setColor(ColorI.i().colorChangeCopy(ColorRGBA.Red, 0.35f));
+				}
 				
 			} catch (IllegalAccessException | IllegalArgumentException| InvocationTargetException ex) {
 				strButtonHintHelp="ERROR: failed to invoke the method '"+mGetter+"' to get the value";
@@ -1588,6 +1600,23 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		});
 //		return aodList;
 		return hmBackup;
+	}
+
+	public boolean isMethodCallUnsafely() {
+		return bMethodCallUnsafely;
+	}
+	
+	/**
+	 * For beans, the getter is a safe call, should cause no changes.
+	 * For {@link SimpleVarReadOnly} it should be the same.
+	 * For other methods that return values, a call may be unsafe and modify something when not wanted.
+	 * 
+	 * @param bUsafeCallReadAll use with caution
+	 * @return
+	 */
+	public SimpleGenericDialog setMethodCallUnsafely(boolean bUsafeCallReadAll) {
+		this.bMethodCallUnsafely = bUsafeCallReadAll;
+		return this; 
 	}
 
 //	public void putCreateOptionAsMethodsOf(OptionData odParentSection, Object objToExtractMethodsFrom) {

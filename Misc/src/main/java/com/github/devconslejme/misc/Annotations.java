@@ -37,9 +37,11 @@ import java.lang.annotation.Target;
  *
  */
 public class Annotations{
+
 	/**
 	 * use this to indicate things that should change one day
 	 */
+	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = {
 			ElementType.ANNOTATION_TYPE,
 			ElementType.CONSTRUCTOR,
@@ -59,6 +61,7 @@ public class Annotations{
 	 * for things that you want them to work differently,
 	 * and also are problematic in some way or another  
 	 */
+	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = {
 			ElementType.ANNOTATION_TYPE,
 			ElementType.CONSTRUCTOR,
@@ -76,6 +79,7 @@ public class Annotations{
 	/**
 	 * use this to pin point bugs that may vanish on dependencies update
 	 */
+	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = {
 			ElementType.ANNOTATION_TYPE,
 			ElementType.CONSTRUCTOR,
@@ -93,6 +97,7 @@ public class Annotations{
 	/**
 	 * not working yet things
 	 */
+	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = {
 			ElementType.ANNOTATION_TYPE,
 			ElementType.CONSTRUCTOR,
@@ -110,6 +115,7 @@ public class Annotations{
 	/**
 	 * methods that could be used by more classes, could be externalized to a misc/util class
 	 */
+	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = {
 			ElementType.ANNOTATION_TYPE,
 			ElementType.CONSTRUCTOR,
@@ -172,6 +178,17 @@ public class Annotations{
 	/**
 	 *	to indicate it is a getter or a setter of a bean 
 	 */
+	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = {ElementType.METHOD})
 	public static @interface Bean{}
+	
+	/**
+	 *	use this on getters to determine that whatever they do will be just a value retrieval,
+	 *	nothing will be modified with such method call (ex.: if the getter increments a get count, then do not
+	 *	use this annnotation!) 
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.METHOD})
+	public @interface SimpleVarReadOnly {}
+
 }

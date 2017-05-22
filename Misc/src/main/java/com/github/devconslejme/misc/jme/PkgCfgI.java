@@ -63,7 +63,7 @@ public class PkgCfgI {
 		// after first
 		DebugVisualsI.i().configure();
 		MiscJmeI.i().configure(nodeVirtualWorld);
-		new KeyCodeConfigureForJme().configure();
+		new KeyCodeConfigureForJme().configure(20);
 		EffectManagerStateI.i().configure();
 		SimulationTimeStateI.i().configure();
 		QueueStateI.i().configure();

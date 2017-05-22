@@ -42,7 +42,7 @@ import com.google.common.collect.HashBiMap;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class GlobalManagerI {
-	/** code shortener TODO good? */
+	/** code shortener */
 	public static class G{
 		/** returns the instance for the specified class */
 		public static <T> T i(Class<T>cl){
@@ -57,12 +57,16 @@ public class GlobalManagerI {
   }
   public static GlobalManagerI i (){return instance;}
   
+  private ArrayList<IGlobalAddListener> aigalList = new ArrayList<IGlobalAddListener>();
+//  private HashBiMap<Class<Enum>,Enum[]> hmEnumVals = HashBiMap.create();
+	private HashMap<Class<Enum>,Enum[]> hmEnumVals = new HashMap<Class<Enum>,Enum[]>();
+	
   public static interface IGlobalAddListener{
   	void globalInstanceAddedEvent(Class clType, Object objValue);
 
 		void globalEnumAddedEvent(Class<Enum> cle, Enum[] ae);
   }
-  private ArrayList<IGlobalAddListener> aigalList = new ArrayList<IGlobalAddListener>();
+  
   public void addGlobalAddListener(IGlobalAddListener igal){
   	if(!aigalList.contains(igal)){
   		aigalList.add(igal);
@@ -132,7 +136,8 @@ public class GlobalManagerI {
 	}
 	public void putEnumClass(Class<Enum> cle,Enum[] values){
 		if(hmEnumVals.get(cle)==null){
-			hmEnumVals.forcePut(cle,values);
+//			hmEnumVals.forcePut(cle,values);
+			hmEnumVals.put(cle,values);
 			callListeners(cle,values); // if values is null, the listener may help on providing them and setting again this enum here with the values filled up
 		}
 	}
@@ -147,19 +152,16 @@ public class GlobalManagerI {
     }
 	}
 	public Enum parseToEnum(String strFullEnumId){
-		for(Class<Enum> cle:hmEnumVals.inverse().values()){ //keys
+//		for(Class<Enum> cle:hmEnumVals.inverse().values()){ //keys
+		for(Class<Enum> cle:hmEnumVals.keySet()){ //keys
 			Enum e = JavaLangI.i().parseToEnum(cle,strFullEnumId);
 			if(e!=null)return e;
 		}
 		return null;
 	}
-	private HashBiMap<Class<Enum>,Enum[]> hmEnumVals = HashBiMap.create();
-//	private ArrayList<Class<Enum>> acleList = new ArrayList<Class<Enum>>();
 	
 	public HashBiMap<Class<Enum>,Enum[]> getGlobalEnumsListCopy(){
-//		return new ArrayList<Class<Enum>>(acleList);
 		return HashBiMap.create(hmEnumVals);
-//		return new HashBiMap<Class<Enum>,Enum[]>(hmEnumVals);
 	}
 	
   public ArrayList<Object> getListCopy(){
