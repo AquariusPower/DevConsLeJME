@@ -28,6 +28,7 @@
 package com.github.devconslejme.tests;
 
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.jme.UserDataI;
@@ -64,7 +65,9 @@ public class TestHierarchyResizablePanel extends SimpleAppStateAbs {
 		for(ResizablePanel rzp:DialogHierarchyStateI.i().getAllOpenedDialogs()){
 			if(rzp.getContents() instanceof Button){ //TODO this is a bad guess...
 				Button btn = (Button)rzp.getContents();
-				String str = UserDataI.i().retrieve(btn, BaseTextUD.class, false).getBaseText();
+				BaseTextUD btud = UserDataI.i().getExistingOrNull(btn, BaseTextUD.class);
+				DetailedException.assertNotNull(btud,btn);
+				String str = btud.getBaseText();
 				btn.setText(str+"\n"
 					+DialogHierarchyStateI.i().getHierarchyComp(rzp).toString().replace(",", "\n")
 				);
@@ -160,7 +163,7 @@ public class TestHierarchyResizablePanel extends SimpleAppStateAbs {
 		
 		String strBaseText=strName+"/"+strInfo;
 		Button btn = new Button(strBaseText);
-		UserDataI.i().put(btn, new BaseTextUD().setBaseText(strBaseText));
+		UserDataI.i().putSafelyMustNotExist(btn, new BaseTextUD().setBaseText(strBaseText));
 		rzp.setContents(btn);
 //		btn.setInsets(new Insets3f(10, 0, 0, 0));
 //		DragParentestPanelListenerI.i().applyAt(rzp);

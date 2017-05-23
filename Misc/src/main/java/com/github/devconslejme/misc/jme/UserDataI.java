@@ -130,11 +130,6 @@ public class UserDataI {
 		}
 		
 		return ret;
-				
-//		@SuppressWarnings("unchecked")
-//		PseudoSavableHolder<R> sh = (PseudoSavableHolder<R>)spt.getUserData(strKey);
-//		if(sh==null)return null;
-//		return sh.getRef();
 	}
 	/**
 	 * 
@@ -159,10 +154,6 @@ public class UserDataI {
 		return setUserDataPSHSafely(spt, eKey.getUId(), obj);
 	}
 	
-//	public boolean isUserDataSet(Spatial spt, Class cl){
-//		return getUserDataPSH(spt, cl.getName())!=null;
-//	}
-//	public <T> T retrieve(Spatial spt, String strKey, Function<Void,T> funcInstanceFactory){
 	/**
 	 * 
 	 * @param spt
@@ -170,7 +161,7 @@ public class UserDataI {
 	 * @param funcInstanceFactory if null will instance using this function
 	 * @return
 	 */
-	public <T> T retrieve(Spatial spt, Class<T> cl, FuncOut<T> funcInstanceFactory){
+	private <T> T retrieve(Spatial spt, Class<T> cl, FuncOut<T> funcInstanceFactory){
 		T ret = getUserDataPSH(spt, cl);
 //		T obj = getUserDataPSH(spt, strKey);
 		if(ret==null){
@@ -180,20 +171,47 @@ public class UserDataI {
 		}
 		return ret;
 	}
-	@SuppressWarnings("unchecked")
-	public <T> T put(Spatial spt, T objToStore){
-		return retrieve(spt, (Class<T>)objToStore.getClass(), new FuncOut<T>(){
-			@Override
-			public T applyOut() {
-				return objToStore;
-			}
-		});
+	
+	public void overwriteSafely(Spatial spt, Object obj){
+		setUserDataPSHSafely(spt, obj);
 	}
-	public <R> R retrieve(Spatial spt, Class<R> cl, boolean bCreateIfNull){
+	
+	public void putSafelyMustNotExist(Spatial spt, Object obj){
+		Object objCurrent=getUserDataPSH(spt, obj.getClass(), false);
+		if(objCurrent!=null){
+			throw new DetailedException("already set", spt, objCurrent,obj);
+		}
+		setUserDataPSHSafely(spt, obj);
+	}
+	
+	public <R> R getExistingOrNull(Spatial spt, Class<R> cl){
+		return getUserDataPSH(spt, cl, false);
+	}
+	
+	public <R> R retrieveExistingOrCreateNew(Spatial spt, Class<R> cl){
+		return getUserDataPSH(spt, cl, true);
+	}
+	@SuppressWarnings("unchecked")
+	public boolean contains(Spatial spt, Class cl){
+		return getUserDataPSH(spt, cl, false)!=null;
+	}
+	
+	private <R> R retrieve(Spatial spt, Class<R> cl, boolean bCreateIfNull){
 		return getUserDataPSH(spt, cl, bCreateIfNull);
 	}
-
-//	public boolean contains(Spatial spt, Class cl) {
-//		return retrieve(spt, cl, false)!=null;
+	
+//	private class OldMethodsJustToAvoidUsingOrReimplementingSelfNote{
+//		private <R> R retrieve(Spatial spt, Class<R> cl, boolean bCreateIfNull){
+//			return getUserDataPSH(spt, cl, bCreateIfNull);
+//		}
+////		@SuppressWarnings("unchecked")
+////		private <T> T put(Spatial spt, T objToStore){
+////			return retrieve(spt, (Class<T>)objToStore.getClass(), new FuncOut<T>(){
+////				@Override
+////				public T applyOut() {
+////					return objToStore;
+////				}
+////			});
+////		}
 //	}
 }

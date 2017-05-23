@@ -65,22 +65,11 @@ public class AbsorbClickCommandsI extends CursorListenerX{
 	private int delegateClickCommands(Spatial capture) {
 		if(!isDelegateClickCommands())return 0;
 		
-//		if(focusman.getFocus()!=capture)return; //the ignored click commands bug happens only when the Button has focus
-		
 		int iExecutedClickCmds=0;
 		if (capture instanceof Button) {
 			Button btn = (Button) capture;
-//			ArrayList<Command<? super Button>> clickCommandsStored =
-//				UserDataI.i().retrieve(btn, EUDClickCmds.ClickCommands.getUId(), new Function<Void, ArrayList<Command<? super Button>>>() {@Override	public ArrayList<Command<? super Button>> apply(Void input) {return new ArrayList<Command<? super Button>>();}});
-//			ClickCommandsStore ccs = UserDataI.i().getUserDataPSH(btn, ClickCommandsStore.class);
-//			ArrayList<Command<? super Button>> clickCommandsStored = 
-//				UserDataI.i().getUserDataPSH(btn, EUDClickCmds.ClickCommands.getUId());
-//				List<Command<? super Button>> clickCommands = btn.getClickCommands();
-//				if(clickCommands!=null){
-//					for(Command<? super Button> a:clickCommands){
-			ClickCommandsStore ccs = UserDataI.i().retrieve(btn, ClickCommandsStore.class, false);
+			ClickCommandsStore ccs = UserDataI.i().getExistingOrNull(btn, ClickCommandsStore.class);
 			if(ccs!=null){
-//			if(UserDataI.i().isUserDataSet(btn, ClickCommandsStore.class)){
 				for(Command<? super Button> a:ccs.clickCommandsStored){
 					a.execute(btn);
 					iExecutedClickCmds++;
@@ -108,7 +97,7 @@ public class AbsorbClickCommandsI extends CursorListenerX{
 				
 //				ArrayList<Command<? super Button>> clickCommandsStored =
 //						UserDataI.i().retrieve(btn, EUDClickCmds.ClickCommands.getUId(), new Function<Void, ArrayList<Command<? super Button>>>() {@Override	public ArrayList<Command<? super Button>> apply(Void input) {return new ArrayList<Command<? super Button>>();}});
-				ClickCommandsStore ccs = UserDataI.i().retrieve(btn, ClickCommandsStore.class, true);
+				ClickCommandsStore ccs = UserDataI.i().retrieveExistingOrCreateNew(btn, ClickCommandsStore.class);
 				if(ccs.clickCommandsStored.size()==0)CursorEventControl.addListenersToSpatial(btn, this); //1st time
 //				ArrayList<Command<? super Button>> clickCommandsStored = 
 //					UserDataI.i().getUserDataPSH(btn, EUDClickCmds.ClickCommands.getUId());

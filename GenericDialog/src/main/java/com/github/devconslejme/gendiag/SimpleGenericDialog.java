@@ -56,6 +56,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.jme.TextI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.AbsorbClickCommandsI;
 import com.github.devconslejme.misc.lemur.CursorListenerX;
@@ -217,7 +218,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		}
 		
 		protected String updateTextAuto(Button btn){
-			strVisibleTextBtn=(strTextKey+": "+getStatusText(iStatusAutoUpdateText));
+			strVisibleTextBtn=(strTextKey+": "+getNextStatus());
 			
 			if(btn!=null){
 				btn.setText(strVisibleTextBtn);
@@ -227,17 +228,29 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			return strVisibleTextBtn;
 		}
 
+		private String getNextStatus() {
+			int i=iStatusAutoUpdateText;
+			i++;
+			if(i==astrStatus.length)i=0;
+			return astrStatus[i];
+		}
+
+		private String getCurrentStatus() {
+			return astrStatus[iStatusAutoUpdateText];
+		}
+
 		private void updateHintHelp(Button btn) {
 			if(iStatusAutoUpdateText!=null){
-				PopupHintHelpListenerI.i().setPopupHintHelp(btn, "Current: "+getStatusText(iStatusAutoUpdateText-1));
+				PopupHintHelpListenerI.i().setPopupHintHelp(btn, "Current: "+getCurrentStatus());
 			}
 		}
 
-		private String getStatusText(int i) {
-			i=i>=astrStatus.length?i=0:i;
-			i=i<0?astrStatus.length-1:i;
-			return astrStatus[i];
-		}
+//		private String getStatusText(int i) {
+//			// overlaps
+//			i = i>=astrStatus.length?i=0:i;
+//			i = i<0?astrStatus.length-1:i;
+//			return astrStatus[i];
+//		}
 
 		protected String[] getStatusArray() {
 			return astrStatus;
@@ -572,8 +585,9 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 					if(bKeepMaximized){							/**							 * restore							 */
 						getDialog().restoreDefaultSafeSize();
 						
-//						Vector3f v3fPosBeforeMaximize = (Vector3f)getDialog().getUserData(strUDKeyPosBeforeMaximize);
-						Vector3f v3fPosBeforeMaximize = UserDataI.i().retrieve(getDialog(), MaximizeUD.class, false).getPosBeforeMaximize();
+						MaximizeUD mud = UserDataI.i().getExistingOrNull(getDialog(), MaximizeUD.class);
+						DetailedException.assertNotNull(mud,getDialog(),this);
+						Vector3f v3fPosBeforeMaximize = mud.getPosBeforeMaximize();
 						getDialog().setLocalTranslationXY(v3fPosBeforeMaximize);
 						
 						bKeepMaximized=false;
@@ -581,7 +595,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 						getDialog().applyCurrentSafeSizeAsDefault();
 						
 //						getDialog().setUserData(strUDKeyPosBeforeMaximize,getDialog().getLocalTranslation().clone());
-						UserDataI.i().put(
+						UserDataI.i().overwriteSafely(
 							getDialog(), 
 							new MaximizeUD().setPosBeforeMaximize(
 								getDialog().getLocalTranslation().clone()
@@ -903,14 +917,21 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 //			mGetter.getParameterTypes().length==0;
 //		if( (bIsBeanGetter || bIsSimpleGetter || bAllowUnsafeCall) && etypeGetterRet!=null ) {
 		if( (bIsBeanGetter || bIsSimpleGetter) && etypeGetterRet!=null ) {
-			String strButtonHintHelp="read-only";
+			String strButtonHintHelp=null;
 			try {
 				Method mSetter = JavaLangI.i().getBeanSetterFor(mGetter,bIsBeanGetter);
 				if(mSetter!=null)od.setHasBean(); //first thing, so if it fails below the problem will be clearly visible
 				
 				Object objVal = mGetter.invoke(mh.getConcreteObjectInstance()); //collect value from getter method
-				ce.setBtn(new Button(""+objVal, getDialog().getStyle())); //show value
+				String strVal=""+objVal;
+				strButtonHintHelp="read-only";
+				if(strVal.length()>20){
+					strButtonHintHelp+=":"+strVal;
+					strVal=strVal.substring(0, 20); //to not mess the dialog
+				}
+				ce.setBtn(new Button(strVal, getDialog().getStyle())); //show value
 				ce.addChild(ce.getBtnShowVal(), 0);
+				TextI.i().recursivelyApplyTextNoWrap(ce.getBtnShowVal());
 				
 				if(mSetter!=null){
 					strButtonHintHelp=ESimpleType.Boolean.is(etypeGetterRet)?"click to toggle":"click to change value";

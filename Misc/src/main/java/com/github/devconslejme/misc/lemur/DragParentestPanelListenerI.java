@@ -170,7 +170,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 		if(event.getButtonIndex()==iButtonClickOk){
 			if(event.isPressed()){
 				eventButtonDown = event;
-				DragInfo di = UserDataI.i().retrieve(capture, DragInfo.class, false);
+				DragInfo di = UserDataI.i().getExistingOrNull(capture, DragInfo.class);
 				if(di==null){
 					MessagesI.i().warnMsg(this, "captured has no info?", capture, target, event);
 					return;
@@ -247,7 +247,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 		bIsReallyDragging=true;
 		
 		// find parentest
-		DragInfo di = UserDataI.i().retrieve(capture, DragInfo.class,false);
+		DragInfo di = UserDataI.i().getExistingOrNull(capture, DragInfo.class);
 		if(di==null){
 			MessagesI.i().warnMsg(this, "captured has no info?", capture, target, event);
 			return;
@@ -402,7 +402,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 		AbsorbClickCommandsI.i().absorbClickCommands(pnl);
 		
 		DragInfo di = new DragInfo();
-		UserDataI.i().put(pnl,di);
+		UserDataI.i().overwriteSafely(pnl,di);
 		
 		CursorEventControl.addListenersToSpatial(pnl, this);
 		
@@ -413,7 +413,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 //			pnlApplyDragAt.setUserData(JavaLangI.i().enumUId(EDrag.ApplyingDragFrom), pnl);
 			DragInfo diOther = new DragInfo();
 			diOther.pnlApplyingDragFrom=pnl;
-			UserDataI.i().put(pnlApplyDragAt,diOther);
+			UserDataI.i().overwriteSafely(pnlApplyDragAt,diOther);
 		}
 	}
 	
@@ -458,6 +458,8 @@ public class DragParentestPanelListenerI implements CursorListener{
 	}
 	
 	public void setEnabledAt(Spatial sptAt, boolean b) {
-		UserDataI.i().retrieve(sptAt, DragInfo.class, false).bEnableDrag=b;
+		DragInfo di = UserDataI.i().getExistingOrNull(sptAt, DragInfo.class);
+		DetailedException.assertNotNull(di,this,sptAt,b);
+		di.bEnableDrag=b;
 	}
 }

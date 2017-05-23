@@ -170,13 +170,16 @@ public class PopupHintHelpListenerI implements CursorListener{
 	}
 	
 	public String getPopupHelp(Spatial spt){
-		PopupHelpUserData ud = UserDataI.i().retrieve(spt, PopupHelpUserData.class, false);
+		PopupHelpUserData ud = UserDataI.i().getExistingOrNull(spt, PopupHelpUserData.class);
 		if(ud==null)return null;
 		return ud.strPopupHelp;
 	}
 	public void resetPopupHelp(Spatial spt){
-		PopupHelpUserData ud = UserDataI.i().retrieve(spt, PopupHelpUserData.class, true);
-		if(ud!=null)ud.setPopupHelp(null);
+		PopupHelpUserData ud = UserDataI.i().getExistingOrNull(spt, PopupHelpUserData.class);
+		/**
+		 * if it does not exist, there is nothing to be reset
+		 */
+		if(ud!=null)ud.setPopupHelp(null); //no need to remove the userdata, just reset the help
 	}
 	public void setPopupHintHelp(Spatial spt, String strHelp){
 		if(strHelp.length()>iWrapAt){
@@ -184,7 +187,7 @@ public class PopupHintHelpListenerI implements CursorListener{
 			strHelp = Joiner.on("\n").join(astrLines);
 		}
 		
-		UserDataI.i().put(spt, new PopupHelpUserData().setPopupHelp(strHelp));
+		UserDataI.i().overwriteSafely(spt, new PopupHelpUserData().setPopupHelp(strHelp));
 		CursorEventControl.addListenersToSpatial(spt, this);
 	}
 	

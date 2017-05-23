@@ -83,22 +83,17 @@ public class HoverHighlightEffectI {
 //	private Effect<Panel> efHighLightBkg = new AbstractEffect<Panel>("ChannelHighLight") {
 	private Effect<Panel> efHighLightBkg = new AbstractEffect<Panel>(EEffectIds.ChannelHighLight.s()) {
 		@Override
-//		public Animation create(final QuadBackgroundComponent qbcTmp, final EffectInfo existing) {
 		public Animation create(final Panel pnlTarget, final EffectInfo effiExisting) {
-//			final GuiComponent gcBgChk = target.getBackground();
-//			if(!QuadBackgroundComponent.class.isInstance(gcBgChk)){
-//				throw new DatailedException("background type not supported for this effect", gcBgChk, target, existing, this);
-//			}
-			
 			return new Animation() {
-//				QuadBackgroundComponent gcBg = (QuadBackgroundComponent)gcBgChk;
-//				QuadBackgroundComponent qbc = UserDataI.i().getUserDataPSH(pnlTarget, EEffectIds.UserDataHighLightTarget.s());
-				QuadBackgroundComponent qbc = UserDataI.i().retrieve(pnlTarget, EffectUserData.class, false).getQbcHighLightTarget();
+				EffectUserData eud = DetailedException.assertNotNull(UserDataI.i().getExistingOrNull(pnlTarget, EffectUserData.class),this,pnlTarget);
+				QuadBackgroundComponent qbc = eud.getQbcHighLightTarget();
 				ColorRGBA colorBkp = qbc.getColor().clone();
 				boolean bApplied=false;
+				
 				@Override	public void cancel() {
 					qbc.setColor(colorBkp);
 				}
+				
 				@Override	public boolean animate(double tpf) {
 					if(!bApplied){
 	//					if(existing!=null && existing.getAnimation()==this)return true;
@@ -130,7 +125,7 @@ public class HoverHighlightEffectI {
 	public void applyAt(Panel pnlToThisElement, QuadBackgroundComponent qbcTargetToBeHighlighted){
 		MouseEventControl.addListenersToSpatial(pnlToThisElement, hml);
 //		UserDataI.i().setUserDataPSHSafely(pnlToThisElement, EEffectIds.UserDataHighLightTarget.s(), qbcTargetToBeHighlighted);
-		UserDataI.i().put(pnlToThisElement, new EffectUserData().setQbcHighLightTarget(qbcTargetToBeHighlighted));
+		UserDataI.i().overwriteSafely(pnlToThisElement, new EffectUserData().setQbcHighLightTarget(qbcTargetToBeHighlighted));
 //		pnl.setUserData(EEffectIds.UserDataHighLightTarget.s(), qbc);
 		efDummy = setupSimpleEffect(pnlToThisElement, EEffectIds.EffectActivateHighLight, efHighLightBkg, efDummy);
 		pnlToThisElement.addEffect(EEffectIds.EffectDeactivateHighLight.s(),efDummy);

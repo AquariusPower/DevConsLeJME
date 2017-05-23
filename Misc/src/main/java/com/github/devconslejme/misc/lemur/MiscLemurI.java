@@ -257,7 +257,7 @@ public class MiscLemurI {
 	 * @param pnl
 	 */
 	public void safeSizeRecursively(EResizeApplyMode eapply, Panel pnl) {
-		SafeSize ss = UserDataI.i().retrieve(pnl, SafeSize.class, true);
+		SafeSize ss = UserDataI.i().retrieveExistingOrCreateNew(pnl, SafeSize.class);
 		switch(eapply){
 			case Restore:{
 				Vector3f v3fSafeSize = ss.v3fSafeSizeLast;
@@ -282,7 +282,7 @@ public class MiscLemurI {
 		}
 	}
 	public void safeSizeInitialize(Panel pnl){
-		SafeSize ss = UserDataI.i().retrieve(pnl, SafeSize.class, true);
+		SafeSize ss = UserDataI.i().retrieveExistingOrCreateNew(pnl, SafeSize.class);
 		if(ss.v3fSafeSizeLast==null){ // 1st/initial safe size will be default
 			MiscLemurI.i().safeSizeRecursively(EResizeApplyMode.UpdateDefaultToCurrent,pnl);
 		}

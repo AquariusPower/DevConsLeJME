@@ -228,10 +228,12 @@ public class EnvironmentJmeI extends AbstractAppState{
 		return mouse;
 	}
 
+	@SimpleVarReadOnly
 	public float getTPF() {
 		return fTPF;
 	}
 	
+	@SimpleVarReadOnly
 	public float getFPS() {
 		return iFPS;
 	}
@@ -295,6 +297,7 @@ public class EnvironmentJmeI extends AbstractAppState{
 		if(nodeInfo.getParent()==null)nodeGui.attachChild(nodeInfo);
 	}
 	
+	@SimpleVarReadOnly
 	public String getInfo(){
 		return btInfo.getText();
 	}
@@ -308,8 +311,9 @@ public class EnvironmentJmeI extends AbstractAppState{
 		return this; //for beans setter
 	}
 
-	public Vector3f getInfoLocation() {
-		return v3fInfoLocation;
+	@SimpleVarReadOnly
+	public Vector3f getInfoLocationCopy() {
+		return v3fInfoLocation.clone();
 	}
 
 	/**

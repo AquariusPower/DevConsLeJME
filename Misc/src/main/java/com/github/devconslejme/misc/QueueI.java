@@ -33,6 +33,10 @@ import java.util.HashMap;
 import java.util.concurrent.Callable;
 
 /**
+ * Queue is mainly usefull for lazy initializations that require pre-conditions.
+ * But this one can be used also for delayed loops and other things.
+ * 
+ * TODO create parallel queues of stuff that can be processed outside of the main thread
  * TODO work with java.util.concurrent.DelayQueue?
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
@@ -462,6 +466,11 @@ public class QueueI {
 		}
 	}
 	
+	/**
+	 * THIS MUST BE CALLED AT THE MAIN THREAD! to cope with JME
+	 * @param lCurrentTime
+	 * @param fTPF
+	 */
 	@SuppressWarnings("unchecked")
 	public void update(long lCurrentTime, float fTPF) {
 		this.lCurrentTime=lCurrentTime;

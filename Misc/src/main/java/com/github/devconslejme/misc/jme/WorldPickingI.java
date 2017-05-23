@@ -101,12 +101,12 @@ public class WorldPickingI {
 //	}
 	
 	public void addSkip(Spatial spt){
-		UserDataI.i().put(spt,new Skip());
+		UserDataI.i().retrieveExistingOrCreateNew(spt, Skip.class);
 	}
 	private static class Skip{}
 	
 	public boolean isSkip(Spatial spt){
-		return (UserDataI.i().retrieve(spt, Skip.class, false)!=null);
+		return UserDataI.i().contains(spt, Skip.class);
 	}
 //	/**
 //	 * TODO use skipper class at UserData?

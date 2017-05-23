@@ -576,7 +576,7 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs {
 		}
 		
 		protected TargetToken getTargetToken(Spatial spt) {
-			return UserDataI.i().retrieve(spt, TargetToken.class, false);
+			return UserDataI.i().getExistingOrNull(spt, TargetToken.class);
 		}
 
 		@Override
@@ -1141,7 +1141,7 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs {
 		}
 		
 		protected boolean hasTargetToken(Spatial spt){
-			return (UserDataI.i().retrieve(spt, TargetToken.class, false)!=null);
+			return UserDataI.i().contains(spt, TargetToken.class);
 		}
 		
 		public boolean hasTargetTokenParentRecursive(Spatial spt){
@@ -1174,7 +1174,7 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs {
 				@Override
 				public Boolean call() {
 					if(spt.getWorldBound().getVolume()==0)return false; //not ready
-					UserDataI.i().put(spt, new TargetToken(OriginDeviceMonster.this, lEnergy));
+					UserDataI.i().overwriteSafely(spt, new TargetToken(OriginDeviceMonster.this, lEnergy));
 					
 					return true;
 				}

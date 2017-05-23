@@ -30,8 +30,6 @@ package com.github.devconslejme.misc;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.google.common.collect.HashBiMap;
-
 /**
  * This makes it easy to:
  * - override a global instance.
@@ -58,7 +56,6 @@ public class GlobalManagerI {
   public static GlobalManagerI i (){return instance;}
   
   private ArrayList<IGlobalAddListener> aigalList = new ArrayList<IGlobalAddListener>();
-//  private HashBiMap<Class<Enum>,Enum[]> hmEnumVals = HashBiMap.create();
 	private HashMap<Class<Enum>,Enum[]> hmEnumVals = new HashMap<Class<Enum>,Enum[]>();
 	
   public static interface IGlobalAddListener{
@@ -160,8 +157,8 @@ public class GlobalManagerI {
 		return null;
 	}
 	
-	public HashBiMap<Class<Enum>,Enum[]> getGlobalEnumsListCopy(){
-		return HashBiMap.create(hmEnumVals);
+	public HashMap<Class<Enum>,Enum[]> getGlobalEnumsListCopy(){
+		return new HashMap<Class<Enum>,Enum[]>(hmEnumVals);
 	}
 	
   public ArrayList<Object> getListCopy(){

@@ -90,7 +90,7 @@ public class TestcaseLemurClickImmuneButton extends SimpleApplication{
 		
 		String strBaseText=strName+"/"+strInfo;
 		Button btn = new Button(strBaseText);
-		UserDataI.i().put(btn, new BaseTextUD().setBaseText(strBaseText));
+		UserDataI.i().putSafelyMustNotExist(btn, new BaseTextUD().setBaseText(strBaseText));
 		rzp.setContents(btn);
 //		DragParentestPanelListenerI.i().applyAt(btn);
 		

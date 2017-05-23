@@ -26,6 +26,8 @@
 */
 package com.github.devconslejme.misc.jme;
 
+import com.github.devconslejme.misc.Annotations.Bugfix;
+import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.StringI;
 import com.jme3.app.Application;
@@ -79,14 +81,32 @@ public class TextI {
 		LineWrapMode e = LineWrapMode.Clip; //TODO could it be a clip only in the height? so it would wrap but would be clipped in the height only if overflowing downwards or outside limits 
 		for(Spatial spt:nodeParent.getChildren()){
 			if(spt instanceof BitmapText){
+				BitmapText bt = ((BitmapText)spt);
 //				System.err.println("NoWrapAt:"+((BitmapText)spt).getText());//TODO rm
-				if(!((BitmapText)spt).getLineWrapMode().equals(e)){
-					((BitmapText)spt).setLineWrapMode(e);
+				if(!bt.getLineWrapMode().equals(e)){
+					bt.setLineWrapMode(e);
 				}
+				
+				clipVertically(bt);
 			}
 			if(spt instanceof Node){
 				recursivelyApplyTextNoWrap((Node)spt);
 			}
+		}
+	}
+	
+	/**
+	 * find a way to clip vertically too instead of this that is destructive:
+	 * @param bt
+	 */
+	@Workaround
+	@Bugfix //as the text should be limited to its panel all the time and never overflow neither vertically...
+	private void clipVertically(BitmapText bt){
+		String strText=bt.getText();
+		int iNL = strText.indexOf("\n");
+		if(iNL>-1){
+			strText=strText.substring(0, iNL);
+			bt.setText(strText);
 		}
 	}
 }

@@ -80,10 +80,11 @@ public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 				
 				diagMaint.putToolAction(new ToolAction("Pkg info", new CmdBtnTA() {
 					@Override	public Integer executeTA(Button source) {
+						bShowPackagesPrepended=!bShowPackagesPrepended;
 						diagMaint.requestUpdateListItems();
-						return (bShowPackagesPrepended=!bShowPackagesPrepended)?0:1;
+						return bShowPackagesPrepended?0:1;
 					}
-				}).setMultiStatusMode(bShowPackagesPrepended?0:1,"after","prepend"));
+				}).setMultiStatusMode(bShowPackagesPrepended?0:1,"prepend","after"));
 				
 //				diagMaint.putToolAction(new ToolAction("Unsafe 'getters'", new CmdBtnTA() {
 //					@Override	public Integer executeTA(Button source) {
