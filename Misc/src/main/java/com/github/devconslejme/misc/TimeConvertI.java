@@ -102,5 +102,8 @@ public class TimeConvertI {
 		
 		throw new UnsupportedOperationException("unsupported timer resolution "+lResolution);
 	}
+	public float milisToSeconds(long lMilis) {
+		return lMilis/1000f;
+	}
 
 }

@@ -29,6 +29,10 @@ package com.github.devconslejme.misc.jme;
 import java.util.ArrayList;
 
 import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.MultiClickI;
+import com.github.devconslejme.misc.MultiClickI.MultiClick;
+import com.github.devconslejme.misc.QueueI.CallableX;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.MeshI.Cone;
 import com.github.devconslejme.misc.jme.OriginDevice.NodeAxis;
 import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
@@ -80,6 +84,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		private Node nodeGeometries;
 		private Vector3f	v3fAdd = Vector3f.UNIT_Y.clone();
 		private Quaternion	quaInitialRotation;
+		private boolean	bInvertRotation;
 		
 		@SuppressWarnings("unchecked")
 		public SELF getThis(){
@@ -128,6 +133,19 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 
 		public void applyInitialRotation() {
 			quaInitialRotation=getLocalRotation().clone();
+		}
+
+		public void toggleInvertRotation() {
+			bInvertRotation=!bInvertRotation;
+		}
+
+		public boolean isInvertRotation() {
+			return bInvertRotation;
+		}
+
+		public NodeAxis<SELF> setInvertRotation(boolean bInvertRotation) {
+			this.bInvertRotation = bInvertRotation;
+			return this; 
 		}
 
 	}
@@ -195,7 +213,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 //		rotate(EAxis.X.get().getRepresentationShape(), 90, false);//TODO wrong
 		
 		createAxis(Vector3f.UNIT_Y, new Sphere(10,10,0.5f));
-		rotate(getAxisInfo(EAxis.Y).getRotatingTorus(), 90, false);
+		rotateAlignment(getAxisInfo(EAxis.Y).getRotatingTorus(), 90, false);
 		
 		createAxis(Vector3f.UNIT_Z, new Cone());
 		
@@ -218,6 +236,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 	
 	protected void rotateMainShape(NODEXS node,Vector3f v3f){
 		if(bStopRotations)return;
+		if(node.isInvertRotation())v3f=v3f.negate();
 		node.rotate(v3f.x,v3f.y,v3f.z);
 	}
 	
@@ -290,6 +309,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 	AxisInfo[] aai = new AxisInfo[EAxis.values().length];
 	private EAxis	eaExclusiveRotations;
 	private boolean	bStopRotations;
+	private MultiClick	mc0;
 	
 	public AxisInfo getAxisInfo(EAxis ea) {
 		return aai[ea.ordinal()];
@@ -309,7 +329,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 				break;
 		}
 		
-		return fSpeed;
+		return fSpeed * (nodeTor.isInvertRotation() ? -1f : 1f);
 	}
 	
 	protected void rotateTor(NODEXS nodeTor,Vector3f v3fSpeed){//, EAxis ea) {
@@ -322,7 +342,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		return (int) (fTPF*1000);
 	}
 	
-	protected void rotate(NODEXS node, float fAngleDegrees, boolean bZOnly){
+	protected void rotateAlignment(NODEXS node, float fAngleDegrees, boolean bZOnly){
 		float fRotRad=FastMath.DEG_TO_RAD*fAngleDegrees;
 		if(!bZOnly && node.getEAxis()==EAxis.X)node.rotate(       0, fRotRad, 0);
 		if(!bZOnly && node.getEAxis()==EAxis.Y)node.rotate(       0, fRotRad, 0);
@@ -358,7 +378,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		// torus core
 		NODEXS nodeCore=createAxisShape(ea,new Torus(iCS,iRS,fIR*0.35f,fDisplacementTorus), 
 			new Vector3f(0,0,0), fRotTorOpac+0.5f, v3fUp);
-		rotate(nodeCore,90,true);
+		rotateAlignment(nodeCore,90,true);
 		axisi.torus.attachChild(nodeCore);
 		
 		createTorusIntersections(axisi.getRotatingTorus(),fDisplacementTorus,v3fUp);
@@ -375,7 +395,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 			new Vector3f(fDisplacementTorus,0,0), fAlpha, v3fUp, false, new Vector3f(1,1,2));
 		MiscJmeI.i().addToName(nodePosit, "Intersection", false, true);
 		nodePosit.lookAt(v3fUp, v3fUp);
-		rotate(nodePosit,-90,false);
+		rotateAlignment(nodePosit,-90,false);
 		nodeTor.attachChild(nodePosit);
 		getAxisInfo(nodeTor.getEAxis()).setTorusTip(nodePosit);
 //		anodeHotShapesList.add(nodePosit);
@@ -470,9 +490,20 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 	 * @return
 	 */
 	public Object debugTest(Object... aobj){
-		rotate(getAxisInfo(EAxis.X).getRepresentationShape(), 90, false);//TODO wrong
+		rotateAlignment(getAxisInfo(EAxis.X).getRepresentationShape(), 90, false);//TODO wrong
 		return null;
 	}
+	
+//	private CallableX[]	acx = {
+//		new CallableXAnon(){
+//			@Override
+//			public Boolean call() {
+//				
+//				return true;
+//			}
+//		}
+//	};
+	
 	@Override
 	public boolean updatePickingEvent(int iButtonIndex, ArrayList<CollisionResult> acrList,			Geometry geom, Spatial sptParentest) {
 		for(EAxis ea:EAxis.values()){
@@ -480,17 +511,30 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 			NODEXS node = axi.getRepresentationShape();
 			if(node.hasChild(geom)){
 				switch(iButtonIndex){
-					case 0:
-						if(eaExclusiveRotations==ea){
-							eaExclusiveRotations=null;
-						}else{
-							eaExclusiveRotations=ea;
+					case 0: //left
+						CallableX[] acx=null;
+						if(mc0!=null && mc0.isDiscarded())mc0=null;
+						if(mc0==null){
+							acx=new CallableX[2];
+							acx[0] = new CallableXAnon(){@Override	public Boolean call() {
+								if(eaExclusiveRotations==ea){
+									eaExclusiveRotations=null;
+								}else{
+									eaExclusiveRotations=ea;
+								}
+								return true;
+							}};
+							acx[1] = new CallableXAnon(){@Override	public Boolean call() {
+								axi.getRotatingTorus().toggleInvertRotation();
+								return true;
+							}};
 						}
+						mc0=MultiClickI.i().updateOrCreateAndIncClicks(mc0,iButtonIndex,acx);
 						return true;
-					case 2:
+					case 2: //middle
 						axi.getRotatingTorus().resetRotation();
 						return true;
-					case 1:
+					case 1: //right
 						bStopRotations=!bStopRotations;
 						return true;
 				}
