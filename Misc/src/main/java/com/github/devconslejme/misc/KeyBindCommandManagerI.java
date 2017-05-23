@@ -250,12 +250,12 @@ public class KeyBindCommandManagerI {
 		if(kbWaitBeReleased!=null){
 			if(kbWaitBeReleased.isActivated()){ // KeyCodeManagerI.i().getAllPressedKeys()
 				//still pressed (with modifiers)
-				MessagesI.i().output(false, System.out, "Info", this, "waiting captured key bind to be released");
+				MessagesI.i().output(false, System.out, "Info", this, "waiting captured key bind to be released: "+kbWaitBeReleased.getBindCfg());
 				return true; 
 			}else
 			if(kbWaitBeReleased.getActionKey().isPressed()){ 
 				//still pressed (only the action key is still being holded)
-				MessagesI.i().output(false, System.out, "Info", this, "waiting captured action key to be released");
+				MessagesI.i().output(false, System.out, "Info", this, "waiting captured action key to be released: "+kbWaitBeReleased.getBindCfg());
 				return true;
 			}else
 			{ //released

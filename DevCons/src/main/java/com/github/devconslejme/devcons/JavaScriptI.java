@@ -514,7 +514,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		LoggingI.i().logMarker("User Command");
 		LoggingI.i().logEntry(strCmd);
 		
-		execCommand(strCmd,true);
+		execCommand(strCmd,true,true);
 		
 		DevConsPluginStateI.i().scrollKeepAtBottom();
 		DevConsPluginStateI.i().clearInput();
@@ -528,11 +528,11 @@ public class JavaScriptI implements IGlobalAddListener {
 		int i=astrCmdHistory.size()-iIndexFromLast-1;
 		if(i<0)i=0;
 		String strCmd = astrCmdHistory.get(i);
-		execCommand(strCmd, true);
+		execCommand(strCmd, true, true); //must change the history because it depends on it!
 	}
 	
-	protected boolean execCommand(String strCmd,boolean bShowRetVal) {
-		addCmdToHistory(strCmd);
+	protected boolean execCommand(String strCmd,boolean bShowRetVal, boolean bAddToHistory) {
+		if(bAddToHistory)addCmdToHistory(strCmd);
 		
 		String strLastCmds="";
 		int iTot=10;
@@ -859,33 +859,12 @@ public class JavaScriptI implements IGlobalAddListener {
 			for(String strCmd:astrUserInit){
 				if(strCmd.isEmpty())continue;
 				LoggingI.i().logSubEntry(strCmd);
-//				if(!execScript(strJS,false)){
-				if(!execCommand(strCmd,false)){
+				if(!execCommand(strCmd,false,false)){
 					bFail=true;
 					String strMsg="UserInit:FAIL";
 					LoggingI.i().logMarker(strMsg);
 					
 					SystemAlertI.i().showTemporarySystemAlert(strMsg+"\n"+strCmd, 5f);
-//					QueueI.i().enqueue(new CallableXAnon() {
-//						TimedDelay td = new TimedDelay(3f, "wait user read it");
-//						private StackTraceElement[]	aste;
-//						@Override
-//						public Boolean call() {
-//							if(!SystemAlertLemurI.i().isShowingAlert()){
-//								aste=SystemAlertLemurI.i().showSystemAlert(strMsg, null);
-//								SystemAlertLemurI.i().setAlertStayOnCenter(true);
-//								td.setActive(true);
-//							}else{
-//								if(td.isReady()){
-//									SystemAlertLemurI.i().hideSystemAlert(aste);
-//									return true;//end
-//								}
-//							}
-//							
-//							return false;
-//						}
-//					});
-					
 					break;
 				}
 			}

@@ -56,7 +56,7 @@ public class KeyCodeConfigureForJme {
 //	private boolean	bCaptureKeyModifiersMode;
 	private InputManager	inputman;
 	private ActionListener	alGeneralJmeAnalogListener;
-	private PseudoKeyAxis[]	akax;
+	private Key[]	akAxis;
 	
 	public void configure(int iMaxMouseButtons) {
 //		if(true)return; //TODO remove this line
@@ -71,20 +71,13 @@ public class KeyCodeConfigureForJme {
   	// JME listener/mapping
   	inputman = GlobalManagerI.i().get(Application.class).getInputManager();
   	
-		alGeneralJmeTriggerListener = new ActionListener() {
-			@Override
-			public void onAction(String strKeyId, boolean bPressed, float tpf) {
-				KeyCodeManagerI.i().refreshPressedState(strKeyId, bPressed);
-			}
-		};
-		
-		alGeneralJmeAnalogListener = new ActionListener() {
-			@Override
-			public void onAction(String strKeyId, boolean bPressed, float tpf) {
-				KeyCodeManagerI.i().refreshPressedState(strKeyId, bPressed);
-				pseudoReleaseAxisKey(strKeyId,bPressed);
-			}
-		}; 
+		alGeneralJmeTriggerListener = new ActionListener() {@Override	public void onAction(String strKeyId, boolean bPressed, float tpf) {
+			KeyCodeManagerI.i().refreshPressedState(strKeyId, bPressed);	
+		}};
+//		alGeneralJmeAnalogListener = new ActionListener() {@Override	public void onAction(String strKeyId, boolean bPressed, float tpf) {
+//			KeyCodeManagerI.i().refreshPressedState(strKeyId, bPressed);
+//			pseudoReleaseAxisKey(strKeyId,bPressed);
+//		}}; 
 		
 		for(Key key:KeyCodeManagerI.i().getKeyListCopy()){
 			addKeyCodeMapping(key);
@@ -98,22 +91,41 @@ public class KeyCodeConfigureForJme {
 			inputman.addListener(alGeneralJmeTriggerListener,strId);
 		}
 		
-		akax = new PseudoKeyAxis[3];
+		akAxis = new Key[3*2];
+		int iCount=0;
 		for(int iAxis=0;iAxis<3;iAxis++){
-			akax[iAxis]=new PseudoKeyAxis();
 			for(int iPositive=0;iPositive<2;iPositive++){
 				boolean bPositive=iPositive==1;
 				Key key=KeyCodeManagerI.i().getMouseAxisKey(iAxis,bPositive);
-				akax[iAxis].key=key;
+				akAxis[iCount++]=key;
 				String strId=key.getFullId();
 		    inputman.addMapping(strId, new MouseAxisTrigger(iAxis,!bPositive));
-				inputman.addListener(alGeneralJmeAnalogListener,strId);
+		    inputman.addListener(alGeneralJmeTriggerListener,strId);
+//				inputman.addListener(alGeneralJmeAnalogListener,strId);
 			}
 		}
+		
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				pseudoReleaseAxisKey();
+				return true;
+			}
+		}).enableLoopMode().setName("PseudoAxisKeyAutoRelease");
 		
 		// TODO joystick
 	}
 	
+	@Workaround
+	private void pseudoAxisKeyUpdatePressed(String strKeyId,boolean bPressed){
+		if(!bPressed)return;
+		
+		for(Key key:akAxis){
+			if(key.getFullId().equals(strKeyId)){
+				key.lPseudoPressedLastFrameId=EnvironmentJmeI.i().getCurrentFrameId();
+			}
+		}
+	}
 	/**
 	 * the listener only receives the "pressed" event, not the "released"
 	 * as being an axis there it no actual trigger (neither press), but... on mouse stop
@@ -121,32 +133,35 @@ public class KeyCodeConfigureForJme {
 	 * @param strKeyId
 	 */
 	@Workaround
-	private void pseudoReleaseAxisKey(String strKeyId,boolean bPressed){
+	private void pseudoReleaseAxisKey(){
 		for(PseudoKeyAxis kax:akax){
-			if(kax.key.getFullId().equals(strKeyId)){
-				if(bPressed){
-					kax.lPseudoPressedLastFrameId=EnvironmentJmeI.i().getCurrentFrameId();
-					
-					/**
-					 * must be on next frame so the "key press" is detected/forwarded by/thru {@link KeyCodeManagerI} 
-					 */
-					QueueI.i().enqueue(kax.cxPseudoRelease);
-				}
-			}
+			kax.lPseudoPressedLastFrameId=EnvironmentJmeI.i().getCurrentFrameId();
+		
+			/**
+			 * must be on next frame so the "key press" is detected/forwarded by/thru {@link KeyCodeManagerI} 
+			 * on the frame it happened and can be "holded" (non stop moving)
+			 */
+			if( kax.lPseudoPressedLastFrameId == EnvironmentJmeI.i().getCurrentFrameId()   )continue;
+			/**
+			 * wait a gap (a lacking "pressed event" for the axis that updates the frame id) 
+			 */
+			if( kax.lPseudoPressedLastFrameId == EnvironmentJmeI.i().getCurrentFrameId()-1 )continue;
+			
+			KeyCodeManagerI.i().refreshPressedState(kax.key.getFullId(), false);
 		}
 	}
-	public static class PseudoKeyAxis{
-		public long	lPseudoPressedLastFrameId;
-		Key key;
-		CallableX cxPseudoRelease = new CallableXAnon() {
-			@Override
-			public Boolean call() {
-				if( lPseudoPressedLastFrameId >= EnvironmentJmeI.i().getFrameId(-1) )return false; //wait a gap (a lacking "pressed event" for the axis)
-				KeyCodeManagerI.i().refreshPressedState(key.getFullId(), false);
-				return true;
-			}
-		};
-	}
+//	public static class PseudoKeyAxis{
+//		public long	lPseudoPressedLastFrameId;
+//		Key key;
+//		CallableX cxPseudoRelease = new CallableXAnon() {
+//			@Override
+//			public Boolean call() {
+//				if( lPseudoPressedLastFrameId >= EnvironmentJmeI.i().getFrameId(-1) )return false; //wait a gap (a lacking "pressed event" for the axis)
+//				KeyCodeManagerI.i().refreshPressedState(key.getFullId(), false);
+//				return true;
+//			}
+//		};
+//	}
 	
 	/** 
 	 * TODO should this be allowed to be called only once? other classes without conflicts would be no problem tho...

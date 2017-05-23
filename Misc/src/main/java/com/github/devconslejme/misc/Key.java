@@ -28,6 +28,8 @@ package com.github.devconslejme.misc;
 
 import java.util.ArrayList;
 
+import com.github.devconslejme.misc.jme.EnvironmentJmeI;
+
 /**
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -157,6 +159,7 @@ public class Key{
 		
 		if(bPressed){
 			lLastPressedNano=System.nanoTime();
+			lLastPressedFrameId=EnvironmentI.i().getCurrentFrameId();
 		}else{
 			lLastReleasedNano=System.nanoTime();
 		}
