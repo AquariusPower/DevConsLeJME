@@ -30,7 +30,6 @@ package com.github.devconslejme.misc.jme;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.StringI;
 import com.jme3.app.Application;
-import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.font.BitmapFont.Align;
 import com.jme3.font.BitmapFont.VAlign;
@@ -48,7 +47,7 @@ import com.jme3.scene.debug.Grid;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class OrthogonalCursorStateI extends AbstractAppState{
+public class OrthogonalCursorStateI extends SimpleAppState{
 	public static OrthogonalCursorStateI i(){return GlobalManagerI.i().get(OrthogonalCursorStateI.class);}
 
 	private Geometry	geom;

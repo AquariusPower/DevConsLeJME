@@ -160,6 +160,7 @@ public class KeyCodeConfigureForJme {//implements AnalogListener,ActionListener{
 	 */
 	@Workaround
 	private void pseudoReleaseAxisKey(){
+//		if(true)return;//TODO revieweing
 		for(Key key:akAxis){
 //			kax.getLastPressedFrameId()=EnvironmentJmeI.i().getCurrentFrameId();
 		
@@ -173,7 +174,7 @@ public class KeyCodeConfigureForJme {//implements AnalogListener,ActionListener{
 			 */
 			if( key.getLastPressedFrameId() == EnvironmentJmeI.i().getCurrentFrameId()-1 )continue;
 			
-			KeyCodeManagerI.i().refreshPressedState(key.getFullId(), false);
+			if(key.isPressed())KeyCodeManagerI.i().refreshState(key.getFullId(), false, 0f);
 		}
 	}
 //	public static class PseudoKeyAxis{

@@ -200,7 +200,8 @@ public class KeyCodeManagerI {
 		Key key=tmKey.get(strKeyId);
 		key.setPressed(bPressed);
 		if(fValue!=null)key.setAnalogValue(fValue);
-		if(bDebug && bPressed && !key.isIgnoreKeyCode())System.out.println(strKeyId+","+bPressed+","+fValue);
+//		if(bDebug && bPressed && !key.isIgnoreKeyCode())System.out.println(strKeyId+","+bPressed+","+fValue);
+		if(bDebug && !key.isIgnoreKeyCode())System.out.println(key.getLastPressedFrameId()+","+strKeyId+","+bPressed+","+fValue);
 		return key;
 	}
 	public Key refreshAnalogState(String strKeyId, float fValue){

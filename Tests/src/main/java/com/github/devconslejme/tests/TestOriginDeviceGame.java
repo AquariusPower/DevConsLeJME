@@ -123,7 +123,7 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs {
 			.setDestroySpatials(true)
 //			.setSourceMode(ETargetMode.Attract)
 			.setAutoTargetNearestSpatials(true);
-		GlobalManagerI.i().put(OriginDeviceMonster.class,orde);
+		GlobalManagerI.i().putGlobal(OriginDeviceMonster.class,orde);
 //		JavaScriptI.i().setJSBindingForEnumsOf(OriginDevice.class);
 		getSApp().getRootNode().attachChild(orde);
 		

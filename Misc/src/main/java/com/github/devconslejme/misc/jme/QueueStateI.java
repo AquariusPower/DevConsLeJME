@@ -30,12 +30,11 @@ package com.github.devconslejme.misc.jme;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.jme3.app.Application;
-import com.jme3.app.state.AbstractAppState;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class QueueStateI extends AbstractAppState{
+public class QueueStateI extends SimpleAppState{
 	public static QueueStateI i(){return GlobalManagerI.i().get(QueueStateI.class);}
 	
 	private Application	app;

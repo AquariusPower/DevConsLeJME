@@ -38,7 +38,7 @@ import com.jme3.app.state.AbstractAppState;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class EffectManagerStateI extends AbstractAppState {
+public class EffectManagerStateI extends SimpleAppState {
 	public static EffectManagerStateI i(){return GlobalManagerI.i().get(EffectManagerStateI.class);}
 	
 	long lLastUpdateMilis=SimulationTimeI.i().getMillis();

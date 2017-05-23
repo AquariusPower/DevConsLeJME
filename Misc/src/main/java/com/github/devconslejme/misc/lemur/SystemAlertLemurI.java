@@ -83,10 +83,10 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 		this.nodeGui=nodeGui;
 		
 		if(!GlobalManagerI.i().isSet(SystemAlertI.class)){
-			GlobalManagerI.i().put(SystemAlertI.class, this); //overrides global
+			GlobalManagerI.i().putGlobal(SystemAlertI.class, this); //overrides global
 		}
 		if(!GlobalManagerI.i().isSet(SystemAlertJmeI.class)){
-			GlobalManagerI.i().put(SystemAlertJmeI.class, this); //overrides global
+			GlobalManagerI.i().putGlobal(SystemAlertJmeI.class, this); //overrides global
 		}
 		
 	}

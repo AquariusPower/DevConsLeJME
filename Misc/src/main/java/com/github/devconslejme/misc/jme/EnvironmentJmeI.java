@@ -33,13 +33,12 @@ import java.util.Map.Entry;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 
+import com.github.devconslejme.misc.Annotations.SimpleVarReadOnly;
 import com.github.devconslejme.misc.EnvironmentI;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.Annotations.SimpleVarReadOnly;
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
-import com.jme3.app.state.AbstractAppState;
 import com.jme3.font.BitmapText;
 import com.jme3.input.InputManager;
 import com.jme3.math.ColorRGBA;
@@ -80,6 +79,8 @@ public class EnvironmentJmeI extends EnvironmentI{
 	private boolean	bShowMouseCursorPos;
 	
 	public void configure(Node nodeGui){
+		GlobalManagerI.i().putGlobal(EnvironmentI.class, this);
+		
 		app=G.i(Application.class);
 		cam=app.getCamera();
 		inputman=app.getInputManager();
@@ -102,7 +103,7 @@ public class EnvironmentJmeI extends EnvironmentI{
 		nodeInfo.attachChild(geomInfoBkg);
 	}
 	
-	public class EnvState extends AbstractAppState{
+	public class EnvState extends SimpleAppState{
 		@Override
 		public void update(float tpf) {
 			super.update(tpf);

@@ -184,7 +184,7 @@ public class JavaLangI {
 	 * Will include the concrete/instanced one too.
 	 * 
 	 * @param obj
-	 * @return
+	 * @return last is superest
 	 */
 	public ArrayList<Class<?>> getSuperClassesOf(Object obj,boolean bAddConcreteToo){
 		ArrayList<Class<?>> ac = new ArrayList<Class<?>>();

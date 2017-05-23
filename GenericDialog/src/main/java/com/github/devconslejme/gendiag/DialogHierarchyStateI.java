@@ -45,6 +45,7 @@ import com.github.devconslejme.misc.jme.EffectElectricity;
 import com.github.devconslejme.misc.jme.EffectManagerStateI;
 import com.github.devconslejme.misc.jme.IEffect;
 import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.jme.SimpleAppState;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.AbsorbClickCommandsI;
@@ -59,7 +60,6 @@ import com.github.devconslejme.misc.lemur.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.lemur.SystemAlertLemurI;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
-import com.jme3.app.state.AbstractAppState;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.input.FlyByCamera;
 import com.jme3.math.ColorRGBA;
@@ -80,7 +80,7 @@ import com.simsilica.lemur.focus.FocusManagerState;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class DialogHierarchyStateI extends AbstractAppState implements IResizableListener{
+public class DialogHierarchyStateI extends SimpleAppState implements IResizableListener{
 	public static DialogHierarchyStateI i(){return GlobalManagerI.i().get(DialogHierarchyStateI.class);}
 	
 	private Application	app;

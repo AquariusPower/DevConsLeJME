@@ -24,62 +24,13 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package com.github.devconslejme.misc;
+package com.github.devconslejme.misc.jme;
 
-import com.github.devconslejme.misc.Annotations.SimpleVarReadOnly;
-
+import com.jme3.app.state.AbstractAppState;
 
 /**
+ * {@link AbstractAppState} is not abstract per se...
+ * This class is just to make that clear.
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class EnvironmentI {
-	public static EnvironmentI i(){return GlobalManagerI.i().get(EnvironmentI.class);}
-
-	private long lTotalFrameCount;
-	private float	fTPF;
-	private float	fSumTPF;
-	private int	iFPSFrameCount;
-	private int	iFPS;
-	
-	/**
-	 * just for clarity
-	 */
-	public void configure(){}
-	
-	public long getTotalFrameCount() {
-		return lTotalFrameCount;
-	}
-
-//	protected EnvironmentI setTotalFrameCount(long lTotalFrameCount) {
-//		this.lTotalFrameCount = lTotalFrameCount;
-//		return this; 
-//	}
-	
-	public void update(float tpf){
-		fTPF=tpf;
-		
-		lTotalFrameCount++; //TODO can this overflow!? :O
-		
-		calcFPS();
-	}
-
-	private void calcFPS() {
-		fSumTPF+=fTPF;
-		iFPSFrameCount++;
-		if(fSumTPF>=1f){
-			iFPS=iFPSFrameCount;
-			fSumTPF-=1f;//precision keeping the tiny bit for the next sum TODO may cause trouble?
-			iFPSFrameCount=0;
-		}
-	}
-
-	@SimpleVarReadOnly
-	public float getTPF() {
-		return fTPF;
-	}
-	
-	@SimpleVarReadOnly
-	public float getFPS() {
-		return iFPS;
-	}
-}
+public class SimpleAppState extends AbstractAppState{}

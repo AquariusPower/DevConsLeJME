@@ -57,11 +57,11 @@ import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.OriginDevice;
 import com.github.devconslejme.misc.jme.RotateI;
+import com.github.devconslejme.misc.jme.SimpleAppState;
 import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
 import com.github.devconslejme.projman.SimpleAppStateAbs;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
-import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppState;
 import com.jme3.audio.AudioListenerState;
 import com.jme3.collision.CollisionResult;
@@ -163,7 +163,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	
 	private void opt_initAll() {
 		orde = new OriginDevice().setEnabled(true);
-		GlobalManagerI.i().put(OriginDevice.class,orde);
+		GlobalManagerI.i().putGlobal(OriginDevice.class,orde);
 		getRootNode().attachChild(orde);
 		// good position related to these objects
 		getCamera().setLocation(new Vector3f(9.787677f, 6.957723f, 11.003839f)); //taken from devcons
@@ -279,7 +279,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		);
 		
 		//// DynamicFPSLimiter
-		getStateManager().attach(new AbstractAppState(){
+		getStateManager().attach(new SimpleAppState(){
 			@Override
 			public void update(float tpf) {
 				super.update(tpf);

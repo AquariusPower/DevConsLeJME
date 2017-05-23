@@ -44,7 +44,7 @@ public class SystemAlertJmeI extends SystemAlertI {
 	
 	public void configure(){
 		if(!GlobalManagerI.i().isSet(SystemAlertI.class)){
-			GlobalManagerI.i().put(SystemAlertI.class, this); //overrides global
+			GlobalManagerI.i().putGlobal(SystemAlertI.class, this); //overrides global
 		}
 	}
 

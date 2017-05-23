@@ -77,16 +77,16 @@ public class GlobalManagerI {
   public boolean isSet(Class cl){
   	return hmInst.get(cl)!=null;
   }
-  public <T> T get (Class<T> cl){
+  public <T> T get(Class<T> cl){
   	return get(cl,true);
   }
   @SuppressWarnings("unchecked")
-	public <T> T get (Class<T> cl, boolean bCreateNewInstanceIfNull){
+	public <T> T get(Class<T> cl, boolean bCreateNewInstanceIfNull){
     Object obj = hmInst.get(cl);
     if (obj==null && bCreateNewInstanceIfNull){
       try {
-      	put(cl, ((T)(obj=cl.newInstance())) );
-//				hmInst.put(cl,obj=cl.newInstance ());
+      	putGlobal(cl, ((T)(obj=cl.newInstance())) );
+//      	putConcrete(obj=cl.newInstance()); // 
 			} catch (InstantiationException | IllegalAccessException e) {
 				NullPointerException npe = new DetailedException("unable to create new instance")
 					.initCauseAndReturnSelf(e);
@@ -103,13 +103,39 @@ public class GlobalManagerI {
    */
   @SuppressWarnings("unchecked")
 	public <T> T putConcrete(T obj){
-  	put((Class<T>)obj.getClass(),obj);
+  	putGlobal((Class<T>)obj.getClass(), obj);
+//  	for(Class cl : new JavaLangI().getSuperClassesOf(obj, true)){
+//    	putGlobal(cl,obj);
+//  	}
+  	
   	return obj;
   }
-  public <T> T put(Class<T> cl,T obj){
+  /**
+   * instead of put() to distinguish on IDE searching for it's usages TODO this is not good... 
+   * @param cl
+   * @param obj
+   * @return
+   */
+  public <T> T putGlobal(Class<? extends T> cl,T obj){
   	Object objAlreadySet=hmInst.get(cl);
     if (objAlreadySet!=null){
       throw new DetailedException("already set: "+cl+", "+objAlreadySet+", "+obj);
+    }
+    
+    // inheritance consistency check
+    for(Object objExisting:hmInst.values()){
+    	if(obj==objExisting)continue;
+    	if(
+    			objExisting.getClass().isInstance(obj) || 
+    			objExisting.getClass().isAssignableFrom(obj.getClass()) ||
+    			obj.getClass().isInstance(objExisting) || 
+    			obj.getClass().isAssignableFrom(objExisting.getClass())
+    	){
+    		throw new DetailedException("there should have only one global per superest type",
+    			objExisting,objExisting.getClass(),objExisting.getClass().getClasses(),
+    			obj				 ,obj				 .getClass(),obj				.getClass().getClasses()
+    		);
+    	}
     }
     
     hmInst.put(cl,obj);

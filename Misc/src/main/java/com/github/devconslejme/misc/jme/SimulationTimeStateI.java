@@ -35,7 +35,6 @@ import com.github.devconslejme.misc.SimulationTimeI;
 import com.github.devconslejme.misc.jme.SavableHelperI.ISavableFieldAccess;
 import com.github.devconslejme.misc.jme.SavableHelperI.SaveSkipper;
 import com.jme3.app.Application;
-import com.jme3.app.state.AbstractAppState;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.Savable;
@@ -44,7 +43,7 @@ import com.jme3.export.Savable;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class SimulationTimeStateI extends AbstractAppState implements Savable,ISavableFieldAccess {
+public class SimulationTimeStateI extends SimpleAppState implements Savable,ISavableFieldAccess {
 	public static SimulationTimeStateI i(){return GlobalManagerI.i().get(SimulationTimeStateI.class);}
 	
 	public void configure(){

@@ -52,7 +52,6 @@ import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.JavaLangI.FuncIn;
-import com.github.devconslejme.misc.KeyBind;
 import com.github.devconslejme.misc.KeyCodeManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
@@ -60,6 +59,7 @@ import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI;
+import com.github.devconslejme.misc.jme.SimpleAppState;
 import com.github.devconslejme.misc.jme.TextI;
 import com.github.devconslejme.misc.lemur.CaratAutoPositionListenerI;
 import com.github.devconslejme.misc.lemur.CursorListenerX;
@@ -72,7 +72,6 @@ import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.github.devconslejme.misc.lemur.ResizablePanel.EEdge;
 import com.github.devconslejme.misc.lemur.VersionedVector3f;
 import com.jme3.app.Application;
-import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.font.BitmapFont;
 import com.jme3.input.KeyInput;
@@ -111,7 +110,7 @@ import com.simsilica.lemur.text.DocumentModel;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class DevConsPluginStateI extends AbstractAppState {//implements IResizableListener{
+public class DevConsPluginStateI extends SimpleAppState {//implements IResizableListener{
 	public static DevConsPluginStateI i(){return GlobalManagerI.i().get(DevConsPluginStateI.class);}
 	
 //	private Vector3f	v3fApplicationWindowSize;

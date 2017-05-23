@@ -47,6 +47,7 @@ public class PkgCfgI {
 		
   	KeyCodeManagerI.i().configure();
 		KeyBindCommandManagerI.i().configure();
+		EnvironmentI.i().configure();
 		
 		bConfigured=true;
 	}
