@@ -71,7 +71,7 @@ import com.simsilica.lemur.style.Styles;
  * it will grow the parentest Panel size little by little,
  * until it works again.  
  * 
- * TODO create a component that allow setting each edge size independently, ex.: for inner panels with a single resizable edge only
+ * TODO ? create a component that allow setting each edge size independently, ex.: for inner panels with a single resizable edge only
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */

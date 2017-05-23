@@ -32,7 +32,8 @@ import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.style.ElementId;
 
 /**
-* @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+ * Important to protect panel's Z, and easify settings.
+ * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class PanelBase<SELF extends PanelBase<SELF>> extends Panel {
 	public PanelBase(boolean b, ElementId elementId, String strStyle) {

@@ -51,11 +51,11 @@ public class KeyBindCommandManagerI {
 	
 	private TreeMap<String,BindCommand> tmbindList = new TreeMap<String, BindCommand>(String.CASE_INSENSITIVE_ORDER);
 	private HashMap<Integer,ArrayList<BindCommand>> hmKeyCodeVsActivatedBind = new HashMap<Integer, ArrayList<BindCommand>>();
-	private BindCommand	bindCaptureToTarget;
+	private BindCommand	bcCaptureToTarget;
 	private KeyBind kbCaptured;
 	private KeyBind kbWaitBeReleased;
 	private StackTraceElement[]	asteAlertFrom;
-	private BindCommand	bindConflict;
+	private BindCommand	bcConflict;
 	private String strRequestUserDecision="Press ESC to cancel or Enter to retry.\n";
 	private Object objLinkedGuiElement;
 	private Function<String,Boolean> funcRunUserCommand;
@@ -259,7 +259,7 @@ public class KeyBindCommandManagerI {
 				return true;
 			}else
 			{ //released
-				if(bindCaptureToTarget!=null && bindCaptureToTarget.getKeyBind()==kbWaitBeReleased){
+				if(bcCaptureToTarget!=null && bcCaptureToTarget.getKeyBind()==kbWaitBeReleased){
 					captureKeyStep(ECaptureUserDecision.Success);
 				}else{
 					captureKeyStep(ECaptureUserDecision.KeyReleased);
@@ -279,12 +279,12 @@ public class KeyBindCommandManagerI {
 	private boolean updateCaptureKey(){
 		if(isWaitKeyRelease())return true;
 		
-		if(bindCaptureToTarget!=null){
+		if(bcCaptureToTarget!=null){
 			SystemAlertI.i().setDynamicInfo(KeyCodeManagerI.i().getAllPressedKeysSimpleReport());
 			
 			kbCaptured=KeyCodeManagerI.i().getPressedKeysAsKeyBind();
 			
-			if(bindConflict!=null){
+			if(bcConflict!=null){
 				ECaptureUserDecision eud=null;
 				if(isCapturedThisKeyCodeWithoutMods(KeyCodeManagerI.i().getKeyCodeForEscape())){
 					eud=ECaptureUserDecision.Cancelled;
@@ -309,25 +309,25 @@ public class KeyBindCommandManagerI {
 					return true;
 				}
 				
-				bindConflict=null;
+				bcConflict=null;
 				for(BindCommand bind:getKeyBindListCopy()){
-					if(bind==bindCaptureToTarget)continue;
+					if(bind==bcCaptureToTarget)continue;
 					if(bind.getKeyBind().isEquivalentTo(kbCaptured)){
-						bindConflict=bind;
+						bcConflict=bind;
 						break;
 					}
 				}
 				
-				if(bindConflict!=null){
+				if(bcConflict!=null){
 					captureKeyStep(ECaptureUserDecision.HasConflict);
 					return true;
 				}else{
-					bindCaptureToTarget.setKeyBind(kbCaptured);
+					bcCaptureToTarget.setKeyBind(kbCaptured);
 					
 					MessagesI.i().output(false, System.out, "Info", this, 
 						"captured key bind "+kbCaptured.getBindCfg()
-						+" for "+bindCaptureToTarget.getUserCommand(),
-						bindCaptureToTarget,kbCaptured,this);
+						+" for "+bcCaptureToTarget.getUserCommand(),
+						bcCaptureToTarget,kbCaptured,this);
 				}
 				
 				kbWaitBeReleased=kbCaptured;
@@ -438,7 +438,7 @@ public class KeyBindCommandManagerI {
 	}
 
 	enum ECaptureUserDecision{
-		Cancelled,
+		Cancelled, EndReset, //same thing
 		Retry,
 		Success, 
 		
@@ -457,18 +457,19 @@ public class KeyBindCommandManagerI {
 					asteAlertFrom = SystemAlertI.i().showSystemAlert(
 							 " Press a key combination to be captured (where modifiers are ctrl, shift or alt).\n"
 							+" More complex or specific keybindings can be set thru console commands.\n"
+							+" (Restricted keys will be ignored)\n"
 							+" Press ESC to cancel.\n"
 							+"\n"
 							+" Re-binding keys for command:\n"
-							+"  "+bindCaptureToTarget.getCommandsInfo()+"\n"
-							+" Current key bind: "+bindCaptureToTarget.getKeyBind().getBindCfg()+"\n",
+							+"  "+bcCaptureToTarget.getCommandsInfo()+"\n"
+							+" Current key bind: "+bcCaptureToTarget.getKeyBind().getBindCfg()+"\n",
 							objLinkedGuiElement
 						);
 				}
 				break;
 			case Retry:
 				kbCaptured=null;
-				bindConflict=null;
+				bcConflict=null;
 				
 				SystemAlertI.i().hideSystemAlert(asteAlertFrom,true);
 				break;
@@ -479,24 +480,25 @@ public class KeyBindCommandManagerI {
 				SystemAlertI.i().hideSystemAlert(asteAlertFrom);
 				
 				String strMsg = "captured key bind "+kbCaptured.getBindCfg()
-					+" is already being used by '"+bindConflict.getCommandsInfo()+"'\n"
+					+" is already being used by '"+bcConflict.getCommandsInfo()+"'\n"
 					+strRequestUserDecision;
-				MessagesI.i().warnMsg(this,strMsg,	bindConflict,bindCaptureToTarget,kbCaptured,this);
+				MessagesI.i().warnMsg(this,strMsg,	bcConflict,bcCaptureToTarget,kbCaptured,this);
 				
 				asteAlertFrom = SystemAlertI.i().showSystemAlert(strMsg,objLinkedGuiElement);
 				
 				kbCaptured=null;
 				break;
+			case EndReset: //same thing
 			case Cancelled:
 				kbCaptured=null;
-				bindConflict=null;
-				bindCaptureToTarget=null;
+				bcConflict=null;
+				bcCaptureToTarget=null;
 				kbWaitBeReleased=null;
 				
 				SystemAlertI.i().hideSystemAlert(asteAlertFrom);
 				break;
 			case Success:
-				captureKeyStep(ECaptureUserDecision.Cancelled); //"recursive" in a sense
+				captureKeyStep(ECaptureUserDecision.EndReset); //"recursive" in a sense
 				
 //				refreshOwnerAfterCapture.requestRefresh();
 				recreateKeyBindFile();
@@ -546,14 +548,14 @@ public class KeyBindCommandManagerI {
 
 //	public void captureAndSetKeyBindAt(BindCommand bindTarget, IRefresh refreshOwner, Object objLinkedGuiElement) {
 	public void captureAndSetKeyBindAt(BindCommand bindTarget, Object objLinkedGuiElement) {
-		if(this.bindCaptureToTarget!=null){
+		if(this.bcCaptureToTarget!=null){
 //			MessagesI.i().warnMsg(this, "already capturing keybind for", this.bindCaptureToTarget, this.refreshOwnerAfterCapture, this);
-			MessagesI.i().warnMsg(this, "already capturing keybind for", this.bindCaptureToTarget, this);
+			MessagesI.i().warnMsg(this, "already capturing keybind for", this.bcCaptureToTarget, this);
 			return;
 		}
 		
 //		this.refreshOwnerAfterCapture=refreshOwner;
-		this.bindCaptureToTarget=bindTarget;
+		this.bcCaptureToTarget=bindTarget;
 		this.objLinkedGuiElement=objLinkedGuiElement;
 //		MessagesI.i().info("For unconventional (more complex) key bindings, use the console command.", bindTarget); 
 //		bindTarget.setValue(captureKeyBind(bindTarget));
@@ -568,5 +570,9 @@ public class KeyBindCommandManagerI {
 		this.funcRunUserCommand = funcRunUserCommand;
 		return this;
 	}
-
+	
+	
+	public boolean isCapturing(){
+		return bcCaptureToTarget!=null;
+	}
 }

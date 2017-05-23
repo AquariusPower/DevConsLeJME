@@ -267,8 +267,12 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 		}else{
 			updateEdgesColor(null);
 		}
-	
-		MiscLemurI.i().setLocalTranslationXY(getAlertAsPanel(), getPosForElement(EElement.Alert,v3fLblSize)); 
+		
+		if(isAlertStayOnCenter()){
+			MiscLemurI.i().moveToScreenCenterXY(getAlertAsPanel());
+		}else{
+			MiscLemurI.i().setLocalTranslationXY(getAlertAsPanel(), getPosForElement(EElement.Alert,v3fLblSize));
+		}
 	}
 
 	public String getStyle(){
@@ -376,8 +380,8 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 		return bAlertStayOnCenter;
 	}
 
-	public SystemAlertLemurI setAlertStayOnCenter(boolean btgAlertStayOnCenter) {
-		this.bAlertStayOnCenter = btgAlertStayOnCenter;
+	public SystemAlertLemurI setAlertStayOnCenter(boolean bAlertStayOnCenter) {
+		this.bAlertStayOnCenter = bAlertStayOnCenter;
 		return this;
 	}
 	

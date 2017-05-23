@@ -116,16 +116,16 @@ public class KeyCodeConfigureForJme {
 		// TODO joystick
 	}
 	
-	@Workaround
-	private void pseudoAxisKeyUpdatePressed(String strKeyId,boolean bPressed){
-		if(!bPressed)return;
-		
-		for(Key key:akAxis){
-			if(key.getFullId().equals(strKeyId)){
-				key.lPseudoPressedLastFrameId=EnvironmentJmeI.i().getCurrentFrameId();
-			}
-		}
-	}
+//	@Workaround
+//	private void pseudoAxisKeyUpdatePressed(String strKeyId,boolean bPressed){
+//		if(!bPressed)return;
+//		
+//		for(Key key:akAxis){
+//			if(key.getFullId().equals(strKeyId)){
+//				key.lPseudoPressedLastFrameId=EnvironmentJmeI.i().getCurrentFrameId();
+//			}
+//		}
+//	}
 	/**
 	 * the listener only receives the "pressed" event, not the "released"
 	 * as being an axis there it no actual trigger (neither press), but... on mouse stop
@@ -134,20 +134,20 @@ public class KeyCodeConfigureForJme {
 	 */
 	@Workaround
 	private void pseudoReleaseAxisKey(){
-		for(PseudoKeyAxis kax:akax){
-			kax.lPseudoPressedLastFrameId=EnvironmentJmeI.i().getCurrentFrameId();
+		for(Key key:akAxis){
+//			kax.getLastPressedFrameId()=EnvironmentJmeI.i().getCurrentFrameId();
 		
 			/**
 			 * must be on next frame so the "key press" is detected/forwarded by/thru {@link KeyCodeManagerI} 
 			 * on the frame it happened and can be "holded" (non stop moving)
 			 */
-			if( kax.lPseudoPressedLastFrameId == EnvironmentJmeI.i().getCurrentFrameId()   )continue;
+			if( key.getLastPressedFrameId() == EnvironmentJmeI.i().getCurrentFrameId()   )continue;
 			/**
-			 * wait a gap (a lacking "pressed event" for the axis that updates the frame id) 
+			 * wait a '1 frame gap' (a lacking "pressed event" for the axis that updates the frame id) 
 			 */
-			if( kax.lPseudoPressedLastFrameId == EnvironmentJmeI.i().getCurrentFrameId()-1 )continue;
+			if( key.getLastPressedFrameId() == EnvironmentJmeI.i().getCurrentFrameId()-1 )continue;
 			
-			KeyCodeManagerI.i().refreshPressedState(kax.key.getFullId(), false);
+			KeyCodeManagerI.i().refreshPressedState(key.getFullId(), false);
 		}
 	}
 //	public static class PseudoKeyAxis{

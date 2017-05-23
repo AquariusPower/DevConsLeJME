@@ -24,55 +24,53 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+package com.github.devconslejme.misc;
 
-package com.github.devconslejme.devcons;
-
-import java.util.function.Function;
-
-import com.github.devconslejme.misc.Annotations.NonStandard;
-import com.github.devconslejme.misc.DetailedException;
-import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.KeyBindCommandManagerI;
-import com.github.devconslejme.misc.MessagesI;
-import com.jme3.app.Application;
-import com.jme3.scene.Node;
+import com.github.devconslejme.misc.Annotations.SimpleVarReadOnly;
 
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PkgCfgI {
-	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
+public class EnvironmentI {
+	public static EnvironmentI i(){return GlobalManagerI.i().get(EnvironmentI.class);}
 
-	private boolean	bConfigured;
+	private long lTotalFrameCount;
+	private float	fTPF;
+	private float	fSumTPF;
+	private int	iFrameCount;
+	private int	iFPS;
 	
-	public void configure(Application app, Node nodeGui, Node nodeVirtualWorld){
-		DetailedException.assertIsFalse("configured", bConfigured, this);
-		com.github.devconslejme.gendiag.PkgCfgI.i().configure(app,nodeGui,nodeVirtualWorld);
-		
-//		FileI.i().configure(JmeSystem.getStorageFolder(StorageFolderType.Internal), app.getClass());
-		DevConsPluginStateI.i().configure(null,nodeGui);
-//		FileI.i().configure(DevConsPluginStateI.i().getStorageFolder());
-		if(KeyBindCommandManagerI.i().getFuncRunUserCommand()==null){
-			KeyBindCommandManagerI.i().setFuncRunUserCommand(new Function<String, Boolean>() {
-				@Override
-				public Boolean apply(String strJS) {
-					JavaScriptI.i().execScript(strJS, false);
-					return true;
-				}
-			});
-		}
-		
-		initNonStandard();
-		
-		bConfigured=true;
+	public long getTotalFrameCount() {
+		return lTotalFrameCount;
+	}
+
+	protected EnvironmentI setTotalFrameCount(long lTotalFrameCount) {
+		this.lTotalFrameCount = lTotalFrameCount;
+		return this; 
 	}
 	
-	@NonStandard
-	private void initNonStandard(){
-		/**
-		 * this special configuration will start appending log to a file
-		 */
-		MessagesI.i().initializeLogFile();
+	public void update(float tpf){
+		fTPF=tpf;
+		
+		lTotalFrameCount++; //TODO can this overflow!? :O
+		
+		fSumTPF+=fTPF;
+		iFrameCount++;
+		if(fSumTPF>=1f){
+			iFPS=iFrameCount;
+			fSumTPF-=1f;
+			iFrameCount=0;
+		}
+	}
+
+	@SimpleVarReadOnly
+	public float getTPF() {
+		return fTPF;
+	}
+	
+	@SimpleVarReadOnly
+	public float getFPS() {
+		return iFPS;
 	}
 }

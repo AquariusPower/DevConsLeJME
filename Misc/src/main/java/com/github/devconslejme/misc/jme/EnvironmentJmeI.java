@@ -33,6 +33,7 @@ import java.util.Map.Entry;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 
+import com.github.devconslejme.misc.EnvironmentI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.Annotations.SimpleVarReadOnly;
 import com.github.devconslejme.misc.GlobalManagerI.G;
@@ -57,17 +58,13 @@ import com.jme3.scene.shape.Quad;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class EnvironmentJmeI extends AbstractAppState{
+public class EnvironmentJmeI extends EnvironmentI{
 	public static EnvironmentJmeI i(){return GlobalManagerI.i().get(EnvironmentJmeI.class);}
 	
 	private MouseI mouse;
 	private DisplayI display = new DisplayI();
 	private ArrayList<IEnvironmentListener> alisteners = new ArrayList<IEnvironmentListener>();
 	
-	private float	fTPF;
-	private float	fSumTPF;
-	private int	iFrameCount;
-	private int	iFPS;
 	private BitmapText	btInfo;
 	private boolean	bShowFPS;
 	private Vector3f	v3fInfoLocation;
@@ -81,7 +78,6 @@ public class EnvironmentJmeI extends AbstractAppState{
 	private Camera	cam;
 	private LinkedHashMap<String,String> hmCustomInfo = new LinkedHashMap<String,String>();
 	private boolean	bShowMouseCursorPos;
-	private long lTotalFrameCount; 
 	
 	public void configure(Node nodeGui){
 		app=G.i(Application.class);
@@ -89,7 +85,7 @@ public class EnvironmentJmeI extends AbstractAppState{
 		inputman=app.getInputManager();
 		mouse = new MouseI(inputman);
 		
-		app.getStateManager().attach(this);
+		app.getStateManager().attach(new EnvState());
 		this.nodeGui=nodeGui;
 		if(this.nodeGui==null){
 			if(G.i(SimpleApplication.class)!=null){
@@ -106,29 +102,20 @@ public class EnvironmentJmeI extends AbstractAppState{
 		nodeInfo.attachChild(geomInfoBkg);
 	}
 	
-	@Override
-	public void update(float fTPF) {
-		super.update(fTPF);
-		
-		this.fTPF=(fTPF);
-		
-		this.lTotalFrameCount++; //TODO can this overflow!? :O
-		
-		this.fSumTPF+=fTPF;
-		this.iFrameCount++;
-		if(fSumTPF>=1f){
-			iFPS=iFrameCount;
-			fSumTPF-=1f;
-			iFrameCount=0;
-		}
-		
-		if(getDisplay().wasResized()){
-			for(IEnvironmentListener l:alisteners){
-				l.displayResizedEvent(getDisplay().getWidth(), getDisplay().getHeight());
+	public class EnvState extends AbstractAppState{
+		@Override
+		public void update(float tpf) {
+			super.update(tpf);
+			EnvironmentJmeI.super.update(tpf);
+			
+			if(getDisplay().wasResized()){
+				for(IEnvironmentListener l:alisteners){
+					l.displayResizedEvent(getDisplay().getWidth(), getDisplay().getHeight());
+				}
 			}
+			
+			updateInfo();
 		}
-		
-		updateInfo();
 	}
 	
 //	public Vector3f getMouseCursorPosition(){
@@ -228,16 +215,6 @@ public class EnvironmentJmeI extends AbstractAppState{
 		return mouse;
 	}
 
-	@SimpleVarReadOnly
-	public float getTPF() {
-		return fTPF;
-	}
-	
-	@SimpleVarReadOnly
-	public float getFPS() {
-		return iFPS;
-	}
-	
 //	/**
 //	 * 
 //	 * @param v3fInfo if null will re-use last one
@@ -265,7 +242,7 @@ public class EnvironmentJmeI extends AbstractAppState{
 		StringBuilder sb=new StringBuilder();
 		String strSep="\n";
 		
-		if(bShowFPS)sb.append("FPS="+iFPS+strSep);
+		if(bShowFPS)sb.append("FPS="+getFPS()+strSep);
 		if(bShowMouseCursorPos)sb.append("MouseXY="+getMouse().getPos2D()+strSep);
 		if(bShowCamPos){
 			sb.append("CamPos="
@@ -355,11 +332,11 @@ public class EnvironmentJmeI extends AbstractAppState{
 	
 	@SimpleVarReadOnly
 	public long getCurrentFrameId() {
-		return lTotalFrameCount;
+		return getTotalFrameCount();
 	}
 
 	public long getFrameId(int iAddOrSub) {
-		return lTotalFrameCount-iAddOrSub;
+		return getTotalFrameCount()-iAddOrSub;
 	}
 
 }

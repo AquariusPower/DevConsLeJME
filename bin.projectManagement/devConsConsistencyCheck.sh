@@ -45,8 +45,11 @@ function FUNCchk(){ # <package to validate> <<what package beyond self can it ac
 	
 	local lstrOtherPkgs="`echo "${lastrOtherPkgs[@]}" |tr " " "|"`"
 	
+	####
 	# grep: before ':' is the full path for the class file being analised
-	if echo "$strDevConsDeps" |grep "/$lstrPkg/[^/]*:" |egrep -v ":(.*/($lstrOtherPkgs)/)";then
+	# grep -v: after ':' will match only the specified packages, if there is a '/' after the package (therefore a non specified package), it will show the problem
+	####
+	if echo "$strDevConsDeps" |grep "/$lstrPkg/[^/]*:" |egrep -v ":.*/($lstrOtherPkgs)/[^/]*$";then
 		bProblemFound=true
 	fi
 	

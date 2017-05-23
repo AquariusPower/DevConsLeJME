@@ -191,8 +191,9 @@ public class KeyCodeManagerI {
 	}
 	
 	public void refreshPressedState(String strKeyId, boolean bPressed){
-		tmKey.get(strKeyId).setPressed(bPressed);
-		if(bDebug && bPressed)System.out.println(strKeyId);
+		Key key=tmKey.get(strKeyId);
+		key.setPressed(bPressed);
+		if(bDebug && bPressed && !key.isIgnoreKeyCode())System.out.println(strKeyId);
 	}
 	
 	public void refreshPressedState(int iKeyCode, boolean bPressed){
@@ -337,6 +338,7 @@ public class KeyCodeManagerI {
 		}
 		
 		for(Key key:getKeyList()){
+			if(key.isIgnoreKeyCode())continue; //ignore it
 			if(EKeyMod.isModKey(key))continue;
 			
 			if(key.isPressed()){

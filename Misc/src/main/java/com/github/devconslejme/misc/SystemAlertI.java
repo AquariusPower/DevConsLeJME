@@ -28,7 +28,6 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.github.devconslejme.misc;
 
 import java.io.File;
-import java.nio.channels.UnsupportedAddressTypeException;
 
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
@@ -177,7 +176,6 @@ public class SystemAlertI {
 			public Boolean call() {
 				if(!SystemAlertLemurI.i().isShowingAlert()){
 					aste=SystemAlertLemurI.i().showSystemAlert(strMsg, null);
-					SystemAlertLemurI.i().setAlertStayOnCenter(true);
 					td.setActive(true);
 				}else{
 					if(!isValidRequestOriginKey(aste))return false; //there is some other alert going on, wait it end

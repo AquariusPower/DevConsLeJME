@@ -53,6 +53,7 @@ import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.JavaLangI.FuncIn;
 import com.github.devconslejme.misc.KeyBind;
+import com.github.devconslejme.misc.KeyCodeManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
@@ -130,7 +131,7 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 //	private ButtonWithCmd btnClipboardShow;
 	private BtnConsoleActionCursorListenerX	bclk;
 	private TextField	tfInput;
-	private int	iKeyCodeToggleConsole = KeyInput.KEY_F10;
+	private Integer	iKeyCodeToggleConsole;
 	private String	strInputMappingToggleDeveloperConsole = "ToggleDeveloperConsole";
 //	private File	flStorageFolder;
 	private HashMap<String,VarMon> hmVarMon = new HashMap<String,VarMon>();
@@ -294,8 +295,12 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		}
 	}
 	
-	public void configure(Node nodeParent) {
+	public void configure(Integer iOpenDevConsKeyCode, Node nodeParent) {
 		this.app=GlobalManagerI.i().get(Application.class);
+		
+		this.iKeyCodeToggleConsole=iOpenDevConsKeyCode;
+		if(this.iKeyCodeToggleConsole==null)this.iKeyCodeToggleConsole=KeyInput.KEY_F10;
+//		setKeyCodeToggleConsole(iOpenDevConsKeyCode);
 		
 		this.nodeParent = nodeParent;
 		
@@ -1578,15 +1583,15 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 		return iKeyCodeToggleConsole;
 	}
 
-	public DevConsPluginStateI setKeyCodeToggleConsole(String strKeyToggleConsoleNoMods) {
-		setKeyCodeToggleConsole(new KeyBind().setFromKeyCfg(strKeyToggleConsoleNoMods).getActionKey().getKeyCode());
-		return this;
-	}
+//	public DevConsPluginStateI setKeyCodeToggleConsole(String strKeyToggleConsoleNoMods) {
+//		setKeyCodeToggleConsole(new KeyBind().setFromKeyCfg(strKeyToggleConsoleNoMods).getActionKey().getKeyCode());
+//		return this;
+//	}
 	
-	public DevConsPluginStateI setKeyCodeToggleConsole(int iKeyCodeToggleConsole) {
+	private DevConsPluginStateI setKeyCodeToggleConsole(int iKeyCodeToggleConsole) {
 		this.iKeyCodeToggleConsole = iKeyCodeToggleConsole;
 		
-		if(alToggleConsole!=null){ //otherwise will be called again during initialize
+//		if(alToggleConsole!=null){ //otherwise will be called again during initialize
 			if(app.getInputManager().hasMapping(strInputMappingToggleDeveloperConsole)){
 				app.getInputManager().deleteMapping(strInputMappingToggleDeveloperConsole);
 			}
@@ -1595,7 +1600,10 @@ public class DevConsPluginStateI extends AbstractAppState {//implements IResizab
 				new KeyTrigger(iKeyCodeToggleConsole));
 			
 			app.getInputManager().addListener(alToggleConsole, strInputMappingToggleDeveloperConsole);
-		}
+//		}
+		
+		String strKey = KeyCodeManagerI.i().getKeyIdFromCode(iKeyCodeToggleConsole);
+		KeyCodeManagerI.i().getKeyForId(strKey).setIgnoreKeyCode();
 		
 		return this;
 	}

@@ -226,15 +226,24 @@ public class MiscLemurI {
 //		}
 //	}
 	
-	public void moveToScreenCenterXY(PanelBase pnl) {
+	public void moveToScreenCenterXY(Panel pnl) {
 		Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSizeCopy(pnl);
-		pnl.setLocalTranslationXY(new Vector3f(
+		setLocalTranslationXY(pnl,new Vector3f(
 			EnvironmentJmeI.i().getDisplay().getWidth()/2f - v3fSize.x/2f, 
 			EnvironmentJmeI.i().getDisplay().getHeight()/2f + v3fSize.y/2f, 
-			0//			pnl.getLocalTranslation().z 
+			0 
 		));
-//		pnl.getWorldBound().setCenter(new Vector3f(DisplayI.i()..getWidth()/2f,DisplayI.i()..getHeight()/2f,pnl.getLocalTranslation().z));
 	}
+	
+//	public void moveToScreenCenterXY(PanelBase pnl) {
+//		moveToScreenCenterXY(pnl);
+////		Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSizeCopy(pnl);
+////		pnl.setLocalTranslationXY(new Vector3f(
+////			EnvironmentJmeI.i().getDisplay().getWidth()/2f - v3fSize.x/2f, 
+////			EnvironmentJmeI.i().getDisplay().getHeight()/2f + v3fSize.y/2f, 
+////			0 
+////		));
+//	}
 	
 	public static enum EResizeApplyMode{
 		Save,

@@ -28,21 +28,22 @@ package com.github.devconslejme.misc;
 
 import java.util.ArrayList;
 
-import com.github.devconslejme.misc.jme.EnvironmentJmeI;
-
 /**
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  *
  */
 public class Key{
+	private Integer iKeyCode = null;
+	private ArrayList<Key> akeyMonitoredList = null;
+	
+	private boolean bIgnored=false;
 	private String strFullId;
 	private String strSimpleId;
-	private Integer iKeyCode = null;
 	private boolean bPressed = false;
 	private long lLastPressedNano=-1;
 	private long lLastReleasedNano=-1;
-	private ArrayList<Key> akeyMonitoredList = null;
+	private long	lLastPressedFrameId;
 	
 //		private Key(Integer iKeyCode) {
 //			this(ManageKeyCodeI.i().getKeyId(iKeyCode), iKeyCode);
@@ -155,11 +156,17 @@ public class Key{
 	}
 	protected void setPressed(boolean bPressed) {
 		assert(AssertionsI.i().restrictedCaller(KeyCodeManagerI.class, 1));
+		
+		if(isIgnoreKeyCode())return;
+		
 		if(akeyMonitoredList!=null)throw new DetailedException("this key is a group reference, cannot be directly pressed...", this, akeyMonitoredList, bPressed);
 		
+		/**
+		 * user actions are realtime, not simulation one
+		 */
 		if(bPressed){
 			lLastPressedNano=System.nanoTime();
-			lLastPressedFrameId=EnvironmentI.i().getCurrentFrameId();
+			lLastPressedFrameId=EnvironmentI.i().getTotalFrameCount();
 		}else{
 			lLastReleasedNano=System.nanoTime();
 		}
@@ -245,6 +252,24 @@ public class Key{
 		builder.append("]");
 		return builder.toString();
 	}
+
+	public long getLastPressedFrameId() {
+		return lLastPressedFrameId;
+	}
+
+	public boolean isIgnoreKeyCode() {
+		return bIgnored;
+	}
 	
-	
+	/**
+	 * ignore a key code to be exclusively used/accessible outside this key binding context,
+	 * so nothing will happen (in this context) while pressing it.
+	 * @return
+	 */
+	public Key setIgnoreKeyCode() {
+		assert iKeyCode!=null : "can only ignore a key code";
+		this.bIgnored = true;
+		return this; 
+	}
+
 }

@@ -33,6 +33,7 @@ import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.Key;
 import com.github.devconslejme.misc.KeyBind;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
+import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.BindCommand;
 import com.github.devconslejme.misc.KeyCodeManagerI;
 import com.github.devconslejme.misc.MessagesI;
@@ -77,6 +78,15 @@ public class KeyBindManagerDialogI {
 						@Override
 						public void execute(Button source) {
 							KeyBindCommandManagerI.i().captureAndSetKeyBindAt(bc, source);
+							
+							QueueI.i().enqueue(new CallableXAnon() {
+								@Override
+								public Boolean call() {
+									if(KeyBindCommandManagerI.i().isCapturing())return false; //wait capture end
+									diagBindMan.requestUpdateListItems();
+									return true;
+								}
+							});
 						}
 					});
 				}
