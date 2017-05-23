@@ -96,7 +96,7 @@ public class GeometryI {
 				@Override	public Boolean call() {
 					if(ga.isDestroy()){
 						ga.removeFromParent();
-						endLoopMode();
+						QueueI.i().removeLoopFromQueue(this); //endLoopMode();
 					}else{
 						if(ga.isEnabled()){
 							if(ga.getParent()==null)nodeBase.attachChild(ga);

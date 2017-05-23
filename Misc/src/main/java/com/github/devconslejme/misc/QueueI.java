@@ -95,7 +95,7 @@ public class QueueI {
 		private float	fDelaySeconds=0f;
 		private boolean	bLoop=false;
 		
-		private long lRunAtTime;
+		private long lRunSuccessAtTime;
 		private boolean	bUserCanKill = false;
 		private boolean	bUserCanPause = false;
 		
@@ -111,12 +111,14 @@ public class QueueI {
 		private StackTraceElement	steInstancedWhere;
 		private StackTraceElement[]	asteLastEnqueued;
 
-		private boolean	bJustRemoveFromQueueOnce;
+		private boolean	bLoopModeJustRemoveFromQueueOnceRequest;
 
 		private Long	lFirstRunAtTime=null;
 
-		private long	lRunCount=0;
+		private long	lRunTryCount=0;
 		private long	lFailCount=0;
+
+		public boolean	bForceRemoveFromQueueRequest;
 		
 		
 		private static String strLastUId="0";
@@ -137,7 +139,10 @@ public class QueueI {
 			this.strName = strName;
 			return getThis();
 		}
-		public SELF setLoopEnabled(boolean b) {
+		private SELF setLoopEnabled(boolean b) {
+			if(this.bLoop==true && b==false){
+				throw new DetailedException("if loop mode was enabled, it cannot be disabled, use the remove queue once option", this);
+			}
 			this.bLoop=b;
 			return getThis();
 		}
@@ -165,7 +170,7 @@ public class QueueI {
 		}
 		
 		public SELF enableLoopMode() {
-			this.bLoop=true;
+			setLoopEnabled(true);
 			return getThis();
 		}
 		
@@ -178,13 +183,14 @@ public class QueueI {
 //			return getThis();
 //		}
 		
-		public SELF endLoopMode() {
-			this.bLoop=false;
-			return getThis();
-		}
+//		public SELF endLoopMode() {
+//			bLoopModeJustRemoveFromQueueOnceRequest=tr
+//			setLoopEnabled(false);
+//			return getThis();
+//		}
 		public SELF setDelaySeconds(float fDelaySeconds) {
 			this.fDelaySeconds=(fDelaySeconds);
-			updateRunAt();
+			updateRunSuccessAt();
 			return getThis();
 		}
 		
@@ -207,7 +213,7 @@ public class QueueI {
 			
 //			prepareName();
 			
-			updateRunAt();
+			updateRunSuccessAt();
 		}
 		
 		private String prepareNameFromEnclosing(){
@@ -268,8 +274,8 @@ public class QueueI {
 			return sb.toString();
 		}
 		
-		private void updateRunAt() {
-			this.lRunAtTime = QueueI.i().calcRunAt(fDelaySeconds);
+		private void updateRunSuccessAt() {
+			this.lRunSuccessAtTime = QueueI.i().calcRunAt(fDelaySeconds);
 		}
 		
 		public float getDelaySeconds() {
@@ -282,14 +288,14 @@ public class QueueI {
 				return true;
 			}
 			
-			if(lFirstRunAtTime!=null && lRunCount==0){
+			if(lFirstRunAtTime!=null && lRunTryCount==0){
 				return QueueI.i().isReady(lFirstRunAtTime);
 			}
 			
-			return QueueI.i().isReady(lRunAtTime);
+			return QueueI.i().isReady(lRunSuccessAtTime);
 		}
 
-		public boolean isLoopEnabled() {
+		public boolean isLoopMode() {
 			return bLoop;
 		}
 		
@@ -307,7 +313,7 @@ public class QueueI {
 			builder.append(", bLoop=");
 			builder.append(bLoop);
 			builder.append(", lRunAtTimeMilis=");
-			builder.append(lRunAtTime);
+			builder.append(lRunSuccessAtTime);
 			builder.append(", bUserCanKill=");
 			builder.append(bUserCanKill);
 			builder.append(", bUserCanPause=");
@@ -433,7 +439,8 @@ public class QueueI {
 	 * call things that must happen on the proper update moment
 	 * @param cx
 	 */
-	public void enqueue(CallableX cx){
+	@SuppressWarnings("unchecked")
+	public <T extends CallableX<T>> T enqueue(CallableX<T> cx){
 		synchronized(acxList){
 			if(!acxList.contains(cx)){
 				acxList.add(cx);
@@ -444,6 +451,7 @@ public class QueueI {
 				cx.prepareName();
 			}
 		}
+		return (T)cx;
 	}
 	/**
 	 * just to let the IDE help me...
@@ -463,9 +471,17 @@ public class QueueI {
 		return lCurrentTime + (long)(fDelaySeconds * lTimeResolution);
 	}
 	
-	public void removeFromQueue(CallableX cx){
+	public void forceRemoveFromQueue(CallableX cx) {
+		cx.bForceRemoveFromQueueRequest=true;
+	}
+	public void removeLoopFromQueue(CallableX cx){
+		assert cx.isLoopMode() : "is not in loop mode";
+		
 		if(acxList.contains(cx)){
-			cx.bJustRemoveFromQueueOnce=true;
+			/**
+			 * only requests if on queue, to avoid next enqueue with a problematic state 
+			 */
+			cx.bLoopModeJustRemoveFromQueueOnceRequest=true;
 		}
 	}
 	
@@ -479,27 +495,58 @@ public class QueueI {
 		this.lCurrentTime=lCurrentTime;
 		
 		for(CallableX<? extends CallableWeak<Boolean>> cx:acxList.toArray(new CallableX[0])){
+			cx.setTPF(fTPF);
 			
-			if(cx.isReady()){
-				if(cx.isPaused())continue;
+			boolean bRun=false;
+			boolean bRemove=false;
+			
+			if(cx.isLoopMode()){ /////////////LOOP MODE
+				if(cx.bLoopModeJustRemoveFromQueueOnceRequest){
+					bRemove=true;
+				}
 				
-				cx.setTPF(fTPF);
-				cx.lRunCount++; //working or not
-				if(cx.call()){ 
-					if(!cx.isLoopEnabled() || cx.bJustRemoveFromQueueOnce){
-						synchronized(acxList){
-							acxList.remove(cx);
-							cx.callAfterRemovedFromQueue();
-							cx.bJustRemoveFromQueueOnce=false;
-						}
-					}else{
-						cx.updateRunAt();
+				if(!cx.isPaused()){
+					if(cx.isReady()){ //in between delay
+						bRun=true;
 					}
-				}else{
-					// if a loop queue fails, it will not wait and will promptly retry!
-					cx.setFailCount(cx.getFailCount() + 1);
+				}
+			}else{ /////////////// RUN ONCE MODE
+				if(cx.isReady()){ //wait initial delay if any
+					bRun=true;
+					bRemove=true;
 				}
 			}
+			
+			if(bRun){
+				cx.lRunTryCount++; //working or not
+				if(cx.call()){ 
+					cx.updateRunSuccessAt();
+				}else{
+					// if a loop queue fails, it will not wait and will promptly retry!
+					cx.lFailCount++;
+					
+					if(!cx.isLoopMode()){
+						bRemove=false; //needs to retry, can be a lazy run once init
+					}
+				}
+			}
+			
+			if(cx.bForceRemoveFromQueueRequest){
+				/**
+				 * this allows to remove even a non-loop mode failing queued callable.
+				 */
+				bRemove=true;
+				cx.bForceRemoveFromQueueRequest=false; //cleanly reset request
+			}
+			
+			if(bRemove){
+				synchronized(acxList){
+					acxList.remove(cx);
+					cx.callAfterRemovedFromQueue();
+					cx.bLoopModeJustRemoveFromQueueOnceRequest=false; //so it can be cleanly re-added to the queue and work correctly
+				}
+			}
+			
 		}
 		
 	}
@@ -530,7 +577,13 @@ public class QueueI {
 		for(CallableX cx:acxList){
 			if(strUIdOrJS.equalsIgnoreCase( strUIdOrJS.endsWith(".js") ? cx.getName() : cx.getUId() )){
 				if(bKill){
-					if(cx.isUserCanKill())cx.endLoopMode();
+					if(cx.isUserCanKill()){
+						if(cx.isLoopMode()){
+							removeLoopFromQueue(cx);//cx.endLoopMode();
+						}else{
+							forceRemoveFromQueue(cx);
+						}
+					}
 				}else{
 					if(cx.isUserCanPause())cx.togglePause();
 				}

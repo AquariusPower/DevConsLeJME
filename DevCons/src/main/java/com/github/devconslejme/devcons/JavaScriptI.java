@@ -650,7 +650,8 @@ public class JavaScriptI implements IGlobalAddListener {
 	 * @param bLoop
 	 */
 	private void execLater(String strSimpleScript, File flJS, float fDelaySeconds, boolean bLoop,boolean bShowRetVal){
-		QueueI.i().enqueue(new CallableX() {
+		@SuppressWarnings("unchecked")
+		CallableX cx = QueueI.i().enqueue(new CallableX() {
 				@Override
 				public Boolean call() {
 					if(flJS!=null){
@@ -664,10 +665,11 @@ public class JavaScriptI implements IGlobalAddListener {
 			}
 			.setName(flJS!=null?flJS.getName():"SimpleScript")
 			.setDelaySeconds(fDelaySeconds)
-			.setLoopEnabled(bLoop)
 			.setUserCanKill(true)
 			.setUserCanPause(true)
 		);
+		
+		if(bLoop)cx.enableLoopMode();
 	}
 	
 	public static class FileSelfScript extends File{

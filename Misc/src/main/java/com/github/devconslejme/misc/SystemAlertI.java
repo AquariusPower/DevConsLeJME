@@ -113,7 +113,7 @@ public class SystemAlertI {
 	
 	protected boolean updateCaptureUserInput(float fTPF, CallableX cx){
 		if(strAlertMsg==null){
-			cx.endLoopMode();
+			QueueI.i().removeLoopFromQueue(cx); //cx.endLoopMode();
 			endCaptureUserInput();
 			return true;
 		}

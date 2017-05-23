@@ -78,7 +78,7 @@ public class QueueManagerDialogI implements IUserTextInputSubmited{
 		for(CallableX cx:QueueI.i().getQueueCopy()){
 			String strText=cx.getInfoText();
 			if(!StringI.i().contains(strText, strFilter, EStringMatchMode.Contains, true))continue;
-			diagMaint.putOption(cx.isLoopEnabled() ? odLoop : odOnce, strText, cx);
+			diagMaint.putOption(cx.isLoopMode() ? odLoop : odOnce, strText, cx);
 		}
 	}
 

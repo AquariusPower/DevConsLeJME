@@ -262,13 +262,12 @@ public class IndicatorI {
 		gi.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
 		
 		QueueI.i().enqueue(new CallableXAnon() {
-					@Override
-					public Boolean call() {
-						if(!update(getTPF(),gi))endLoopMode();
-						return true;
-					}
+			@Override	public Boolean call() {
+				if(!update(getTPF(),gi)){
+					QueueI.i().removeLoopFromQueue(this); //endLoopMode();
 				}
-				.setName("IndicatorFollowTarget")
+				return true;
+			}}.setName("IndicatorFollowTarget")
 				.setUserCanPause(true)
 				.setDelaySeconds(1f/20f)
 				.enableLoopMode()
