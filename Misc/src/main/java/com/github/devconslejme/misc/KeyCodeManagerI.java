@@ -190,6 +190,9 @@ public class KeyCodeManagerI {
 		return null;
 	}
 	
+	public void refreshMouseButtonPressedState(int iButtonIndex, boolean bPressed){
+		refreshPressedState(strMouseTriggerKeyPrefix+iButtonIndex, bPressed);
+	}
 	public void refreshPressedState(String strKeyId, boolean bPressed){
 		Key key=tmKey.get(strKeyId);
 		key.setPressed(bPressed);
@@ -266,6 +269,7 @@ public class KeyCodeManagerI {
 	}
 	
 	private String strAxisPrefix="mouseAxis";
+	private String	strMouseTriggerKeyPrefix="mouseButton";
 	public void prepareMouseAxisCodes(){
 		addKeyWorkFull(strAxisPrefix+0+0+"_XLeft", iSpecialCodeStart--);
 		addKeyWorkFull(strAxisPrefix+0+1+"_XRight", iSpecialCodeStart--);
@@ -283,9 +287,12 @@ public class KeyCodeManagerI {
 		return null;
 	}
 	
+	public Key getMouseTriggerKey(int iButtonIndex){
+		return getKeyForId(strMouseTriggerKeyPrefix+iButtonIndex);
+	}
+	
 	public Key addMouseTriggerCode(int iButtonIndex){
-		String strKeyPrefix="mouseButton";
-		String strId=strKeyPrefix+iButtonIndex;
+		String strId=strMouseTriggerKeyPrefix+iButtonIndex;
 		Key key=getKeyForId(strId);
 		if(key!=null){
 			throw new DetailedException("already set "+strId, key);

@@ -67,6 +67,7 @@ public class PkgCfgI {
 		MiscLemurI.i().configure(nodeGui);
 		SystemAlertLemurI.i().configure(nodeGui);
 		EffectsLemurI.i().configure();
+		new KeyCodeConfigureForLemur().configure();
 		
 		bConfigured=(true);
 	}

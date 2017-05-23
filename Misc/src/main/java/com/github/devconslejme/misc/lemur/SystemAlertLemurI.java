@@ -30,6 +30,7 @@ package com.github.devconslejme.misc.lemur;
 import java.util.ArrayList;
 
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.KeyCodeManagerI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.SystemAlertI;
 import com.github.devconslejme.misc.TimedDelay;
@@ -156,10 +157,22 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 		return aste;
 	}
 	
+	/**
+	 * the alert panel is above the lemur picking ray!
+	 * so the blocker will receive all clikc events!!!
+	 */
 	private static class BlockerClickListener extends CursorListenerX{
 		@Override
 		protected boolean click(CursorButtonEvent event, Spatial target, Spatial capture) {
+//			/**
+//			 * lemur seems to not let mouse cursor buttons to be forwared to JME other core listeners 
+//			 * so it has to be done here.
+//			 * TODO confirm that? if this could be avoided by letting the JME action listener at KeyCodeConfigureForJme do all the work? 
+//			 */
+//			KeyCodeManagerI.i().refreshMouseButtonPressedState(event.getButtonIndex(), event.isPressed());
+			
 			SystemAlertLemurI.i().tdBlockerGlow.reactivate(); //a simple effect to show it received the click
+			
 			return true;
 		}
 	}
@@ -321,6 +334,7 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 	}
 	
 	/**
+	 * the alert panel is above the lemur picking ray!
 	 * 
 	 * @param e
 	 * @param v3fRef see the code, it may be null or used in different ways
@@ -357,7 +371,7 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 				v3fPos = new Vector3f(v3fRef);
 				v3fPos.z=fZ;
 				break;
-			case Alert:
+			case Alert: // the alert panel is above the lemur picking ray!
 				Vector3f v3fAlertSize=v3fRef;
 				if(v3fAlertSize==null){
 					v3fAlertSize = v3fWdwSize.mult(0.5f);

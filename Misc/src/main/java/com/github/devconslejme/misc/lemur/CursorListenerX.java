@@ -91,7 +91,7 @@ public abstract class CursorListenerX implements CursorListener{
 	
 	@Override
 	public void cursorButtonEvent(CursorButtonEvent event, Spatial target,			Spatial capture) {
-		MiscLemurI.i().clickGlobalListeners(event,target,capture);
+		MiscLemurI.i().clickGlobalListeners(event,target,capture); //pressed and released
 		event = refreshesEventForListBoxItem(event,capture);
 		if(event.isConsumed())return;
 		
