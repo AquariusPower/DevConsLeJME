@@ -123,8 +123,8 @@ public class DragParentestPanelListenerI implements CursorListener{
 		private void updateMouseEffect() {
 			if(EnvironmentJmeI.i().getMouse().isCursorVisible() && EnvironmentJmeI.i().getMouse().isMouseCursorPressedButtons()>0){
 				if(v3fPressedPos==null){
-					v3fPressedPos = MiscJmeI.i().toV3f(inputman.getCursorPosition());
-					v3fPressedPos.z=MiscJmeI.i().getZAboveAllAtGuiNode();
+					v3fPressedPos = MiscJmeI.i().toV3fZAA(inputman.getCursorPosition());
+//					v3fPressedPos.z=MiscJmeI.i().getZAboveAllAtGuiNode();
 					efDisplaced.setFrom(v3fPressedPos);
 					efDisplaced.setPlay(true);
 					indicatorFrom.setPositionRelativeToTarget(v3fPressedPos);

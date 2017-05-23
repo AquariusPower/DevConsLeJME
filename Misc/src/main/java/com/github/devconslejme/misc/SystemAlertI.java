@@ -31,7 +31,6 @@ import java.io.File;
 
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
-import com.github.devconslejme.misc.lemur.SystemAlertLemurI;
 
 
 /**
@@ -174,14 +173,14 @@ public class SystemAlertI {
 			private StackTraceElement[]	aste;
 			@Override
 			public Boolean call() {
-				if(!SystemAlertLemurI.i().isShowingAlert()){
-					aste=SystemAlertLemurI.i().showSystemAlert(strMsg, null);
+				if(!SystemAlertI.i().isShowingAlert()){
+					aste=SystemAlertI.i().showSystemAlert(strMsg, null);
 					td.setActive(true);
 				}else{
 					if(!isValidRequestOriginKey(aste))return false; //there is some other alert going on, wait it end
 					
 					if(td.isReady()){
-						SystemAlertLemurI.i().hideSystemAlert(aste);
+						SystemAlertI.i().hideSystemAlert(aste);
 						return true;//end
 					}
 				}

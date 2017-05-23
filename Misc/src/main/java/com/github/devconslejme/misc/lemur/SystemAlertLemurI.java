@@ -30,7 +30,6 @@ package com.github.devconslejme.misc.lemur;
 import java.util.ArrayList;
 
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.KeyCodeManagerI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.SystemAlertI;
 import com.github.devconslejme.misc.TimedDelay;
@@ -187,7 +186,7 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 			tdBlockerGlow.setActive(true);
 //			GlobalGUINodeI.i().attachChild(pnlBlocker);
 			nodeGui.attachChild(pnlBlocker);
-			MiscLemurI.i().setPreferredSize(pnlBlocker, EnvironmentJmeI.i().getDisplay().getAppWindowSize());
+			SizeAndLocationI.i().setPreferredSize(pnlBlocker, EnvironmentJmeI.i().getDisplay().getAppWindowSize());
 			pnlBlocker.setLocalTranslation(getPosForElement(EElement.Blocker, null));
 //			MiscLemurI.i().setLocalTranslationXY(pnlBlocker, EnvironmentI.i().getDisplay().getTopLeftCorner());
 //			MiscLemurI.i().setLocalTranslationZ(pnlBlocker, MiscJmeI.i().getZAboveAllAtGuiNode()-MiscLemurI.i().getMinSizeZ()); //just below the lemur raycast
@@ -285,9 +284,9 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 		}
 		
 		if(isAlertStayOnCenter()){
-			MiscLemurI.i().moveToScreenCenterXY(getAlertAsPanel());
+			SizeAndLocationI.i().moveToScreenCenterXY(getAlertAsPanel());
 		}else{
-			MiscLemurI.i().setLocalTranslationXY(getAlertAsPanel(), getPosForElement(EElement.Alert,v3fLblSize));
+			SizeAndLocationI.i().setLocalTranslationXY(getAlertAsPanel(), getPosForElement(EElement.Alert,v3fLblSize));
 		}
 	}
 
@@ -358,7 +357,7 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 		 */
 //		float fZ=bbGuiNodeWorldBoundPriorToAlert.getMax(null).z;
 //		float fZ=MiscJmeI.i().getZAboveAllAtGuiNode()-MiscLemurI.i().getMinSizeZ(); //just below the lemur raycast start point
-		float fZ=MiscLemurI.i().getPickingRayCastFromZ()-MiscLemurI.i().getMinSizeZ(); //just below the lemur raycast start point
+		float fZ=MiscLemurI.i().getPickingRayCastFromZ()-SizeAndLocationI.i().getMinSizeZ(); //just below the lemur raycast start point
 		
 		Vector3f v3fPos = null;
 //		fZ += fZDispl*(e.ordinal()+1); // attention how the order/index is a multiplier of the displacement!

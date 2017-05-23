@@ -33,10 +33,11 @@ import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.Key;
 import com.github.devconslejme.misc.KeyBind;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
-import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.BindCommand;
+import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.KeyCodeManagerI;
 import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.TimeFormatI;
 import com.simsilica.lemur.Button;
@@ -112,7 +113,7 @@ public class KeyBindManagerDialogI {
 		
 		BindCommand bc = new BindCommand();
 		bc.setKeyBind(kb);
-		bc.setHardCommand(new CallableXAnon(){
+		bc.setHardCommand(new CallBoundKeyCmd(){
 				@Override
 				public Boolean call() {
 					MessagesI.i().output(false,System.out,"Info:",this,KeyBindManagerDialogI.class.getSimpleName()+":test:"+TimeFormatI.i().getRealTimeFormatted());

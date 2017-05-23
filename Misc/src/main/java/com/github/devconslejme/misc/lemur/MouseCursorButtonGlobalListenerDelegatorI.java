@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 2016-2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+	Copyright (c) 2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 	
 	All rights reserved.
 
@@ -26,31 +26,44 @@
 */
 package com.github.devconslejme.misc.lemur;
 
-import com.github.devconslejme.misc.KeyCodeManagerI;
-import com.github.devconslejme.misc.lemur.MouseCursorButtonGlobalListenerDelegatorI.IGlobalClickListener;
+import java.util.ArrayList;
+
+import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.event.CursorButtonEvent;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class KeyCodeConfigureForLemur {
-	
-	public static class GlobalListenerX implements IGlobalClickListener{
-		@Override
-		public void clickEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
-			/**
-			 * lemur seems to not let mouse cursor buttons to be forwared to JME other core listeners 
-			 * so it has to be done here.
-			 * TODO confirm that? if this could be avoided by letting the JME action listener at KeyCodeConfigureForJme do all the work? 
-			 */
-			KeyCodeManagerI.i().refreshMouseButtonPressedState(event.getButtonIndex(), event.isPressed());
-		}
-	}
-	private GlobalListenerX glx = new GlobalListenerX();
+public class MouseCursorButtonGlobalListenerDelegatorI {
+	public static MouseCursorButtonGlobalListenerDelegatorI i(){return GlobalManagerI.i().get(MouseCursorButtonGlobalListenerDelegatorI.class);}
 
-	public void configure() {
-		MouseCursorButtonGlobalListenerDelegatorI.i().addGlobalClickListener(glx);
+	/**
+	 * must not be CursorListener to avoid being used elsewhere...
+	 */
+	public static interface IGlobalClickListener{
+		public void clickEvent(CursorButtonEvent event, Spatial target, Spatial capture);
+	}
+	private ArrayList<IGlobalClickListener> aclxGlobal = new ArrayList<IGlobalClickListener>();
+	/**
+	 * cannot consume the event. mainly for auto focus
+	 * @param clxGlobal
+	 */
+	public void addGlobalClickListener(IGlobalClickListener clxGlobal){
+//		DetailedException.assertNotAlreadySet(this.clxGlobal, clxGlobal);
+		if(!aclxGlobal.contains(clxGlobal))aclxGlobal.add(clxGlobal);
+	}
+	
+	public void clickGlobalListeners(CursorButtonEvent event, Spatial target, Spatial capture) {
+//		if(clxGlobal==null)return;
+		for(IGlobalClickListener clx:aclxGlobal){
+			boolean bWasConsumed=event.isConsumed();
+			clx.clickEvent(event, target, capture);
+			if(!bWasConsumed && event.isConsumed()){
+				throw new DetailedException("must not consume the event!",clx,event,target,capture,this);
+			}
+		}
 	}
 	
 }

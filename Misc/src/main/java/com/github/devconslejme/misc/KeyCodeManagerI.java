@@ -190,13 +190,22 @@ public class KeyCodeManagerI {
 		return null;
 	}
 	
-	public void refreshMouseButtonPressedState(int iButtonIndex, boolean bPressed){
-		refreshPressedState(strMouseTriggerKeyPrefix+iButtonIndex, bPressed);
+	public Key refreshMouseButtonPressedState(int iButtonIndex, boolean bPressed){
+		return refreshPressedState(strMouseTriggerKeyPrefix+iButtonIndex, bPressed);
 	}
-	public void refreshPressedState(String strKeyId, boolean bPressed){
+	public Key refreshPressedState(String strKeyId, boolean bPressed){
+		return refreshState(strKeyId, bPressed, null);
+	}
+	public Key refreshState(String strKeyId, boolean bPressed, Float fValue){
 		Key key=tmKey.get(strKeyId);
 		key.setPressed(bPressed);
-		if(bDebug && bPressed && !key.isIgnoreKeyCode())System.out.println(strKeyId);
+		if(fValue!=null)key.setAnalogValue(fValue);
+		if(bDebug && bPressed && !key.isIgnoreKeyCode())System.out.println(strKeyId+","+bPressed+","+fValue);
+		return key;
+	}
+	public Key refreshAnalogState(String strKeyId, float fValue){
+//		return refreshPressedState(strKeyId, true).setAnalogValue(fValue);
+		return refreshState(strKeyId, true, fValue);
 	}
 	
 	public void refreshPressedState(int iKeyCode, boolean bPressed){

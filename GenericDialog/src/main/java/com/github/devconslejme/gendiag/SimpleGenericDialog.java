@@ -64,6 +64,7 @@ import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
+import com.github.devconslejme.misc.lemur.SizeAndLocationI;
 import com.google.common.base.Function;
 import com.jme3.app.Application;
 import com.jme3.input.KeyInput;
@@ -898,7 +899,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			pnl.updateLogicalState(0); //this will pre-calculate the required good size 
 			Vector3f v3fSize = pnl.getSize().clone();
 			if(v3fSize.x<fMinWidth)v3fSize.x=fMinWidth;
-			MiscLemurI.i().setPreferredSize(pnl,v3fSize); //pnl.setPreferredSize(v3fSize);
+			SizeAndLocationI.i().setPreferredSize(pnl,v3fSize); //pnl.setPreferredSize(v3fSize);
 			return (T)pnl;
 		}
 	}
@@ -1437,7 +1438,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	
 	public void update(float tpf) {
 		if(bKeepMaximized){
-			MiscLemurI.i().maximize(getDialog());
+			SizeAndLocationI.i().maximize(getDialog());
 		}
 		
 		if(bRequestSelectedToggleExpandedOnce){

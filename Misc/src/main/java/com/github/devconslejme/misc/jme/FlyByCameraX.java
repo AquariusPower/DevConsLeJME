@@ -31,8 +31,10 @@ import java.util.ArrayList;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI.G;
+import com.github.devconslejme.misc.Key;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
+import com.github.devconslejme.misc.KeyCodeManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
@@ -79,21 +81,38 @@ public class FlyByCameraX extends FlyByCamera {
 	private float fChangeZoomStepSpeed=500f;
 	private float	fZoomedRotationSpeed=1f; //no zoom
 	
-	public void reBindKeys(){
+	public boolean reBindKeysLazy(){
+		Key keyMWU=KeyCodeManagerI.i().getMouseAxisKey(2,true);
+		if(keyMWU==null)return false;
+		String strMouseWheelUp=keyMWU.getFullId();
+		
+		Key keyMWD=KeyCodeManagerI.i().getMouseAxisKey(2,false);
+		if(keyMWD==null)return false;
+		String strMouseWheelDown=keyMWD.getFullId();
+		
     MiscJmeI.i().enqueueUnregisterKeyMappings( //these were set at super
   		CameraInput.FLYCAM_LEFT,
   		CameraInput.FLYCAM_RIGHT,
   		CameraInput.FLYCAM_UP,
-  		CameraInput.FLYCAM_DOWN,
+  		CameraInput.FLYCAM_DOWN
     		
-    	CameraInput.FLYCAM_STRAFELEFT,
+    	,CameraInput.FLYCAM_STRAFELEFT,
     	CameraInput.FLYCAM_STRAFERIGHT,
     	CameraInput.FLYCAM_FORWARD,
     	CameraInput.FLYCAM_BACKWARD,
     	CameraInput.FLYCAM_RISE,
     	CameraInput.FLYCAM_LOWER
+    	
+      ,CameraInput.FLYCAM_ZOOMIN,
+      CameraInput.FLYCAM_ZOOMOUT
     );
     
+    // zoom
+		KeyBindCommandManagerI.i().putBindCommandLater(strMouseWheelUp,CameraInput.FLYCAM_ZOOMIN,new CallBoundKeyCmd(){@Override	public Boolean call(){
+			zoomCamera( getAnalogValue());return true;}});
+		KeyBindCommandManagerI.i().putBindCommandLater(strMouseWheelDown,CameraInput.FLYCAM_ZOOMOUT,new CallBoundKeyCmd(){@Override	public Boolean call(){
+			zoomCamera(-getAnalogValue());return true;}});
+		
     // rotation
 		KeyBindCommandManagerI.i().putBindCommandLater("Left",CameraInput.FLYCAM_LEFT,new CallBoundKeyCmd(){@Override	public Boolean call(){
 			rotateCamera( getTPF(),initialUpVec);return true;}}.holdKeyForContinuousCmd());
@@ -104,7 +123,7 @@ public class FlyByCameraX extends FlyByCamera {
 		KeyBindCommandManagerI.i().putBindCommandLater("Down",CameraInput.FLYCAM_DOWN,new CallBoundKeyCmd(){@Override	public Boolean call(){
 			rotateCamera( getTPF() * (invertY ? -1 : 1), cam.getLeft());return true;}}.holdKeyForContinuousCmd());
 		
-		// re-add later the mouse rotation JME native mappings config
+		// re-add later the mouse rotation JME native mappings config TODO use the Key bind system (after axis are working perfectly)
 		restoreMouseAxisLater(CameraInput.FLYCAM_LEFT,MouseInput.AXIS_X,true);
 		restoreMouseAxisLater(CameraInput.FLYCAM_RIGHT,MouseInput.AXIS_X,false);
 		restoreMouseAxisLater(CameraInput.FLYCAM_UP,MouseInput.AXIS_Y,false);
@@ -132,6 +151,7 @@ public class FlyByCameraX extends FlyByCamera {
 			riseCamera(-getTPF()      );accMvTrsTm(this);return true;}
 			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.holdKeyForContinuousCmd());
 		
+		return true;
 	}
 	
 	@Override
@@ -187,15 +207,15 @@ public class FlyByCameraX extends FlyByCamera {
 		
 //		setMoveSpeed(1f);
 		
-		reBindKeys();
-//		QueueI.i().enqueue(new CallableXAnon() {
-//			@Override
-//			public Boolean call() {
+//		reBindKeys();
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
 //				if(KeyCodeManagerI.i().getKeyListCopy().size()==0)return false;
-//				reBindKeys();
-//				return true;
-//			}
-//		});
+				if(!reBindKeysLazy())return false;
+				return true;
+			}
+		});
 		
 		KeyBindCommandManagerI.i().putBindCommandLater("F5","hold to keep mouse cursor visible",new CallBoundKeyCmd(){
 			@Override	public Boolean call(){

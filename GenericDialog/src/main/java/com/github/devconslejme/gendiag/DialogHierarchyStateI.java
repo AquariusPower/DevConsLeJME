@@ -52,10 +52,11 @@ import com.github.devconslejme.misc.lemur.CursorListenerX;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
-import com.github.devconslejme.misc.lemur.SystemAlertLemurI;
-import com.github.devconslejme.misc.lemur.MiscLemurI.IGlobalClickListener;
+import com.github.devconslejme.misc.lemur.MouseCursorButtonGlobalListenerDelegatorI;
+import com.github.devconslejme.misc.lemur.MouseCursorButtonGlobalListenerDelegatorI.IGlobalClickListener;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.github.devconslejme.misc.lemur.ResizablePanel.IResizableListener;
+import com.github.devconslejme.misc.lemur.SystemAlertLemurI;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
@@ -222,7 +223,7 @@ public class DialogHierarchyStateI extends AbstractAppState implements IResizabl
 	}
 
 	public void configure(Node nodeToMonitor,float fBeginOrderZ){
-		MiscLemurI.i().addGlobalClickListener(glx);
+		MouseCursorButtonGlobalListenerDelegatorI.i().addGlobalClickListener(glx);
 		
 		this.fBeginOrderPosZ=fBeginOrderZ;
 		this.nodeToMonitor=nodeToMonitor;

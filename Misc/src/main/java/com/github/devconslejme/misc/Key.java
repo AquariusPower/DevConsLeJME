@@ -44,6 +44,7 @@ public class Key{
 	private long lLastPressedNano=-1;
 	private long lLastReleasedNano=-1;
 	private long	lLastPressedFrameId;
+	private float	fValue;
 	
 //		private Key(Integer iKeyCode) {
 //			this(ManageKeyCodeI.i().getKeyId(iKeyCode), iKeyCode);
@@ -172,6 +173,8 @@ public class Key{
 		}
 		
 		this.bPressed = bPressed;
+		
+		if(!bPressed)fValue=0f;
 	}
 	
 	/**
@@ -272,4 +275,12 @@ public class Key{
 		return this; 
 	}
 
+	public Key setAnalogValue(float fValue) {
+		this.fValue=fValue;
+		return this;
+	}
+	
+	public float getAnalogValue() {
+		return fValue;
+	}
 }

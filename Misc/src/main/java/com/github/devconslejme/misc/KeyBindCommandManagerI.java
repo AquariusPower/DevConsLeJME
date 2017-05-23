@@ -65,7 +65,7 @@ public class KeyBindCommandManagerI {
 	 * TODO tmp placeholder dummy based on old KeyBoundVarField
 	 */
 	public static class BindCommand{
-		private CallableX	cxHardCommand;
+		private CallBoundKeyCmd	cxHardCommand;
 		private KeyBind	kb;
 //		private boolean	bReadOnly;
 		private String	strUserCommand;
@@ -110,7 +110,7 @@ public class KeyBindCommandManagerI {
 		public String getUserCommand() {
 			return strUserCommand;
 		}
-		public CallableX getHardCommand(){
+		public CallBoundKeyCmd getHardCommand(){
 			return cxHardCommand;
 		}
 		
@@ -121,7 +121,7 @@ public class KeyBindCommandManagerI {
 		public void setUserCommand(String strUserCommand){
 			this.strUserCommand=strUserCommand;
 		}
-		public BindCommand setHardCommand(CallableX cx){
+		public BindCommand setHardCommand(CallBoundKeyCmd cx){
 //			if(this.cxCommand!=null && isReadOnly())throw new DetailedException("readonly",this);
 //			if(isReadOnly())throw new DetailedException("readonly",this);
 			assertHardCommandNotSet(cx); //DetailedException.assertNotAlreadySet(this.cxHardCommand, cx, this);
@@ -186,6 +186,7 @@ public class KeyBindCommandManagerI {
 	
 	public static abstract class CallBoundKeyCmd extends CallableX<CallBoundKeyCmd>{
 		public StackTraceElement[]	asteConfiguredAt;
+		private BindCommand	bc;
 
 		/**
 		 * mainly for clarification
@@ -194,6 +195,20 @@ public class KeyBindCommandManagerI {
 		public CallBoundKeyCmd holdKeyForContinuousCmd(){
 			enableLoopMode();
 			return getThis();
+		}
+
+		public CallBoundKeyCmd setBindCommand(BindCommand bc) {
+			assert(this.bc==null);
+			this.bc = bc;
+			return getThis();
+		}
+		
+		public BindCommand getBindCommand() {
+			return bc;
+		}
+		
+		public float getAnalogValue(){
+			return bc.getKeyBind().getActionKey().getAnalogValue();
 		}
 	}
 	
@@ -223,11 +238,11 @@ public class KeyBindCommandManagerI {
 	 * @return
 	 */
 	public BindCommand putBindCommand(String strKeyBindCfg, String strName, CallBoundKeyCmd cx){
-		return putBindCommand(
-			new BindCommand()
-				.setKeyBind(new KeyBind().setFromKeyCfg(strKeyBindCfg))
-				.setHardCommand(cx.setName(strName))
-		);
+		BindCommand bc = new BindCommand()
+			.setKeyBind(new KeyBind().setFromKeyCfg(strKeyBindCfg))
+			.setHardCommand(cx.setName(strName));
+		cx.setBindCommand(bc);
+		return putBindCommand(bc);
 	}
 	/**
 	 * 
@@ -423,9 +438,15 @@ public class KeyBindCommandManagerI {
 		 */
 		if(bc.getUserCommand()!=null){
 			if(getFuncRunUserCommand()==null){
-				MessagesI.i().warnMsg(this, "function to run user command is not set", this, bc);
+				MessagesI.i().warnMsg(this, "function to run user command is not set", this, bc); //TODO create a warnOnce at messagesi?
 			}else{
-				getFuncRunUserCommand().apply(bc.getUserCommand());
+				QueueI.i().enqueue(new CallableXAnon() {
+					@Override
+					public Boolean call() {
+						getFuncRunUserCommand().apply(bc.getUserCommand());
+						return true;
+					}
+				});
 			}
 		}
 	}

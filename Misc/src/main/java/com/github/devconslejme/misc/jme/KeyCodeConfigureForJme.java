@@ -33,15 +33,16 @@ import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.Key;
 import com.github.devconslejme.misc.KeyCodeManagerI;
-import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.KeyCodeManagerI.EKeyMod;
 import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.jme3.app.Application;
 import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
+import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
@@ -51,11 +52,14 @@ import com.jme3.input.controls.MouseButtonTrigger;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  *
  */
-public class KeyCodeConfigureForJme {
-	private ActionListener	alGeneralJmeTriggerListener;
+public class KeyCodeConfigureForJme {//implements AnalogListener,ActionListener{
+	AnalogListener anlAxis;
+	ActionListener aclTriggers;
+	
+//	private ActionListener	alGeneralJmeTriggerListener;
 //	private boolean	bCaptureKeyModifiersMode;
 	private InputManager	inputman;
-	private ActionListener	alGeneralJmeAnalogListener;
+//	private ActionListener	alGeneralJmeAnalogListener;
 	private Key[]	akAxis;
 	
 	public void configure(int iMaxMouseButtons) {
@@ -71,26 +75,48 @@ public class KeyCodeConfigureForJme {
   	// JME listener/mapping
   	inputman = GlobalManagerI.i().get(Application.class).getInputManager();
   	
-		alGeneralJmeTriggerListener = new ActionListener() {@Override	public void onAction(String strKeyId, boolean bPressed, float tpf) {
-			KeyCodeManagerI.i().refreshPressedState(strKeyId, bPressed);	
-		}};
+//		alGeneralJmeTriggerListener = new ActionListener() {@Override	public void onAction(String strKeyId, boolean bPressed, float tpf) {
+//			KeyCodeManagerI.i().refreshPressedState(strKeyId, bPressed);	
+//		}};
 //		alGeneralJmeAnalogListener = new ActionListener() {@Override	public void onAction(String strKeyId, boolean bPressed, float tpf) {
 //			KeyCodeManagerI.i().refreshPressedState(strKeyId, bPressed);
 //			pseudoReleaseAxisKey(strKeyId,bPressed);
 //		}}; 
 		
+  	aclTriggers = new ActionListener() {
+  		/**
+  		 * TPF ignored as the {@link CallableX#getTPF()} will be available when then
+  		 * related bound command (for the specified keys combination) is called.  
+  		 */
+  		@Override
+  		public void onAction(String strKeyId, boolean bPressed, float fTPF) {
+  			KeyCodeManagerI.i().refreshPressedState(strKeyId, bPressed);
+  		}
+		};
+		
+		anlAxis = new AnalogListener() {
+			/**
+			 * see the onAction() one for more info
+			 */
+			@Override
+			public void onAnalog(String strKeyId, float fValue, float fTPF) {
+				KeyCodeManagerI.i().refreshAnalogState(strKeyId, fValue);
+			}
+		};
+  	
 		for(Key key:KeyCodeManagerI.i().getKeyListCopy()){
 			addKeyCodeMapping(key);
 		}
 		
-		// mouse
+		// mouse buttons
 		for(int i=0;i<iMaxMouseButtons;i++){
 			Key key = KeyCodeManagerI.i().addMouseTriggerCode(i);
 			String strId=key.getFullId();
 			inputman.addMapping(strId, new MouseButtonTrigger(i));
-			inputman.addListener(alGeneralJmeTriggerListener,strId);
+			inputman.addListener(aclTriggers,strId);
 		}
 		
+		// mouse axes
 		akAxis = new Key[3*2];
 		int iCount=0;
 		for(int iAxis=0;iAxis<3;iAxis++){
@@ -100,7 +126,7 @@ public class KeyCodeConfigureForJme {
 				akAxis[iCount++]=key;
 				String strId=key.getFullId();
 		    inputman.addMapping(strId, new MouseAxisTrigger(iAxis,!bPositive));
-		    inputman.addListener(alGeneralJmeTriggerListener,strId);
+		    inputman.addListener(anlAxis,strId);
 //				inputman.addListener(alGeneralJmeAnalogListener,strId);
 			}
 		}
@@ -245,14 +271,14 @@ public class KeyCodeConfigureForJme {
 			/**
 			 * if the "keycode id" mapping already existed, it will just add a listener to it!
 			 */
-			inputman.addListener(alGeneralJmeTriggerListener, strMapping);
+			inputman.addListener(aclTriggers, strMapping);
 		}else{
 			MessagesI.i().warnMsg(this, "still not supported", key);
 		}
 	}
 
 	/**
-	 * Deprecated! keep as reference/info/reason to prevent reimplementation...
+	 * @DevSelfNote Deprecated! keep as reference/info/reason to prevent reimplementation...
 	 * This would needlessly remove the keycode mappings for other already set before here.
 	 * The listener can be removed from all mappings if it becomes necessary...
 	 */
@@ -264,4 +290,21 @@ public class KeyCodeConfigureForJme {
 			inputman.deleteMapping(strMapping);
 		}
 	}
+
+//	/**
+//	 * TPF ignored as the {@link CallableX#getTPF()} will be available when then
+//	 * related bound command (for the specified keys combination) is called.  
+//	 */
+//	@Override
+//	public void onAction(String strKeyId, boolean bPressed, float fTPF) {
+//		KeyCodeManagerI.i().refreshPressedState(strKeyId, bPressed);
+//	}
+	
+//	/**
+//	 * see {@link #onAction(String, boolean, float)}
+//	 */
+//	@Override
+//	public void onAnalog(String strKeyId, float fValue, float fTPF) {
+//		KeyCodeManagerI.i().refreshAnalogState(strKeyId, fValue);
+//	}
 }

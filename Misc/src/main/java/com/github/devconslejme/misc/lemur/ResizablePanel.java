@@ -39,7 +39,7 @@ import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.TextI;
-import com.github.devconslejme.misc.lemur.MiscLemurI.EResizeApplyMode;
+import com.github.devconslejme.misc.lemur.SizeAndLocationI.EResizeApplyMode;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.math.ColorRGBA;
@@ -431,7 +431,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		
 		Vector3f v3f = pnlParentest.getPreferredSize().add(new Vector3f(1, 1, 0));
 		if(v3f.equals(new Vector3f(EnvironmentJmeI.i().getDisplay().getWidth(),EnvironmentJmeI.i().getDisplay().getHeight(),0))){
-			MiscLemurI.i().safeSizeRecursively(EResizeApplyMode.Restore,pnlParentest);
+			SizeAndLocationI.i().safeSizeRecursively(EResizeApplyMode.Restore,pnlParentest);
 			return;
 		}
 		
@@ -457,7 +457,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 	
 	public void applyCurrentSafeSizeAsDefault(){
 		if(isUpdateLogicalStateSuccess()){
-			MiscLemurI.i().safeSizeRecursively(EResizeApplyMode.UpdateDefaultToCurrent, this);
+			SizeAndLocationI.i().safeSizeRecursively(EResizeApplyMode.UpdateDefaultToCurrent, this);
 		}
 	}
 	
@@ -547,7 +547,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 				Vector3f v3fSize = rzpParentest.getSize();
 				if(v3fSize.x==EnvironmentJmeI.i().getDisplay().getWidth() && v3fSize.y==EnvironmentJmeI.i().getDisplay().getHeight()){
 					if(v3fLastSucessSize!=null){
-						MiscLemurI.i().safeSizeRecursively(EResizeApplyMode.Restore,getParentest());
+						SizeAndLocationI.i().safeSizeRecursively(EResizeApplyMode.Restore,getParentest());
 //						setPreferredSize(v3fLastSucessSize); //restore last
 						v3fLastSucessSize=null; //one try only as something inside may have changed making it completely impossible to work
 					}else{
@@ -565,8 +565,8 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		}
 		
 		if(bFirstSuccessOnChange){
-			MiscLemurI.i().safeSizeInitialize(this);
-			MiscLemurI.i().safeSizeRecursively(EResizeApplyMode.Save,getParentest());
+			SizeAndLocationI.i().safeSizeInitialize(this);
+			SizeAndLocationI.i().safeSizeRecursively(EResizeApplyMode.Save,getParentest());
 		}
 		
 		for(IResizableListener iuls:listeners){
@@ -646,7 +646,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 					/**
 					 * initial default location: centralized on the screen.
 					 */
-					MiscLemurI.i().moveToScreenCenterXY(ResizablePanel.this);
+					SizeAndLocationI.i().moveToScreenCenterXY(ResizablePanel.this);
 					
 					return true;
 				}
@@ -953,7 +953,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 	}
 	
 	public void restoreDefaultSafeSize() {
-		MiscLemurI.i().safeSizeRecursively(EResizeApplyMode.RestoreDefault, this);
+		SizeAndLocationI.i().safeSizeRecursively(EResizeApplyMode.RestoreDefault, this);
 	}
 	public boolean isEnableResizing() {
 		return bEnableResizing;

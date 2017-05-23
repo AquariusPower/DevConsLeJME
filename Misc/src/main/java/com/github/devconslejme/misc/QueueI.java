@@ -32,6 +32,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
 
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
+
 /**
  * Queue is mainly usefull for lazy initializations that require pre-conditions.
  * But this one can be used also for delayed loops and other things.

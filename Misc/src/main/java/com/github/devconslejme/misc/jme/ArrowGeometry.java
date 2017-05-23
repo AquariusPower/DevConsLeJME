@@ -28,7 +28,6 @@ package com.github.devconslejme.misc.jme;
 
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.QueueI.CallableX;
-import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -98,7 +97,8 @@ public class ArrowGeometry extends Geometry {
 		return this;
 	}
 	public ArrowGeometry setFromTo(Spatial spt, Vector2f v2fTo){
-		setFromTo(spt, MiscLemurI.i().toV3f(v2fTo));
+//		setFromTo(spt, MiscLemurI.i().toV3f(v2fTo));
+		setFromTo(spt, MiscJmeI.i().toV3fZAA(v2fTo));
 		return this;
 	}
 	public ArrowGeometry setFromTo(Spatial sptFrom, Vector3f v3fTo){

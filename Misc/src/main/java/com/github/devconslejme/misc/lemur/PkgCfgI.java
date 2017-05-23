@@ -27,9 +27,9 @@
 
 package com.github.devconslejme.misc.lemur;
 
+import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.app.Application;
 import com.jme3.math.Vector2f;
@@ -88,7 +88,7 @@ public class PkgCfgI {
 		
 		MiscLemurI.i().setPickingRayCastFromZ(1000);
 
-		MiscLemurI.i().setMinSizeZ(new QuadBackgroundComponent().getZOffset());
+		SizeAndLocationI.i().setMinSizeZ(new QuadBackgroundComponent().getZOffset());
 	}
 
 }

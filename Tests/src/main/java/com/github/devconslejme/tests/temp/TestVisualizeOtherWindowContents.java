@@ -33,8 +33,8 @@ import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.MiscJmeI;
-import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
+import com.github.devconslejme.misc.lemur.SizeAndLocationI;
 import com.jme3.app.SimpleApplication;
 import com.jme3.asset.AssetNotFoundException;
 import com.jme3.math.Vector3f;
@@ -112,7 +112,7 @@ public class TestVisualizeOtherWindowContents extends SimpleApplication{
 				tf = new TextField("TypeWindowIdHere");
 				sapp.getGuiNode().attachChild(tf);
 				tf.setLocalTranslation(new Vector3f(300,300,0));
-				tf.setPreferredSize(new Vector3f(300,50,MiscLemurI.i().getMinSizeZ()));
+				tf.setPreferredSize(new Vector3f(300,50,SizeAndLocationI.i().getMinSizeZ()));
 			}
 		}
 		if(iTryMode==1){
@@ -122,8 +122,8 @@ public class TestVisualizeOtherWindowContents extends SimpleApplication{
 //			getGuiNode().attachChild(btn);
 			
 			pnl = new Panel(BaseStyles.GLASS);
-			MiscLemurI.i().setPreferredSize(pnl,new Vector3f(100,100,0.01f));
-			MiscLemurI.i().setLocalTranslationXY(pnl,new Vector3f(100,300,0));
+			SizeAndLocationI.i().setPreferredSize(pnl,new Vector3f(100,100,0.01f));
+			SizeAndLocationI.i().setLocalTranslationXY(pnl,new Vector3f(100,300,0));
 			
 			ic = new IconComponent(getFileName());
 			pnl.setBackground(ic);

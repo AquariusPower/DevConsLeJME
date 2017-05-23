@@ -162,10 +162,18 @@ public class MiscJmeI {
 	public Vector2f toV2f(Vector3f v3f) {
 		return new Vector2f(v3f.x,v3f.y);
 	}
-		
-	public Vector3f toV3f(Vector2f v2f) {
-		return toV3f(v2f, 0);
+	
+	/**
+	 * Z Above All at gui node
+	 * @param v2fTo
+	 * @return
+	 */
+	public Vector3f toV3fZAA(Vector2f v2fTo) {
+		return new Vector3f(v2fTo.x,v2fTo.y,getZAboveAllAtGuiNode());
 	}
+//	public Vector3f toV3f(Vector2f v2f) {
+//		return toV3f(v2f, 0);
+//	}
 	public Vector3f toV3f(Vector2f v2f,float fZ) {
 		return new Vector3f(v2f.x,v2f.y,fZ);
 	}
