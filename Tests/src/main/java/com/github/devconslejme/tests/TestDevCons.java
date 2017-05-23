@@ -231,7 +231,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	}
 	
 	@Override
-	public boolean updatePickingEvent(ArrayList<CollisionResult> acrList, Geometry geom, Spatial sptParentest) {
+	public boolean updatePickingEvent(int iButtonIndex, ArrayList<CollisionResult> acrList, Geometry geom, Spatial sptParentest) {
 		return false;
 	}
 	

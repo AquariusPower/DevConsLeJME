@@ -301,7 +301,18 @@ public class KeyCodeManagerI {
 		return getKeyForId(strMouseTriggerKeyPrefix+iButtonIndex);
 	}
 	
+	public int getTotalMouseButtons(){
+		return iCountMouseButton;
+	}
+	
+	int iCountMouseButton=0;
 	public Key addMouseTriggerCode(int iButtonIndex){
+		if(iCountMouseButton==iButtonIndex){
+			iCountMouseButton++;
+		}else{
+			throw new DetailedException("mouse buttons must be added in order starting at 0",iCountMouseButton,iButtonIndex);
+		}
+		
 		String strId=strMouseTriggerKeyPrefix+iButtonIndex;
 		Key key=getKeyForId(strId);
 		if(key!=null){

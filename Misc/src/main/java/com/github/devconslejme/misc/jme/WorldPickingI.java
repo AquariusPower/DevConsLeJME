@@ -67,7 +67,7 @@ public class WorldPickingI {
 		 * @param sptParentest
 		 * @return true if consumed TODO prioritize listeners?
 		 */
-		boolean updatePickingEvent(ArrayList<CollisionResult> acrList, Geometry geom, Spatial sptParentest);
+		boolean updatePickingEvent(int iButtonIndex, ArrayList<CollisionResult> acrList, Geometry geom, Spatial sptParentest);
 	}
 	
 	public  void addListener(IPickListener l){
@@ -76,32 +76,19 @@ public class WorldPickingI {
 	
 	public void configure(FlyByCamera flycam){
 		String strPck="PickVirtualWorldThing";
-		KeyBindCommandManagerI.i().putBindCommandLater(
-			KeyCodeManagerI.i().getMouseTriggerKey(MouseInput.BUTTON_LEFT).getFullId(), 
-			strPck, 
-			new CallBoundKeyCmd(){@Override public Boolean callOnKeyReleased() {
-				if(flycam!=null && flycam.isEnabled())return true; //to ignore picking
-				
-//				if(!isPressed()){ //on release
-					WorldPickingI.i().pickWorldPiercingAtCursor(); //will call the world pick listeners
-//				}
-				
-				return true;
-			}}
-		);
-//		G.i(Application.class).getInputManager().addMapping(strPck, new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
-//		G.i(Application.class).getInputManager().addListener(new ActionListener() {
-//				@Override
-//				public void onAction(String name, boolean isPressed, float tpf) {
-//					if(flycam!=null && flycam.isEnabled())return;
-//					
-//					if(!isPressed && name.equals(strPck)){ //on release
-//						WorldPickingI.i().pickWorldPiercingAtCursor(); //will call the listeners
-//					}
-//				}
-//			},
-//			strPck
-//		);
+		for(int i=0;i<KeyCodeManagerI.i().getTotalMouseButtons();i++){
+			int iButtonIndex=i;
+			KeyBindCommandManagerI.i().putBindCommandLater(
+				KeyCodeManagerI.i().getMouseTriggerKey(i).getFullId(), 
+				strPck+"MouseButton"+i, 
+				new CallBoundKeyCmd(){@Override public Boolean callOnKeyReleased() {
+					if(flycam!=null && flycam.isEnabled())return true; //to ignore picking
+					WorldPickingI.i().pickWorldPiercingAtCursor(iButtonIndex); //will call the world pick listeners
+					return true;
+				}}
+			);
+		}
+		
 	}
 	
 	public void addSkip(Spatial spt){
@@ -113,15 +100,15 @@ public class WorldPickingI {
 		return UserDataI.i().contains(spt, Skip.class);
 	}
 	
-	public CollisionResult pickCollisionResultAtCursor(){
-		ArrayList<CollisionResult> crs = pickWorldPiercingAtCursor();
+	public CollisionResult pickCollisionResultAtCursor(int iButtonIndex){
+		ArrayList<CollisionResult> crs = pickWorldPiercingAtCursor(iButtonIndex);
 		if(crs==null)return null;
 		return crs.get(0);
 	}
-	public ArrayList<CollisionResult> pickWorldPiercingAtCursor(){
-		return pickWorldPiercingAtCursor(MiscJmeI.i().getNodeVirtualWorld());
+	public ArrayList<CollisionResult> pickWorldPiercingAtCursor(int iButtonIndex){
+		return pickWorldPiercingAtCursor(iButtonIndex,MiscJmeI.i().getNodeVirtualWorld());
 	}
-	public ArrayList<CollisionResult> pickWorldPiercingAtCursor(Node nodeVirtualWorld){
+	public ArrayList<CollisionResult> pickWorldPiercingAtCursor(int iButtonIndex,Node nodeVirtualWorld){
 		CollisionResults crs = new CollisionResults();
 		
 		Vector3f v3fCursorAtVirtualWorld3D = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(
@@ -154,7 +141,7 @@ public class WorldPickingI {
 			spt = getLastWorldPickParentest();
 		}
 		for(IPickListener l:aplList){
-			if(l.updatePickingEvent(acrLastPickList,geom,spt)){
+			if(l.updatePickingEvent(iButtonIndex,acrLastPickList,geom,spt)){
 				if(acrLastPickList!=null){
 					if(bAllowConsume)break;
 				}

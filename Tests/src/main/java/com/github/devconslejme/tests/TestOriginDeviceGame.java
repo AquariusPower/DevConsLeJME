@@ -252,12 +252,16 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs {
 		@Deprecated @Override	public void rotateUpTo(Vector3f newUp) {		throw new UnsupportedOperationException(strMsgError);	}
 		
 		@Override
-		public boolean updatePickingEvent(ArrayList<CollisionResult> acrList, Geometry geom, Spatial sptParentest) {
+		public boolean updatePickingEvent(int iButtonIndex, ArrayList<CollisionResult> acrList, Geometry geom, Spatial sptParentest) {
 			if(geom!=null){
 				LoggingI.i().logMarker(""+geom);
 				LoggingI.i().logEntry(""+geom.getWorldBound());
 				LoggingI.i().logEntry("Volume="+geom.getWorldBound().getVolume());
-				setElectricitySource(geom);
+				switch(iButtonIndex){
+					case 0:
+						setElectricitySource(geom);
+						break;
+				}
 				return true;
 			}
 			
