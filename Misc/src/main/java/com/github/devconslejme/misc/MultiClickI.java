@@ -41,19 +41,6 @@ public class MultiClickI {
 	
 	private long lMaxDelayMilis=1000;
 	
-	/**
-	 * callers cmds can have 'null' gaps to skip a click count index, like will work only for 2 or 4 clicks but not 3 or 1
-	 * @param acx what to call in order of click count as index, when ready
-	 */
-	public MultiClick updateOrCreateAndIncClicks(MultiClick mc,int iButtonIndex,CallableX[] acx){
-		if(mc==null){
-			assert acx!=null;
-			mc=new MultiClick(iButtonIndex,acx);
-		}
-		mc.updateIncClicks();
-		return mc;
-	}
-	
 	public long getMaxDelayMilis() {
 		return lMaxDelayMilis;
 	}
@@ -78,6 +65,91 @@ public class MultiClickI {
 	}
 
 	public static class MultiClick{
+		private int	iButtonIndex;
+		
+		private Long lLastClickMilis;
+		private int	iClickCount;
+		private boolean bLock;
+
+		private String[]	astrHelpPerClickCountIndex;
+		
+		public void reset() {
+			init();
+		}
+		private void init() {
+			bLock=false;
+			lLastClickMilis=null;
+			iClickCount=0;
+		}
+		
+		public MultiClick(int iButtonIndex, String... astrHelpPerClickCountIndex){
+			this.astrHelpPerClickCountIndex=astrHelpPerClickCountIndex;
+			this.iButtonIndex=iButtonIndex;
+			init();
+		}
+		
+		public String getHelp(){
+			String str="";
+			int i=0;
+			for(String strHelp:astrHelpPerClickCountIndex){
+				str+=++i+":"+strHelp+"\n";
+			}
+			return str;
+		}
+		
+		public boolean isReady(){
+			return bLock;
+		}
+		
+		/**
+		 * 
+		 * @param iMaxClicks min of 2
+		 * @return
+		 */
+		public boolean updateIncClicks(int iMaxClicks) {
+			assert iMaxClicks>=2 : "the max's min is two clicks, single click does not need this...";
+			if(bLock)return true;
+			
+			long lMilis = System.currentTimeMillis();
+			if(lLastClickMilis==null){
+				lLastClickMilis=lMilis;
+				iClickCount++;
+				return false;
+			}else{
+				if( (lMilis-lLastClickMilis)>MultiClickI.i().getMaxDelayMilis() ){
+					bLock=true;
+				}else{
+					lLastClickMilis=lMilis;
+					iClickCount++;
+				}
+				
+				if(iClickCount==iMaxClicks)bLock=true;
+				
+				if(bLock){ 
+					if(MultiClickI.i().bDebug){
+						System.out.println(
+								MultiClick.class.getSimpleName()+":clk="+iClickCount+","+"/mb="+iButtonIndex+"/totclks="+iMaxClicks);
+					}
+					
+					return true;
+				}
+				
+			}
+			
+			return false;
+		}
+		
+		public int getTotalClicks(){
+			return iClickCount;
+		}
+
+	}
+	
+	/**
+	 * too complex..
+	 */
+	@Deprecated
+	private static class _MultiClick{
 		private Long lLastClickMilis=null;
 		private int	iClickCount=0;
 		private boolean bLock=false;
@@ -86,7 +158,7 @@ public class MultiClickI {
 		private boolean	bDiscarded;
 		private int	iButtonIndex;
 		
-		private MultiClick(int iButtonIndex,CallableX... acx){
+		private _MultiClick(int iButtonIndex,CallableX... acx){
 			this.iButtonIndex=iButtonIndex;
 			this.acxClickIndex=acx;
 			assert acxClickIndex!=null && acxClickIndex.length>0 : "requires at least two commands to call, single click does not need this...";
@@ -106,7 +178,7 @@ public class MultiClickI {
 						
 						QueueI.i().removeLoopFromQueue(this);
 						
-						MultiClick.this.bDiscarded=true;
+//						MultiClick.this.bDiscarded=true;
 						
 						if(MultiClickI.i().bDebug)System.out.println(MultiClick.class.getSimpleName()+":clk="+i+","+getName());
 						

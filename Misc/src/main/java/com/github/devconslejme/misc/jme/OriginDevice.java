@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.MultiClickI;
 import com.github.devconslejme.misc.MultiClickI.MultiClick;
-import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.MeshI.Cone;
 import com.github.devconslejme.misc.jme.OriginDevice.NodeAxis;
@@ -309,7 +308,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 	AxisInfo[] aai = new AxisInfo[EAxis.values().length];
 	private EAxis	eaExclusiveRotations;
 	private boolean	bStopRotations;
-	private MultiClick	mc0;
+	private MultiClick	mcMainShapeMB0 = new MultiClick(0,"rotate only the one clicked","invert rotation");
 	
 	public AxisInfo getAxisInfo(EAxis ea) {
 		return aai[ea.ordinal()];
@@ -494,16 +493,6 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		return null;
 	}
 	
-//	private CallableX[]	acx = {
-//		new CallableXAnon(){
-//			@Override
-//			public Boolean call() {
-//				
-//				return true;
-//			}
-//		}
-//	};
-	
 	@Override
 	public boolean updatePickingEvent(int iButtonIndex, ArrayList<CollisionResult> acrList,			Geometry geom, Spatial sptParentest) {
 		for(EAxis ea:EAxis.values()){
@@ -512,24 +501,21 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 			if(node.hasChild(geom)){
 				switch(iButtonIndex){
 					case 0: //left
-						CallableX[] acx=null;
-						if(mc0!=null && mc0.isDiscarded())mc0=null;
-						if(mc0==null){
-							acx=new CallableX[2];
-							acx[0] = new CallableXAnon(){@Override	public Boolean call() {
-								if(eaExclusiveRotations==ea){
-									eaExclusiveRotations=null;
-								}else{
-									eaExclusiveRotations=ea;
-								}
-								return true;
-							}};
-							acx[1] = new CallableXAnon(){@Override	public Boolean call() {
-								axi.getRotatingTorus().toggleInvertRotation();
-								return true;
-							}};
+						if(mcMainShapeMB0.updateIncClicks(2)){
+							switch(mcMainShapeMB0.getTotalClicks()){
+								case 1:
+									if(eaExclusiveRotations==ea){
+										eaExclusiveRotations=null;
+									}else{
+										eaExclusiveRotations=ea;
+									}
+									break;
+								case 2:
+									axi.getRotatingTorus().toggleInvertRotation();
+									break;
+							}
+							mcMainShapeMB0.reset();
 						}
-						mc0=MultiClickI.i().updateOrCreateAndIncClicks(mc0,iButtonIndex,acx);
 						return true;
 					case 2: //middle
 						axi.getRotatingTorus().resetRotation();

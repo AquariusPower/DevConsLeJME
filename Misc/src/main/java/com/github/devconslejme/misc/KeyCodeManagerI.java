@@ -322,6 +322,19 @@ public class KeyCodeManagerI {
 		return key;
 	}
 	
+	/**
+	 * the key pressed/released will be controlled externally, it can be for ex. a 
+	 * key modifier context like FlyCamEnabled+mouseButton2
+	 * @param cc
+	 * @param strKeyId
+	 * @return
+	 */
+	public Key createSpecialExternalContextKey(ICompositeRestrictedAccessControl cc,String strKeyId){
+		Key key = addKeyWorkFull(strKeyId, iSpecialCodeStart--);
+		key.setSpecialExternalContextKeyMode(cc);
+		return key;
+	}
+	
 //	public Key getMouseButtonKey(int iButtonIndex){
 //		return getKeyForId("mouseButton"+iButtonIndex);
 //	}

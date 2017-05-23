@@ -131,7 +131,7 @@ public class KeyBindCommandManagerI {
 		}
 		
 		public void assertHardCommandNotSet(Object... aobjDbg){
-			if(this.cxHardCommand!=null)throw new DetailedException("already set",this,aobjDbg);
+			if(this.cxHardCommand!=null)throw new DetailedException("already set",this,cxHardCommand.getName(),aobjDbg);
 		}
 		
 //		private boolean isReadOnly() {
@@ -314,7 +314,7 @@ public class KeyBindCommandManagerI {
 		
 		BindCommand bcExisting = tmbindList.get(str);
 //		if(bcExisting.isReadOnly())throw new DetailedException("readonly",bcExisting,bc);
-		if(bcExisting!=null)bcExisting.assertHardCommandNotSet(bc);
+		if(bcExisting!=null)bcExisting.assertHardCommandNotSet(bc,bc.getKeyBind(),bc.getCommandsInfo(),bc.getKeyBind().getBindCfg());
 		
 		return tmbindList.put(str,bc);
 	}

@@ -45,6 +45,7 @@ public class Key{
 	private long lLastReleasedNano=-1;
 	private long	lLastPressedFrameId;
 	private float	fValue;
+	private ICompositeRestrictedAccessControl	ccIsSpecialExternalContextKey;
 	
 //		private Key(Integer iKeyCode) {
 //			this(ManageKeyCodeI.i().getKeyId(iKeyCode), iKeyCode);
@@ -282,5 +283,31 @@ public class Key{
 	
 	public float getAnalogValue() {
 		return fValue;
+	}
+
+	public void setPressedSpecialExternalContextKeyMode(ICompositeRestrictedAccessControl cc,boolean bPressed) {
+		assert cc==ccIsSpecialExternalContextKey;
+//		assert ccIsSpecialExternalContextKey;
+		
+//		if(ccIsSpecialExternalContextKey){
+			this.bPressed=bPressed;
+//		}
+	}
+	
+	public boolean isSpecialExternalContextKeyMode(){
+		return ccIsSpecialExternalContextKey!=null;
+	}
+	
+	public void setSpecialExternalContextKeyMode(ICompositeRestrictedAccessControl cc) {
+		assert this.ccIsSpecialExternalContextKey==null;
+		this.ccIsSpecialExternalContextKey=cc;
+	}
+
+	public String composeCfgPrependModifiers(Key... akeyMod) {
+		String str="";
+		for(Key k:akeyMod){
+			str+=k.getFullId()+"+";
+		}
+		return str+=getFullId();
 	}
 }

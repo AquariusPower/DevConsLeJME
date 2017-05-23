@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI.G;
+import com.github.devconslejme.misc.ICompositeRestrictedAccessControl;
 import com.github.devconslejme.misc.Key;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
@@ -76,10 +77,13 @@ public class FlyByCameraX extends FlyByCamera {
 	ArrayList<Float> afListZoom = new ArrayList<Float>();
 	private int iCurrentZoomStep;
 	private boolean	bEnableZoomStepsAndLimits;
-	private TimedDelay tdMG=new TimedDelay(0.5f,"update mouse grab").setActive(true);
+	private TimedDelay tdMouseGrab=new TimedDelay(0.5f,"update mouse grab").setActive(true);
 	private TimedDelay tdMI=new TimedDelay(1f,"update mouse info").setActive(true);
 	private float fChangeZoomStepSpeed=500f;
 	private float	fZoomedRotationSpeed=1f; //no zoom
+//	protected boolean	bZoomApplied;
+	private int	iBkpZoomStep;
+	private Key	keyFlyCamMod;
 	
 	public boolean reBindKeysLazy(){
 		Key keyMWU=KeyCodeManagerI.i().getMouseAxisKey(2,true);
@@ -107,11 +111,20 @@ public class FlyByCameraX extends FlyByCamera {
       CameraInput.FLYCAM_ZOOMOUT
     );
     
+    // FlyCam key! Contextualized keybindings!
+//    Key key = new Key("FlyCam", -1);
+    keyFlyCamMod = KeyCodeManagerI.i().createSpecialExternalContextKey(cc,"FlyCamModifier");
+    
     // zoom
 		KeyBindCommandManagerI.i().putBindCommandLater(strMouseWheelUp,CameraInput.FLYCAM_ZOOMIN,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(){
 			zoomCamera( getAnalogValue());return true;}});
 		KeyBindCommandManagerI.i().putBindCommandLater(strMouseWheelDown,CameraInput.FLYCAM_ZOOMOUT,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(){
 			zoomCamera(-getAnalogValue());return true;}});
+		KeyBindCommandManagerI.i().putBindCommandLater(
+			KeyCodeManagerI.i().getMouseTriggerKey(2).composeCfgPrependModifiers(keyFlyCamMod),
+//			keyFlyCamMod.getFullId()+"+"+KeyCodeManagerI.i().getMouseTriggerKey(2).getFullId(),
+			"toggleZoom",
+			new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(){toggleZoom();return true;}});
 		
     // rotation
 		KeyBindCommandManagerI.i().putBindCommandLater("Left",CameraInput.FLYCAM_LEFT,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(){
@@ -154,6 +167,14 @@ public class FlyByCameraX extends FlyByCamera {
 		return true;
 	}
 	
+	protected void toggleZoom() {
+		if(iBkpZoomStep!=iCurrentZoomStep){
+			iCurrentZoomStep=iBkpZoomStep;
+		}else{
+			iCurrentZoomStep=getNoZoomStepIndex();
+		}
+	}
+
 	@Override
 	protected void rotateCamera(float value, Vector3f axis) {
 		if(!isRotationAllowed())return;
@@ -260,6 +281,9 @@ public class FlyByCameraX extends FlyByCamera {
 			}else{
 				iCurrentZoomStep+=(isZoomInverted()?1:-1);
 			}
+			fixZoom();
+			//			bZoomApplied=true;
+			iBkpZoomStep=iCurrentZoomStep;
 		}else{ //direct controls it
 			super.zoomCamera(value);
 		}
@@ -406,18 +430,22 @@ public class FlyByCameraX extends FlyByCamera {
 		return inputman;
 	}
 	
+	private static class CompositeControl implements ICompositeRestrictedAccessControl{
+		private CompositeControl(){}; }; private CompositeControl cc;
+	
 	public void update(float fTPF){
-		if(tdMG.isReady(true)){
+		if(tdMouseGrab.isReady(true)){
 			if(isEnabled() && EnvironmentJmeI.i().getMouse().isCursorVisible()){
 				//this is useful when debugging thru IDE that has an watch evaluation to ungrab the mouse directly thru lwjgl
 				setEnabledRaw(true); //to grant it is properly set
 			}
 		}
 		
+		keyFlyCamMod.setPressedSpecialExternalContextKeyMode(cc,isEnabled());
+		
 		// fix/apply fov
 		if(bEnableZoomStepsAndLimits){
-			if(iCurrentZoomStep<0)iCurrentZoomStep=0;
-			if(iCurrentZoomStep>afListZoom.size()-1)iCurrentZoomStep=afListZoom.size()-1;
+			fixZoom();
 			
 			/**
 			 * automatically zoom in/out to reach the requested zoom step value
@@ -431,27 +459,30 @@ public class FlyByCameraX extends FlyByCamera {
 			}
 			
 			fZoomedRotationSpeed=afListZoom.get(iCurrentZoomStep)/fMaxFOVdeg;
-			
-//			float fDefaultZRS=1f; //at no zoom (last/min)
-//			float fMinZRS=fMinFOVdeg/20f;//0.5f;
-//			float fDeltaZRS=fDefaultZRS-fMinZRS;
-//			float fStepZRS=fDeltaZRS/afListZoom.size();
-//			fZoomedRotationSpeed=fMinZRS+(fStepZRS*(iCurrentZoomStep+1));
-			
-//			if(iCurrentZoomStep==afListZoom.size()-1)fZoomedRotationSpeed=1f;
-//			if(iCurrentZoomStep==0)fZoomedRotationSpeed=0.5f;
 		}
 		
 		if(tdMI.isReady(true)){
 			String strFOV="{ ";
 			strFOV+="fov="+StringI.i().fmtFloat(getFOV(),2);
 			if(bEnableZoomStepsAndLimits){
-				strFOV+="("+StringI.i().fmtFloat(afListZoom.get(iCurrentZoomStep),2)+") "+afListZoom.toString();
-				strFOV+=", zmRtSpd="+fZoomedRotationSpeed;
+				/** (current zoom/toggleBkpZoom) [zoom list], zoomRotateSpeed */
+				strFOV+="("+StringI.i().fmtFloat(afListZoom.get(iCurrentZoomStep),2)
+					+"/"+afListZoom.get(iBkpZoomStep)+") ";
+				strFOV+=afListZoom.toString()+", ";
+				strFOV+="zmRtSpd="+fZoomedRotationSpeed;
 			}
 			strFOV+=" }";
 			EnvironmentJmeI.i().putCustomInfo("CamFOVdeg", strFOV);
 		}
+	}
+
+	private void fixZoom() {
+		if(iCurrentZoomStep<0)iCurrentZoomStep=0;
+		if(iCurrentZoomStep>getNoZoomStepIndex())iCurrentZoomStep=getNoZoomStepIndex();
+	}
+
+	private int getNoZoomStepIndex() {
+		return afListZoom.size()-1;
 	}
 
 	public boolean isOverrideKeepFlyCamDisabled() {
