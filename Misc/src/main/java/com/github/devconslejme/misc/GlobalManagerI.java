@@ -77,15 +77,31 @@ public class GlobalManagerI {
   public boolean isSet(Class cl){
   	return hmInst.get(cl)!=null;
   }
+  /**
+   * see {@link #retrieveOverridingSupers(Class, boolean, Class...)}
+   * @param cl
+   * @return
+   */
   public <T> T get(Class<T> cl){
-  	return get(cl,true);
+  	return retrieveOverridingSupers(cl,true);
   }
+  /**
+   * Use this one to auto set/put global overrides
+   * 
+   * @param cl
+   * @param bCreateNewInstanceIfNull
+   * @param aclSuperAttrToo super class types to attribute this instance to them too, on the hashmap
+   * @return
+   */
   @SuppressWarnings("unchecked")
-	public <T> T get(Class<T> cl, boolean bCreateNewInstanceIfNull){
+	public <T> T retrieveOverridingSupers(Class<T> cl, boolean bCreateNewInstanceIfNull, Class... aclSuperAttrToo){
     Object obj = hmInst.get(cl);
     if (obj==null && bCreateNewInstanceIfNull){
       try {
       	putGlobal(cl, ((T)(obj=cl.newInstance())) );
+      	for(Class clSuper:aclSuperAttrToo){
+      		putGlobal(clSuper,obj);
+      	}
 //      	putConcrete(obj=cl.newInstance()); // 
 			} catch (InstantiationException | IllegalAccessException e) {
 				NullPointerException npe = new DetailedException("unable to create new instance")
@@ -119,7 +135,8 @@ public class GlobalManagerI {
   public <T> T putGlobal(Class<? extends T> cl,T obj){
   	Object objAlreadySet=hmInst.get(cl);
     if (objAlreadySet!=null){
-      throw new DetailedException("already set: "+cl+", "+objAlreadySet+", "+obj);
+      throw new DetailedException("already set: "+cl+", "+objAlreadySet+", "+obj+" "
+      	+(obj==objAlreadySet?"REDUNDANT/equalToAlreadySet!":""));
     }
     
     // inheritance consistency check
@@ -131,7 +148,7 @@ public class GlobalManagerI {
     			obj.getClass().isInstance(objExisting) || 
     			obj.getClass().isAssignableFrom(objExisting.getClass())
     	){
-    		throw new DetailedException("there should have only one global per superest type",
+    		throw new DetailedException("there should have only one inherited global type",
     			objExisting,objExisting.getClass(),objExisting.getClass().getClasses(),
     			obj				 ,obj				 .getClass(),obj				.getClass().getClasses()
     		);

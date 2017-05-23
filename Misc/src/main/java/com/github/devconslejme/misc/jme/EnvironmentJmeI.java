@@ -58,7 +58,7 @@ import com.jme3.scene.shape.Quad;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class EnvironmentJmeI extends EnvironmentI{
-	public static EnvironmentJmeI i(){return GlobalManagerI.i().get(EnvironmentJmeI.class);}
+	public static EnvironmentJmeI i(){return GlobalManagerI.i().retrieveOverridingSupers(EnvironmentJmeI.class,true,EnvironmentI.class);}
 	
 	private MouseI mouse;
 	private DisplayI display = new DisplayI();
@@ -79,7 +79,7 @@ public class EnvironmentJmeI extends EnvironmentI{
 	private boolean	bShowMouseCursorPos;
 	
 	public void configure(Node nodeGui){
-		GlobalManagerI.i().putGlobal(EnvironmentI.class, this);
+//		GlobalManagerI.i().putGlobal(EnvironmentI.class, this);
 		
 		app=G.i(Application.class);
 		cam=app.getCamera();

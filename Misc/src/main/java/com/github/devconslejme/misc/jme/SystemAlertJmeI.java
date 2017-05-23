@@ -27,9 +27,6 @@
 package com.github.devconslejme.misc.jme;
 
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.QueueI.CallableX;
-import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.SystemAlertI;
 import com.jme3.scene.Spatial;
 
@@ -38,14 +35,14 @@ import com.jme3.scene.Spatial;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class SystemAlertJmeI extends SystemAlertI {
-	public static SystemAlertJmeI i(){return GlobalManagerI.i().get(SystemAlertJmeI.class);}
+	public static SystemAlertJmeI i(){return GlobalManagerI.i().retrieveOverridingSupers(SystemAlertJmeI.class, true, SystemAlertI.class);}
 	
 	private Spatial	sptAlert;
 	
 	public void configure(){
-		if(!GlobalManagerI.i().isSet(SystemAlertI.class)){
-			GlobalManagerI.i().putGlobal(SystemAlertI.class, this); //overrides global
-		}
+//		if(!GlobalManagerI.i().isSet(SystemAlertI.class)){
+//			GlobalManagerI.i().putGlobal(SystemAlertI.class, this); //overrides global
+//		}
 	}
 
 	public Spatial getAlertSpatial() {

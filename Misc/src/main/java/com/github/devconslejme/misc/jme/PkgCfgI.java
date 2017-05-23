@@ -53,12 +53,19 @@ public class PkgCfgI {
 		com.github.devconslejme.misc.PkgCfgI.i().configure(
 				JmeSystem.getStorageFolder(StorageFolderType.Internal), app.getClass());
 		
-		GlobalManagerI.i().putGlobal(Application.class, app);  //first!
+		/**
+		 * FIRST!
+		 */
+		GlobalManagerI.i().putGlobal(Application.class, app);
 		FlyByCamera flycam=null;
 		if(app instanceof SimpleApplication){
-			GlobalManagerI.i().putGlobal(SimpleApplication.class, (SimpleApplication)app); //code depending on this should be optional...
+			/**
+			 * code depending on this should be optional...
+			 */
+			GlobalManagerI.i().putGlobal(SimpleApplication.class, (SimpleApplication)app);
 			flycam=G.i(SimpleApplication.class).getFlyByCamera();
 		}
+		GlobalManagerI.i().putGlobal(app.getClass(), app); //concrete
 		
 		// after first
 		DebugVisualsI.i().configure();
