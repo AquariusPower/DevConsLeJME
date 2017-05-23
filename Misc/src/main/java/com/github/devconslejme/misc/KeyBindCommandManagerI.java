@@ -59,6 +59,7 @@ public class KeyBindCommandManagerI {
 	private String strRequestUserDecision="Press ESC to cancel or Enter to retry.\n";
 	private Object objLinkedGuiElement;
 	private Function<String,Boolean> funcRunUserCommand;
+	private ECaptureStep	eCaptureStep;
 	
 	/**
 	 * TODO tmp placeholder dummy based on old KeyBoundVarField
@@ -260,9 +261,9 @@ public class KeyBindCommandManagerI {
 			}else
 			{ //released
 				if(bcCaptureToTarget!=null && bcCaptureToTarget.getKeyBind()==kbWaitBeReleased){
-					captureKeyStep(ECaptureUserDecision.Success);
+					captureKeyStep(ECaptureStep.Success);
 				}else{
-					captureKeyStep(ECaptureUserDecision.KeyReleased);
+					captureKeyStep(ECaptureStep.KeyReleased);
 				}
 			}
 			
@@ -280,17 +281,19 @@ public class KeyBindCommandManagerI {
 		if(isWaitKeyRelease())return true;
 		
 		if(bcCaptureToTarget!=null){
+//			if(!SystemAlertI.i().isAlertReady())return true; //wait the alert be ready before doing other things
+			
 			SystemAlertI.i().setDynamicInfo(KeyCodeManagerI.i().getAllPressedKeysSimpleReport());
 			
 			kbCaptured=KeyCodeManagerI.i().getPressedKeysAsKeyBind();
 			
 			if(bcConflict!=null){
-				ECaptureUserDecision eud=null;
+				ECaptureStep eud=null;
 				if(isCapturedThisKeyCodeWithoutMods(KeyCodeManagerI.i().getKeyCodeForEscape())){
-					eud=ECaptureUserDecision.Cancelled;
+					eud=ECaptureStep.Cancelled;
 				}else
 				if(isCapturedThisKeyCodeWithoutMods(KeyCodeManagerI.i().getKeyCodeForEnter())){
-					eud=ECaptureUserDecision.Retry;
+					eud=ECaptureStep.Retry;
 				}
 				
 				if(eud!=null){
@@ -302,10 +305,10 @@ public class KeyBindCommandManagerI {
 			}
 			
 			if(kbCaptured==null){
-				captureKeyStep(ECaptureUserDecision.KeepTrying);
+				captureKeyStep(ECaptureStep.KeepTrying);
 			}else{
 				if(isCapturedThisKeyCodeWithoutMods(KeyCodeManagerI.i().getKeyCodeForEscape())){
-					captureKeyStep(ECaptureUserDecision.Cancelled);
+					captureKeyStep(ECaptureStep.Cancelled);
 					return true;
 				}
 				
@@ -319,7 +322,7 @@ public class KeyBindCommandManagerI {
 				}
 				
 				if(bcConflict!=null){
-					captureKeyStep(ECaptureUserDecision.HasConflict);
+					captureKeyStep(ECaptureStep.HasConflict);
 					return true;
 				}else{
 					bcCaptureToTarget.setKeyBind(kbCaptured);
@@ -340,6 +343,9 @@ public class KeyBindCommandManagerI {
 	}
 	
 	public void update(float fTpf){
+		if(eCaptureStep==ECaptureStep.KeepTrying){
+			if(!SystemAlertI.i().isAlertReady())return; //wait the alert be ready before doing other things
+		}
 		if(updateCaptureKey())return;
 		if(SystemAlertI.i().isShowingAlert())return;
 		
@@ -437,7 +443,7 @@ public class KeyBindCommandManagerI {
 		return false;
 	}
 
-	enum ECaptureUserDecision{
+	enum ECaptureStep{
 		Cancelled, EndReset, //same thing
 		Retry,
 		Success, 
@@ -450,7 +456,8 @@ public class KeyBindCommandManagerI {
 		KeepTrying,
 	}
 	
-	private void captureKeyStep(ECaptureUserDecision e) {
+	private void captureKeyStep(ECaptureStep e) {
+		eCaptureStep=e;
 		switch(e){
 			case KeepTrying:
 				if(!SystemAlertI.i().isShowingAlert()){
@@ -498,7 +505,7 @@ public class KeyBindCommandManagerI {
 				SystemAlertI.i().hideSystemAlert(asteAlertFrom);
 				break;
 			case Success:
-				captureKeyStep(ECaptureUserDecision.EndReset); //"recursive" in a sense
+				captureKeyStep(ECaptureStep.EndReset); //"recursive" in a sense
 				
 //				refreshOwnerAfterCapture.requestRefresh();
 				recreateKeyBindFile();
@@ -550,7 +557,7 @@ public class KeyBindCommandManagerI {
 	public void captureAndSetKeyBindAt(BindCommand bindTarget, Object objLinkedGuiElement) {
 		if(this.bcCaptureToTarget!=null){
 //			MessagesI.i().warnMsg(this, "already capturing keybind for", this.bindCaptureToTarget, this.refreshOwnerAfterCapture, this);
-			MessagesI.i().warnMsg(this, "already capturing keybind for", this.bcCaptureToTarget, this);
+			MessagesI.i().warnMsg(this, "already capturing keybind for", this.bcCaptureToTarget.getCommandsInfo(), this.bcCaptureToTarget.getKeyBind().getBindCfg(), this);
 			return;
 		}
 		

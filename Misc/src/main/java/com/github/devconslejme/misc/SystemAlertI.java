@@ -190,5 +190,9 @@ public class SystemAlertI {
 			}
 		}.setName("TemporarySystemAlert"));
 	}
+	
+	public boolean isAlertReady() {
+		return true;
+	}
 }
 
