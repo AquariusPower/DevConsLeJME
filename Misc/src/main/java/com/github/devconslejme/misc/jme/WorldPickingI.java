@@ -31,6 +31,9 @@ import java.util.ArrayList;
 
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
+import com.github.devconslejme.misc.KeyBindCommandManagerI;
+import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
+import com.github.devconslejme.misc.KeyCodeManagerI;
 import com.google.common.collect.Lists;
 import com.jme3.app.Application;
 import com.jme3.collision.CollisionResult;
@@ -73,32 +76,33 @@ public class WorldPickingI {
 	
 	public void configure(FlyByCamera flycam){
 		String strPck="PickVirtualWorldThing";
-		G.i(Application.class).getInputManager().addMapping(strPck, new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
-		G.i(Application.class).getInputManager().addListener(new ActionListener() {
-				@Override
-				public void onAction(String name, boolean isPressed, float tpf) {
-					if(flycam!=null && flycam.isEnabled())return;
-					
-					if(!isPressed && name.equals(strPck)){ //on release
-						WorldPickingI.i().pickWorldPiercingAtCursor(); //will call the listeners
-//						WorldPickingI.i().pickWorldSpatialAtCursor();
-//						Spatial spt = PickingHandI.i().pickWorldSpatialAtCursor();
-//						if(spt!=null)LoggingI.i().logMarker(spt.toString());
-					}
-				}
-			},
-			strPck
+		KeyBindCommandManagerI.i().putBindCommandLater(
+			KeyCodeManagerI.i().getMouseTriggerKey(MouseInput.BUTTON_LEFT).getFullId(), 
+			strPck, 
+			new CallBoundKeyCmd(){@Override public Boolean callOnKeyReleased() {
+				if(flycam!=null && flycam.isEnabled())return true; //to ignore picking
+				
+//				if(!isPressed()){ //on release
+					WorldPickingI.i().pickWorldPiercingAtCursor(); //will call the world pick listeners
+//				}
+				
+				return true;
+			}}
 		);
+//		G.i(Application.class).getInputManager().addMapping(strPck, new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
+//		G.i(Application.class).getInputManager().addListener(new ActionListener() {
+//				@Override
+//				public void onAction(String name, boolean isPressed, float tpf) {
+//					if(flycam!=null && flycam.isEnabled())return;
+//					
+//					if(!isPressed && name.equals(strPck)){ //on release
+//						WorldPickingI.i().pickWorldPiercingAtCursor(); //will call the listeners
+//					}
+//				}
+//			},
+//			strPck
+//		);
 	}
-	
-//	ArrayList<Class<? extends Spatial>> aclspt = new ArrayList<Class<? extends Spatial>>();
-//	/**
-//	 * TODO use skipper class at UserData? and this would be per Spatial!
-//	 * @param cl
-//	 */
-//	public void addSkipType(Class<? extends Spatial> cl){
-//		if(!aclspt.contains(cl))aclspt.add(cl);
-//	}
 	
 	public void addSkip(Spatial spt){
 		UserDataI.i().retrieveExistingOrCreateNew(spt, Skip.class);
@@ -108,19 +112,6 @@ public class WorldPickingI {
 	public boolean isSkip(Spatial spt){
 		return UserDataI.i().contains(spt, Skip.class);
 	}
-//	/**
-//	 * TODO use skipper class at UserData?
-//	 * @param clChk
-//	 * @return
-//	 */
-//	public boolean isSkipType(Class<? extends Spatial> clChk){
-//		for(Class<? extends Spatial> cl:aclspt){
-//			if(cl.isAssignableFrom(clChk)){
-//				return true;
-//			}
-//		}
-//		return false;
-//	}
 	
 	public CollisionResult pickCollisionResultAtCursor(){
 		ArrayList<CollisionResult> crs = pickWorldPiercingAtCursor();

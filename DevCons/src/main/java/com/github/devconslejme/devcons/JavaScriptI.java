@@ -404,7 +404,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		
 		for(int iCount=1;iCount<=10;iCount++){
 			final int i=iCount;
-			KeyBindCommandManagerI.i().putBindCommandLater("Ctrl+Shift+"+(i%10),"RepeatLastConsCmd"+i,new CallBoundKeyCmd(){@Override	public Boolean call(){
+			KeyBindCommandManagerI.i().putBindCommandLater("Ctrl+Shift+"+(i%10),"RepeatLastConsCmd"+i,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyReleased(){
 				repeatLastCommand(i-1);return true;}});
 		}
 	}

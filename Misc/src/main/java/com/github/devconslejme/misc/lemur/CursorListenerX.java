@@ -27,8 +27,10 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.github.devconslejme.misc.lemur;
 
 import com.github.devconslejme.misc.Annotations.Workaround;
+import com.github.devconslejme.misc.EnvironmentI;
 import com.github.devconslejme.misc.jme.EffectElectricity;
 import com.github.devconslejme.misc.jme.EffectManagerStateI;
+import com.github.devconslejme.misc.jme.EnvironmentJmeI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
@@ -47,6 +49,9 @@ public abstract class CursorListenerX implements CursorListener{
 	private CursorButtonEvent	eventOverriden;
 //	private Vector3f	v3fPressedPos;
 //	private EffectElectricity	efDisplaced = new EffectElectricity();
+	private long	lLastPressedNano;
+	private long	lLastPressedMilis;
+	private long	lLastReleasedMilis;
 	
 	public CursorListenerX() {
 //		EffectManagerStateI.i().add(efDisplaced);
@@ -96,11 +101,13 @@ public abstract class CursorListenerX implements CursorListener{
 		if(event.isConsumed())return;
 		
 		if(event.isPressed()){
+			lLastPressedMilis = System.currentTimeMillis();
 			sptPrepareToWorkWith = capture;
 //			v3fPressedPos = MiscJmeI.i().toV3f(event.getLocation());
 //			efDisplaced.setFollowFromTarget(sptPrepareToWorkWith,null);
 //			efDisplaced.setPlay(true);
 		}else{
+			lLastReleasedMilis = System.currentTimeMillis();
 			if(sptPrepareToWorkWith!=null && sptPrepareToWorkWith==capture){
 				if(!DragParentestPanelListenerI.i().isDragOverridingButtonUpClickEvent(event)){
 //					MiscLemurI.i().cursorButtonEvent(event, target, capture);

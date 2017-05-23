@@ -115,12 +115,12 @@ public class KeyBindManagerDialogI {
 		bc.setKeyBind(kb);
 		bc.setHardCommand(new CallBoundKeyCmd(){
 				@Override
-				public Boolean call() {
+				public Boolean callOnKeyPressed() {
 					MessagesI.i().output(false,System.out,"Info:",this,KeyBindManagerDialogI.class.getSimpleName()+":test:"+TimeFormatI.i().getRealTimeFormatted());
 					return true;
 				}
 			}
-			.enableLoopMode()
+			.holdKeyPressedForContinuousCmd()
 			.setDelaySeconds(1f)
 			.setName("simple test log entry for bind cmd")
 		);

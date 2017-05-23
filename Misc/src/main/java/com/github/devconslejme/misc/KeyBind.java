@@ -234,7 +234,7 @@ public class KeyBind {
 	}
 
 	public boolean isResetted() {
-		return lActivationCount ==0;
+		return lActivationCount==0;
 	}
 
 	public void reset() {

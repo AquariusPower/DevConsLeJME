@@ -418,6 +418,7 @@ public class QueueI {
 		}
 		
 		public void callAfterRemovedFromQueue() {}
+		
 		public long getFailCount() {
 			return lFailCount;
 		}
@@ -485,7 +486,6 @@ public class QueueI {
 				cx.setTPF(fTPF);
 				cx.lRunCount++; //working or not
 				if(cx.call()){ 
-//					cx.done();
 					if(!cx.isLoopEnabled() || cx.bJustRemoveFromQueueOnce){
 						synchronized(acxList){
 							acxList.remove(cx);
@@ -495,14 +495,6 @@ public class QueueI {
 					}else{
 						cx.updateRunAt();
 					}
-					
-//					if(cx.isLoopEnabled()){
-//						cx.updateRunAt();
-//					}else{
-//						synchronized(acxList){
-//							acxList.remove(cx);
-//						}
-//					}
 				}else{
 					// if a loop queue fails, it will not wait and will promptly retry!
 					cx.setFailCount(cx.getFailCount() + 1);
@@ -510,11 +502,6 @@ public class QueueI {
 			}
 		}
 		
-//		if(iDoneCount>10){ //TODO what is a good amount to let it be cleaned considering speed/cpu usage?
-//			for(CallableX cx:acxList.toArray(new CallableX[]{})){
-//				if(cx.isDone())acxList.remove(cx);
-//			}
-//		}
 	}
 	
 	public void configure(long lTimeResolution) {

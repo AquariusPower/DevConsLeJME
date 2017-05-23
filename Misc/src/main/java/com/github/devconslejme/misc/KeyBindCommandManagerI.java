@@ -187,16 +187,68 @@ public class KeyBindCommandManagerI {
 	public static abstract class CallBoundKeyCmd extends CallableX<CallBoundKeyCmd>{
 		public StackTraceElement[]	asteConfiguredAt;
 		private BindCommand	bc;
-
+		private boolean	bExpectingKeyReleasedOverriden;
+		
+		@Deprecated
+		@Override
+		public Boolean call() {
+			if(isPressed()){
+				Boolean bRet = callOnKeyPressed();
+				if(bRet!=null)return bRet;
+				
+				bRet=callOnKeyStatus(true);
+				if(bRet!=null)return bRet;
+				
+				bExpectingKeyReleasedOverriden=true;
+			}
+			return false; // in this case, it is expected that the on key released have been overriden and is returning not null
+		}
+		
+//	public abstract Boolean callOnKeyPressed();
+		public Boolean callOnKeyPressed(){return null;}
+		public Boolean callOnKeyReleased(){return null;}
+		
+		/**
+		 * use this one or the other two (pressed/released) not both kinds!
+		 * @param bPressed
+		 * @return
+		 */
+		public Boolean callOnKeyStatus(boolean bPressed){return null;}
+		
+		@Deprecated
+		@Override
+		public void callAfterRemovedFromQueue() {
+			if(!isPressed()){
+				Boolean bRet = callOnKeyReleased();
+				if(bRet!=null)return;
+				
+				bRet=callOnKeyStatus(false);
+				if(bRet!=null)return;
+				
+				if(bExpectingKeyReleasedOverriden){
+					throw new DetailedException("neither 'on key pressed' nor 'on key released' methods were overriden!",this,asteConfiguredAt,bc,bc.getCommandsInfo(),bc.getUserCommand(),bc.getKeyBind().getBindCfg());
+				}
+			}
+		}
+		
 		/**
 		 * mainly for clarification
 		 * @return 
 		 */
-		public CallBoundKeyCmd holdKeyForContinuousCmd(){
-			enableLoopMode();
+		public CallBoundKeyCmd holdKeyPressedForContinuousCmd(){
+			super.enableLoopMode();
 			return getThis();
 		}
-
+		
+		/**
+		 * see {@link #holdKeyPressedForContinuousCmd()}
+		 */
+		@Deprecated
+		@Override
+		public CallBoundKeyCmd enableLoopMode() {
+			return super.enableLoopMode();
+		}
+		
 		public CallBoundKeyCmd setBindCommand(BindCommand bc) {
 			assert(this.bc==null);
 			this.bc = bc;
@@ -209,6 +261,14 @@ public class KeyBindCommandManagerI {
 		
 		public float getAnalogValue(){
 			return bc.getKeyBind().getActionKey().getAnalogValue();
+		}
+		
+		public boolean isPressed(){
+//			return getBindCommand().getKeyBind().getActionKey().isPressed();
+			/**
+			 * it is the mods+actionKey that matters and is controlled/setup here
+			 */
+			return getBindCommand().getKeyBind().isActivated(); 
 		}
 	}
 	
@@ -367,16 +427,19 @@ public class KeyBindCommandManagerI {
 		runActiveBinds();
 	}
 	
+	/**
+	 * for key released, see {@link CallBoundKeyCmd} new methods
+	 */
 	private void runActiveBinds() {
 		/**
 		 * fill all binds for each action keycode to check which will win.
 		 */
 		hmKeyCodeVsActivatedBind.clear();
-		for(BindCommand bc:tmbindList.values()){
-			if(!bc.isCommandSet())continue; //not set yet
+		for(BindCommand bcChkActivated:tmbindList.values()){
+			if(!bcChkActivated.isCommandSet())continue; //not set yet
 			
-			if(bc.getKeyBind().isActivated()){ //pressed
-				Integer iKeyCode = bc.getKeyBind().getActionKey().getKeyCode();
+			if(bcChkActivated.getKeyBind().isActivated()){ //pressed
+				Integer iKeyCode = bcChkActivated.getKeyBind().getActionKey().getKeyCode();
 				
 				ArrayList<BindCommand> abindForActKeyCode = hmKeyCodeVsActivatedBind.get(iKeyCode);
 				if(abindForActKeyCode==null){
@@ -384,11 +447,13 @@ public class KeyBindCommandManagerI {
 					hmKeyCodeVsActivatedBind.put(iKeyCode, abindForActKeyCode);
 				}
 				
-				abindForActKeyCode.add(bc);
-			}else{ //released
-				reset(bc);
-//				bc.getKeyBind().reset(); //np if keep reseting, it should/is fast
-////				runCommandOnKeyRelease(bc);
+				abindForActKeyCode.add(bcChkActivated);
+			}else{ 
+				/****************************
+				 * KEY RELEASED EVENT (pressed=false)
+				 * will happen, when the callable is removed from the queue
+				 ****************************/
+				reset(bcChkActivated);
 			}
 		}
 		
@@ -398,10 +463,10 @@ public class KeyBindCommandManagerI {
 		for(ArrayList<BindCommand> abindForActKeyCode:hmKeyCodeVsActivatedBind.values()){
 			BindCommand bcWin=abindForActKeyCode.get(0);
 			
-			for(BindCommand bind:abindForActKeyCode){
-				if(bcWin==bind)continue;
-				if(bcWin.getKeyBind().getKeyModListSize() < bind.getKeyBind().getKeyModListSize()){
-					bcWin=bind;
+			for(BindCommand bcChkMostMods:abindForActKeyCode){
+				if(bcWin==bcChkMostMods)continue;
+				if(bcWin.getKeyBind().getKeyModListSize() < bcChkMostMods.getKeyBind().getKeyModListSize()){
+					bcWin=bcChkMostMods;
 				}
 			}
 			
@@ -409,16 +474,9 @@ public class KeyBindCommandManagerI {
 		}
 	}
 	
-//	private void runCommandOnKeyRelease(BindCommand bc){
-//		bc.getKeyBind().isCanBeRunNowOrReset();
-//		if(true)return; //TODO enable on key release?
-//		if(bc.getKeyBind().isWasAlreadyActivatedAtLeastOnce()){
-//			runCommands(bc);
-//		}
-//	}
-	
 	private void reset(BindCommand bc) {
 		if(bc.getKeyBind().isResetted())return;
+		
 		bc.getKeyBind().reset();
 		QueueI.i().removeFromQueue(bc.getHardCommand()); //bc.getHardCommand().justRemoveFromQueueOnce();
 	}
