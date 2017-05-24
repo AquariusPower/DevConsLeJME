@@ -30,7 +30,7 @@ public class TestcaseLemurClickImmuneButton extends SimpleApplication{
 		BaseStyles.loadGlassStyle();
 		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS);
 		
-		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode(), getRootNode(), null);
+		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode(), getRootNode());
 		initTest();
 	}
 

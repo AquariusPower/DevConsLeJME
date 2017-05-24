@@ -53,7 +53,7 @@ public class OrthogonalCursorStateI extends SimpleAppState{
 	private Geometry	geom;
 	private Application	app;
 	private Node	nodeParent;
-	private InputManager	inputman;
+//	private InputManager	inputman;
 	private int	fSize;
 //	private SimpleApplication	sappOpt;
 	private BitmapText	bt;
@@ -65,9 +65,11 @@ public class OrthogonalCursorStateI extends SimpleAppState{
 //	private float	fAboveLemurCursorRayCast;
 	private float	fRotateSpeed;
 	private float	fDistanceToCursor;
-	private Vector2f v2fCursorPosPrevious;
+//	private Vector2f v2fCursorPosPrevious;
+	private Vector3f v3fCursorPosPrevious;
 	private float	fGoodReadableRotateSpeedZ;
-	private Vector2f	v2fCursorPos;
+//	private Vector2f	v2fCursorPos;
+	private Vector3f	v3fCursorPos;
 	private boolean	bShowCursorInfo;
 	
 	public OrthogonalCursorStateI() {
@@ -75,7 +77,8 @@ public class OrthogonalCursorStateI extends SimpleAppState{
 //		fAboveLemurCursorRayCast = MiscJmeI.i().getZAboveAllAtGuiNode(); 
 		fRotateSpeed=1f;
 		fDistanceToCursor=100;
-		v2fCursorPosPrevious = new Vector2f();
+//		v2fCursorPosPrevious = new Vector2f();
+		v3fCursorPosPrevious = new Vector3f();
 		fGoodReadableRotateSpeedZ = -0.0025f;
 	}
 	
@@ -83,7 +86,7 @@ public class OrthogonalCursorStateI extends SimpleAppState{
 		app = GlobalManagerI.i().get(Application.class);
 //		sappOpt = GlobalManagerI.i().get(SimpleApplication.class,false);
 		app.getStateManager().attach(this);
-		inputman=app.getInputManager();
+//		inputman=app.getInputManager();
 		this.nodeParent=nodeParent;
 	}
 	
@@ -115,11 +118,11 @@ public class OrthogonalCursorStateI extends SimpleAppState{
 	
 	private void updateCursorInfo(){
 		String str=StringI.i().createTable(3,
-				"xy", String.format("%.0f",v2fCursorPos.x), String.format("%.0f",v2fCursorPos.y),
+				"xy", String.format("%.0f",v3fCursorPos.x), String.format("%.0f",v3fCursorPos.y),
 				"max", ""+EnvironmentJmeI.i().getDisplay().getWidth(), ""+EnvironmentJmeI.i().getDisplay().getHeight(),
-				"diff", ""+(EnvironmentJmeI.i().getDisplay().getWidth()-(int)v2fCursorPos.x), ""+(EnvironmentJmeI.i().getDisplay().getHeight()-(int)v2fCursorPos.y),
-				"%",	String.format("%.1f", (v2fCursorPos.x/(float)EnvironmentJmeI.i().getDisplay().getWidth ())*100),
-							String.format("%.1f", (v2fCursorPos.y/(float)EnvironmentJmeI.i().getDisplay().getHeight())*100)
+				"diff", ""+(EnvironmentJmeI.i().getDisplay().getWidth()-(int)v3fCursorPos.x), ""+(EnvironmentJmeI.i().getDisplay().getHeight()-(int)v3fCursorPos.y),
+				"%",	String.format("%.1f", (v3fCursorPos.x/(float)EnvironmentJmeI.i().getDisplay().getWidth ())*100),
+							String.format("%.1f", (v3fCursorPos.y/(float)EnvironmentJmeI.i().getDisplay().getHeight())*100)
 			);
 			
 			bt.setText(str);
@@ -138,12 +141,12 @@ public class OrthogonalCursorStateI extends SimpleAppState{
 			if(bRotating){
 				boolean bRotateNow=true;
 				float fSpeedMultWhileMovingCursor=1f;
-				if(v2fCursorPosPrevious.equals(v2fCursorPos)){
+				if(v3fCursorPosPrevious.equals(v3fCursorPos)){
 					if(bRotateOnlyIfMouseMoves){
 						bRotateNow=false;
 					}
 				}else{
-					fSpeedMultWhileMovingCursor=v2fCursorPosPrevious.distance(v2fCursorPos)*5f;
+					fSpeedMultWhileMovingCursor=v3fCursorPosPrevious.distance(v3fCursorPos)*5f;
 				}
 				
 					v3fPos.addLocal(fDistanceToCursor,0,0);
@@ -169,22 +172,25 @@ public class OrthogonalCursorStateI extends SimpleAppState{
 				v3fPos.addLocal(v3fSize);
 			}
 			nodeHook.setLocalTranslation(v3fPos);
-			nodeInfo.setLocalTranslation(MiscJmeI.i().toV3f(v2fCursorPos, MiscJmeI.i().getZAboveAllAtGuiNode()));
+//			nodeInfo.setLocalTranslation(MiscJmeI.i().toV3f(v2fCursorPos, MiscJmeI.i().getZAboveAllAtGuiNode()));
+			nodeInfo.setLocalTranslation(v3fCursorPos);
 	}
 	
 	@Override
 	public void update(float tpf) {
 		super.update(tpf);
-		if(inputman.isCursorVisible()){
-			v2fCursorPos = inputman.getCursorPosition();
-			geom.setLocalTranslation(v2fCursorPos.x-fSize, v2fCursorPos.y+fSize, MiscJmeI.i().getZAboveAllAtGuiNode() );
+		if(EnvironmentJmeI.i().getMouse().isCursorVisible()){
+//			v2fCursorPos = EnvironmentJmeI.i().getMouse().getPos2D();//inputman.getCursorPosition();
+			v3fCursorPos = EnvironmentJmeI.i().getMouse().getPos3D();
+			geom.setLocalTranslation(v3fCursorPos.x-fSize, v3fCursorPos.y+fSize, v3fCursorPos.z);
+//			geom.setLocalTranslation(v2fCursorPos.x-fSize, v2fCursorPos.y+fSize, MiscJmeI.i().getZAboveAllAtGuiNode() );
 			
 			if(isShowCursorInfo())updateCursorInfo();
 			
-			v2fCursorPosPrevious.set(v2fCursorPos);
+			v3fCursorPosPrevious.set(v3fCursorPos);
 		}
 		
-		setShow(inputman.isCursorVisible());
+		setShow(EnvironmentJmeI.i().getMouse().isCursorVisible());
 	}
 	
 	@Override

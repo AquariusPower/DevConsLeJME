@@ -165,6 +165,7 @@ public class EnvironmentJmeI extends EnvironmentI{
 
 	public static class MouseI{
 		private InputManager	inputman;
+		private Vector2f	v2fLastPosWhileVisible = new Vector2f();
 
 		public MouseI(InputManager inputman) {
 			this.inputman = inputman;
@@ -198,9 +199,21 @@ public class EnvironmentJmeI extends EnvironmentI{
 			v3fPos.y += v3fSize.y/2f;
 			return v3fPos;
 		}
-
+		
 		public Vector2f getPos2D() {
-			return inputman.getCursorPosition(); //return new Vector2f(Mouse.getX(), Mouse.getY());
+			/**
+			 * TODO inputman.getCursorPosition() keeps changing even with flycam enabled, and when \ 
+			 * it gets disabled, the last position with flycam previously disabled is restored as \
+			 * soon the mouse moves any little bit, why that? is that good/useful in some way?
+			 */
+			if(isCursorVisible()){
+				/**
+				 * directly collet from lwjgl will avoid the inputman.getCursorPosition() 
+				 * accumulated movement while the cursor was NOT visible ...
+				 */
+				v2fLastPosWhileVisible.set(Mouse.getX(),Mouse.getY()); // 
+			}
+			return v2fLastPosWhileVisible;
 		}
 		
 		/**

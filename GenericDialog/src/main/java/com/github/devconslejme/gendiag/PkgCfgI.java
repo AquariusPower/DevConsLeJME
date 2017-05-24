@@ -47,11 +47,10 @@ public class PkgCfgI {
 	 * @param app (forwarded)
 	 * @param nodeGui to manage dialogs
 	 * @param nodeVirtualWorld (forwarded) 
-	 * @param strBindCmdUId (forwarded)
 	 */
-	public void configure(Application app, Node nodeGui, Node nodeVirtualWorld, String strBindCmdUId){
+	public void configure(Application app, Node nodeGui, Node nodeVirtualWorld){
 		DetailedException.assertIsFalse("configured", bConfigured, this);
-		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(app, nodeGui, nodeVirtualWorld, strBindCmdUId);
+		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(app, nodeGui, nodeVirtualWorld);
 		
 		DialogHierarchyStateI.i().configure(nodeGui,0f);
 		ContextMenuI.i().configure();

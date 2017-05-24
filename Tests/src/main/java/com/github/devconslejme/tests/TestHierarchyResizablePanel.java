@@ -56,7 +56,7 @@ public class TestHierarchyResizablePanel extends SimpleAppStateAbs {
 	
 	@Override
 	public void simpleInitApp() {
-		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode(), getRootNode(), null);
+		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode(), getRootNode());
 		initTest();
 	}
 	

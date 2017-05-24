@@ -70,7 +70,30 @@ public class DetailedException extends NullPointerException{
 //			chkprb.performChecks(getExitErrorMessage(), getExitRequestCause());
 //		}
 //	}
-
+	
+	private static ArrayList<StackTraceElement> asteExitPreventerList = new ArrayList<StackTraceElement>();
+//	public static String genKeyExitPreventer(StackTraceElement ste){
+//		return ste.getClassName()+"."+ste.getMethodName();
+//	}
+	public static void addStackTraceElementExitPreventer(){
+//		asteExitPreventerList.add(genKeyExitPreventer(Thread.currentThread().getStackTrace()[2]));
+		StackTraceElement ste = Thread.currentThread().getStackTrace()[2];
+		if(!asteExitPreventerList.contains(ste))asteExitPreventerList.add(ste);
+	}
+	public static boolean isChildOfStackTraceElementOfExitPreventers(){
+//		return asteExitPreventerList.contains(Thread.currentThread().getStackTrace()[2+iStackAdd].toString());
+		for(StackTraceElement steExitPreventer:asteExitPreventerList){
+			for(StackTraceElement ste:Thread.currentThread().getStackTrace()){
+				if(steExitPreventer.getMethodName().equals(ste.getMethodName())){ //is more specific and also required
+					if(steExitPreventer.getClassName().equals(ste.getClassName())){
+						return true;
+					}					
+				}
+			}
+		}
+		return false;
+	}
+	
 	private static String prepareExceptionReport(String strMessage, Object... aobj){
 		if(JavaLangI.i().isRecursiveLoopOnMethod("<init>",DetailedException.class)){
 			System.err.println(strHeader+"Recursive loop exception, stack dump below:");
@@ -102,13 +125,14 @@ public class DetailedException extends NullPointerException{
 		}
 	}
 	public DetailedException(String str, Object... aobj) {
-		this(true,str,aobj);
+//		this(true,str,aobj);
+		this(!isChildOfStackTraceElementOfExitPreventers(),str,aobj);
 	}
 //	public DetailedException() {
 //		this("(no extra info)");
 //	}
 	public DetailedException(Exception ex, Object... aobj) {
-		this("(just rethrowing the cause)",aobj);
+		this(!isChildOfStackTraceElementOfExitPreventers(),"(just rethrowing the cause)",aobj);
 		setCauseAndReturnSelf(ex);
 	}
 

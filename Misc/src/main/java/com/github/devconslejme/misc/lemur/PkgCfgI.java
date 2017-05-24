@@ -55,12 +55,11 @@ public class PkgCfgI {
 	 * @param app to init lemur GuiGlobals
 	 * @param nodeGui to manage dialogs
 	 * @param nodeVirtualWorld (forwarded)
-	 * @param strBindCmdUId (forwarded)
 	 */
-	public void configure(Application app, Node nodeGui, Node nodeVirtualWorld, String strBindCmdUId){
+	public void configure(Application app, Node nodeGui, Node nodeVirtualWorld){
 		DetailedException.assertIsFalse("configured", isConfigured(), this);
 		SystemAlertLemurI.i().configure(); //this is a global overrider
-		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app,nodeGui, nodeVirtualWorld, strBindCmdUId);
+		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app,nodeGui, nodeVirtualWorld);
 		
 		// lermur inits
 		if(GuiGlobals.getInstance()==null)GuiGlobals.initialize(app); //GuiGlobals.initialize(app);

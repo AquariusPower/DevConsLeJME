@@ -43,16 +43,15 @@ public class PkgCfgI {
 	 * 
 	 * @param flAppBaseUserDataFolder to store all app configs and saved files
 	 * @param clAppMainClass to compose the relative storage path for the currently being run application/class
-	 * @param strBindCmdUId to let key bindings be loaded from the config file, if null will prevent saving and loading bind cfgs
 	 */
-	public void configure(File flAppBaseUserDataFolder, Class clAppMainClass, String strBindCmdUId){
+	public void configure(File flAppBaseUserDataFolder, Class clAppMainClass){
 		DetailedException.assertIsFalse("configured", bConfigured, this);
 		MainThreadI.i().configure();
 		
 		FileI.i().configure(flAppBaseUserDataFolder, clAppMainClass);
 		
   	KeyCodeManagerI.i().configure();
-		KeyBindCommandManagerI.i().configure(strBindCmdUId);
+		KeyBindCommandManagerI.i().configure();
 		EnvironmentI.i().configure();
 		
 		bConfigured=true;

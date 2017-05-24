@@ -49,7 +49,7 @@ public class TestResizablePanel extends SimpleAppStateAbs {
 	
 	@Override
 	public void simpleInitApp() {
-		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(this, getGuiNode(), getRootNode(), null);
+		com.github.devconslejme.misc.lemur.PkgCfgI.i().configure(this, getGuiNode(), getRootNode());
 		initTest();
 	}
 	

@@ -235,7 +235,7 @@ public class JavaScriptI implements IGlobalAddListener {
 				}
 				return true;
 			case bind:
-				KeyBindCommandManagerI.i().loadConfig(strCmd); //requires the main cmd too
+				KeyBindCommandManagerI.i().loadConfigParamsOnly(strParams);
 				break;
 			default:
 //				throw new UnsupportedOperationException("not implemented yet "+ebc);
@@ -510,6 +510,8 @@ public class JavaScriptI implements IGlobalAddListener {
 //	}
 	
 	protected void submitUserCommand() {
+		DetailedException.addStackTraceElementExitPreventer();
+		
 		String strCmd = DevConsPluginStateI.i().getInputText();
 		
 		strCmd=strCmd.trim();
@@ -518,7 +520,11 @@ public class JavaScriptI implements IGlobalAddListener {
 		LoggingI.i().logMarker("User Command");
 		LoggingI.i().logEntry(strCmd);
 		
-		execCommand(strCmd,true,true);
+		try{
+			execCommand(strCmd,true,true);
+		}catch(DetailedException ex){
+			LoggingI.i().logExceptionEntry(ex, strCmd);
+		}
 		
 		DevConsPluginStateI.i().scrollKeepAtBottom();
 		DevConsPluginStateI.i().clearInput();

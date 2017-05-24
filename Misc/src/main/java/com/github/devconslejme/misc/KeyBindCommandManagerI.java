@@ -61,7 +61,8 @@ public class KeyBindCommandManagerI {
 	private Object objLinkedGuiElement;
 	private Function<String,Boolean> funcRunUserCommand;
 	private ECaptureStep	eCaptureStep;
-	private String strCmdBindId;//="bind";
+//	private String strCmdBindId="bind";
+	private boolean	bDebug;
 	
 	/**
 	 * TODO tmp placeholder dummy based on old KeyBoundVarField
@@ -115,7 +116,7 @@ public class KeyBindCommandManagerI {
 //			return str;
 //		}
 		
-		public String getUserCommand() {
+		public String getUserJSCmd() {
 			return strJSUserCommand;
 		}
 		public CallBoundKeyCmd getHardCommand(){
@@ -126,7 +127,7 @@ public class KeyBindCommandManagerI {
 		 * TODO syntax for executing on-press, on-release, b4 hard-command, after hard-command.
 		 * @param strJSUserCommand can be null
 		 */
-		public void setUserCommand(String strJSUserCommand){
+		public void setUserJSCmd(String strJSUserCommand){
 			this.strJSUserCommand=strJSUserCommand;
 		}
 		public BindCommand setHardCommand(CallBoundKeyCmd cx){
@@ -167,12 +168,12 @@ public class KeyBindCommandManagerI {
 
 	}
 	
-	public void configure(String strCmdBindId){
-		this.strCmdBindId=strCmdBindId;
+	public void configure(){//String strCmdBindId){
+//		this.strCmdBindId=strCmdBindId;
 		
-		if(this.strCmdBindId==null){
-			MessagesI.i().warnMsg(this, "wont  be able to load/save key bind cfg file and other related functionalities", this);
-		}
+//		if(this.strCmdBindId==null){
+//			MessagesI.i().warnMsg(this, "wont  be able to load/save key bind cfg file and other related functionalities", this);
+//		}
 		
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
@@ -360,13 +361,15 @@ public class KeyBindCommandManagerI {
 		}
 		
 		CallBoundKeyCmd callcmd = bc.getHardCommand();
-		CallBoundKeyCmd callcmdExisting = tmCmdIdVsCmd.get(callcmd.getName());
-		if(callcmdExisting==null){
-			tmCmdIdVsCmd.put(callcmd.getName(),callcmd);
-		}else{
-			//consistency
-			if(callcmd!=callcmdExisting){
-				throw new DetailedException("cmd ids must be unique",callcmdExisting,callcmd);
+		if(callcmd!=null){ // can also be just a user JS command
+			CallBoundKeyCmd callcmdExisting = tmCmdIdVsCmd.get(callcmd.getName());
+			if(callcmdExisting==null){
+				tmCmdIdVsCmd.put(callcmd.getName(),callcmd);
+			}else{
+				//consistency
+				if(callcmd!=callcmdExisting){
+					throw new DetailedException("cmd ids must be unique",callcmdExisting,callcmd);
+				}
 			}
 		}
 		
@@ -552,7 +555,7 @@ public class KeyBindCommandManagerI {
 				}
 			}
 			
-			runCommands(bcWin);
+			runCommandsOf(bcWin);
 		}
 	}
 	
@@ -564,32 +567,36 @@ public class KeyBindCommandManagerI {
 //		QueueI.i().removeLoopFromQueue(bc.getHardCommand()); //bc.getHardCommand().justRemoveFromQueueOnce();
 	}
 
-	private void runCommands(BindCommand bc){
+	private void runCommandsOf(BindCommand bc){
 //		if(!bc.getKeyBind().isActivated())return;
 		
 		bc.getKeyBind().incActivationCount();
-		if(bc.getKeyBind().getActivationCount()==1){
-			QueueI.i().enqueue(bc.getHardCommand());
-		}
-////		bc.getKeyBind().isActivated()
-//		bc.getHardCommand().call(); //TODO put on the queue?
 		
-		/**
-		 * TODO review custom user command? it is quite limited (lacking features) compared to the queued hardcommand call... allow user to configure every command may be using options on the very user command to set at the CallableX? :D
-		 */
-		if(bc.getUserCommand()!=null){
-			if(getFuncRunUserCommand()==null){
-				MessagesI.i().warnMsg(this, "function to run user command is not set", this, bc); //TODO create a warnOnce at messagesi?
-			}else{
-				QueueI.i().enqueue(new CallableXAnon() {
-					@Override
-					public Boolean call() {
-						getFuncRunUserCommand().apply(bc.getUserCommand());
-						return true;
-					}
-				});
+		if(bc.getKeyBind().getActivationCount()==1){
+			if(bc.getHardCommand()!=null){
+				if(isDebug())System.out.println("Enqueue:RunHardCmd:"+bc.getHardCommand().getName());
+				QueueI.i().enqueue(bc.getHardCommand());
+			}
+		
+			/**
+			 * TODO review custom user command? it is quite limited (lacking features) compared to the queued hardcommand call... allow user to configure every command may be using options on the very user command to set at the CallableX? :D
+			 */
+			if(bc.getUserJSCmd()!=null){
+				if(getFuncRunUserCommand()==null){
+					MessagesI.i().warnMsg(this, "function to run user command is not set", this, bc); //TODO create a warnOnce at messagesi?
+				}else{
+					if(isDebug())System.out.println("Enqueue:RunJSCmd:"+bc.getUserJSCmd());
+					QueueI.i().enqueue(new CallableXAnon() {
+						@Override
+						public Boolean call() {
+							getFuncRunUserCommand().apply(bc.getUserJSCmd());
+							return true;
+						}
+					});
+				}
 			}
 		}
+		
 	}
 	
 	private boolean isCapturedThisKeyCodeWithoutMods(int iKeyCode) {
@@ -683,6 +690,9 @@ public class KeyBindCommandManagerI {
 		}
 	}
 	
+	public BindCommand loadConfigParamsOnly(String strParams) {
+		return loadConfig(getCmdBindId()+" "+strParams);
+	}
 	/**
 	 * accepts:
 	 * <bindCmdId> <hardCmdId> [JSuserCmd]
@@ -693,13 +703,14 @@ public class KeyBindCommandManagerI {
 	 * @return
 	 */
 	public BindCommand loadConfig(String strCommandLine){
-		if(strCmdBindId==null){
-			MessagesI.i().warnMsg(this, "bind cmd id not set, unable to load cfg file", this, strCommandLine);
-			return null;
-		}
+//		if(strCmdBindId==null){
+//			MessagesI.i().warnMsg(this, "bind cmd id not set, unable to load cfg file", this, strCommandLine);
+//			return null;
+//		}
 			
+//		strCommandLine="_BindDummyPseudoCmd_ "+strCommandLine; //just to easify parsing
 		CommandLineParser cl = new CommandLineParser(strCommandLine);
-		if(!cl.getCommand().equals(strCmdBindId))throw new DetailedException("invalid main bind cmd",strCommandLine,strCmdBindId);
+		if(!cl.getCommand().equals(getCmdBindId()))throw new DetailedException("invalid main bind cmd",strCommandLine,getCmdBindId());
 		
 		String strKeyBindCfgId = cl.getParsedParam(0);
 //		String strHardCommandUId = cl.getParsedParam(1);
@@ -722,8 +733,8 @@ public class KeyBindCommandManagerI {
 		
 		BindCommand bc = new BindCommand();
 		bc.setKeyBind(new KeyBind().setFromKeyCfg(strKeyBindCfgId));
-		bc.setHardCommand(tmCmdIdVsCmd.get(strHardCommandUId));
-		bc.setUserCommand(strJSUserCmd);
+		if(strHardCommandUId!=null)bc.setHardCommand(tmCmdIdVsCmd.get(strHardCommandUId));
+		bc.setUserJSCmd(strJSUserCmd);
 		
 		putBindCommand(bc);
 		
@@ -734,18 +745,18 @@ public class KeyBindCommandManagerI {
 		return prepareConfig(bc).recreateCommandLine();
 	}
 	public CommandLineParser prepareConfig(BindCommand bc) {
-		if(strCmdBindId==null){
-			MessagesI.i().warnMsg(this, "bind cmd id not set, unable to create bind cfg", this, bc);
-			return null;
-		}
+//		if(strCmdBindId==null){
+//			MessagesI.i().warnMsg(this, "bind cmd id not set, unable to create bind cfg", this, bc);
+//			return null;
+//		}
 		
 		CommandLineParser cl = new CommandLineParser();
-		cl.setCommand(strCmdBindId);
+		cl.setCommand(getCmdBindId());
 		cl.appendParams(bc.getKeyBind().getBindCfg());
 		if(bc.getHardCommand()!=null){
 			cl.appendParams(bc.getHardCommand().getName());
 		}
-		String strJSCmd=bc.getUserCommand();
+		String strJSCmd=bc.getUserJSCmd();
 		if(strJSCmd!=null){
 			cl.appendParams(strJSCmd);
 		}
@@ -770,6 +781,10 @@ public class KeyBindCommandManagerI {
 //		
 //		return (sb.toString());
 		return cl;
+	}
+
+	private String getCmdBindId() {
+		return "bind";
 	}
 
 	public ArrayList<BindCommand> getKeyBindListCopy(){
@@ -811,4 +826,23 @@ public class KeyBindCommandManagerI {
 	public boolean isCapturing(){
 		return bcCaptureToTarget!=null;
 	}
+
+	public boolean isDebug() {
+		return bDebug;
+	}
+
+	public KeyBindCommandManagerI setDebug(boolean bDebug) {
+		this.bDebug = bDebug;
+		return this; 
+	}
+
+
+//	public String getCmdBindId() {
+//		return strCmdBindId;
+//	}
+//
+//	public KeyBindCommandManagerI setCmdBindId(String strCmdBindId) {
+//		this.strCmdBindId = strCmdBindId;
+//		return this; 
+//	}
 }
