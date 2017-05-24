@@ -636,16 +636,12 @@ public class KeyBindCommandManagerI {
 //	public void captureAndSetKeyBindAt(BindCommand bindTarget, IRefresh refreshOwner, Object objLinkedGuiElement) {
 	public void captureAndSetKeyBindAt(BindCommand bindTarget, Object objLinkedGuiElement) {
 		if(this.bcCaptureToTarget!=null){
-//			MessagesI.i().warnMsg(this, "already capturing keybind for", this.bindCaptureToTarget, this.refreshOwnerAfterCapture, this);
 			MessagesI.i().warnMsg(this, "already capturing keybind for", this.bcCaptureToTarget.getCommandsInfo(), this.bcCaptureToTarget.getKeyBind().getBindCfg(), this);
 			return;
 		}
 		
-//		this.refreshOwnerAfterCapture=refreshOwner;
 		this.bcCaptureToTarget=bindTarget;
 		this.objLinkedGuiElement=objLinkedGuiElement;
-//		MessagesI.i().info("For unconventional (more complex) key bindings, use the console command.", bindTarget); 
-//		bindTarget.setValue(captureKeyBind(bindTarget));
 	}
 
 	public Function<String,Boolean> getFuncRunUserCommand() {
