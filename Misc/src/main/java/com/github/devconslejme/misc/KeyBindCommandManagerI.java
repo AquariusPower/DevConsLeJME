@@ -66,6 +66,7 @@ public class KeyBindCommandManagerI {
 	private ECaptureStep	eCaptureStep;
 //	private String strCmdBindId="bind";
 	private boolean	bDebug;
+	private Key	keyNewBindHelper;
 	
 	/**
 	 * TODO tmp placeholder dummy based on old KeyBoundVarField
@@ -191,6 +192,8 @@ public class KeyBindCommandManagerI {
 				return true;
 			}
 		}.enableLoopMode());
+		
+		keyNewBindHelper = KeyCodeManagerI.i().createSpecialSimpleKey(strDummyTempAddNewBindHelperId);
 	}
 	
 //	public String getMappingFrom(BindCommand bind){
@@ -221,9 +224,10 @@ public class KeyBindCommandManagerI {
 	}
 	public void removeKeyBind(String strBindCfg){
 		strBindCfg=new KeyBind().setFromKeyCfg(strBindCfg).getBindCfg(); //fixed/corrected cfg
-		BindCommand bc = tmCfgVsBCmd.get(strBindCfg);
+//		BindCommand bc = tmCfgVsBCmd.get(strBindCfg);
 //		bc.assertHardCommandNotSet(strBindCfg);
-		tmCfgVsBCmd.remove(strBindCfg);
+		BindCommand bc = tmCfgVsBCmd.remove(strBindCfg);
+		MessagesI.i().output(false, System.out, "KeyBindCmd", this, "removed "+strBindCfg+" "+bc);
 	}
 	
 	public static abstract class CallBoundKeyCmd extends CallableX<CallBoundKeyCmd>{
@@ -566,12 +570,18 @@ public class KeyBindCommandManagerI {
 		return false;
 	}
 	
-	public void applyNewBindHelper(BindCommand bc){
-		bc.getKeyBind().setActionKey(KeyCodeManagerI.i().getNewBindHelperKey());
+	public void applyNewKeyBindHelperAt(BindCommand bc){
+		bc.setKeyBind(new KeyBind());
+		bc.getKeyBind().setActionKey(keyNewBindHelper);
 	}
 	
+	private String	strDummyTempAddNewBindHelperId = "_DummyTempAddNewBindHelper_";
+//	public Key getNewBindHelperKey(){
+//		return KeyCodeManagerI.i().getKeyForId(strDummyTempAddNewBindHelperId);
+//	}
+
 	public boolean isNewBindHelper(BindCommand bc) {
-		return bc.getKeyBind().getActionKey()==KeyCodeManagerI.i().getNewBindHelperKey();
+		return bc.getKeyBind().getActionKey()==keyNewBindHelper;
 	}
 
 	public void update(float fTpf){
@@ -816,9 +826,9 @@ public class KeyBindCommandManagerI {
 		}
 	}
 	
-	public void loadConfigParamsOnly(String strParams) {
-		loadConfig(getCmdBindId()+" "+strParams);
-	}
+//	public void loadConfigParamsOnly(String strParams) {
+//		loadConfig(getCmdBindId()+" "+strParams);
+//	}
 	/**
 	 * accepts:
 	 * <bindCmdId> <hardCmdId> [JSuserCmd]
@@ -828,7 +838,11 @@ public class KeyBindCommandManagerI {
 	 * @param strCommandLine 
 	 * @return
 	 */
-	public void loadConfig(String strCommandLine){
+	public void loadConfig(String strCommandLine, boolean bPrependCmdBindId, boolean bRebindReplacing){
+		if(bPrependCmdBindId){
+			strCommandLine=getCmdBindId()+" "+strCommandLine;
+		}
+		
 		CommandLineParser cl = new CommandLineParser(strCommandLine);
 		if(!cl.getCommand().equals(getCmdBindId()))throw new DetailedException("invalid main bind cmd",strCommandLine,getCmdBindId());
 		
@@ -849,8 +863,14 @@ public class KeyBindCommandManagerI {
 			throw new DetailedException("no command specified",strCommandLine);
 		}
 		
+		KeyBind kb = new KeyBind().setFromKeyCfg(strKeyBindCfgId);
+		BindCommand bcExistingToRemove = tmCfgVsBCmd.get(kb.getBindCfg());
+		if(!bRebindReplacing && bcExistingToRemove!=null){
+			throw new DetailedException("bindcmd already set",bcExistingToRemove,kb,strCommandLine);
+		}
+		
 		BindCommand bc = new BindCommand();
-		bc.setKeyBind(new KeyBind().setFromKeyCfg(strKeyBindCfgId));
+		bc.setKeyBind(kb);
 		bc.setUserCmd(strJSUserCmd);
 		
 		if(strHardCommandUId!=null){
@@ -860,6 +880,8 @@ public class KeyBindCommandManagerI {
 				if(callcmd==null)return false; //wait cmd be available
 				
 				bc.setHardCommand(callcmd);
+				
+				if(bcExistingToRemove!=null)removeKeyBind(bcExistingToRemove);
 				putBindCommand(bc);
 				
 				return true;
@@ -931,7 +953,7 @@ public class KeyBindCommandManagerI {
 		return this; 
 	}
 
-	public BindCommand applyCallcmdAt(BindCommand bc, String strCmdId) {
+	public BindCommand applyCommandAt(BindCommand bc, String strCmdId) {
 		bc.setHardCommand(tmCmdIdVsCmd.get(strCmdId));
 		return bc;
 	}

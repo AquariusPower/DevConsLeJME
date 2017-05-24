@@ -47,10 +47,12 @@ public class KeyCodeManagerI {
 	private boolean	bConfigured;
 	private int	iSpecialCodeStart=Integer.MAX_VALUE;
 	private boolean	bDebug;
-	public static class KeyCodeManCompositeControl implements ICompositeRestrictedAccessControl{
-		private KeyCodeManCompositeControl(){}}
 	private KeyCodeManCompositeControl ccSelf = new KeyCodeManCompositeControl();
-	private String	strDummyTempAddNewBindHelperId = "_DummyTempAddNewBindHelper_";
+//	private String	strDummyTempAddNewBindHelperId = "_DummyTempAddNewBindHelper_";
+	
+	public static class KeyCodeManCompositeControl implements ICompositeRestrictedAccessControl{
+		private KeyCodeManCompositeControl(){}
+	}
 	
 	public Key addKey(String strId, Integer... aiCodeToMonitor){
 		ArrayList<Key> akey = new ArrayList<Key>();
@@ -251,12 +253,13 @@ public class KeyCodeManagerI {
 //		
 //	}
 	
-	public Key getNewBindHelperKey(){
-		return getKeyForId(strDummyTempAddNewBindHelperId);
-	}
+//	private String	strDummyTempAddNewBindHelperId = "_DummyTempAddNewBindHelper_";
+//	public Key getNewBindHelperKey(){
+//		return KeyCodeManagerI.i().getKeyForId(strDummyTempAddNewBindHelperId);
+//	}
 	
 	private void addSpecialKeys() {
-		addKeyWorkFull(strDummyTempAddNewBindHelperId , iSpecialCodeStart--);
+//		addKeyWorkFull(strDummyTempAddNewBindHelperId , iSpecialCodeStart--);
 //		// a mouse listener can be used to set these 
 //		addKeyWorkFull("mouseWheelUp",		iSpecialCodeStart--);
 //		addKeyWorkFull("mouseWheelDown",	iSpecialCodeStart--);
@@ -332,14 +335,17 @@ public class KeyCodeManagerI {
 	/**
 	 * the key pressed/released will be controlled externally, it can be for ex. a 
 	 * key modifier context like FlyCamEnabled+mouseButton2
-	 * @param cc
+	 * @param ccContextRestrictedAccess
 	 * @param strKeyId
 	 * @return
 	 */
-	public Key createSpecialExternalContextKey(ICompositeRestrictedAccessControl cc,String strKeyId){
-		Key key = addKeyWorkFull(strKeyId, iSpecialCodeStart--);
-		key.setSpecialExternalContextKeyMode(cc);
+	public Key createSpecialExternalContextKey(ICompositeRestrictedAccessControl ccContextRestrictedAccess,String strKeyId){
+		Key key = createSpecialSimpleKey(strKeyId);
+		key.setSpecialExternalContextKeyMode(ccContextRestrictedAccess);
 		return key;
+	}
+	public Key createSpecialSimpleKey(String strId){
+		return addKeyWorkFull(strId, iSpecialCodeStart--);
 	}
 	
 //	public Key getMouseButtonKey(int iButtonIndex){

@@ -95,16 +95,11 @@ public class KeyBindManagerDialogI {
 			}
 
 			private void addCmdCfgCaptureBind(String strActionText, OptionData od,String strCmdId) {
-				addCmdCfgCaptureBind(
-					strActionText,
-					od,
-					KeyBindCommandManagerI.i().applyCallcmdAt(
-						new BindCommand(),
-						strCmdId
-					).setKeyBind(
-						new KeyBind().setActionKey(KeyCodeManagerI.i().getNewBindHelperKey())
-					)
-				);
+				BindCommand bc=new BindCommand();
+				KeyBindCommandManagerI.i().applyCommandAt(bc,strCmdId);
+				KeyBindCommandManagerI.i().applyNewKeyBindHelperAt(bc);
+				
+				addCmdCfgCaptureBind(strActionText,od,bc);
 			}
 			private void addCmdCfgCaptureBind(String strActionText, OptionData odbc,BindCommand bc) {
 				odbc.addCmdCfg(new CmdCfg(strActionText) {@Override	public void execute(Button source) {
