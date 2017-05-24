@@ -33,6 +33,8 @@ import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.function.Function;
 
+import javax.swing.text.Position.Bias;
+
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 
@@ -59,7 +61,7 @@ public class KeyBindCommandManagerI {
 	private BindCommand	bcConflict;
 	private String strRequestUserDecision="Press ESC to cancel or Enter to retry.\n";
 	private Object objLinkedGuiElement;
-	private CallUserCustomCmd funcRunUserCommand;
+	private CallUserCustomCmd callcmdRunUserCommand;
 	private ECaptureStep	eCaptureStep;
 //	private String strCmdBindId="bind";
 	private boolean	bDebug;
@@ -220,8 +222,11 @@ public class KeyBindCommandManagerI {
 	
 	public static abstract class CallBoundKeyCmd extends CallableX<CallBoundKeyCmd>{
 		public StackTraceElement[]	asteConfiguredAt;
-		private BindCommand	bc;
+//		private BindCommand	bc;
 		private boolean	bExpectingKeyReleasedOverriden;
+		private boolean	bIsPressed;
+		private float	fAnalogValue;
+		private BindCommand	bcLastPressed;
 		
 		@Override
 		public CallBoundKeyCmd setName(String strName) {
@@ -265,7 +270,8 @@ public class KeyBindCommandManagerI {
 				if(bRet!=null)return;
 				
 				if(bExpectingKeyReleasedOverriden){
-					throw new DetailedException("neither 'on key pressed' nor 'on key released' methods were overriden!",this,asteConfiguredAt,bc);
+//					throw new DetailedException("neither 'on key pressed' nor 'on key released' methods were overriden!",this,asteConfiguredAt,bc);
+					throw new DetailedException("neither 'on key pressed' nor 'on key released' methods were overriden!",this,asteConfiguredAt,bIsPressed,fAnalogValue);
 				}
 			}
 		}
@@ -288,26 +294,44 @@ public class KeyBindCommandManagerI {
 			return super.enableLoopMode();
 		}
 		
-		public CallBoundKeyCmd setBindCommand(BindCommand bc) {
-			assert(this.bc==null);
-			this.bc = bc;
-			return getThis();
-		}
-		
-		public BindCommand getBindCommand() {
-			return bc;
-		}
+//		public CallBoundKeyCmd setBindCommand(BindCommand bc) {
+//			assert(this.bc==null);
+//			this.bc = bc;
+//			return getThis();
+//		}
+//		
+//		public BindCommand getBindCommand() {
+//			return bc;
+//		}
 		
 		public float getAnalogValue(){
-			return bc.getKeyBind().getActionKey().getAnalogValue();
+//			return bc.getKeyBind().getActionKey().getAnalogValue();
+			return fAnalogValue;
 		}
 		
 		public boolean isPressed(){
-//			return getBindCommand().getKeyBind().getActionKey().isPressed();
-			/**
-			 * it is the mods+actionKey that matters and is controlled/setup here
-			 */
-			return getBindCommand().getKeyBind().isActivated(); 
+////			return getBindCommand().getKeyBind().getActionKey().isPressed();
+//			/**
+//			 * it is the mods+actionKey that matters and is controlled/setup here
+//			 */
+//			return getBindCommand().getKeyBind().isActivated();
+			return bIsPressed;
+		}
+
+		private void setCurrentStatus(BindCommand bcLastPressed, boolean bIsPressed, float fAnalogValue) {
+			this.bIsPressed = bIsPressed;
+			if(this.bIsPressed)this.bcLastPressed=bcLastPressed;
+			this.fAnalogValue = fAnalogValue;
+		}
+		
+		/**
+		 * This callcmd can be simultaneously called by two different key bindings.
+		 * Only the last one pressed, on release, must trigger the removal of this callcmd from the queue. 
+		 * @param bc
+		 * @return
+		 */
+		public boolean isLastPressed(BindCommand bc) {
+			return bcLastPressed==bc;
 		}
 	}
 	
@@ -342,7 +366,7 @@ public class KeyBindCommandManagerI {
 		BindCommand bc = new BindCommand()
 			.setKeyBind(new KeyBind().setFromKeyCfg(strKeyBindCfg))
 			.setHardCommand(callcmd.setName(strName));
-		callcmd.setBindCommand(bc);
+//		callcmd.setBindCommand(bc);
 		return putBindCommand(bc);
 	}
 	
@@ -559,11 +583,31 @@ public class KeyBindCommandManagerI {
 		}
 	}
 	
+	private void updateHardCommandStatus(BindCommand bc){
+		/**
+		 * This will update the status related to the currently being used key binding,
+		 * as there can have many key bindings for the same command.
+		 */
+		bc.getHardCommand().setCurrentStatus(
+			bc,
+			bc.getKeyBind().isActivated(), //set if is pressed 
+			bc.getKeyBind().getActionKey().getAnalogValue()
+		);
+	}
+	
 	private void reset(BindCommand bc) {
 		if(bc.getKeyBind().isResetted())return;
 		
-		if(bc.getHardCommand()!=null)QueueI.i().forceRemoveFromQueue(bc.getHardCommand());
-		if(bc.getUserJSCmd  ()!=null)QueueI.i().forceRemoveFromQueue(getFuncRunUserCommand());
+		if(bc.getHardCommand()!=null){
+			if(bc.getHardCommand().isLastPressed(bc)){
+				QueueI.i().forceRemoveFromQueue(bc.getHardCommand());
+				updateHardCommandStatus(bc);
+			}
+		}
+		
+		if(bc.getUserJSCmd  ()!=null){
+			QueueI.i().forceRemoveFromQueue(getFuncRunUserCommand());
+		}
 //		QueueI.i().removeLoopFromQueue(bc.getHardCommand()); //bc.getHardCommand().justRemoveFromQueueOnce();
 		
 		bc.getKeyBind().reset();
@@ -600,10 +644,22 @@ public class KeyBindCommandManagerI {
 			}
 		}
 		
+		//getBindCommand().getKeyBind().isActivated()
+		//bc.getKeyBind().getActionKey().getAnalogValue();
+//		/**
+//		 * This will update the status related to the currently being used key binding,
+//		 * as there can have many key bindings for the same command.
+//		 */
+//		bc.getHardCommand().setCurrentStatus(
+//			bc.getKeyBind().isActivated(), //set if is pressed 
+//			bc.getKeyBind().getActionKey().getAnalogValue()
+//		);
+		updateHardCommandStatus(bc);
+		
 	}
 	
 	public CallUserCustomCmd getFuncRunUserCommand() {
-		return funcRunUserCommand;
+		return callcmdRunUserCommand;
 	}
 	
 	public static abstract class CallUserCustomCmd extends CallableX<CallUserCustomCmd>{
@@ -629,8 +685,8 @@ public class KeyBindCommandManagerI {
 	}
 	
 	public KeyBindCommandManagerI setFuncRunUserCommand(CallUserCustomCmd funcRunUserCommand) {
-		assert(this.funcRunUserCommand==null);
-		this.funcRunUserCommand = funcRunUserCommand;
+		assert(this.callcmdRunUserCommand==null);
+		this.callcmdRunUserCommand = funcRunUserCommand;
 		return this;
 	}
 	
@@ -729,6 +785,12 @@ public class KeyBindCommandManagerI {
 	public BindCommand loadConfigParamsOnly(String strParams) {
 		return loadConfig(getCmdBindId()+" "+strParams);
 	}
+//	public BindCommand loadConfigLazy(String strCommandLine){
+//		if(strHardCommandUId!=null){
+//			bc.setHardCommand(tmCmdIdVsCmd.get(strHardCommandUId));
+//		}
+//
+//	}
 	/**
 	 * accepts:
 	 * <bindCmdId> <hardCmdId> [JSuserCmd]
