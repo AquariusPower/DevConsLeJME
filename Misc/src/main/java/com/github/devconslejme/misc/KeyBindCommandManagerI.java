@@ -562,10 +562,11 @@ public class KeyBindCommandManagerI {
 	private void reset(BindCommand bc) {
 		if(bc.getKeyBind().isResetted())return;
 		
-		bc.getKeyBind().reset();
 		if(bc.getHardCommand()!=null)QueueI.i().forceRemoveFromQueue(bc.getHardCommand());
 		if(bc.getUserJSCmd  ()!=null)QueueI.i().forceRemoveFromQueue(getFuncRunUserCommand());
 //		QueueI.i().removeLoopFromQueue(bc.getHardCommand()); //bc.getHardCommand().justRemoveFromQueueOnce();
+		
+		bc.getKeyBind().reset();
 	}
 
 	private void runCommandsOf(BindCommand bc){
