@@ -101,7 +101,7 @@ public class KeyBindCommandManagerI {
 		
 		@Override
 		public String toString(){
-			return KeyBindCommandManagerI.i().prepareConfig(this);
+			return KeyBindCommandManagerI.i().prepareConfigStr(this);
 		}
 		
 //		public String getCommandsInfo(){
@@ -361,7 +361,7 @@ public class KeyBindCommandManagerI {
 		CallBoundKeyCmd callcmd = bc.getHardCommand();
 		CallBoundKeyCmd callcmdExisting = tmCmdIdVsCmd.get(callcmd.getName());
 		if(callcmdExisting==null){
-			tmCmdIdVsCmd.put(validateHardCommandUId(callcmd).getName(),callcmd);
+			tmCmdIdVsCmd.put(callcmd.getName(),callcmd);
 		}else{
 			//consistency
 			if(callcmd!=callcmdExisting){
@@ -376,17 +376,17 @@ public class KeyBindCommandManagerI {
 	 * mainly to forbid characters that could be on a javascript code ex.: "." "(" ";"
 	 * but still allowing a lot of flexibility and readability
 	 */
-	public CallBoundKeyCmd validateHardCommandUId(CallBoundKeyCmd callcmd){
-//	public String validateHardCommandUId(String strUId){
-		if(callcmd.getName().trim().length()!=callcmd.getName().length()){
-			throw new DetailedException("is not trimmed",callcmd.getName()); //to prevent messy ids
+//	public CallBoundKeyCmd validateHardCommandUId(CallBoundKeyCmd callcmd){
+	public String validateHardCommandUId(String strUId){
+		if(strUId.trim().length()!=strUId.length()){
+			throw new DetailedException("is not trimmed",strUId); //to prevent messy ids
 		}
 		
-		if(!callcmd.getName().matches("[0-9A-Za-z_-+ ]*")){
-			throw new DetailedException("invalid hard command unique id",callcmd.getName());
+		if(!strUId.matches("[0-9A-Za-z_-+ ]*")){
+			throw new DetailedException("invalid hard command unique id",strUId);
 		}
 		
-		return callcmd;
+		return strUId;
 	}
 	
 	public ArrayList<String> getHardCommandsIdListCopy(){
@@ -671,7 +671,7 @@ public class KeyBindCommandManagerI {
 		File flCfg = FileI.i().createNewFile(this, "cfg", true);
 		flCfg.delete();
 		for(BindCommand bc:getKeyBindListCopy()){
-			FileI.i().appendLine(flCfg, prepareConfig(bc));
+			FileI.i().appendLine(flCfg, prepareConfigStr(bc));
 		}
 	}
 	
@@ -746,7 +746,7 @@ public class KeyBindCommandManagerI {
 	public ArrayList<String> getBindAndCmdList() {
 		ArrayList<String> astr = new ArrayList<String>();
 		for(BindCommand bc:getKeyBindListCopy()){
-			astr.add(prepareConfig(bc));
+			astr.add(prepareConfigStr(bc));
 		}
 		
 		return astr;
