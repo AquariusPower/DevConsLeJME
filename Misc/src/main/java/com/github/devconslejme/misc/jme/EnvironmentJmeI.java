@@ -276,6 +276,9 @@ public class EnvironmentJmeI extends EnvironmentI{
 		}
 		
 		btInfo.setText(sb.toString());
+//		btInfo.setColor("(?m)^(?=[^=]*)=",ColorRGBA.Yellow); //(?m) multiline mode
+		btInfo.setColor("(?m)^[^=]*=",ColorRGBA.Cyan); //(?m) multiline mode
+		btInfo.setColor("[0-9.]*",ColorRGBA.Green); //(?m) multiline mode
 		geomInfoBkg.setMesh(new Quad(btInfo.getLineWidth(),btInfo.getHeight()));
 		
 		Vector3f v3f=v3fInfoLocation;

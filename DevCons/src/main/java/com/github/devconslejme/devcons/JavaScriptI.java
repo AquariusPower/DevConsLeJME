@@ -408,11 +408,13 @@ public class JavaScriptI implements IGlobalAddListener {
 		 */
 		GlobalManagerI.i().addGlobalAddListener(this);
 		
-		for(int iCount=1;iCount<=10;iCount++){
-			final int i=iCount;
-			KeyBindCommandManagerI.i().putBindCommandLater("Ctrl+Shift+"+(i%10),"RepeatLastConsCmd"+i,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyReleased(){
-				repeatLastCommand(i-1);return true;}});
-		}
+//		for(int iCount=1;iCount<=10;iCount++){
+//			final int i=iCount;
+//			KeyBindCommandManagerI.i().putBindCommandLater("Ctrl+Shift+"+(i%10),"RepeatLastConsCmd"+i,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyReleased(){
+//				repeatLastCommand(i-1);return true;}});
+//		}
+		KeyBindCommandManagerI.i().putBindCommandLater("Ctrl+R","RepeatLastConsCmd",new CallBoundKeyCmd(){@Override	public Boolean callOnKeyReleased(){
+			repeatLastCommand(0);return true;}});
 	}
 	
 	public static class New{
@@ -558,11 +560,14 @@ public class JavaScriptI implements IGlobalAddListener {
 		String strLastCmds="";
 		int iTot=10;
 		int iCount=1;
-		for(int i=astrCmdHistory.size()-1;i>=0 && i>astrCmdHistory.size()-1-iTot;i--){
-			strLastCmds+=" ["+(iCount++)+"]"+astrCmdHistory.get(i)+";";
-		}
-		EnvironmentJmeI.i().putCustomInfo("Ctrl+Shift+N", 
-			"{(last@"+TimeFormatI.i().getRealTimeFormatted(null,"HH:mm:ss")+")"+strLastCmds+"}");
+//		for(int i=astrCmdHistory.size()-1;i>=0 && i>astrCmdHistory.size()-1-iTot;i--){
+//			strLastCmds+=" ["+(iCount++)+"]"+astrCmdHistory.get(i)+";";
+//			strLastCmds+=" "+astrCmdHistory.get(astrCmdHistory.size()-1)+";";
+//		}
+//		EnvironmentJmeI.i().putCustomInfo("Ctrl+R", 
+//			"{(last@"+TimeFormatI.i().getRealTimeFormatted(null,"HH:mm:ss")+")"+strLastCmds+"}");
+		EnvironmentJmeI.i().putCustomInfo("LastCmd", 
+			"@"+TimeFormatI.i().getRealTimeFormatted(null,"HH:mm:ss")+" '"+astrCmdHistory.get(astrCmdHistory.size()-1)+"'");
 		
 		if(isBaseCommand(strCmd)){
 			return execBaseCommand(strCmd);
