@@ -216,20 +216,28 @@ public class QueueI {
 			updateRunSuccessAt();
 		}
 		
+		private String prepareName(String strClassName,String strMethodName){
+			String str = strMethodName.trim(); //can be "<init>".equals(str) too
+			String[] astr = strClassName.split("[.]");
+			str=astr[astr.length-1]+"."+str;
+			str=str.trim();
+			return str;
+		}
 		private String prepareNameFromEnclosing(){
 			if(getEnclosing()!=null){
-				return getEnclosing().getName().trim();
+				return prepareName(getEnclosing().getDeclaringClass().getName(), getEnclosing().getName());
 			}
 			return null;
 		}
 		private String prepareNameFromStack(){
-			String str = steInstancedWhere.getMethodName().trim(); //can be "<init>".equals(str) too
-//			if("<init>".equals(str)){
-				String[] astr = steInstancedWhere.getClassName().split("[.]");
-				str=astr[astr.length-1]+"."+str;
-				str=str.trim();
-//			}
-			return str;
+			return prepareName(steInstancedWhere.getClassName(),steInstancedWhere.getMethodName());
+//			String str = steInstancedWhere.getMethodName().trim(); //can be "<init>".equals(str) too
+////			if("<init>".equals(str)){
+//				String[] astr = steInstancedWhere.getClassName().split("[.]");
+//				str=astr[astr.length-1]+"."+str;
+//				str=str.trim();
+////			}
+//			return str;
 		}
 		private void prepareName(){
 			///////////////////////////////////// enclosing
@@ -244,7 +252,7 @@ public class QueueI {
 			}
 			
 			// above is about enclosing origin
-			if(isNameSetProperly())strName="Something@"+strName;
+			if(isNameSetProperly())strName+="<AnonymousClass?>";
 			
 			/////////////////////////////////////// failed
 			if(!isNameSetProperly()){
@@ -256,8 +264,7 @@ public class QueueI {
 		public String getInfoText(){
 			String strSeparator = ", ";
 			StringBuilder sb = new StringBuilder("");
-			sb.append("uid="+getUId()+strSeparator);
-			sb.append("'"+getName()+"'"+strSeparator);
+			sb.append("'"+getName()+"'"+strSeparator); //this first is better for sorting
 			
 			if(getEnclosing()!=null){
 				/**
@@ -270,6 +277,8 @@ public class QueueI {
 			}else{
 				sb.append(prepareNameFromStack() + strSeparator);
 			}
+			
+			sb.append("uid="+getUId()+strSeparator);
 			
 			return sb.toString();
 		}

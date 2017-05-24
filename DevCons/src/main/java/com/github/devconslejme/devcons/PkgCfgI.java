@@ -27,12 +27,11 @@
 
 package com.github.devconslejme.devcons;
 
-import java.util.function.Function;
-
 import com.github.devconslejme.misc.Annotations.NonStandard;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
+import com.github.devconslejme.misc.KeyBindCommandManagerI.CallUserCustomCmd;
 import com.github.devconslejme.misc.MessagesI;
 import com.jme3.app.Application;
 import com.jme3.scene.Node;
@@ -60,10 +59,18 @@ public class PkgCfgI {
 		DevConsPluginStateI.i().configure(null,nodeGui);
 //		FileI.i().configure(DevConsPluginStateI.i().getStorageFolder());
 		if(KeyBindCommandManagerI.i().getFuncRunUserCommand()==null){
-			KeyBindCommandManagerI.i().setFuncRunUserCommand(new Function<String, Boolean>() {
+//			KeyBindCommandManagerI.i().setFuncRunUserCommand(new Function<String, Boolean>() {
+//				@Override
+//				public Boolean apply(String strJS) {
+//					JavaScriptI.i().execScript(strJS, false);
+//					return true;
+//				}
+//			});
+			KeyBindCommandManagerI.i().setFuncRunUserCommand(new CallUserCustomCmd() {
 				@Override
-				public Boolean apply(String strJS) {
-					JavaScriptI.i().execScript(strJS, false);
+				public Boolean execUserCustomCmd(String strJSCmd) {
+					JavaScriptI.i().setJSBinding(this); //this allows for accessing this callable from within the script
+					JavaScriptI.i().execScript(strJSCmd, false);
 					return true;
 				}
 			});

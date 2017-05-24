@@ -57,6 +57,7 @@ import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.JavadocI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
+import com.github.devconslejme.misc.KeyBindCommandManagerI.CallUserCustomCmd;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.MethodX;
 import com.github.devconslejme.misc.QueueI;
@@ -111,6 +112,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	private String strLastRetValId=strCustomVarPrefix+"LastRetVal";
 	
 	private String strCommentLineToken="//";
+	private static String	strSelfCallEnqueuedId="SelfCallEnqueued";
 	
 //	enum EJSObjectBind {
 //		selfScript,
@@ -121,7 +123,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	enum EBaseCommand{
 		clear("clears the console log (not the log file)"),
 		echo("print some text on the console log"),
-		exec("[file] runs a script file, mainly at "+FileI.i().getStorageFolder()),
+		exec("[file] runs a script file, mainly at "+FileI.i().getStorageFolder()+". Extra JSBind:"+SelfScriptFile.class.getSimpleName()),
 		exit,
 		help("[filter]"),
 		javadoc("[filter]"),
@@ -131,7 +133,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		quit,
 		set("<JSBindId> <CommandReturningNonVoid>"),
 		showIni,
-		bind("<KeyCfg> <[<HardCmdId>|<CustomJS>]>"),
+		bind("<KeyCfg> <[<HardCmdId>|<CustomJS>]> Extra JSBind: "+strSelfCallEnqueuedId),
 		;
 		
 		EBaseCommand(){}
@@ -264,7 +266,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		
 		if(execScript(strJS, false)){
 			if(objRetValUser!=null){
-				setJSBindingRaw(strCustomUserBind,objRetValUser);
+				setJSBindingCanReplace(strCustomUserBind,objRetValUser);
 			}else{
 				LoggingI.i().logWarn("not set: return was null");
 			}
@@ -399,7 +401,7 @@ public class JavaScriptI implements IGlobalAddListener {
 //		setJSBindingRaw(strCustomVarPrefix+"tmp"+Vector2f.class.getSimpleName(), new Vector2f());
 //		setJSBindingRaw(strCustomVarPrefix+"new"+Vector3f.class.getSimpleName(), new Vector3f());
 //		setJSBindingRaw(strCustomVarPrefix+"new"+Quaternion.class.getSimpleName(), new Quaternion());
-		setJSBindingRaw("New", new New());
+		setJSBindingCanReplace("New", new New());
 		
 		/**
 		 * listen for new ones
@@ -421,7 +423,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	/**
 	 * 
 	 * @param obj
-	 * @return basically the simple name or the simple enclosing name $ the simple type name, works for enums too.
+	 * @return basically the classSimpleName or the simpleEnclosingName$simpleTypeName, works for enums too.
 	 */
 	public String genKeyFor(Object obj){
 		if(JavaLangI.i().isEnumClass(obj)){
@@ -431,7 +433,14 @@ public class JavaScriptI implements IGlobalAddListener {
 			return strBindIdNew;
 		}
 		
-		return obj.getClass().getSimpleName();
+		if(obj instanceof CallUserCustomCmd){
+			return strSelfCallEnqueuedId; 
+		}
+		
+		String str=obj.getClass().getSimpleName();
+		if(!str.isEmpty())return str;
+		
+		throw new DetailedException("unable to generate JS key for "+obj.getClass().getName(),obj,this);
 	}
 	
 	/**
@@ -450,25 +459,27 @@ public class JavaScriptI implements IGlobalAddListener {
 		Class<Enum> clEnum = (JavaLangI.i().isEnumClass(objBindValue)) ? (Class<Enum>)objBindValue : null;
 		
 		String strBindId = genKeyFor(objBindValue);
-		if(bndJSE.get(strBindId)!=null){
-			if(clEnum!=null)return; //np if already set, just skip/ignore as enums are global statics (not instances)
-			throw new DetailedException("already set: "+strBindId, bndJSE.get(strBindId));
-		}
-		
-		if(clEnum!=null){
-			try {
-				objBindValue = jse.eval("Java.type('"+clEnum.getName()+"');"); //prepares a static class access
-			} catch (ScriptException e) {
-				throw new DetailedException(e, strBindId, objBindValue);
+		if(!CallUserCustomCmd.class.isInstance(objBindValue)){
+			if(bndJSE.get(strBindId)!=null){
+				if(clEnum!=null)return; //np if already set, just skip/ignore as enums are global statics (not instances)
+				throw new DetailedException("already set: "+strBindId, bndJSE.get(strBindId));
+			}
+			
+			if(clEnum!=null){
+				try {
+					objBindValue = jse.eval("Java.type('"+clEnum.getName()+"');"); //prepares a static class access
+				} catch (ScriptException e) {
+					throw new DetailedException(e, strBindId, objBindValue);
+				}
 			}
 		}
 		
-		setJSBindingRaw(strBindId,objBindValue);
+		setJSBindingCanReplace(strBindId,objBindValue);
 		
 //		setJSBindingForEnumsOf(objBindValue.getClass());
 	}
 	
-	private void setJSBindingRaw(String strBindId,Object objBindValue){
+	private void setJSBindingCanReplace(String strBindId,Object objBindValue){
 		if(isAccessForbidden(objBindValue)){ //restrictions still apply
 			throw new DetailedException("forbidden bind type", objBindValue);
 		}
@@ -608,18 +619,18 @@ public class JavaScriptI implements IGlobalAddListener {
 		showRetVal(objRetValFile); //this method will be called by the user, so show the return value
 		return b;
 	}
-	public FileSelfScript asFile(String strFile){
+	public SelfScriptFile asFile(String strFile){
 		if(strFile.isEmpty()){
 			LoggingI.i().logWarn("missing file param");
 			return null;
 		}
 		
-		FileSelfScript flJS = null;
+		SelfScriptFile flJS = null;
 		try {
-			flJS = new FileSelfScript(strFile); //first try to find it at some absolute location
+			flJS = new SelfScriptFile(strFile); //first try to find it at some absolute location
 			if(!flJS.exists()){ 
 				//now try relatively to default storage path
-				flJS = new FileSelfScript(FileI.i().createNewFileHandler(strFile,true).toURI());
+				flJS = new SelfScriptFile(FileI.i().createNewFileHandler(strFile,true).toURI());
 			}
 			
 			if(!flJS.exists()){
@@ -682,12 +693,12 @@ public class JavaScriptI implements IGlobalAddListener {
 		if(bLoop)cx.enableLoopMode();
 	}
 	
-	public static class FileSelfScript extends File{
+	public static class SelfScriptFile extends File{
 		private static final long	serialVersionUID	= -1605739267004772815L;
-		public FileSelfScript(URI uri) {super(uri);}
-		public FileSelfScript(File parent, String child) {super(parent, child);}
-		public FileSelfScript(String parent, String child) {super(parent, child);}
-		public FileSelfScript(String pathname) {super(pathname);}
+		public SelfScriptFile(URI uri) {super(uri);}
+		public SelfScriptFile(File parent, String child) {super(parent, child);}
+		public SelfScriptFile(String parent, String child) {super(parent, child);}
+		public SelfScriptFile(String pathname) {super(pathname);}
 	}
 	
 	/**
@@ -698,7 +709,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	 */
 	private boolean execFile(File flJS){
 		try {
-			FileSelfScript flsc = new FileSelfScript(flJS.toURI());
+			SelfScriptFile flsc = new SelfScriptFile(flJS.toURI());
 //			bndJSE.remove(EJSObjectBind.selfScript.s());
 			bndJSE.remove(genKeyFor(flsc));
 //			setJSBinding(EJSObjectBind.selfScript.s(), flJS);
@@ -717,7 +728,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		DetailedException.assertNotEmpty("Javascript", strJS, bShowRetVal);
 		try {
 			objRetValUser=jse.eval(strJS,bndJSE);
-			if(objRetValUser!=null)setJSBindingRaw(strLastRetValId, objRetValUser);
+			if(objRetValUser!=null)setJSBindingCanReplace(strLastRetValId, objRetValUser);
 			if(bShowRetVal)showRetVal(objRetValUser);
 			return true;
 		} catch (ScriptException e) {

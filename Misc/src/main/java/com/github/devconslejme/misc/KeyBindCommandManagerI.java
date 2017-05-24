@@ -59,7 +59,7 @@ public class KeyBindCommandManagerI {
 	private BindCommand	bcConflict;
 	private String strRequestUserDecision="Press ESC to cancel or Enter to retry.\n";
 	private Object objLinkedGuiElement;
-	private Function<String,Boolean> funcRunUserCommand;
+	private CallUserCustomCmd funcRunUserCommand;
 	private ECaptureStep	eCaptureStep;
 //	private String strCmdBindId="bind";
 	private boolean	bDebug;
@@ -97,7 +97,7 @@ public class KeyBindCommandManagerI {
 		}
 
 		public boolean isCommandSet() {
-			return cxHardCommand!=null;
+			return cxHardCommand!=null || strJSUserCommand!=null;
 		}
 		
 		@Override
@@ -563,7 +563,8 @@ public class KeyBindCommandManagerI {
 		if(bc.getKeyBind().isResetted())return;
 		
 		bc.getKeyBind().reset();
-		QueueI.i().forceRemoveFromQueue(bc.getHardCommand());
+		if(bc.getHardCommand()!=null)QueueI.i().forceRemoveFromQueue(bc.getHardCommand());
+		if(bc.getUserJSCmd  ()!=null)QueueI.i().forceRemoveFromQueue(getFuncRunUserCommand());
 //		QueueI.i().removeLoopFromQueue(bc.getHardCommand()); //bc.getHardCommand().justRemoveFromQueueOnce();
 	}
 
@@ -586,19 +587,53 @@ public class KeyBindCommandManagerI {
 					MessagesI.i().warnMsg(this, "function to run user command is not set", this, bc); //TODO create a warnOnce at messagesi?
 				}else{
 					if(isDebug())System.out.println("Enqueue:RunJSCmd:"+bc.getUserJSCmd());
-					QueueI.i().enqueue(new CallableXAnon() {
-						@Override
-						public Boolean call() {
-							getFuncRunUserCommand().apply(bc.getUserJSCmd());
-							return true;
-						}
-					});
+					QueueI.i().enqueue(getFuncRunUserCommand().setCmd(bc.getUserJSCmd()));
+//					QueueI.i().enqueue(new CallableXAnon() {
+//						@Override
+//						public Boolean call() {
+//							getFuncRunUserCommand().apply(bc.getUserJSCmd());
+//							return true;
+//						}
+//					});
 				}
 			}
 		}
 		
 	}
 	
+	public CallUserCustomCmd getFuncRunUserCommand() {
+		return funcRunUserCommand;
+	}
+	
+	public static abstract class CallUserCustomCmd extends CallableX<CallUserCustomCmd>{
+		private String strCmd;
+		
+		/**
+		 * use {@link #execUserCustomCmd(String)} instead
+		 */
+		@Deprecated
+		@Override
+		public Boolean call() {
+			assert strCmd!=null && !strCmd.isEmpty();
+			execUserCustomCmd(strCmd);
+			return true;
+		}
+		
+		public abstract Boolean execUserCustomCmd(String strCmd);
+
+		public CallUserCustomCmd setCmd(String strCmd) {
+			this.strCmd = strCmd;
+			return this; 
+		}
+	}
+	
+	public KeyBindCommandManagerI setFuncRunUserCommand(CallUserCustomCmd funcRunUserCommand) {
+		assert(this.funcRunUserCommand==null);
+		this.funcRunUserCommand = funcRunUserCommand;
+		return this;
+	}
+	
+
 	private boolean isCapturedThisKeyCodeWithoutMods(int iKeyCode) {
 		if(
 				kbCaptured!=null &&
@@ -812,17 +847,6 @@ public class KeyBindCommandManagerI {
 		this.objLinkedGuiElement=objLinkedGuiElement;
 	}
 
-	public Function<String,Boolean> getFuncRunUserCommand() {
-		return funcRunUserCommand;
-	}
-
-	public KeyBindCommandManagerI setFuncRunUserCommand(Function<String,Boolean> funcRunUserCommand) {
-		assert(this.funcRunUserCommand==null);
-		this.funcRunUserCommand = funcRunUserCommand;
-		return this;
-	}
-	
-	
 	public boolean isCapturing(){
 		return bcCaptureToTarget!=null;
 	}
