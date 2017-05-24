@@ -782,15 +782,9 @@ public class KeyBindCommandManagerI {
 		}
 	}
 	
-	public BindCommand loadConfigParamsOnly(String strParams) {
-		return loadConfig(getCmdBindId()+" "+strParams);
+	public void loadConfigParamsOnly(String strParams) {
+		loadConfig(getCmdBindId()+" "+strParams);
 	}
-//	public BindCommand loadConfigLazy(String strCommandLine){
-//		if(strHardCommandUId!=null){
-//			bc.setHardCommand(tmCmdIdVsCmd.get(strHardCommandUId));
-//		}
-//
-//	}
 	/**
 	 * accepts:
 	 * <bindCmdId> <hardCmdId> [JSuserCmd]
@@ -800,19 +794,11 @@ public class KeyBindCommandManagerI {
 	 * @param strCommandLine 
 	 * @return
 	 */
-	public BindCommand loadConfig(String strCommandLine){
-//		if(strCmdBindId==null){
-//			MessagesI.i().warnMsg(this, "bind cmd id not set, unable to load cfg file", this, strCommandLine);
-//			return null;
-//		}
-			
-//		strCommandLine="_BindDummyPseudoCmd_ "+strCommandLine; //just to easify parsing
+	public void loadConfig(String strCommandLine){
 		CommandLineParser cl = new CommandLineParser(strCommandLine);
 		if(!cl.getCommand().equals(getCmdBindId()))throw new DetailedException("invalid main bind cmd",strCommandLine,getCmdBindId());
 		
 		String strKeyBindCfgId = cl.getParsedParam(0);
-//		String strHardCommandUId = cl.getParsedParam(1);
-//		String strJSUserCmd = cl.getParsedParam(2);
 		
 		String strHardCommandUId=null;
 		String strJSUserCmd=null;
@@ -831,23 +817,27 @@ public class KeyBindCommandManagerI {
 		
 		BindCommand bc = new BindCommand();
 		bc.setKeyBind(new KeyBind().setFromKeyCfg(strKeyBindCfgId));
-		if(strHardCommandUId!=null)bc.setHardCommand(tmCmdIdVsCmd.get(strHardCommandUId));
 		bc.setUserJSCmd(strJSUserCmd);
 		
-		putBindCommand(bc);
+		if(strHardCommandUId!=null){
+			String strHardCommandUIdLazy=strHardCommandUId;
+			QueueI.i().enqueue(new CallableXAnon() {@Override	public Boolean call() {
+				CallBoundKeyCmd callcmd = tmCmdIdVsCmd.get(strHardCommandUIdLazy);
+				if(callcmd==null)return false; //wait cmd be available
+				
+				bc.setHardCommand(callcmd);
+				putBindCommand(bc);
+				
+				return true;
+			}});
+		}
 		
-		return bc;
 	}
 	
 	public String prepareConfigStr(BindCommand bc) {
 		return prepareConfig(bc).recreateCommandLine();
 	}
 	public CommandLineParser prepareConfig(BindCommand bc) {
-//		if(strCmdBindId==null){
-//			MessagesI.i().warnMsg(this, "bind cmd id not set, unable to create bind cfg", this, bc);
-//			return null;
-//		}
-		
 		CommandLineParser cl = new CommandLineParser();
 		cl.setCommand(getCmdBindId());
 		cl.appendParams(bc.getKeyBind().getBindCfg());

@@ -456,6 +456,11 @@ public class QueueI {
 			}
 			cx.asteLastEnqueued=Thread.currentThread().getStackTrace();
 			
+			/**
+			 * the enqueue request must prevail if happened just after the remove request
+			 */
+			cx.bLoopModeJustRemoveFromQueueOnceRequest=false; //
+			
 			if(cx.getName()==null || cx.getName().isEmpty()){
 				cx.prepareName();
 			}

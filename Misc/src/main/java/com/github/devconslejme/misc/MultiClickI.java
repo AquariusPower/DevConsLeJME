@@ -29,6 +29,7 @@ package com.github.devconslejme.misc;
 
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.jme.OriginDevice.MultiClickAxis;
 
 
 /**
@@ -39,7 +40,7 @@ public class MultiClickI {
 	
 	private boolean bDebug=false;
 	
-	private long lMaxDelayMilis=1000;
+	private long lMaxDelayMilis=500;
 	
 	public long getMaxDelayMilis() {
 		return lMaxDelayMilis;
@@ -63,29 +64,68 @@ public class MultiClickI {
 		this.bDebug = bDebug;
 		return this; 
 	}
+	
+	public static abstract class CallMultiClickUpdate extends CallableX<CallMultiClickUpdate>{
+		private MultiClick mc;
+		
+		@Deprecated
+		@Override
+		public Boolean call() {
+			if(mc.isTimeLimitReached())mc.bReady=true;
+			if(!mc.isReady())return true;
+			
+			applyMultiClick(mc.getTotalClicks());
+			mc.reset();
+			
+			return true;
+		}
 
-	public static class MultiClick{
+		public abstract void applyMultiClick(int totalClicks);
+	}
+	
+	public static class MultiClick <SELF extends MultiClick<SELF>>{
 		private int	iButtonIndex;
 		
 		private Long lLastClickMilis;
 		private int	iClickCount;
-		private boolean bLock;
+		private boolean bReady;
 
 		private String[]	astrHelpPerClickCountIndex;
+
+		private int	iMaxClicks;
+
+		private CallableX	cxUpdate;
 		
-		public void reset() {
+		public SELF reset() {
 			init();
+			QueueI.i().removeLoopFromQueue(cxUpdate);
+			return getThis();
 		}
 		private void init() {
-			bLock=false;
+			bReady=false;
 			lLastClickMilis=null;
 			iClickCount=0;
 		}
 		
-		public MultiClick(int iButtonIndex, String... astrHelpPerClickCountIndex){
-			this.astrHelpPerClickCountIndex=astrHelpPerClickCountIndex;
+		public MultiClick(int iButtonIndex, int iMaxClicks, CallMultiClickUpdate cxUpdate){
+			assert iMaxClicks>=2 : "the max's min is two clicks, single click does not need this...";
+			
 			this.iButtonIndex=iButtonIndex;
+			this.iMaxClicks=iMaxClicks;
+			this.cxUpdate=cxUpdate.enableLoopMode().setName(this.getClass().getSimpleName()+"_UpdateLoop");
+			cxUpdate.mc=this;
+			
 			init();
+		}
+		
+		@SuppressWarnings("unchecked")
+		public SELF getThis(){
+			return (SELF)this;
+		}
+		
+		public SELF setHelp(String string, String... astrHelpPerClickCountIndex) {
+			this.astrHelpPerClickCountIndex=astrHelpPerClickCountIndex;
+			return getThis();
 		}
 		
 		public String getHelp(){
@@ -98,7 +138,7 @@ public class MultiClickI {
 		}
 		
 		public boolean isReady(){
-			return bLock;
+			return bReady;
 		}
 		
 		/**
@@ -106,37 +146,40 @@ public class MultiClickI {
 		 * @param iMaxClicks min of 2
 		 * @return
 		 */
-		public boolean updateIncClicks(int iMaxClicks) {
-			assert iMaxClicks>=2 : "the max's min is two clicks, single click does not need this...";
-			if(bLock)return true;
+		@SuppressWarnings("unchecked")
+		public void updateIncClicks() {
+			if(bReady)return; //just skip as limit reached
+			
+			QueueI.i().enqueue(cxUpdate);
 			
 			long lMilis = System.currentTimeMillis();
 			if(lLastClickMilis==null){
 				lLastClickMilis=lMilis;
 				iClickCount++;
-				return false;
 			}else{
-				if( (lMilis-lLastClickMilis)>MultiClickI.i().getMaxDelayMilis() ){
-					bLock=true;
+//				if( (lMilis-lLastClickMilis)>MultiClickI.i().getMaxDelayMilis() ){
+				if(isTimeLimitReached()){
+					bReady=true;
 				}else{
 					lLastClickMilis=lMilis;
 					iClickCount++;
 				}
 				
-				if(iClickCount==iMaxClicks)bLock=true;
+				if(iClickCount==iMaxClicks)bReady=true;
 				
-				if(bLock){ 
+				if(bReady){ 
 					if(MultiClickI.i().bDebug){
 						System.out.println(
 								MultiClick.class.getSimpleName()+":clk="+iClickCount+","+"/mb="+iButtonIndex+"/totclks="+iMaxClicks);
 					}
-					
-					return true;
 				}
 				
 			}
-			
-			return false;
+		}
+		
+		private boolean isTimeLimitReached() {
+			if(lLastClickMilis==null)return false;
+			return (System.currentTimeMillis()-lLastClickMilis) > MultiClickI.i().getMaxDelayMilis();
 		}
 		
 		public int getTotalClicks(){

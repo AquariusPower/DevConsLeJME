@@ -29,9 +29,8 @@ package com.github.devconslejme.misc.jme;
 import java.util.ArrayList;
 
 import com.github.devconslejme.misc.MessagesI;
-import com.github.devconslejme.misc.MultiClickI;
+import com.github.devconslejme.misc.MultiClickI.CallMultiClickUpdate;
 import com.github.devconslejme.misc.MultiClickI.MultiClick;
-import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.MeshI.Cone;
 import com.github.devconslejme.misc.jme.OriginDevice.NodeAxis;
 import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
@@ -189,6 +188,8 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		
 		updateTorusRotations();
 		updateAxisMainShapes();
+		
+//		updateMultiClickMainShapeMB0();
 	}
 	
 	protected float getRadius() {
@@ -308,7 +309,43 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 	AxisInfo[] aai = new AxisInfo[EAxis.values().length];
 	private EAxis	eaExclusiveRotations;
 	private boolean	bStopRotations;
-	private MultiClick	mcMainShapeMB0 = new MultiClick(0,"rotate only the one clicked","invert rotation");
+	
+	public static class MultiClickAxis extends MultiClick<MultiClickAxis>{
+		private EAxis ea;
+		private Geometry  geomClicked;
+		public AxisInfo	axi;
+		public MultiClickAxis(int iButtonIndex, int iMaxClicks,CallMultiClickUpdate cxUpdate) {
+			super(iButtonIndex, iMaxClicks,cxUpdate);
+		}
+		
+		@Override	
+		public MultiClickAxis reset() {
+			geomClicked=null;
+			ea=null;
+			axi=null;
+			
+			super.reset();
+			
+			return getThis();
+		}
+
+	}
+	
+	private MultiClickAxis	mcMainShapeMB0 = new MultiClickAxis(0,2,new CallMultiClickUpdate(){
+		@Override	public void applyMultiClick(int totalClicks) {
+			switch(totalClicks){
+				case 1:
+					if(eaExclusiveRotations==mcMainShapeMB0.ea){
+						eaExclusiveRotations=null;
+					}else{
+						eaExclusiveRotations=mcMainShapeMB0.ea;
+					}
+					break;
+				case 2:
+					mcMainShapeMB0.axi.getRotatingTorus().toggleInvertRotation();
+					break;
+			}
+		}}).setHelp("1 click: rotate only the one clicked","2 clicks: invert rotation");
 	
 	public AxisInfo getAxisInfo(EAxis ea) {
 		return aai[ea.ordinal()];
@@ -493,6 +530,27 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		return null;
 	}
 	
+//	private void updateMultiClickMainShapeMB0(){
+////		if(mcMainShapeMB0.geomClicked==null)return;
+//		if(!mcMainShapeMB0.isReady())return;
+//		
+////		if(mcMainShapeMB0.updateIncClicks(2)){
+//			switch(mcMainShapeMB0.getTotalClicks()){
+//				case 1:
+//					if(eaExclusiveRotations==mcMainShapeMB0.ea){
+//						eaExclusiveRotations=null;
+//					}else{
+//						eaExclusiveRotations=mcMainShapeMB0.ea;
+//					}
+//					break;
+//				case 2:
+//					mcMainShapeMB0.axi.getRotatingTorus().toggleInvertRotation();
+//					break;
+//			}
+//			mcMainShapeMB0.reset();
+////		}
+//	}
+	
 	@Override
 	public boolean updatePickingEvent(int iButtonIndex, ArrayList<CollisionResult> acrList,			Geometry geom, Spatial sptParentest) {
 		for(EAxis ea:EAxis.values()){
@@ -501,21 +559,17 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 			if(node.hasChild(geom)){
 				switch(iButtonIndex){
 					case 0: //left
-						if(mcMainShapeMB0.updateIncClicks(2)){
-							switch(mcMainShapeMB0.getTotalClicks()){
-								case 1:
-									if(eaExclusiveRotations==ea){
-										eaExclusiveRotations=null;
-									}else{
-										eaExclusiveRotations=ea;
-									}
-									break;
-								case 2:
-									axi.getRotatingTorus().toggleInvertRotation();
-									break;
-							}
-							mcMainShapeMB0.reset();
+						if(mcMainShapeMB0.geomClicked==null){
+							mcMainShapeMB0.geomClicked=geom;
+						}else
+						if(mcMainShapeMB0.geomClicked!=geom){  
+							mcMainShapeMB0.reset(); //changed click target, reset
 						}
+						
+						mcMainShapeMB0.updateIncClicks();
+						
+						mcMainShapeMB0.ea=ea;
+						mcMainShapeMB0.axi=axi;
 						return true;
 					case 2: //middle
 						axi.getRotatingTorus().resetRotation();
