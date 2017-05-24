@@ -90,7 +90,7 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs {
 
 	@Override
 	public void simpleInitApp() {
-		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(this,getGuiNode(),getRootNode());
+		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(this,getGuiNode(),getRootNode(), null);
 		initTest();
 	}
 	

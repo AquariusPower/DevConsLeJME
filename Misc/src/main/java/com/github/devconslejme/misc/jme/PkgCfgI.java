@@ -47,11 +47,20 @@ public class PkgCfgI {
 	
 	private boolean	bConfigured;
 	public boolean isConfigured() {return bConfigured;}
-
-	public void configure(Application app,Node nodeGui, Node nodeVirtualWorld){
+	
+	/**
+	 * 
+	 * @param app to create global
+	 * @param nodeGui allow gui elements that depends only on JME
+	 * @param nodeVirtualWorld to allow virtual world functionalities
+	 * @param strBindCmdUId (forwarded)
+	 */
+	public void configure(Application app,Node nodeGui, Node nodeVirtualWorld, String strBindCmdUId){
 		DetailedException.assertIsFalse("configured", bConfigured, this);
 		com.github.devconslejme.misc.PkgCfgI.i().configure(
-				JmeSystem.getStorageFolder(StorageFolderType.Internal), app.getClass());
+			JmeSystem.getStorageFolder(StorageFolderType.Internal), 
+			app.getClass(),
+			strBindCmdUId);
 		
 		/**
 		 * FIRST!

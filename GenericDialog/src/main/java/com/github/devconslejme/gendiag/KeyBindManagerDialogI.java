@@ -65,14 +65,7 @@ public class KeyBindManagerDialogI {
 				for(BindCommand bc:KeyBindCommandManagerI.i().getKeyBindListCopy()){
 					String str="";
 					
-					str+="["+bc.getKeyBind().getBindCfg()+"]";
-					if(bKeybindPrepend){
-						str+=" -> ";
-						str+=bc.getCommandsInfo();
-					}else{
-						str=" -> "+str;
-						str=bc.getCommandsInfo()+str;
-					}
+					str+=bc.getInfo(bKeybindPrepend);
 					
 					OptionData odbc = diagBindMan.putOption(odBindSection, str, bc);
 					odbc.addCmdCfg(new CmdCfg("ChangeBind") {

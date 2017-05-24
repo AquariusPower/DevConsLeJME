@@ -131,6 +131,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		quit,
 		set("<JSBindId> <CommandReturningNonVoid>"),
 		showIni,
+		bind("<KeyCfg> <[<HardCmdId>|<CustomJS>]>"),
 		;
 		
 		EBaseCommand(){}
@@ -233,6 +234,9 @@ public class JavaScriptI implements IGlobalAddListener {
 					LoggingI.i().logEntry(str);
 				}
 				return true;
+			case bind:
+				KeyBindCommandManagerI.i().loadConfig(strParams);
+				break;
 			default:
 //				throw new UnsupportedOperationException("not implemented yet "+ebc);
 				LoggingI.i().logWarn("not implemented yet "+ebc);
@@ -1046,5 +1050,9 @@ public class JavaScriptI implements IGlobalAddListener {
 				MessagesI.i().warnMsg(this, "removed JS access to", cl, bndJSE.remove(cl.getSimpleName()));
 			}
 		}
+	}
+
+	public String getBindCmdUId() {
+		return strBaseCmdToken+EBaseCommand.bind.toString();
 	}
 }

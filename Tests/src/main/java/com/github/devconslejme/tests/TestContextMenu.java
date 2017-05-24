@@ -47,7 +47,7 @@ public class TestContextMenu extends SimpleAppStateAbs{
 
 	@Override
 	public void simpleInitApp() {
-		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode(), getRootNode());
+		com.github.devconslejme.gendiag.PkgCfgI.i().configure(this, getGuiNode(), getRootNode(), null);
 		initTest();
 	}
 

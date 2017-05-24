@@ -37,8 +37,10 @@ public class CommandLineParser {
 	
 	private ArrayList<Object>	aobjList;
 	
-	private String strCommand;
+	private String strCommand=null;
 	private ArrayList<Object>	aobjParamsList;
+	
+	int iDefaultFloatPrecision=3;
 	
 	enum EType{
 		Command, //unquoted string
@@ -49,6 +51,11 @@ public class CommandLineParser {
 		Enum, //TODO add Enum type support? will required list of known enums (from globals should suffice) and each unique id JavaLangI.i().enumUId(e)
 		;
 	}
+	
+	/**
+	 * use this constructor as build (reversed) mode, to create a command line from objects
+	 */
+	public CommandLineParser(){}
 	
 	/**
 	 * strings must be enclosed in single or double quotes, otherwise a parse number will be tried
@@ -65,6 +72,31 @@ public class CommandLineParser {
 		aobjParamsList.remove(0);
 	}
 	
+	public CommandLineParser setCommand(String str){
+		if(this.strCommand!=null)throw new DetailedException("Command already set",this.strCommand,str);
+		if(aobjList!=null)throw new DetailedException("objs list should be unset",aobjList,str);
+		if(aobjParamsList!=null)throw new DetailedException("params objs list should be unset",aobjParamsList,str);
+		
+		this.strCommand=str;
+		aobjList=new ArrayList<>();
+		aobjList.add(strCommand);
+		aobjParamsList=new ArrayList<>();
+		
+		return this;
+	}
+
+	public CommandLineParser appendParams(Object... aobj){
+		assert aobjList!=null && aobjParamsList!=null;
+		for(Object obj:aobj){
+			if(obj instanceof String){
+				if("null".equals(obj))obj=null; //special nullifier case
+			}
+			aobjList.add(obj);
+			aobjParamsList.add(obj);
+		}
+		return this;
+	}
+	
 	/**
 	 * or param 0
 	 * @return
@@ -73,13 +105,26 @@ public class CommandLineParser {
 		return strCommand;
 	}
 	
+	/**
+	 * the main command will be at 0
+	 * @param iIndex
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public <T> T getParsedPart(int iIndex){
+		if(iIndex>=aobjList.size())return null;
 		return (T)aobjList.get(iIndex);
 	}
 	
+	/**
+	 * The main command will not be here.
+	 * the index 0 will have the 1st param
+	 * @param iIndex
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public <T> T getParsedParam(int iIndex){
+		if(iIndex>=aobjParamsList.size())return null;
 		return (T)aobjParamsList.get(iIndex);
 	}
 	
@@ -87,7 +132,7 @@ public class CommandLineParser {
 		return new ArrayList<Object>(aobjParamsList); 
 	}
 	public ArrayList<String> getAllParamsStrListCopy(){
-		return getAllParamsStrListCopy(3);
+		return getAllParamsStrListCopy(iDefaultFloatPrecision);
 	}
 	public ArrayList<String> getAllParamsStrListCopy(int iFloatPrecision){
 		ArrayList<String> astr= new ArrayList<String>();
@@ -122,7 +167,7 @@ public class CommandLineParser {
 //		return str; 
 //	}
 	
-	public void parse(){
+	protected void parse(){
 		strLine=strLine.trim();
 		strLine+=" "; // a blank at the end will easify the finalization of the last part fill/detection
 		String strParam="";
@@ -292,8 +337,29 @@ public class CommandLineParser {
 		return astrList;
 	}
 
-	public String getAllParamsJoinedStrCopy() {
-		return String.join(" ", getAllParamsStrListCopy());
+	public String recreateCommandLine() {
+		return recreateCommandLine(iDefaultFloatPrecision);
+	}
+	public String recreateCommandLine(int iFloatPrecision) {
+		StringBuilder sb=new StringBuilder(strCommand);
+		for(Object obj:aobjParamsList){
+			sb.append(" ");
+			if(obj instanceof String){
+				sb.append("\""+obj+"\""); //TODO ? if there are escaped double quotes, use double quotes. if there are non escaped double quotes, use single quotes. as enclosing token
+			}else
+			if(Float.class.isInstance(obj) || Double.class.isInstance(obj)){
+				sb.append(String.format("%."+iFloatPrecision+"f", obj));
+			}else
+			if(Integer.class.isInstance(obj) || Long.class.isInstance(obj)){
+				sb.append(""+obj);
+			}else
+			if(Enum.class.isInstance(obj)){
+				sb.append(JavaLangI.i().enumUId((Enum)obj));
+			}else{
+				throw new DetailedException("unsupported type",obj.getClass(),obj);
+			}
+		}
+		return sb.toString();
 	}
 	
 }
