@@ -134,7 +134,7 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 	
 	private void clickToRaise(CursorButtonEvent event, Spatial target,				Spatial capture, boolean bBlockerCheck) {
 		Visuals vs = DialogHierarchyStateI.i().getVisuals(
-				SpatialHierarchyI.i().getParentest(capture, ResizablePanel.class, true));
+				SpatialHierarchyI.i().getParentest(capture!=null?capture:target, ResizablePanel.class, true));
 			
 		if(vs!=null){
 			if(bBlockerCheck){

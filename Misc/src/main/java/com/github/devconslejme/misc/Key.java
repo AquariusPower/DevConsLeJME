@@ -28,6 +28,8 @@ package com.github.devconslejme.misc;
 
 import java.util.ArrayList;
 
+import com.github.devconslejme.misc.KeyCodeManagerI.KeyCodeManCompositeControl;
+
 /**
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -52,13 +54,14 @@ public class Key{
 //		}
 	
 	/**
-	 * Must remain private, the scope of available keys is limited and must be managed here!
+	 * The scope of available keys is limited and must be managed only by {@link KeyCodeManagerI}
 	 * @param strId
 	 * @param iKeyCode
 	 */
-	public Key(String strId, Integer iKeyCode) {
+	public Key(KeyCodeManCompositeControl cc, String strId, Integer iKeyCode) {
 		this(strId);
-		assert(AssertionsI.i().restrictedCaller(KeyCodeManagerI.class, 1));
+		assert cc!=null;
+//		assert(AssertionsI.i().restrictedCaller(KeyCodeManagerI.class, 1));
 		
 		DetailedException.assertNotNull(iKeyCode, "code", this);
 		DetailedException.assertIsTrue("invalid negative keycode", iKeyCode>=0, this);

@@ -35,6 +35,7 @@ import java.util.function.Function;
 
 import javax.swing.text.Position.Bias;
 
+import com.github.devconslejme.misc.KeyBindCommandManagerI.BindCommand;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 
@@ -73,7 +74,7 @@ public class KeyBindCommandManagerI {
 		private CallBoundKeyCmd	cxHardCommand;
 		private KeyBind	kb;
 //		private boolean	bReadOnly;
-		private String	strJSUserCommand;
+		private String	strUserCommand;
 //		private String strUniqueId
 		
 //		public boolean isReadOnly() {
@@ -99,11 +100,17 @@ public class KeyBindCommandManagerI {
 		}
 
 		public boolean isCommandSet() {
-			return cxHardCommand!=null || strJSUserCommand!=null;
+			return cxHardCommand!=null || strUserCommand!=null;
 		}
 		
 		@Override
 		public String toString(){
+			String str="";
+			if(getKeyBind()==null)str+="[KeyBind not set]";
+			if(getHardCommand()==null)str+="[HardCmd not set]";
+			if(getUserCmd()==null)str+="[UserCmd not set]";
+			if(!str.isEmpty())return str;
+			
 			return KeyBindCommandManagerI.i().prepareConfigStr(this);
 		}
 		
@@ -118,8 +125,8 @@ public class KeyBindCommandManagerI {
 //			return str;
 //		}
 		
-		public String getUserJSCmd() {
-			return strJSUserCommand;
+		public String getUserCmd() {
+			return strUserCommand;
 		}
 		public CallBoundKeyCmd getHardCommand(){
 			return cxHardCommand;
@@ -127,10 +134,10 @@ public class KeyBindCommandManagerI {
 		
 		/**
 		 * TODO syntax for executing on-press, on-release, b4 hard-command, after hard-command.
-		 * @param strJSUserCommand can be null
+		 * @param strUserCommand can be null
 		 */
-		public void setUserJSCmd(String strJSUserCommand){
-			this.strJSUserCommand=strJSUserCommand;
+		public void setUserCmd(String strUserCommand){
+			this.strUserCommand=strUserCommand;
 		}
 		public BindCommand setHardCommand(CallBoundKeyCmd cx){
 			assert(cx!=null);
@@ -215,8 +222,7 @@ public class KeyBindCommandManagerI {
 	public void removeKeyBind(String strBindCfg){
 		strBindCfg=new KeyBind().setFromKeyCfg(strBindCfg).getBindCfg(); //fixed/corrected cfg
 		BindCommand bc = tmCfgVsBCmd.get(strBindCfg);
-		bc.assertHardCommandNotSet(strBindCfg);
-//		if(bc.isReadOnly())throw new DetailedException("readonly",bc);
+//		bc.assertHardCommandNotSet(strBindCfg);
 		tmCfgVsBCmd.remove(strBindCfg);
 	}
 	
@@ -224,8 +230,10 @@ public class KeyBindCommandManagerI {
 		public StackTraceElement[]	asteConfiguredAt;
 //		private BindCommand	bc;
 		private boolean	bExpectingKeyReleasedOverriden;
-		private boolean	bIsPressed;
+//		private boolean	bIsPressed;
 		private float	fAnalogValue;
+		
+		/** This callcmd can be simultaneously called by many different key bindings.  */
 		private ArrayList<KeyBind>	abcSimultaneouslyPressed = new ArrayList<>();
 		
 		@Override
@@ -271,7 +279,7 @@ public class KeyBindCommandManagerI {
 				
 				if(bExpectingKeyReleasedOverriden){
 //					throw new DetailedException("neither 'on key pressed' nor 'on key released' methods were overriden!",this,asteConfiguredAt,bc);
-					throw new DetailedException("neither 'on key pressed' nor 'on key released' methods were overriden!",this,asteConfiguredAt,bIsPressed,fAnalogValue);
+					throw new DetailedException("neither 'on key pressed' nor 'on key released' methods were overriden!",this,asteConfiguredAt,fAnalogValue);
 				}
 			}
 		}
@@ -309,19 +317,28 @@ public class KeyBindCommandManagerI {
 			return fAnalogValue;
 		}
 		
+//		/**
+//		 * This callcmd can be simultaneously called by many different key bindings.
+//		 */
+//		public boolean isSimultaneouslyPressedKeyBindsListEmpty(){
+//			return abcSimultaneouslyPressed.isEmpty();
+//		}
+		
 		public boolean isPressed(){
 ////			return getBindCommand().getKeyBind().getActionKey().isPressed();
 //			/**
 //			 * it is the mods+actionKey that matters and is controlled/setup here
 //			 */
 //			return getBindCommand().getKeyBind().isActivated();
-			return bIsPressed;
+//			return bIsPressed;
+//			return abcSimultaneouslyPressed.size()>0;
+			return !abcSimultaneouslyPressed.isEmpty();
 		}
 
 		private void updateCurrentStatus(KeyBind kbLastPressed) {
 			if(kbLastPressed.isActivated()){
 				if(kbLastPressed.getActivationCount()==1){
-					assert abcSimultaneouslyPressed.contains(kbLastPressed) : "lacking consistency, should have been removed"; //TODO is such precision useful? other parts of the code may be improved keeping this check tho.
+					assert !abcSimultaneouslyPressed.contains(kbLastPressed) : "lacking consistency, should have been removed"; //TODO is such precision useful? other parts of the code may be improved keeping this check tho.
 					
 					/**
 					 * only at the 1st activation (if being hold will ignore subsequent ones)
@@ -335,21 +352,14 @@ public class KeyBindCommandManagerI {
 			}
 			
 			if(abcSimultaneouslyPressed.isEmpty()){
-				this.bIsPressed=false;
-				this.fAnalogValue=0f;
+//				this.bIsPressed=false;
+				this.fAnalogValue=0f; //reset
 			}else{
 				if(abcSimultaneouslyPressed.get(abcSimultaneouslyPressed.size()-1)==kbLastPressed){
-					this.bIsPressed = kbLastPressed.isActivated();
+//					this.bIsPressed = kbLastPressed.isActivated();
 					this.fAnalogValue = kbLastPressed.getActionKey().getAnalogValue();
 				}
 			}
-		}
-		
-		/**
-		 * This callcmd can be simultaneously called by two different key bindings.
-		 */
-		public boolean isSimultaneouslyPressedKeyBindsListEmpty(){
-			return abcSimultaneouslyPressed.isEmpty();
 		}
 		
 //		/**
@@ -535,7 +545,9 @@ public class KeyBindCommandManagerI {
 					captureKeyStep(ECaptureStep.HasConflict);
 					return true;
 				}else{
+					boolean bAdd=isNewBindHelper(bcCaptureToTarget);
 					bcCaptureToTarget.setKeyBind(kbCaptured);
+					if(bAdd)putBindCommand(bcCaptureToTarget);
 					
 					MessagesI.i().output(false, System.out, "InfoKeyBind", this,
 						prepareConfigStr(bcCaptureToTarget));
@@ -554,6 +566,14 @@ public class KeyBindCommandManagerI {
 		return false;
 	}
 	
+	public void applyNewBindHelper(BindCommand bc){
+		bc.getKeyBind().setActionKey(KeyCodeManagerI.i().getNewBindHelperKey());
+	}
+	
+	public boolean isNewBindHelper(BindCommand bc) {
+		return bc.getKeyBind().getActionKey()==KeyCodeManagerI.i().getNewBindHelperKey();
+	}
+
 	public void update(float fTpf){
 		if(eCaptureStep==ECaptureStep.KeepTrying){
 			if(!SystemAlertI.i().isAlertReady())return; //wait the alert be ready before doing other things
@@ -627,15 +647,18 @@ public class KeyBindCommandManagerI {
 		if(bc.getKeyBind().isResetted())return;
 		
 		if(bc.getHardCommand()!=null){
+			updateHardCommandStatus(bc);
+			
 //			if(bc.getHardCommand().isLastPressed(bc)){
-			if(bc.getHardCommand().isSimultaneouslyPressedKeyBindsListEmpty()){
+//			if(bc.getHardCommand().isSimultaneouslyPressedKeyBindsListEmpty()){
+			if(!bc.getHardCommand().isPressed()){
 				QueueI.i().forceRemoveFromQueue(bc.getHardCommand());
-				updateHardCommandStatus(bc);
+//				updateHardCommandStatus(bc);
 			}
 		}
 		
-		if(bc.getUserJSCmd()!=null){
-			QueueI.i().forceRemoveFromQueue(getFuncRunUserCommand());
+		if(bc.getUserCmd()!=null){
+			QueueI.i().forceRemoveFromQueue(getCallRunUserCommand());
 		}
 //		QueueI.i().removeLoopFromQueue(bc.getHardCommand()); //bc.getHardCommand().justRemoveFromQueueOnce();
 		
@@ -656,12 +679,12 @@ public class KeyBindCommandManagerI {
 			/**
 			 * TODO review custom user command? it is quite limited (lacking features) compared to the queued hardcommand call... allow user to configure every command may be using options on the very user command to set at the CallableX? :D
 			 */
-			if(bc.getUserJSCmd()!=null){
-				if(getFuncRunUserCommand()==null){
+			if(bc.getUserCmd()!=null){
+				if(getCallRunUserCommand()==null){
 					MessagesI.i().warnMsg(this, "function to run user command is not set", this, bc); //TODO create a warnOnce at messagesi?
 				}else{
-					if(isDebug())System.out.println("Enqueue:RunJSCmd:"+bc.getUserJSCmd());
-					QueueI.i().enqueue(getFuncRunUserCommand().setCmd(bc.getUserJSCmd()));
+					if(isDebug())System.out.println("Enqueue:RunJSCmd:"+bc.getUserCmd());
+					QueueI.i().enqueue(getCallRunUserCommand().setCmd(bc.getUserCmd()));
 				}
 			}
 		}
@@ -669,7 +692,7 @@ public class KeyBindCommandManagerI {
 		updateHardCommandStatus(bc);
 	}
 	
-	public CallUserCustomCmd getFuncRunUserCommand() {
+	public CallUserCustomCmd getCallRunUserCommand() {
 		return callcmdRunUserCommand;
 	}
 	
@@ -695,7 +718,7 @@ public class KeyBindCommandManagerI {
 		}
 	}
 	
-	public KeyBindCommandManagerI setFuncRunUserCommand(CallUserCustomCmd funcRunUserCommand) {
+	public KeyBindCommandManagerI setCallRunUserCommand(CallUserCustomCmd funcRunUserCommand) {
 		assert(this.callcmdRunUserCommand==null);
 		this.callcmdRunUserCommand = funcRunUserCommand;
 		return this;
@@ -828,7 +851,7 @@ public class KeyBindCommandManagerI {
 		
 		BindCommand bc = new BindCommand();
 		bc.setKeyBind(new KeyBind().setFromKeyCfg(strKeyBindCfgId));
-		bc.setUserJSCmd(strJSUserCmd);
+		bc.setUserCmd(strJSUserCmd);
 		
 		if(strHardCommandUId!=null){
 			String strHardCommandUIdLazy=strHardCommandUId;
@@ -849,36 +872,20 @@ public class KeyBindCommandManagerI {
 		return prepareConfig(bc).recreateCommandLine();
 	}
 	public CommandLineParser prepareConfig(BindCommand bc) {
+		KeyBind kb = bc.getKeyBind();
+		if(kb==null)throw new DetailedException("has no key bind",bc);
+		
 		CommandLineParser cl = new CommandLineParser();
 		cl.setCommand(getCmdBindId());
-		cl.appendParams(bc.getKeyBind().getBindCfg());
+		cl.appendParams(kb.getBindCfg());
 		if(bc.getHardCommand()!=null){
 			cl.appendParams(bc.getHardCommand().getName());
 		}
-		String strJSCmd=bc.getUserJSCmd();
+		String strJSCmd=bc.getUserCmd();
 		if(strJSCmd!=null){
 			cl.appendParams(strJSCmd);
 		}
 		
-//		//TODO this is still useless/tmp
-//		//TODO also load key binds somewhere...
-//		String strSep=",";
-//		StringBuilder sb=new StringBuilder("");
-//		sb.append(bc.getKeyBind().getBindCfg());
-//		sb.append(strSep);
-//		
-//		if(bc.getHardCommand()!=null){
-//			sb.append(bc.getHardCommand().getName());
-//			sb.append(strSep);
-//		}
-//		
-//		String strJSCmd=bc.getUserCommand();
-//		if(strJSCmd!=null){
-//			sb.append(strJSCmd);
-//			sb.append(strSep);
-//		}
-//		
-//		return (sb.toString());
 		return cl;
 	}
 
@@ -922,6 +929,11 @@ public class KeyBindCommandManagerI {
 	public KeyBindCommandManagerI setDebug(boolean bDebug) {
 		this.bDebug = bDebug;
 		return this; 
+	}
+
+	public BindCommand applyCallcmdAt(BindCommand bc, String strCmdId) {
+		bc.setHardCommand(tmCmdIdVsCmd.get(strCmdId));
+		return bc;
 	}
 
 

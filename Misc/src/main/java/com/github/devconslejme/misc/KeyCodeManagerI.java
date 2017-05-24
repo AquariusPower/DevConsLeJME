@@ -32,8 +32,6 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import com.github.devconslejme.misc.jme.UserDataI.IUDKey;
-
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
@@ -49,6 +47,10 @@ public class KeyCodeManagerI {
 	private boolean	bConfigured;
 	private int	iSpecialCodeStart=Integer.MAX_VALUE;
 	private boolean	bDebug;
+	public static class KeyCodeManCompositeControl implements ICompositeRestrictedAccessControl{
+		private KeyCodeManCompositeControl(){}}
+	private KeyCodeManCompositeControl ccSelf = new KeyCodeManCompositeControl();
+	private String	strDummyTempAddNewBindHelperId = "_DummyTempAddNewBindHelper_";
 	
 	public Key addKey(String strId, Integer... aiCodeToMonitor){
 		ArrayList<Key> akey = new ArrayList<Key>();
@@ -107,7 +109,7 @@ public class KeyCodeManagerI {
 				}
 			}
 			
-			Key keyNew = new Key(strId,iCode);
+			Key keyNew = new Key(ccSelf,strId,iCode);
 			keyNew.prepareSimpleId(strPrefix);
 			DetailedException.assertNotAlreadySet(tmKey.get(strId), keyNew, "key id", strId, iCode, this);
 			tmKey.put(strId, keyNew);
@@ -249,7 +251,12 @@ public class KeyCodeManagerI {
 //		
 //	}
 	
+	public Key getNewBindHelperKey(){
+		return getKeyForId(strDummyTempAddNewBindHelperId);
+	}
+	
 	private void addSpecialKeys() {
+		addKeyWorkFull(strDummyTempAddNewBindHelperId , iSpecialCodeStart--);
 //		// a mouse listener can be used to set these 
 //		addKeyWorkFull("mouseWheelUp",		iSpecialCodeStart--);
 //		addKeyWorkFull("mouseWheelDown",	iSpecialCodeStart--);

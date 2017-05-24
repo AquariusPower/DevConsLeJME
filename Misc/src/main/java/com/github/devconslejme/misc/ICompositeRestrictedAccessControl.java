@@ -27,6 +27,10 @@
 package com.github.devconslejme.misc;
 
 /**
+ * Implement it on a static inner class and make the default constructor private.
+ * The other classes can know about it but only the enclosing can instantiate it and keep that instanced 
+ * object private.
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public interface ICompositeRestrictedAccessControl {}

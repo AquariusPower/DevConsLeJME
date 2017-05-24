@@ -58,7 +58,13 @@ public class KeyBindManagerDialogI {
 			public void updateMaintenanceList() {
 				OptionData odCodeSection = diagBindMan.putSection(null, KeyCodeManagerI.class.getSimpleName());
 				for(Key key:KeyCodeManagerI.i().getKeyListCopy()){
-					diagBindMan.putOption(odCodeSection, key.getAsInfo(), key);
+					OptionData od = diagBindMan.putOption(odCodeSection, key.getAsInfo(), key);
+				}
+				
+				OptionData odCallcmdSection = diagBindMan.putSection(null, "Commands");
+				for(String strCmdId:KeyBindCommandManagerI.i().getHardCommandsIdListCopy()){
+					OptionData od = diagBindMan.putOption(odCallcmdSection, strCmdId, strCmdId);
+					addCmdCfgCaptureBind("addBind",od,strCmdId);
 				}
 				
 				OptionData odBindSection = diagBindMan.putSection(null, KeyBindCommandManagerI.class.getSimpleName());
@@ -67,23 +73,49 @@ public class KeyBindManagerDialogI {
 					
 					str+=bc.getInfo(bKeybindPrepend);
 					
-					OptionData odbc = diagBindMan.putOption(odBindSection, str, bc);
-					odbc.addCmdCfg(new CmdCfg("ChangeBind") {
-						@Override
-						public void execute(Button source) {
-							KeyBindCommandManagerI.i().captureAndSetKeyBindAt(bc, source);
-							
-							QueueI.i().enqueue(new CallableXAnon() {
-								@Override
-								public Boolean call() {
-									if(KeyBindCommandManagerI.i().isCapturing())return false; //wait capture end
-									diagBindMan.requestUpdateListItems();
-									return true;
-								}
-							});
-						}
-					});
+					OptionData od = diagBindMan.putOption(odBindSection, str, bc);
+					addCmdCfgCaptureBind("changeBind",od,bc);
+					
+//					odbc.addCmdCfg(new CmdCfg("ChangeBind") {@Override	public void execute(Button source) {
+//						KeyBindCommandManagerI.i().captureAndSetKeyBindAt(bc, source);
+//						
+//						QueueI.i().enqueue(new CallableXAnon() {@Override	public Boolean call() {
+//							if(KeyBindCommandManagerI.i().isCapturing())return false; //wait capture end
+//							diagBindMan.requestUpdateListItems();
+//							return true;
+//						}});
+//					}});
+					
+					od.addCmdCfg(new CmdCfg("DelBind") {@Override	public void execute(Button source) {
+						//TODO confirmation dialog
+						KeyBindCommandManagerI.i().removeKeyBind(bc);
+						diagBindMan.requestUpdateListItems();
+					}});
 				}
+			}
+
+			private void addCmdCfgCaptureBind(String strActionText, OptionData od,String strCmdId) {
+				addCmdCfgCaptureBind(
+					strActionText,
+					od,
+					KeyBindCommandManagerI.i().applyCallcmdAt(
+						new BindCommand(),
+						strCmdId
+					).setKeyBind(
+						new KeyBind().setActionKey(KeyCodeManagerI.i().getNewBindHelperKey())
+					)
+				);
+			}
+			private void addCmdCfgCaptureBind(String strActionText, OptionData odbc,BindCommand bc) {
+				odbc.addCmdCfg(new CmdCfg(strActionText) {@Override	public void execute(Button source) {
+					KeyBindCommandManagerI.i().captureAndSetKeyBindAt(bc, source);
+					
+					QueueI.i().enqueue(new CallableXAnon() {@Override	public Boolean call() {
+						if(KeyBindCommandManagerI.i().isCapturing())return false; //wait capture end
+						diagBindMan.requestUpdateListItems();
+						return true;
+					}});
+				}});
 			}
 		};
 		
@@ -93,6 +125,10 @@ public class KeyBindManagerDialogI {
 				return (bKeybindPrepend=!bKeybindPrepend)?0:1;
 			}
 		}).setMultiStatusMode(bKeybindPrepend?0:1,"after","prepend"));
+		
+	}
+	
+	public void captureBind(){
 		
 	}
 	

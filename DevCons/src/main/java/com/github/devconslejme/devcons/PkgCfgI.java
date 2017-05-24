@@ -58,7 +58,7 @@ public class PkgCfgI {
 //		FileI.i().configure(JmeSystem.getStorageFolder(StorageFolderType.Internal), app.getClass());
 		DevConsPluginStateI.i().configure(null,nodeGui);
 //		FileI.i().configure(DevConsPluginStateI.i().getStorageFolder());
-		if(KeyBindCommandManagerI.i().getFuncRunUserCommand()==null){
+		if(KeyBindCommandManagerI.i().getCallRunUserCommand()==null){
 //			KeyBindCommandManagerI.i().setFuncRunUserCommand(new Function<String, Boolean>() {
 //				@Override
 //				public Boolean apply(String strJS) {
@@ -66,7 +66,7 @@ public class PkgCfgI {
 //					return true;
 //				}
 //			});
-			KeyBindCommandManagerI.i().setFuncRunUserCommand(new CallUserCustomCmd() {
+			KeyBindCommandManagerI.i().setCallRunUserCommand(new CallUserCustomCmd() {
 				@Override
 				public Boolean execUserCustomCmd(String strJSCmd) {
 					JavaScriptI.i().setJSBinding(this); //this allows for accessing this callable from within the script
