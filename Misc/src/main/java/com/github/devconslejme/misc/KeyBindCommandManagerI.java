@@ -70,7 +70,7 @@ public class KeyBindCommandManagerI {
 		private CallBoundKeyCmd	cxHardCommand;
 		private KeyBind	kb;
 //		private boolean	bReadOnly;
-		private String	strUserCommand;
+		private String	strJSUserCommand;
 //		private String strUniqueId
 		
 //		public boolean isReadOnly() {
@@ -116,7 +116,7 @@ public class KeyBindCommandManagerI {
 //		}
 		
 		public String getUserCommand() {
-			return strUserCommand;
+			return strJSUserCommand;
 		}
 		public CallBoundKeyCmd getHardCommand(){
 			return cxHardCommand;
@@ -124,12 +124,13 @@ public class KeyBindCommandManagerI {
 		
 		/**
 		 * TODO syntax for executing on-press, on-release, b4 hard-command, after hard-command.
-		 * @param strUserCommand
+		 * @param strJSUserCommand can be null
 		 */
-		public void setUserCommand(String strUserCommand){
-			this.strUserCommand=strUserCommand;
+		public void setUserCommand(String strJSUserCommand){
+			this.strJSUserCommand=strJSUserCommand;
 		}
 		public BindCommand setHardCommand(CallBoundKeyCmd cx){
+			assert(cx!=null);
 //			if(this.cxCommand!=null && isReadOnly())throw new DetailedException("readonly",this);
 //			if(isReadOnly())throw new DetailedException("readonly",this);
 			assertHardCommandNotSet(cx); //DetailedException.assertNotAlreadySet(this.cxHardCommand, cx, this);
@@ -377,18 +378,18 @@ public class KeyBindCommandManagerI {
 	 * but still allowing a lot of flexibility and readability
 	 */
 //	public CallBoundKeyCmd validateHardCommandUId(CallBoundKeyCmd callcmd){
-	public String validateHardCommandUId(String strUId){
+	public String validateHardCommandUId(String strUId) throws IllegalArgumentException{
 		if(strUId.trim().isEmpty()){
-			throw new DetailedException("empty id",strUId); //to prevent messy ids
+			throw new DetailedException("empty id "+strUId); //to prevent messy ids
 		}
 		
 		if(strUId.trim().length()!=strUId.length()){
-			throw new DetailedException("is not trimmed",strUId); //to prevent messy ids
+			throw new DetailedException("is not trimmed "+strUId); //to prevent messy ids
 		}
 		
 //		if(!strUId.matches("[0-9A-Za-z_-+ ]*")){
 		if(!strUId.matches("[0-9A-Za-z_ -]*")){ //regex: "-" must be the last thing within []
-			throw new DetailedException("invalid hard command unique id",strUId);
+			throw new DetailedException("invalid hard command unique id "+strUId);
 		}
 		
 		return strUId;
@@ -481,10 +482,12 @@ public class KeyBindCommandManagerI {
 				}else{
 					bcCaptureToTarget.setKeyBind(kbCaptured);
 					
-					MessagesI.i().output(false, System.out, "Info", this, 
-						"captured key bind "+kbCaptured.getBindCfg()
-						+" for "+bcCaptureToTarget.getUserCommand(),
-						bcCaptureToTarget,kbCaptured,this);
+					MessagesI.i().output(false, System.out, "InfoKeyBind", this,
+						prepareConfigStr(bcCaptureToTarget));
+//					MessagesI.i().output(false, System.out, "Info", this, 
+//						"captured key bind "+kbCaptured.getBindCfg()
+//						+" for "+bcCaptureToTarget.getUserCommand(),
+//						bcCaptureToTarget,kbCaptured,this);
 				}
 				
 				kbWaitBeReleased=kbCaptured;
@@ -680,6 +683,15 @@ public class KeyBindCommandManagerI {
 		}
 	}
 	
+	/**
+	 * accepts:
+	 * <bindCmdId> <hardCmdId> [JSuserCmd]
+	 * <bindCmdId> null <JSuserCmd>
+	 * <bindCmdId> <JSuserCmd>
+	 * 
+	 * @param strCommandLine 
+	 * @return
+	 */
 	public BindCommand loadConfig(String strCommandLine){
 		if(strCmdBindId==null){
 			MessagesI.i().warnMsg(this, "bind cmd id not set, unable to load cfg file", this, strCommandLine);
@@ -690,13 +702,30 @@ public class KeyBindCommandManagerI {
 		if(!cl.getCommand().equals(strCmdBindId))throw new DetailedException("invalid main bind cmd",strCommandLine,strCmdBindId);
 		
 		String strKeyBindCfgId = cl.getParsedParam(0);
-		String strHardCommandUId = cl.getParsedParam(1);
-		String strJSUserCmd = cl.getParsedParam(2);
+//		String strHardCommandUId = cl.getParsedParam(1);
+//		String strJSUserCmd = cl.getParsedParam(2);
+		
+		String strHardCommandUId=null;
+		String strJSUserCmd=null;
+		String strChk = cl.getParsedParam(1);
+		try{
+			validateHardCommandUId(strChk);
+			strHardCommandUId=strChk;
+		}catch(DetailedException ex){
+			strJSUserCmd=strChk;
+		}
+		if(strJSUserCmd==null)strJSUserCmd = cl.getParsedParam(2);
+		
+		if(strHardCommandUId==null && strJSUserCmd==null){
+			throw new DetailedException("no command specified",strCommandLine);
+		}
 		
 		BindCommand bc = new BindCommand();
 		bc.setKeyBind(new KeyBind().setFromKeyCfg(strKeyBindCfgId));
 		bc.setHardCommand(tmCmdIdVsCmd.get(strHardCommandUId));
 		bc.setUserCommand(strJSUserCmd);
+		
+		putBindCommand(bc);
 		
 		return bc;
 	}

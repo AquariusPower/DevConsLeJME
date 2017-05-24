@@ -235,7 +235,7 @@ public class JavaScriptI implements IGlobalAddListener {
 				}
 				return true;
 			case bind:
-				KeyBindCommandManagerI.i().loadConfig(strParams);
+				KeyBindCommandManagerI.i().loadConfig(strCmd); //requires the main cmd too
 				break;
 			default:
 //				throw new UnsupportedOperationException("not implemented yet "+ebc);

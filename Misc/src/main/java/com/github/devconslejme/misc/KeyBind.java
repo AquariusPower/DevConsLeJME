@@ -66,17 +66,19 @@ public class KeyBind {
 		return keyAction;
 	}
 	
-	public void addModifier(String... astrKeyId){
+	public KeyBind addModifier(String... astrKeyId){
 		for(String strId:astrKeyId){
 			addModifier(KeyCodeManagerI.i().getKeyForId(strId));
 		}
-	}
-	public void addModifier(int... aiKeyCode){
+		return this;
+}
+	public KeyBind addModifier(int... aiKeyCode){
 		for(Integer iKeyCode:aiKeyCode){
 			addModifier(KeyCodeManagerI.i().getFirstKeyForCode(iKeyCode));
 		}
+		return this;
 	}
-	public void addModifier(Key... akey){
+	public KeyBind addModifier(Key... akey){
 //		akeyModifierList.addAll(Arrays.asList(akey));
 		if(akeyModifierList==null)akeyModifierList = new ArrayList<Key>();
 		
@@ -84,6 +86,8 @@ public class KeyBind {
 			DetailedException.assertNotNull(key, "mod key", this);
 			akeyModifierList.add(key);
 		}
+		
+		return this;
 	}
 	
 	public ArrayList<Key> getKeyModifiersCopy(){
@@ -91,11 +95,12 @@ public class KeyBind {
 		return new ArrayList<Key>(akeyModifierList);
 	}
 	
-	public void setActionKey(Key key) {
+	public KeyBind setActionKey(Key key) {
 		DetailedException.assertNotAlreadySet(this.keyAction, key, "action key", this);
 		DetailedException.assertNotNull(key, "action key", this);
 		
 		this.keyAction=key;
+		return this;
 	}
 	
 	public void setActionKey(String strId) {
@@ -237,12 +242,14 @@ public class KeyBind {
 		return lActivationCount==0;
 	}
 
-	public void reset() {
+	public KeyBind reset() {
 		lActivationCount=0;
+		return this;
 	}
 
-	public void incActivationCount() {
+	public KeyBind incActivationCount() {
 		lActivationCount++;
+		return this;
 	}
 
 	public long getActivationCount() {

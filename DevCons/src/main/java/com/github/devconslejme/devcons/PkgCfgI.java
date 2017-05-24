@@ -46,6 +46,12 @@ public class PkgCfgI {
 
 	private boolean	bConfigured;
 	
+	/**
+	 * 
+	 * @param app (forwarded)
+	 * @param nodeGui where to attach DevCons
+	 * @param nodeVirtualWorld (forwarded)
+	 */
 	public void configure(Application app, Node nodeGui, Node nodeVirtualWorld){
 		DetailedException.assertIsFalse("configured", bConfigured, this);
 		com.github.devconslejme.gendiag.PkgCfgI.i().configure(app,nodeGui,nodeVirtualWorld,JavaScriptI.i().getBindCmdUId());
