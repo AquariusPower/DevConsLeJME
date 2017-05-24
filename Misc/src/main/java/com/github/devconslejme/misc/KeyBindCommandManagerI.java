@@ -226,7 +226,7 @@ public class KeyBindCommandManagerI {
 		private boolean	bExpectingKeyReleasedOverriden;
 		private boolean	bIsPressed;
 		private float	fAnalogValue;
-		private BindCommand	bcLastPressed;
+		private ArrayList<KeyBind>	abcSimultaneouslyPressed = new ArrayList<>();
 		
 		@Override
 		public CallBoundKeyCmd setName(String strName) {
@@ -318,26 +318,49 @@ public class KeyBindCommandManagerI {
 			return bIsPressed;
 		}
 
-		private void setCurrentStatus(BindCommand bcLastPressed, boolean bIsPressed, float fAnalogValue) {
-			this.bIsPressed = bIsPressed;
-			if(this.bIsPressed && bcLastPressed.getKeyBind().getActivationCount()==1){
-				/**
-				 * only at the 1st activation (if being hold will ignore subsequent ones)
-				 */
-				this.bcLastPressed=bcLastPressed;
+		private void updateCurrentStatus(KeyBind kbLastPressed) {
+			if(kbLastPressed.isActivated()){
+				if(kbLastPressed.getActivationCount()==1){
+					assert abcSimultaneouslyPressed.contains(kbLastPressed) : "lacking consistency, should have been removed"; //TODO is such precision useful? other parts of the code may be improved keeping this check tho.
+					
+					/**
+					 * only at the 1st activation (if being hold will ignore subsequent ones)
+					 */
+//					if(!abcSimultaneouslyPressed.contains(kbLastPressed)){
+						abcSimultaneouslyPressed.add(kbLastPressed);
+//					}
+				}
+			}else{
+				abcSimultaneouslyPressed.remove(kbLastPressed);
 			}
-			this.fAnalogValue = fAnalogValue;
+			
+			if(abcSimultaneouslyPressed.isEmpty()){
+				this.bIsPressed=false;
+				this.fAnalogValue=0f;
+			}else{
+				if(abcSimultaneouslyPressed.get(abcSimultaneouslyPressed.size()-1)==kbLastPressed){
+					this.bIsPressed = kbLastPressed.isActivated();
+					this.fAnalogValue = kbLastPressed.getActionKey().getAnalogValue();
+				}
+			}
 		}
 		
 		/**
 		 * This callcmd can be simultaneously called by two different key bindings.
-		 * Only the last one pressed, on release, must trigger the removal of this callcmd from the queue. 
-		 * @param bc
-		 * @return
 		 */
-		public boolean isLastPressed(BindCommand bc) {
-			return bcLastPressed==bc;
+		public boolean isSimultaneouslyPressedKeyBindsListEmpty(){
+			return abcSimultaneouslyPressed.isEmpty();
 		}
+		
+//		/**
+//		 * This callcmd can be simultaneously called by two different key bindings.
+//		 * Only the last one pressed, on release, must trigger the removal of this callcmd from the queue. 
+//		 * @param bc
+//		 * @return
+//		 */
+//		public boolean isLastPressed(BindCommand bc) {
+//			return bcLastPressed==bc;
+//		}
 	}
 	
 	/**
@@ -593,18 +616,19 @@ public class KeyBindCommandManagerI {
 		 * This will update the status related to the currently being used key binding,
 		 * as there can have many key bindings for the same command.
 		 */
-		bc.getHardCommand().setCurrentStatus(
-			bc,
-			bc.getKeyBind().isActivated(), //set if is pressed 
-			bc.getKeyBind().getActionKey().getAnalogValue()
-		);
+		bc.getHardCommand().updateCurrentStatus(bc.getKeyBind());
+//			bc.getKeyBind(),
+//			bc.getKeyBind().isActivated(), //set if is pressed 
+//			bc.getKeyBind().getActionKey().getAnalogValue()
+//		);
 	}
 	
 	private void reset(BindCommand bc) {
 		if(bc.getKeyBind().isResetted())return;
 		
 		if(bc.getHardCommand()!=null){
-			if(bc.getHardCommand().isLastPressed(bc)){
+//			if(bc.getHardCommand().isLastPressed(bc)){
+			if(bc.getHardCommand().isSimultaneouslyPressedKeyBindsListEmpty()){
 				QueueI.i().forceRemoveFromQueue(bc.getHardCommand());
 				updateHardCommandStatus(bc);
 			}
