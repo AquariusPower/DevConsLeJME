@@ -40,7 +40,7 @@ public class MultiClickI {
 	
 	private boolean bDebug=false;
 	
-	private long lMaxDelayMilis=500;
+	private long lMaxDelayMilis=250;
 	
 	public long getMaxDelayMilis() {
 		return lMaxDelayMilis;

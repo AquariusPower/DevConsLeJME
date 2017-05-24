@@ -320,7 +320,12 @@ public class KeyBindCommandManagerI {
 
 		private void setCurrentStatus(BindCommand bcLastPressed, boolean bIsPressed, float fAnalogValue) {
 			this.bIsPressed = bIsPressed;
-			if(this.bIsPressed)this.bcLastPressed=bcLastPressed;
+			if(this.bIsPressed && bcLastPressed.getKeyBind().getActivationCount()==1){
+				/**
+				 * only at the 1st activation (if being hold will ignore subsequent ones)
+				 */
+				this.bcLastPressed=bcLastPressed;
+			}
 			this.fAnalogValue = fAnalogValue;
 		}
 		
@@ -605,7 +610,7 @@ public class KeyBindCommandManagerI {
 			}
 		}
 		
-		if(bc.getUserJSCmd  ()!=null){
+		if(bc.getUserJSCmd()!=null){
 			QueueI.i().forceRemoveFromQueue(getFuncRunUserCommand());
 		}
 //		QueueI.i().removeLoopFromQueue(bc.getHardCommand()); //bc.getHardCommand().justRemoveFromQueueOnce();
@@ -633,29 +638,11 @@ public class KeyBindCommandManagerI {
 				}else{
 					if(isDebug())System.out.println("Enqueue:RunJSCmd:"+bc.getUserJSCmd());
 					QueueI.i().enqueue(getFuncRunUserCommand().setCmd(bc.getUserJSCmd()));
-//					QueueI.i().enqueue(new CallableXAnon() {
-//						@Override
-//						public Boolean call() {
-//							getFuncRunUserCommand().apply(bc.getUserJSCmd());
-//							return true;
-//						}
-//					});
 				}
 			}
 		}
 		
-		//getBindCommand().getKeyBind().isActivated()
-		//bc.getKeyBind().getActionKey().getAnalogValue();
-//		/**
-//		 * This will update the status related to the currently being used key binding,
-//		 * as there can have many key bindings for the same command.
-//		 */
-//		bc.getHardCommand().setCurrentStatus(
-//			bc.getKeyBind().isActivated(), //set if is pressed 
-//			bc.getKeyBind().getActionKey().getAnalogValue()
-//		);
 		updateHardCommandStatus(bc);
-		
 	}
 	
 	public CallUserCustomCmd getFuncRunUserCommand() {

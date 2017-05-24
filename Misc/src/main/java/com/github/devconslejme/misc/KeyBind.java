@@ -42,6 +42,7 @@ public class KeyBind {
 	private ArrayList<Key> akeyModifierList;// = new ArrayList<Key>();
 //	private long lLastActivationMilis=-1;
 	private long	lActivationCount = 0;
+	private long	lFistActivationMilis;
 	
 	/**
 	 * TODO see {@link KeyBindCommandManagerI#runCommandOnKeyRelease(BindCommand)}, the 'on pressed' can already be limited to a single activation, what would have the same meaning/usage. would it still be interesging to allow 'on released' activation mode anyway or is just pointletss and could still complexify/break something?
@@ -244,14 +245,20 @@ public class KeyBind {
 
 	public KeyBind reset() {
 		lActivationCount=0;
+		lFistActivationMilis=0;
 		return this;
 	}
 
 	public KeyBind incActivationCount() {
 		lActivationCount++;
+		if(lActivationCount==1)lFistActivationMilis=System.currentTimeMillis();
 		return this;
 	}
-
+	
+	public long getFistActivationMilis() {
+		return lFistActivationMilis;
+	}
+	
 	public long getActivationCount() {
 		return lActivationCount;
 	}
