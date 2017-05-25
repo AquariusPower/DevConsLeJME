@@ -41,7 +41,7 @@ import com.github.devconslejme.extras.SingleAppInstance.CallChkProblemsAbs;
 import com.github.devconslejme.gendiag.GlobalsManagerDialogI;
 import com.github.devconslejme.gendiag.KeyBindManagerDialogI;
 import com.github.devconslejme.gendiag.QueueManagerDialogI;
-import com.github.devconslejme.gendiag.SpatialsManagerI;
+import com.github.devconslejme.gendiag.SpatialsManagerDialogI;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.CheckProblemsI;
 import com.github.devconslejme.misc.CommandLineParser;
@@ -311,10 +311,10 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		);
 		
 		//// Spatials manager dialog
-		SpatialsManagerI.i().configure();
+		SpatialsManagerDialogI.i().configure();
 		DevConsPluginStateI.i().putButtonLater("SpatialsManager", "open Spatials hierarchy manager", 
 			new Command<Button>() {@Override public void execute(Button source) {
-				SpatialsManagerI.i().show();
+				SpatialsManagerDialogI.i().show();
 			}}, null
 		);
 		

@@ -36,8 +36,8 @@ import com.jme3.scene.Spatial;
 /**
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
-public class SpatialsManagerI implements IUserTextInputSubmited{
-	public static SpatialsManagerI i(){return GlobalManagerI.i().get(SpatialsManagerI.class);}
+public class SpatialsManagerDialogI implements IUserTextInputSubmited{
+	public static SpatialsManagerDialogI i(){return GlobalManagerI.i().get(SpatialsManagerDialogI.class);}
 	
 	private SimpleMaintenanceGenericDialog	diagMaint;
 	private SimpleApplication	sapp;
@@ -46,14 +46,14 @@ public class SpatialsManagerI implements IUserTextInputSubmited{
 	public void configure() {
 		sapp = GlobalManagerI.i().get(SimpleApplication.class);
 		
-		diagMaint = new SimpleMaintenanceGenericDialog(SpatialsManagerI.class.getSimpleName()){
+		diagMaint = new SimpleMaintenanceGenericDialog(SpatialsManagerDialogI.class.getSimpleName()){
 			@Override
 			public void updateMaintenanceList() {
 				recursiveAddSpatialsToMaintenance(null,sapp.getGuiNode());
 				recursiveAddSpatialsToMaintenance(null,sapp.getRootNode());
 			}
 		};
-		diagMaint.setTitle(SpatialsManagerI.class.getSimpleName());
+		diagMaint.setTitle(SpatialsManagerDialogI.class.getSimpleName());
 //		if(!diagMaint.isInitialized())return false; //prior to new actions below
 		
 		diagMaint.addUserInputTextSubmittedListener(this);

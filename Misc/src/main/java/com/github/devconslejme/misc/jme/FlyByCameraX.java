@@ -52,6 +52,8 @@ import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
+import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 
 /**
  * TODO complete to be attachable to player's head or flying ship (limiting/requesting(listener?) the movement etc..)
@@ -148,9 +150,7 @@ public class FlyByCameraX extends FlyByCamera {
 		putFlyCamBindCmdLater(strMouseWheelDown,CameraInput.FLYCAM_ZOOMOUT,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			zoomCamera(-getAnalogValue());return true;}});
 		putFlyCamBindCmdLater(
-//				KeyCodeManagerI.i().getMouseTriggerKey(2).composeCfgPrependModifiers(keyFlyCamMod),
 			KeyCodeManagerI.i().getMouseTriggerKey(2).getFullId(),
-//			keyFlyCamMod.getFullId()+"+"+KeyCodeManagerI.i().getMouseTriggerKey(2).getFullId(),
 			"toggleZoom",
 			new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){toggleZoom();return true;}});
 		
@@ -471,6 +471,8 @@ public class FlyByCameraX extends FlyByCamera {
 	
 	private static class CompositeControl implements ICompositeRestrictedAccessControl{
 		private CompositeControl(){}; }; private CompositeControl cc;
+		private Spatial	sptReticle;
+		private Node	nodeReticleParent;
 	
 	public void update(float fTPF){
 		if(tdMouseGrab.isReady(true)){
@@ -513,6 +515,24 @@ public class FlyByCameraX extends FlyByCamera {
 			strFOV+=" }";
 			EnvironmentJmeI.i().putCustomInfo("CamFOVdeg", strFOV);
 		}
+		
+		if(isZooming()){
+			if(getReticle()!=null){
+				if(sptReticle.getParent()==null)nodeReticleParent.attachChild(sptReticle);
+			}
+		}else{
+			if(getReticle()!=null){
+				if(sptReticle.getParent()!=null)sptReticle.removeFromParent();
+			}
+		}
+	}
+
+	private Spatial getReticle() {
+		return sptReticle;
+	}
+
+	public boolean isZooming() {
+		return getNoZoomStepIndex()!=iCurrentZoomStep;
 	}
 
 	private void fixZoom() {
@@ -599,5 +619,11 @@ public class FlyByCameraX extends FlyByCamera {
 	public FlyByCameraX setEnableZoomLimits(boolean bEnableZoomLimits) {
 		this.bEnableZoomStepsAndLimits = bEnableZoomLimits;
 		return this; 
+	}
+	
+	public FlyByCameraX setReticle(Spatial sptReticle, Node nodeReticleParent){
+		this.sptReticle=sptReticle;
+		this.nodeReticleParent = nodeReticleParent;
+		return this;
 	}
 }

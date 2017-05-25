@@ -157,6 +157,10 @@ public class EnvironmentJmeI extends EnvironmentI{
 
 		public Vector3f getTopLeftCorner() {
 			return new Vector3f(0,getHeight(),0);
+		}
+
+		public Vector3f getCenter() {
+			return new Vector3f(getWidth()/2,getHeight()/2,0);
 		}		
 	}
 	public DisplayI getDisplay(){

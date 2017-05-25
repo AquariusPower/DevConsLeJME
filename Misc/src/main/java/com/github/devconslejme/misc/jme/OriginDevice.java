@@ -388,6 +388,9 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		Node nodePet=new Node();
 		NodeAxis nodeCopyFrom = getAxisInfo(ea).getTorusTip();
 		nodePet.setLocalTransform(nodeCopyFrom.getLocalTransform());
+		nodePet.setLocalTranslation(
+			getAxisInfo(ea).getRepresentationShape().getLocalTranslation().add(
+				RotateI.i().randomDirection()));
 		Geometry geom = nodeCopyFrom.getGeom().clone();
 		nodePet.attachChild(geom);
 		geom.setLocalScale(1f, 0.5f, 3f);

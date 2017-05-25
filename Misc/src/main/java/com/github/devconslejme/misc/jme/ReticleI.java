@@ -24,74 +24,61 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
 package com.github.devconslejme.misc.jme;
 
-import com.github.devconslejme.misc.AssertionsI;
-import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
-import com.jme3.app.Application;
+import com.github.devconslejme.misc.lemur.MiscLemurI;
+import com.github.devconslejme.misc.lemur.SizeAndLocationI;
 import com.jme3.app.SimpleApplication;
 import com.jme3.input.FlyByCamera;
+import com.jme3.math.ColorRGBA;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
-import com.jme3.system.JmeSystem;
-import com.jme3.system.JmeSystem.StorageFolderType;
-
+import com.jme3.scene.shape.Torus;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PkgCfgI {
-	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
+public class ReticleI {
+	public static ReticleI i(){return GlobalManagerI.i().get(ReticleI.class);}
 	
-	private boolean	bConfigured;
-	public boolean isConfigured() {return bConfigured;}
+	public void configure(){} //keep even if empty to help init global
 	
-	/**
-	 * 
-	 * @param app to create global
-	 * @param nodeGui allow gui elements that depends only on JME
-	 * @param nodeVirtualWorld to allow virtual world functionalities
-	 */
-	public void configure(Application app,Node nodeGui, Node nodeVirtualWorld){
-		DetailedException.assertIsFalse("configured", bConfigured, this);
-		com.github.devconslejme.misc.PkgCfgI.i().configure(
-			JmeSystem.getStorageFolder(StorageFolderType.Internal), 
-			app.getClass());
+	public Node createReticle(){
+		Node node = new Node("Reticle");
 		
-		/**
-		 * FIRST!
-		 */
-		GlobalManagerI.i().putGlobal(Application.class, app);
-		FlyByCamera flycam=null;
-		if(app instanceof SimpleApplication){
-			/**
-			 * code depending on this should be optional...
-			 */
-			GlobalManagerI.i().putGlobal(SimpleApplication.class, (SimpleApplication)app);
-			flycam=G.i(SimpleApplication.class).getFlyByCamera();
+		Geometry torus = GeometryI.i().create(
+			new Torus(100, 10, 20, 200), 
+			ColorI.i().colorChangeCopy(ColorRGBA.White,0f,0.85f));
+		
+		node.attachChild(torus);
+		node.attachChild(GeometryI.i().create(MeshI.i().box(10), ColorRGBA.Yellow));
+		
+		return node;
+	}
+	
+	public void initAutoSetup(){
+		SimpleApplication sapp = G.i(SimpleApplication.class);
+		if(sapp!=null){
+			FlyByCamera flycam = sapp.getFlyByCamera();
+			if(flycam instanceof FlyByCameraX){
+				FlyByCameraX flycamx = (FlyByCameraX)flycam;
+				Node node = createReticle();
+				flycamx.setReticle(node, sapp.getGuiNode()); //TODO shouldnt be another layer, below the gui node?
+				sapp.getGuiNode().attachChild(node);
+				node.setLocalTranslation(EnvironmentJmeI.i().getDisplay().getCenter());
+//				node.move(0, -1000, -10);
+				
+//				GeometryI.i().createArrowFollowing(sapp.getGuiNode(), null, node, ColorRGBA.Yellow)
+//					.setFromTo(EnvironmentJmeI.i().getDisplay().getCenter(), node.getLocalTranslation());
+				
+				EffectElectricity el = new EffectElectricity();
+				el.setFollowFromTarget(node, null);
+				el.setFollowToMouse(true);
+				el.setPlay(true);
+				EffectManagerStateI.i().add(el);
+			}
 		}
-		GlobalManagerI.i().putGlobal(app.getClass(), app); //concrete
-		
-		// after first
-		DebugVisualsI.i().configure();
-		MiscJmeI.i().configure(nodeVirtualWorld);
-		new KeyCodeConfigureForJme().configure(20);
-		EffectManagerStateI.i().configure();
-		SimulationTimeStateI.i().configure();
-		QueueStateI.i().configure();
-		OrthogonalCursorStateI.i().configure(nodeGui);
-		AssertionsI.i().configure();
-		IndicatorI.i().configure(nodeGui);
-		EnvironmentJmeI.i().configure(nodeGui);
-		WorldPickingI.i().configure(flycam);
-		HighlighterI.i().configure(flycam);
-		ReticleI.i().configure();
-		
-		// non standard cfgs
-//		WorldPickingI.i().addSkipType(DebugVisualsI.GeometryBVolDbg.class);
-		
-		bConfigured=true;
 	}
 }
