@@ -51,8 +51,9 @@ public class HighlighterI {
 	private Node nodeHightlight = new Node();
 	private Geometry	geomTarget;
 	private Geometry	geomHighlight;
-	private ColorRGBA	colorHighlight=ColorRGBA.Yellow.clone();
-	private TimedDelay tdColorGlow = new TimedDelay(1f, "").setActive(true);
+//	private ColorRGBA	colorHighlight=ColorRGBA.Yellow.clone();
+	private ColorRGBA	colorHighlight;
+	private TimedDelay tdColorGlow = new TimedDelay(15f, "").setActive(true);
 	
 	public void configure(FlyByCamera flycam){
 		this.flycam = flycam;
@@ -68,16 +69,17 @@ public class HighlighterI {
 			}
 		}).enableLoopMode();
 		
-		colorHighlight.a=0.5f; //just to let it be auto-configured as transparent bucket below
-		geomHighlight = GeometryI.i().create(new Sphere(),colorHighlight); //.getMaterial().setColor("GlowColor", 	ColorRGBA.Yellow);
-		colorHighlight=(ColorRGBA) geomHighlight.getMaterial().getParam("Color").getValue();
+//		colorHighlight.a=0.5f; 
+		/**
+		 * alpha = 0.5f, just to let it be auto-configured as transparent bucket below
+		 */
+		geomHighlight = GeometryI.i().create(new Sphere(),new ColorRGBA(1,1,1,0.5f)); //.getMaterial().setColor("GlowColor", 	ColorRGBA.Yellow);
+		colorHighlight=(ColorRGBA)geomHighlight.getMaterial().getParam("Color").getValue();
 		geomHighlight.setName("HighLight");
 		
 		nodeHightlight.attachChild(geomHighlight);
 		
 		WorldPickingI.i().addSkip(geomHighlight);
-		
-		
 	}
 	
 	
@@ -103,27 +105,65 @@ public class HighlighterI {
 //			nodeHightlight.setLocalTransform(geomTarget.getWorldTransform());
 //			nodeHightlight.scale(1.01f);
 			
-			float fVal = tdColorGlow.getCurrentDelayCalcDynamic(7f);
-//			tdColorGlow.resetAndChangeDelayTo(7f).setActive(true);
-			colorHighlight.set(0,0,0,1f);
-			switch((int)fVal){
-				case 0:colorHighlight.r=fVal%1f;break;
-				case 1:colorHighlight.g=fVal%1f;break;
-				case 2:colorHighlight.b=fVal%1f;break;
-				case 3:colorHighlight.r=colorHighlight.g=fVal%1f;break;
-				case 4:colorHighlight.r=colorHighlight.b=fVal%1f;break;
-				case 5:colorHighlight.g=colorHighlight.b=fVal%1f;break;
-				case 6:colorHighlight.r=colorHighlight.g=colorHighlight.b=fVal%1f;break;
+			float fValOriginal = tdColorGlow.getCurrentDelayCalcDynamic(7f); //MUST BE 7: r g b rg rb gb rgb!!!
+			float fPercGlow=fValOriginal%1f;
+//			tdColorGlow.resetAndChangeDelayTo(14f).setActive(true);
+//			float fSet=fVal%1f;
+			if(fPercGlow<0.5f){
+				fPercGlow*=2f; //0.0 to 0.5 will become 0.0 to 1.0
+			}else{
+				fPercGlow=1f-fPercGlow;
+				fPercGlow*=2f; //0.5 to 1.0 will become 1.0 to 0.0
+			}
+			float fColorCompMin=0.75f;
+			float fColorCompMax=1f;
+//			float fDiff=fMax-fMin;
+			float fColorCompDiff=fColorCompMax-fColorCompMin;
+//			float fSet=fMin+((fVal%1f)*(1f-fMin));
+			float fColorComp=fColorCompMin+(fColorCompDiff*fPercGlow);
+			
+			float fAlphaMin=0f;
+			float fAlphaMax=0.50f;
+			float fAlphaDiff=fAlphaMax-fAlphaMin;
+			float fAlpha=fAlphaMin+(fAlphaDiff*fPercGlow);
+			
+			colorHighlight.set(0,0,0,fAlpha);
+//			colorHighlight.set(0,0,0,fSet);
+//			colorHighlight.set(0,0,0,0.5f);
+			switch((int)fValOriginal){
+				case 0:colorHighlight.r=fColorComp;break;
+				case 1:colorHighlight.g=fColorComp;break;
+				case 2:colorHighlight.b=fColorComp;break;
+				case 3:colorHighlight.r=colorHighlight.g=fColorComp;break;
+				case 4:colorHighlight.r=colorHighlight.b=fColorComp;break;
+				case 5:colorHighlight.g=colorHighlight.b=fColorComp;break;
+				case 6:colorHighlight.r=colorHighlight.g=colorHighlight.b=fColorComp;break;
 			}
 //			colorHighlight.set(1,0,0,1);
 			
 			if(geomTarget!=geomHighlight){
 				geomHighlight.setMesh(geomTarget.getMesh());
 //				if(nodeHightlight.getParent()==null)MiscJmeI.i().getNodeVirtualWorld().attachChild(nodeHightlight);
-				if(nodeHightlight.getParent()==null){
-					geomTarget.getParent().attachChild(nodeHightlight);
-					nodeHightlight.setLocalTransform(geomTarget.getLocalTransform());
-				}
+//				if(nodeHightlight.getParent()==null){
+//					/**
+//					 * this makes the placement be precise, but may be destructive if this child is not expected to be there
+//					 */
+//					geomTarget.getParent().attachChild(nodeHightlight); //
+////					nodeHightlight.setLocalTransform(geomTarget.getLocalTransform());
+//				}
+				
+				/**
+				 * This makes the placement be precise even with moving spatials, but may be destructive if 
+				 * this child is not expected to be there (like if the childs there are scanned for some reason).
+				 */
+				geomTarget.getParent().attachChild(nodeHightlight); //
+				
+				/**
+				 * Also, for a few geometries regions (not all hit spots just a few), 
+				 * it was necessary to update this at every frame :/ TODO my fault?
+				 */
+				nodeHightlight.setLocalTransform(geomTarget.getLocalTransform());
+				
 				if(isDebug())DebugVisualsI.i().showWorldBoundAndRotAxes(nodeHightlight);
 			}
 		}else{
