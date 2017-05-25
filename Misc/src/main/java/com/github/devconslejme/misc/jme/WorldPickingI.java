@@ -80,12 +80,11 @@ public class WorldPickingI {
 			int iButtonIndex=i;
 			KeyBindCommandManagerI.i().putBindCommandLater(
 				KeyCodeManagerI.i().getMouseTriggerKey(i).getFullId(), 
-				strPck+"MouseButton"+i, 
 				new CallBoundKeyCmd(){@Override public Boolean callOnKeyReleased() {
 					if(flycam!=null && flycam.isEnabled())return true; //to ignore picking
 					WorldPickingI.i().pickWorldPiercingAtCursor(iButtonIndex); //will call the world pick listeners
 					return true;
-				}}
+				}}.setName(strPck+"MouseButton"+i)
 			);
 		}
 		

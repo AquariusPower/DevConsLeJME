@@ -248,13 +248,22 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		private NodeAxis	tip;
 		private NodeAxis	feather;
 		private NodeAxis	nodeRepresentationShape;
+		private ColorRGBA	colorRotPlane;
 		
 		public ColorRGBA getColor() {
 			return color;
 		}
-
+		
+		public ColorRGBA getColorRotPlane() {
+			return colorRotPlane;
+		}
+		
 		private AxisInfo setColor(ColorRGBA color) {
 			this.color = color;
+			/**
+			 * will be the other two color components, while the current wil be zeroed
+			 */
+			this.colorRotPlane=new ColorRGBA().fromIntRGBA(color.asIntRGBA()^0xffFFff00);
 			return this; 
 		}
 		
@@ -331,7 +340,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 
 	}
 	
-	private MultiClickAxis	mcMainShapeMB0 = new MultiClickAxis(0,2,new CallMultiClickUpdate(){
+	private MultiClickAxis	mcMainShapeMB0 = new MultiClickAxis(0,3,new CallMultiClickUpdate(){
 		@Override	public void applyMultiClick(int totalClicks) {
 			switch(totalClicks){
 				case 1:
@@ -343,6 +352,9 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 					break;
 				case 2:
 					mcMainShapeMB0.axi.getRotatingTorus().toggleInvertRotation();
+					break;
+				case 3:
+					//TODO spawn pet
 					break;
 			}
 		}}).setHelp("1 click: rotate only the one clicked","2 clicks: invert rotation");
@@ -434,7 +446,8 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		rotateAlignment(nodePosit,-90,false);
 		nodeTor.attachChild(nodePosit);
 		getAxisInfo(nodeTor.getEAxis()).setTorusTip(nodePosit);
-//		anodeHotShapesList.add(nodePosit);
+		ColorRGBA color = getAxisInfo(nodeTor.getEAxis()).getColorRotPlane();
+		nodePosit.getGeom().setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
 		
 		// other end
 		NODEXS nodeNegat=createAxisShape(nodeTor.getEAxis(),new Sphere(10,10,fIRa),
@@ -442,7 +455,8 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		MiscJmeI.i().addToName(nodeNegat, "Intersection", false, true);
 		nodeTor.attachChild(nodeNegat);
 		getAxisInfo(nodeTor.getEAxis()).setTorusFeather(nodeNegat);
-//		anodeHotShapesList.add(nodeNegat);
+		nodeNegat.getGeom().setMaterial(ColorI.i().retrieveMaterialUnshadedColor(
+			ColorI.i().colorChangeCopy(color, -0.5f)));
 	}
 	
 	@SuppressWarnings("unchecked")

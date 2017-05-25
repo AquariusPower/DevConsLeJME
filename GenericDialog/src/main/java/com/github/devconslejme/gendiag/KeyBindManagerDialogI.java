@@ -76,16 +76,6 @@ public class KeyBindManagerDialogI {
 					OptionData od = diagBindMan.putOption(odBindSection, str, bc);
 					addCmdCfgCaptureBind("changeBind",od,bc);
 					
-//					odbc.addCmdCfg(new CmdCfg("ChangeBind") {@Override	public void execute(Button source) {
-//						KeyBindCommandManagerI.i().captureAndSetKeyBindAt(bc, source);
-//						
-//						QueueI.i().enqueue(new CallableXAnon() {@Override	public Boolean call() {
-//							if(KeyBindCommandManagerI.i().isCapturing())return false; //wait capture end
-//							diagBindMan.requestUpdateListItems();
-//							return true;
-//						}});
-//					}});
-					
 					od.addCmdCfg(new CmdCfg("DelBind") {@Override	public void execute(Button source) {
 						//TODO confirmation dialog
 						KeyBindCommandManagerI.i().removeKeyBind(bc);
@@ -131,24 +121,24 @@ public class KeyBindManagerDialogI {
 		DialogHierarchyStateI.i().showDialog(diagBindMan.getDialog());
 	}
 	
-	public void testCreateBind(){
-		KeyBind kb = new KeyBind();
-		kb.setFromKeyCfg("Ctrl+L");
-		
-		BindCommand bc = new BindCommand();
-		bc.setKeyBind(kb);
-		bc.setHardCommand(new CallBoundKeyCmd(){
-				@Override
-				public Boolean callOnKeyPressed() {
-					MessagesI.i().output(false,System.out,"Info:",this,KeyBindManagerDialogI.class.getSimpleName()+":test:"+TimeFormatI.i().getRealTimeFormatted());
-					return true;
-				}
-			}
-			.holdKeyPressedForContinuousCmd()
-			.setDelaySeconds(1f)
-			.setName("simple test log entry for bind cmd")
-		);
-		
-		KeyBindCommandManagerI.i().putBindCommand(bc);
-	}
+//	public void testCreateBind(){
+//		KeyBind kb = new KeyBind();
+//		kb.setFromKeyCfg("Ctrl+L");
+//		
+//		BindCommand bc = new BindCommand();
+//		bc.setKeyBind(kb);
+//		bc.addHardCommand(new CallBoundKeyCmd(){
+//				@Override
+//				public Boolean callOnKeyPressed() {
+//					MessagesI.i().output(false,System.out,"Info:",this,KeyBindManagerDialogI.class.getSimpleName()+":test:"+TimeFormatI.i().getRealTimeFormatted());
+//					return true;
+//				}
+//			}
+//			.holdKeyPressedForContinuousCmd()
+//			.setDelaySeconds(1f)
+//			.setName("simple test log entry for bind cmd")
+//		);
+//		
+//		KeyBindCommandManagerI.i().putBindCommand(bc);
+//	}
 }

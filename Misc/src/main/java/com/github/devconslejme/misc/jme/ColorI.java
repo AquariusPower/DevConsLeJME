@@ -55,34 +55,31 @@ public class ColorI {
 		}
 	}
 	
-	/**
-	 * no overlapping
-	 * @param f
-	 * @return
-	 */
-	private float colorComponentLimit(float f){
-		if(f<=0)f=0;
-		if(f>=1)f=1;
-		return f;
-	}
+//	/**
+//	 * no overlapping
+//	 * @param f
+//	 * @return
+//	 */
+//	private float colorComponentLimit(float f){
+//		if(f<=0)f=0;
+//		if(f>=1)f=1;
+//		return f;
+//	}
 	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB){
 		return colorChangeCopy(color,fAddRGB,color.a);
 	}
 	public ColorRGBA colorChangeCopy(ColorRGBA color, float fAddRGB, float fAlpha){
 		color = color.clone();
-//		color.a=fAlpha;
-//		color = fixCopy(color);
 		
-//		color.r=colorComponentLimit(color.r+=fAddRGB);
-//		color.g=colorComponentLimit(color.g+=fAddRGB);
-//		color.b=colorComponentLimit(color.b+=fAddRGB);
 		color.r+=(fAddRGB);
 		color.g+=(fAddRGB);
 		color.b+=(fAddRGB);
 		
 		color.a=fAlpha;
-//		return color;
-		return fixCopy(color);
+		
+		color.clamp();
+		
+		return color;
 	}
 	
 	/**
@@ -103,19 +100,19 @@ public class ColorI {
 		return color;
 	}
 	
-	/**
-	 * TODO apply it everywhere
-	 * @param color
-	 * @return
-	 */
-	public ColorRGBA fixCopy(ColorRGBA color){
-		return new ColorRGBA( //fix it
-				colorComponentLimit(color.r),
-				colorComponentLimit(color.g),
-				colorComponentLimit(color.b),
-				colorComponentLimit(color.a)
-			);
-	}
+//	/**
+//	 * TODO apply it everywhere
+//	 * @param color
+//	 * @return
+//	 */
+//	public ColorRGBA fixCopy(ColorRGBA color){
+//		return new ColorRGBA( //fix it
+//				colorComponentLimit(color.r),
+//				colorComponentLimit(color.g),
+//				colorComponentLimit(color.b),
+//				colorComponentLimit(color.a)
+//			);
+//	}
 	
 	HashMap<Integer,Material> hmMatUnshadedColor = new HashMap<Integer,Material>();
 	/**
@@ -124,7 +121,8 @@ public class ColorI {
 	 * @return
 	 */
 	public Material retrieveMaterialUnshadedColor(ColorRGBA color){
-		color = fixCopy(color);
+		color = color.clone();color.clamp(); //fix the color
+		
 		int i = color.asIntRGBA();
 		Material mat = hmMatUnshadedColor.get(i);
 		if(mat==null){

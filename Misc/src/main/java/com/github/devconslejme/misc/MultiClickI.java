@@ -74,6 +74,10 @@ public class MultiClickI {
 			if(mc.isTimeLimitReached())mc.bReady=true;
 			if(!mc.isReady())return true;
 			
+			if(MultiClickI.i().bDebug){
+				System.out.println(mc);
+			}
+			
 			applyMultiClick(mc.getTotalClicks());
 			mc.reset();
 			
@@ -95,6 +99,13 @@ public class MultiClickI {
 		private int	iMaxClicks;
 
 		private CallableX	cxUpdate;
+		
+		@Override
+		public String toString(){
+			return (MultiClick.class.getSimpleName()+":"
+				+"mb="+iButtonIndex+","
+				+"clks="+iClickCount+"/"+iMaxClicks);
+		}
 		
 		public SELF reset() {
 			init();
@@ -157,29 +168,21 @@ public class MultiClickI {
 				lLastClickMilis=lMilis;
 				iClickCount++;
 			}else{
-//				if( (lMilis-lLastClickMilis)>MultiClickI.i().getMaxDelayMilis() ){
-				if(isTimeLimitReached()){
-					bReady=true;
-				}else{
+				/**
+				 * this will never happen because the update loop is per frame:
+				   if(isTimeLimitReached()){bReady=true;}else{
+				 */
 					lLastClickMilis=lMilis;
 					iClickCount++;
-				}
+//				}
 				
 				if(iClickCount==iMaxClicks)bReady=true;
-				
-				if(bReady){ 
-					if(MultiClickI.i().bDebug){
-						System.out.println(
-								MultiClick.class.getSimpleName()+":clk="+iClickCount+","+"/mb="+iButtonIndex+"/totclks="+iMaxClicks);
-					}
-				}
-				
 			}
 		}
 		
 		private boolean isTimeLimitReached() {
 			if(lLastClickMilis==null)return false;
-			return (System.currentTimeMillis()-lLastClickMilis) > MultiClickI.i().getMaxDelayMilis();
+			return !MultiClickI.i().isWithinMaxDelay(lLastClickMilis);
 		}
 		
 		public int getTotalClicks(){
@@ -188,90 +191,8 @@ public class MultiClickI {
 
 	}
 	
-	/**
-	 * too complex..
-	 */
-	@Deprecated
-	private static class _MultiClick{
-		private Long lLastClickMilis=null;
-		private int	iClickCount=0;
-		private boolean bLock=false;
-//		ArrayList<CallableX> acxClickIndex = new ArrayList<CallableX>();
-		private CallableX[] acxClickIndex;
-		private boolean	bDiscarded;
-		private int	iButtonIndex;
-		
-		private _MultiClick(int iButtonIndex,CallableX... acx){
-			this.iButtonIndex=iButtonIndex;
-			this.acxClickIndex=acx;
-			assert acxClickIndex!=null && acxClickIndex.length>0 : "requires at least two commands to call, single click does not need this...";
-			
-			QueueI.i().enqueue(new CallableXAnon() {
-				@SuppressWarnings("unchecked")
-				@Override
-				public Boolean call() {
-					if(isReady()){
-						int i=getTotalClicks()-1;
-						int iLimit=acxClickIndex.length-1;
-						if(i>=iLimit)i=iLimit;
-						CallableX cx = acxClickIndex[i];
-						if(cx!=null){ //this allow for click count index gaps for specific multiclicks counts
-							QueueI.i().enqueue(cx);
-						}
-						
-						QueueI.i().removeLoopFromQueue(this);
-						
-//						MultiClick.this.bDiscarded=true;
-						
-						if(MultiClickI.i().bDebug)System.out.println(MultiClick.class.getSimpleName()+":clk="+i+","+getName());
-						
-						return true;
-					}
-					
-					return true;
-				}
-			}).enableLoopMode()
-				.setDelaySeconds( TimeConvertI.i().milisToSeconds(MultiClickI.i().getMaxDelayMilis()) / 3f )
-				.setName(MultiClick.class.getSimpleName()+"/mb="+iButtonIndex+"/totclks="+acx.length);
-		}
-		
-		public boolean isReady(){
-			return bLock;
-		}
-		
-		/**
-		 * 
-		 * @param tpf
-		 * @return if ready to retrieve the multi-click count
-		 */
-		private boolean updateIncClicks() {
-			if(bLock)return true;
-			
-			long lMilis = System.currentTimeMillis();
-			if(lLastClickMilis==null){
-				lLastClickMilis=lMilis;
-				iClickCount++;
-				return false;
-			}else{
-				if( (lMilis-lLastClickMilis)>MultiClickI.i().getMaxDelayMilis() ){
-					bLock=true; 
-					return true;
-				}
-				
-				lLastClickMilis=lMilis;
-				iClickCount++;
-			}
-			
-			return false;
-		}
-		
-		public int getTotalClicks(){
-			return iClickCount;
-		}
-
-		public boolean isDiscarded() {
-			return bDiscarded;
-		}
+	public boolean isWithinMaxDelay(long lMilis) {
+		return (System.currentTimeMillis()-lMilis) <= lMaxDelayMilis;
 	}
 	
 }

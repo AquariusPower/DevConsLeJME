@@ -29,6 +29,7 @@ package com.github.devconslejme.misc;
 import java.util.ArrayList;
 
 import com.github.devconslejme.misc.KeyBindCommandManagerI.BindCommand;
+import com.github.devconslejme.misc.KeyBindCommandManagerI.KeyBindCmdManCompositeControl;
 
 /**
  * 
@@ -41,8 +42,10 @@ public class KeyBind {
 	private Key keyAction = null;
 	private ArrayList<Key> akeyModifierList;// = new ArrayList<Key>();
 //	private long lLastActivationMilis=-1;
-	private long	lActivationCount = 0;
+	private long	lHoldedActivationCount = 0;
 	private long	lFistActivationMilis;
+	private int iMultiClickIndex=0;
+	private long	lPreviousFirstActivationMilis;
 	
 	/**
 	 * TODO see {@link KeyBindCommandManagerI#runCommandOnKeyRelease(BindCommand)}, the 'on pressed' can already be limited to a single activation, what would have the same meaning/usage. would it still be interesging to allow 'on released' activation mode anyway or is just pointletss and could still complexify/break something?
@@ -240,27 +243,42 @@ public class KeyBind {
 	}
 
 	public boolean isResetted() {
-		return lActivationCount==0;
+		return lHoldedActivationCount==0;
 	}
 
 	public KeyBind reset() {
-		lActivationCount=0;
+		lHoldedActivationCount=0;
+		lPreviousFirstActivationMilis=lFistActivationMilis;
 		lFistActivationMilis=0;
 		return this;
 	}
 
-	public KeyBind incActivationCount() {
-		lActivationCount++;
-		if(lActivationCount==1)lFistActivationMilis=System.currentTimeMillis();
+	public KeyBind incHoldedActivationCount(KeyBindCmdManCompositeControl ccSelf) {
+		assert ccSelf!=null;
+		lHoldedActivationCount++;
+		if(lHoldedActivationCount==1){
+			lFistActivationMilis=System.currentTimeMillis();
+			
+			if(MultiClickI.i().isWithinMaxDelay(lPreviousFirstActivationMilis)){
+				iMultiClickIndex++;
+			}else{
+				iMultiClickIndex=0; //lost multiclick mode chain, reset 
+			}
+		}
+		
 		return this;
 	}
 	
-	public long getFistActivationMilis() {
-		return lFistActivationMilis;
-	}
+//	public long getFistActivationMilis() {
+//		return lFistActivationMilis;
+//	}
 	
 	public long getActivationCount() {
-		return lActivationCount;
+		return lHoldedActivationCount;
 	}
-	
+
+	public int getMultiClickIndex() {
+		return iMultiClickIndex;
+	}
+
 }

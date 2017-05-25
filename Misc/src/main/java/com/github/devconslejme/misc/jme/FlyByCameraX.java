@@ -113,23 +113,33 @@ public class FlyByCameraX extends FlyByCamera {
     );
     
     // FlyCam key! Contextualized keybindings!
-//    Key key = new Key("FlyCam", -1);
     keyFlyCamMod = KeyCodeManagerI.i().createSpecialExternalContextKey(cc,"FlyCamContext");
     
     // fly cam temp disabler (must work outside of the flycam context too!!!)
-    KeyBindCommandManagerI.i().putBindCommandLater("F5","hold to keep mouse cursor visible",new CallBoundKeyCmd(){
-			@Override	public Boolean callOnKeyPressed(){
-				bOverrideKeepFlyCamDisabled=true;
-				setEnabled(false);
-				return true;
-			}
-			
-			@Override public Boolean callOnKeyReleased() {
-				bOverrideKeepFlyCamDisabled=false;
-				return true;
-			};
-			
-		}.holdKeyPressedForContinuousCmd());
+    KeyBindCommandManagerI.i().putBindCommandLater("F5",2,
+    	new CallBoundKeyCmd(){
+    		@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
+					bOverrideKeepFlyCamDisabled=true;
+					setEnabled(false);									return true;}
+    		@Override public Boolean callOnKeyReleased(int iClickCountIndex) {
+					if(iClickCountIndex==0)bOverrideKeepFlyCamDisabled=false;	return true;}
+			}.setName("KeepCursorVisible").holdKeyPressedForContinuousCmd()
+		);
+    /** TODO this is kept here as an example, remove later */
+    KeyBindCommandManagerI.i().putBindCommandLater("F5",
+			new CallBoundKeyCmd(){
+	    	@Override	public Boolean callOnKeyPressed(){
+	    		bOverrideKeepFlyCamDisabled=true;
+	    		setEnabled(false);									return true;}
+	    	@Override public Boolean callOnKeyReleased() {
+	    		bOverrideKeepFlyCamDisabled=false;	return true;}
+	    }.setName("HoldToKeepCursorVisible").holdKeyPressedForContinuousCmd(),
+	    new CallBoundKeyCmd(){
+	    	@Override	public Boolean callOnKeyPressed(){
+	    		bOverrideKeepFlyCamDisabled=true;
+	    		setEnabled(false);									return true;}
+	    }.setName("KeepCursorVisible")
+    );
     
     // zoom
 		putFlyCamBindCmdLater(strMouseWheelUp,CameraInput.FLYCAM_ZOOMIN,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(){
@@ -185,7 +195,7 @@ public class FlyByCameraX extends FlyByCamera {
 	}
 	
 	public void putFlyCamBindCmdLater(String strKeyCfg, String strName, CallBoundKeyCmd callcmd) {
-		KeyBindCommandManagerI.i().putBindCommandLater(getCfgAddFlyCamMod(strKeyCfg),strName,callcmd);
+		KeyBindCommandManagerI.i().putBindCommandLater(getCfgAddFlyCamMod(strKeyCfg), callcmd.setName(strName));
 	}
 
 	public String getCfgAddFlyCamMod(String strOtherModsAndActionKeyCfg){

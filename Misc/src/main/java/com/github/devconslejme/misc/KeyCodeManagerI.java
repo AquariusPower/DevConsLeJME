@@ -48,8 +48,6 @@ public class KeyCodeManagerI {
 	private int	iSpecialCodeStart=Integer.MAX_VALUE;
 	private boolean	bDebug;
 	private KeyCodeManCompositeControl ccSelf = new KeyCodeManCompositeControl();
-//	private String	strDummyTempAddNewBindHelperId = "_DummyTempAddNewBindHelper_";
-	
 	public static class KeyCodeManCompositeControl implements ICompositeRestrictedAccessControl{
 		private KeyCodeManCompositeControl(){}
 	}
