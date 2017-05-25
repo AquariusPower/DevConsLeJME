@@ -52,6 +52,10 @@ public class TimedDelay {
 
 	private boolean	bInstaReadyOnce;
 
+	private boolean	bUseRealTime=false; //defaults to simulation time
+
+	private boolean	bLockTimeMode;
+
 	/**
 	 * This constructor is exclusively for methods local variables.
 	 * Such variables will not be stored neither easily accessible at console.
@@ -82,7 +86,7 @@ public class TimedDelay {
 		long lCurrentDelay = 0;
 		
 		if(bOverlapLimit){
-			long lCurrentTimeNano = SimulationTimeI.i().getNanoTime();
+			long lCurrentTimeNano = getTimeNano();
 			
 			long lTotalDelayNano = lCurrentTimeNano - lLastUpdateReferenceTimeNano;
 			
@@ -92,14 +96,22 @@ public class TimedDelay {
 				lLastUpdateReferenceTimeNano = lCurrentTimeNano;
 			}
 		}else{
-			lCurrentDelay = SimulationTimeI.i().getNanoTime() -lLastUpdateReferenceTimeNano;
+			lCurrentDelay = getTimeNano() -lLastUpdateReferenceTimeNano;
 		}
 		
 		return lCurrentDelay;
 	}
 	
+	public long getTimeNano(){
+		if(isUseRealTime()){
+			return System.nanoTime();
+		}else{
+			return SimulationTimeI.i().getNanoTime();
+		}
+	}
+	
 	public void updateTime() {
-		lLastUpdateReferenceTimeNano = SimulationTimeI.i().getNanoTime();
+		lLastUpdateReferenceTimeNano = getTimeNano();
 	}
 	public boolean isReady() {
 		return isReady(false);
@@ -153,6 +165,7 @@ public class TimedDelay {
 	public TimedDelay setActive(boolean b){
 		if(b){
 			if(!isActive())updateTime();
+			bLockTimeMode=true;
 		}else{
 			resetTime();
 		}
@@ -249,5 +262,17 @@ public class TimedDelay {
 		bInstaReadyOnce=true;
 		if(bIfReadyWillAlsoUpdate)updateTime();
 		return this;
+	}
+
+	public boolean isUseRealTime() {
+		return bUseRealTime;
+	}
+
+	public TimedDelay setUseRealTime(boolean bUseRealTime) {
+		if(bLockTimeMode && this.bUseRealTime!=bUseRealTime){
+			throw new DetailedException("after the first activation, the time mode cannot be changed", this.bUseRealTime);
+		}
+		this.bUseRealTime = bUseRealTime;
+		return this; 
 	}
 }

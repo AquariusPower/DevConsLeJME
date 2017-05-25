@@ -30,6 +30,8 @@ package com.github.devconslejme.misc.jme;
 import java.util.HashMap;
 
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.TimedDelay;
 import com.jme3.app.Application;
 import com.jme3.material.Material;
@@ -42,16 +44,72 @@ import com.jme3.math.ColorRGBA;
 public class ColorI {
 	public static ColorI i(){return GlobalManagerI.i().get(ColorI.class);}
 	
-	public static class ColorRGBAx {
+//	public static class ColorRGBAx {
+//		private ColorRGBA	color;
+//
+//		public ColorRGBAx(ColorRGBA color) {
+//			this.color = color;
+//		}
+//
+//		public ColorRGBA setA(float fAlpha) {
+//			color.a=fAlpha;
+//			return color;
+//		}
+//	}
+	
+	public static class ColorGlow{
 		private ColorRGBA	color;
-
-		public ColorRGBAx(ColorRGBA color) {
-			this.color = color;
+		
+		private TimedDelay tdColorGlow = new TimedDelay(15f, "").setActive(true);
+		
+		private float fColorCompMin=0.75f;
+		private float fColorCompMax=1f;
+		private float fAlphaMin=0f;
+		private float fAlphaMax=0.50f;
+		
+		private float fAlphaDiff;
+		private float fColorCompDiff;
+		
+		public ColorGlow(ColorRGBA color){
+			this.color=color;
+			
+			this.fColorCompDiff=fColorCompMax-fColorCompMin;
+			this.fAlphaDiff=fAlphaMax-fAlphaMin;
+			
+			QueueI.i().enqueue(new CallableXAnon() {
+				@Override
+				public Boolean call() {
+					update(getTPF());
+					return true;
+				}
+			}).enableLoopMode();
 		}
-
-		public ColorRGBA setA(float fAlpha) {
-			color.a=fAlpha;
-			return color;
+		
+		public void update(float fTPF){
+			float fValOriginal = tdColorGlow.getCurrentDelayCalcDynamic(7f); //MUST BE 7: r g b rg rb gb rgb!!!
+			
+			float fPercGlow=fValOriginal%1f;
+			if(fPercGlow<0.5f){
+				fPercGlow*=2f; //0.0 to 0.5 will become 0.0 to 1.0
+			}else{
+				fPercGlow=1f-fPercGlow;
+				fPercGlow*=2f; //0.5 to 1.0 will become 1.0 to 0.0
+			}
+			
+			float fColorComp=fColorCompMin+(fColorCompDiff*fPercGlow);
+			
+			float fAlpha=fAlphaMin+(fAlphaDiff*fPercGlow);
+			color.set(0,0,0,fAlpha);
+			
+			switch((int)fValOriginal){
+				case 0:color.r=fColorComp;break;
+				case 1:color.g=fColorComp;break;
+				case 2:color.b=fColorComp;break;
+				case 3:color.r=color.g=fColorComp;break;
+				case 4:color.r=color.b=fColorComp;break;
+				case 5:color.g=color.b=fColorComp;break;
+				case 6:color.r=color.g=color.b=fColorComp;break;
+			}
 		}
 	}
 	

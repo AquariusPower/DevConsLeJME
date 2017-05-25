@@ -30,7 +30,7 @@ import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
-import com.github.devconslejme.misc.TimedDelay;
+import com.github.devconslejme.misc.jme.ColorI.ColorGlow;
 import com.jme3.app.SimpleApplication;
 import com.jme3.collision.CollisionResult;
 import com.jme3.input.FlyByCamera;
@@ -53,7 +53,7 @@ public class HighlighterI {
 	private Geometry	geomHighlight;
 //	private ColorRGBA	colorHighlight=ColorRGBA.Yellow.clone();
 	private ColorRGBA	colorHighlight;
-	private TimedDelay tdColorGlow = new TimedDelay(15f, "").setActive(true);
+//	private TimedDelay tdColorGlow = new TimedDelay(15f, "").setActive(true);
 	
 	public void configure(FlyByCamera flycam){
 		this.flycam = flycam;
@@ -77,9 +77,12 @@ public class HighlighterI {
 		colorHighlight=(ColorRGBA)geomHighlight.getMaterial().getParam("Color").getValue();
 		geomHighlight.setName("HighLight");
 		
+		// this way more things can be added to the node
 		nodeHightlight.attachChild(geomHighlight);
 		
 		WorldPickingI.i().addSkip(geomHighlight);
+		
+		new ColorGlow(colorHighlight);
 	}
 	
 	
@@ -101,35 +104,34 @@ public class HighlighterI {
 		}
 			
 		if(geomTarget!=null){
-			// this way more things can be added to the node
-			float fValOriginal = tdColorGlow.getCurrentDelayCalcDynamic(7f); //MUST BE 7: r g b rg rb gb rgb!!!
-			float fPercGlow=fValOriginal%1f;
-			if(fPercGlow<0.5f){
-				fPercGlow*=2f; //0.0 to 0.5 will become 0.0 to 1.0
-			}else{
-				fPercGlow=1f-fPercGlow;
-				fPercGlow*=2f; //0.5 to 1.0 will become 1.0 to 0.0
-			}
-			float fColorCompMin=0.75f;
-			float fColorCompMax=1f;
-			float fColorCompDiff=fColorCompMax-fColorCompMin;
-			float fColorComp=fColorCompMin+(fColorCompDiff*fPercGlow);
-			
-			float fAlphaMin=0f;
-			float fAlphaMax=0.50f;
-			float fAlphaDiff=fAlphaMax-fAlphaMin;
-			float fAlpha=fAlphaMin+(fAlphaDiff*fPercGlow);
-			colorHighlight.set(0,0,0,fAlpha);
-			
-			switch((int)fValOriginal){
-				case 0:colorHighlight.r=fColorComp;break;
-				case 1:colorHighlight.g=fColorComp;break;
-				case 2:colorHighlight.b=fColorComp;break;
-				case 3:colorHighlight.r=colorHighlight.g=fColorComp;break;
-				case 4:colorHighlight.r=colorHighlight.b=fColorComp;break;
-				case 5:colorHighlight.g=colorHighlight.b=fColorComp;break;
-				case 6:colorHighlight.r=colorHighlight.g=colorHighlight.b=fColorComp;break;
-			}
+//			float fValOriginal = tdColorGlow.getCurrentDelayCalcDynamic(7f); //MUST BE 7: r g b rg rb gb rgb!!!
+//			float fPercGlow=fValOriginal%1f;
+//			if(fPercGlow<0.5f){
+//				fPercGlow*=2f; //0.0 to 0.5 will become 0.0 to 1.0
+//			}else{
+//				fPercGlow=1f-fPercGlow;
+//				fPercGlow*=2f; //0.5 to 1.0 will become 1.0 to 0.0
+//			}
+//			float fColorCompMin=0.75f;
+//			float fColorCompMax=1f;
+//			float fColorCompDiff=fColorCompMax-fColorCompMin;
+//			float fColorComp=fColorCompMin+(fColorCompDiff*fPercGlow);
+//			
+//			float fAlphaMin=0f;
+//			float fAlphaMax=0.50f;
+//			float fAlphaDiff=fAlphaMax-fAlphaMin;
+//			float fAlpha=fAlphaMin+(fAlphaDiff*fPercGlow);
+//			colorHighlight.set(0,0,0,fAlpha);
+//			
+//			switch((int)fValOriginal){
+//				case 0:colorHighlight.r=fColorComp;break;
+//				case 1:colorHighlight.g=fColorComp;break;
+//				case 2:colorHighlight.b=fColorComp;break;
+//				case 3:colorHighlight.r=colorHighlight.g=fColorComp;break;
+//				case 4:colorHighlight.r=colorHighlight.b=fColorComp;break;
+//				case 5:colorHighlight.g=colorHighlight.b=fColorComp;break;
+//				case 6:colorHighlight.r=colorHighlight.g=colorHighlight.b=fColorComp;break;
+//			}
 			
 			if(geomTarget!=geomHighlight){
 				geomHighlight.setMesh(geomTarget.getMesh());
