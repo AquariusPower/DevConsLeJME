@@ -356,43 +356,6 @@ public class QueueI {
 		public boolean isPaused() {
 			return bPaused;
 		}
-//		/**
-//		 * TODO it is possible to avoid using this by extending the {@link CallableX}
-//		 * @param objVal
-//		 * @return
-//		 */
-//		synchronized public SELF putKeyClassValue(Object objVal) {
-//			hmKeyValue.put(objVal.getClass().getName(),objVal);
-//			return getThis();
-//		}
-//		/**
-//		 * TODO it is possible to avoid using this by extending the {@link CallableX}
-//		 * @param strKey
-//		 * @param objVal
-//		 * @return
-//		 */
-//		synchronized public SELF putKeyValue(String strKey, Object objVal) {
-//			hmKeyValue.put(strKey,objVal);
-//			return getThis();
-//		}
-//		/**
-//		 * TODO it is possible to avoid using this by extending the {@link CallableX}
-//		 * @param cl
-//		 * @return
-//		 */
-//		@SuppressWarnings("unchecked")
-//		synchronized public <T> T getValue(Class<T> cl) {
-//			return (T)hmKeyValue.get(cl.getName());
-//		}
-//		/**
-//		 * TODO it is possible to avoid using this by extending the {@link CallableX}
-//		 * @param strKey
-//		 * @return
-//		 */
-//		@SuppressWarnings("unchecked")
-//		synchronized public <T> T getValue(String strKey) {
-//			return (T)hmKeyValue.get(strKey);
-//		}
 		public boolean isNameSetProperly(){
 			return strName!=null && !strName.isEmpty();
 		}

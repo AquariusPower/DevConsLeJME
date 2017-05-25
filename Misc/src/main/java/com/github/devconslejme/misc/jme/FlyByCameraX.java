@@ -116,7 +116,7 @@ public class FlyByCameraX extends FlyByCamera {
     keyFlyCamMod = KeyCodeManagerI.i().createSpecialExternalContextKey(cc,"FlyCamContext");
     
     // fly cam temp disabler (must work outside of the flycam context too!!!)
-    KeyBindCommandManagerI.i().putBindCommandLater("F5",2,
+    KeyBindCommandManagerI.i().putBindCommandsLater("F5",2,
     	new CallBoundKeyCmd(){
     		@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 					bOverrideKeepFlyCamDisabled=true;
@@ -125,42 +125,43 @@ public class FlyByCameraX extends FlyByCamera {
 					if(iClickCountIndex==0)bOverrideKeepFlyCamDisabled=false;	return true;}
 			}.setName("KeepCursorVisible").holdKeyPressedForContinuousCmd()
 		);
-    /** TODO this is kept here as an example, remove later */
-    KeyBindCommandManagerI.i().putBindCommandLater("F5",
+    
+    /** TODO this dummy is kept here as an example for 2 "diff" callcmds, remove later */
+    KeyBindCommandManagerI.i().putBindCommandsLater("Ctrl+F5",
 			new CallBoundKeyCmd(){
-	    	@Override	public Boolean callOnKeyPressed(){
+	    	@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 	    		bOverrideKeepFlyCamDisabled=true;
 	    		setEnabled(false);									return true;}
-	    	@Override public Boolean callOnKeyReleased() {
+	    	@Override public Boolean callOnKeyReleased(int iClickCountIndex) {
 	    		bOverrideKeepFlyCamDisabled=false;	return true;}
 	    }.setName("HoldToKeepCursorVisible").holdKeyPressedForContinuousCmd(),
 	    new CallBoundKeyCmd(){
-	    	@Override	public Boolean callOnKeyPressed(){
+	    	@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 	    		bOverrideKeepFlyCamDisabled=true;
 	    		setEnabled(false);									return true;}
-	    }.setName("KeepCursorVisible")
+	    }.setName("KeepCursorVisibleAfterTriggerIsReleased")
     );
     
     // zoom
-		putFlyCamBindCmdLater(strMouseWheelUp,CameraInput.FLYCAM_ZOOMIN,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(){
+		putFlyCamBindCmdLater(strMouseWheelUp,CameraInput.FLYCAM_ZOOMIN,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			zoomCamera( getAnalogValue());return true;}});
-		putFlyCamBindCmdLater(strMouseWheelDown,CameraInput.FLYCAM_ZOOMOUT,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(){
+		putFlyCamBindCmdLater(strMouseWheelDown,CameraInput.FLYCAM_ZOOMOUT,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			zoomCamera(-getAnalogValue());return true;}});
 		putFlyCamBindCmdLater(
 //				KeyCodeManagerI.i().getMouseTriggerKey(2).composeCfgPrependModifiers(keyFlyCamMod),
 			KeyCodeManagerI.i().getMouseTriggerKey(2).getFullId(),
 //			keyFlyCamMod.getFullId()+"+"+KeyCodeManagerI.i().getMouseTriggerKey(2).getFullId(),
 			"toggleZoom",
-			new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(){toggleZoom();return true;}});
+			new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){toggleZoom();return true;}});
 		
     // rotation
-		putFlyCamBindCmdLater("Left",CameraInput.FLYCAM_LEFT,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(){
+		putFlyCamBindCmdLater("Left",CameraInput.FLYCAM_LEFT,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			rotateCamera( getTPF(),initialUpVec);return true;}}.holdKeyPressedForContinuousCmd());
-		putFlyCamBindCmdLater("Right",CameraInput.FLYCAM_RIGHT,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(){
+		putFlyCamBindCmdLater("Right",CameraInput.FLYCAM_RIGHT,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			rotateCamera(-getTPF(),initialUpVec);return true;}}.holdKeyPressedForContinuousCmd());
-		putFlyCamBindCmdLater("Up",CameraInput.FLYCAM_UP,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(){
+		putFlyCamBindCmdLater("Up",CameraInput.FLYCAM_UP,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			rotateCamera(-getTPF() * (invertY ? -1 : 1), cam.getLeft());return true;}}.holdKeyPressedForContinuousCmd());
-		putFlyCamBindCmdLater("Down",CameraInput.FLYCAM_DOWN,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(){
+		putFlyCamBindCmdLater("Down",CameraInput.FLYCAM_DOWN,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			rotateCamera( getTPF() * (invertY ? -1 : 1), cam.getLeft());return true;}}.holdKeyPressedForContinuousCmd());
 		
 		// re-add later the mouse rotation JME native mappings config TODO use the Key bind system (after axis are working perfectly)
@@ -170,24 +171,24 @@ public class FlyByCameraX extends FlyByCamera {
 		restoreMouseAxisLater(CameraInput.FLYCAM_DOWN,MouseInput.AXIS_Y,true);
 		
     // movement, each key requires an independent queue object instance as they can be combined
-		putFlyCamBindCmdLater("A",CameraInput.FLYCAM_STRAFELEFT ,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(){
+		putFlyCamBindCmdLater("A",CameraInput.FLYCAM_STRAFELEFT ,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			moveCamera( getTPF(),true );accMvTrsTm(this);return true;}
 			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.holdKeyPressedForContinuousCmd());
-		putFlyCamBindCmdLater("D",CameraInput.FLYCAM_STRAFERIGHT,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(){
+		putFlyCamBindCmdLater("D",CameraInput.FLYCAM_STRAFERIGHT,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			moveCamera(-getTPF(),true );accMvTrsTm(this);return true;}
 			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.holdKeyPressedForContinuousCmd());
 		
-		putFlyCamBindCmdLater("W",CameraInput.FLYCAM_FORWARD    ,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(){
+		putFlyCamBindCmdLater("W",CameraInput.FLYCAM_FORWARD    ,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			moveCamera( getTPF(),false);accMvTrsTm(this);return true;}
 			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.holdKeyPressedForContinuousCmd());
-		putFlyCamBindCmdLater("S",CameraInput.FLYCAM_BACKWARD   ,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(){
+		putFlyCamBindCmdLater("S",CameraInput.FLYCAM_BACKWARD   ,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			moveCamera(-getTPF(),false);accMvTrsTm(this);return true;}
 			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.holdKeyPressedForContinuousCmd());
 		
-		putFlyCamBindCmdLater("Q",CameraInput.FLYCAM_RISE       ,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(){
+		putFlyCamBindCmdLater("Q",CameraInput.FLYCAM_RISE       ,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			riseCamera( getTPF()      );accMvTrsTm(this);return true;}
 			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.holdKeyPressedForContinuousCmd());
-		putFlyCamBindCmdLater("Z",CameraInput.FLYCAM_LOWER      ,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(){
+		putFlyCamBindCmdLater("Z",CameraInput.FLYCAM_LOWER      ,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			riseCamera(-getTPF()      );accMvTrsTm(this);return true;}
 			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.holdKeyPressedForContinuousCmd());
 		
@@ -195,7 +196,7 @@ public class FlyByCameraX extends FlyByCamera {
 	}
 	
 	public void putFlyCamBindCmdLater(String strKeyCfg, String strName, CallBoundKeyCmd callcmd) {
-		KeyBindCommandManagerI.i().putBindCommandLater(getCfgAddFlyCamMod(strKeyCfg), callcmd.setName(strName));
+		KeyBindCommandManagerI.i().putBindCommandsLater(getCfgAddFlyCamMod(strKeyCfg), callcmd.setName(strName));
 	}
 
 	public String getCfgAddFlyCamMod(String strOtherModsAndActionKeyCfg){

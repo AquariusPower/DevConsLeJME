@@ -63,7 +63,8 @@ public class KeyBindManagerDialogI {
 				
 				OptionData odCallcmdSection = diagBindMan.putSection(null, "Commands");
 				for(String strCmdId:KeyBindCommandManagerI.i().getHardCommandsIdListCopy()){
-					OptionData od = diagBindMan.putOption(odCallcmdSection, strCmdId, strCmdId);
+					String strCmdInfo = KeyBindCommandManagerI.i().getHardCommandInfo(strCmdId);
+					OptionData od = diagBindMan.putOption(odCallcmdSection, strCmdInfo, strCmdId);
 					addCmdCfgCaptureBind("addBind",od,strCmdId);
 				}
 				
@@ -121,24 +122,4 @@ public class KeyBindManagerDialogI {
 		DialogHierarchyStateI.i().showDialog(diagBindMan.getDialog());
 	}
 	
-//	public void testCreateBind(){
-//		KeyBind kb = new KeyBind();
-//		kb.setFromKeyCfg("Ctrl+L");
-//		
-//		BindCommand bc = new BindCommand();
-//		bc.setKeyBind(kb);
-//		bc.addHardCommand(new CallBoundKeyCmd(){
-//				@Override
-//				public Boolean callOnKeyPressed() {
-//					MessagesI.i().output(false,System.out,"Info:",this,KeyBindManagerDialogI.class.getSimpleName()+":test:"+TimeFormatI.i().getRealTimeFormatted());
-//					return true;
-//				}
-//			}
-//			.holdKeyPressedForContinuousCmd()
-//			.setDelaySeconds(1f)
-//			.setName("simple test log entry for bind cmd")
-//		);
-//		
-//		KeyBindCommandManagerI.i().putBindCommand(bc);
-//	}
 }

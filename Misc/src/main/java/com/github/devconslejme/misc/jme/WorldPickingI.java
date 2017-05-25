@@ -78,9 +78,9 @@ public class WorldPickingI {
 		String strPck="PickVirtualWorldThing";
 		for(int i=0;i<KeyCodeManagerI.i().getTotalMouseButtons();i++){
 			int iButtonIndex=i;
-			KeyBindCommandManagerI.i().putBindCommandLater(
+			KeyBindCommandManagerI.i().putBindCommandsLater(
 				KeyCodeManagerI.i().getMouseTriggerKey(i).getFullId(), 
-				new CallBoundKeyCmd(){@Override public Boolean callOnKeyReleased() {
+				new CallBoundKeyCmd(){@Override public Boolean callOnKeyPressed(int iClickCountIndex) {
 					if(flycam!=null && flycam.isEnabled())return true; //to ignore picking
 					WorldPickingI.i().pickWorldPiercingAtCursor(iButtonIndex); //will call the world pick listeners
 					return true;

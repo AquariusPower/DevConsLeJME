@@ -413,7 +413,7 @@ public class JavaScriptI implements IGlobalAddListener {
 //			KeyBindCommandManagerI.i().putBindCommandLater("Ctrl+Shift+"+(i%10),"RepeatLastConsCmd"+i,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyReleased(){
 //				repeatLastCommand(i-1);return true;}});
 //		}
-		KeyBindCommandManagerI.i().putBindCommandLater("Ctrl+R",new CallBoundKeyCmd(){@Override	public Boolean callOnKeyReleased(){
+		KeyBindCommandManagerI.i().putBindCommandsLater("Ctrl+R",new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			repeatLastCommand(0);return true;}}.setName("RepeatLastConsCmd"));
 	}
 	

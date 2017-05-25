@@ -354,7 +354,8 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 					mcMainShapeMB0.axi.getRotatingTorus().toggleInvertRotation();
 					break;
 				case 3:
-					//TODO spawn pet
+				default: //3 or more
+					//TODO keep spawning temporary pets
 					break;
 			}
 		}}).setHelp("1 click: rotate only the one clicked","2 clicks: invert rotation");

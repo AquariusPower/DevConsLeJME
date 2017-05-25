@@ -29,6 +29,7 @@ package com.github.devconslejme.misc;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.function.Function;
@@ -159,19 +160,12 @@ public class KeyBindCommandManagerI {
 		}
 		public BindCommand addHardCommand(CallBoundKeyCmd cx){
 			assert(cx!=null);
-//			if(this.cxCommand!=null && isReadOnly())throw new DetailedException("readonly",this);
-//			if(isReadOnly())throw new DetailedException("readonly",this);
-//			assertHardCommandNotSet(cx); //DetailedException.assertNotAlreadySet(this.cxHardCommand, cx, this);
 			DetailedException.assertIsTrue("name set (a description is necessary as the command is hard coded)", !cx.getName().isEmpty(), cx, this);
-			assert !acxHardCommand.contains(cx);
-			acxHardCommand.add(cx);
+//			assert !acxHardCommand.contains(cx);
+			acxHardCommand.add(cx); //callcmds can be repeated, the same can be used as multiclick mode
 			return this;
 		}
 		
-//		public void assertHardCommandNotSet(Object... aobjDbg){
-//			if(acxHardCommand.size()>0)throw new DetailedException("already set",this,acxHardCommand,aobjDbg);
-//		}
-
 		public String getInfo(boolean bKeybindPrepend) {
 			CommandLineParser cl = KeyBindCommandManagerI.i().prepareConfig(this);
 			
@@ -267,12 +261,49 @@ public class KeyBindCommandManagerI {
 		private boolean	bExpectingKeyReleasedOverriden;
 //		private boolean	bIsPressed;
 		private float	fAnalogValue;
+		private int iClickCountIndex=0;
 		
 		/** This callcmd can be simultaneously called by many different key bindings.  */
 		private ArrayList<KeyBind>	abcSimultaneouslyPressed = new ArrayList<>();
+		private int	iMultiClicksAccepted = 1; //min is 1 of course
+		
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+			builder.append("CallBoundKeyCmd [asteDbgConfiguredAt=");
+			builder.append(Arrays.toString(asteDbgConfiguredAt));
+			builder.append(", bExpectingKeyReleasedOverriden=");
+			builder.append(bExpectingKeyReleasedOverriden);
+			builder.append(", fAnalogValue=");
+			builder.append(fAnalogValue);
+			builder.append(", iClickCountIndex=");
+			builder.append(iClickCountIndex);
+			builder.append(", abcSimultaneouslyPressed=");
+			builder.append(abcSimultaneouslyPressed);
+			builder.append(", iMultiClicksAccepted=");
+			builder.append(iMultiClicksAccepted);
+			builder.append("]");
+			return builder.toString();
+		}
+
+		public CallBoundKeyCmd setClickCountIndex(int iClickCountIndex) {
+			this.iClickCountIndex=iClickCountIndex;
+			return this;
+		}
+		
+		public int getClickCountIndex(){
+			return iClickCountIndex;
+		}
+		
+//		private CallBoundKeyCmd setNameRestricted(String str) {
+//			super.setName(str);
+//			return this;
+//		}
 		
 		@Override
 		public CallBoundKeyCmd setName(String strName) {
+//			if(strName.contains("*"))throw new DetailedException("'*' is restricted use/indicator of multiclick mode",strName,this);
+//			return setNameRestricted(KeyBindCommandManagerI.i().validateHardCommandUId(strName));
 			return super.setName(KeyBindCommandManagerI.i().validateHardCommandUId(strName));
 		}
 		
@@ -280,7 +311,7 @@ public class KeyBindCommandManagerI {
 		@Override
 		public Boolean call() {
 			if(isPressed()){
-				Boolean bRet = callOnKeyPressed();
+				Boolean bRet = callOnKeyPressed(iClickCountIndex);
 				if(bRet!=null)return bRet;
 				
 				bRet=callOnKeyStatus(true);
@@ -292,8 +323,8 @@ public class KeyBindCommandManagerI {
 		}
 		
 //	public abstract Boolean callOnKeyPressed();
-		public Boolean callOnKeyPressed(){return null;}
-		public Boolean callOnKeyReleased(){return null;}
+		public Boolean callOnKeyPressed(int iClickCountIndex){return null;}
+		public Boolean callOnKeyReleased(int iClickCountIndex){return null;}
 		
 		/**
 		 * use this one or the other two (pressed/released) not both kinds!
@@ -306,7 +337,7 @@ public class KeyBindCommandManagerI {
 		@Override
 		public void callAfterRemovedFromQueue() {
 			if(!isPressed()){
-				Boolean bRet = callOnKeyReleased();
+				Boolean bRet = callOnKeyReleased(iClickCountIndex);
 				if(bRet!=null)return;
 				
 				bRet=callOnKeyStatus(false);
@@ -381,6 +412,7 @@ public class KeyBindCommandManagerI {
 //					if(!abcSimultaneouslyPressed.contains(kbLastPressed)){
 						abcSimultaneouslyPressed.add(kbLastPressed);
 //					}
+//					setClickCountIndex(kbLastPressed.getMultiClickIndex());
 				}
 			}else{
 				abcSimultaneouslyPressed.remove(kbLastPressed);
@@ -393,10 +425,24 @@ public class KeyBindCommandManagerI {
 				if(abcSimultaneouslyPressed.get(abcSimultaneouslyPressed.size()-1)==kbLastPressed){
 //					this.bIsPressed = kbLastPressed.isActivated();
 					this.fAnalogValue = kbLastPressed.getActionKey().getAnalogValue();
+					setClickCountIndex(kbLastPressed.getMultiClickIndex());
 				}
 			}
 		}
+
+		public CallBoundKeyCmd setMaxMultiClicksAccepted(int iCallcmdAcceptsMultiClicksCount) {
+			this.iMultiClicksAccepted=iCallcmdAcceptsMultiClicksCount;
+			return this;
+		}
 		
+		public int getMaxMultiClicksAccepted(){
+			return iMultiClicksAccepted;
+		}
+
+//		public void applyMultiClickName(int iCallcmdAcceptsMultiClicksCount) {
+//			setNameRestricted(getName()+"*"+iCallcmdAcceptsMultiClicksCount);
+//		}
+
 //		/**
 //		 * This callcmd can be simultaneously called by two different key bindings.
 //		 * Only the last one pressed, on release, must trigger the removal of this callcmd from the queue. 
@@ -408,10 +454,39 @@ public class KeyBindCommandManagerI {
 //		}
 	}
 	
-	public void putBindCommandLater(String strKeyBindCfg, int iCallcmdAcceptsMultiClicksCount, CallBoundKeyCmd cx){
+	/**
+	 * use this method if the callcmd accepts more than 1 click
+	 * @param strKeyBindCfg
+	 * @param iCallcmdAcceptsMultiClicksCount
+	 * @param cx
+	 */
+	public void putBindCommandsLater(String strKeyBindCfg, int iCallcmdAcceptsMultiClicksCount, CallBoundKeyCmd cx){
+		assert iCallcmdAcceptsMultiClicksCount>=1; //min is 1 tho, will not be a problem...
+//		cx.applyMultiClickName(iCallcmdAcceptsMultiClicksCount);
+		cx.setMaxMultiClicksAccepted(iCallcmdAcceptsMultiClicksCount);
+//		putCommand(cx);
+		
 		CallBoundKeyCmd[] acx = new CallBoundKeyCmd[iCallcmdAcceptsMultiClicksCount];
 		for(int i=0;i<iCallcmdAcceptsMultiClicksCount;i++)acx[i]=cx;
-		putBindCommandLater(strKeyBindCfg, acx);
+		putBindCommandsLater(strKeyBindCfg, true, acx);
+//		putBindCommands(strKeyBindCfg,createIdList(acx));//astr.toArray(new String[0]));
+	}
+	
+	private void putBindCommandsLater(String strKeyBindCfg, boolean bOneCmdIsMultiClickMode, CallBoundKeyCmd... acx){
+		if(bOneCmdIsMultiClickMode){
+			putCommand(acx[0]); //put only the first that is equal to the others
+		}else{
+			putCommands(acx);
+		}
+		
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				if(KeyCodeManagerI.i().getKeyListCopy().size()==0)return false;
+				putBindCommands(strKeyBindCfg,createIdList(acx));//astr.toArray(new String[0]));
+				return true;
+			}
+		});
 	}
 	
 	/**
@@ -421,30 +496,29 @@ public class KeyBindCommandManagerI {
 	 * @param cx
 	 * @return
 	 */
-	public void putBindCommandLater(String strKeyBindCfg, CallBoundKeyCmd... acx){
-//		StackTraceElement[] asteConfiguredAt = Thread.currentThread().getStackTrace();
-		QueueI.i().enqueue(new CallableXAnon() {
-			@Override
-			public Boolean call() {
-				if(KeyCodeManagerI.i().getKeyListCopy().size()==0)return false;
-				putBindCommands(strKeyBindCfg,putCommandsAndCreateCmdIdList(acx));//astr.toArray(new String[0]));
-				return true;
-			}
-
-		});
+	public void putBindCommandsLater(String strKeyBindCfg, CallBoundKeyCmd... acx){
+		putBindCommandsLater(strKeyBindCfg,false,acx);
+//		putCommands(acx);
+//		QueueI.i().enqueue(new CallableXAnon() {
+//			@Override
+//			public Boolean call() {
+//				if(KeyCodeManagerI.i().getKeyListCopy().size()==0)return false;
+//				putBindCommands(strKeyBindCfg,createIdList(acx));//astr.toArray(new String[0]));
+//				return true;
+//			}
+//		});
 	}
 	
-//	private String[] putCommands(CallBoundKeyCmd[] acx,boolean bIsOneCallcmdThatAcceptsMultiClicks) {
-	private String[] putCommandsAndCreateCmdIdList(CallBoundKeyCmd[] acx) {
-		ArrayList<String> astr=new ArrayList<String>();
-		CallBoundKeyCmd cxPrevious=null;
+	protected void putCommands(CallBoundKeyCmd[] acx) {
 		for(CallBoundKeyCmd cx:acx){
-//			cx.asteDbgConfiguredAt=asteConfiguredAt;
+//			if(tmCmdIdVsCmd.get(cx.getName())==null)
+			putCommand(cx);
+		}
+	}
+	protected String[] createIdList(CallBoundKeyCmd[] acx) {
+		ArrayList<String> astr=new ArrayList<String>();
+		for(CallBoundKeyCmd cx:acx){
 			astr.add(cx.getName());
-//			if(bIsOneCallcmdThatAcceptsMultiClicks){
-//				if(cx==cxPrevious)continue; //this is useful in case of adding a callcmd that accepts multi clicks
-//			}
-			if(tmCmdIdVsCmd.get(cx.getName())==null)putCommand(cx);
 		}
 		return astr.toArray(new String[0]);
 	}
@@ -470,7 +544,11 @@ public class KeyBindCommandManagerI {
 	}
 	
 	public CallBoundKeyCmd putCommand(CallBoundKeyCmd callcmd){
-		assert tmCmdIdVsCmd.get(callcmd.getName())==null && !callcmd.getName().isEmpty();
+		assert !callcmd.getName().isEmpty();
+		CallBoundKeyCmd callcmdExisting = tmCmdIdVsCmd.get(callcmd.getName());
+		if(callcmdExisting!=null){
+			throw new DetailedException("id already used: "+callcmd.getName(),callcmdExisting,callcmd);
+		}
 		tmCmdIdVsCmd.put(callcmd.getName(), callcmd);
 		return callcmd;
 	}
@@ -518,10 +596,11 @@ public class KeyBindCommandManagerI {
 		return astrUId;
 	}
 	/**
-	 * mainly to forbid characters that could be on a javascript code ex.: "." "(" ";"
-	 * but still allowing a lot of flexibility and readability
+	 * Allows a lot of flexibility and readability.
+	 * But also helps to forbid characters that could be on a javascript code ex.: "." "(" ";"
+	 * making it easier to distinguish.
+	 * btw, "*" char is restricted use/indicator.
 	 */
-//	public CallBoundKeyCmd validateHardCommandUId(CallBoundKeyCmd callcmd){
 	public String validateHardCommandUId(String strUId) throws IllegalArgumentException{
 		if(strUId.trim().isEmpty()){
 			throw new DetailedException("empty id "+strUId); //to prevent messy ids
@@ -531,8 +610,8 @@ public class KeyBindCommandManagerI {
 			throw new DetailedException("is not trimmed "+strUId); //to prevent messy ids
 		}
 		
-//		if(!strUId.matches("[0-9A-Za-z_-+ ]*")){
-		if(!strUId.matches("[0-9A-Za-z_ -]*")){ //regex: "-" must be the last thing within []
+//		if(!strUId.matches("[0-9A-Za-z_ *+-]*")){ //regex: "-" must be the last thing within []
+		if(!strUId.matches("[0-9A-Za-z_ +-]*")){ //regex: "-" must be the last thing within []
 			throw new DetailedException("invalid hard command unique id "+strUId);
 		}
 		
@@ -757,7 +836,12 @@ public class KeyBindCommandManagerI {
 		
 		if(bc.getKeyBind().getActivationCount()==1){
 			if(bc.getHardCommandsCount()>0){
-				if(isDebug())System.out.println("Enqueue:RunHardCmd:"+bc.getCurrentHardCommand().getName());
+				if(isDebug()){
+					System.out.println("Enqueue:RunHardCmd:"
+						+bc.getCurrentHardCommand().getName()
+						+",clicks="+(bc.getCurrentHardCommand().getClickCountIndex()+1)
+					);
+				}
 				QueueI.i().enqueue(bc.getCurrentHardCommand());
 			}
 		
@@ -954,11 +1038,11 @@ public class KeyBindCommandManagerI {
 			String[] astrHardCommandUIdLazy=astrHardCommandUId;
 			QueueI.i().enqueue(new CallableXAnon() {@Override	public Boolean call() {
 				for(String strHardCmd:astrHardCommandUIdLazy){
-					CallBoundKeyCmd callcmd = tmCmdIdVsCmd.get(strHardCmd);
-					if(callcmd==null)return false; //wait cmd be available
-					
-					bc.addHardCommand(callcmd);
-					
+					if(tmCmdIdVsCmd.get(strHardCmd)==null)return false; //wait all cmds be available
+				}
+				
+				for(String strHardCmd:astrHardCommandUIdLazy){
+					bc.addHardCommand(tmCmdIdVsCmd.get(strHardCmd));
 					if(bcExistingToRemove!=null)removeKeyBind(bcExistingToRemove);
 					putBindCommand(bc);
 				}
@@ -1035,6 +1119,12 @@ public class KeyBindCommandManagerI {
 	public BindCommand applyCommandAt(BindCommand bc, String strCmdId) {
 		bc.addHardCommand(tmCmdIdVsCmd.get(strCmdId));
 		return bc;
+	}
+
+	public String getHardCommandInfo(String strCmdId) {
+		CallBoundKeyCmd callcmd = tmCmdIdVsCmd.get(strCmdId);
+		int i = callcmd.getMaxMultiClicksAccepted();
+		return callcmd.getName()+(i>1 ? " (accepts "+i+" clicks)" : "");
 	}
 
 
