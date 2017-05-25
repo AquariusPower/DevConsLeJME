@@ -27,91 +27,34 @@
 
 package com.github.devconslejme.misc;
 
-
 /**
- * You can use this also to avoid running code on every loop.
- * Or to have any kind of delayed execution.
- * Even just retrieve the current delay percentual for gradual variations.
- *	
- * It is not active initially because of the start time it will need to be active from.
- * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class TimedDelay {
-	
-	/**
-	 * it must be initialized as inactive (null) so the begin time can be set properly/precisely.
-	 */
-	private Long	lLastUpdateReferenceTimeNano = null;
-
+	private boolean	bUseRealTime;
+	private boolean	bLockTimeMode;
+	private Long	lLastUpdateReferenceTimeNano;
+	private long	lDelayNano;
+	private boolean	bInstaReadyOnce;
 	private boolean	bOscilate;
 
-	private float	fDelay;
-
-	private String	strHelp;
-
-	private boolean	bInstaReadyOnce;
-
-	private boolean	bUseRealTime=false; //defaults to simulation time
-
-	private boolean	bLockTimeMode;
-
-	/**
-	 * This constructor is exclusively for methods local variables.
-	 * Such variables will not be stored neither easily accessible at console.
-	 * 
-	 * @param rfcfgOwnerUseThis
-	 * @param fDelay
-	 */
-	public TimedDelay(float fDelay, String strHelp) {
-		this.fDelay=fDelay;
-		this.strHelp=strHelp;
+	public TimedDelay(float fDelay) {
+		setDelay(fDelay);
 	}
 	
-	public long getCurrentDelayNano() {
-		return getCurrentDelayNano(false,false);
+	private void setDelay(float fSeconds){
+		lDelayNano = TimeConvertI.i().secondsToNano(fSeconds);
 	}
 	
-	/**
-	 * 
-	 * @param bOverlapLimit if false, update is required to get a value withing the limit. If true,
-	 * will use {@link #lLastUpdateReferenceTimeNano} to precisely determine the delay based on 
-	 * the remainder of a the division by {@link #getDelayLimitNano()} 
-	 * @param bOverlapModeAlsoUpdateReferenceTime
-	 * @return
-	 */
-	public long getCurrentDelayNano(boolean bOverlapLimit, boolean bOverlapModeAlsoUpdateReferenceTime) {
-		if(!isActive())throw new DetailedException("inactive"); //this, of course, affects all others using this method
-		
-		long lCurrentDelay = 0;
-		
-		if(bOverlapLimit){
-			long lCurrentTimeNano = getTimeNano();
-			
-			long lTotalDelayNano = lCurrentTimeNano - lLastUpdateReferenceTimeNano;
-			
-			lCurrentDelay = lTotalDelayNano%getDelayLimitNano();
-			
-			if(bOverlapModeAlsoUpdateReferenceTime){
-				lLastUpdateReferenceTimeNano = lCurrentTimeNano;
-			}
-		}else{
-			lCurrentDelay = getTimeNano() -lLastUpdateReferenceTimeNano;
-		}
-		
-		return lCurrentDelay;
+	public TimedDelay setAsReadyOnce(boolean bIfReadyWillAlsoUpdate) {
+		bInstaReadyOnce=true;
+		if(bIfReadyWillAlsoUpdate)updateTime();
+		return this;
 	}
-	
-	public long getTimeNano(){
-		if(isUseRealTime()){
-			return System.nanoTime();
-		}else{
-			return SimulationTimeI.i().getNanoTime();
-		}
-	}
-	
-	public void updateTime() {
-		lLastUpdateReferenceTimeNano = getTimeNano();
+	public TimedDelay resetAndChangeDelayTo(float fDelaySeconds){
+		resetTime();
+		setDelay(fDelaySeconds);
+		return this;
 	}
 	public boolean isReady() {
 		return isReady(false);
@@ -128,20 +71,37 @@ public class TimedDelay {
 		
 		return bReady;
 	}
-	public long getDelayLimitMilis(){
-		return getDelayLimitNano()/1000000;
-	}
+
 	public long getDelayLimitNano(){
-		return TimeConvertI.i().secondsToNano(getDelayLimitSeconds());
+		return lDelayNano;
 	}
-	public float getDelayLimitSeconds(){
-		if(bOscilate){
-			return fDelay*2f;
+
+	public long getCurrentDelayNano() {
+		return getTimeNano()-lLastUpdateReferenceTimeNano;
+	}
+
+	public TimedDelay setActive(boolean b){
+		if(b){
+			if(!isActive())updateTime();
+			bLockTimeMode=true;
 		}else{
-			return fDelay;
+			resetTime();
+		}
+		
+		return this;
+	}
+	
+	public long getTimeNano(){
+		if(isUseRealTime()){
+			return System.nanoTime();
+		}else{
+			return SimulationTimeI.i().getNanoTime();
 		}
 	}
 	
+	public void updateTime() {
+		lLastUpdateReferenceTimeNano = getTimeNano();
+	}
 	/**
 	 * will start from now
 	 * @return 
@@ -155,117 +115,11 @@ public class TimedDelay {
 		lLastUpdateReferenceTimeNano=null;
 		return this;
 	}
-	
+
 	public boolean isActive() {
 		return lLastUpdateReferenceTimeNano!=null;
 	}
 	
-	/**
-	 * can be called many subsequent times without updating the reference time
-	 * @param b
-	 * @return 
-	 */
-	public TimedDelay setActive(boolean b){
-		if(b){
-			if(!isActive())updateTime();
-			bLockTimeMode=true;
-		}else{
-			resetTime();
-		}
-		
-		return this;
-	}
-	
-	public TimedDelay setOscilateMode(boolean b){
-		this.bOscilate=b;
-		return this;
-	}
-	
-	public float getCurrentDelayCalc(float fMaxValue,boolean bIfReadyWillAlsoUpdate) {
-		return getCurrentDelayCalc(fMaxValue,bOscilate,false,bIfReadyWillAlsoUpdate);
-	}
-	public float getCurrentDelayCalcDynamic(float fMaxValue) {
-		return getCurrentDelayCalc(fMaxValue,bOscilate,true,null);
-	}
-	/**
-	 * 
-	 * @param fMaxValue
-	 * @param bOscilate
-	 * @param bDynamic
-	 * @param bIfReadyWillAlsoUpdate
-	 * @return
-	 */
-	private float getCurrentDelayCalc(float fMaxValue, boolean bOscilate, boolean bDynamic, Boolean bIfReadyWillAlsoUpdate) {
-		Float fPerc = null;
-		if(bDynamic){
-			fPerc = getCurrentDelayPercentualDynamic();
-		}else{
-			fPerc = getCurrentDelayPercentual(bIfReadyWillAlsoUpdate);
-		}
-		float fCurrent = (fPerc * fMaxValue);
-		
-		if(!bOscilate)return fCurrent;
-		
-		float fOscilatedCurrent=0f;
-		
-		//ex.: max is 10
-		float fHalf=(fMaxValue/2f);
-		if(fCurrent<fHalf){
-			fOscilatedCurrent=fCurrent*2f; //ex.: from 0 to 10: 1 -> 2; 4 -> 8;
-		}else{
-			fOscilatedCurrent=fMaxValue-((fCurrent-fHalf)*2f); //ex.: from 10 to 0: 6 -> 8; 9 -> 2;
-		}
-		
-		return fOscilatedCurrent;
-	}	
-	/**
-	 * Will overlap {@link #getDelayLimitNano()} not requiring {@link #updateTime()} 
-	 * to return precise values.
-	 * 
-	 * @return
-	 */
-	public float getCurrentDelayPercentualDynamic() {
-		long lCurrentDelay = getCurrentDelayNano(true,false);
-		
-		double dPerc = 1.0 - ((double)lCurrentDelay)/((double)getDelayLimitNano());
-		
-		return (float)dPerc;
-	}
-	
-	/**
-	 * Will not overlap {@link #getDelayLimitNano()}, so {@link #updateTime()} is required.
-	 */
-	public float getCurrentDelayPercentual(boolean bIfReadyWillAlsoUpdate) {
-		long lCurrentDelayNano = getCurrentDelayNano();
-		
-		long lDiff = getDelayLimitNano()-lCurrentDelayNano;
-		if(lDiff<0)lDiff=0; //if it took too much time, this constraint will fix the negative value
-		
-		double dPerc = 1.0 - ((double)lDiff)/((double)getDelayLimitNano());
-		
-		if(isReady(bIfReadyWillAlsoUpdate)){
-			return 1f; //if from getting the current to now it gets ready, will return 100%
-		}else{
-			return (float)dPerc;
-		}
-	}
-
-	public String getHelp() {
-		return strHelp;
-	}
-
-	public TimedDelay resetAndChangeDelayTo(float fDelaySeconds){
-		resetTime();
-		fDelay=(fDelaySeconds);
-		return this;
-	}
-
-	public TimedDelay setAsReadyOnce(boolean bIfReadyWillAlsoUpdate) {
-		bInstaReadyOnce=true;
-		if(bIfReadyWillAlsoUpdate)updateTime();
-		return this;
-	}
-
 	public boolean isUseRealTime() {
 		return bUseRealTime;
 	}
@@ -277,4 +131,35 @@ public class TimedDelay {
 		this.bUseRealTime = bUseRealTime;
 		return this; 
 	}
+
+	public float calcRemainderAsPercentualMultBy(float fMaxValue) {
+		assert isActive();
+		double dPerc=0f;
+		if(bOscilate){ 
+			/**
+			 * Remainder of x2 limit is important to keep the variation speed.
+			 */
+			long lRemainderX2 = getCurrentDelayNano()%(getDelayLimitNano()*2);
+			double dPercX2 = lRemainderX2/(double)getDelayLimitNano(); //from 0.0 to 2.0
+			if(dPercX2<=1f){ // from 0.0 to 1.0
+				dPerc=dPercX2;
+			}else{ //from 1.0 to 2.0 will become from 1.0 to 0.0 
+				dPerc=2f-dPercX2;
+			}
+		}else{
+			long lRemainder = getCurrentDelayNano()%getDelayLimitNano();
+			dPerc = lRemainder/(double)getDelayLimitNano();
+		}
+		return (float) (fMaxValue*dPerc);
+	}
+
+	public TimedDelay setOscilateMode(boolean b) {
+		this.bOscilate=b;
+		return this;
+	}
+
+	public double getCurrentDelay() {
+		return TimeConvertI.i().nanoToSeconds(getCurrentDelayNano());
+	}
+
 }

@@ -20,12 +20,13 @@ public class TestSimpleThings {
 	}
 	
 	private static void tst7() {
-		TimedDelay td = new TimedDelay(1f, "").setUseRealTime(true).setActive(true)
-				//.setOscilateMode(true)
+		TimedDelay td = new TimedDelay(1f).setUseRealTime(true).setActive(true)
+				.setOscilateMode(true)
 				;
 		
-		while(td.getCurrentDelayNano()<2*1000000000){
-			System.out.println(td.getCurrentDelayNano()+","+td.getCurrentDelayCalcDynamic(10));
+		while(td.getCurrentDelay()<5){
+//			System.out.println(td.getCurrentDelayNano()+","+td.getCurrentDelayCalcDynamic(10));
+			System.out.println(td.calcRemainderAsPercentualMultBy(10));
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {

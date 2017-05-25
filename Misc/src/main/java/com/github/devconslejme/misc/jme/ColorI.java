@@ -62,7 +62,8 @@ public class ColorI {
 	public static class ColorGlow{
 		private ColorRGBA	color;
 		
-		private TimedDelay tdColorGlow = new TimedDelay(15f, "").setActive(true);
+//		private TimedDelay tdColorGlow = new TimedDelay(15f);
+		private TimedDelay tdColorGlow = new TimedDelay(5f);
 		
 		private float fColorCompMin=0.75f;
 		private float fColorCompMax=1f;
@@ -78,7 +79,7 @@ public class ColorI {
 		
 		public ColorGlow(ColorRGBA color,boolean bUseRealTime){
 			this.color=color;
-			tdColorGlow.setUseRealTime(bUseRealTime);
+			tdColorGlow.setUseRealTime(bUseRealTime).setActive(true);
 			
 			this.fColorCompDiff=fColorCompMax-fColorCompMin;
 			this.fAlphaDiff=fAlphaMax-fAlphaMin;
@@ -93,11 +94,13 @@ public class ColorI {
 		}
 		
 		public void update(float fTPF){
-			float fValOriginal = tdColorGlow.getCurrentDelayCalcDynamic(7f); //MUST BE 7: r g b rg rb gb rgb!!!
+			int iTot=7;//MUST BE 7: r g b rg rb gb rgb!!!
+			float fValOriginal = tdColorGlow.calcRemainderAsPercentualMultBy(iTot); 
 			
 			float fStart=0f;
 			if(isStartHigh()){
-				fStart=0.5f; //will be *2 becoming 1f below
+				fStart+=0.5f; //will be *2 becoming 1f below
+				fStart+=6f; //to use the white color initially
 //				if(ColorI.i().isDebug())System.out.println(""+this+":fPercGlow="+fPercGlow);
 			}
 			fValOriginal+=fStart;
@@ -117,7 +120,7 @@ public class ColorI {
 			float fAlpha=fAlphaMin+(fAlphaDiff*fPercGlow);
 			color.set(0,0,0,fAlpha);
 			
-			switch((int)fValOriginal){
+			switch((int)fValOriginal%iTot){
 				case 0:color.r=fColorComp;break;
 				case 1:color.g=fColorComp;break;
 				case 2:color.b=fColorComp;break;
@@ -243,7 +246,7 @@ public class ColorI {
 		
 		td.setOscilateMode(bFadeInAndOut);
 		
-		color.a = fMinAlpha + td.getCurrentDelayCalcDynamic(fDeltaWorkAlpha);
+		color.a = fMinAlpha + td.calcRemainderAsPercentualMultBy(fDeltaWorkAlpha);
 		
 //		if(color.a<0)color.a=0;
 		if(color.a>fMaxAlpha){

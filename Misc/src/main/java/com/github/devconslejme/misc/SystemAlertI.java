@@ -169,17 +169,17 @@ public class SystemAlertI {
 	public void showTemporarySystemAlert(String strMsg, float fDelay){
 		String strName="TemporarySystemAlert";
 		QueueI.i().enqueue(new CallableXAnon() {
-			TimedDelay td = new TimedDelay(fDelay, strName);
+			TimedDelay tdHideSystemAlert = new TimedDelay(fDelay);
 			private StackTraceElement[]	aste;
 			@Override
 			public Boolean call() {
 				if(!SystemAlertI.i().isShowingAlert()){
 					aste=SystemAlertI.i().showSystemAlert(strMsg, null);
-					td.setActive(true);
+					tdHideSystemAlert.setActive(true);
 				}else{
 					if(!isValidRequestOriginKey(aste))return false; //there is some other alert going on, wait it end
 					
-					if(td.isReady()){
+					if(tdHideSystemAlert.isReady()){
 						SystemAlertI.i().hideSystemAlert(aste);
 						return true;//end
 					}
@@ -187,7 +187,11 @@ public class SystemAlertI {
 				
 				return false;
 			}
-		}.setName("TemporarySystemAlert"));
+//			@Override
+//			public void callAfterRemovedFromQueue() {
+//				SystemAlertI.i().hideSystemAlert(aste);
+//			}
+		}.setName(strName));
 	}
 	
 	public boolean isAlertReady() {

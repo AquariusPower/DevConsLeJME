@@ -78,8 +78,8 @@ public class FlyByCameraX extends FlyByCamera {
 	ArrayList<Float> afListZoom = new ArrayList<Float>();
 	private int iCurrentZoomStep;
 	private boolean	bEnableZoomStepsAndLimits;
-	private TimedDelay tdMouseGrab=new TimedDelay(0.5f,"update mouse grab").setActive(true);
-	private TimedDelay tdMI=new TimedDelay(1f,"update mouse info").setActive(true);
+	private TimedDelay tdMouseGrab=new TimedDelay(0.5f).setActive(true);
+	private TimedDelay tdMouseInfo=new TimedDelay(1f).setActive(true);
 	private float fChangeZoomStepSpeed=500f;
 	private float	fZoomedRotationSpeed=1f; //no zoom
 //	protected boolean	bZoomApplied;
@@ -500,7 +500,7 @@ public class FlyByCameraX extends FlyByCamera {
 			fZoomedRotationSpeed=afListZoom.get(iCurrentZoomStep)/fMaxFOVdeg;
 		}
 		
-		if(tdMI.isReady(true)){
+		if(tdMouseInfo.isReady(true)){
 			String strFOV="{ ";
 			strFOV+="fov="+StringI.i().fmtFloat(getFOV(),2);
 			if(bEnableZoomStepsAndLimits){

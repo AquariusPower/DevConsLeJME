@@ -132,6 +132,8 @@ public class HighlighterI {
 		}else{
 			reset();
 		}
+		
+		EnvironmentJmeI.i().putCustomInfo("Highlighting", geomTarget!=null ? geomTarget.toString() : "(nothing)");
 	}
 
 	public boolean isDebug() {

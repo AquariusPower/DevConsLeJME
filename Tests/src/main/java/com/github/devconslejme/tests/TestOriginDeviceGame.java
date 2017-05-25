@@ -48,6 +48,7 @@ import com.github.devconslejme.misc.jme.EnvironmentJmeI;
 import com.github.devconslejme.misc.jme.GeometryI;
 import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.jme.Orbiter;
 import com.github.devconslejme.misc.jme.OriginDevice;
 import com.github.devconslejme.misc.jme.OriginDevice.NodeAxis;
 import com.github.devconslejme.misc.jme.RotateI;
@@ -325,7 +326,25 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs {
 			updateAutoTarget();
 			updateElectricalEffects();
 			updateEnergySourceInteraction(esm);
+			
+			if(isUnstable()){
+				boolean bCreate=false;
+				if(!tdUnstableCreatePets.isActive()){
+					tdUnstableCreatePets.setActive(true);
+					bCreate=true;
+				}else{
+					if(tdUnstableCreatePets.isReady(true))bCreate=true;
+				}
+				
+				if(bCreate){
+					createPet(EAxis.values()[FastMath.nextRandomInt(0,2)]);
+				}
+			}else{
+				tdUnstableCreatePets.setActive(false);
+			}
 		}
+		
+		TimedDelay tdUnstableCreatePets = new TimedDelay(1f);
 		
 		private void updateEnergyCore() {
 			float fECScale=0.01f;
@@ -601,7 +620,7 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs {
 			anodeElectricShapesList.add(nodeEnergyCore);
 			
 			// electricity
-			tdEffectRetarget = new TimedDelay(fRetargetDefaultDelay,"").setActive(true);
+			tdEffectRetarget = new TimedDelay(fRetargetDefaultDelay).setActive(true);
 			efHook=new EffectArrow();
 			efHook.setColor(ColorRGBA.Gray);
 			EffectManagerStateI.i().add(efHook);
@@ -630,110 +649,112 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs {
 			return ef;
 		}
 
-		private void preparePet(NodeAxisGm nodePet) {
-			MiscJmeI.i().addToName(nodePet, "Pet", false);
-			
-			TimedDelay td = new TimedDelay(10f, "change direction").setActive(true).setAsReadyOnce(true);
-			
-			// Orde's pet
-			anodeElectricShapesList.add(nodePet);
-			nodePet.getGeomWireFrame().setMaterial(ColorI.i().retrieveMaterialUnshadedColor(ColorRGBA.Cyan));
-			nodePet.getGeomWireFrame().getMaterial().getAdditionalRenderState().setWireframe(true);
-			nodePet.rotateUpTo(Vector3f.UNIT_Y); //undo the axis default
-			nodePet.removeFromParent(); //independent
-				
-			QueueI.i().enqueue(new CallableXAnon() {
-				@Override
-				public Boolean call() {
-					if(getParent()==null)return false;
-					updatePet(getTPF(),nodePet,td);
-					return true;
-				}
-			}).enableLoopMode();//.setDelaySeconds(0.1f);//.setInitialDelay(10));
-		}
+//		private void preparePet(NodeAxisGm nodePet) {
+//			MiscJmeI.i().addToName(nodePet, "Pet", false);
+//			
+////			TimedDelay tdChangeDir = new TimedDelay(10f).setActive(true).setAsReadyOnce(true);
+//			
+//			// Orde's pet
+//			anodeElectricShapesList.add(nodePet);
+//			nodePet.getGeomWireFrame().setMaterial(ColorI.i().retrieveMaterialUnshadedColor(ColorRGBA.Cyan));
+//			nodePet.getGeomWireFrame().getMaterial().getAdditionalRenderState().setWireframe(true);
+//			nodePet.rotateUpTo(Vector3f.UNIT_Y); //undo the axis default
+//			nodePet.removeFromParent(); //independent
+//				
+////			new Orbiter(this,nodePet,nodePet.getGeom());
+////			
+////			QueueI.i().enqueue(new CallableXAnon() {
+////				@Override
+////				public Boolean call() {
+////					if(getParent()==null)return false;
+////					updatePet(getTPF(),nodePet,tdChangeDir);
+////					return true;
+////				}
+////			}).enableLoopMode();//.setDelaySeconds(0.1f);//.setInitialDelay(10));
+//		}
 		
-		/**
-		 * TODO use class Orbiter
-		 * @param fTPF
-		 * @param nodePet
-		 * @param td
-		 */
-		protected void updatePet(float fTPF,NodeAxisGm nodePet, TimedDelay td) {
-			if(isUnstable()){
-				if(nodePet.getParent()==null)this.getParent().attachChild(nodePet);
-			}else{
-				if(nodePet.getParent()!=null)nodePet.removeFromParent();
-				return;
-			}
-			
-			/////////////  pet distance
-			Vector3f v3fDir = nodePet.getLocalTranslation().subtract(this.getLocalTranslation()).normalize();
-			if(v3fDir.length()==0){ // may happen after reaching Orde origin
-				v3fDir=RotateI.i().randomDirection();
-				//TODO fix the initial rotation too?
-			}
-			
-			float fPercDist = bPetUnstableDist ? energy.getUnstablePerc() : 1f;
-			if(fPercDist>1f)fPercDist=1f; //so the max dist will be at max for a 200% energy
-			
-			Vector3f v3fDist = v3fDir.mult(fPercDist*getPetMaxDist()); //getLocalScale()
-			
-			nodePet.setLocalTranslation(getLocalTranslation().add(v3fDist));
-			
-			///////////////// rotate around Orde
-			if(bPetOrbit){
-				// irregularity
-				Vector3f v3fNodeUp = nodePet.nodeOrdeRefLike.getLocalRotation().getRotationColumn(1);//y
-				boolean bIrregular=true; //TODO true
-				if(bIrregular){
-					if(td.isReady(true)){
-						nodePet.getV3fAdd().set(
-								FastMath.nextRandomInt(0,1),
-								FastMath.nextRandomInt(0,1),
-								FastMath.nextRandomInt(0,1));
-					}
-					
-					float f=0.25f;
-					v3fNodeUp.addLocal(nodePet.getV3fAdd().mult(f)).normalizeLocal();
-				}
-				nodePet.nodeOrdeRefLike.setLocalTranslation(getLocalTranslation());
-//				nodePet.nodeOrdeRefLike.setLocalRotation(getLocalRotation());
-				nodePet.nodeOrdeRefLike.rotateUpTo(v3fNodeUp);
-				if(nodePet.nodeOrdeRefLike.getParent()==null)getParent().attachChild(nodePet.nodeOrdeRefLike);
-				
-				// orbit
-				float fRotSpeed=300f;
-				RotateI.i().rotateAroundPivot(
-						nodePet, 
-						nodePet.nodeOrdeRefLike, 
-						-(fRotSpeed*fTPF)*FastMath.DEG_TO_RAD,	
-						true);
-			}
-			
-			////////////////// spin around self
-			if(bPetSpin){
-				Quaternion qua = nodePet.getNodeGeometries().getLocalRotation().clone();
-				Vector3f v3fGeomUp = qua.getRotationColumn(1); //y
-				float fSpinSpeed=500f;
-				RotateI.i().rotateSpinning(
-					nodePet.getNodeGeometries(),
-					v3fGeomUp,
-					qua.getRotationColumn(2),
-					(fSpinSpeed*fTPF)*FastMath.DEG_TO_RAD
-				);
-			}
-			
-			//////////// scaled based on unstability
-			if(bPetScale){
-				float fPercScale = energy.getUnstablePerc();
-				if(fPercScale>1f)fPercScale=1f; //so the max dist will be at max for a 200% energy
-				nodePet.setLocalScale(getLocalScale().length()*fPercScale);
-			}
-			
-			/////////// energy
-			consumeEnergyPF(EEnergyConsumpWpM.PetFlyExpelsEnergy,energy.getUnstablePerc()/3f); //3f is just to last more, then ending lasts 5 full loops this way, no "real" energy reason tho..
-
-		}
+//		/**
+//		 * TODO use class Orbiter
+//		 * @param fTPF
+//		 * @param nodePet
+//		 * @param td
+//		 */
+//		protected void updatePet(float fTPF,NodeAxisGm nodePet, TimedDelay td) {
+//			if(isUnstable()){
+//				if(nodePet.getParent()==null)this.getParent().attachChild(nodePet);
+//			}else{
+//				if(nodePet.getParent()!=null)nodePet.removeFromParent();
+//				return;
+//			}
+//			
+//			/////////////  pet distance
+//			Vector3f v3fDir = nodePet.getLocalTranslation().subtract(this.getLocalTranslation()).normalize();
+//			if(v3fDir.length()==0){ // may happen after reaching Orde origin
+//				v3fDir=RotateI.i().randomDirection();
+//				//TODO fix the initial rotation too?
+//			}
+//			
+//			float fPercDist = bPetUnstableDist ? energy.getUnstablePerc() : 1f;
+//			if(fPercDist>1f)fPercDist=1f; //so the max dist will be at max for a 200% energy
+//			
+//			Vector3f v3fDist = v3fDir.mult(fPercDist*getPetMaxDist()); //getLocalScale()
+//			
+//			nodePet.setLocalTranslation(getLocalTranslation().add(v3fDist));
+//			
+//			///////////////// rotate around Orde
+//			if(bPetOrbit){
+//				// irregularity
+//				Vector3f v3fNodeUp = nodePet.nodeOrdeRefLike.getLocalRotation().getRotationColumn(1);//y
+//				boolean bIrregular=true; //TODO true
+//				if(bIrregular){
+//					if(td.isReady(true)){
+//						nodePet.getV3fAdd().set(
+//								FastMath.nextRandomInt(0,1),
+//								FastMath.nextRandomInt(0,1),
+//								FastMath.nextRandomInt(0,1));
+//					}
+//					
+//					float f=0.25f;
+//					v3fNodeUp.addLocal(nodePet.getV3fAdd().mult(f)).normalizeLocal();
+//				}
+//				nodePet.nodeOrdeRefLike.setLocalTranslation(getLocalTranslation());
+////				nodePet.nodeOrdeRefLike.setLocalRotation(getLocalRotation());
+//				nodePet.nodeOrdeRefLike.rotateUpTo(v3fNodeUp);
+//				if(nodePet.nodeOrdeRefLike.getParent()==null)getParent().attachChild(nodePet.nodeOrdeRefLike);
+//				
+//				// orbit
+//				float fRotSpeed=300f;
+//				RotateI.i().rotateAroundPivot(
+//						nodePet, 
+//						nodePet.nodeOrdeRefLike, 
+//						-(fRotSpeed*fTPF)*FastMath.DEG_TO_RAD,	
+//						true);
+//			}
+//			
+//			////////////////// spin around self
+//			if(bPetSpin){
+//				Quaternion qua = nodePet.getNodeGeometries().getLocalRotation().clone();
+//				Vector3f v3fGeomUp = qua.getRotationColumn(1); //y
+//				float fSpinSpeed=500f;
+//				RotateI.i().rotateSpinning(
+//					nodePet.getNodeGeometries(),
+//					v3fGeomUp,
+//					qua.getRotationColumn(2),
+//					(fSpinSpeed*fTPF)*FastMath.DEG_TO_RAD
+//				);
+//			}
+//			
+//			//////////// scaled based on unstability
+//			if(bPetScale){
+//				float fPercScale = energy.getUnstablePerc();
+//				if(fPercScale>1f)fPercScale=1f; //so the max dist will be at max for a 200% energy
+//				nodePet.setLocalScale(getLocalScale().length()*fPercScale);
+//			}
+//			
+//			/////////// energy
+//			consumeEnergyPF(EEnergyConsumpWpM.PetFlyExpelsEnergy,energy.getUnstablePerc()/3f); //3f is just to last more, then ending lasts 5 full loops this way, no "real" energy reason tho..
+//
+//		}
 		
 		private void updateCheckGrowShrink() {
 			Float fPerc=null;
@@ -993,11 +1014,11 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs {
 				.setFollowToTarget(nodeRepresentationShape,null);
 			EffectManagerStateI.i().add(nodeRepresentationShape.ef);
 			
-			// pets
-			NodeAxisGm nodePet = createAxisShape(ea,
-				MeshI.i().cone(1f), new Vector3f(getPetMaxDist(),0,0), 1f, v3fUp, true, 
-				new Vector3f(0.05f, 0.15f, 1));
-			preparePet(nodePet);
+//			// pets
+//			NodeAxisGm nodePet = createAxisShape(ea,
+//				MeshI.i().cone(1f), new Vector3f(getPetMaxDist(),0,0), 1f, v3fUp, true, 
+//				new Vector3f(0.05f, 0.15f, 1));
+//			preparePet(nodePet);
 			
 			return ea;
 		}

@@ -67,7 +67,10 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 	private Container	cntrAlert;
 	private Label	lblAlertMsg;
 	private Panel	pnlBlocker;
-	private final TimedDelay	tdBlockerGlow = new TimedDelay(3f, "the blocker blocks all gui elements to let some special feature be performed");
+	
+	/** the blocker blocks all gui elements to let some special feature be performed */
+	private final TimedDelay	tdBlockerGlow = new TimedDelay(3f);
+	
 	private ColorRGBA	colorBlockerBkg;
 	private boolean bAlertStayOnCenter = true;
 	private boolean	bStartedShowEffect;

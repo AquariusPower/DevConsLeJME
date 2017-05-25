@@ -88,7 +88,7 @@ public class Orbiter {
 		}
 		
 		this.fMaxDist = sptPet.getLocalTranslation().distance(sptPivot.getLocalTranslation());
-		this.tdIrregularity = new TimedDelay(10f, "Irregularity").setActive(true);
+		this.tdIrregularity = new TimedDelay(10f).setActive(true);
 		
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override

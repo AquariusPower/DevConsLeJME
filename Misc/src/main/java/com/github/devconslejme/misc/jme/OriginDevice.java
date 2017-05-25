@@ -352,7 +352,6 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 	
 	private boolean	bDebug;
 	private MultiClickAxis	mcMainShapeMB0 = new MultiClickAxis(0,3,new CallMultiClickUpdate(){
-
 		@Override	public void applyMultiClick(int totalClicks) {
 			switch(totalClicks){
 				case 1:
@@ -371,33 +370,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 					break;
 				case 3:
 				default: //3 or more keep spawning temporary pets
-					/**
-					 * clone node axis intersection arrow tip
-					 */
-					Node nodePet=new Node();
-					NodeAxis nodeCopyFrom = getAxisInfo(mcMainShapeMB0.ea).getTorusTip();
-					nodePet.setLocalTransform(nodeCopyFrom.getLocalTransform());
-					Geometry geom = nodeCopyFrom.getGeom().clone();
-					nodePet.attachChild(geom);
-					geom.setLocalScale(1f, 0.5f, 3f);
-					Orbiter obt = new Orbiter(OriginDevice.this, nodePet, geom);
-//					getParent().attachChild(obt.get);
-					
-					/**
-					 * randomize orbiting speed making it slower.
-					 * the slower orbiting, the longer it will take to shrink and get closer.
-					 */
-					float fOrbitSpeed = obt.getOrbitSpeed();
-					fOrbitSpeed = FastMath.clamp(FastMath.nextRandomFloat()*fOrbitSpeed, fOrbitSpeed/10f, fOrbitSpeed);
-					float fDelay=10f / (fOrbitSpeed/obt.getOrbitSpeed());
-					if(isDebug())System.out.println("OrbitSpeed="+fOrbitSpeed+", delay="+fDelay);
-					obt.setOrbitSpeed(fOrbitSpeed);
-					obt.setMaxDelayToFullyShrink(fDelay);
-					obt.setMaxDelayToGetCloser(fDelay);
-//					obt.setOrbiting(false).setScaling(false).setGetCloser(false); //TODO rm
-					
-					aobtList.add(obt);
-					
+					createPet(mcMainShapeMB0.ea);
 					break;
 			}
 		}
@@ -408,6 +381,35 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		return bDebug;
 	}
 
+	public void createPet(EAxis ea) {
+		/**
+		 * clone node axis intersection arrow tip
+		 */
+		Node nodePet=new Node();
+		NodeAxis nodeCopyFrom = getAxisInfo(ea).getTorusTip();
+		nodePet.setLocalTransform(nodeCopyFrom.getLocalTransform());
+		Geometry geom = nodeCopyFrom.getGeom().clone();
+		nodePet.attachChild(geom);
+		geom.setLocalScale(1f, 0.5f, 3f);
+		Orbiter obt = new Orbiter(OriginDevice.this, nodePet, geom);
+//		getParent().attachChild(obt.get);
+		
+		/**
+		 * randomize orbiting speed making it slower.
+		 * the slower orbiting, the longer it will take to shrink and get closer.
+		 */
+		float fOrbitSpeed = obt.getOrbitSpeed();
+		fOrbitSpeed = FastMath.clamp(FastMath.nextRandomFloat()*fOrbitSpeed, fOrbitSpeed/10f, fOrbitSpeed);
+		float fDelay=10f / (fOrbitSpeed/obt.getOrbitSpeed());
+		if(isDebug())System.out.println("OrbitSpeed="+fOrbitSpeed+", delay="+fDelay);
+		obt.setOrbitSpeed(fOrbitSpeed);
+		obt.setMaxDelayToFullyShrink(fDelay);
+		obt.setMaxDelayToGetCloser(fDelay);
+//		obt.setOrbiting(false).setScaling(false).setGetCloser(false); //TODO rm
+		
+		aobtList.add(obt);
+	}
+	
 	public OriginDevice<SELF, NODEXS> setDebug(boolean bDebug) {
 		this.bDebug = bDebug;
 		return this; 
