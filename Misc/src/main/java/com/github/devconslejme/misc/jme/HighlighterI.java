@@ -54,6 +54,7 @@ public class HighlighterI {
 //	private ColorRGBA	colorHighlight=ColorRGBA.Yellow.clone();
 	private ColorRGBA	colorHighlight;
 //	private TimedDelay tdColorGlow = new TimedDelay(15f, "").setActive(true);
+	private ColorGlow	cg;
 	
 	public void configure(FlyByCamera flycam){
 		this.flycam = flycam;
@@ -82,12 +83,14 @@ public class HighlighterI {
 		
 		WorldPickingI.i().addSkip(geomHighlight);
 		
-		new ColorGlow(colorHighlight);
+		cg = new ColorGlow(colorHighlight,true).setStartHigh(true);
 	}
 	
 	
 	protected void reset(){
+		geomTarget=null;
 		nodeHightlight.removeFromParent();
+		cg.disable();
 		DebugVisualsI.i().hideWorldBoundAndRotAxes(nodeHightlight);
 	}
 	
@@ -97,43 +100,19 @@ public class HighlighterI {
 			return;
 		}
 		
-		geomTarget=null;
+		Geometry geomTargetNew=null;
 		for(CollisionResult cr:WorldPickingI.i().raycastPiercingAtCursor(null)){
-			geomTarget=cr.getGeometry();
+			geomTargetNew=cr.getGeometry();
 			break; //1st only
 		}
 			
-		if(geomTarget!=null){
-//			float fValOriginal = tdColorGlow.getCurrentDelayCalcDynamic(7f); //MUST BE 7: r g b rg rb gb rgb!!!
-//			float fPercGlow=fValOriginal%1f;
-//			if(fPercGlow<0.5f){
-//				fPercGlow*=2f; //0.0 to 0.5 will become 0.0 to 1.0
-//			}else{
-//				fPercGlow=1f-fPercGlow;
-//				fPercGlow*=2f; //0.5 to 1.0 will become 1.0 to 0.0
-//			}
-//			float fColorCompMin=0.75f;
-//			float fColorCompMax=1f;
-//			float fColorCompDiff=fColorCompMax-fColorCompMin;
-//			float fColorComp=fColorCompMin+(fColorCompDiff*fPercGlow);
-//			
-//			float fAlphaMin=0f;
-//			float fAlphaMax=0.50f;
-//			float fAlphaDiff=fAlphaMax-fAlphaMin;
-//			float fAlpha=fAlphaMin+(fAlphaDiff*fPercGlow);
-//			colorHighlight.set(0,0,0,fAlpha);
-//			
-//			switch((int)fValOriginal){
-//				case 0:colorHighlight.r=fColorComp;break;
-//				case 1:colorHighlight.g=fColorComp;break;
-//				case 2:colorHighlight.b=fColorComp;break;
-//				case 3:colorHighlight.r=colorHighlight.g=fColorComp;break;
-//				case 4:colorHighlight.r=colorHighlight.b=fColorComp;break;
-//				case 5:colorHighlight.g=colorHighlight.b=fColorComp;break;
-//				case 6:colorHighlight.r=colorHighlight.g=colorHighlight.b=fColorComp;break;
-//			}
-			
-			if(geomTarget!=geomHighlight){
+		if(geomTargetNew!=null){
+			if(geomTarget!=geomTargetNew){
+				geomTarget = geomTargetNew;
+				if(isDebug())System.out.println(this+":"+geomTarget.getName());
+				
+				cg.enable();
+				
 				geomHighlight.setMesh(geomTarget.getMesh());
 				
 				/**

@@ -81,7 +81,7 @@ public class TimedDelay {
 	 * @return
 	 */
 	public long getCurrentDelayNano(boolean bOverlapLimit, boolean bOverlapModeAlsoUpdateReferenceTime) {
-		if(!isActive())throw new NullPointerException("inactive"); //this, of course, affects all others using this method
+		if(!isActive())throw new DetailedException("inactive"); //this, of course, affects all others using this method
 		
 		long lCurrentDelay = 0;
 		
@@ -144,13 +144,16 @@ public class TimedDelay {
 	
 	/**
 	 * will start from now
+	 * @return 
 	 */
-	public void reactivate(){
+	public TimedDelay reactivate(){
 		updateTime();
+		return this;
 	}
 	
-	public void resetTime() {
+	public TimedDelay resetTime() {
 		lLastUpdateReferenceTimeNano=null;
+		return this;
 	}
 	
 	public boolean isActive() {
@@ -193,8 +196,6 @@ public class TimedDelay {
 	 * @return
 	 */
 	private float getCurrentDelayCalc(float fMaxValue, boolean bOscilate, boolean bDynamic, Boolean bIfReadyWillAlsoUpdate) {
-		float fHalf=(fMaxValue/2f);
-		
 		Float fPerc = null;
 		if(bDynamic){
 			fPerc = getCurrentDelayPercentualDynamic();
@@ -208,6 +209,7 @@ public class TimedDelay {
 		float fOscilatedCurrent=0f;
 		
 		//ex.: max is 10
+		float fHalf=(fMaxValue/2f);
 		if(fCurrent<fHalf){
 			fOscilatedCurrent=fCurrent*2f; //ex.: from 0 to 10: 1 -> 2; 4 -> 8;
 		}else{

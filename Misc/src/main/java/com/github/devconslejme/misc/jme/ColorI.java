@@ -43,6 +43,8 @@ import com.jme3.math.ColorRGBA;
  */
 public class ColorI {
 	public static ColorI i(){return GlobalManagerI.i().get(ColorI.class);}
+
+	private boolean	bDebug;
 	
 //	public static class ColorRGBAx {
 //		private ColorRGBA	color;
@@ -69,9 +71,14 @@ public class ColorI {
 		
 		private float fAlphaDiff;
 		private float fColorCompDiff;
+
+		private boolean	bStartHigh;
+
+		private boolean	bEnabled;
 		
-		public ColorGlow(ColorRGBA color){
+		public ColorGlow(ColorRGBA color,boolean bUseRealTime){
 			this.color=color;
+			tdColorGlow.setUseRealTime(bUseRealTime);
 			
 			this.fColorCompDiff=fColorCompMax-fColorCompMin;
 			this.fAlphaDiff=fAlphaMax-fAlphaMin;
@@ -88,7 +95,15 @@ public class ColorI {
 		public void update(float fTPF){
 			float fValOriginal = tdColorGlow.getCurrentDelayCalcDynamic(7f); //MUST BE 7: r g b rg rb gb rgb!!!
 			
-			float fPercGlow=fValOriginal%1f;
+			float fStart=0f;
+			if(isStartHigh()){
+				fStart=0.5f; //will be *2 becoming 1f below
+//				if(ColorI.i().isDebug())System.out.println(""+this+":fPercGlow="+fPercGlow);
+			}
+			fValOriginal+=fStart;
+			
+			float fPercGlow=(fValOriginal%1f);
+			
 			if(fPercGlow<0.5f){
 				fPercGlow*=2f; //0.0 to 0.5 will become 0.0 to 1.0
 			}else{
@@ -97,6 +112,7 @@ public class ColorI {
 			}
 			
 			float fColorComp=fColorCompMin+(fColorCompDiff*fPercGlow);
+			fColorComp=1f;
 			
 			float fAlpha=fAlphaMin+(fAlphaDiff*fPercGlow);
 			color.set(0,0,0,fAlpha);
@@ -110,6 +126,28 @@ public class ColorI {
 				case 5:color.g=color.b=fColorComp;break;
 				case 6:color.r=color.g=color.b=fColorComp;break;
 			}
+			
+//			if(ColorI.i().isDebug()&&fValOriginal<1f)System.out.println(""+this+":fPercGlow="+fPercGlow+",color="+color);
+			if(ColorI.i().isDebug())System.out.println(""+this+":fPercGlow="+fPercGlow+",color="+color+",fValOriginal="+fValOriginal);
+		}
+
+		public void enable() {
+			tdColorGlow.resetTime().setActive(true);
+			if(ColorI.i().isDebug())System.out.println(this+":RestarTimer");
+			bEnabled=true;
+		}
+
+		public boolean isStartHigh() {
+			return bStartHigh;
+		}
+
+		public ColorGlow setStartHigh(boolean bStartHigh) {
+			this.bStartHigh = bStartHigh;
+			return this; 
+		}
+
+		public void disable() {
+			bEnabled=false;
 		}
 	}
 	
@@ -214,5 +252,12 @@ public class ColorI {
 		if(color.a < fMinAlpha){
 			color.a=fMinAlpha;
 		}
+	}
+	public boolean isDebug() {
+		return bDebug;
+	}
+	public ColorI setDebug(boolean bDebug) {
+		this.bDebug = bDebug;
+		return this; 
 	}
 }

@@ -3,11 +3,15 @@ package com.github.devconslejme.tests.temp;
 import com.github.devconslejme.misc.CommandLineParser;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.JavaLangI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.StringI;
+import com.github.devconslejme.misc.TimedDelay;
 
 public class TestSimpleThings {
 	public static void main(String[] args) {
-		tst6();
+		tst7();
+//		tst6();
 //		tst5();
 //		tst4();
 //		tst3();
@@ -15,6 +19,21 @@ public class TestSimpleThings {
 //		tst1();
 	}
 	
+	private static void tst7() {
+		TimedDelay td = new TimedDelay(1f, "").setUseRealTime(true).setActive(true)
+				//.setOscilateMode(true)
+				;
+		
+		while(td.getCurrentDelayNano()<2*1000000000){
+			System.out.println(td.getCurrentDelayNano()+","+td.getCurrentDelayCalcDynamic(10));
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	public static enum ETest{
 		TestA,
 		TestB
