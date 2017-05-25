@@ -652,24 +652,19 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs {
 			}).enableLoopMode();//.setDelaySeconds(0.1f);//.setInitialDelay(10));
 		}
 		
+		/**
+		 * TODO use class Orbiter
+		 * @param fTPF
+		 * @param nodePet
+		 * @param td
+		 */
 		protected void updatePet(float fTPF,NodeAxisGm nodePet, TimedDelay td) {
-//			if(true){ //TODO false
-//				bPetOrbit=true;
-//				bPetSpin=true;
-//				bPetScale=true;
-//				bPetUnstableDist=true;
-//				if(nodePet.getParent()==null)this.getParent().attachChild(nodePet);
-//			}
-			
-//			if(false) //TODO rm
-//			{
-				if(isUnstable()){
-					if(nodePet.getParent()==null)this.getParent().attachChild(nodePet);
-				}else{
-					if(nodePet.getParent()!=null)nodePet.removeFromParent();
-					return;
-				}
-//			}
+			if(isUnstable()){
+				if(nodePet.getParent()==null)this.getParent().attachChild(nodePet);
+			}else{
+				if(nodePet.getParent()!=null)nodePet.removeFromParent();
+				return;
+			}
 			
 			/////////////  pet distance
 			Vector3f v3fDir = nodePet.getLocalTranslation().subtract(this.getLocalTranslation()).normalize();

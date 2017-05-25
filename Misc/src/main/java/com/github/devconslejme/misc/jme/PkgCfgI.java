@@ -86,6 +86,7 @@ public class PkgCfgI {
 		IndicatorI.i().configure(nodeGui);
 		EnvironmentJmeI.i().configure(nodeGui);
 		WorldPickingI.i().configure(flycam);
+		HighlighterI.i().configure(flycam);
 		
 		// non standard cfgs
 //		WorldPickingI.i().addSkipType(DebugVisualsI.GeometryBVolDbg.class);

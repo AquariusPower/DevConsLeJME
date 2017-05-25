@@ -33,6 +33,9 @@ import com.github.devconslejme.misc.jme.OriginDevice.MultiClickAxis;
 
 
 /**
+ * Keybind already has a multiclick functionality, so this can be used as alternative to that.
+ * May provide easier customization than keybind.
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class MultiClickI {
@@ -180,7 +183,7 @@ public class MultiClickI {
 			}
 		}
 		
-		private boolean isTimeLimitReached() {
+		public boolean isTimeLimitReached() {
 			if(lLastClickMilis==null)return false;
 			return !MultiClickI.i().isWithinMaxDelay(lLastClickMilis);
 		}

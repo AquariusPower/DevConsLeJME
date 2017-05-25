@@ -436,6 +436,10 @@ public class DebugVisualsI {
 //		setShowWorldBound(true);
 	}
 	
+	public void hideWorldBoundAndRotAxes(Spatial spt) {
+		ahmShowWorldBound.remove(spt);
+	}
+	
 	public boolean isShowSpatialsWorldBoundsEnabled() {
 		return bShowWorldBound;
 	}
@@ -449,6 +453,7 @@ public class DebugVisualsI {
 		}
 		return this; //for beans setter
 	}
+
 	
 //	public void showRotationAxis(Spatial spt){
 //		ahmShowWorldBound.put(spt, createWorldBoundGeom(spt).setShow(true));

@@ -84,6 +84,11 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		private Quaternion	quaInitialRotation;
 		private boolean	bInvertRotation;
 		
+		@Override
+		public NodeAxis clone() {
+			return (NodeAxis)super.clone();
+		}
+		
 		@SuppressWarnings("unchecked")
 		public SELF getThis(){
 			return (SELF)this;
@@ -188,6 +193,10 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		
 		updateTorusRotations();
 		updateAxisMainShapes();
+		
+		for(Orbiter obt:aobtList.toArray(new Orbiter[0])){
+			if(!obt.isAttached())aobtList.remove(obt);
+		}
 		
 //		updateMultiClickMainShapeMB0();
 	}
@@ -318,6 +327,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 	AxisInfo[] aai = new AxisInfo[EAxis.values().length];
 	private EAxis	eaExclusiveRotations;
 	private boolean	bStopRotations;
+	private ArrayList<Orbiter>	aobtList=new ArrayList<Orbiter>();
 	
 	public static class MultiClickAxis extends MultiClick<MultiClickAxis>{
 		private EAxis ea;
@@ -340,7 +350,9 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 
 	}
 	
+	private boolean	bDebug;
 	private MultiClickAxis	mcMainShapeMB0 = new MultiClickAxis(0,3,new CallMultiClickUpdate(){
+
 		@Override	public void applyMultiClick(int totalClicks) {
 			switch(totalClicks){
 				case 1:
@@ -348,17 +360,58 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 						eaExclusiveRotations=null;
 					}else{
 						eaExclusiveRotations=mcMainShapeMB0.ea;
+						for(EAxis ea:EAxis.values()){
+							if(ea==eaExclusiveRotations)continue;
+							getAxisInfo(ea).getRotatingTorus().resetRotation();
+						}
 					}
 					break;
 				case 2:
 					mcMainShapeMB0.axi.getRotatingTorus().toggleInvertRotation();
 					break;
 				case 3:
-				default: //3 or more
-					//TODO keep spawning temporary pets
+				default: //3 or more keep spawning temporary pets
+					/**
+					 * clone node axis intersection arrow tip
+					 */
+					Node nodePet=new Node();
+					NodeAxis nodeCopyFrom = getAxisInfo(mcMainShapeMB0.ea).getTorusTip();
+					nodePet.setLocalTransform(nodeCopyFrom.getLocalTransform());
+					Geometry geom = nodeCopyFrom.getGeom().clone();
+					nodePet.attachChild(geom);
+					geom.setLocalScale(1f, 0.5f, 3f);
+					Orbiter obt = new Orbiter(OriginDevice.this, nodePet, geom);
+//					getParent().attachChild(obt.get);
+					
+					/**
+					 * randomize orbiting speed making it slower.
+					 * the slower orbiting, the longer it will take to shrink and get closer.
+					 */
+					float fOrbitSpeed = obt.getOrbitSpeed();
+					fOrbitSpeed = FastMath.clamp(FastMath.nextRandomFloat()*fOrbitSpeed, fOrbitSpeed/10f, fOrbitSpeed);
+					float fDelay=10f / (fOrbitSpeed/obt.getOrbitSpeed());
+					if(isDebug())System.out.println("OrbitSpeed="+fOrbitSpeed+", delay="+fDelay);
+					obt.setOrbitSpeed(fOrbitSpeed);
+					obt.setMaxDelayToFullyShrink(fDelay);
+					obt.setMaxDelayToGetCloser(fDelay);
+//					obt.setOrbiting(false).setScaling(false).setGetCloser(false); //TODO rm
+					
+					aobtList.add(obt);
+					
 					break;
 			}
-		}}).setHelp("1 click: rotate only the one clicked","2 clicks: invert rotation");
+		}
+
+	}).setHelp("1 click: rotate only the one clicked","2 clicks: invert rotation");
+	
+	public boolean isDebug() {
+		return bDebug;
+	}
+
+	public OriginDevice<SELF, NODEXS> setDebug(boolean bDebug) {
+		this.bDebug = bDebug;
+		return this; 
+	}
 	
 	public AxisInfo getAxisInfo(EAxis ea) {
 		return aai[ea.ordinal()];
@@ -442,7 +495,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		// arrow tip
 		NODEXS nodePosit = createAxisShape(nodeTor.getEAxis(),new Cone(fIRa*2f),
 			new Vector3f(fDisplacementTorus,0,0), fAlpha, v3fUp, false, new Vector3f(1,1,2));
-		MiscJmeI.i().addToName(nodePosit, "Intersection", false, true);
+		MiscJmeI.i().addToName(nodePosit, "IntersectionTip", false, true);
 		nodePosit.lookAt(v3fUp, v3fUp);
 		rotateAlignment(nodePosit,-90,false);
 		nodeTor.attachChild(nodePosit);
@@ -453,7 +506,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		// other end
 		NODEXS nodeNegat=createAxisShape(nodeTor.getEAxis(),new Sphere(10,10,fIRa),
 			new Vector3f(-fDisplacementTorus,0,0), fAlpha, v3fUp);
-		MiscJmeI.i().addToName(nodeNegat, "Intersection", false, true);
+		MiscJmeI.i().addToName(nodeNegat, "IntersectionFeather", false, true);
 		nodeTor.attachChild(nodeNegat);
 		getAxisInfo(nodeTor.getEAxis()).setTorusFeather(nodeNegat);
 		nodeNegat.getGeom().setMaterial(ColorI.i().retrieveMaterialUnshadedColor(

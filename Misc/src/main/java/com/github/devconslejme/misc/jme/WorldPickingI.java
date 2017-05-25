@@ -54,7 +54,7 @@ import com.jme3.scene.Spatial;
 public class WorldPickingI {
 	public static WorldPickingI i(){return GlobalManagerI.i().get(WorldPickingI.class);}
 	
-	private ArrayList<CollisionResult>	acrLastPickList;
+	private ArrayList<CollisionResult>	acrLastPickList = new ArrayList<CollisionResult>();
 	private Ray	rayLastCast;
 	ArrayList<IPickListener> aplList = new ArrayList<IPickListener>();
 	private boolean	bAllowConsume=true;
@@ -93,7 +93,7 @@ public class WorldPickingI {
 	public void addSkip(Spatial spt){
 		UserDataI.i().retrieveExistingOrCreateNew(spt, Skip.class);
 	}
-	private static class Skip{}
+	public static class Skip{}
 	
 	public boolean isSkip(Spatial spt){
 		return UserDataI.i().contains(spt, Skip.class);
@@ -105,9 +105,60 @@ public class WorldPickingI {
 		return crs.get(0);
 	}
 	public ArrayList<CollisionResult> pickWorldPiercingAtCursor(int iButtonIndex){
-		return pickWorldPiercingAtCursor(iButtonIndex,MiscJmeI.i().getNodeVirtualWorld());
+		return pickWorldPiercingAtCursor(iButtonIndex,null);//MiscJmeI.i().getNodeVirtualWorld());
 	}
 	public ArrayList<CollisionResult> pickWorldPiercingAtCursor(int iButtonIndex,Node nodeVirtualWorld){
+//		CollisionResults crs = new CollisionResults();
+//		
+//		Vector3f v3fCursorAtVirtualWorld3D = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(
+//			EnvironmentJmeI.i().getMouse().getPos2D(), 0f);
+//		
+//		Vector3f v3fDirection = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(
+//			EnvironmentJmeI.i().getMouse().getPos2D(), 1f);
+//		v3fDirection.subtractLocal(v3fCursorAtVirtualWorld3D).normalizeLocal();
+//		
+//		rayLastCast = new Ray(v3fCursorAtVirtualWorld3D, v3fDirection);
+//		nodeVirtualWorld.collideWith(rayLastCast, crs);
+//		
+//		ArrayList<CollisionResult> acrList=new ArrayList<CollisionResult>();
+//		if(crs.size()==0){
+//			acrLastPickList=null;
+//		}else{
+//			for(CollisionResult cr:Lists.newArrayList(crs.iterator())){
+//				if(!isSkip(cr.getGeometry()))acrList.add(cr);
+//			}
+//			
+//			if(acrList.size()>0)acrLastPickList=acrList;
+//		}
+		acrLastPickList.clear();
+		acrLastPickList.addAll(raycastPiercingAtCursor(nodeVirtualWorld));
+		
+		// call listeners
+		Geometry geom = null; 
+		Spatial spt = null;
+		if(acrLastPickList.size()>0){
+			geom = getLastWorldPickGeometry(); 
+			spt = getLastWorldPickParentest();
+		}
+		for(IPickListener l:aplList){
+			if(l.updatePickingEvent(iButtonIndex,acrLastPickList,geom,spt)){
+				if(acrLastPickList.size()>0){
+					if(bAllowConsume)break;
+				}
+			}
+		}
+		
+		return acrLastPickList;
+	}
+	
+	/**
+	 * 
+	 * @param nodeVirtualWorld can be null (will use default)
+	 * @return
+	 */
+	public ArrayList<CollisionResult> raycastPiercingAtCursor(Node nodeVirtualWorld){
+		if(nodeVirtualWorld==null)nodeVirtualWorld=MiscJmeI.i().getNodeVirtualWorld();
+		
 		CollisionResults crs = new CollisionResults();
 		
 		Vector3f v3fCursorAtVirtualWorld3D = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(
@@ -117,44 +168,17 @@ public class WorldPickingI {
 			EnvironmentJmeI.i().getMouse().getPos2D(), 1f);
 		v3fDirection.subtractLocal(v3fCursorAtVirtualWorld3D).normalizeLocal();
 		
-		rayLastCast = new Ray(v3fCursorAtVirtualWorld3D, v3fDirection);
-		nodeVirtualWorld.collideWith(rayLastCast, crs);
+		Ray ray = new Ray(v3fCursorAtVirtualWorld3D, v3fDirection);
+		nodeVirtualWorld.collideWith(ray, crs);
 		
 		ArrayList<CollisionResult> acrList=new ArrayList<CollisionResult>();
-		if(crs.size()==0){
-			acrLastPickList=null;
-		}else{
-//			if(aclspt.size()>0){
-				for(CollisionResult cr:Lists.newArrayList(crs.iterator())){
-					if(!isSkip(cr.getGeometry()))acrList.add(cr);
-				}
-//			}
-			
-			if(acrList.size()>0)acrLastPickList=acrList;
-		}
-		
-		Geometry geom = null; 
-		Spatial spt = null;
-		if(acrLastPickList!=null){
-			geom = getLastWorldPickGeometry(); 
-			spt = getLastWorldPickParentest();
-		}
-		for(IPickListener l:aplList){
-			if(l.updatePickingEvent(iButtonIndex,acrLastPickList,geom,spt)){
-				if(acrLastPickList!=null){
-					if(bAllowConsume)break;
-				}
+		if(crs.size()>0){
+			for(CollisionResult cr:Lists.newArrayList(crs.iterator())){
+				if(!isSkip(cr.getGeometry()))acrList.add(cr);
 			}
-//			if(acrLastPickList!=null){
-//				if(l.updatePickingEvent(acrLastPickList,geom,spt)){
-//					if(bAllowConsume)break;
-//				}
-//			}else{
-//				l.updatePickingEvent(null,null,null);
-//			}
 		}
 		
-		return acrLastPickList;
+		return acrList;
 	}
 	
 	/**
@@ -174,16 +198,16 @@ public class WorldPickingI {
 //		return anode.get(anode.size()-1);
 	}
 	public Geometry getLastWorldPickGeometry(){
-		if(acrLastPickList==null)return null;
+		if(acrLastPickList.size()==0)return null;
 //		if(crLastPick.getClosestCollision()==null)return null;
 		return acrLastPickList.get(0).getGeometry();
 	}
-	public ArrayList<CollisionResult> getLastWorldPiercingPick(){
-		return acrLastPickList;
+	public ArrayList<CollisionResult> getLastWorldPiercingPickCopy(){
+		return new ArrayList<CollisionResult>(acrLastPickList);
 	}
-	public Ray getRayLastCast() {
-		return rayLastCast;
-	}
+//	public Ray getRayLastCast() {
+//		return rayLastCast;
+//	}
 
 	public boolean isAllowConsume() {
 		return bAllowConsume;

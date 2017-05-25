@@ -29,11 +29,11 @@ package com.github.devconslejme.misc;
 
 
 /**
- * Use this class to avoid running code on every loop.
+ * You can use this also to avoid running code on every loop.
  * Or to have any kind of delayed execution.
  * Even just retrieve the current delay percentual for gradual variations.
- * 
- * For this class are also automatically generated console variables to directly tweak them.
+ *	
+ * It is not active initially because of the start time it will need to be active from.
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
