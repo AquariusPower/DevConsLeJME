@@ -26,7 +26,6 @@
 */
 package com.github.devconslejme.projman;
 
-
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */

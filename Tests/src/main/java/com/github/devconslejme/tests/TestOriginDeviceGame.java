@@ -29,8 +29,6 @@ package com.github.devconslejme.tests;
 import java.util.ArrayList;
 
 import com.github.devconslejme.devcons.LoggingI;
-import com.github.devconslejme.misc.Annotations.Bugfix;
-import com.github.devconslejme.misc.Annotations.ToDo;
 import com.github.devconslejme.misc.CalcI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
@@ -48,7 +46,6 @@ import com.github.devconslejme.misc.jme.EnvironmentJmeI;
 import com.github.devconslejme.misc.jme.GeometryI;
 import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
-import com.github.devconslejme.misc.jme.Orbiter;
 import com.github.devconslejme.misc.jme.OriginDevice;
 import com.github.devconslejme.misc.jme.OriginDevice.NodeAxis;
 import com.github.devconslejme.misc.jme.RotateI;
@@ -56,7 +53,6 @@ import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.TextI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.jme.WorldPickingI;
-import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
 import com.github.devconslejme.projman.SimpleAppStateAbs;
 import com.github.devconslejme.tests.TestDevCons.GeometryVolDbg;
 import com.jme3.bounding.BoundingBox;
@@ -113,8 +109,8 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs {
 		super.initTest();
 		
 		// good position related to these objects
-		getApp().getCamera().setLocation(new Vector3f(9.787677f, 6.957723f, 11.003839f)); //taken from devcons
-		getApp().getCamera().setRotation(new Quaternion(-0.068618454f, 0.91919893f, -0.18511744f, -0.34072912f)); //taken from devcons
+		getCamera().setLocation(new Vector3f(9.787677f, 6.957723f, 11.003839f)); //taken from devcons
+		getCamera().setRotation(new Quaternion(-0.068618454f, 0.91919893f, -0.18511744f, -0.34072912f)); //taken from devcons
 		
 		// Orde
 		orde = new OriginDeviceMonster().setEnabled(true);
@@ -126,7 +122,7 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs {
 			.setAutoTargetNearestSpatials(true);
 		GlobalManagerI.i().putGlobal(OriginDeviceMonster.class,orde);
 //		JavaScriptI.i().setJSBindingForEnumsOf(OriginDevice.class);
-		getSApp().getRootNode().attachChild(orde);
+		getRootNode().attachChild(orde);
 		
 		// Orde's food
 		Node nodeRef=new Node();
@@ -150,14 +146,14 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs {
 			nodeRef.attachChild(geom);
 			Vector3f v3fWorld = geom.getWorldTranslation(); //rotated position
 			geom.setLocalTranslation(v3fWorld);
-			getSApp().getRootNode().attachChild(geom);
+			getRootNode().attachChild(geom);
 			
 			// wont move, just for debug 
 			if(false){
 				GeometryVolDbg geomVolume = GeometryI.i().create(MeshI.i().sphereFromVolumeOf(geom), ColorRGBA.Red,false,new GeometryVolDbg());
 				geomVolume.getMaterial().getAdditionalRenderState().setWireframe(true);
 				geomVolume.setLocalTranslation(v3fWorld);
-				getSApp().getRootNode().attachChild(geomVolume);
+				getRootNode().attachChild(geomVolume);
 		    WorldPickingI.i().addSkip(geomVolume);
 			}
 		    

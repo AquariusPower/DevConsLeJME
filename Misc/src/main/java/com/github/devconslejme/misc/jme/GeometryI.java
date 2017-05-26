@@ -72,7 +72,7 @@ public class GeometryI {
 	public ArrowGeometry createArrow(ColorRGBA color){
 		ArrowGeometry geom = new ArrowGeometry();
 		MiscJmeI.i().addToName(geom, DebugVisualsI.class.getSimpleName(), true);
-		geom.setMesh(new Arrow(new Vector3f(0,0,1f))); //its size will be controled by z scale
+//		geom.setMesh(new Arrow(new Vector3f(0,0,1f))); //its length will be controled by z scale
 		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
 		return geom;
 	}

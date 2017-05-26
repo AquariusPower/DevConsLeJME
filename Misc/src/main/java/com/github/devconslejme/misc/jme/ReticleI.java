@@ -27,6 +27,7 @@
 package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
@@ -52,172 +53,265 @@ import com.jme3.scene.shape.Torus;
 public class ReticleI {
 	public static ReticleI i(){return GlobalManagerI.i().get(ReticleI.class);}
 
-	private Node	nodeBorder;
-	private Node	node;
-	private int	fBorderIR;
-	private float	fBorderOR;
-	private Quaternion	quaBorderStartAt;
-	private BitmapText[]	abtDistMarks;
+	private ReticleNode	rn;
+	protected Vector3f	v3fAppWSize = new Vector3f();
 	
 	public void configure(){} //keep even if empty to help init global
 	
-	public Node createReticle(){
-		node = new Node("Reticle");
-//		node.setLocalTranslation(0, 0, -1000);
+	public static class ReticleNode extends Node{
+		private Node	nodeBorder;
+	//	private Node	node;
+		private int	fBorderIR=5;
+		private float	fBorderOR;
+		private Quaternion	quaBorderStartAt;
+		private BitmapText[]	abtDistMarks;
+		private boolean	bBinoculars;
+		private ArrayList<Geometry> ageomZoomMarkersList = new ArrayList<>();
+		private int	iZoomIndexLast=-1;
+		private float fDegAnglePerZoomStep=10f;
+		
+		public Node getNodeBorder() {
+			return nodeBorder;
+		}
+
+		public int getBorderIR() {
+			return fBorderIR;
+		}
+
+		public float getBorderOR() {
+			return fBorderOR;
+		}
+
+		public Quaternion getQuaBorderStartAt() {
+			return quaBorderStartAt;
+		}
+
+		public ArrayList<BitmapText> getDistMarksList() {
+			return new ArrayList(Arrays.asList(abtDistMarks));
+		}
+
+		public boolean isBinoculars() {
+			return bBinoculars;
+		}
+
+		public ArrayList<Geometry> getZoomMarkersList() {
+			return ageomZoomMarkersList;
+		}
+
+		public int getZoomIndexLast() {
+			return iZoomIndexLast;
+		}
+
+		public float getDegAnglePerZoomStep() {
+			return fDegAnglePerZoomStep;
+		}
+
+		public float getDistMarkY(float fDivBorderOR, int iMarkIndex) {
+			if(!bBinoculars){
+				float fStep = fBorderOR/fDivBorderOR;
+				float fTopStart=20;
+				switch(iMarkIndex){
+					case 0: return fTopStart;
+					case 1: return -(fStep*1);
+					case 2: return -(fStep*3);
+					case 3: return -(fStep*5);
+					case 4: return -(fStep*7);
+				}
+			}
+			throw new DetailedException("invalid index",iMarkIndex);
+		}
+		
+		public void updateDistanceMarkersValues(int... ai){
+			if(!bBinoculars){
+				for(int i=0;i<5;i++){
+					abtDistMarks[i].setText((i==0?"    ":"=== ")+ai[i]);
+				}
+			}
+		}
+		public void updateZoomMarkers(int iTot){
+			if(iTot==ageomZoomMarkersList.size())return;
+			
+			for(Geometry geom:ageomZoomMarkersList){
+				geom.removeFromParent();
+			}
+			ageomZoomMarkersList.clear();
+			
+			for(int i=0;i<iTot;i++){
+				Geometry geom=createZoomLevelMarker(ColorRGBA.DarkGray);
+				nodeBorder.getParent().attachChild(geom);
+				Node nodePivot = new Node();
+				nodePivot.rotateUpTo(Vector3f.UNIT_Z);
+				nodeBorder.getParent().attachChild(nodePivot);
+				RotateI.i().rotateAroundPivot(geom, nodePivot, fDegAnglePerZoomStep*i*FastMath.DEG_TO_RAD, false);
+				ageomZoomMarkersList.add(geom);
+			}
+		}
+		
+		public void updateZoomLevel(int iZoomIndex){
+			if(iZoomIndexLast == iZoomIndex)return;
+			RotateI.i().rotateSpinning(nodeBorder, Vector3f.UNIT_X, Vector3f.UNIT_Z, 
+				(90+(fDegAnglePerZoomStep*((ageomZoomMarkersList.size()-1)-iZoomIndex)))*FastMath.DEG_TO_RAD);
+		}
+		
+		private Geometry createZoomLevelMarker(ColorRGBA color) {
+			Geometry zoommarker = GeometryI.i().create(MeshI.i().cone(fBorderIR*2f),color);
+			zoommarker.setLocalTranslation(fBorderOR,0,fBorderIR);
+			zoommarker.lookAt(new Vector3f(), Vector3f.UNIT_Y);
+			return zoommarker;
+		}
+
+		public ReticleNode setBinocularsMode(boolean bBinoculars) {
+			this.bBinoculars = bBinoculars;
+			return this; 
+		}
+
+		public ReticleNode setDegAnglePerZoomStep(float fDegAnglePerZoomStep) {
+			this.fDegAnglePerZoomStep = fDegAnglePerZoomStep;
+			return this; 
+		}
+
+		public ReticleNode setBorderIR(int fBorderIR) {
+			this.fBorderIR = fBorderIR;
+			return this; 
+		}
+		
+	}
+	
+	public ReticleNode createReticle(ReticleNode rnStore){
+		if(rnStore==null)rnStore=new ReticleNode();
+		
+//		node = new Node("Reticle");
+		rnStore.setName("Reticle"+(rnStore.isBinoculars()?".binoc":""));
 		
 		int iDMin=EnvironmentJmeI.i().getDisplay().getMinSize();
 		int iDMax=EnvironmentJmeI.i().getDisplay().getMaxSize();
 		
 		// scope border
-		nodeBorder=new Node("Border");
-		fBorderIR=5;
-		fBorderOR=(iDMin/2f)-fBorderIR;
-		Geometry border = GeometryI.i().create(new Torus(40, 5, fBorderIR, fBorderOR),ColorRGBA.Gray);
-		nodeBorder.attachChild(border);
-		Geometry zoomMarkerCurrent = createZoomLevelMarker(ColorI.i().colorChangeCopy(ColorRGBA.Red,-0.5f));
+		rnStore.nodeBorder=new Node("Border");
+		rnStore.fBorderOR=(iDMin/2f)-rnStore.getBorderIR();
+		Geometry border = GeometryI.i().create(new Torus(40, 5, rnStore.getBorderIR(), rnStore.fBorderOR),ColorRGBA.Gray);
+		rnStore.nodeBorder.attachChild(border);
+		Geometry zoomMarkerCurrent = rnStore.createZoomLevelMarker(ColorI.i().colorChangeCopy(ColorRGBA.Red,-0.5f));
 		zoomMarkerCurrent.scale(2f);
-		zoomMarkerCurrent.move(0,0,fBorderIR);
-		nodeBorder.attachChild(zoomMarkerCurrent);
-		quaBorderStartAt = nodeBorder.getLocalRotation().clone();
-		node.attachChild(nodeBorder);
+		zoomMarkerCurrent.move(0,0,rnStore.getBorderIR());
+		rnStore.nodeBorder.attachChild(zoomMarkerCurrent);
+		rnStore.quaBorderStartAt = rnStore.nodeBorder.getLocalRotation().clone();
+		rnStore.attachChild(rnStore.nodeBorder);
 		
 		// distance marks
-		abtDistMarks=new BitmapText[5];
-		for(int i=0;i<5;i++){
-			abtDistMarks[i]=new BitmapText(TextI.i().loadDefaultMonoFont());
-//			abtDistMarks[i].setText(i==0?"   ":"---");
-			node.attachChild(abtDistMarks[i]);
-			abtDistMarks[i].setLocalTranslation(-10,getDistMarkY(i),0);
-			abtDistMarks[i].setColor(ColorRGBA.DarkGray);
+		if(rnStore.isBinoculars()){
+			//TODO
+		}else{
+			rnStore.abtDistMarks=new BitmapText[5];
+			for(int i=0;i<5;i++){
+				rnStore.abtDistMarks[i]=new BitmapText(TextI.i().loadDefaultMonoFont());
+				rnStore.attachChild(rnStore.abtDistMarks[i]);
+				rnStore.abtDistMarks[i].setLocalTranslation(-10,rnStore.getDistMarkY(8,i),0);
+				rnStore.abtDistMarks[i].setColor(ColorRGBA.DarkGray);
+			}
+			rnStore.updateDistanceMarkersValues(100,200,300,400,500);
+			
+			// arrows
+			float fArrowsZ = -10f;
+			float fCenterMargin = 20f;
+			rnStore.attachChild(createLine(rnStore, fArrowsZ, fCenterMargin));
+			ArrowGeometry arrowRight = GeometryI.i().createArrow(ColorRGBA.DarkGray);
+			arrowRight.setFromTo(new Vector3f(rnStore.fBorderOR,0,fArrowsZ), new Vector3f(fCenterMargin,0,fArrowsZ));
+			rnStore.attachChild(arrowRight);
+			ArrowGeometry arrowBottom = GeometryI.i().createArrow(ColorRGBA.DarkGray);
+			arrowBottom.setFromTo(new Vector3f(0,-rnStore.fBorderOR,fArrowsZ), new Vector3f(0,-fCenterMargin,fArrowsZ));
+			rnStore.attachChild(arrowBottom);
 		}
-		updateDistanceMarkersValues(100,200,300,400,500);
-		float fArrowsZ = -10f;
-		float fCenterMargin = 20f;
-		ArrowGeometry arrowLeft = GeometryI.i().createArrow(ColorRGBA.DarkGray);
-		arrowLeft.setFromTo(new Vector3f(-fBorderOR,0,fArrowsZ), new Vector3f(-fCenterMargin,0,fArrowsZ));
-		node.attachChild(arrowLeft);
-		ArrowGeometry arrowRight = GeometryI.i().createArrow(ColorRGBA.DarkGray);
-		arrowRight.setFromTo(new Vector3f(fBorderOR,0,fArrowsZ), new Vector3f(fCenterMargin,0,fArrowsZ));
-		node.attachChild(arrowRight);
-		ArrowGeometry arrowBottom = GeometryI.i().createArrow(ColorRGBA.DarkGray);
-		arrowBottom.setFromTo(new Vector3f(0,-fBorderOR,fArrowsZ), new Vector3f(0,-fCenterMargin,fArrowsZ));
-		node.attachChild(arrowBottom);
-		
-//		DebugVisualsI.i().showWorldBoundAndRotAxes(nodeBorder);
 		
 		// blocker
-//		{
+		float fProportion = iDMin/(float)iDMax;
 		float fDiagonal = FastMath.sqrt(FastMath.pow(iDMin,2)+FastMath.pow(iDMax,2));
-		float fBlockerIR=(fDiagonal-fBorderOR)/2f;
-		float fBlockerOR=fBorderOR+fBlockerIR-100; //TODO why had to -100?
+		float fBlockerIR=((fDiagonal/2f)-rnStore.fBorderOR)/2f;
+//		float fBlockerIR=((iDMax/2)-(iDMin/2))/2;if(fBlockerIR<1f)fBlockerIR=1f;
+		float fBlockerOR=rnStore.fBorderOR+fBlockerIR; //TODO why had to -100?
+		fBlockerIR*=1.25f; //after outer radius calc TODO why 1.25f worked? torus creation inner radius innacuracy? or my fault?
 		Geometry blocker = GeometryI.i().create(new Torus(25, 5, fBlockerIR, fBlockerOR),
-			ColorI.i().colorChangeCopy(ColorRGBA.Black,0f,0.97f));
-//			ColorRGBA.Blue);
+			new ColorRGBA(0.0125f,0.025f,0.05f,0.97f)); //glass feeling, TODO use a texture?
 		blocker.setQueueBucket(Bucket.Inherit); //restore gui one
-//		blocker.move(new Vector3f(0,0,-(fBlockerIR*10)));
 		blocker.move(new Vector3f(0,0,-fBlockerIR));
-		node.attachChild(blocker);
-//		}
+		rnStore.attachChild(blocker);
 		
-//		(EnvironmentJmeI.i().getDisplay().getMaxSize()-EnvironmentJmeI.i().getDisplay().getMinSize())/2f;
-
+		return rnStore;
+	}
+	
+	private Node createLine(ReticleNode rnStore, float fArrowsZ, float fCenterMargin ) {
+		Vector3f v3fFrom = new Vector3f(-rnStore.fBorderOR,0,fArrowsZ);
+		Vector3f v3fTo=new Vector3f(-fCenterMargin,0,fArrowsZ);
 		
-//		torus.getMaterial().getAdditionalRenderState().setWireframe(true);
+		ArrowGeometry ag = GeometryI.i().createArrow(ColorRGBA.DarkGray);
+		ag.setFromTo(v3fFrom,v3fTo);
+		Node node = new Node();
+		node.attachChild(ag);
 		
-//		node.attachChild(torus);
-////		node.attachChild(GeometryI.i().create(MeshI.i().box(10), ColorRGBA.Yellow));
-//		node.attachChild(GeometryI.i().create(MeshI.i().box(10),
-//			ColorI.i().colorChangeCopy(ColorRGBA.Yellow,0f,0.85f)));
+		float fTipScale = rnStore.fBorderOR/10f;
+//		node.setLocalScale(fTipScale,fTipScale,1f);
 		
 		return node;
 	}
-	
-	private float getDistMarkY(int i) {
-		float fStep = fBorderOR/8f;
-		switch(i){
-			case 0: return 20;
-			case 1: return -(fStep*1);
-			case 2: return -(fStep*3);
-			case 3: return -(fStep*5);
-			case 4: return -(fStep*7);
-		}
-		throw new DetailedException("invalid index",i);
-	}
-	
-	public void updateDistanceMarkersValues(int... ai){
-		for(int i=0;i<5;i++){
-			abtDistMarks[i].setText((i==0?"    ":"=== ")+ai[i]);
-//			abtDistMarks[i].setText("--- "+ai[i]);
-		}
-	}
 
-	private ArrayList<Geometry> ageomZoomMarkersList = new ArrayList<>();
-	private int	iZoomIndexLast=-1;
+	/**
+	 * see {@link #autoRecreate(ReticleNode)}
+	 * @param rnStore
+	 */
+	public void initAutoSetup(boolean bBinoculars){
+		autoRecreate(new ReticleNode().setBinocularsMode(bBinoculars));
+	}
 	
-	public void updateZoomMarkers(int iTot){
-		if(iTot==ageomZoomMarkersList.size())return;
+	/**
+	 * 
+	 * @param rnStore can come with some things pre-setup
+	 */
+	public void autoRecreate(ReticleNode rnStore){
+		if(rn!=null)rn.removeFromParent();
 		
-		for(Geometry geom:ageomZoomMarkersList){
-			geom.removeFromParent();
-		}
-		ageomZoomMarkersList.clear();
-		
-		for(int i=0;i<iTot;i++){
-			Geometry geom=createZoomLevelMarker(ColorRGBA.DarkGray);
-			nodeBorder.getParent().attachChild(geom);
-			Node nodePivot = new Node();
-			nodePivot.rotateUpTo(Vector3f.UNIT_Z);
-			nodeBorder.getParent().attachChild(nodePivot);
-			RotateI.i().rotateAroundPivot(geom, nodePivot, fDegAnglePerZoomStep*i*FastMath.DEG_TO_RAD, false);
-			ageomZoomMarkersList.add(geom);
-		}
-	}
-	
-	float fDegAnglePerZoomStep=10f;
-	public void updateZoomLevel(int iZoomIndex){
-		if(iZoomIndexLast == iZoomIndex)return;
-//		nodeBorder.lookAt(Vector3f.UNIT_X, Vector3f.UNIT_Y);
-////		nodeBorder.setLocalRotation(quaBorderStartAt);
-		RotateI.i().rotateSpinning(nodeBorder, Vector3f.UNIT_X, Vector3f.UNIT_Z, 
-//			(-90+(fDegAnglePerZoomStep*(ageomZoomMarkersList.size()-iZoomIndex)))*FastMath.DEG_TO_RAD);
-			(90+(fDegAnglePerZoomStep*((ageomZoomMarkersList.size()-1)-iZoomIndex)))*FastMath.DEG_TO_RAD);
-	}
-	
-	private Geometry createZoomLevelMarker(ColorRGBA color) {
-		Geometry zoommarker = GeometryI.i().create(MeshI.i().cone(fBorderIR*2f),color);
-		zoommarker.setLocalTranslation(fBorderOR,0,fBorderIR);
-		zoommarker.lookAt(new Vector3f(), Vector3f.UNIT_Y);
-		return zoommarker;
-	}
-
-	public void initAutoSetup(){
 		SimpleApplication sapp = G.i(SimpleApplication.class);
 		if(sapp!=null){
 			FlyByCamera flycam = sapp.getFlyByCamera();
-			if(flycam instanceof FlyByCameraX){
-				FlyByCameraX flycamx = (FlyByCameraX)flycam;
-				Node node = createReticle();
-				flycamx.setReticle(node, sapp.getGuiNode()); //TODO shouldnt be another layer, below the gui node?
-				sapp.getGuiNode().attachChild(node);
-				node.setLocalTranslation(EnvironmentJmeI.i().getDisplay().getCenter(
-					-((BoundingBox)node.getWorldBound()).getExtent(null).length()
-				));
-				
+			FlyByCameraX flycamx=(flycam instanceof FlyByCameraX) ? (FlyByCameraX)flycam : null;
+			
+			rn = createReticle(rnStore);
+			if(flycamx!=null)flycamx.setReticle(rn, sapp.getGuiNode()); //TODO shouldnt be another layer, below the gui node?
+			sapp.getGuiNode().attachChild(rn);
+			rn.setLocalTranslation(EnvironmentJmeI.i().getDisplay().getCenter(
+				-((BoundingBox)rn.getWorldBound()).getExtent(null).length()
+			));
+			
+			if(flycamx!=null){
 				QueueI.i().enqueue(new CallableXAnon() {
 					@Override
 					public Boolean call() {
-						updateZoomMarkers(flycamx.getTotalZoomSteps());
-						updateZoomLevel(flycamx.getCurrentZoomLevelIndex());
+						Vector3f v3fAppWSizeCurrent = EnvironmentJmeI.i().getDisplay().getAppWindowSize();
+						if(!v3fAppWSizeCurrent.equals(v3fAppWSize)){
+							autoRecreate(null);
+							v3fAppWSize.set(v3fAppWSizeCurrent);
+//							QueueI.i().removeLoopFromQueue(this); //a new one will be created
+							return true; 
+						}
+						
+						rn.updateZoomMarkers(flycamx.getTotalZoomSteps());
+						rn.updateZoomLevel(flycamx.getCurrentZoomLevelIndex());
 						return true;
 					}
 				}).setName("ReticleUpdateZoom").enableLoopMode().setDelaySeconds(0.5f);
+			}
 				
 //				EffectElectricity el = new EffectElectricity();
 //				el.setFollowFromTarget(node, null);
 //				el.setFollowToMouse(true);
 //				el.setPlay(true);
 //				EffectManagerStateI.i().add(el);
-			}
+			
 		}
+		
 	}
+
+	public ReticleNode getLastReticuleNode() {
+		return rn;
+	}
+
 }

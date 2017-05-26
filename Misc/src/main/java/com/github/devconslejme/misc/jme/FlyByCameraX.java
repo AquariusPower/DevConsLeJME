@@ -77,15 +77,15 @@ public class FlyByCameraX extends FlyByCamera {
 	private float	fMaxFOVdeg;
 //	private Float	fFOVstep;
 	private int	iZoomSteps;
-	ArrayList<Float> afListZoom = new ArrayList<Float>();
-	private int iCurrentZoomStep;
+	private ArrayList<Float> afListZoom = new ArrayList<Float>();
+	private int iCurrentZoomStepIndex;
 	private boolean	bEnableZoomStepsAndLimits;
 	private TimedDelay tdMouseGrab=new TimedDelay(0.5f).setActive(true);
 	private TimedDelay tdMouseInfo=new TimedDelay(1f).setActive(true);
 	private float fChangeZoomStepSpeed=500f;
 	private float	fZoomedRotationSpeed=1f; //no zoom
 //	protected boolean	bZoomApplied;
-	private int	iBkpZoomStep;
+	private int	iBkpZoomStepIndex=0; //max zoom, cool 1st toggle
 	private Key	keyFlyCamMod;
 	
 	public boolean lazyPrepareKeyBindings(){
@@ -207,10 +207,11 @@ public class FlyByCameraX extends FlyByCamera {
 	}
 	
 	protected void toggleZoom() {
-		if(iBkpZoomStep!=iCurrentZoomStep){
-			iCurrentZoomStep=iBkpZoomStep;
+		if(iBkpZoomStepIndex!=iCurrentZoomStepIndex){
+			iCurrentZoomStepIndex=iBkpZoomStepIndex;
+			fixZoom();
 		}else{
-			iCurrentZoomStep=getNoZoomStepIndex();
+			iCurrentZoomStepIndex=getNoZoomStepIndex();
 		}
 	}
 
@@ -316,13 +317,13 @@ public class FlyByCameraX extends FlyByCamera {
 		
 		if(bEnableZoomStepsAndLimits){
 			if(value>0){
-				iCurrentZoomStep+=(isZoomInverted()?-1:1);
+				iCurrentZoomStepIndex+=(isZoomInverted()?-1:1);
 			}else{
-				iCurrentZoomStep+=(isZoomInverted()?1:-1);
+				iCurrentZoomStepIndex+=(isZoomInverted()?1:-1);
 			}
 			fixZoom();
 			//			bZoomApplied=true;
-			iBkpZoomStep=iCurrentZoomStep;
+			iBkpZoomStepIndex=iCurrentZoomStepIndex;
 		}else{ //direct controls it
 			super.zoomCamera(value);
 		}
@@ -401,7 +402,9 @@ public class FlyByCameraX extends FlyByCamera {
 		for(int i=0;i<=iZoomSteps;i++){
 			afListZoom.add(fMinFOVdeg+(i*fZoomStep));
 		}
-		iCurrentZoomStep=afListZoom.size()-1; // last/max one = no zoom
+		iCurrentZoomStepIndex=afListZoom.size()-1; // last/max one = no zoom
+		
+		iBkpZoomStepIndex=0;//reset
 		
 		return this; //for beans setter
 	}
@@ -491,15 +494,16 @@ public class FlyByCameraX extends FlyByCamera {
 			/**
 			 * automatically zoom in/out to reach the requested zoom step value
 			 */
-			if(Math.abs(getFOV() - afListZoom.get(iCurrentZoomStep)) > 1f){ //compare with error margin
+			float fErrorMargin=0.5f;//1f
+			if(Math.abs(getFOV() - afListZoom.get(iCurrentZoomStepIndex)) > fErrorMargin){ //compare with error margin
 				float fZooming = (isZoomInverted()?1:-1)*(fChangeZoomStepSpeed*fTPF);
-				if(getFOV() < afListZoom.get(iCurrentZoomStep)){
+				if(getFOV() < afListZoom.get(iCurrentZoomStepIndex)){
 					fZooming*=-1f;
 				}
 				super.zoomCamera(fZooming);
 			}
 			
-			fZoomedRotationSpeed=afListZoom.get(iCurrentZoomStep)/fMaxFOVdeg;
+			fZoomedRotationSpeed=afListZoom.get(iCurrentZoomStepIndex)/fMaxFOVdeg;
 		}
 		
 		if(tdMouseInfo.isReady(true)){
@@ -507,8 +511,9 @@ public class FlyByCameraX extends FlyByCamera {
 			strFOV+="fov="+StringI.i().fmtFloat(getFOV(),2);
 			if(bEnableZoomStepsAndLimits){
 				/** (current zoom/toggleBkpZoom) [zoom list], zoomRotateSpeed */
-				strFOV+="("+StringI.i().fmtFloat(afListZoom.get(iCurrentZoomStep),2)
-					+"/"+afListZoom.get(iBkpZoomStep)+") ";
+				strFOV+="("+StringI.i().fmtFloat(afListZoom.get(iCurrentZoomStepIndex),2)
+//						+"/"+getBkpZoomFOV()+") ";
+					+"/"+afListZoom.get(iBkpZoomStepIndex)+") ";
 				strFOV+=afListZoom.toString()+", ";
 				strFOV+="zmRtSpd="+fZoomedRotationSpeed;
 			}
@@ -526,18 +531,25 @@ public class FlyByCameraX extends FlyByCamera {
 			}
 		}
 	}
+	
+//	public String getBkpZoomFOVinfo(){
+//		if(iBkpZoomStepIndex>0&&iBkpZoomStepIndex<afListZoom.size()){
+//			return afListZoom.get(iBkpZoomStepIndex);
+//		}
+//		return ""
+//	}
 
 	private Spatial getReticle() {
 		return sptReticle;
 	}
 
 	public boolean isZooming() {
-		return getNoZoomStepIndex()!=iCurrentZoomStep;
+		return getNoZoomStepIndex()!=iCurrentZoomStepIndex;
 	}
 
 	private void fixZoom() {
-		if(iCurrentZoomStep<0)iCurrentZoomStep=0;
-		if(iCurrentZoomStep>getNoZoomStepIndex())iCurrentZoomStep=getNoZoomStepIndex();
+		if(iCurrentZoomStepIndex<0)iCurrentZoomStepIndex=0;
+		if(iCurrentZoomStepIndex>getNoZoomStepIndex())iCurrentZoomStepIndex=getNoZoomStepIndex();
 	}
 
 	private int getNoZoomStepIndex() {
@@ -628,14 +640,14 @@ public class FlyByCameraX extends FlyByCamera {
 	}
 	
 	public int zoomIn(){
-		iCurrentZoomStep--;
+		iCurrentZoomStepIndex--;
 		fixZoom();
-		return iCurrentZoomStep;
+		return iCurrentZoomStepIndex;
 	}
 	public int zoomOut(){
-		iCurrentZoomStep++;
+		iCurrentZoomStepIndex++;
 		fixZoom();
-		return iCurrentZoomStep;
+		return iCurrentZoomStepIndex;
 	}
 
 	public int getTotalZoomSteps() {
@@ -643,6 +655,7 @@ public class FlyByCameraX extends FlyByCamera {
 	}
 
 	public int getCurrentZoomLevelIndex() {
-		return iCurrentZoomStep;
+		return iCurrentZoomStepIndex;
 	}
+	
 }

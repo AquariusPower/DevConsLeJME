@@ -354,6 +354,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	 */
 	private void opt_initIntegrateAllOtherTests() {
 		LoggingI.i().logMarker("Can init these tests:");
+		//TODO find the classes and auto add them based on the super class too
 		addTest(TestContextMenu.class);
 		addTest(TestChoiceDialog.class);
 		addTest(TestMultiChildDialog.class);
@@ -361,13 +362,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		addTest(TestMaintenanceDialog.class);
 		addTest(TestResizablePanel.class);
 		addTest(TestOriginDeviceGame.class);
-//		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestContextMenu()));
-//		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestChoiceDialog()));
-//		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestMultiChildDialog()));
-//		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestHierarchyResizablePanel()));
-//		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestMaintenanceDialog()));
-//		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestResizablePanel()));
-//		aoUpdOpts.add(GlobalManagerI.i().putConcrete(new TestOriginDeviceGame()));
+		addTest(TestZoomDistances.class);
 	}
 	
 	@Override

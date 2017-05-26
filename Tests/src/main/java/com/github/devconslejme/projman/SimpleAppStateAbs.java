@@ -27,14 +27,15 @@
 package com.github.devconslejme.projman;
 
 import com.github.devconslejme.misc.GlobalManagerI.G;
+import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
-import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppState;
 import com.jme3.app.state.AppStateManager;
+import com.jme3.input.FlyByCamera;
+import com.jme3.renderer.Camera;
 import com.jme3.renderer.RenderManager;
-import com.simsilica.lemur.GuiGlobals;
-import com.simsilica.lemur.style.BaseStyles;
+import com.jme3.scene.Node;
 
 /**
  * Two behaviors, can be called from another application class!
@@ -48,17 +49,13 @@ public abstract class SimpleAppStateAbs extends SimpleApplication implements App
   private SimpleApplication	sapp;
 
 	/**
-	 * TODO this code below can only be used when overriding this method!   
+	 * This 1 line code below can only be used when overriding this method!   
 	 * com.github.devconslejme.TODO.PkgCfgI.i().configure();
 	 * 
 	 * you can also use {@link #initTest()} for the specific test inits
 	 */
 	@Override
 	public abstract void simpleInitApp();
-//	public void simpleInitApp() {
-//		bEnabled=true;
-//		G.i(Application.class).getStateManager().attach(this); //can be another applicaiton using this as a app state only
-//	}
 	
 	/**
 	 * use the update from the app state
@@ -74,11 +71,39 @@ public abstract class SimpleAppStateAbs extends SimpleApplication implements App
 //  protected abstract void initTest();
   protected void initTest(){
 		bEnabled=true;
-		this.app=(G.i(Application.class));
-		this.sapp=G.i(SimpleApplication.class);
-		getApp().getStateManager().attach(this); //can be another applicaiton using this as a app state only
+		app=(G.i(Application.class));
+		sapp=G.i(SimpleApplication.class);
+		app.getStateManager().attach(this); //can be another applicaiton using this as a app state only
   }
-
+  
+  //TODO add all other alt-app methods
+  
+  @Override
+  public FlyByCamera getFlyByCamera() {
+  	return sapp!=null&&sapp!=this ? sapp.getFlyByCamera():super.getFlyByCamera();
+  }
+  public boolean isFlyByCameraX(){
+  	return (getFlyByCamera() instanceof FlyByCameraX);
+  }
+  public FlyByCameraX getFlyByCameraX() {
+  	return (FlyByCameraX)getFlyByCamera();
+  }
+  
+  @Override
+  public Camera getCamera() {
+  	return sapp!=null&&sapp!=this ? sapp.getCamera():super.getCamera();
+  }
+  
+  @Override
+  public Node getRootNode() {
+  	return sapp!=null&&sapp!=this ? sapp.getRootNode():super.getRootNode();
+  }
+  
+  @Override
+  public Node getGuiNode() {
+  	return sapp!=null&&sapp!=this ? sapp.getGuiNode():super.getGuiNode();
+  }
+  
 	@Override
 	public boolean isInitialized() {
       return bInit;
@@ -104,12 +129,12 @@ public abstract class SimpleAppStateAbs extends SimpleApplication implements App
       bInit = false;
   }
 
-	public Application getApp() {
-		return app;
-	}
-
-	public SimpleApplication getSApp() {
-		return sapp;
-	}
+//	public Application getApp() {
+//		return app;
+//	}
+//
+//	public SimpleApplication getSApp() {
+//		return sapp;
+//	}
   
 }

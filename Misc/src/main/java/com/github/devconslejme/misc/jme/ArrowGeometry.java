@@ -33,6 +33,7 @@ import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.debug.Arrow;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -60,6 +61,7 @@ public class ArrowGeometry extends Geometry {
 	
 	public ArrowGeometry() {
 		MiscJmeI.i().addToName(this, ArrowGeometry.class.getSimpleName(), true);
+		setMesh(new Arrow(new Vector3f(0,0,1f))); //its length will be controled by z scale
 	}
 	
 	public ArrowGeometry setColor(ColorRGBA color){
