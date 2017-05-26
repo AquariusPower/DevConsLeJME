@@ -56,6 +56,8 @@ public class PkgCfgI {
 	 */
 	public void configure(Application app,Node nodeGui, Node nodeVirtualWorld){
 		DetailedException.assertIsFalse("configured", bConfigured, this);
+		
+		EnvironmentJmeI.i(); //sub class overriders/inheriters must instance before
 		com.github.devconslejme.misc.PkgCfgI.i().configure(
 			JmeSystem.getStorageFolder(StorageFolderType.Internal), 
 			app.getClass());
