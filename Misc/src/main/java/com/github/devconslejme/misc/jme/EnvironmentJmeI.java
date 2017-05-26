@@ -160,8 +160,8 @@ public class EnvironmentJmeI extends EnvironmentI{
 			return new Vector3f(0,getHeight(),0);
 		}
 
-		public Vector3f getCenter() {
-			return new Vector3f(getWidth()/2,getHeight()/2,0);
+		public Vector3f getCenter(Float fZ) {
+			return new Vector3f(getWidth()/2,getHeight()/2,fZ==null ? MiscJmeI.i().getZAboveAllAtGuiNode() : fZ);
 		}
 
 		public int getMinSize() {

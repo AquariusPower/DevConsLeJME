@@ -28,11 +28,14 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.jme3.app.SimpleApplication;
+import com.jme3.bounding.BoundingBox;
+import com.jme3.font.BitmapText;
 import com.jme3.input.FlyByCamera;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -54,11 +57,13 @@ public class ReticleI {
 	private int	fBorderIR;
 	private float	fBorderOR;
 	private Quaternion	quaBorderStartAt;
+	private BitmapText[]	abtDistMarks;
 	
 	public void configure(){} //keep even if empty to help init global
 	
 	public Node createReticle(){
 		node = new Node("Reticle");
+//		node.setLocalTranslation(0, 0, -1000);
 		
 		int iDMin=EnvironmentJmeI.i().getDisplay().getMinSize();
 		int iDMax=EnvironmentJmeI.i().getDisplay().getMaxSize();
@@ -69,11 +74,34 @@ public class ReticleI {
 		fBorderOR=(iDMin/2f)-fBorderIR;
 		Geometry border = GeometryI.i().create(new Torus(40, 5, fBorderIR, fBorderOR),ColorRGBA.Gray);
 		nodeBorder.attachChild(border);
-		Geometry zoomMarkerCurrent = createZoomLevelMarker(ColorRGBA.Red);
-		zoomMarkerCurrent.scale(1.25f);
+		Geometry zoomMarkerCurrent = createZoomLevelMarker(ColorI.i().colorChangeCopy(ColorRGBA.Red,-0.5f));
+		zoomMarkerCurrent.scale(2f);
+		zoomMarkerCurrent.move(0,0,fBorderIR);
 		nodeBorder.attachChild(zoomMarkerCurrent);
 		quaBorderStartAt = nodeBorder.getLocalRotation().clone();
 		node.attachChild(nodeBorder);
+		
+		// distance marks
+		abtDistMarks=new BitmapText[5];
+		for(int i=0;i<5;i++){
+			abtDistMarks[i]=new BitmapText(TextI.i().loadDefaultMonoFont());
+//			abtDistMarks[i].setText(i==0?"   ":"---");
+			node.attachChild(abtDistMarks[i]);
+			abtDistMarks[i].setLocalTranslation(-10,getDistMarkY(i),0);
+			abtDistMarks[i].setColor(ColorRGBA.DarkGray);
+		}
+		updateDistanceMarkersValues(100,200,300,400,500);
+		float fArrowsZ = -10f;
+		float fCenterMargin = 20f;
+		ArrowGeometry arrowLeft = GeometryI.i().createArrow(ColorRGBA.DarkGray);
+		arrowLeft.setFromTo(new Vector3f(-fBorderOR,0,fArrowsZ), new Vector3f(-fCenterMargin,0,fArrowsZ));
+		node.attachChild(arrowLeft);
+		ArrowGeometry arrowRight = GeometryI.i().createArrow(ColorRGBA.DarkGray);
+		arrowRight.setFromTo(new Vector3f(fBorderOR,0,fArrowsZ), new Vector3f(fCenterMargin,0,fArrowsZ));
+		node.attachChild(arrowRight);
+		ArrowGeometry arrowBottom = GeometryI.i().createArrow(ColorRGBA.DarkGray);
+		arrowBottom.setFromTo(new Vector3f(0,-fBorderOR,fArrowsZ), new Vector3f(0,-fCenterMargin,fArrowsZ));
+		node.attachChild(arrowBottom);
 		
 //		DebugVisualsI.i().showWorldBoundAndRotAxes(nodeBorder);
 		
@@ -104,6 +132,25 @@ public class ReticleI {
 		return node;
 	}
 	
+	private float getDistMarkY(int i) {
+		float fStep = fBorderOR/8f;
+		switch(i){
+			case 0: return 20;
+			case 1: return -(fStep*1);
+			case 2: return -(fStep*3);
+			case 3: return -(fStep*5);
+			case 4: return -(fStep*7);
+		}
+		throw new DetailedException("invalid index",i);
+	}
+	
+	public void updateDistanceMarkersValues(int... ai){
+		for(int i=0;i<5;i++){
+			abtDistMarks[i].setText((i==0?"    ":"=== ")+ai[i]);
+//			abtDistMarks[i].setText("--- "+ai[i]);
+		}
+	}
+
 	private ArrayList<Geometry> ageomZoomMarkersList = new ArrayList<>();
 	private int	iZoomIndexLast=-1;
 	
@@ -116,7 +163,7 @@ public class ReticleI {
 		ageomZoomMarkersList.clear();
 		
 		for(int i=0;i<iTot;i++){
-			Geometry geom=createZoomLevelMarker(ColorRGBA.Black);
+			Geometry geom=createZoomLevelMarker(ColorRGBA.DarkGray);
 			nodeBorder.getParent().attachChild(geom);
 			Node nodePivot = new Node();
 			nodePivot.rotateUpTo(Vector3f.UNIT_Z);
@@ -152,7 +199,9 @@ public class ReticleI {
 				Node node = createReticle();
 				flycamx.setReticle(node, sapp.getGuiNode()); //TODO shouldnt be another layer, below the gui node?
 				sapp.getGuiNode().attachChild(node);
-				node.setLocalTranslation(EnvironmentJmeI.i().getDisplay().getCenter());
+				node.setLocalTranslation(EnvironmentJmeI.i().getDisplay().getCenter(
+					-((BoundingBox)node.getWorldBound()).getExtent(null).length()
+				));
 				
 				QueueI.i().enqueue(new CallableXAnon() {
 					@Override

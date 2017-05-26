@@ -112,6 +112,8 @@ public class RotateI {
 			Vector3f v3fWDistIniToRot = v3fTargetRotPos.subtract(v3fTargetIniPos); //to normalize would be more inexact..
 			Vector3f v3fWLookAt = v3fTargetRotPos.add(v3fWDistIniToRot); //inexact predicted new (after this) rotation pos
 			sptTargetToRotate.lookAt(v3fWLookAt, sptTargetToRotate.getLocalRotation().getRotationColumn(1).clone());
+		}else{
+			sptTargetToRotate.setLocalRotation(rhRotAround.nodeChild.getWorldRotation());
 		}
 		
 	}
