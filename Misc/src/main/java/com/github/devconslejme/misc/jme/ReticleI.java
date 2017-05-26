@@ -26,13 +26,19 @@
 */
 package com.github.devconslejme.misc.jme;
 
+import java.util.ArrayList;
+
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
-import com.github.devconslejme.misc.lemur.MiscLemurI;
-import com.github.devconslejme.misc.lemur.SizeAndLocationI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.jme3.app.SimpleApplication;
 import com.jme3.input.FlyByCamera;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
+import com.jme3.math.Quaternion;
+import com.jme3.math.Vector3f;
+import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Torus;
@@ -42,22 +48,101 @@ import com.jme3.scene.shape.Torus;
  */
 public class ReticleI {
 	public static ReticleI i(){return GlobalManagerI.i().get(ReticleI.class);}
+
+	private Node	nodeBorder;
+	private Node	node;
+	private int	fBorderIR;
+	private float	fBorderOR;
+	private Quaternion	quaBorderStartAt;
 	
 	public void configure(){} //keep even if empty to help init global
 	
 	public Node createReticle(){
-		Node node = new Node("Reticle");
+		node = new Node("Reticle");
 		
-		Geometry torus = GeometryI.i().create(
-			new Torus(100, 10, 20, 200), 
-			ColorI.i().colorChangeCopy(ColorRGBA.White,0f,0.85f));
+		int iDMin=EnvironmentJmeI.i().getDisplay().getMinSize();
+		int iDMax=EnvironmentJmeI.i().getDisplay().getMaxSize();
 		
-		node.attachChild(torus);
-		node.attachChild(GeometryI.i().create(MeshI.i().box(10), ColorRGBA.Yellow));
+		// scope border
+		nodeBorder=new Node("Border");
+		fBorderIR=5;
+		fBorderOR=(iDMin/2f)-fBorderIR;
+		Geometry border = GeometryI.i().create(new Torus(40, 5, fBorderIR, fBorderOR),ColorRGBA.Gray);
+		nodeBorder.attachChild(border);
+		Geometry zoomMarkerCurrent = createZoomLevelMarker(ColorRGBA.Red);
+		zoomMarkerCurrent.scale(1.25f);
+		nodeBorder.attachChild(zoomMarkerCurrent);
+		quaBorderStartAt = nodeBorder.getLocalRotation().clone();
+		node.attachChild(nodeBorder);
+		
+//		DebugVisualsI.i().showWorldBoundAndRotAxes(nodeBorder);
+		
+		// blocker
+//		{
+		float fDiagonal = FastMath.sqrt(FastMath.pow(iDMin,2)+FastMath.pow(iDMax,2));
+		float fBlockerIR=(fDiagonal-fBorderOR)/2f;
+		float fBlockerOR=fBorderOR+fBlockerIR-100; //TODO why had to -100?
+		Geometry blocker = GeometryI.i().create(new Torus(25, 5, fBlockerIR, fBlockerOR),
+			ColorI.i().colorChangeCopy(ColorRGBA.Black,0f,0.97f));
+//			ColorRGBA.Blue);
+		blocker.setQueueBucket(Bucket.Inherit); //restore gui one
+//		blocker.move(new Vector3f(0,0,-(fBlockerIR*10)));
+		blocker.move(new Vector3f(0,0,-fBlockerIR));
+		node.attachChild(blocker);
+//		}
+		
+//		(EnvironmentJmeI.i().getDisplay().getMaxSize()-EnvironmentJmeI.i().getDisplay().getMinSize())/2f;
+
+		
+//		torus.getMaterial().getAdditionalRenderState().setWireframe(true);
+		
+//		node.attachChild(torus);
+////		node.attachChild(GeometryI.i().create(MeshI.i().box(10), ColorRGBA.Yellow));
+//		node.attachChild(GeometryI.i().create(MeshI.i().box(10),
+//			ColorI.i().colorChangeCopy(ColorRGBA.Yellow,0f,0.85f)));
 		
 		return node;
 	}
 	
+	private ArrayList<Geometry> ageomZoomMarkersList = new ArrayList<>();
+	private int	iZoomIndexLast=-1;
+	
+	public void updateZoomMarkers(int iTot){
+		if(iTot==ageomZoomMarkersList.size())return;
+		
+		for(Geometry geom:ageomZoomMarkersList){
+			geom.removeFromParent();
+		}
+		ageomZoomMarkersList.clear();
+		
+		for(int i=0;i<iTot;i++){
+			Geometry geom=createZoomLevelMarker(ColorRGBA.Black);
+			nodeBorder.getParent().attachChild(geom);
+			Node nodePivot = new Node();
+			nodePivot.rotateUpTo(Vector3f.UNIT_Z);
+			nodeBorder.getParent().attachChild(nodePivot);
+			RotateI.i().rotateAroundPivot(geom, nodePivot, fDegAnglePerZoomStep*i*FastMath.DEG_TO_RAD, false);
+			ageomZoomMarkersList.add(geom);
+		}
+	}
+	
+	float fDegAnglePerZoomStep=10f;
+	public void updateZoomLevel(int iZoomIndex){
+		if(iZoomIndexLast == iZoomIndex)return;
+//		nodeBorder.lookAt(Vector3f.UNIT_X, Vector3f.UNIT_Y);
+////		nodeBorder.setLocalRotation(quaBorderStartAt);
+		RotateI.i().rotateSpinning(nodeBorder, Vector3f.UNIT_X, Vector3f.UNIT_Z, 
+//			(-90+(fDegAnglePerZoomStep*(ageomZoomMarkersList.size()-iZoomIndex)))*FastMath.DEG_TO_RAD);
+			(90+(fDegAnglePerZoomStep*((ageomZoomMarkersList.size()-1)-iZoomIndex)))*FastMath.DEG_TO_RAD);
+	}
+	
+	private Geometry createZoomLevelMarker(ColorRGBA color) {
+		Geometry zoommarker = GeometryI.i().create(MeshI.i().cone(fBorderIR*2f),color);
+		zoommarker.setLocalTranslation(fBorderOR,0,fBorderIR);
+		zoommarker.lookAt(new Vector3f(), Vector3f.UNIT_Y);
+		return zoommarker;
+	}
+
 	public void initAutoSetup(){
 		SimpleApplication sapp = G.i(SimpleApplication.class);
 		if(sapp!=null){
@@ -68,16 +153,21 @@ public class ReticleI {
 				flycamx.setReticle(node, sapp.getGuiNode()); //TODO shouldnt be another layer, below the gui node?
 				sapp.getGuiNode().attachChild(node);
 				node.setLocalTranslation(EnvironmentJmeI.i().getDisplay().getCenter());
-//				node.move(0, -1000, -10);
 				
-//				GeometryI.i().createArrowFollowing(sapp.getGuiNode(), null, node, ColorRGBA.Yellow)
-//					.setFromTo(EnvironmentJmeI.i().getDisplay().getCenter(), node.getLocalTranslation());
+				QueueI.i().enqueue(new CallableXAnon() {
+					@Override
+					public Boolean call() {
+						updateZoomMarkers(flycamx.getTotalZoomSteps());
+						updateZoomLevel(flycamx.getCurrentZoomLevelIndex());
+						return true;
+					}
+				}).setName("ReticleUpdateZoom").enableLoopMode().setDelaySeconds(0.5f);
 				
-				EffectElectricity el = new EffectElectricity();
-				el.setFollowFromTarget(node, null);
-				el.setFollowToMouse(true);
-				el.setPlay(true);
-				EffectManagerStateI.i().add(el);
+//				EffectElectricity el = new EffectElectricity();
+//				el.setFollowFromTarget(node, null);
+//				el.setFollowToMouse(true);
+//				el.setPlay(true);
+//				EffectManagerStateI.i().add(el);
 			}
 		}
 	}

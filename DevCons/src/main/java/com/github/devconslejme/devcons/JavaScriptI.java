@@ -62,6 +62,7 @@ import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.MethodX;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.ReportI;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.SystemAlertI;
@@ -883,21 +884,33 @@ public class JavaScriptI implements IGlobalAddListener {
 	public void processUserInit() {
 		if(astrUserInit.size()>0){
 			LoggingI.i().logMarker("UserInit:Begin");
-			boolean bFail=false;
-			for(String strCmd:astrUserInit){
-				if(strCmd.isEmpty())continue;
-				LoggingI.i().logSubEntry(strCmd);
-				if(!execCommand(strCmd,false,false)){
-					bFail=true;
-					String strMsg="UserInit:FAIL";
-					LoggingI.i().logMarker(strMsg);
+			QueueI.i().enqueue(new CallableXAnon() {
+				@Override
+				public Boolean call() {
+//					boolean bFail=false;
+					String strCmd = astrUserInit.remove(0);
+					if(strCmd.isEmpty())return false; //next cmd on next frame
 					
-					SystemAlertI.i().showTemporarySystemAlert(strMsg+"\n"+strCmd, 5f);
-					break;
+					LoggingI.i().logSubEntry(strCmd);
+					if(!execCommand(strCmd,false,false)){
+//						bFail=true;
+						String strMsg="UserInit:FAIL";
+						LoggingI.i().logMarker(strMsg);
+						
+						SystemAlertI.i().showTemporarySystemAlert(strMsg+"\n"+strCmd, 5f);
+						return true; //user cmd failed, end queue
+					}
+					
+					if(astrUserInit.size()>0)return false; //next cmd on next frame
+					
+//					astrUserInit.clear();
+					
+//					if(!bFail)
+					LoggingI.i().logMarker("UserInit:End");
+					
+					return true; //success, end queue
 				}
-			}
-			astrUserInit.clear();
-			if(!bFail)LoggingI.i().logMarker("UserInit:End");
+			}).setName("InitUserCfg");
 		}
 	}
 	

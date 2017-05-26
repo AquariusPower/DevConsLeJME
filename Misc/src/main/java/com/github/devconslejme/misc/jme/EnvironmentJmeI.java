@@ -42,6 +42,7 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.font.BitmapText;
 import com.jme3.input.InputManager;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
@@ -161,6 +162,13 @@ public class EnvironmentJmeI extends EnvironmentI{
 
 		public Vector3f getCenter() {
 			return new Vector3f(getWidth()/2,getHeight()/2,0);
+		}
+
+		public int getMinSize() {
+			return Math.min(getWidth(),getHeight());
+		}		
+		public int getMaxSize() {
+			return Math.max(getWidth(),getHeight());
 		}		
 	}
 	public DisplayI getDisplay(){
@@ -284,6 +292,9 @@ public class EnvironmentJmeI extends EnvironmentI{
 		btInfo.setColor("(?m)^[^=]*=",ColorRGBA.Cyan); //(?m) multiline mode
 		btInfo.setColor("[0-9.]*",ColorRGBA.Green); //(?m) multiline mode
 		geomInfoBkg.setMesh(new Quad(btInfo.getLineWidth(),btInfo.getHeight()));
+//		geomInfoBkg.setLocalTranslation(new Vector3f());
+//		geomInfoBkg.rotate(xAngle, yAngle, zAngle)
+		geomInfoBkg.setLocalTranslation(0,-btInfo.getHeight(),0);
 		
 		Vector3f v3f=v3fInfoLocation;
 		if(v3f==null){

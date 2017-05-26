@@ -626,4 +626,23 @@ public class FlyByCameraX extends FlyByCamera {
 		this.nodeReticleParent = nodeReticleParent;
 		return this;
 	}
+	
+	public int zoomIn(){
+		iCurrentZoomStep--;
+		fixZoom();
+		return iCurrentZoomStep;
+	}
+	public int zoomOut(){
+		iCurrentZoomStep++;
+		fixZoom();
+		return iCurrentZoomStep;
+	}
+
+	public int getTotalZoomSteps() {
+		return afListZoom.size();
+	}
+
+	public int getCurrentZoomLevelIndex() {
+		return iCurrentZoomStep;
+	}
 }
