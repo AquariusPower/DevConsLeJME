@@ -164,6 +164,9 @@ public class WorldPickingI {
 	public ArrayList<CollisionResult> raycastPiercingAtCenter(Node nodeVirtualWorld){
 		return raycastPiercingAt(nodeVirtualWorld, HWEnvironmentJmeI.i().getDisplay().getCenter(0f)); //z will be ignored
 	}
+	public ArrayList<CollisionResult> raycastPiercingFromCenterTo(Node nodeVirtualWorld, Vector3f v3fDisplaceFromCenterXY){
+		return raycastPiercingAt(nodeVirtualWorld, HWEnvironmentJmeI.i().getDisplay().getCenter(0f).add(v3fDisplaceFromCenterXY)); //z will be ignored
+	}
 	public ArrayList<CollisionResult> raycastPiercingAt(Node nodeVirtualWorld, Vector3f v3fGuiNodeXY){
 		if(nodeVirtualWorld==null)nodeVirtualWorld=MiscJmeI.i().getNodeVirtualWorld();
 		

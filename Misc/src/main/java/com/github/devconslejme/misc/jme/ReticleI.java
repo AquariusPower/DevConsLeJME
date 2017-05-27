@@ -41,7 +41,9 @@ import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.collision.CollisionResult;
+import com.jme3.font.BitmapFont.Align;
 import com.jme3.font.BitmapText;
+import com.jme3.font.Rectangle;
 import com.jme3.input.FlyByCamera;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -74,7 +76,7 @@ public class ReticleI {
     		@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 					resetTarget();
 					
-					ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+					ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingFromCenterTo(null,rnLastConfigured.v3fMarkersCenter);
 //					boolean bReset=false;
 					if(acr.size()>0){
 //						Geometry geomTargetNew = acr.get(0).getGeometry();
@@ -112,6 +114,11 @@ public class ReticleI {
 		private BitmapText[]	abtDistMarksH;
 		private ArrayList<Geometry> ageomZoomMarkersList = new ArrayList<>();
 		private BitmapText	btRangeDist;
+		public Vector3f	v3fMarkersCenter;
+		public Node	nodeBorderAndZoomMarkers;
+		public Geometry	zoomMarkerCurrent;
+		public Node	nodeZoomMarkerCurrent;
+		public Node	nodeZoomMarkerCurrentRot;
 		
 		public ReticleNode(){
 			setName(ReticleNode.class.getSimpleName());
@@ -154,11 +161,12 @@ public class ReticleI {
 		}
 
 		public float getDistMark(boolean bVertical,int iMarkIndex) {
+			float fEmptyMarginBinoc=(fBorderOR*2f)*0.05f;
 			float fStepBinocV = (fBorderOR*2f)/abtDistMarksV.length; //Vertical is the reference to keep
 			if(bVertical){
 				if(bBinoculars){
-					float fTopStart=fBorderOR;
-					return fTopStart+(fStepBinocV*iMarkIndex);
+					float fTopStart=fBorderOR-fEmptyMarginBinoc;
+					return fTopStart-(fStepBinocV*iMarkIndex);
 				}else{
 					float fDivBorderOR=8f;
 					float fStep = fBorderOR/fDivBorderOR;
@@ -173,7 +181,7 @@ public class ReticleI {
 				}
 			}else{
 				if(bBinoculars){
-					float fLeftStart=-fBorderOR;
+					float fLeftStart=-((abtDistMarksH.length/2)*fStepBinocV);
 					return fLeftStart+(fStepBinocV*iMarkIndex);
 				}else{
 					//nothing
@@ -183,15 +191,23 @@ public class ReticleI {
 		}
 		
 		public void updateDistanceMarkersValues(boolean bVertical, int... ai){
-			if(!bBinoculars){
-				for(int i=0;i<5;i++){
+//			if(!bBinoculars){
+				for(int i=0;i<ai.length;i++){
 					if(bVertical){
-						abtDistMarksV[i].setText((i==0?"    ":"=== ")+ai[i]);
+						String str="";
+						if(bBinoculars){
+							str=(ai[i]==0 ? "" : "--- "+ai[i]);
+						}else{
+							str=(i==0?"    ":"=== ")+ai[i];
+						}
+						abtDistMarksV[i].setText(str);
 					}else{
-						abtDistMarksH[i].setText(ai[i]+"\n|");
+						if(bBinoculars){
+							abtDistMarksH[i].setText(ai[i]!=0 ? ai[i]+"\n|" : "");
+						}
 					}
 				}
-			}
+//			}
 		}
 		public void updateZoomMarkers(int iTot){
 			if(iTot==ageomZoomMarkersList.size())return;
@@ -214,7 +230,12 @@ public class ReticleI {
 		
 		public void updateZoomLevel(int iZoomIndex){
 			if(iZoomIndexLast == iZoomIndex)return;
-			RotateI.i().rotateSpinning(nodeBorder, Vector3f.UNIT_X, Vector3f.UNIT_Z, 
+//			RotateI.i().rotateSpinning(nodeBorder, Vector3f.UNIT_X, Vector3f.UNIT_Z, 
+//					(90+(fDegAnglePerZoomStep*((ageomZoomMarkersList.size()-1)-iZoomIndex)))*FastMath.DEG_TO_RAD);
+			/**
+			 * TODO may be RotateI.i().rotateSpinning() is not working well? for scaled binoc...
+			 */
+			RotateI.i().rotateSpinning(nodeZoomMarkerCurrentRot, Vector3f.UNIT_X, Vector3f.UNIT_Z, 
 				(90+(fDegAnglePerZoomStep*((ageomZoomMarkersList.size()-1)-iZoomIndex)))*FastMath.DEG_TO_RAD);
 		}
 		
@@ -275,35 +296,71 @@ public class ReticleI {
 		int iDMin=HWEnvironmentJmeI.i().getDisplay().getMinSize();
 		int iDMax=HWEnvironmentJmeI.i().getDisplay().getMaxSize();
 		
-		// scope border
+		float fBinocXScale=1f; //TODO 1.5f; updateZoomLevel() may not be working well...
+		/////////////////////////////// reticle border
+		rnStore.nodeBorderAndZoomMarkers = new Node();
 		rnStore.nodeBorder=new Node("Border");
 		rnStore.fBorderOR=(iDMin/2f)-rnStore.getBorderIR();
 		Geometry border = GeometryI.i().create(new Torus(40, 5, rnStore.getBorderIR(), rnStore.fBorderOR),ColorRGBA.Gray);
 		rnStore.nodeBorder.attachChild(border);
 		rnStore.quaBorderStartAt = rnStore.nodeBorder.getLocalRotation().clone();
-		rnStore.attachChild(rnStore.nodeBorder);
+//		if(rnStore.bBinoculars)rnStore.nodeBorder.scale(fBinocXScale,1,1);
+		if(rnStore.bBinoculars)rnStore.nodeBorderAndZoomMarkers.scale(fBinocXScale,1,1);
+		rnStore.nodeBorderAndZoomMarkers.attachChild(rnStore.nodeBorder);
+		rnStore.attachChild(rnStore.nodeBorderAndZoomMarkers);
 		
-		Geometry zoomMarkerCurrent = rnStore.createZoomLevelMarker(ColorI.i().colorChangeCopy(ColorRGBA.Red,-0.5f));
-		zoomMarkerCurrent.scale(2f);
-		zoomMarkerCurrent.move(0,0,rnStore.getBorderIR());
-		rnStore.nodeBorder.attachChild(zoomMarkerCurrent);
+		//////////////////////////////// current zoom level
+		rnStore.ageomZoomMarkersList.clear(); //reset the zoom level markers
+		rnStore.zoomMarkerCurrent = rnStore.createZoomLevelMarker(ColorI.i().colorChangeCopy(ColorRGBA.Red,-0.5f));
+		rnStore.zoomMarkerCurrent.scale(2f);
+		rnStore.zoomMarkerCurrent.move(0,0,rnStore.getBorderIR());
+//		rnStore.nodeBorder.attachChild(zoomMarkerCurrent);
+//		rnStore.nodeBorderAndZoomMarkers.attachChild(rnStore.zoomMarkerCurrent);
 		
-		rnStore.btRangeDist=createBText(rnStore,ColorRGBA.Green);
-		rnStore.btRangeDist.setText("+99999.9m"); //TODO maximum displayable distance, create a formatter and get from there considering the world limits
-//		rnStore.btRangeDist = new BitmapText(TextI.i().loadDefaultMonoFont());
-//		rnStore.btRangeDist.setColor(ColorRGBA.Green);
+		rnStore.nodeZoomMarkerCurrent=new Node();
+		if(rnStore.bBinoculars)rnStore.nodeZoomMarkerCurrent.scale(fBinocXScale,1,1);
+		rnStore.attachChild(rnStore.nodeZoomMarkerCurrent);
+		
+		rnStore.nodeZoomMarkerCurrentRot=new Node();
+		rnStore.nodeZoomMarkerCurrentRot.attachChild(rnStore.zoomMarkerCurrent);
+		rnStore.nodeZoomMarkerCurrent.attachChild(rnStore.nodeZoomMarkerCurrentRot);
+		
+		///////////////////////////// auto target/dist range info
+		BitmapText bt = createBText(rnStore,ColorRGBA.Green);
+		bt.setText("Tgt:+99999.9m\nDummy"); //TODO maximum displayable distance, create a formatter and get from there considering the world limits
+		bt.setBox(new Rectangle(0, 0, bt.getLineWidth(), bt.getHeight()));
+		bt.setAlignment(Align.Right);
+//		bt = new BitmapText(TextI.i().loadDefaultMonoFont());
+//		bt.setColor(ColorRGBA.Green);
 		int iHalfMin=iDMin/2;
-//		rnStore.btRangeDist.setLocalTranslation(iDMin/2f-50f,iDMin/2f-50f,0);
-		rnStore.btRangeDist.setLocalTranslation(
-			iHalfMin-rnStore.btRangeDist.getLineWidth(),
-			iHalfMin-rnStore.btRangeDist.getHeight(),
+//		bt.setLocalTranslation(iDMin/2f-50f,iDMin/2f-50f,0);
+		bt.setLocalTranslation(
+			iHalfMin-bt.getLineWidth(),
+			iHalfMin-bt.getHeight(),
 			0);
-//		rnStore.btRangeDist.setLocalTranslation(300f,300f,300);
-//		rnStore.attachChild(rnStore.btRangeDist);
+//		bt.setLocalTranslation(300f,300f,300);
+//		rnStore.attachChild(bt);
+		rnStore.btRangeDist=bt;
 		
-		// distance marks
-		float fArrowsZ = -10f;
+		//////////////////////////////// blocker
+		float fProportion = iDMin/(float)iDMax;
+		float fDiagonal = FastMath.sqrt(FastMath.pow(iDMin,2)+FastMath.pow(iDMax,2));
+		float fBlockerIR=((fDiagonal/2f)-rnStore.fBorderOR)/2f;
+//		float fBlockerIR=((iDMax/2)-(iDMin/2))/2;if(fBlockerIR<1f)fBlockerIR=1f;
+		float fBlockerOR=rnStore.fBorderOR+fBlockerIR; //TODO why had to -100?
+		fBlockerIR*=1.25f; //after outer radius calc TODO why 1.25f worked? torus creation inner radius innacuracy? or my fault?
+		Geometry blocker = GeometryI.i().create(new Torus(25, 5, fBlockerIR, fBlockerOR),
+			new ColorRGBA(0.0125f,0.025f,0.05f,0.97f)); //glass feeling, TODO use a texture?
+		blocker.setQueueBucket(Bucket.Inherit); //restore gui one
+		blocker.move(new Vector3f(0,0,-fBlockerIR));
+		if(rnStore.bBinoculars)blocker.scale(fBinocXScale,1,1);
+		rnStore.attachChild(blocker);
+		
+		///////////////////////////////// text markers for distance info
+//		float fArrowsZ = -10f;
+		float fArrowsZ = -fBlockerIR*2f;
 		if(rnStore.isBinoculars()){ //mortar recalculations markers
+			rnStore.v3fMarkersCenter = new Vector3f(0,-(rnStore.fBorderOR/5)*2,0);
 			createTextMarkers(rnStore,true,11);
 			createTextMarkers(rnStore,false,11);
 			rnStore.updateDistanceMarkersValues(true,7,6,5,4,3,2,1,0,1,2,3); //vertical
@@ -316,6 +373,7 @@ public class ReticleI {
 			rnStore.attachChild(createArrowLine(rnStore, fArrowsZ, fCenterMargin, EEdge.Top));
 			rnStore.attachChild(createArrowLine(rnStore, fArrowsZ, fCenterMargin, EEdge.Bottom));
 		}else{ //bullet drop dists
+			rnStore.v3fMarkersCenter = new Vector3f();
 			createTextMarkers(rnStore,true,5);
 			rnStore.updateDistanceMarkersValues(true,100,200,300,400,500); //vertical
 			
@@ -326,24 +384,12 @@ public class ReticleI {
 			rnStore.attachChild(createArrowLine(rnStore, fArrowsZ, fCenterMargin, EEdge.Bottom));
 		}
 		
-		// blocker
-		float fProportion = iDMin/(float)iDMax;
-		float fDiagonal = FastMath.sqrt(FastMath.pow(iDMin,2)+FastMath.pow(iDMax,2));
-		float fBlockerIR=((fDiagonal/2f)-rnStore.fBorderOR)/2f;
-//		float fBlockerIR=((iDMax/2)-(iDMin/2))/2;if(fBlockerIR<1f)fBlockerIR=1f;
-		float fBlockerOR=rnStore.fBorderOR+fBlockerIR; //TODO why had to -100?
-		fBlockerIR*=1.25f; //after outer radius calc TODO why 1.25f worked? torus creation inner radius innacuracy? or my fault?
-		Geometry blocker = GeometryI.i().create(new Torus(25, 5, fBlockerIR, fBlockerOR),
-			new ColorRGBA(0.0125f,0.025f,0.05f,0.97f)); //glass feeling, TODO use a texture?
-		blocker.setQueueBucket(Bucket.Inherit); //restore gui one
-		blocker.move(new Vector3f(0,0,-fBlockerIR));
-		rnStore.attachChild(blocker);
-		
 		return rnStore;
 	}
 	
 	private BitmapText createBText(ReticleNode rnStore, ColorRGBA color) {
 		BitmapText bt = new BitmapText(TextI.i().loadDefaultMonoFont());
+		bt.setText("(not set)");
 		bt.setColor(color);
 		rnStore.attachChild(bt);
 		return bt;
@@ -358,7 +404,6 @@ public class ReticleI {
 		for(int i=0;i<iTotal;i++){
 			BitmapText bt=createBText(rnStore, ColorRGBA.DarkGray);
 //			BitmapText bt=new BitmapText(TextI.i().loadDefaultMonoFont());
-			float fH=bt.getLineHeight();
 //			bt.setColor(ColorRGBA.DarkGray);
 //			rnStore.attachChild(bt);
 			
@@ -366,7 +411,8 @@ public class ReticleI {
 				bt.setLocalTranslation(-10,rnStore.getDistMark(bVertical,i),0);
 				rnStore.abtDistMarksV[i]=bt;
 			}else{
-				bt.setLocalTranslation(rnStore.getDistMark(bVertical,i),fH,0);
+				float fH=bt.getLineHeight()*1.5f;
+				bt.setLocalTranslation(rnStore.getDistMark(bVertical,i),fH+rnStore.v3fMarkersCenter.y,0);
 				rnStore.abtDistMarksH[i]=bt;
 			}
 		}
@@ -382,21 +428,22 @@ public class ReticleI {
 	private Node createArrowLine(ReticleNode rnStore, float fArrowsZ, float fCenterMargin, EEdge ee) {
 		Vector3f v3fFrom = new Vector3f(0,0,fArrowsZ);
 		Vector3f v3fTo = new Vector3f(0,0,fArrowsZ);
+		float fLength=rnStore.fBorderOR*2f;
 		switch(ee){
 			case Left:
-				v3fFrom.x=-rnStore.fBorderOR;
+				v3fFrom.x=-fLength;
 				v3fTo.x=-fCenterMargin;
 				break;
 			case Right:
-				v3fFrom.x=rnStore.fBorderOR;
+				v3fFrom.x=fLength;
 				v3fTo.x=fCenterMargin;
 				break;
 			case Top:
-				v3fFrom.y=rnStore.fBorderOR;
+				v3fFrom.y=fLength;
 				v3fTo.y=fCenterMargin;
 				break;
 			case Bottom:
-				v3fFrom.y=-rnStore.fBorderOR;
+				v3fFrom.y=-fLength;
 				v3fTo.y=-fCenterMargin;
 				break;
 		}
@@ -405,6 +452,7 @@ public class ReticleI {
 		ag.setScaleArrowTip(rnStore.fBorderOR/20f);
 //	node.setLocalScale(fTipScale,fTipScale,1f);
 		ag.setFromTo(v3fFrom,v3fTo);
+		ag.move(rnStore.v3fMarkersCenter);
 		Node node = new Node();
 		node.attachChild(ag);
 		
@@ -448,42 +496,25 @@ public class ReticleI {
 							autoRecreate(rnLastConfigured);
 							v3fAppWSize.set(v3fAppWSizeCurrent);
 //							QueueI.i().removeLoopFromQueue(this); //a new one will be created
-							return true; 
-						}
-						
-						ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
-						Float fDist=null;
-						Float fTargetDist=null;
-						if(acr.size()>0)fDist=(acr.get(0).getDistance());
-						
-						if(sptTarget!=null && sptTarget.hasAncestor(sapp.getRootNode())){
-							fTargetDist=(app.getCamera().getLocation().distance(sptTarget.getWorldTranslation()));
-							HighlighterI.i().applyAt(geomTarget);
 						}else{
-							resetTarget();
-							fTargetDist=null;
+							ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingFromCenterTo(null,rnLastConfigured.v3fMarkersCenter);
+							Float fDist=null;
+							Float fTargetDist=null;
+							if(acr.size()>0)fDist=(acr.get(0).getDistance());
+							
+							if(sptTarget!=null && sptTarget.hasAncestor(sapp.getRootNode())){
+								fTargetDist=(app.getCamera().getLocation().distance(sptTarget.getWorldTranslation()));
+								HighlighterI.i().applyAt(geomTarget);
+							}else{
+								resetTarget();
+								fTargetDist=null;
+							}
+							
+							rnLastConfigured.updateRangeFinderValue(fTargetDist,fDist);
+							rnLastConfigured.updateZoomLevel(flycamx.getCurrentZoomLevelIndex());
+							rnLastConfigured.updateZoomMarkers(flycamx.getTotalZoomSteps());
 						}
-//						if(sptTarget==null){
-//							ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
-//							if(acr.size()>0){
-//								setRangeFinderDistanceValue(acr.get(0).getDistance());
-//							}else{
-//								setRangeFinderDistanceValue(null);
-//							}
-//						}else{
-//							if(sptTarget.hasAncestor(sapp.getRootNode())){
-////							sapp.getRootNode().hasAncestor(ancestor)
-////							if(SpatialHierarchyI.i().getParentest(sptTarget, Node.class, false)!=null)
-//								setRangeFinderDistanceValue(app.getCamera().getLocation().distance(sptTarget.getWorldTranslation()));
-//							}else{
-//								sptTarget=null;
-//								setRangeFinderDistanceValue(null);
-//							}
-//						}
 						
-						rnLastConfigured.updateRangeFinderValue(fTargetDist,fDist);
-						rnLastConfigured.updateZoomMarkers(flycamx.getTotalZoomSteps());
-						rnLastConfigured.updateZoomLevel(flycamx.getCurrentZoomLevelIndex());
 						return true;
 					}
 				}).setName("ReticleUpdateZoom").enableLoopMode().setDelaySeconds(0.5f);
