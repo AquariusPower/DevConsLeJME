@@ -130,7 +130,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		.enableLoopMode()
 		.setDelaySeconds(10) //will still keep running if contents change to fix them TODO 10s good to spare cpu?
 		.setInitialDelay(1f) //good to let the panel be ready
-		.setName("ApplyNoWrap")
+		.setName("ApplyNoWrap") //TODO add parentest dialog title
 		;
 	
 	public static interface IBorderMargin {

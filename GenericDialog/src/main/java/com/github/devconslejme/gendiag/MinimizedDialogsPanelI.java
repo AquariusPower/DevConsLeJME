@@ -30,6 +30,7 @@ import java.util.ArrayList;
 
 import com.github.devconslejme.es.DialogHierarchyComp.DiagCompBean;
 import com.github.devconslejme.es.DialogHierarchySystemI;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.DialogVisuals;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.github.devconslejme.misc.QueueI;
@@ -59,6 +60,7 @@ public class MinimizedDialogsPanelI implements IResizableListener{
 	private Node	nodeToMonitor;
 	protected boolean	bInitialized;
 	private float fMinSize=30; //TODO auto find out the current style font height
+	protected DialogVisuals	vs;
 	
 	public void configure(Node nodeToMonitor){
 		dhs=DialogHierarchyStateI.i();
@@ -84,13 +86,13 @@ public class MinimizedDialogsPanelI implements IResizableListener{
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
-				minimizedDiags = dhs.createDialog("Minimized dialogs panel", null);
+				vs = dhs.prepareDialogParts("Minimized dialogs panel", null);
+				minimizedDiags = vs.getDialog();
 				minimizedDiags.addResizableListener(MinimizedDialogsPanelI.this);
 				minimizedDiags.setApplyContentsBoundingBoxSize(false);
 				minimizedDiags.setLocalTranslationXY(new Vector3f(0,EnvironmentJmeI.i().getDisplay().getHeight(),Float.NaN));
 				minimizedDiags.setPreferredSizeWH(new Vector3f(EnvironmentJmeI.i().getDisplay().getWidth(),fMinSize,Float.NaN));
-				sys.setHierarchyComp(dhs.getEntityId(minimizedDiags), 
-						new DiagCompBean().setHierarchyType(EHierarchyType.Top));
+				sys.setHierarchyComp(vs.getEntityId(), new DiagCompBean().setHierarchyType(EHierarchyType.Top));
 				
 				cntrMinimized=new Container();
 				minimizedDiags.setContents(cntrMinimized);

@@ -29,6 +29,7 @@ package com.github.devconslejme.gendiag;
 
 import java.util.HashMap;
 
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.DialogVisuals;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
@@ -52,22 +53,24 @@ import com.simsilica.lemur.focus.FocusTraversal;
 public abstract class AbstractGenericDialog implements IResizableListener{
 	private Container	cntrMain;
 	private Object	objSelected;
-	HashMap<ESection,ResizablePanel> hmSection = new HashMap<ESection,ResizablePanel>();
-	private ResizablePanel	rzpDialog;
+	private HashMap<ESection,ResizablePanel> hmSection = new HashMap<ESection,ResizablePanel>();
+//	private ResizablePanel	rzpDialog;
+	private DialogVisuals vs;
 	
 	public AbstractGenericDialog setSection(ESection e, Panel pnl) {
-		hmSection.put(e,new ResizablePanel(rzpDialog.getStyle()).setContents(pnl));
+		hmSection.put(e,new ResizablePanel(vs.getDialog().getStyle()).setContents(pnl));
 		return this;
 	}
 	
-	public AbstractGenericDialog(ResizablePanel rzpDialog) {
-		this.rzpDialog=rzpDialog;
-		MiscJmeI.i().addToName(rzpDialog, this.getClass().getSimpleName(), true);
+	public void setDialogVisuals(DialogVisuals vs) {
+		this.vs=vs;
+//		this.rzpDialog=rzpDialog;
+		MiscJmeI.i().addToName(vs.getDialog(), this.getClass().getSimpleName(), true);
 //		rzpDialog.addControl(ctrl);
 		
 		bl = new BorderLayoutFT(getDialog());
 		
-		rzpDialog.addResizableListener(this);
+		vs.getDialog().addResizableListener(this);
 		
 //		initPreContentsContainer();
 		QueueI.i().enqueue(new CallableXAnon() {
@@ -82,6 +85,10 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 	
 //	protected abstract void initPreContentsContainer();
 	
+	/**
+	 * This is important to avoid exposing the input field, and still letting it be focused indirectly
+	 * thru it's parent(est).
+	 */
 	private class BorderLayoutFT extends BorderLayout implements FocusTraversal{
 		DefaultFocusTraversalControl dftc = new DefaultFocusTraversalControl();
 //		FocusTraversalAdapter dftc = new FocusTraversalAdapter();
@@ -95,7 +102,8 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 		
 		@Override
 		public Spatial getDefaultFocus() {
-			return getSection(ESection.Input).getContents();
+//			return getSection(ESection.Input).getContents();
+			return getInputField();
 		}
 
 		@Override
@@ -112,12 +120,16 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 	private BorderLayoutFT bl;
 	private boolean	bInitialized;
 	
+	public Panel getInputField(){
+		return getSection(ESection.Input).getContents();
+	}
+	
 	protected void initContentsContainer() {
 		DetailedException.assertNotNull(bl, this);
 		
-		DragParentestPanelListenerI.i().applyAt(rzpDialog);
+		DragParentestPanelListenerI.i().applyAt(vs.getDialog());
 		
-		cntrMain = new Container(bl, rzpDialog.getStyle());
+		cntrMain = new Container(bl, vs.getDialog().getStyle());
 //		cntrMain = new Container(new BorderLayout(), rzpDialog.getStyle());
 		DetailedException.assertNotAlreadySet(getDialog().getContents(), cntrMain, this);
 		
@@ -198,7 +210,7 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 	}
 
 	public ResizablePanel getDialog() {
-		return rzpDialog;
+		return vs.getDialog();
 	}
 
 	@Override	public void resizableRemovedFromParentEvent(ResizablePanel rzpSource) {	}

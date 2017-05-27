@@ -45,7 +45,7 @@ import com.github.devconslejme.gendiag.ContextMenuI.ContextMenuAnon;
 import com.github.devconslejme.gendiag.ContextMenuI.HintUpdaterPerCtxtBtn;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI.IDialogHierarchyListener;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
-import com.github.devconslejme.gendiag.DialogHierarchyStateI.Visuals;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.DialogVisuals;
 import com.github.devconslejme.gendiag.ManagerHelperI;
 import com.github.devconslejme.gendiag.ManagerHelperI.RetVal;
 import com.github.devconslejme.misc.Annotations.Workaround;
@@ -173,6 +173,7 @@ public class DevConsPluginStateI extends SimpleAppState implements IDialogHierar
 		}
 	};
 	private ActionListener	alToggleConsole;
+	private DialogVisuals	vs;
 	private static class VersionedStatus extends VersionedList<String>{
 		private HashMap<String,Integer> hmKV = new HashMap<String,Integer>();
 		public void put(String strKey, String strValue){
@@ -1192,9 +1193,10 @@ public class DevConsPluginStateI extends SimpleAppState implements IDialogHierar
 	}
 	
 	private void initMainContainer() {
-		rzpMain = DialogHierarchyStateI.i().createDialog(DevConsPluginStateI.class.getSimpleName(), getStyle());
-		EntityId entid = DialogHierarchyStateI.i().getEntityId(rzpMain); //DialogHierarchySystemI.i().createEntity(ContextMenuI.class.getSimpleName());
-		DialogHierarchySystemI.i().setHierarchyComp(entid, new DiagCompBean().setHierarchyType(EHierarchyType.Top));
+		vs = DialogHierarchyStateI.i().prepareDialogParts(DevConsPluginStateI.class.getSimpleName(), getStyle());
+		rzpMain = vs.getDialog(); 
+//		EntityId entid = DialogHierarchyStateI.i().getEntityId(rzpMain); //DialogHierarchySystemI.i().createEntity(ContextMenuI.class.getSimpleName());
+		DialogHierarchySystemI.i().setHierarchyComp(vs.getEntityId(), new DiagCompBean().setHierarchyType(EHierarchyType.Top));
 		rzpMain.setApplyContentsBoundingBoxSize(false);
 //		rzpMain.addResizableListener(this);
 		
@@ -1612,17 +1614,17 @@ public class DevConsPluginStateI extends SimpleAppState implements IDialogHierar
 	}
 
 	@Override
-	public void dialogCreatedEvent(Visuals vs) {
+	public void dialogCreatedEvent(DialogVisuals vs) {
 		LoggingI.i().logEntry("DialogCreated:"+vs.getDialog().getName());
 	}
 
 	@Override
-	public void dialogMadeVisibleEvent(Visuals vs) {
+	public void dialogMadeVisibleEvent(DialogVisuals vs) {
 		LoggingI.i().logEntry("DialogOpened:"+vs.getDialog().getName());
 	}
 
 	@Override
-	public void dialogClosedEvent(Visuals vs) {
+	public void dialogClosedEvent(DialogVisuals vs) {
 		LoggingI.i().logEntry("DialogClosed:"+vs.getDialog().getName());
 	}
 	

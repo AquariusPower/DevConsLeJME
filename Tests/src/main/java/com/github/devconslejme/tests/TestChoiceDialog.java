@@ -68,7 +68,7 @@ public class TestChoiceDialog extends SimpleAppStateAbs {
 
 	@SuppressWarnings("unchecked")
 	private void prepareButtonThatCallsDiag() {
-		ResizablePanel diagParent = DialogHierarchyStateI.i().createDialog("main", null);
+		ResizablePanel diagParent = DialogHierarchyStateI.i().prepareDialogParts("main", null).getDialog();
 		
 		btnChosenOption = new Button("Click to change option");
 		AbsorbClickCommandsI.i().addClickCommands(btnChosenOption,new Command<Button>(){

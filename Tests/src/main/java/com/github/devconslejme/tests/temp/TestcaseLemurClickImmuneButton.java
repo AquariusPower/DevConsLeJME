@@ -84,7 +84,7 @@ public class TestcaseLemurClickImmuneButton extends SimpleApplication{
 	private ResizablePanel createDialog(Vector3f pos,String strName,String strInfo) {
 		if(strInfo==null)strInfo=strName;
 		
-		ResizablePanel rzp = DialogHierarchyStateI.i().createDialog(strName,null);
+		ResizablePanel rzp = DialogHierarchyStateI.i().prepareDialogParts(strName,null).getDialog();
 		rzp.setPreferredSizeWH(new Vector3f(300,250,0));
 		rzp.setLocalTranslationXY(pos); //above DevCons
 		
@@ -101,7 +101,7 @@ public class TestcaseLemurClickImmuneButton extends SimpleApplication{
 	private ResizablePanel addButton(ResizablePanel parent, float fX) {
 		Button btn = new Button("MouseCursor Click Immune");
 		
-		ResizablePanel rzp = DialogHierarchyStateI.i().createDialog("test",null);
+		ResizablePanel rzp = DialogHierarchyStateI.i().prepareDialogParts("test",null).getDialog();
 //		ResizablePanel rzp = new ResizablePanel(null);
 		rzp.setContents(btn);
 		

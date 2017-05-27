@@ -85,7 +85,7 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 	
 	private Application	app;
 	/** dialogs may close, but not be discarded TODO confirm this:  */
-	private ArrayList<ResizablePanel> arzpAllCreatedDialogs = new ArrayList<ResizablePanel>();
+	private ArrayList<DialogVisuals> arzpAllCreatedDialogs = new ArrayList<DialogVisuals>();
 	private float	fBeginOrderPosZ;
 	private Node	nodeToMonitor;
 	private FocusManagerState	focusState;
@@ -133,7 +133,7 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 	}
 	
 	private void clickToRaise(CursorButtonEvent event, Spatial target,				Spatial capture, boolean bBlockerCheck) {
-		Visuals vs = DialogHierarchyStateI.i().getVisuals(
+		DialogVisuals vs = DialogHierarchyStateI.i().getVisuals(
 				SpatialHierarchyI.i().getParentest(capture!=null?capture:target, ResizablePanel.class, true));
 			
 		if(vs!=null){
@@ -146,9 +146,9 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 	}
 	
 	public static interface IDialogHierarchyListener {
-		void dialogCreatedEvent(Visuals vs);
-		void dialogMadeVisibleEvent(Visuals vs);
-		void dialogClosedEvent(Visuals vs);
+		void dialogCreatedEvent(DialogVisuals vs);
+		void dialogMadeVisibleEvent(DialogVisuals vs);
+		void dialogClosedEvent(DialogVisuals vs);
 	}
 	private ArrayList<IDialogHierarchyListener> aidhlListener = new ArrayList<IDialogHierarchyListener>();
 	public void addDialogHierarchyListener(IDialogHierarchyListener idhl){
@@ -166,7 +166,7 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 	/**
 	 * keep setters private
 	 */
-	public static class Visuals{
+	public static class DialogVisuals{
 		private EntityId entid;
 		private ResizablePanel rzpDiag;
 		private ResizablePanel pnlBlocker;
@@ -269,13 +269,14 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 			@Override
 			public Boolean call() {
 				for(Panel pnl:apnlAutoFocus){
-					ResizablePanel rzp = SpatialHierarchyI.i().getParentest(pnl, ResizablePanel.class, true);
-					DialogHierarchyComp hc = DialogHierarchyStateI.i().getHierarchyComp(rzp);
-					if(!hc.isOpened())continue;
 					if(SystemAlertI.i().isShowingAlert()){
 						GuiGlobals.getInstance().requestFocus(SystemAlertLemurI.i().getAlertAsPanel());
 						continue;
 					}
+					
+					ResizablePanel rzp = SpatialHierarchyI.i().getParentest(pnl, ResizablePanel.class, true);
+					DialogHierarchyComp hc = DialogHierarchyStateI.i().getHierarchyComp(rzp);
+					if(!hc.isOpened())continue;
 					
 					if(!hc.isBlocked()){
 						GuiGlobals.getInstance().requestFocus(pnl);
@@ -286,7 +287,8 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 				return true;
 			}
 		}.setName("FocusAtDevConsInput")
-		 .setDelaySeconds(0.25f).enableLoopMode();
+		 .setDelaySeconds(0.25f)
+		 .enableLoopMode();
 		QueueI.i().enqueue(cxAutoFocus);
 		
 //		QueueI.i().enqueue(new CallableXAnon() {
@@ -304,14 +306,19 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 	
 //	private HashBiMap<Long,Visuals> hmDiag = HashBiMap.create();
 	
-	public ResizablePanel createDialog(String strName, String strStyle) {
+	public DialogVisuals prepareDialogParts(String strName, String strStyle) {
+		DialogVisuals vs = new DialogVisuals();
+		
 		EntityId entid = sys.createEntity(strName);
+		vs.setEntityId(entid);
 		
 		// main dialog panel
 		ResizablePanel rzp = new ResizablePanel(strStyle);
 		MiscJmeI.i().addToName(rzp, strName, true);
 		rzp.addResizableListener(this);
 		HoverHighlightEffectI.i().applyAt(rzp, (QuadBackgroundComponent)rzp.getResizableBorder());
+		UserDataI.i().putSafelyMustNotExist(rzp, vs);
+		vs.setDiag(rzp);
 		
 		// blocker
 		ResizablePanel pnlBlocker = new ResizablePanel(strStyle);
@@ -323,20 +330,14 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 		DragParentestPanelListenerI.i().applyAt(pnlBlocker, rzp); // the blocker has not a parent panel! so it will let the dialog be dragged directly!  
 		DragParentestPanelListenerI.i().applyAt(rzp); // the resizable border can be used to move/drag the parentest with the middle mouse button!  
 		CursorEventControl.addListenersToSpatial(pnlBlocker,blockerListener);
-		
-		// visual data
-		Visuals vs = new Visuals();
-		vs.setEntityId(entid);
-		vs.setDiag(rzp);
-		vs.setBlocker(pnlBlocker);
-		UserDataI.i().putSafelyMustNotExist(rzp, vs);
 		UserDataI.i().putSafelyMustNotExist(pnlBlocker, vs);
+		vs.setBlocker(pnlBlocker);
 		
-		arzpAllCreatedDialogs.add(rzp);
+		arzpAllCreatedDialogs.add(vs);
 		
 		for(IDialogHierarchyListener idhl:aidhlListener)idhl.dialogCreatedEvent(vs);
 		
-		return rzp;
+		return vs;
 	}
 	
 	/**
@@ -344,13 +345,13 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 	 * @param spt
 	 * @return
 	 */
-	public Visuals getVisuals(Spatial spt){
+	public DialogVisuals getVisuals(Spatial spt){
 		if(spt==null)return null;
-		return UserDataI.i().getMustExistOrNull(spt,Visuals.class);
+		return UserDataI.i().getMustExistOrNull(spt,DialogVisuals.class);
 	}
 	
 	public DialogHierarchyComp getHierarchyComp(Spatial spt){
-		Visuals vs = getVisuals(spt);
+		DialogVisuals vs = getVisuals(spt);
 		if(vs==null)return null;
 		return sys.getHierarchyComp(vs.getEntityId());
 	}
@@ -422,7 +423,7 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 	protected void applyParentChildLinkEffect(ResizablePanel rzpParent, ResizablePanel rzpChild) {
 		if(!getHierarchyComp(rzpParent).isShowLinksFromChilds())return;
 		
-		Visuals vsChild = getVisuals(rzpChild);
+		DialogVisuals vsChild = getVisuals(rzpChild);
 		if(vsChild.getEffLinkToParent()==null || vsChild.getEffLinkToParent().isDiscarded()){
 			IEffect effLink = ieffParentToChildLink.clone();
 			
@@ -493,8 +494,8 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 	 */
 	private void updateDialogsResizableBorderSize() {
 		if(vriResizableBorderSize.update()){
-			for(ResizablePanel rzp:arzpAllCreatedDialogs){
-				rzp.setResizableBorderSize(vriResizableBorderSize.get(), vriResizableBorderSize.get());
+			for(DialogVisuals rzp:arzpAllCreatedDialogs){
+				rzp.getDialog().setResizableBorderSize(vriResizableBorderSize.get(), vriResizableBorderSize.get());
 			}
 		}
 	}
@@ -537,9 +538,9 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 						;
 				}
 				
-				setFocusRecursively(getEntityId(pnl));
+				DialogVisuals vs = getVisuals(pnl);
+				setFocusRecursively(vs.getEntityId());
 				
-				Visuals vs = getVisuals(pnl);
 				IEffect ef = vs.getEffLinkToParent();
 				if(ef!=null)ef.setPlay(false); // suspend the hierarchy link effect to unclutter while dragging
 				
@@ -563,7 +564,7 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 	
 	public ResizablePanel getOpenDialog(EntityId entid){
 		for(Spatial spt:nodeToMonitor.getChildren()){
-			Visuals vs = getVisuals(spt);
+			DialogVisuals vs = getVisuals(spt);
 			if(vs==null)continue;
 			if(vs.getEntityId().equals(entid))return vs.getDialog();
 		}
@@ -577,7 +578,7 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 	 * @param rzp
 	 */
 //	public void updateBlocker(Float tpf,EntityId entid, ResizablePanel rzp){
-	public void updateBlocker(Float tpf,Visuals vs){
+	public void updateBlocker(Float tpf,DialogVisuals vs){
 		// blocker work
 		ResizablePanel pnlBlocker = vs.getBlocker();
 		if(vs.getDialog().isOpened()){
@@ -639,12 +640,12 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 	
 	@Override
 	public void resizableUpdatedLogicalStateEvent(float tpf, ResizablePanel rzpSource) {
-		Visuals vs = getVisuals(rzpSource);
+		DialogVisuals vs = getVisuals(rzpSource);
 		updateBlocker(tpf, vs);
 		updateDragResizeRelativeParentPos(tpf, rzpSource, vs);
 	}
 	
-	private void updateDragResizeRelativeParentPos(float tpf, ResizablePanel rzpSource, Visuals vs) {
+	private void updateDragResizeRelativeParentPos(float tpf, ResizablePanel rzpSource, DialogVisuals vs) {
 		if(!vs.isAllowPositionRelativeToParent())return;
 		
 		DialogHierarchyComp hc = getHierarchyComp(rzpSource);
@@ -683,7 +684,7 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 	@Override
 	public void resizableStillResizingEvent(ResizablePanel rzpSource, Vector3f v3fNewSize) {
 		if(rzpCurrentlyBeingResized==null){ //marks it's start!
-			setFocusRecursively(getEntityId(rzpSource));
+			setFocusRecursively(getVisuals(rzpSource).getEntityId());
 		}
 		
 		rzpCurrentlyBeingResized=rzpSource;
@@ -697,7 +698,7 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 	@Override
 	public void resizableRemovedFromParentEvent(ResizablePanel rzpSource) {
 //		updateBlocker(null, getVisuals(rzpSource).getEntityId(), rzpSource);
-		Visuals vs = getVisuals(rzpSource);
+		DialogVisuals vs = getVisuals(rzpSource);
 		
 		updateBlocker(null, vs);
 		
@@ -759,9 +760,9 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 		}
 	}
 
-	public EntityId getEntityId(Spatial spt) {
-		return getVisuals(spt).getEntityId();
-	}
+//	public EntityId getEntityId(Spatial spt) {
+//		return getVisuals(spt).getEntityId();
+//	}
 
 	public float getInBetweenGapDistZ() {
 		return fInBetweenGapDistZ;

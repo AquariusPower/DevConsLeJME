@@ -55,7 +55,7 @@ public class TestContextMenu extends SimpleAppStateAbs{
 	public void initTest() {
 		super.initTest();
 		
-		ResizablePanel rzp = DialogHierarchyStateI.i().createDialog(TestContextMenu.class.getSimpleName(), null);
+		ResizablePanel rzp = DialogHierarchyStateI.i().prepareDialogParts(TestContextMenu.class.getSimpleName(), null).getDialog();
 		rzp.setContents(new Button("context click me"));
 		DialogHierarchyStateI.i().showDialog(rzp);
 		

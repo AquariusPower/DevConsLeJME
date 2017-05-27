@@ -35,6 +35,7 @@ import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.es.DialogHierarchyComp;
 import com.github.devconslejme.es.DialogHierarchyComp.DiagCompBean;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.DialogVisuals;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
@@ -100,10 +101,10 @@ public class ContextMenuI implements IResizableListener{
 		private ResizablePanel	rzpDialogHierarchyParent;
 		private ContextButton	btnChoice;
 		private boolean	bSingleChoiceMode;
-		private ResizablePanel	rzpContextMenu;
+//		private ResizablePanel	rzpContextMenu;
 		private String	strStyle;
 		private Container	cntrContextOptions;
-		private EntityId	entid;
+//		private EntityId	entid;
 		private Button	btnTitle;
 		
 		private Command<Button>	cmdCloseOnClick = new Command<Button>() {
@@ -112,13 +113,14 @@ public class ContextMenuI implements IResizableListener{
 				ContextButton cb = (ContextButton)source;
 				if(!cb.isSubContextMenu()){
 	//				hideContextMenu();
-					rzpContextMenu.close();
+					vs.getDialog().close();
 				}
 			}
 		};
+		private DialogVisuals	vs;
 		
 		public String getReport(){
-			return toString()+","+DialogHierarchyStateI.i().getHierarchyComp(rzpContextMenu).toString();
+			return toString()+","+DialogHierarchyStateI.i().getHierarchyComp(vs.getDialog()).toString();
 		}
 		
 		public ContextMenu(ResizablePanel	rzpDialogHierarchyParent){
@@ -126,25 +128,25 @@ public class ContextMenuI implements IResizableListener{
 			
 			strStyle = GuiGlobals.getInstance().getStyles().getDefaultStyle();
 			
-			rzpContextMenu = DialogHierarchyStateI.i().createDialog(ContextMenuI.class.getSimpleName(), strStyle);
-			entid = DialogHierarchyStateI.i().getEntityId(rzpContextMenu); //DialogHierarchySystemI.i().createEntity(ContextMenuI.class.getSimpleName());
+			vs = DialogHierarchyStateI.i().prepareDialogParts(ContextMenuI.class.getSimpleName(), strStyle);;
+//			entid = DialogHierarchyStateI.i().getEntityId(rzpContextMenu); //DialogHierarchySystemI.i().createEntity(ContextMenuI.class.getSimpleName());
 			
-			rzpContextMenu.addResizableListener(ContextMenuI.i());
+			vs.getDialog().addResizableListener(ContextMenuI.i());
 			
-			DialogHierarchyStateI.i().getVisuals(rzpContextMenu).ignorePositionRelativeToParent();
+			vs.ignorePositionRelativeToParent();
 			
-			MiscJmeI.i().addToName(rzpContextMenu, ContextMenuI.class.getSimpleName(), true);
+			MiscJmeI.i().addToName(vs.getDialog(), ContextMenuI.class.getSimpleName(), true);
 			
-			DialogHierarchySystemI.i().setHierarchyComp(entid, new DiagCompBean()
+			DialogHierarchySystemI.i().setHierarchyComp(vs.getEntityId(), new DiagCompBean()
 				.setHierarchyType(EHierarchyType.Top)
 				.setVolatileModal(true)
 			);
 			
-			rzpContextMenu.setAllEdgesEnabled(false); //it is here for the hierarchy (not the resizing)
+			vs.getDialog().setAllEdgesEnabled(false); //it is here for the hierarchy (not the resizing)
 			
 			cntrContextOptions = new Container(strStyle);
-			rzpContextMenu.setContents(cntrContextOptions);
-			rzpContextMenu.setBackground(new QuadBackgroundComponent(
+			vs.getDialog().setContents(cntrContextOptions);
+			vs.getDialog().setBackground(new QuadBackgroundComponent(
 				ColorI.i().colorChangeCopy(ColorRGBA.Cyan, -0.5f, 0.75f)));
 			
 			btnTitle = new Button("");
@@ -152,7 +154,7 @@ public class ContextMenuI implements IResizableListener{
 			
 //			CursorEventControl.addListenersToSpatial(rzpContextMenu, new ContextMenuListenerI());
 			
-			DialogHierarchyStateI.i().addRequestAutoFocus(rzpContextMenu);
+			DialogHierarchyStateI.i().addRequestAutoFocus(vs.getDialog());
 			
 			if(ContextMenuI.i().bShowDbgInfo)QueueI.i().enqueue(cxDbgInfo);
 		}
@@ -160,9 +162,9 @@ public class ContextMenuI implements IResizableListener{
 		private CallableX	cxDbgInfo = new CallableX() {
 			@Override
 			public Boolean call() {
-				DialogHierarchyComp hc = DialogHierarchyStateI.i().getHierarchyComp(rzpContextMenu);
+				DialogHierarchyComp hc = DialogHierarchyStateI.i().getHierarchyComp(vs.getDialog());
 				
-				if(!rzpContextMenu.isOpened())return true;
+				if(!vs.getDialog().isOpened())return true;
 				
 				//after diag hierarchy is ready
 				if(hc.getLastFocusTime()==-1)return true;
@@ -196,7 +198,7 @@ public class ContextMenuI implements IResizableListener{
 		}
 		
 		public ContextMenu createSubMenu(String strTextKey){
-			ContextMenu cmSub = new ContextMenu(this.rzpContextMenu);
+			ContextMenu cmSub = new ContextMenu(vs.getDialog());
 			
 			ContextButton cb = addNewEntry(
 				"[+] "+strTextKey, 
@@ -643,9 +645,9 @@ public class ContextMenuI implements IResizableListener{
 			cm.cntrContextOptions.addChild(cbChoice, i++, 0);
 		}
 		
-		DialogHierarchyStateI.i().showDialogAsModal(cm.getDialogHierarchyParent(), cm.rzpContextMenu);
+		DialogHierarchyStateI.i().showDialogAsModal(cm.getDialogHierarchyParent(), cm.vs.getDialog());
 		
-		cm.rzpContextMenu.setPreferredSizeWH(
+		cm.vs.getDialog().setPreferredSizeWH(
 			new Vector3f(
 				200, 
 				30*cm.hmContextOptions.size(), 
@@ -653,7 +655,7 @@ public class ContextMenuI implements IResizableListener{
 		);
 		
 		int iDisplacement=20;
-		cm.rzpContextMenu.setLocalTranslationXY(new Vector3f(
+		cm.vs.getDialog().setLocalTranslationXY(new Vector3f(
 			v2fMouseCursorPos.getX()-iDisplacement, 
 			v2fMouseCursorPos.getY()+iDisplacement, 
 			0)); // z will be fixed by diag hierarchy

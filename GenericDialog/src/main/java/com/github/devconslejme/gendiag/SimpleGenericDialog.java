@@ -482,14 +482,23 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 
 	}
 	
-	public SimpleGenericDialog(String strTitle, ResizablePanel rzpOwner) {
-		super(rzpOwner);
-		setTitle(strTitle);
-//		configureDefaults();
-	}
+//	public SimpleGenericDialog(String strTitle, ResizablePanel rzpOwner) {
+//		super(rzpOwner);
+//		setTitle(strTitle);
+////		configureDefaults();
+//	}
 
 	public SimpleGenericDialog(String strTitle) {
-		this(strTitle, DialogHierarchyStateI.i().createDialog(SimpleGenericDialog.class.getSimpleName(), null));
+		setTitle(strTitle);
+		
+		setDialogVisuals(
+			DialogHierarchyStateI.i().prepareDialogParts(
+				SimpleGenericDialog.this.getClass().getSimpleName(),
+				null
+			)
+		);
+		
+//		this(strTitle, DialogHierarchyStateI.i().prepareDialogParts(SimpleGenericDialog.class.getSimpleName(), null, this));
 //		addListOptionsUserInteractionListener(DialogHierarchyStateI.i());
 		
 		hmOptionsRoot = new LinkedHashMapX<String,OptionData>();
@@ -504,6 +513,17 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		 * as the label will require aiming at the label's text...
 		 */
 		btnInfoText = createInfoButton("(No Info)",null);
+		
+		
+//		QueueI.i().enqueue(new CallableXAnon() {
+//			@Override
+//			public Boolean call() {
+//				DialogHierarchyStateI.i().prepareDialogParts(
+////						SimpleGenericDialog.class.getSimpleName(), null, SimpleGenericDialog.this);
+//					SimpleGenericDialog.this.getClass().getSimpleName(), null, SimpleGenericDialog.this);
+//				return true;
+//			}
+//		});
 	}
 	
 	/**
@@ -515,6 +535,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		if(od!=null){
 			bRequestUpdateOptionSelected=true;
 			lstbxOptions.getSelectionModel().setSelection(vlodOptions.indexOf(od));
+			setLastSelectedOptionStoredValue(od.getStoredValue());
 			return true;
 		}
 		

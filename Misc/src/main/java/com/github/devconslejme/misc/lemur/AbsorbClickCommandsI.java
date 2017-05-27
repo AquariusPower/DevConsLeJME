@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
-import com.github.devconslejme.gendiag.DialogHierarchyStateI.Visuals;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.DialogVisuals;
 import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.GlobalManagerI;

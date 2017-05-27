@@ -102,7 +102,7 @@ public class TestVisualizeOtherWindowContents extends SimpleApplication{
 	
 	private void init(){
 		if(iTryMode==0){
-			rzp = DialogHierarchyStateI.i().createDialog(this.getClass().getSimpleName(),null);
+			rzp = DialogHierarchyStateI.i().prepareDialogParts(this.getClass().getSimpleName(),null).getDialog();
 			MiscJmeI.i().addToName(rzp, this.getClass().getSimpleName(), true);
 			rzp.setContents(new Panel());
 			rzp.setPreferredSizeWH(new Vector3f(100,100,Float.NaN));
