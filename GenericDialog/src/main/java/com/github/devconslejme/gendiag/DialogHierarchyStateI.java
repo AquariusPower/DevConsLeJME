@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import com.github.devconslejme.es.DialogHierarchyComp;
 import com.github.devconslejme.es.DialogHierarchyComp.DiagCompBean;
 import com.github.devconslejme.es.DialogHierarchySystemI;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.IUserInteraction;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
@@ -83,6 +84,26 @@ import com.simsilica.lemur.focus.FocusManagerState;
 public class DialogHierarchyStateI extends SimpleAppState implements IResizableListener{
 	public static DialogHierarchyStateI i(){return GlobalManagerI.i().get(DialogHierarchyStateI.class);}
 	
+	public static interface IUserInteraction{
+		void receiveSubmitedUserInputTextEvent(DialogVisuals vs, String str);
+		void receiveLastClickedItemStoredValueEvent(DialogVisuals vs, Object obj);
+	}
+	private ArrayList<IUserInteraction> auiLitenersList = new  ArrayList<IUserInteraction> ();
+	public void addGlobalListOptionsUserInteractionListener(IUserInteraction listener){
+		if(!auiLitenersList.contains(listener))auiLitenersList.add(listener);
+	}
+	IUserInteraction iuiGlobalUserInteractionListener = new IUserInteraction() {
+		@Override
+		public void receiveSubmitedUserInputTextEvent(DialogVisuals vs, String str) {
+			for(IUserInteraction iui:auiLitenersList)iui.receiveSubmitedUserInputTextEvent(vs,str);
+		}
+		
+		@Override
+		public void receiveLastClickedItemStoredValueEvent(DialogVisuals vs, Object obj) {
+			for(IUserInteraction iui:auiLitenersList)iui.receiveLastClickedItemStoredValueEvent(vs,obj);
+		}
+	};
+
 	private Application	app;
 	/** dialogs may close, but not be discarded TODO confirm this:  */
 	private ArrayList<DialogVisuals> arzpAllCreatedDialogs = new ArrayList<DialogVisuals>();
@@ -802,6 +823,10 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 	public DialogHierarchyStateI setFlycam(FlyByCamera flycam) {
 		this.flycam = flycam;
 		return this;
+	}
+
+	public IUserInteraction getGlobalUserInteractionListener() {
+		return iuiGlobalUserInteractionListener;
 	}
 
 }

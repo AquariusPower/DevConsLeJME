@@ -52,7 +52,7 @@ public class PkgCfgI {
 		
   	KeyCodeManagerI.i().configure();
 		KeyBindCommandManagerI.i().configure();
-		EnvironmentI.i().configure();
+		HWEnvironmentI.i().configure();
 		
 		bConfigured=true;
 	}

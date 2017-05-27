@@ -35,7 +35,7 @@ import com.github.devconslejme.misc.SystemAlertI;
 import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.EffectElectricity;
-import com.github.devconslejme.misc.jme.EnvironmentJmeI;
+import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.IEffect;
 import com.github.devconslejme.misc.jme.SystemAlertJmeI;
 import com.github.devconslejme.misc.lemur.EffectsLemurI.EEffChannel;
@@ -189,7 +189,7 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 			tdBlockerGlow.setActive(true);
 //			GlobalGUINodeI.i().attachChild(pnlBlocker);
 			nodeGui.attachChild(pnlBlocker);
-			SizeAndLocationI.i().setPreferredSize(pnlBlocker, EnvironmentJmeI.i().getDisplay().getAppWindowSize());
+			SizeAndLocationI.i().setPreferredSize(pnlBlocker, HWEnvironmentJmeI.i().getDisplay().getAppWindowSize());
 			pnlBlocker.setLocalTranslation(getPosForElement(EElement.Blocker, null));
 //			MiscLemurI.i().setLocalTranslationXY(pnlBlocker, EnvironmentI.i().getDisplay().getTopLeftCorner());
 //			MiscLemurI.i().setLocalTranslationZ(pnlBlocker, MiscJmeI.i().getZAboveAllAtGuiNode()-MiscLemurI.i().getMinSizeZ()); //just below the lemur raycast
@@ -317,7 +317,7 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 			ieffAlert.setFollowFromTarget(getActionSourceElement(), new Vector3f(0,0,1));
 		}else{
 			// use mouse pos
-			ieffAlert.setFromTo( getPosForElement(EElement.Effects, EnvironmentJmeI.i().getMouse().getPos3D()), 
+			ieffAlert.setFromTo( getPosForElement(EElement.Effects, HWEnvironmentJmeI.i().getMouse().getPos3D()), 
 				getAlertAsPanel().getLocalTranslation());
 		}
 		
@@ -344,7 +344,7 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 	 */
 	private Vector3f getPosForElement(EElement e, Vector3f v3fRef){
 		if(v3fRef!=null)v3fRef=v3fRef.clone(); //safety
-		Vector3f v3fWdwSize = EnvironmentJmeI.i().getDisplay().getAppWindowSize();
+		Vector3f v3fWdwSize = HWEnvironmentJmeI.i().getDisplay().getAppWindowSize();
 		
 		/**
 		 * TODO the Z displacement should consider each element bounding box Z
@@ -384,7 +384,7 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 					v3fPos.x-=v3fAlertSize.x/2f;
 					v3fPos.y+=v3fAlertSize.y/2f;
 				}else{
-					v3fPos = EnvironmentJmeI.i().getMouse().getPosWithMouseOnCenter(v3fAlertSize);
+					v3fPos = HWEnvironmentJmeI.i().getMouse().getPosWithMouseOnCenter(v3fAlertSize);
 				}
 				
 				v3fPos.set(new Vector3f(v3fPos.x, v3fPos.y, fZ));

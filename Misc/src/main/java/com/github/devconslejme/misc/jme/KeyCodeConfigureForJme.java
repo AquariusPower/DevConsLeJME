@@ -168,11 +168,11 @@ public class KeyCodeConfigureForJme {//implements AnalogListener,ActionListener{
 			 * must be on next frame so the "key press" is detected/forwarded by/thru {@link KeyCodeManagerI} 
 			 * on the frame it happened and can be "holded" (non stop moving)
 			 */
-			if( key.getLastPressedFrameId() == EnvironmentJmeI.i().getCurrentFrameId()   )continue;
+			if( key.getLastPressedFrameId() == HWEnvironmentJmeI.i().getCurrentFrameId()   )continue;
 			/**
 			 * wait a '1 frame gap' (a lacking "pressed event" for the axis that updates the frame id) 
 			 */
-			if( key.getLastPressedFrameId() == EnvironmentJmeI.i().getCurrentFrameId()-1 )continue;
+			if( key.getLastPressedFrameId() == HWEnvironmentJmeI.i().getCurrentFrameId()-1 )continue;
 			
 			if(key.isPressed())KeyCodeManagerI.i().refreshState(key.getFullId(), false, 0f);
 		}

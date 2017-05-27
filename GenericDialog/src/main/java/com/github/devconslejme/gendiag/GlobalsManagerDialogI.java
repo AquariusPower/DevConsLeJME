@@ -29,16 +29,15 @@ package com.github.devconslejme.gendiag;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import com.github.devconslejme.gendiag.SimpleGenericDialog.IUserInteraction;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.DialogVisuals;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.IUserInteraction;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction.CmdBtnTA;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
-import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.simsilica.lemur.Button;
-import com.simsilica.lemur.core.VersionedReference;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -127,11 +126,11 @@ public class GlobalsManagerDialogI implements IUserInteraction{
 	}
 	
 	@Override
-	public void receiveSubmitedUserInputTextEvent(String str) {
+	public void receiveSubmitedUserInputTextEvent(DialogVisuals vs,String str) {
 		cmto.setUserInputTextFilter(str);
 		diagMaint.requestUpdateListItems();
 	}
 
-	@Override public void receiveLastClickedItemStoredValueEvent(Object obj) {}
+	@Override public void receiveLastClickedItemStoredValueEvent(DialogVisuals vs,Object obj) {}
 
 }

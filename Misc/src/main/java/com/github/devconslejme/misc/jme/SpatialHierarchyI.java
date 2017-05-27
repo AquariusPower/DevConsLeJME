@@ -43,6 +43,13 @@ import com.jme3.scene.Spatial;
 public class SpatialHierarchyI {
 	public static SpatialHierarchyI i(){return GlobalManagerI.i().get(SpatialHierarchyI.class);}
 	
+	/**
+	 * this can bring even the parentest nodes like rootNode and guiNode
+	 * @param sptStartFrom
+	 * @param clTypeParentest
+	 * @param bIncludeStartFrom
+	 * @return
+	 */
 	public <T extends Spatial> T getParentest(Spatial sptStartFrom, Class<T> clTypeParentest, boolean bIncludeStartFrom){
 		return getParentest(sptStartFrom, clTypeParentest, bIncludeStartFrom, true);
 	}

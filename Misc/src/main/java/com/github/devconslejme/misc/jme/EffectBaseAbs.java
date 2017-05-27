@@ -100,7 +100,7 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 	public Vector3f getLocationTo() {
 		Vector3f v3fTargetSpot = v3fTo==null?null:v3fTo.clone();
 		if(bToMouse){
-			v3fTargetSpot=EnvironmentJmeI.i().getMouse().getPos3D();
+			v3fTargetSpot=HWEnvironmentJmeI.i().getMouse().getPos3D();
 			if(v3fTo!=null)v3fTargetSpot.z=v3fTo.z;
 //			v3fTargetSpot.z = v3fTo==null ? MiscJmeI.i().getZAboveAllAtGuiNode() : v3fTo.z;
 		}else

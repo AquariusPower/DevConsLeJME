@@ -62,6 +62,10 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 		return this;
 	}
 	
+	protected DialogVisuals getDialogVisuals(){
+		return vs;
+	}
+	
 	public void setDialogVisuals(DialogVisuals vs) {
 		this.vs=vs;
 //		this.rzpDialog=rzpDialog;

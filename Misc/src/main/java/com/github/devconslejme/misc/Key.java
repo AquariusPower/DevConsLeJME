@@ -171,7 +171,7 @@ public class Key{
 		 */
 		if(bPressed){
 			lLastPressedNano=System.nanoTime();
-			lLastPressedFrameId=EnvironmentI.i().getTotalFrameCount();
+			lLastPressedFrameId=HWEnvironmentI.i().getTotalFrameCount();
 		}else{
 			lLastReleasedNano=System.nanoTime();
 		}

@@ -29,7 +29,7 @@ package com.github.devconslejme.misc.lemur;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
-import com.github.devconslejme.misc.jme.EnvironmentJmeI;
+import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.jme3.math.Vector3f;
@@ -92,8 +92,8 @@ public class SizeAndLocationI {
 
 	public void maximize(PanelBase pnl) {
 		maximize(pnl, 
-			new Vector3f(0,EnvironmentJmeI.i().getDisplay().getHeight(),0), 
-			new Vector3f(EnvironmentJmeI.i().getDisplay().getWidth(),EnvironmentJmeI.i().getDisplay().getHeight(),0));
+			new Vector3f(0,HWEnvironmentJmeI.i().getDisplay().getHeight(),0), 
+			new Vector3f(HWEnvironmentJmeI.i().getDisplay().getWidth(),HWEnvironmentJmeI.i().getDisplay().getHeight(),0));
 	}
 	public void maximize(PanelBase pnl, Vector3f v3fPosXY, Vector3f v3fSizeWH) {
 		pnl.setLocalTranslationXY(v3fPosXY);
@@ -112,10 +112,10 @@ public class SizeAndLocationI {
 		Vector3f v3fSize = pnl.getSize();
 		Vector3f v3fPos = pnl.getLocalTranslation();
 		return 
-			v3fSize.x==EnvironmentJmeI.i().getDisplay().getWidth() && 
-			v3fSize.y==EnvironmentJmeI.i().getDisplay().getHeight() &&
+			v3fSize.x==HWEnvironmentJmeI.i().getDisplay().getWidth() && 
+			v3fSize.y==HWEnvironmentJmeI.i().getDisplay().getHeight() &&
 			v3fPos.x==0 &&
-			v3fPos.y==EnvironmentJmeI.i().getDisplay().getHeight()
+			v3fPos.y==HWEnvironmentJmeI.i().getDisplay().getHeight()
 			;
 	}
 
@@ -174,8 +174,8 @@ public class SizeAndLocationI {
 	public void moveToScreenCenterXY(Panel pnl) {
 		Vector3f v3fSize = MiscJmeI.i().getBoundingBoxSizeCopy(pnl);
 		setLocalTranslationXY(pnl,new Vector3f(
-			EnvironmentJmeI.i().getDisplay().getWidth()/2f - v3fSize.x/2f, 
-			EnvironmentJmeI.i().getDisplay().getHeight()/2f + v3fSize.y/2f, 
+			HWEnvironmentJmeI.i().getDisplay().getWidth()/2f - v3fSize.x/2f, 
+			HWEnvironmentJmeI.i().getDisplay().getHeight()/2f + v3fSize.y/2f, 
 			0 
 		));
 	}

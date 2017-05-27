@@ -479,7 +479,7 @@ public class FlyByCameraX extends FlyByCamera {
 	
 	public void update(float fTPF){
 		if(tdMouseGrab.isReady(true)){
-			if(isEnabled() && EnvironmentJmeI.i().getMouse().isCursorVisible()){
+			if(isEnabled() && HWEnvironmentJmeI.i().getMouse().isCursorVisible()){
 				//this is useful when debugging thru IDE that has an watch evaluation to ungrab the mouse directly thru lwjgl
 				setEnabledRaw(true); //to grant it is properly set
 			}
@@ -518,7 +518,7 @@ public class FlyByCameraX extends FlyByCamera {
 				strFOV+="zmRtSpd="+fZoomedRotationSpeed;
 			}
 			strFOV+=" }";
-			EnvironmentJmeI.i().putCustomInfo("CamFOVdeg", strFOV);
+			HWEnvironmentJmeI.i().putCustomInfo("CamFOVdeg", strFOV);
 		}
 		
 		if(isZooming()){

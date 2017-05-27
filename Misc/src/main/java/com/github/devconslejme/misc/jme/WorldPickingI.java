@@ -43,6 +43,7 @@ import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.math.Ray;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
@@ -108,28 +109,6 @@ public class WorldPickingI {
 		return pickWorldPiercingAtCursor(iButtonIndex,null);//MiscJmeI.i().getNodeVirtualWorld());
 	}
 	public ArrayList<CollisionResult> pickWorldPiercingAtCursor(int iButtonIndex,Node nodeVirtualWorld){
-//		CollisionResults crs = new CollisionResults();
-//		
-//		Vector3f v3fCursorAtVirtualWorld3D = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(
-//			EnvironmentJmeI.i().getMouse().getPos2D(), 0f);
-//		
-//		Vector3f v3fDirection = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(
-//			EnvironmentJmeI.i().getMouse().getPos2D(), 1f);
-//		v3fDirection.subtractLocal(v3fCursorAtVirtualWorld3D).normalizeLocal();
-//		
-//		rayLastCast = new Ray(v3fCursorAtVirtualWorld3D, v3fDirection);
-//		nodeVirtualWorld.collideWith(rayLastCast, crs);
-//		
-//		ArrayList<CollisionResult> acrList=new ArrayList<CollisionResult>();
-//		if(crs.size()==0){
-//			acrLastPickList=null;
-//		}else{
-//			for(CollisionResult cr:Lists.newArrayList(crs.iterator())){
-//				if(!isSkip(cr.getGeometry()))acrList.add(cr);
-//			}
-//			
-//			if(acrList.size()>0)acrLastPickList=acrList;
-//		}
 		acrLastPickList.clear();
 		acrLastPickList.addAll(raycastPiercingAtCursor(nodeVirtualWorld));
 		
@@ -157,15 +136,45 @@ public class WorldPickingI {
 	 * @return
 	 */
 	public ArrayList<CollisionResult> raycastPiercingAtCursor(Node nodeVirtualWorld){
+//		if(nodeVirtualWorld==null)nodeVirtualWorld=MiscJmeI.i().getNodeVirtualWorld();
+//		
+//		CollisionResults crs = new CollisionResults();
+//		
+//		Vector3f v3fCursorAtVirtualWorld3D = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(
+//			EnvironmentJmeI.i().getMouse().getPos2D(), 0f);
+//		
+//		Vector3f v3fDirection = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(
+//			EnvironmentJmeI.i().getMouse().getPos2D(), 1f);
+//		v3fDirection.subtractLocal(v3fCursorAtVirtualWorld3D).normalizeLocal();
+//		
+//		Ray ray = new Ray(v3fCursorAtVirtualWorld3D, v3fDirection);
+//		nodeVirtualWorld.collideWith(ray, crs);
+//		
+//		ArrayList<CollisionResult> acrList=new ArrayList<CollisionResult>();
+//		if(crs.size()>0){
+//			for(CollisionResult cr:Lists.newArrayList(crs.iterator())){
+//				if(!isSkip(cr.getGeometry()))acrList.add(cr);
+//			}
+//		}
+//		
+//		return acrList;
+		return raycastPiercingAt(nodeVirtualWorld, HWEnvironmentJmeI.i().getMouse().getPos3D());
+	}
+	
+	public ArrayList<CollisionResult> raycastPiercingAtCenter(Node nodeVirtualWorld){
+		return raycastPiercingAt(nodeVirtualWorld, HWEnvironmentJmeI.i().getDisplay().getCenter(0f)); //z will be ignored
+	}
+	public ArrayList<CollisionResult> raycastPiercingAt(Node nodeVirtualWorld, Vector3f v3fGuiNodeXY){
 		if(nodeVirtualWorld==null)nodeVirtualWorld=MiscJmeI.i().getNodeVirtualWorld();
 		
 		CollisionResults crs = new CollisionResults();
 		
-		Vector3f v3fCursorAtVirtualWorld3D = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(
-			EnvironmentJmeI.i().getMouse().getPos2D(), 0f);
+//		Vector3f v3fCursorAtVirtualWorld3D = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(
+//				EnvironmentJmeI.i().getMouse().getPos2D(), 0f);
+		Vector2f v2f = MiscJmeI.i().toV2f(v3fGuiNodeXY);
+		Vector3f v3fCursorAtVirtualWorld3D = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(v2f,0f);
 		
-		Vector3f v3fDirection = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(
-			EnvironmentJmeI.i().getMouse().getPos2D(), 1f);
+		Vector3f v3fDirection = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(v2f,1f);
 		v3fDirection.subtractLocal(v3fCursorAtVirtualWorld3D).normalizeLocal();
 		
 		Ray ray = new Ray(v3fCursorAtVirtualWorld3D, v3fDirection);

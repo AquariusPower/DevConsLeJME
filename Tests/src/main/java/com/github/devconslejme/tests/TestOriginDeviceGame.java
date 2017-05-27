@@ -42,7 +42,7 @@ import com.github.devconslejme.misc.jme.EffectArrow;
 import com.github.devconslejme.misc.jme.EffectElectricity;
 import com.github.devconslejme.misc.jme.EffectManagerStateI;
 import com.github.devconslejme.misc.jme.EnergyJme;
-import com.github.devconslejme.misc.jme.EnvironmentJmeI;
+import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.GeometryI;
 import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
@@ -98,7 +98,7 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs {
 	@Override
 	public void update(float tpf) {
 		orde.update(tpf);
-		EnvironmentJmeI.i().putCustomInfo("OrdeEnergy", ""+orde.energyInfo());
+		HWEnvironmentJmeI.i().putCustomInfo("OrdeEnergy", ""+orde.energyInfo());
 	}
 	
 	/**

@@ -37,6 +37,7 @@ import com.jme3.input.FlyByCamera;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Sphere;
 
 /**
@@ -133,7 +134,7 @@ public class HighlighterI {
 			reset();
 		}
 		
-		EnvironmentJmeI.i().putCustomInfo("Highlighting", geomTarget!=null ? geomTarget.toString() : "(nothing)");
+		HWEnvironmentJmeI.i().putCustomInfo("Highlighting", geomTarget!=null ? geomTarget.toString() : "(nothing)");
 	}
 
 	public boolean isDebug() {
@@ -152,6 +153,20 @@ public class HighlighterI {
 	public HighlighterI setColorHighlight(ColorRGBA colorHighlight) {
 		this.colorHighlight.set(colorHighlight);
 		return this; 
+	}
+
+
+	public void applyAt(Spatial sptTarget) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("method not implemented");
+		
+	}
+
+
+	public void removeFrom(Spatial sptTarget) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("method not implemented");
+		
 	}
 	
 }

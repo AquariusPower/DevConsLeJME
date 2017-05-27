@@ -53,8 +53,8 @@ import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.SystemAlertI;
 import com.github.devconslejme.misc.jme.ArrowGeometry;
-import com.github.devconslejme.misc.jme.EnvironmentJmeI;
-import com.github.devconslejme.misc.jme.EnvironmentJmeI.IEnvironmentListener;
+import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
+import com.github.devconslejme.misc.jme.HWEnvironmentJmeI.IEnvironmentListener;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.GeometryI;
 import com.github.devconslejme.misc.jme.MeshI;
@@ -208,7 +208,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	}
 
 	private void opt_initShowFPS() {
-		EnvironmentJmeI.i()
+		HWEnvironmentJmeI.i()
 			.setShowFPS(true)
 			.setShowCamPos(true)
 			.setShowCamRot(true)
@@ -251,8 +251,8 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	
 	@SuppressWarnings("unused")
 	private static void opt_initWindow(TestDevCons tdc) {
-		EnvironmentJmeI.i().getDisplay().setResizable(true);
-		EnvironmentJmeI.i().addListener(tdc);
+		HWEnvironmentJmeI.i().getDisplay().setResizable(true);
+		HWEnvironmentJmeI.i().addListener(tdc);
 		
 		AppSettings as = new AppSettings(true);
 		as.setTitle(TestDevCons.class.getSimpleName());
@@ -418,7 +418,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	public Object debugTest(Object... aobj){
 		ArrowGeometry ag = GeometryI.i().createArrow(ColorRGBA.Yellow);
 		getGuiNode().attachChild(ag);
-		ag.setLocalTranslation(EnvironmentJmeI.i().getDisplay().getCenter(500f));
+		ag.setLocalTranslation(HWEnvironmentJmeI.i().getDisplay().getCenter(500f));
 //		Geometry geom = GeometryI.i().create(MeshI.i().cone(1f), ColorRGBA.Blue);
 //		aobjDebugTest=new Object[]{geom};
 //		getRootNode().attachChild(geom);

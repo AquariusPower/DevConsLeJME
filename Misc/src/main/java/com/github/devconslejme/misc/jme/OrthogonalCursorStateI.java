@@ -96,7 +96,7 @@ public class OrthogonalCursorStateI extends SimpleAppState{
 		
 		// cross
 		geom=new Geometry(OrthogonalCursorStateI.class.getSimpleName());
-		fSize=Math.max(EnvironmentJmeI.i().getDisplay().getWidth(),EnvironmentJmeI.i().getDisplay().getHeight())+10; //a bit more to hide the borders
+		fSize=Math.max(HWEnvironmentJmeI.i().getDisplay().getWidth(),HWEnvironmentJmeI.i().getDisplay().getHeight())+10; //a bit more to hide the borders
 		geom.setMesh(new Grid(3,3,fSize));
 //		geom.lookAt(new Vector3f(v2f.x,v2f.y-1000000,0), Vector3f.UNIT_Z.mult(1000));
 		geom.lookAt(new Vector3f(0,-1000000,0), Vector3f.UNIT_Z.mult(1000));
@@ -119,10 +119,10 @@ public class OrthogonalCursorStateI extends SimpleAppState{
 	private void updateCursorInfo(){
 		String str=StringI.i().createTable(3,
 				"xy", String.format("%.0f",v3fCursorPos.x), String.format("%.0f",v3fCursorPos.y),
-				"max", ""+EnvironmentJmeI.i().getDisplay().getWidth(), ""+EnvironmentJmeI.i().getDisplay().getHeight(),
-				"diff", ""+(EnvironmentJmeI.i().getDisplay().getWidth()-(int)v3fCursorPos.x), ""+(EnvironmentJmeI.i().getDisplay().getHeight()-(int)v3fCursorPos.y),
-				"%",	String.format("%.1f", (v3fCursorPos.x/(float)EnvironmentJmeI.i().getDisplay().getWidth ())*100),
-							String.format("%.1f", (v3fCursorPos.y/(float)EnvironmentJmeI.i().getDisplay().getHeight())*100)
+				"max", ""+HWEnvironmentJmeI.i().getDisplay().getWidth(), ""+HWEnvironmentJmeI.i().getDisplay().getHeight(),
+				"diff", ""+(HWEnvironmentJmeI.i().getDisplay().getWidth()-(int)v3fCursorPos.x), ""+(HWEnvironmentJmeI.i().getDisplay().getHeight()-(int)v3fCursorPos.y),
+				"%",	String.format("%.1f", (v3fCursorPos.x/(float)HWEnvironmentJmeI.i().getDisplay().getWidth ())*100),
+							String.format("%.1f", (v3fCursorPos.y/(float)HWEnvironmentJmeI.i().getDisplay().getHeight())*100)
 			);
 			
 			bt.setText(str);
@@ -179,9 +179,9 @@ public class OrthogonalCursorStateI extends SimpleAppState{
 	@Override
 	public void update(float tpf) {
 		super.update(tpf);
-		if(EnvironmentJmeI.i().getMouse().isCursorVisible()){
+		if(HWEnvironmentJmeI.i().getMouse().isCursorVisible()){
 //			v2fCursorPos = EnvironmentJmeI.i().getMouse().getPos2D();//inputman.getCursorPosition();
-			v3fCursorPos = EnvironmentJmeI.i().getMouse().getPos3D();
+			v3fCursorPos = HWEnvironmentJmeI.i().getMouse().getPos3D();
 			geom.setLocalTranslation(v3fCursorPos.x-fSize, v3fCursorPos.y+fSize, v3fCursorPos.z);
 //			geom.setLocalTranslation(v2fCursorPos.x-fSize, v2fCursorPos.y+fSize, MiscJmeI.i().getZAboveAllAtGuiNode() );
 			
@@ -190,7 +190,7 @@ public class OrthogonalCursorStateI extends SimpleAppState{
 			v3fCursorPosPrevious.set(v3fCursorPos);
 		}
 		
-		setShow(EnvironmentJmeI.i().getMouse().isCursorVisible());
+		setShow(HWEnvironmentJmeI.i().getMouse().isCursorVisible());
 	}
 	
 	@Override

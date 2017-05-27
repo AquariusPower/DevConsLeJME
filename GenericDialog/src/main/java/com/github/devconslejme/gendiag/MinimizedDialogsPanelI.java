@@ -35,7 +35,7 @@ import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
-import com.github.devconslejme.misc.jme.EnvironmentJmeI;
+import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.TextI;
 import com.github.devconslejme.misc.lemur.AbsorbClickCommandsI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
@@ -90,8 +90,8 @@ public class MinimizedDialogsPanelI implements IResizableListener{
 				minimizedDiags = vs.getDialog();
 				minimizedDiags.addResizableListener(MinimizedDialogsPanelI.this);
 				minimizedDiags.setApplyContentsBoundingBoxSize(false);
-				minimizedDiags.setLocalTranslationXY(new Vector3f(0,EnvironmentJmeI.i().getDisplay().getHeight(),Float.NaN));
-				minimizedDiags.setPreferredSizeWH(new Vector3f(EnvironmentJmeI.i().getDisplay().getWidth(),fMinSize,Float.NaN));
+				minimizedDiags.setLocalTranslationXY(new Vector3f(0,HWEnvironmentJmeI.i().getDisplay().getHeight(),Float.NaN));
+				minimizedDiags.setPreferredSizeWH(new Vector3f(HWEnvironmentJmeI.i().getDisplay().getWidth(),fMinSize,Float.NaN));
 				sys.setHierarchyComp(vs.getEntityId(), new DiagCompBean().setHierarchyType(EHierarchyType.Top));
 				
 				cntrMinimized=new Container();

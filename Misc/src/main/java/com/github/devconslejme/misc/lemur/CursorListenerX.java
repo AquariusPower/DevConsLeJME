@@ -27,10 +27,10 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.github.devconslejme.misc.lemur;
 
 import com.github.devconslejme.misc.Annotations.Workaround;
-import com.github.devconslejme.misc.EnvironmentI;
+import com.github.devconslejme.misc.HWEnvironmentI;
 import com.github.devconslejme.misc.jme.EffectElectricity;
 import com.github.devconslejme.misc.jme.EffectManagerStateI;
-import com.github.devconslejme.misc.jme.EnvironmentJmeI;
+import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;

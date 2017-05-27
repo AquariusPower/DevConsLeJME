@@ -32,8 +32,8 @@ import com.github.devconslejme.misc.Annotations.SimpleVarReadOnly;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class EnvironmentI {
-	public static EnvironmentI i(){return GlobalManagerI.i().get(EnvironmentI.class);}
+public class HWEnvironmentI {
+	public static HWEnvironmentI i(){return GlobalManagerI.i().get(HWEnvironmentI.class);}
 
 	private long lTotalFrameCount;
 	private float	fTPF;

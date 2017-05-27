@@ -26,13 +26,13 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.github.devconslejme.gendiag;
 
-import com.github.devconslejme.gendiag.SimpleGenericDialog.IUserInteraction;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.DialogVisuals;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.IUserInteraction;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.SimpleApplication;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.simsilica.lemur.Button;
 
 /**
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -104,7 +104,7 @@ public class SpatialsManagerDialogI implements IUserInteraction{
 	}
 	
 	@Override
-	public void receiveSubmitedUserInputTextEvent(String str) {
+	public void receiveSubmitedUserInputTextEvent(DialogVisuals vs,String str) {
 		this.strFilter=str;
 		diagMaint.requestUpdateListItems();
 	}
@@ -113,6 +113,6 @@ public class SpatialsManagerDialogI implements IUserInteraction{
 		DialogHierarchyStateI.i().showDialog(diagMaint.getDialog());
 	}
 
-	@Override public void receiveLastClickedItemStoredValueEvent(Object obj) {}
+	@Override public void receiveLastClickedItemStoredValueEvent(DialogVisuals vs,Object obj) {}
 	
 }

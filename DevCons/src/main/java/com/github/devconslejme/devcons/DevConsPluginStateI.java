@@ -46,6 +46,7 @@ import com.github.devconslejme.gendiag.ContextMenuI.HintUpdaterPerCtxtBtn;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI.IDialogHierarchyListener;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI.DialogVisuals;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.IUserInteraction;
 import com.github.devconslejme.gendiag.ManagerHelperI;
 import com.github.devconslejme.gendiag.ManagerHelperI.RetVal;
 import com.github.devconslejme.misc.Annotations.Workaround;
@@ -60,7 +61,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
-import com.github.devconslejme.misc.jme.EnvironmentJmeI;
+import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.SimpleAppState;
 import com.github.devconslejme.misc.jme.TextI;
 import com.github.devconslejme.misc.lemur.CaratAutoPositionListenerI;
@@ -112,7 +113,7 @@ import com.simsilica.lemur.text.DocumentModel;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class DevConsPluginStateI extends SimpleAppState implements IDialogHierarchyListener {
+public class DevConsPluginStateI extends SimpleAppState implements IDialogHierarchyListener, IUserInteraction {
 	public static DevConsPluginStateI i(){return GlobalManagerI.i().get(DevConsPluginStateI.class);}
 	
 //	private Vector3f	v3fApplicationWindowSize;
@@ -313,11 +314,12 @@ public class DevConsPluginStateI extends SimpleAppState implements IDialogHierar
 		
 		ManagerHelperI.i().setHandleCallRetVal(new FuncIn<RetVal>(){@Override public void applyIn(RetVal rv){
 			LoggingI.i().logEntry(rv.getDescription());
-			JavaScriptI.i().showRetVal(rv.getRetVal());
+			JavaScriptI.i().showValue(rv.getRetVal());
 		}});
 		LoggingI.i().logEntry("Handling calls return values, will be shown here thru: "+ManagerHelperI.class.getName());
 		
 		DialogHierarchyStateI.i().addDialogHierarchyListener(this);
+		DialogHierarchyStateI.i().addGlobalListOptionsUserInteractionListener(this);
 	}
 	
 	public static abstract class CallableVarMonX extends CallableX<CallableVarMonX>{
@@ -1305,7 +1307,7 @@ public class DevConsPluginStateI extends SimpleAppState implements IDialogHierar
 	}
 	
 	public Vector3f getWindowSize(){
-		return new Vector3f(EnvironmentJmeI.i().getDisplay().getWidth(),EnvironmentJmeI.i().getDisplay().getHeight(),0);
+		return new Vector3f(HWEnvironmentJmeI.i().getDisplay().getWidth(),HWEnvironmentJmeI.i().getDisplay().getHeight(),0);
 	}
 	
 //	public void updateVisibleLogItems(){
@@ -1626,6 +1628,17 @@ public class DevConsPluginStateI extends SimpleAppState implements IDialogHierar
 	@Override
 	public void dialogClosedEvent(DialogVisuals vs) {
 		LoggingI.i().logEntry("DialogClosed:"+vs.getDialog().getName());
+	}
+
+	@Override
+	public void receiveSubmitedUserInputTextEvent(DialogVisuals vs, String str) {
+		LoggingI.i().logEntry("DialogInputSubmitted@("+vs.getDialog().getName()+"): '"+str+"'");
+	}
+
+	@Override
+	public void receiveLastClickedItemStoredValueEvent(DialogVisuals vs, Object obj) {
+		LoggingI.i().logEntry("DialogSelectedListItemValue@("+vs.getDialog().getName()+"):");
+		JavaScriptI.i().showValue(obj);
 	}
 	
 }

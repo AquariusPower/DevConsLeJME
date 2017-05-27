@@ -34,7 +34,7 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.misc.Annotations.SimpleVarReadOnly;
-import com.github.devconslejme.misc.EnvironmentI;
+import com.github.devconslejme.misc.HWEnvironmentI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.jme3.app.Application;
@@ -51,15 +51,17 @@ import com.jme3.scene.Node;
 import com.jme3.scene.shape.Quad;
 
 /**
+ * Hardware environment info.
+ * 
  * This way lwjgl3 may replace lwjgl more easily... or any other ways to collect the required values
  * can be used.
  * 
- * TODO prefer using whatever is not a direct read from lwjgl (while still being precise/actual) if possible
+ * TODO prefer using whatever is not a direct read from lwjgl (while still being precise/uptodate) if possible
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class EnvironmentJmeI extends EnvironmentI{
-	public static EnvironmentJmeI i(){return GlobalManagerI.i().retrieveOverridingSupers(EnvironmentJmeI.class,true,EnvironmentI.class);}
+public class HWEnvironmentJmeI extends HWEnvironmentI{
+	public static HWEnvironmentJmeI i(){return GlobalManagerI.i().retrieveOverridingSupers(HWEnvironmentJmeI.class,true,HWEnvironmentI.class);}
 	
 	private MouseI mouse;
 	private DisplayI display = new DisplayI();
@@ -102,14 +104,14 @@ public class EnvironmentJmeI extends EnvironmentI{
 		btInfo.setLocalTranslation(new Vector3f(0,0,1));
 		nodeInfo.attachChild(btInfo);
 		nodeInfo.attachChild(geomInfoBkg);
-		nodeInfo.setName(EnvironmentJmeI.class.getSimpleName()+":info");
+		nodeInfo.setName(HWEnvironmentJmeI.class.getSimpleName()+":info");
 	}
 	
 	public class EnvState extends SimpleAppState{
 		@Override
 		public void update(float tpf) {
 			super.update(tpf);
-			EnvironmentJmeI.super.update(tpf);
+			HWEnvironmentJmeI.super.update(tpf);
 			
 			if(getDisplay().wasResized()){
 				for(IEnvironmentListener l:alisteners){
@@ -316,7 +318,7 @@ public class EnvironmentJmeI extends EnvironmentI{
 		return bShowFPS;
 	}
 
-	public EnvironmentJmeI setShowFPS(boolean bShowFPS) {
+	public HWEnvironmentJmeI setShowFPS(boolean bShowFPS) {
 		this.bShowFPS = bShowFPS;
 		return this; //for beans setter
 	}
@@ -331,7 +333,7 @@ public class EnvironmentJmeI extends EnvironmentI{
 	 * @param v3fInfo if null will be auto lower left corner
 	 * @return
 	 */
-	public EnvironmentJmeI setInfoLocation(Vector3f v3fInfo) {
+	public HWEnvironmentJmeI setInfoLocation(Vector3f v3fInfo) {
 		this.v3fInfoLocation = v3fInfo;
 		return this; //for beans setter
 	}
@@ -340,7 +342,7 @@ public class EnvironmentJmeI extends EnvironmentI{
 		return bShowCamPos;
 	}
 
-	public EnvironmentJmeI setShowCamPos(boolean bShowCamPos) {
+	public HWEnvironmentJmeI setShowCamPos(boolean bShowCamPos) {
 		this.bShowCamPos = bShowCamPos;
 		return this; //for beans setter
 	}
@@ -349,7 +351,7 @@ public class EnvironmentJmeI extends EnvironmentI{
 		return bShowCamRot;
 	}
 	
-	public EnvironmentJmeI setShowCamRot(boolean bShowCamRot) {
+	public HWEnvironmentJmeI setShowCamRot(boolean bShowCamRot) {
 		this.bShowCamRot = bShowCamRot;
 		return this; //for beans setter
 	}
@@ -358,7 +360,7 @@ public class EnvironmentJmeI extends EnvironmentI{
 		return bShowMouseCursorPos;
 	}
 
-	public EnvironmentJmeI setShowMouseCursorPos(boolean bShowMouseCursorPos) {
+	public HWEnvironmentJmeI setShowMouseCursorPos(boolean bShowMouseCursorPos) {
 		this.bShowMouseCursorPos = bShowMouseCursorPos;
 		return this; 
 	}

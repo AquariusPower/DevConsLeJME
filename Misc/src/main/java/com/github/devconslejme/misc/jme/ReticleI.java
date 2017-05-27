@@ -31,12 +31,16 @@ import java.util.Arrays;
 
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
+import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.bounding.BoundingBox;
+import com.jme3.collision.CollisionResult;
 import com.jme3.font.BitmapText;
 import com.jme3.input.FlyByCamera;
 import com.jme3.math.ColorRGBA;
@@ -58,10 +62,26 @@ public class ReticleI {
 	private ReticleNode	rnLastConfigured;
 	protected Vector3f	v3fAppWSize = new Vector3f();
 	private CallableXAnon	cxUpdate;
-	private float	fRangeDist;
+	private Float	fRangeDist;
 	private Spatial	sptTarget;
+	private SimpleApplication	sapp;
+	private Application	app;
 	
-	public void configure(){} //keep even if empty to help init global
+	public void configure(){//keep even if empty to help init global
+    KeyBindCommandManagerI.i().putBindCommandsLater("T",
+    	new CallBoundKeyCmd(){
+    		@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
+					ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+					if(acr.size()>0){
+						sptTarget=SpatialHierarchyI.i().getParentest(acr.get(0).getGeometry(), Node.class, true, false);
+					}else{
+						sptTarget=null;
+					}
+					return true;
+				}
+			}.setName("AcquireTarget").holdKeyPressedForContinuousCmd()
+		);
+	} 
 	
 	public static class ReticleNode extends Node{
 		// user configurable
@@ -206,8 +226,13 @@ public class ReticleI {
 			return this; 
 		}
 
-		public void updateRangeFinderValue(float fRangeDist) {
-			btRangeDist .setText(""+StringI.i().fmtFloat(fRangeDist, 2));
+		public void updateRangeFinderValue(Float fTargetDist,Float fRangeDist) {
+//			if(btRangeDist.getLocalTranslation().length()>0)System.out.println(btRangeDist.getWorldTranslation());
+			btRangeDist.setText(""
+				+(fRangeDist==null?"...":StringI.i().fmtFloat(fRangeDist,1)+"m")
+				+"\n"
+				+(fTargetDist==null?"":"Tgt:"+StringI.i().fmtFloat(fTargetDist,1)+"m")
+			);
 		}
 		
 	}
@@ -216,7 +241,7 @@ public class ReticleI {
 		this.sptTarget = spt;
 		return this;
 	}
-	public ReticleI setRangeFinderDistanceValue(float fRangeDist){
+	public ReticleI setRangeFinderDistanceValue(Float fRangeDist){
 		this.fRangeDist = fRangeDist;
 		return this;
 	}
@@ -233,8 +258,8 @@ public class ReticleI {
 //		node = new Node("Reticle");
 		rnStore.setName("Reticle"+(rnStore.isBinoculars()?".binoc":""));
 		
-		int iDMin=EnvironmentJmeI.i().getDisplay().getMinSize();
-		int iDMax=EnvironmentJmeI.i().getDisplay().getMaxSize();
+		int iDMin=HWEnvironmentJmeI.i().getDisplay().getMinSize();
+		int iDMax=HWEnvironmentJmeI.i().getDisplay().getMaxSize();
 		
 		// scope border
 		rnStore.nodeBorder=new Node("Border");
@@ -249,9 +274,18 @@ public class ReticleI {
 		zoomMarkerCurrent.move(0,0,rnStore.getBorderIR());
 		rnStore.nodeBorder.attachChild(zoomMarkerCurrent);
 		
-		rnStore.btRangeDist = new BitmapText(TextI.i().loadDefaultMonoFont());
-		rnStore.btRangeDist.setColor(ColorRGBA.Green);
-		rnStore.btRangeDist.setLocalTranslation(iDMin/2f-50f,iDMin/2f-50f,0);
+		rnStore.btRangeDist=createBText(rnStore,ColorRGBA.Green);
+		rnStore.btRangeDist.setText("+99999.9m"); //TODO maximum displayable distance, create a formatter and get from there considering the world limits
+//		rnStore.btRangeDist = new BitmapText(TextI.i().loadDefaultMonoFont());
+//		rnStore.btRangeDist.setColor(ColorRGBA.Green);
+		int iHalfMin=iDMin/2;
+//		rnStore.btRangeDist.setLocalTranslation(iDMin/2f-50f,iDMin/2f-50f,0);
+		rnStore.btRangeDist.setLocalTranslation(
+			iHalfMin-rnStore.btRangeDist.getLineWidth(),
+			iHalfMin-rnStore.btRangeDist.getHeight(),
+			0);
+//		rnStore.btRangeDist.setLocalTranslation(300f,300f,300);
+//		rnStore.attachChild(rnStore.btRangeDist);
 		
 		// distance marks
 		float fArrowsZ = -10f;
@@ -294,6 +328,12 @@ public class ReticleI {
 		return rnStore;
 	}
 	
+	private BitmapText createBText(ReticleNode rnStore, ColorRGBA color) {
+		BitmapText bt = new BitmapText(TextI.i().loadDefaultMonoFont());
+		bt.setColor(color);
+		rnStore.attachChild(bt);
+		return bt;
+	}
 	private void createTextMarkers(ReticleNode rnStore, boolean bVertical, int iTotal) {
 		if(bVertical){
 			rnStore.abtDistMarksV=new BitmapText[iTotal];
@@ -302,10 +342,11 @@ public class ReticleI {
 		}
 		
 		for(int i=0;i<iTotal;i++){
-			BitmapText bt=new BitmapText(TextI.i().loadDefaultMonoFont());
+			BitmapText bt=createBText(rnStore, ColorRGBA.DarkGray);
+//			BitmapText bt=new BitmapText(TextI.i().loadDefaultMonoFont());
 			float fH=bt.getLineHeight();
-			bt.setColor(ColorRGBA.DarkGray);
-			rnStore.attachChild(bt);
+//			bt.setColor(ColorRGBA.DarkGray);
+//			rnStore.attachChild(bt);
 			
 			if(bVertical){
 				bt.setLocalTranslation(-10,rnStore.getDistMark(bVertical,i),0);
@@ -371,15 +412,16 @@ public class ReticleI {
 	public void autoRecreate(ReticleNode rnStore){
 		if(rnLastConfigured!=null)rnLastConfigured.removeFromParent();
 		
-		SimpleApplication sapp = G.i(SimpleApplication.class);
-		if(sapp!=null){
+		app = G.i(Application.class);
+		sapp = G.i(SimpleApplication.class);
+		if(sapp!=null){ //TODO it cannot really independ of flycamX and sapp yet...
 			FlyByCamera flycam = sapp.getFlyByCamera();
 			FlyByCameraX flycamx=(flycam instanceof FlyByCameraX) ? (FlyByCameraX)flycam : null;
 			
 			rnLastConfigured = createReticle(rnStore);
 			if(flycamx!=null)flycamx.setReticle(rnLastConfigured, sapp.getGuiNode()); //TODO shouldnt be another layer, below the gui node?
 			sapp.getGuiNode().attachChild(rnLastConfigured);
-			rnLastConfigured.setLocalTranslation(EnvironmentJmeI.i().getDisplay().getCenter(
+			rnLastConfigured.setLocalTranslation(HWEnvironmentJmeI.i().getDisplay().getCenter(
 				-((BoundingBox)rnLastConfigured.getWorldBound()).getExtent(null).length()
 			));
 			
@@ -387,7 +429,7 @@ public class ReticleI {
 				if(cxUpdate==null)cxUpdate=(new CallableXAnon() {
 					@Override
 					public Boolean call() {
-						Vector3f v3fAppWSizeCurrent = EnvironmentJmeI.i().getDisplay().getAppWindowSize();
+						Vector3f v3fAppWSizeCurrent = HWEnvironmentJmeI.i().getDisplay().getAppWindowSize();
 						if(v3fAppWSize.length()==0 || !v3fAppWSizeCurrent.equals(v3fAppWSize)){ //1st time is length=0
 							autoRecreate(rnLastConfigured);
 							v3fAppWSize.set(v3fAppWSizeCurrent);
@@ -395,7 +437,38 @@ public class ReticleI {
 							return true; 
 						}
 						
-						rnLastConfigured.updateRangeFinderValue(fRangeDist);
+						ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+						Float fDist=null;
+						Float fTargetDist=null;
+						if(acr.size()>0)fDist=(acr.get(0).getDistance());
+						
+						if(sptTarget!=null && sptTarget.hasAncestor(sapp.getRootNode())){
+							fTargetDist=(app.getCamera().getLocation().distance(sptTarget.getWorldTranslation()));
+							HighlighterI.i().applyAt(sptTarget);
+						}else{
+							HighlighterI.i().removeFrom(sptTarget);
+							sptTarget=null;
+							fTargetDist=null;
+						}
+//						if(sptTarget==null){
+//							ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+//							if(acr.size()>0){
+//								setRangeFinderDistanceValue(acr.get(0).getDistance());
+//							}else{
+//								setRangeFinderDistanceValue(null);
+//							}
+//						}else{
+//							if(sptTarget.hasAncestor(sapp.getRootNode())){
+////							sapp.getRootNode().hasAncestor(ancestor)
+////							if(SpatialHierarchyI.i().getParentest(sptTarget, Node.class, false)!=null)
+//								setRangeFinderDistanceValue(app.getCamera().getLocation().distance(sptTarget.getWorldTranslation()));
+//							}else{
+//								sptTarget=null;
+//								setRangeFinderDistanceValue(null);
+//							}
+//						}
+						
+						rnLastConfigured.updateRangeFinderValue(fTargetDist,fDist);
 						rnLastConfigured.updateZoomMarkers(flycamx.getTotalZoomSteps());
 						rnLastConfigured.updateZoomLevel(flycamx.getCurrentZoomLevelIndex());
 						return true;

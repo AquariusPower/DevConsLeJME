@@ -27,7 +27,8 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.github.devconslejme.gendiag;
 
-import com.github.devconslejme.gendiag.SimpleGenericDialog.IUserInteraction;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.DialogVisuals;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.IUserInteraction;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI;
@@ -35,7 +36,6 @@ import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.StringI.EStringMatchMode;
-import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.simsilica.lemur.core.VersionedReference;
 
 /**
@@ -83,7 +83,7 @@ public class QueueManagerDialogI implements IUserInteraction{
 	}
 
 	@Override
-	public void receiveSubmitedUserInputTextEvent(String str) {
+	public void receiveSubmitedUserInputTextEvent(DialogVisuals vs,String str) {
 		setUserInputTextFilter(str);
 		diagMaint.requestUpdateListItems();
 	}
@@ -96,6 +96,6 @@ public class QueueManagerDialogI implements IUserInteraction{
 		DialogHierarchyStateI.i().showDialog(diagMaint.getDialog());
 	}
 
-	@Override public void receiveLastClickedItemStoredValueEvent(Object obj) {}
+	@Override public void receiveLastClickedItemStoredValueEvent(DialogVisuals vs,Object obj) {}
 }
 

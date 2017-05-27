@@ -67,7 +67,7 @@ import com.github.devconslejme.misc.ReportI;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.SystemAlertI;
 import com.github.devconslejme.misc.TimeFormatI;
-import com.github.devconslejme.misc.jme.EnvironmentJmeI;
+import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.TextI;
 import com.google.common.collect.HashBiMap;
 import com.jme3.app.Application;
@@ -110,7 +110,8 @@ public class JavaScriptI implements IGlobalAddListener {
 	};
 	
 	private String	strCustomVarPrefix="$";
-	private String strLastRetValId=strCustomVarPrefix+"LastRetVal";
+	private String strLastRetValId=strCustomVarPrefix+"LastScriptExecRetVal";
+	private String strLastShownValue=strCustomVarPrefix+"LastShownValue";
 	
 	private String strCommentLineToken="//";
 	private static String	strSelfCallEnqueuedId="SelfCallEnqueued";
@@ -567,7 +568,7 @@ public class JavaScriptI implements IGlobalAddListener {
 //		}
 //		EnvironmentJmeI.i().putCustomInfo("Ctrl+R", 
 //			"{(last@"+TimeFormatI.i().getRealTimeFormatted(null,"HH:mm:ss")+")"+strLastCmds+"}");
-		EnvironmentJmeI.i().putCustomInfo("LastCmd", 
+		HWEnvironmentJmeI.i().putCustomInfo("LastCmd", 
 			"@"+TimeFormatI.i().getRealTimeFormatted(null,"HH:mm:ss")+" '"+astrCmdHistory.get(astrCmdHistory.size()-1)+"'");
 		
 		if(isBaseCommand(strCmd)){
@@ -622,7 +623,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	
 	public boolean execFileAndShowRetVal(String strFile){
 		boolean b=execFile(asFile(strFile));
-		showRetVal(objRetValFile); //this method will be called by the user, so show the return value
+		showValue(objRetValFile); //this method will be called by the user, so show the return value
 		return b;
 	}
 	public SelfScriptFile asFile(String strFile){
@@ -735,7 +736,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		try {
 			objExecScriptRetVal=jse.eval(strJS,bndJSE);
 			if(objExecScriptRetVal!=null)setJSBindingCanReplace(strLastRetValId, objExecScriptRetVal);
-			if(bShowRetVal)showRetVal(objExecScriptRetVal);
+			if(bShowRetVal)showValue(objExecScriptRetVal);
 			return true;
 		} catch (ScriptException e) {
 			LoggingI.i().logExceptionEntry(e, strJS);
@@ -746,32 +747,29 @@ public class JavaScriptI implements IGlobalAddListener {
 		return false;
 	}
 	
-	public void showRetVal(Object obj){
+	public void showValue(Object obj){
 		if(obj==null){
-			LoggingI.i().logSubEntry("Return is null or void.");
+			LoggingI.i().logSubEntry("Value is null or void.");
 		}else{
+			String str="";
 			String strCl=obj.toString();
-			String strJCS = "JavaClassStatics["; //it is javascript's stuff
+			String strJCS = "JavaClassStatics["; //it is javascript's internal stuff
 			if(strCl.startsWith(strJCS)){
 				strCl=strCl.substring(strJCS.length(), strCl.length()-1);
 				Enum[] ae = GlobalManagerI.i().getGlobalEnumValuesClNm(strCl);
-				if(ae!=null)obj=ae;
-//				Class cl = Class.forName(strCl);
-//				obj=GlobalManagerI.i().getGlobalEnumValuesCl(cl);
-//				if(JavaLangI.i().isEnumClass(cl)){
-//					@SuppressWarnings("unchecked") Class<Enum> cle = (Class<Enum>)cl;
-//					obj=GlobalManagerI.i().getGlobalEnumValues(cle);
-//				}
+				if(ae!=null)obj=ae;//JavaLangI.i().enumUId(ae);
 			}
 			
-			LoggingI.i().logSubEntry("Return type: "+obj.getClass());
+			LoggingI.i().logSubEntry("Value type: "+obj.getClass());
 			if(JavaLangI.i().isCanUserTypeIt(obj)){ // simple types result in simple and readable strings
-				String str="";
-					str+="Return value = '"+obj+"'";
+				if (obj instanceof String) {
+					str+="'"+obj+"'";
+				}else{
+					str+=""+obj; //int long etc
+				}
 				LoggingI.i().logSubEntry(str);
 			}else
 			if(!isAndShowArray(obj)){
-				String str="";
 				if (obj instanceof Vector3f) {
 					Vector3f v3f = (Vector3f) obj;
 					str+="new Vector3f("+TextI.i().fmtVector3f(v3f,2)+")";
@@ -780,13 +778,15 @@ public class JavaScriptI implements IGlobalAddListener {
 					Quaternion qua = (Quaternion) obj;
 					str+="new Quaternion().fromAngles("+TextI.i().fmtToDegrees(qua,2)+")";
 				}else{
-					str+="Return value as String = '"+obj+"'";
+					str+="Object value: #"+obj.hashCode()+", .toString(): '"+obj+"'";
 				}
 				
 				LoggingI.i().logSubEntry(str); //yes, show before and after to be easier to find/use
 				showMethods(obj);
 				LoggingI.i().logSubEntry(str); //yes, show before and after to be easier to find/use
 			}
+			
+			setJSBindingCanReplace(strLastShownValue, obj);
 		}
 	}
 	

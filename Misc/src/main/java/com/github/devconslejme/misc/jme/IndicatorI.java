@@ -87,7 +87,7 @@ public class IndicatorI {
 			efTractor.setZOverride(MiscJmeI.i().getZAboveAllAtGuiNode());
 			efTractor.setOverrideThickness(1);
 			
-			setLocalTranslation(EnvironmentJmeI.i().getMouse().getPos3D()); //initial pos
+			setLocalTranslation(HWEnvironmentJmeI.i().getMouse().getPos3D()); //initial pos
 		}
 		
 		@Override
