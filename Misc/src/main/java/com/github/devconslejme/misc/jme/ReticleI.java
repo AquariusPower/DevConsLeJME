@@ -66,20 +66,34 @@ public class ReticleI {
 	private Spatial	sptTarget;
 	private SimpleApplication	sapp;
 	private Application	app;
+	protected Geometry	geomTarget;
 	
 	public void configure(){//keep even if empty to help init global
     KeyBindCommandManagerI.i().putBindCommandsLater("T",
     	new CallBoundKeyCmd(){
     		@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
+					resetTarget();
+					
 					ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+//					boolean bReset=false;
 					if(acr.size()>0){
-						sptTarget=SpatialHierarchyI.i().getParentest(acr.get(0).getGeometry(), Node.class, true, false);
-					}else{
-						sptTarget=null;
+//						Geometry geomTargetNew = acr.get(0).getGeometry();
+						geomTarget = acr.get(0).getGeometry();
+//						if(geomTarget==geomTargetNew){
+//							bReset=true;
+//						}else{
+							sptTarget=SpatialHierarchyI.i().getParentest(geomTarget, Node.class, true, false);
+//						}
 					}
+					
+//					if(bReset){
+//						resetTarget();
+////						sptTarget=null;
+////						geomTarget=null;
+//					}
 					return true;
 				}
-			}.setName("AcquireTarget").holdKeyPressedForContinuousCmd()
+			}.setName("AcquireTarget")
 		);
 	} 
 	
@@ -444,10 +458,9 @@ public class ReticleI {
 						
 						if(sptTarget!=null && sptTarget.hasAncestor(sapp.getRootNode())){
 							fTargetDist=(app.getCamera().getLocation().distance(sptTarget.getWorldTranslation()));
-							HighlighterI.i().applyAt(sptTarget);
+							HighlighterI.i().applyAt(geomTarget);
 						}else{
-							HighlighterI.i().removeFrom(sptTarget);
-							sptTarget=null;
+							resetTarget();
 							fTargetDist=null;
 						}
 //						if(sptTarget==null){
@@ -487,6 +500,11 @@ public class ReticleI {
 		
 	}
 
+	protected void resetTarget() {
+		if(geomTarget!=null)HighlighterI.i().removeFrom(geomTarget);
+		sptTarget=null;
+		geomTarget=null;
+	}
 	public ReticleNode getLastReticuleNode() {
 		return rnLastConfigured;
 	}

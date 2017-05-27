@@ -26,6 +26,8 @@
 */
 package com.github.devconslejme.misc.jme;
 
+import java.util.HashMap;
+
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.QueueI;
@@ -37,7 +39,6 @@ import com.jme3.input.FlyByCamera;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Sphere;
 
 /**
@@ -46,16 +47,39 @@ import com.jme3.scene.shape.Sphere;
 public class HighlighterI {
 	public static HighlighterI i(){return GlobalManagerI.i().get(HighlighterI.class);}
 	
+	public static class NodeHighLigh extends Node{
+		public NodeHighLigh(Geometry geom) {
+			this.geomTarget=geom;
+			//	colorHighlight.a=0.5f; 
+			/**
+			 * alpha = 0.5f, just to let it be auto-configured as transparent bucket below
+			 */
+//			geomHighlight = GeometryI.i().create(new Sphere(),new ColorRGBA(1,1,1,0.5f));
+			geomHighlight = GeometryI.i().create(new Sphere(),new ColorRGBA(1,1,1,0.5f)); 
+			geomHighlight.getMaterial().setColor("Color",HighlighterI.i().colorHighlight); //only a copy of that color will be there, we need to apply the glowing one
+//			colorHighlight=(ColorRGBA)geomHighlight.getMaterial().getParam("Color").getValue();
+			geomHighlight.setName("HighLight");
+			
+			// this way more things can be added to the node
+			attachChild(geomHighlight);
+			
+			WorldPickingI.i().addSkip(geomHighlight);
+		}
+		private Geometry	geomTarget;
+		private Geometry	geomHighlight;
+	}
+	private HashMap<Geometry,NodeHighLigh> ahlnList = new HashMap<Geometry,NodeHighLigh>();
+	
+	private ColorRGBA	colorHighlight=new ColorRGBA(1,1,1,0.5f);
 	private boolean bDebug=false;
 	private boolean bEnabled=true;
 	private FlyByCamera	flycam;
-	private Node nodeHightlight = new Node();
-	private Geometry	geomTarget;
-	private Geometry	geomHighlight;
+//	private Node nodeHightlight = new Node();
 //	private ColorRGBA	colorHighlight=ColorRGBA.Yellow.clone();
-	private ColorRGBA	colorHighlight;
 //	private TimedDelay tdColorGlow = new TimedDelay(15f, "").setActive(true);
 	private ColorGlow	cg;
+
+	private NodeHighLigh	nhMouseCursorOver;
 	
 	public void configure(FlyByCamera flycam){
 		this.flycam = flycam;
@@ -71,70 +95,77 @@ public class HighlighterI {
 			}
 		}).enableLoopMode();
 		
-//		colorHighlight.a=0.5f; 
-		/**
-		 * alpha = 0.5f, just to let it be auto-configured as transparent bucket below
-		 */
-		geomHighlight = GeometryI.i().create(new Sphere(),new ColorRGBA(1,1,1,0.5f)); //.getMaterial().setColor("GlowColor", 	ColorRGBA.Yellow);
-		colorHighlight=(ColorRGBA)geomHighlight.getMaterial().getParam("Color").getValue();
-		geomHighlight.setName("HighLight");
-		
-		// this way more things can be added to the node
-		nodeHightlight.attachChild(geomHighlight);
-		
-		WorldPickingI.i().addSkip(geomHighlight);
+//		nhMouseCursorOver = createNodeHighlight();
+		nhMouseCursorOver = new NodeHighLigh(null);
 		
 		cg = new ColorGlow(colorHighlight,true).setStartHigh(true);
+		cg.enable();
 	}
 	
 	
-	protected void reset(){
-		geomTarget=null;
-		nodeHightlight.removeFromParent();
-		cg.disable();
-		DebugVisualsI.i().hideWorldBoundAndRotAxes(nodeHightlight);
+//	private NodeHighLigh createNodeHighlight(Geometry geom) {
+//		NodeHighLigh nh = new NodeHighLigh(geom);
+//		return nh;
+//	}
+
+
+	protected void reset(NodeHighLigh nh){
+		nh.geomTarget=null;
+		nh.removeFromParent();
+//		cg.disable();
+		DebugVisualsI.i().hideWorldBoundAndRotAxes(nh);
 	}
 	
 	protected void update(float tpf) {
+		/**
+		 * mouse cursor visible hovering over things
+		 */
 		if(flycam.isEnabled()){
-			reset();
-			return;
-		}
-		
-		Geometry geomTargetNew=null;
-		for(CollisionResult cr:WorldPickingI.i().raycastPiercingAtCursor(null)){
-			geomTargetNew=cr.getGeometry();
-			break; //1st only
-		}
-			
-		if(geomTargetNew!=null){
-			if(geomTarget!=geomTargetNew){
-				geomTarget = geomTargetNew;
-				if(isDebug())System.out.println(this+":"+geomTarget.getName());
-				
-				cg.enable();
-				
-				geomHighlight.setMesh(geomTarget.getMesh());
-				
-				/**
-				 * This makes the placement be precise even with moving spatials, but may be destructive if 
-				 * this child is not expected to be there (like if the childs there are scanned for some reason).
-				 */
-				geomTarget.getParent().attachChild(nodeHightlight); //
-				
-				/**
-				 * Also, for a few geometries regions (not all hit spots just a few), 
-				 * it was necessary to update this at every frame :/ TODO my fault?
-				 */
-				nodeHightlight.setLocalTransform(geomTarget.getLocalTransform());
-				
-				if(isDebug())DebugVisualsI.i().showWorldBoundAndRotAxes(nodeHightlight);
-			}
+			reset(nhMouseCursorOver);
 		}else{
-			reset();
+			Geometry geomTargetNew=null;
+			for(CollisionResult cr:WorldPickingI.i().raycastPiercingAtCursor(null)){
+				geomTargetNew=cr.getGeometry();
+				break; //1st only
+			}
+			if(geomTargetNew!=null && ahlnList.get(geomTargetNew)==null){
+				if(nhMouseCursorOver.geomTarget!=geomTargetNew){
+					nhMouseCursorOver.geomTarget = geomTargetNew;
+					update(nhMouseCursorOver,tpf);
+				}
+			}else{
+				reset(nhMouseCursorOver);
+			}
 		}
 		
-		HWEnvironmentJmeI.i().putCustomInfo("Highlighting", geomTarget!=null ? geomTarget.toString() : "(nothing)");
+		// other selecteds
+		for(NodeHighLigh nh:ahlnList.values()){
+			update(nh,tpf);
+		}
+	}
+	
+	protected void update(NodeHighLigh nh,  float tpf) {
+		if(isDebug())System.out.println(this+":"+nh.geomTarget.getName());
+		
+//		cg.enable();
+		
+		nh.geomHighlight.setMesh(nh.geomTarget.getMesh());
+		
+		/**
+		 * This makes the placement be precise even with moving spatials, but may be destructive if 
+		 * this child is not expected to be there (like if the childs there are scanned for some reason).
+		 */
+		nh.geomTarget.getParent().attachChild(nh); //
+		
+		/**
+		 * Also, for a few geometries regions (not all hit spots just a few), 
+		 * it was necessary to update this at every frame :/ TODO my fault?
+		 */
+		nh.setLocalTransform(nh.geomTarget.getLocalTransform());
+		
+		if(isDebug())DebugVisualsI.i().showWorldBoundAndRotAxes(nh);
+		
+		HWEnvironmentJmeI.i().putCustomInfo("Highlighting", nh.geomTarget!=null ? nh.geomTarget.toString() : "(nothing)");
 	}
 
 	public boolean isDebug() {
@@ -154,19 +185,14 @@ public class HighlighterI {
 		this.colorHighlight.set(colorHighlight);
 		return this; 
 	}
-
-
-	public void applyAt(Spatial sptTarget) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented");
-		
+	
+	public void applyAt(Geometry geom) {
+		assert geom!=null;
+		if(ahlnList.get(geom)==null)ahlnList.put(geom, new NodeHighLigh(geom));
 	}
-
-
-	public void removeFrom(Spatial sptTarget) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("method not implemented");
-		
+	
+	public void removeFrom(Geometry geom) {
+		reset(ahlnList.remove(geom));
 	}
 	
 }
