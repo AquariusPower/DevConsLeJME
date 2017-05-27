@@ -27,7 +27,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.github.devconslejme.gendiag;
 
-import com.github.devconslejme.gendiag.SimpleGenericDialog.IUserTextInputSubmited;
+import com.github.devconslejme.gendiag.SimpleGenericDialog.IUserInteraction;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI;
@@ -41,7 +41,7 @@ import com.simsilica.lemur.core.VersionedReference;
 /**
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class QueueManagerDialogI implements IUserTextInputSubmited{
+public class QueueManagerDialogI implements IUserInteraction{
 	public static QueueManagerDialogI i(){return GlobalManagerI.i().get(QueueManagerDialogI.class);}
 	
 	private SimpleMaintenanceGenericDialog	diagMaint;
@@ -63,7 +63,7 @@ public class QueueManagerDialogI implements IUserTextInputSubmited{
 				}
 				diagMaint.setTitle(QueueManagerDialogI.class.getSimpleName());
 				
-				diagMaint.addUserInputTextSubmittedListener(QueueManagerDialogI.this);
+				diagMaint.addListOptionsUserInteractionListener(QueueManagerDialogI.this);
 //				MiscJmeI.i().addToName(diagMaint.getDialog(), GlobalsManagerDialogI.class.getSimpleName(), true);
 				
 				return true;
@@ -95,5 +95,7 @@ public class QueueManagerDialogI implements IUserTextInputSubmited{
 	public void show(){
 		DialogHierarchyStateI.i().showDialog(diagMaint.getDialog());
 	}
+
+	@Override public void receiveLastClickedItemStoredValueEvent(Object obj) {}
 }
 

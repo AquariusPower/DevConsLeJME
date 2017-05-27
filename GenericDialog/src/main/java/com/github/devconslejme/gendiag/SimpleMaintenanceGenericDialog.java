@@ -150,7 +150,7 @@ public abstract class SimpleMaintenanceGenericDialog extends SimpleGenericDialog
 	}
 	
 	protected void automaticConfiguratorCreateAsMethodsOfValue(OptionData od) {
-		String strKey = "CfgObj";
+		String strKey = "Cfg";
 		if(od.isCmdCfgSet(strKey))return;
 		if(od.getStoredValue()==null)return;
 		if(od instanceof OptionDataDummy)return;
@@ -179,7 +179,7 @@ public abstract class SimpleMaintenanceGenericDialog extends SimpleGenericDialog
 					DialogHierarchyStateI.i().showDialogAsModal(getDialog(), sgdCfgObj.getDialog());
 				}
 			}//.setText()
-			 .setHintHelp("click to configure this complex object")
+			 .setHintHelp("click to modify this object")
 		);
 	}
 

@@ -634,8 +634,11 @@ public class FlyByCameraX extends FlyByCamera {
 	}
 	
 	public FlyByCameraX setReticle(Spatial sptReticle, Node nodeReticleParent){
+		if(this.sptReticle!=null)this.sptReticle.removeFromParent();
 		this.sptReticle=sptReticle;
+		
 		this.nodeReticleParent = nodeReticleParent;
+		
 		return this;
 	}
 	

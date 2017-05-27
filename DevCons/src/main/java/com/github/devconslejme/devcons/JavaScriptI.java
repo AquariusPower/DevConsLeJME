@@ -81,7 +81,7 @@ import com.jme3.math.Vector3f;
 public class JavaScriptI implements IGlobalAddListener {
 	public static JavaScriptI i(){return GlobalManagerI.i().get(JavaScriptI.class);}
 	
-	private Object	objRetValUser;
+	private Object	objExecScriptRetVal;
 	private Object	objRetValFile;
 	private ScriptEngine	jse;
 	private Bindings	bndJSE;
@@ -250,13 +250,13 @@ public class JavaScriptI implements IGlobalAddListener {
 	
 	/**
 	 * 
-	 * @param strParams <[$]customJSVarBindId> <CommandToCaptureReturnValueFrom>
+	 * @param strParams "<[$]customJSVarBindId> <JSCmdToCaptureReturnValueFrom>"
 	 */
 	public void setCustomUserVar(String strParams) {
 //		CommandLineParser clp = new CommandLineParser(strParams);
 //		String strCustomUserBind = clp.getCommand();
 		String strCustomUserBind = StringI.i().extractPart(strParams, " ", 0);
-		String strJS = strParams.substring(strCustomUserBind.length()+1);
+		String strJSCmd = strParams.substring(strCustomUserBind.length()+1);
 		
 		// prefix
 		if(!strCustomUserBind.startsWith(strCustomVarPrefix))strCustomUserBind=strCustomVarPrefix+strCustomUserBind;
@@ -265,9 +265,9 @@ public class JavaScriptI implements IGlobalAddListener {
 			LoggingI.i().logWarn("this var id is volatile, will be replaced often");
 		}
 		
-		if(execScript(strJS, false)){
-			if(objRetValUser!=null){
-				setJSBindingCanReplace(strCustomUserBind,objRetValUser);
+		if(execScript(strJSCmd, false)){
+			if(objExecScriptRetVal!=null){
+				setJSBindingCanReplace(strCustomUserBind,objExecScriptRetVal);
 			}else{
 				LoggingI.i().logWarn("not set: return was null");
 			}
@@ -487,14 +487,14 @@ public class JavaScriptI implements IGlobalAddListener {
 			throw new DetailedException("forbidden bind type", objBindValue);
 		}
 		
-		String strMode="created";
-		if(bndJSE.get(strBindId)!=null)strMode="replaced";//LoggingI.i().logSubEntry("replacing "+strBindId);
+		String strInfoMode="created";
+		if(bndJSE.get(strBindId)!=null)strInfoMode="replaced";//LoggingI.i().logSubEntry("replacing "+strBindId);
 		
 		// do it
 		bndJSE.put(strBindId,objBindValue);
 		
 		// logs
-		String strMsg=strMode+" JS bind: "+strBindId;
+		String strMsg=strInfoMode+" JS bind: "+strBindId;
 		
 		if(!strBindId.equals(strLastRetValId)){
 			LoggingI.i().logMarker(strMsg,-1);
@@ -733,9 +733,9 @@ public class JavaScriptI implements IGlobalAddListener {
 	public boolean execScript(String strJS,boolean bShowRetVal){
 		DetailedException.assertNotEmpty("Javascript", strJS, bShowRetVal);
 		try {
-			objRetValUser=jse.eval(strJS,bndJSE);
-			if(objRetValUser!=null)setJSBindingCanReplace(strLastRetValId, objRetValUser);
-			if(bShowRetVal)showRetVal(objRetValUser);
+			objExecScriptRetVal=jse.eval(strJS,bndJSE);
+			if(objExecScriptRetVal!=null)setJSBindingCanReplace(strLastRetValId, objExecScriptRetVal);
+			if(bShowRetVal)showRetVal(objExecScriptRetVal);
 			return true;
 		} catch (ScriptException e) {
 			LoggingI.i().logExceptionEntry(e, strJS);
@@ -782,8 +782,10 @@ public class JavaScriptI implements IGlobalAddListener {
 				}else{
 					str+="Return value as String = '"+obj+"'";
 				}
-				LoggingI.i().logSubEntry(str);
+				
+				LoggingI.i().logSubEntry(str); //yes, show before and after to be easier to find/use
 				showMethods(obj);
+				LoggingI.i().logSubEntry(str); //yes, show before and after to be easier to find/use
 			}
 		}
 	}

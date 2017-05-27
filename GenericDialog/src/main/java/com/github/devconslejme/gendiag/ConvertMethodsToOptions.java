@@ -172,9 +172,9 @@ public class ConvertMethodsToOptions {
 					JavadocI.i().browseJavadoc(mh);
 				}});
 			
-			od.addCmdCfg(new CmdCfg("Cp") {@Override	public void execute(Button source) {
+			od.addCmdCfg(new CmdCfg("CpM") {@Override	public void execute(Button source) {
 					JavaLangI.i().copyToClipboard(mh.getFullHelp(true, true));
-				}}.setHintHelp("copy to clipboard"));
+				}}.setHintHelp("copy method access to clipboard"));
 			
 			iValidCount++;
 		}

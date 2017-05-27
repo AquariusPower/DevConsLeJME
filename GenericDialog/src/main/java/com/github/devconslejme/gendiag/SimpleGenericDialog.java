@@ -510,8 +510,6 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	 * @param btn
 	 */
 	private boolean buttonClicked(ButtonCell btn){
-//		ButtonCell btnc = (ButtonCell)btn;
-//		OptionData od = UserDataI.i().getUserDataPSH(btn, OptionData.class);
 		OptionData od = btn.od;
 		if(od!=null){
 			bRequestUpdateOptionSelected=true;
@@ -519,10 +517,9 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			return true;
 		}
 		
-//		ToolAction ta = UserDataI.i().getUserDataPSH(btn, ToolAction.class);
 		ToolAction ta = btn.ta;
 		if(ta!=null){
-			//TODO does nothing???
+			//TODO just ignore???
 			return true;
 		}
 		
@@ -779,7 +776,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 					getNestingStepDistance()*cntr.cp.btnItemText.od.getNestingDepth(), 
 					0, 0));
 				
-				// update the text based on the value
+				// update the text based on the value using a transformation
 				cntr.cp.btnItemText.setText(valueToString(od));
 				
 				// CONFIGURATOR: each item may have a different kind of configurator from button text to a different visual (like a slider etc)
@@ -1067,14 +1064,15 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		return ta;
 	}
 	
-	public static interface IUserTextInputSubmited{
+	public static interface IUserInteraction{
 		void receiveSubmitedUserInputTextEvent(String str);
+		void receiveLastClickedItemStoredValueEvent(Object obj);
 	}
 	
-	private ArrayList<IUserTextInputSubmited> aUserTxtSubmitListeners = new  ArrayList<IUserTextInputSubmited> ();
+	private ArrayList<IUserInteraction> auiLitenersList = new  ArrayList<IUserInteraction> ();
 	
-	public void addUserInputTextSubmittedListener(IUserTextInputSubmited listener){
-		if(!aUserTxtSubmitListeners.contains(listener))aUserTxtSubmitListeners.add(listener);
+	public void addListOptionsUserInteractionListener(IUserInteraction listener){
+		if(!auiLitenersList.contains(listener))auiLitenersList.add(listener);
 	}
 	
 	private void initSectionInput() {
@@ -1107,7 +1105,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	}
 	
 	private void initSectionOptions() {
-		ESection es=ESection.Options;
+		ESection es=ESection.Options; //list items
 		if(getSection(es)==null){
 			vlodOptions = new VersionedList<OptionData>();
 			lstbxOptions = new ListBox<OptionData>(vlodOptions, getDialog().getStyle());
@@ -1361,6 +1359,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	};
 	
 	private boolean	bSortAlphabetically=true;
+	private boolean	bCopyClickedOptionTextToInputField=true;
+	private Object	objLastSelectedOptionStoredValue;
 	
 	private void recreateListItemsRecursively(HashMap<String, OptionData> hmOpt, int iDepth){
 //		ArrayList<OptionData> aod = new ArrayList<OptionData>(hmOpt.values());
@@ -1374,6 +1374,9 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 					aodHasChildren.add(od);
 				}else{
 					aodChildLess.add(od);
+					od.addCmdCfg(new CmdCfg("Cp") {@Override	public void execute(Button source) {
+						JavaLangI.i().copyToClipboard(od.getVisibleText());
+					}}.setHintHelp("copy visible text to clipboard"));
 				}
 			}
 			Collections.sort(aodChildLess, sortAtoZ);
@@ -1463,7 +1466,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		
 		if(bRequestUserSubmitedInputValueApply){
 			vhInputTextSubmitted.setObject(getInputText());
-			for(IUserTextInputSubmited l:aUserTxtSubmitListeners){
+			for(IUserInteraction l:auiLitenersList){
 				l.receiveSubmitedUserInputTextEvent(getInputText());
 			}
 			bRequestUserSubmitedInputValueApply=false;
@@ -1509,7 +1512,10 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		if(od.isSection()){
 			bRequestSelectedToggleExpandedOnce=true;
 		}else{
-			tfInput.setText(od.getTextKey());
+			if(bCopyClickedOptionTextToInputField){
+				tfInput.setText(od.getTextKey());
+				setLastSelectedOptionStoredValue(od.getStoredValue());
+			}
 		}
 	}
 
@@ -1625,58 +1631,26 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		return hmBackup;
 	}
 
-//	public boolean isMethodCallUnsafely() {
-//		return bMethodCallUnsafely;
-//	}
-//	
-//	/**
-//	 * For beans, the getter is a safe call, should cause no changes.
-//	 * For {@link SimpleVarReadOnly} it should be the same.
-//	 * For other methods that return values, a call may be unsafe and modify something when not wanted.
-//	 * 
-//	 * @param bUsafeCallReadAll use with caution
-//	 * @return
-//	 */
-//	public SimpleGenericDialog setMethodCallUnsafely(boolean bUsafeCallReadAll) {
-//		this.bMethodCallUnsafely = bUsafeCallReadAll;
-//		return this; 
-//	}
+	public boolean isCopyClickedOptionTextToInputField() {
+		return bCopyClickedOptionTextToInputField;
+	}
 
-//	public void putCreateOptionAsMethodsOf(OptionData odParentSection, Object objToExtractMethodsFrom) {
-//		Method[] am = isShowInherited() ? 
-//			objToExtractMethodsFrom.getClass().getMethods() : 
-//			objToExtractMethodsFrom.getClass().getDeclaredMethods();
-//			
-//		int iValidCount=0;
-//		for(Method m:am){
-//			if(!Modifier.isPublic(m.getModifiers()))continue; //skip non public
-//			if(bShowOnlyEditableBeans && !JavaLangI.i().isBeanGetter(m))continue;
-//			
-//			MethodHelp mh = new MethodHelp().setObject(objToExtractMethodsFrom).setMethod(m);
-//			
-//			String strTextKey = mh.getFullHelp(true, false);
-////				if(bRegexFilter && !strTextKey.matches(smd.getInputText()))continue;
-//			if(
-//					bRegexFilter
-//					&& 
-//					!StringI.i().contains(
-//						strTextKey, getUserInputTextFilter(), getEStringMatchMode(), isMatchIgnoreCase())
-//			)continue;
-//			
-//			OptionData od = diagMaint.putOption(odParentSection,	strTextKey, mh);
-//			
-//			od.addCmdCfg(new CmdCfg() {@Override	public void execute(Button source) {
-//					JavadocI.i().browseJavadoc(mh);
-//				}}.setText("JavaDoc"));
-//			
-//			od.addCmdCfg(new CmdCfg() {@Override	public void execute(Button source) {
-//					JavaLangI.i().copyToClipboard(mh.getFullHelp(true, true));
-//				}}.setText("Cp").setHintHelp("copy to clipboard"));
-//			
-//			iValidCount++;
-//		}
-//		
-//		return iValidCount;
-//	}
+	public SimpleGenericDialog setCopyClickedOptionTextToInputField(
+			boolean bCopyClickedOptionTextToInputField) {
+		this.bCopyClickedOptionTextToInputField = bCopyClickedOptionTextToInputField;
+		return this; 
+	}
+
+	public Object getLastSelectedOptionStoredValue() {
+		return objLastSelectedOptionStoredValue;
+	}
+
+	public SimpleGenericDialog setLastSelectedOptionStoredValue(Object objLastSelectedOptionStoredValue) {
+		this.objLastSelectedOptionStoredValue = objLastSelectedOptionStoredValue;
+		for(IUserInteraction l:auiLitenersList){
+			l.receiveLastClickedItemStoredValueEvent(objLastSelectedOptionStoredValue);
+		}
+		return this; 
+	}
 
 }

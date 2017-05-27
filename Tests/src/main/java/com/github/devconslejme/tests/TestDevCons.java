@@ -33,6 +33,7 @@ import java.util.function.Function;
 import com.github.devconslejme.debug.DebugTrackProblemsJME;
 import com.github.devconslejme.debug.UnsafeDebugHacksI;
 import com.github.devconslejme.devcons.DevConsPluginStateI;
+import com.github.devconslejme.devcons.JavaScriptI;
 import com.github.devconslejme.devcons.LoggingI;
 import com.github.devconslejme.extras.DynamicFPSLimiter;
 import com.github.devconslejme.extras.OSCmd;
@@ -42,13 +43,16 @@ import com.github.devconslejme.gendiag.GlobalsManagerDialogI;
 import com.github.devconslejme.gendiag.KeyBindManagerDialogI;
 import com.github.devconslejme.gendiag.QueueManagerDialogI;
 import com.github.devconslejme.gendiag.SpatialsManagerDialogI;
+import com.github.devconslejme.gendiag.SimpleGenericDialog.CmdCfg;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.CheckProblemsI;
 import com.github.devconslejme.misc.CommandLineParser;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.SystemAlertI;
+import com.github.devconslejme.misc.jme.ArrowGeometry;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI;
 import com.github.devconslejme.misc.jme.EnvironmentJmeI.IEnvironmentListener;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
@@ -317,6 +321,11 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 				SpatialsManagerDialogI.i().show();
 			}}, null
 		);
+//		SpatialsManagerDialogI.i().addCmdCfgToAll(new CmdCfg("CpVal") {@Override	public void execute(Button source) {
+//			JavaScriptI.i().setCustomUserVar(strParams);
+//			JavaScriptI.i().setJSBinding(od.getStoredValue());
+//		}}.setHintHelp("copy stored linked value to a DevCons variable"));
+
 		
 		//// OS Cmds
 		G.i(OSCmd.class).configure(new Function<String, ArrayList<String>>() {
@@ -407,17 +416,20 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	/** @DevSelfNote keep even if emtpy */ Object[] aobjDebugTest;
 	/** @DevSelfNote keep even if emtpy */ 
 	public Object debugTest(Object... aobj){
-		Geometry geom = GeometryI.i().create(MeshI.i().cone(1f), ColorRGBA.Blue);
-		aobjDebugTest=new Object[]{geom};
-		getRootNode().attachChild(geom);
-		return null;
+		ArrowGeometry ag = GeometryI.i().createArrow(ColorRGBA.Yellow);
+		getGuiNode().attachChild(ag);
+		ag.setLocalTranslation(EnvironmentJmeI.i().getDisplay().getCenter(500f));
+//		Geometry geom = GeometryI.i().create(MeshI.i().cone(1f), ColorRGBA.Blue);
+//		aobjDebugTest=new Object[]{geom};
+//		getRootNode().attachChild(geom);
+		return ag;
 	}
 	/** @DevSelfNote keep even if emtpy */ 
 	public void updateDebugTest(float fTPF){
-		if(aobjDebugTest==null)return;
-		Geometry geom = ((Geometry)aobjDebugTest[0]);
-		if(false)
-			geom.setLocalTranslation(3,1,0);
-		RotateI.i().rotateAroundPivot(geom, orde, 0.01f, true);
+//		if(aobjDebugTest==null)return;
+//		Geometry geom = ((Geometry)aobjDebugTest[0]);
+//		if(false)
+//			geom.setLocalTranslation(3,1,0);
+//		RotateI.i().rotateAroundPivot(geom, orde, 0.01f, true);
 	}
 }

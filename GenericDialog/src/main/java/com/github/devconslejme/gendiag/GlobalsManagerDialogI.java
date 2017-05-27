@@ -29,7 +29,7 @@ package com.github.devconslejme.gendiag;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import com.github.devconslejme.gendiag.SimpleGenericDialog.IUserTextInputSubmited;
+import com.github.devconslejme.gendiag.SimpleGenericDialog.IUserInteraction;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction.CmdBtnTA;
@@ -43,7 +43,7 @@ import com.simsilica.lemur.core.VersionedReference;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class GlobalsManagerDialogI implements IUserTextInputSubmited{
+public class GlobalsManagerDialogI implements IUserInteraction{
 	public static GlobalsManagerDialogI i(){return GlobalManagerI.i().get(GlobalsManagerDialogI.class);}
 
 	private TreeMap<String,Object> hmSortedGlobals = new TreeMap<String,Object>(String.CASE_INSENSITIVE_ORDER);
@@ -76,7 +76,7 @@ public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 //				diagMaint.setAllowAutoCfgForComplexObjects(false); //will be handled here
 				cmto = new ConvertMethodsToOptions(diagMaint);
 				
-				diagMaint.addUserInputTextSubmittedListener(GlobalsManagerDialogI.this);
+				diagMaint.addListOptionsUserInteractionListener(GlobalsManagerDialogI.this);
 				
 				diagMaint.putToolAction(new ToolAction("Pkg info", new CmdBtnTA() {
 					@Override	public Integer executeTA(Button source) {
@@ -131,5 +131,7 @@ public class GlobalsManagerDialogI implements IUserTextInputSubmited{
 		cmto.setUserInputTextFilter(str);
 		diagMaint.requestUpdateListItems();
 	}
+
+	@Override public void receiveLastClickedItemStoredValueEvent(Object obj) {}
 
 }

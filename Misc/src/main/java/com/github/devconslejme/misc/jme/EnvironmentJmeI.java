@@ -102,6 +102,7 @@ public class EnvironmentJmeI extends EnvironmentI{
 		btInfo.setLocalTranslation(new Vector3f(0,0,1));
 		nodeInfo.attachChild(btInfo);
 		nodeInfo.attachChild(geomInfoBkg);
+		nodeInfo.setName(EnvironmentJmeI.class.getSimpleName()+":info");
 	}
 	
 	public class EnvState extends SimpleAppState{

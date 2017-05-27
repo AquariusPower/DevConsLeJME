@@ -26,17 +26,18 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.github.devconslejme.gendiag;
 
-import com.github.devconslejme.gendiag.SimpleGenericDialog.IUserTextInputSubmited;
+import com.github.devconslejme.gendiag.SimpleGenericDialog.IUserInteraction;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.SimpleApplication;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.simsilica.lemur.Button;
 
 /**
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
-public class SpatialsManagerDialogI implements IUserTextInputSubmited{
+public class SpatialsManagerDialogI implements IUserInteraction{
 	public static SpatialsManagerDialogI i(){return GlobalManagerI.i().get(SpatialsManagerDialogI.class);}
 	
 	private SimpleMaintenanceGenericDialog	diagMaint;
@@ -56,7 +57,7 @@ public class SpatialsManagerDialogI implements IUserTextInputSubmited{
 		diagMaint.setTitle(SpatialsManagerDialogI.class.getSimpleName());
 //		if(!diagMaint.isInitialized())return false; //prior to new actions below
 		
-		diagMaint.addUserInputTextSubmittedListener(this);
+		diagMaint.addListOptionsUserInteractionListener(this);
 		
 //		DialogHierarchyStateI.i().showDialog(diagMaint.getDialog());
 	}
@@ -67,7 +68,7 @@ public class SpatialsManagerDialogI implements IUserTextInputSubmited{
 	 * @param spt
 	 */
 	private void recursiveAddSpatialsToMaintenance(OptionData odParent,Spatial spt) {
-		String strKey = ""+spt.hashCode()+"/"+spt.getName()+"/"+spt.getClass().getSimpleName();
+		String strKey = "#"+spt.hashCode()+",'"+spt.getName()+"' ("+spt.getClass().getSimpleName()+")";
 		
 		if(strFilter.isEmpty()){
 			if(spt instanceof Node){
@@ -75,7 +76,7 @@ public class SpatialsManagerDialogI implements IUserTextInputSubmited{
 				 * create a section and update the parent for new childs
 				 */
 				odParent = diagMaint.putSection(odParent, strKey);
-				strKey="<SELF_NODE_REF> "+strKey;
+				strKey="#000<<<NodeSelfCfg>>> "+strKey; //#000 is to sort on top
 			}
 		}
 		
@@ -85,7 +86,13 @@ public class SpatialsManagerDialogI implements IUserTextInputSubmited{
 		 * used.
 		 */
 		if(strFilter.isEmpty() || (spt.getName()!=null && spt.getName().contains(strFilter))){
-			diagMaint.putOption(odParent, strKey, spt);
+			OptionData od = diagMaint.putOption(odParent, strKey, spt);
+//			od.addCmdCfg(new CmdCfg() {
+//				@Override
+//				public void execute(Button source) {
+//					
+//				}
+//			});
 		}
 		
 		if(spt instanceof Node){
@@ -105,5 +112,7 @@ public class SpatialsManagerDialogI implements IUserTextInputSubmited{
 	public void show(){
 		DialogHierarchyStateI.i().showDialog(diagMaint.getDialog());
 	}
+
+	@Override public void receiveLastClickedItemStoredValueEvent(Object obj) {}
 	
 }

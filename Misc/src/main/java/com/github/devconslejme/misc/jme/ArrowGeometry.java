@@ -135,7 +135,7 @@ public class ArrowGeometry extends Geometry {
 	}
 	/**
 	 * 
-	 * @param v3fFrom if null will keep its current from location
+	 * @param v3fFrom if null will keep its current origin
 	 * @param v3fTo
 	 * @return
 	 */
