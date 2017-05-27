@@ -170,12 +170,12 @@ public class PopupHintHelpListenerI implements CursorListener{
 	}
 	
 	public String getPopupHelp(Spatial spt){
-		PopupHelpUserData ud = UserDataI.i().getExistingOrNull(spt, PopupHelpUserData.class);
+		PopupHelpUserData ud = UserDataI.i().getMustExistOrNull(spt, PopupHelpUserData.class);
 		if(ud==null)return null;
 		return ud.strPopupHelp;
 	}
 	public void resetPopupHelp(Spatial spt){
-		PopupHelpUserData ud = UserDataI.i().getExistingOrNull(spt, PopupHelpUserData.class);
+		PopupHelpUserData ud = UserDataI.i().getMustExistOrNull(spt, PopupHelpUserData.class);
 		/**
 		 * if it does not exist, there is nothing to be reset
 		 */

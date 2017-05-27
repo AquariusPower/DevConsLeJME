@@ -68,7 +68,7 @@ public class AbsorbClickCommandsI extends CursorListenerX{
 		int iExecutedClickCmds=0;
 		if (capture instanceof Button) {
 			Button btn = (Button) capture;
-			ClickCommandsStore ccs = UserDataI.i().getExistingOrNull(btn, ClickCommandsStore.class);
+			ClickCommandsStore ccs = UserDataI.i().getMustExistOrNull(btn, ClickCommandsStore.class);
 			if(ccs!=null){
 				for(Command<? super Button> a:ccs.clickCommandsStored){
 					a.execute(btn);

@@ -42,22 +42,22 @@ public class MouseCursorButtonGlobalListenerDelegatorI {
 	/**
 	 * must not be CursorListener to avoid being used elsewhere...
 	 */
-	public static interface IGlobalClickListener{
+	public static interface IGlobalMouseCursorClickListener{
 		public void clickEvent(CursorButtonEvent event, Spatial target, Spatial capture);
 	}
-	private ArrayList<IGlobalClickListener> aclxGlobal = new ArrayList<IGlobalClickListener>();
+	private ArrayList<IGlobalMouseCursorClickListener> aclxGlobal = new ArrayList<IGlobalMouseCursorClickListener>();
 	/**
 	 * cannot consume the event. mainly for auto focus
 	 * @param clxGlobal
 	 */
-	public void addGlobalClickListener(IGlobalClickListener clxGlobal){
+	public void addGlobalClickListener(IGlobalMouseCursorClickListener clxGlobal){
 //		DetailedException.assertNotAlreadySet(this.clxGlobal, clxGlobal);
 		if(!aclxGlobal.contains(clxGlobal))aclxGlobal.add(clxGlobal);
 	}
 	
 	public void clickGlobalListeners(CursorButtonEvent event, Spatial target, Spatial capture) {
 //		if(clxGlobal==null)return;
-		for(IGlobalClickListener clx:aclxGlobal){
+		for(IGlobalMouseCursorClickListener clx:aclxGlobal){
 			boolean bWasConsumed=event.isConsumed();
 			clx.clickEvent(event, target, capture);
 			if(!bWasConsumed && event.isConsumed()){

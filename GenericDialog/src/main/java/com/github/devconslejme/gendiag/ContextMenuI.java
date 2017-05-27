@@ -478,7 +478,7 @@ public class ContextMenuI implements IResizableListener{
 			
 			Button btn = (Button)capture;
 			
-			ContextMenu cm = UserDataI.i().getExistingOrNull(btn, ContextMenu.class);
+			ContextMenu cm = UserDataI.i().getMustExistOrNull(btn, ContextMenu.class);
 			if(cm!=null){
 				ContextMenuI.i().showContextMenu(event.getLocation(), btn.getText(), cm.setContextSource(btn));
 				return true;

@@ -490,6 +490,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 
 	public SimpleGenericDialog(String strTitle) {
 		this(strTitle, DialogHierarchyStateI.i().createDialog(SimpleGenericDialog.class.getSimpleName(), null));
+//		addListOptionsUserInteractionListener(DialogHierarchyStateI.i());
 		
 		hmOptionsRoot = new LinkedHashMapX<String,OptionData>();
 		bRequestUpdateListItems = true;
@@ -583,7 +584,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 					if(bKeepMaximized){							/**							 * restore							 */
 						getDialog().restoreDefaultSafeSize();
 						
-						MaximizeUD mud = UserDataI.i().getExistingOrNull(getDialog(), MaximizeUD.class);
+						MaximizeUD mud = UserDataI.i().getMustExistOrNull(getDialog(), MaximizeUD.class);
 						DetailedException.assertNotNull(mud,getDialog(),this);
 						Vector3f v3fPosBeforeMaximize = mud.getPosBeforeMaximize();
 						getDialog().setLocalTranslationXY(v3fPosBeforeMaximize);

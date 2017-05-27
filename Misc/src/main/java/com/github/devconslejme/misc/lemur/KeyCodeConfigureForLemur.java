@@ -27,7 +27,7 @@
 package com.github.devconslejme.misc.lemur;
 
 import com.github.devconslejme.misc.KeyCodeManagerI;
-import com.github.devconslejme.misc.lemur.MouseCursorButtonGlobalListenerDelegatorI.IGlobalClickListener;
+import com.github.devconslejme.misc.lemur.MouseCursorButtonGlobalListenerDelegatorI.IGlobalMouseCursorClickListener;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.event.CursorButtonEvent;
 
@@ -36,7 +36,7 @@ import com.simsilica.lemur.event.CursorButtonEvent;
  */
 public class KeyCodeConfigureForLemur {
 	
-	public static class GlobalListenerX implements IGlobalClickListener{
+	public static class GlobalListenerX implements IGlobalMouseCursorClickListener{
 		@Override
 		public void clickEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
 			/**

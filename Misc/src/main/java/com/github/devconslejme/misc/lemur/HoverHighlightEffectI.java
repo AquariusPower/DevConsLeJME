@@ -85,7 +85,7 @@ public class HoverHighlightEffectI {
 		@Override
 		public Animation create(final Panel pnlTarget, final EffectInfo effiExisting) {
 			return new Animation() {
-				EffectUserData eud = DetailedException.assertNotNull(UserDataI.i().getExistingOrNull(pnlTarget, EffectUserData.class),this,pnlTarget);
+				EffectUserData eud = DetailedException.assertNotNull(UserDataI.i().getMustExistOrNull(pnlTarget, EffectUserData.class),this,pnlTarget);
 				QuadBackgroundComponent qbc = eud.getQbcHighLightTarget();
 				ColorRGBA colorBkp = qbc.getColor().clone();
 				boolean bApplied=false;

@@ -54,12 +54,6 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 	private Object	objSelected;
 	HashMap<ESection,ResizablePanel> hmSection = new HashMap<ESection,ResizablePanel>();
 	private ResizablePanel	rzpDialog;
-//	private DefaultFocusTraversalControl ctrl = new DefaultFocusTraversalControl(){
-//		@Override
-//		public Spatial getDefaultFocus() {
-//			return getSection(ESection.Input);
-//		};
-//	};
 	
 	public AbstractGenericDialog setSection(ESection e, Panel pnl) {
 		hmSection.put(e,new ResizablePanel(rzpDialog.getStyle()).setContents(pnl));

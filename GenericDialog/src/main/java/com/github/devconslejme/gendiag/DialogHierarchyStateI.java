@@ -54,7 +54,7 @@ import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.MouseCursorButtonGlobalListenerDelegatorI;
-import com.github.devconslejme.misc.lemur.MouseCursorButtonGlobalListenerDelegatorI.IGlobalClickListener;
+import com.github.devconslejme.misc.lemur.MouseCursorButtonGlobalListenerDelegatorI.IGlobalMouseCursorClickListener;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.github.devconslejme.misc.lemur.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.lemur.SystemAlertLemurI;
@@ -145,13 +145,23 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 		}
 	}
 	
-	public static class GlobalListenerX implements IGlobalClickListener{
+	public static interface IDialogHierarchyListener {
+		void dialogCreatedEvent(Visuals vs);
+		void dialogMadeVisibleEvent(Visuals vs);
+		void dialogClosedEvent(Visuals vs);
+	}
+	private ArrayList<IDialogHierarchyListener> aidhlListener = new ArrayList<IDialogHierarchyListener>();
+	public void addDialogHierarchyListener(IDialogHierarchyListener idhl){
+		if(!aidhlListener.contains(idhl))aidhlListener.add(idhl);
+	}
+	
+	public static class GlobalMouseCursorClickListenerX implements IGlobalMouseCursorClickListener{
 		@Override
 		public void clickEvent(CursorButtonEvent event, Spatial target,				Spatial capture) {
 			DialogHierarchyStateI.i().clickToRaise(event,target,capture,false);
 		}
 	}
-	private GlobalListenerX glx = new GlobalListenerX();
+	private GlobalMouseCursorClickListenerX glx = new GlobalMouseCursorClickListenerX();
 	
 	/**
 	 * keep setters private
@@ -324,6 +334,8 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 		
 		arzpAllCreatedDialogs.add(rzp);
 		
+		for(IDialogHierarchyListener idhl:aidhlListener)idhl.dialogCreatedEvent(vs);
+		
 		return rzp;
 	}
 	
@@ -334,7 +346,7 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 	 */
 	public Visuals getVisuals(Spatial spt){
 		if(spt==null)return null;
-		return UserDataI.i().getExistingOrNull(spt,Visuals.class);
+		return UserDataI.i().getMustExistOrNull(spt,Visuals.class);
 	}
 	
 	public DialogHierarchyComp getHierarchyComp(Spatial spt){
@@ -384,6 +396,8 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 				return true;
 			}
 		}).setName("AbsorbClickCommands");
+		
+		for(IDialogHierarchyListener idhl:aidhlListener)idhl.dialogMadeVisibleEvent(getVisuals(rzp));
 	}
 
 	public void showDialogAsModeless(ResizablePanel rzpParent, ResizablePanel rzpChild) {
@@ -690,6 +704,8 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 		sys.setHierarchyComp(vs.getEntityId(), new DiagCompBean().setOpened(false));
 		
 		if(vs.getEffLinkToParent()!=null)vs.getEffLinkToParent().setAsDiscarded();
+		
+		for(IDialogHierarchyListener idhl:aidhlListener)idhl.dialogClosedEvent(vs);
 	}
 	
 	private void updateZOrder(EntityId entid){

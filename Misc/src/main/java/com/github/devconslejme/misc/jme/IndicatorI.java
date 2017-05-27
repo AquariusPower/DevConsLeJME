@@ -234,7 +234,7 @@ public class IndicatorI {
 		return data;
 	}
 	private GeomIndicatorsData getGeomIndicatorsDataFrom(Spatial spt){
-		return UserDataI.i().getExistingOrNull(spt, GeomIndicatorsData.class);
+		return UserDataI.i().getMustExistOrNull(spt, GeomIndicatorsData.class);
 	}
 	
 	public static enum EIndicatorMode{

@@ -595,7 +595,7 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs {
 		}
 		
 		protected TargetToken getTargetToken(Spatial spt) {
-			return UserDataI.i().getExistingOrNull(spt, TargetToken.class);
+			return UserDataI.i().getMustExistOrNull(spt, TargetToken.class);
 		}
 
 		@Override

@@ -43,7 +43,9 @@ import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenuAnon;
 import com.github.devconslejme.gendiag.ContextMenuI.HintUpdaterPerCtxtBtn;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.IDialogHierarchyListener;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.Visuals;
 import com.github.devconslejme.gendiag.ManagerHelperI;
 import com.github.devconslejme.gendiag.ManagerHelperI.RetVal;
 import com.github.devconslejme.misc.Annotations.Workaround;
@@ -110,7 +112,7 @@ import com.simsilica.lemur.text.DocumentModel;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class DevConsPluginStateI extends SimpleAppState {//implements IResizableListener{
+public class DevConsPluginStateI extends SimpleAppState implements IDialogHierarchyListener {
 	public static DevConsPluginStateI i(){return GlobalManagerI.i().get(DevConsPluginStateI.class);}
 	
 //	private Vector3f	v3fApplicationWindowSize;
@@ -313,6 +315,8 @@ public class DevConsPluginStateI extends SimpleAppState {//implements IResizable
 			JavaScriptI.i().showRetVal(rv.getRetVal());
 		}});
 		LoggingI.i().logEntry("Handling calls return values, will be shown here thru: "+ManagerHelperI.class.getName());
+		
+		DialogHierarchyStateI.i().addDialogHierarchyListener(this);
 	}
 	
 	public static abstract class CallableVarMonX extends CallableX<CallableVarMonX>{
@@ -1605,6 +1609,21 @@ public class DevConsPluginStateI extends SimpleAppState {//implements IResizable
 		KeyCodeManagerI.i().getKeyForId(strKey).setIgnoreKeyCode();
 		
 		return this;
+	}
+
+	@Override
+	public void dialogCreatedEvent(Visuals vs) {
+		LoggingI.i().logEntry("DialogCreated:"+vs.getDialog().getName());
+	}
+
+	@Override
+	public void dialogMadeVisibleEvent(Visuals vs) {
+		LoggingI.i().logEntry("DialogOpened:"+vs.getDialog().getName());
+	}
+
+	@Override
+	public void dialogClosedEvent(Visuals vs) {
+		LoggingI.i().logEntry("DialogClosed:"+vs.getDialog().getName());
 	}
 	
 }

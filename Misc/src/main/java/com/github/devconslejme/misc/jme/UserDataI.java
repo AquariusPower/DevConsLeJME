@@ -184,7 +184,7 @@ public class UserDataI {
 		setUserDataPSHSafely(spt, obj);
 	}
 	
-	public <R> R getExistingOrNull(Spatial spt, Class<R> cl){
+	public <R> R getMustExistOrNull(Spatial spt, Class<R> cl){
 		return getUserDataPSH(spt, cl, false);
 	}
 	

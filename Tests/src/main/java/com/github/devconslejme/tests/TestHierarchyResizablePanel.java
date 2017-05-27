@@ -65,7 +65,7 @@ public class TestHierarchyResizablePanel extends SimpleAppStateAbs {
 		for(ResizablePanel rzp:DialogHierarchyStateI.i().getAllOpenedDialogs()){
 			if(rzp.getContents() instanceof Button){ //TODO this is a bad guess...
 				Button btn = (Button)rzp.getContents();
-				BaseTextUD btud = UserDataI.i().getExistingOrNull(btn, BaseTextUD.class);
+				BaseTextUD btud = UserDataI.i().getMustExistOrNull(btn, BaseTextUD.class);
 				DetailedException.assertNotNull(btud,btn);
 				String str = btud.getBaseText();
 				btn.setText(str+"\n"
