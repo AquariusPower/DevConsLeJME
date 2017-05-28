@@ -53,6 +53,8 @@ import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.JavaLangI.LinkedHashMapX;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.MethodX;
+import com.github.devconslejme.misc.MultiClickI.CallMultiClickUpdate;
+import com.github.devconslejme.misc.MultiClickI.MultiClick;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
@@ -598,6 +600,15 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		}
 	}
 	
+	MultiClick mcTitle = new MultiClick(0,2,new CallMultiClickUpdate() {
+		@Override
+		public void applyMultiClick(int totalClicks) {
+			if(totalClicks==2){
+				toggleMaximize();
+			}
+		}
+	});
+	
 	private void initSectionInfoTitle() {
 
 		cmdInfoSectionTitleButtons = new Command<Button>() {
@@ -605,28 +616,29 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			@Override
 			public void execute(Button source) {
 				if(source==btnMaximizeRestore){ //toggle
-					if(bKeepMaximized){							/**							 * restore							 */
-						getDialog().restoreDefaultSafeSize();
-						
-						MaximizeUD mud = UserDataI.i().getMustExistOrNull(getDialog(), MaximizeUD.class);
-						DetailedException.assertNotNull(mud,getDialog(),this);
-						Vector3f v3fPosBeforeMaximize = mud.getPosBeforeMaximize();
-						getDialog().setLocalTranslationXY(v3fPosBeforeMaximize);
-						
-						bKeepMaximized=false;
-					}else{							/**							 * maximize							 */
-						getDialog().applyCurrentSafeSizeAsDefault();
-						
-//						getDialog().setUserData(strUDKeyPosBeforeMaximize,getDialog().getLocalTranslation().clone());
-						UserDataI.i().overwriteSafely(
-							getDialog(), 
-							new MaximizeUD().setPosBeforeMaximize(
-								getDialog().getLocalTranslation().clone()
-							)
-						);
-						
-						bKeepMaximized=true;
-					}
+					toggleMaximize();
+//					if(bKeepMaximized){							/**							 * restore							 */
+//						getDialog().restoreDefaultSafeSize();
+//						
+//						MaximizeUD mud = UserDataI.i().getMustExistOrNull(getDialog(), MaximizeUD.class);
+//						DetailedException.assertNotNull(mud,getDialog(),this);
+//						Vector3f v3fPosBeforeMaximize = mud.getPosBeforeMaximize();
+//						getDialog().setLocalTranslationXY(v3fPosBeforeMaximize);
+//						
+//						bKeepMaximized=false;
+//					}else{							/**							 * maximize							 */
+//						getDialog().applyCurrentSafeSizeAsDefault();
+//						
+////						getDialog().setUserData(strUDKeyPosBeforeMaximize,getDialog().getLocalTranslation().clone());
+//						UserDataI.i().overwriteSafely(
+//							getDialog(), 
+//							new MaximizeUD().setPosBeforeMaximize(
+//								getDialog().getLocalTranslation().clone()
+//							)
+//						);
+//						
+//						bKeepMaximized=true;
+//					}
 				}else
 				if(source==btnClose){
 					getDialog().close();
@@ -635,7 +647,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 					MinimizedDialogsPanelI.i().minimize(SimpleGenericDialog.this);
 				}else
 				if(source==btnTitleText){
-					//TODO do something one day? double click to maximize/restore?
+					mcTitle.updateIncClicks();
 				}else
 				{
 					MessagesI.i().warnMsg(SimpleGenericDialog.this, "cmd not supported yet", source);
@@ -669,6 +681,31 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		cntrTitle.addChild(btnTitleText, BorderLayout.Position.Center);
 		cntrTitle.addChild(cntrDiagControls, BorderLayout.Position.East);
 		
+	}
+
+	protected void toggleMaximize() {
+		if(bKeepMaximized){							/**							 * restore							 */
+			getDialog().restoreDefaultSafeSize();
+			
+			MaximizeUD mud = UserDataI.i().getMustExistOrNull(getDialog(), MaximizeUD.class);
+			DetailedException.assertNotNull(mud,getDialog(),this);
+			Vector3f v3fPosBeforeMaximize = mud.getPosBeforeMaximize();
+			getDialog().setLocalTranslationXY(v3fPosBeforeMaximize);
+			
+			bKeepMaximized=false;
+		}else{							/**							 * maximize							 */
+			getDialog().applyCurrentSafeSizeAsDefault();
+			
+//			getDialog().setUserData(strUDKeyPosBeforeMaximize,getDialog().getLocalTranslation().clone());
+			UserDataI.i().overwriteSafely(
+				getDialog(), 
+				new MaximizeUD().setPosBeforeMaximize(
+					getDialog().getLocalTranslation().clone()
+				)
+			);
+			
+			bKeepMaximized=true;
+		}
 	}
 
 	private void initInfoSectionTitleContextMenu() {
