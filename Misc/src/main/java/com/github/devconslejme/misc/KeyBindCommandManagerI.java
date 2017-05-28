@@ -252,7 +252,7 @@ public class KeyBindCommandManagerI {
 //		BindCommand bc = tmCfgVsBCmd.get(strBindCfg);
 //		bc.assertHardCommandNotSet(strBindCfg);
 		BindCommand bc = tmCfgVsBCmd.remove(strBindCfg);
-		MessagesI.i().output(false, System.out, "KeyBindCmd", this, "removed '"+strBindCfg+"': "+bc);
+		MessagesI.i().output(System.out, "KeyBindCmd", this, "removed '"+strBindCfg+"': "+bc);
 	}
 	
 	public static abstract class CallBoundKeyCmd extends CallableX<CallBoundKeyCmd>{
@@ -629,12 +629,12 @@ public class KeyBindCommandManagerI {
 		if(kbWaitBeReleased!=null){
 			if(kbWaitBeReleased.isActivated()){ // KeyCodeManagerI.i().getAllPressedKeys()
 				//still pressed (with modifiers)
-				MessagesI.i().output(false, System.out, "Info", this, "waiting captured key bind to be released: "+kbWaitBeReleased.getBindCfg());
+				MessagesI.i().output(System.out, "Info", this, "waiting captured key bind to be released: "+kbWaitBeReleased.getBindCfg());
 				return true; 
 			}else
 			if(kbWaitBeReleased.getActionKey().isPressed()){ 
 				//still pressed (only the action key is still being holded)
-				MessagesI.i().output(false, System.out, "Info", this, "waiting captured action key to be released: "+kbWaitBeReleased.getBindCfg());
+				MessagesI.i().output(System.out, "Info", this, "waiting captured action key to be released: "+kbWaitBeReleased.getBindCfg());
 				return true;
 			}else
 			{ //released
@@ -707,7 +707,7 @@ public class KeyBindCommandManagerI {
 					bcCaptureToTarget.setKeyBind(kbCaptured);
 					if(bAdd)putBindCommand(bcCaptureToTarget);
 					
-					MessagesI.i().output(false, System.out, "InfoKeyBind", this,
+					MessagesI.i().output(System.out, "InfoKeyBind", this,
 						prepareConfigStr(bcCaptureToTarget));
 //					MessagesI.i().output(false, System.out, "Info", this, 
 //						"captured key bind "+kbCaptured.getBindCfg()

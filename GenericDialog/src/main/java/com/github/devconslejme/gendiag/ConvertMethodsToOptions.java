@@ -146,18 +146,15 @@ public class ConvertMethodsToOptions {
 					String strInfo=mh.getFullHelp(true, true)+" //"+ConvertMethodsToOptions.class.getSimpleName()+"/"+strKey;
 					od.addCmdCfg(new CmdCfg(strKey) {@Override	public void execute(Button source) {
 						try {
-//							LoggingI.i().logEntry("Calling: "+strInfo);
-							MessagesI.i().output(false, System.out, "CallMethod", this, strInfo);
+							MessagesI.i().output(System.out, "CallMethod", this, strInfo);
 							Object objRet = mh.getMethod().invoke(mh.getConcreteObjectInstance());
-							MessagesI.i().output(true, System.out, "ReturnValue", this, strInfo, objRet);
+							MessagesI.i().putReviewableMsg(
+								MessagesI.i().output(System.out, "ReturnValue", this, strInfo, objRet));
 							if(G.i(ManagerHelperI.class).isHandleCallRetValSet()){
 								G.i(ManagerHelperI.class).applyCallHandler(new RetVal(objRet, mh.getFullHelp(true, true)));
 							}
-//							if(funcHandleCallRetVal!=null)funcHandleCallRetVal.apply(objRet);
-//							JavaScriptI.i().showRetVal(objRet);
 						} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
 							MessagesI.i().warnMsg(this, strInfo, mh);
-//							LoggingI.i().logExceptionEntry(ex, strInfo);
 						}
 					}}.setHintHelp( "will call this simple (parameters less) method, "
 							+"which may perform more actions than the obvious one, better find out what "

@@ -104,7 +104,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	public void simpleInitApp() {
 		/** this should be the 1st thing configured */
 		com.github.devconslejme.devcons.PkgCfgI.i().configure(this,getGuiNode(), getRootNode());
-//		com.github.devconslejme.misc.jme.game.PkgCfgI.i().configure(this,getGuiNode(), getRootNode());
+		com.github.devconslejme.misc.jme.game.PkgCfgI.i().configure(this,getGuiNode(), getRootNode());
 		
 		if(bEnableOpt)opt_initBasics();
 		
@@ -178,25 +178,6 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	
 	private void opt_initAlertConsoleKey() {
 		SystemAlertI.i().showTemporarySystemAlert("hit F10 to open console", 3f);
-//		QueueI.i().enqueue(new CallableXAnon() {
-//			TimedDelay td = new TimedDelay(3f, "wait user read it");
-//			private StackTraceElement[]	aste;
-//			@Override
-//			public Boolean call() {
-//				if(!SystemAlertLemurI.i().isShowingAlert()){
-//					aste=SystemAlertLemurI.i().showSystemAlert("hit F10 to open console", null);
-//					SystemAlertLemurI.i().setAlertStayOnCenter(true);
-//					td.setActive(true);
-//				}else{
-//					if(td.isReady()){
-//						SystemAlertLemurI.i().hideSystemAlert(aste);
-//						return true;//end
-//					}
-//				}
-//				
-//				return false;
-//			}
-//		});
 	}
 
 	private void opt_initShowFPS() {

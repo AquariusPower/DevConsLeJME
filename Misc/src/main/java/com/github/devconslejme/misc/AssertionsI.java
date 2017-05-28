@@ -107,7 +107,7 @@ public class AssertionsI {
 	public void assertAllRemainUnmodified(boolean bLogAllOk){
 		for(Entry<Object, Object> entry:hmAssert.entrySet()){
 			if(bLogAllOk){
-				MessagesI.i().output(false, System.out, "Assert", this, 
+				MessagesI.i().output(System.out, "Assert", this, 
 					entry.getKey().getClass().getSimpleName()+": Original="+entry.getValue()+", Current="+entry.getKey());
 			}
 			

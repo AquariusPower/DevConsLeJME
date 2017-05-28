@@ -87,7 +87,9 @@ public class SystemAlertI {
 		this.objActionSourceElement=objActionSourceElement;
 //		dumpAlert(); //just in case another one happens before the update...
 		
-		MessagesI.i().output(true, System.out, "ALERT!!!", this, strAlertMsg, strDynamicInfo, objActionSourceElement);
+		MessagesI.i().putReviewableMsg(
+			MessagesI.i().output(System.out, "ALERT!!!", this, strAlertMsg, strDynamicInfo, objActionSourceElement), 
+			false);
 		enqueueCaptureUserInput();
 		
 		return this.asteStackKeyRequestOrigin;
@@ -131,7 +133,9 @@ public class SystemAlertI {
 	 * Override if other means will be used to capture input
 	 */
 	protected void doCapture(float fTPF, CallableX cxQueuedCall) {
-		MessagesI.i().output(true, System.out, "ALERT!!!", this, strAlertMsg, strDynamicInfo);
+		MessagesI.i().putReviewableMsg(
+			MessagesI.i().output(System.out, "ALERT!!!", this, strAlertMsg, strDynamicInfo), 
+			false);
 		//TODO do capture text terminal input (one day...)
 		throw new UnsupportedOperationException("not implemented");
 	}
@@ -173,24 +177,27 @@ public class SystemAlertI {
 			private StackTraceElement[]	aste;
 			@Override
 			public Boolean call() {
+				boolean bEnd=false;
+				
 				if(!SystemAlertI.i().isShowingAlert()){
-					aste=SystemAlertI.i().showSystemAlert(strMsg, null);
+					aste=SystemAlertI.i().showSystemAlert(strMsg+"\n(Press ESC to end this alert)", null);
 					tdHideSystemAlert.setActive(true);
 				}else{
 					if(!isValidRequestOriginKey(aste))return false; //there is some other alert going on, wait it end
 					
+					if(KeyCodeManagerI.i().getAllPressedKeys().contains(KeyCodeManagerI.i().getFirstKeyForCode(KeyCodeManagerI.i().getKeyCodeForEscape()))){
+						bEnd=true; //end
+					}
+					
 					if(tdHideSystemAlert.isReady()){
-						SystemAlertI.i().hideSystemAlert(aste);
-						return true;//end
+						bEnd=true;//end
 					}
 				}
 				
-				return false;
+				if(bEnd)SystemAlertI.i().hideSystemAlert(aste);
+				
+				return bEnd; //by failing, will work like a loop
 			}
-//			@Override
-//			public void callAfterRemovedFromQueue() {
-//				SystemAlertI.i().hideSystemAlert(aste);
-//			}
 		}.setName(strName));
 	}
 	

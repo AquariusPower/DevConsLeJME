@@ -85,7 +85,8 @@ public class DebugTrackProblemsJME implements ICheckProblems{
 					}
 				}
 				
-				MessagesI.i().output(true, System.err, "CriticalError", this, DebugTrackProblemsJME.class.getSimpleName()+":SpatialProblem:"+str, asptList);
+				MessagesI.i().putReviewableMsg(
+					MessagesI.i().output(System.err, "CriticalError", this, DebugTrackProblemsJME.class.getSimpleName()+":SpatialProblem:"+str, asptList));
 			}
 		}
 		
@@ -133,14 +134,11 @@ public class DebugTrackProblemsJME implements ICheckProblems{
 					 * without this limitation, it will cause internal prloblems at Eclipse IDE luna...
 					 * and create loads of useless log output entries... 
 					 */
-//					if(lTimePrev != app.getTimer().getTime()){ //only do it if the main thread is being updated
 					if(lTimePrev != SimulationTimeI.i().getNanoTime()){ 
 						geom.setLocalTranslation(FastMath.nextRandomFloat(),0,0);
 						
-//						System.out.print(geom.getMesh().getClass().getSimpleName()+"/"+geom.getLocalTranslation());
-						MessagesI.i().output(false, System.err, "CreatingTestProblem:", this , geom.getMesh().getClass().getSimpleName()+"/"+geom.getLocalTranslation());
+						MessagesI.i().output(System.err, "CreatingTestProblem:", this , geom.getMesh().getClass().getSimpleName()+"/"+geom.getLocalTranslation());
 						
-//						lTimePrev = app.getTimer().getTime();
 						lTimePrev = SimulationTimeI.i().getNanoTime();
 					}else{
 						int i=0;i++;int i2=i; //to put breakpoint

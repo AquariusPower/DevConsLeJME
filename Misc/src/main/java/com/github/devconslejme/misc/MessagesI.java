@@ -51,6 +51,7 @@ public class MessagesI {
 	private int	iSummaryReportLineLength = 100;
 	private File	flLog;
 	private boolean	bLog;
+	private String strUIdLastForced="0";
 	
 	/**
 	 * {@link FileI} also depends on this class, so this initializer is necessary
@@ -61,9 +62,10 @@ public class MessagesI {
 		bLog=true;
 	}
 	
-	public void warnUniqueMsg(Object objSource, String strMsg, Object... aobj){
+	public void warnUniqueMsg(Object objSource, String strMsg, Object... aobjMoreInfo){
 //		new Runnable(){@Override public void run() {warnMsg(objSource,strMsg,aobj);}}.run();
-		warnMsg(objSource,strMsg,aobj);
+		putReviewableMsg(warnMsgWork(objSource,strMsg,aobjMoreInfo),true);
+//		warnMsg(objSource,strMsg,aobj);
 	}
 	/**
 	 * for things that will break non crucial functionalities
@@ -72,9 +74,12 @@ public class MessagesI {
 	 * @param aobjMoreInfo
 	 */
 	public void warnMsg(Object objSource, String strMsg, Object... aobjMoreInfo){
+		putReviewableMsg(warnMsgWork(objSource,strMsg,aobjMoreInfo),false);
+	}
+	protected String warnMsgWork(Object objSource, String strMsg, Object... aobjMoreInfo){
 		Object[] aobjMoreInfoSte = Arrays.copyOf(aobjMoreInfo, aobjMoreInfo.length+1);//add one slot on the array
 		aobjMoreInfoSte[aobjMoreInfoSte.length-1]=Thread.currentThread().getStackTrace()[2];
-		output(true,System.err,"WARN",objSource,strMsg,aobjMoreInfoSte);
+		return output(System.err,"WARN",objSource,strMsg,aobjMoreInfoSte);
 	}
 	
 	/**
@@ -90,13 +95,16 @@ public class MessagesI {
 	 */
 	public void debugInfo(Object objSource, String strMsg, Object... aobj) {
 //		output(false,ReportI.i().joinMessageWithObjects("DevInfo["+objSource.getClass().getSimpleName()+"]: "+strMsg, aobj));
-		output(false,System.out,"DebugInfo",objSource,strMsg,aobj,Thread.currentThread().getStackTrace());
+		output(System.out,"DebugInfo",objSource,strMsg,aobj,Thread.currentThread().getStackTrace());
 	}
 	
 //	public void output(PrintStream ps, Object objSource, String strMsg){
 //		output(ps==System.err,"",objSource,strMsg);
 //	}
 //	
+//	public String outputReviewable(PrintStream ps,String strMsgType, Object objSource, String strMsg, Object... aobj){
+//		putReviewableMsg(output(), false);
+//	}
 	/**
 	 * 
 	 * @param bReviewable will create an object for easy reviewing avoiding repetitions
@@ -106,7 +114,7 @@ public class MessagesI {
 	 * @param strMsg
 	 * @param aobj
 	 */
-	public void output(boolean bReviewable, PrintStream ps,String strMsgType, Object objSource, String strMsg, Object... aobj){
+	public String output(PrintStream ps,String strMsgType, Object objSource, String strMsg, Object... aobj){
 		//TODO log4j?
 		Class cl = Class.class.isInstance(objSource)?(Class)objSource:objSource.getClass(); //can be from a static method
 		String strOutput = ReportI.i().prepareReport(
@@ -119,21 +127,44 @@ public class MessagesI {
 			FileI.i().appendLine(flLog,strOutput);
 		}
 		
-		if(bReviewable){
-			putReviewableMsg(strOutput);
-//			ReviewableMsg mdNew = new ReviewableMsg(getStackAsKey(),strOutput);
-//			
-//			ReviewableMsg mdExisting = hmMsgs.get(mdNew.strKey);
-//			if(mdExisting!=null){
-//				mdExisting.updateMsg(mdNew);
-//			}else{
-//				hmMsgs.put(mdNew.strKey, mdNew);
-//			}
-		}
+		return strOutput;
+		
+//		if(bReviewable){
+//			putReviewableMsg(strOutput);
+////			ReviewableMsg mdNew = new ReviewableMsg(getStackAsKey(),strOutput);
+////			
+////			ReviewableMsg mdExisting = hmMsgs.get(mdNew.strKey);
+////			if(mdExisting!=null){
+////				mdExisting.updateMsg(mdNew);
+////			}else{
+////				hmMsgs.put(mdNew.strKey, mdNew);
+////			}
+//		}
 	}
 	
 	public ReviewableMsg putReviewableMsg(String strOutput){
-		ReviewableMsg mdNew = new ReviewableMsg(getStackAsKey(),strOutput);
+		return putReviewableMsg(strOutput,false);
+	}
+	public ReviewableMsg putReviewableUniqueMsg(String strOutput){
+		return putReviewableMsg(strOutput,true);
+	}
+	/**
+	 * 
+	 * @param strOutput
+	 * @param bMakeItUnique so even being the same stacktrace (used as a string key) it will be made unique  
+	 * @return
+	 */
+	protected ReviewableMsg putReviewableMsg(String strOutput,boolean bMakeItUnique){
+		ReviewableMsg mdNew = new ReviewableMsg(
+			getStackAsKey()
+				+(bMakeItUnique?
+					"//UIdForceUniqueMsg="
+						+(strUIdLastForced=StringI.i().getNextUniqueId(strUIdLastForced)) //this will make it unique
+					:
+					""
+				),
+			strOutput
+		);
 		
 		ReviewableMsg mdExisting = hmMsgs.get(mdNew.strKey);
 		ReviewableMsg mdRet = null;
@@ -205,7 +236,7 @@ public class MessagesI {
 		
 	}
 	
-	private String getStackAsKey(){
+	protected String getStackAsKey(){
 		sbStack = new StringBuilder(); 
 		for(StackTraceElement ste:Thread.currentThread().getStackTrace()){
 			sbStack.append(ste.toString()+";");

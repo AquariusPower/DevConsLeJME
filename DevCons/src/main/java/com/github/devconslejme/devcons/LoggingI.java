@@ -99,8 +99,8 @@ public class LoggingI {
 			
 			logEntry("Caused by:",bSkipLogFile,System.err);
 		}
-		
-		MessagesI.i().output(true,null,"DevConsLog",this,strJS,ex);
+		MessagesI.i().putReviewableMsg(
+			MessagesI.i().output(null,"DevConsLog",this,strJS,ex)); 
 	}
 	
 	public void logEntry(String str){
@@ -131,7 +131,7 @@ public class LoggingI {
 		}
 		
 //		if(ps!=null)ps.println(str);
-		MessagesI.i().output(false,ps,"DevConsLog",this,str);
+		MessagesI.i().output(ps,"DevConsLog",this,str);
 		
 		//dont! ConsolePluginI.i().scrollToBottom();
 	}

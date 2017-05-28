@@ -60,6 +60,7 @@ import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallUserCustomCmd;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.MethodX;
+import com.github.devconslejme.misc.PkgCfgAbs;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
@@ -395,7 +396,12 @@ public class JavaScriptI implements IGlobalAddListener {
 			if(objExisting==null){
 				setJSBinding(obj);
 			}else{
-				MessagesI.i().warnUniqueMsg(this, "key already used", strKey, objExisting, obj);
+				/**
+				 * ignore overriders
+				 */
+				if(!obj.getClass().isInstance(objExisting) && !objExisting.getClass().isInstance(obj)){
+					MessagesI.i().warnUniqueMsg(this, "key already used", strKey, objExisting, obj);
+				}
 			}
 		}
 		
@@ -454,10 +460,15 @@ public class JavaScriptI implements IGlobalAddListener {
 		Class<Enum> clEnum = (JavaLangI.i().isEnumClass(objBindValue)) ? (Class<Enum>)objBindValue : null;
 		
 		String strBindId = genKeyFor(objBindValue);
+		
+		/**
+		 * check for restrictions
+		 */
 		if(!CallUserCustomCmd.class.isInstance(objBindValue)){
-			if(bndJSE.get(strBindId)!=null){
+			Object objExisting = bndJSE.get(strBindId);
+			if(objExisting!=null){
 				if(clEnum!=null)return; //np if already set, just skip/ignore as enums are global statics (not instances)
-				throw new DetailedException("already set: "+strBindId, bndJSE.get(strBindId));
+				throw new DetailedException("already set: "+strBindId, objExisting);
 			}
 			
 			if(clEnum!=null){
@@ -498,12 +509,21 @@ public class JavaScriptI implements IGlobalAddListener {
 	
 	private boolean isAccessForbidden(Object objBindValue) {
 		DetailedException.assertNotNull(objBindValue);
+		
+		boolean b=false;
+		
 		if(aclForbidJS.contains(objBindValue.getClass())){
 			MessagesI.i().warnMsg(this, "forbidden JS access to class", objBindValue.getClass());
-			return true;
+			b=true;
 		}
 		
-		return false;
+		/** special case to prevent unnecesary access while still keeping its overridable globals */
+		if(objBindValue instanceof PkgCfgAbs){
+			MessagesI.i().output(System.out, "info:", this, "skipping JS access to "+objBindValue.getClass());
+			b=true;
+		}
+		
+		return b;
 	}
 
 //	/**

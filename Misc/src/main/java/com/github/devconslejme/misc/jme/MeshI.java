@@ -100,9 +100,10 @@ public class MeshI {
 		double dVolume=0;
 		for(Geometry geom:ageom){
 			if(isDebug()){
-				MessagesI.i().output(true, System.out, "MeshVolume", this, "\n"+ 
-					volumeOf(geom)+"//"+geom+"\n"+
-					volOfMesh(geom.getMesh(),geom.getWorldScale())+"//MESH//"+geom);
+				MessagesI.i().putReviewableMsg(
+					MessagesI.i().output(System.out, "MeshVolume", this, "\n"+ 
+						volumeOf(geom)+"//"+geom+"\n"+
+						volOfMesh(geom.getMesh(),geom.getWorldScale())+"//MESH//"+geom)); 
 			}
 			dVolume += volumeOf(geom);
 		}

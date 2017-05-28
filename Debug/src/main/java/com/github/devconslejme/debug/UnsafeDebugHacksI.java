@@ -61,7 +61,8 @@ public class UnsafeDebugHacksI {
 	public static class SimpleHandleExceptions implements IHandleExceptions{
 		@Override
 		public void handleExceptionThreaded(Exception e) {
-			MessagesI.i().output(true, System.err, "DebugHacksException", this, e.getMessage(), e);
+			MessagesI.i().putReviewableMsg(
+				MessagesI.i().output(System.err, "DebugHacksException", this, e.getMessage(), e)); 
 		}
 	}
 	
