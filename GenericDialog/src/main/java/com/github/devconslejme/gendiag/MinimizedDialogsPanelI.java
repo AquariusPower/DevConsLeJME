@@ -36,7 +36,7 @@ import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
-import com.github.devconslejme.misc.jme.TextI;
+import com.github.devconslejme.misc.jme.TextStringI;
 import com.github.devconslejme.misc.lemur.AbsorbClickCommandsI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
@@ -109,7 +109,7 @@ public class MinimizedDialogsPanelI implements IResizableListener{
 		
 		Button btn = new Button(sgd.getTitle());
 		PopupHintHelpListenerI.i().setPopupHintHelp(btn, btn.getText());
-		TextI.i().recursivelyApplyTextNoWrap(btn);
+		TextStringI.i().recursivelyApplyTextNoWrap(btn);
 		//TODO rotate text 90degreess if in the vertical?
 		
 		addMinimized(btn, cntrMinimized.getLayout().getChildren().size());

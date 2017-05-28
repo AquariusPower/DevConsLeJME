@@ -34,7 +34,7 @@ import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.lemur.AbsorbClickCommandsI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
-import com.github.devconslejme.projman.SimpleAppStateAbs;
+import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
@@ -43,7 +43,7 @@ import com.simsilica.lemur.Command;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestChoiceDialog extends SimpleAppStateAbs {
+public class TestChoiceDialog extends SimpleApplicationAndStateAbs {
 	public static void main(String[] args) {
 		TestChoiceDialog tst = new TestChoiceDialog();
 		tst.start();

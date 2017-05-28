@@ -68,7 +68,7 @@ import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.SystemAlertI;
 import com.github.devconslejme.misc.TimeFormatI;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
-import com.github.devconslejme.misc.jme.TextI;
+import com.github.devconslejme.misc.jme.TextStringI;
 import com.google.common.collect.HashBiMap;
 import com.jme3.app.Application;
 import com.jme3.input.KeyInput;
@@ -495,7 +495,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		bndJSE.put(strBindId,objBindValue);
 		
 		// logs
-		String strMsg=strInfoMode+" JS bind: "+strBindId;
+		String strMsg=strInfoMode+" JS bind: "+strBindId+" ("+objBindValue.getClass().getSimpleName()+")";
 		
 		if(!strBindId.equals(strLastRetValId)){
 			LoggingI.i().logMarker(strMsg,-1);
@@ -772,11 +772,11 @@ public class JavaScriptI implements IGlobalAddListener {
 			if(!isAndShowArray(obj)){
 				if (obj instanceof Vector3f) {
 					Vector3f v3f = (Vector3f) obj;
-					str+="new Vector3f("+TextI.i().fmtVector3f(v3f,2)+")";
+					str+="new Vector3f("+TextStringI.i().fmtVector3f(v3f,2)+")";
 				}else
 				if (obj instanceof Quaternion) {
 					Quaternion qua = (Quaternion) obj;
-					str+="new Quaternion().fromAngles("+TextI.i().fmtToDegrees(qua,2)+")";
+					str+="new Quaternion().fromAngles("+TextStringI.i().fmtToDegrees(qua,2)+")";
 				}else{
 					str+="Object value: #"+obj.hashCode()+", .toString(): '"+obj+"'";
 				}

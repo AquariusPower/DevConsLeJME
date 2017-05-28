@@ -288,7 +288,7 @@ public class CommandLineParser {
 						continue;
 					case Enum:
 						if(isBlank(ch)){ //finalize
-							Enum e=GlobalManagerI.i().parseToEnum(strParam);
+							Enum e=parseToEnum(strParam);
 //							for(Object obj:GlobalManagerI.i().getListCopy()){
 //								if(JavaLangI.i().isEnumClass(obj)){
 //									Enum e = (Enum)obj;
@@ -321,6 +321,24 @@ public class CommandLineParser {
 //					et=EType.Number; continue; //will be parsed to confirm later
 //			}
 		}
+	}
+	
+	public Enum parseToEnum(String strFullEnumId){
+	//	for(Class<Enum> cle:hmEnumVals.inverse().values()){ //keys
+		for(Class<Enum> cle:GlobalManagerI.i().getGlobalEnumsListCopy().keySet()){ //keys
+			Enum e = parseToEnum(cle,strFullEnumId);
+			if(e!=null)return e;
+		}
+		return null;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Enum parseToEnum(Class<Enum> cle, String strFullEnumId) {
+		if(strFullEnumId.startsWith(cle.getName())){
+			String strEnumId=strFullEnumId.substring(cle.getName().length()+1);
+			return Enum.valueOf(cle, strEnumId);
+		}
+		return null;
 	}
 	
 	public boolean isBlank(char ch){

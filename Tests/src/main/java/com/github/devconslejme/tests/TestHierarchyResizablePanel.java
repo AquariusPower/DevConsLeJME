@@ -35,7 +35,7 @@ import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.AbsorbClickCommandsI;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
-import com.github.devconslejme.projman.SimpleAppStateAbs;
+import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.es.EntityId;
@@ -47,7 +47,7 @@ import com.simsilica.lemur.event.MouseEventControl;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestHierarchyResizablePanel extends SimpleAppStateAbs {
+public class TestHierarchyResizablePanel extends SimpleApplicationAndStateAbs {
 	public static void main(String[] args) {
 		TestHierarchyResizablePanel tst = new TestHierarchyResizablePanel();
 		tst.setPauseOnLostFocus(false); //good for outside monitoring

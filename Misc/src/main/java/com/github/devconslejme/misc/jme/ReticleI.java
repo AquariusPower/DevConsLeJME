@@ -114,7 +114,7 @@ public class ReticleI {
 		private BitmapText[]	abtDistMarksV;
 		private BitmapText[]	abtDistMarksH;
 		private ArrayList<Geometry> ageomZoomMarkersList = new ArrayList<>();
-		private BitmapText	btRangeDist;
+		private BitmapText	btInfo;
 		public Vector3f	v3fMarkersCenter;
 		public Node	nodeBorderAndZoomMarkers;
 		public Geometry	zoomMarkerCurrent;
@@ -274,12 +274,14 @@ public class ReticleI {
 			return this; 
 		}
 
-		public void updateRangeFinderValue(Float fTargetDist,Float fRangeDist) {
+		public void updateInfo(Float fTargetDist,Float fRangeDist,Float fFoV) {
 //			if(btRangeDist.getLocalTranslation().length()>0)System.out.println(btRangeDist.getWorldTranslation());
-			btRangeDist.setText(""
-				+(fRangeDist==null?"...":StringI.i().fmtFloat(fRangeDist,1)+"m")
+			btInfo.setText(""
+				+(fFoV==null?"":"FoV "+StringI.i().fmtFloat(fFoV,0)+""+Character.toString((char)176)+"")//"°")
 				+"\n"
-				+(fTargetDist==null?"":"Tgt:"+StringI.i().fmtFloat(fTargetDist,1)+"m")
+				+"RF "+(fRangeDist==null?"...":StringI.i().fmtFloat(fRangeDist,1)+"m")
+				+"\n"
+				+(fTargetDist==null?"":"Tg "+StringI.i().fmtFloat(fTargetDist,1)+"m") //last (may not be set)
 			);
 		}
 		
@@ -341,8 +343,7 @@ public class ReticleI {
 		rnStore.nodeZoomMarkerCurrent.attachChild(rnStore.nodeZoomMarkerCurrentRot);
 		
 		///////////////////////////// auto target/dist range info
-		BitmapText bt = createBText(rnStore,ColorRGBA.Green);
-		bt.setText("Tgt:+99999.9m\nDummy"); //TODO maximum displayable distance, create a formatter and get from there considering the world limits
+		BitmapText bt = TextStringI.i().createBitmapText("Tgt:+99999.9m\nDummy",ColorRGBA.Green); //TODO maximum displayable distance, create a formatter and get from there considering the world limits
 		bt.setBox(new Rectangle(0, 0, bt.getLineWidth(), bt.getHeight()));
 		bt.setAlignment(Align.Right);
 //		bt = new BitmapText(TextI.i().loadDefaultMonoFont());
@@ -355,7 +356,8 @@ public class ReticleI {
 			0);
 //		bt.setLocalTranslation(300f,300f,300);
 //		rnStore.attachChild(bt);
-		rnStore.btRangeDist=bt;
+		rnStore.btInfo=bt;
+		rnStore.attachChild(bt);
 		
 		//////////////////////////////// blocker
 		float fProportion = iDMin/(float)iDMax;
@@ -402,13 +404,14 @@ public class ReticleI {
 		return rnStore;
 	}
 	
-	private BitmapText createBText(ReticleNode rnStore, ColorRGBA color) {
-		BitmapText bt = new BitmapText(TextI.i().loadDefaultMonoFont());
-		bt.setText("(not set)");
-		bt.setColor(color);
-		rnStore.attachChild(bt);
-		return bt;
-	}
+//	private BitmapText createBText(ReticleNode rnStore, ColorRGBA color) {
+//		BitmapText bt = new BitmapText(TextStringI.i().loadDefaultMonoFont());
+//		bt.getSize();
+//		bt.setText("(not set)");
+//		bt.setColor(color);
+//		rnStore.attachChild(bt);
+//		return bt;
+//	}
 	private void createTextMarkers(ReticleNode rnStore, boolean bVertical, int iTotal) {
 		if(bVertical){
 			rnStore.abtDistMarksV=new BitmapText[iTotal];
@@ -417,7 +420,8 @@ public class ReticleI {
 		}
 		
 		for(int i=0;i<iTotal;i++){
-			BitmapText bt=createBText(rnStore, ColorRGBA.DarkGray);
+			BitmapText bt=TextStringI.i().createBitmapText("",ColorRGBA.DarkGray);
+			rnStore.attachChild(bt);
 //			BitmapText bt=new BitmapText(TextI.i().loadDefaultMonoFont());
 //			bt.setColor(ColorRGBA.DarkGray);
 //			rnStore.attachChild(bt);
@@ -525,7 +529,7 @@ public class ReticleI {
 								fTargetDist=null;
 							}
 							
-							rnLastConfigured.updateRangeFinderValue(fTargetDist,fDist);
+							rnLastConfigured.updateInfo(fTargetDist,fDist,flycamx.getFOV());
 							rnLastConfigured.updateZoomLevel(flycamx.getCurrentZoomLevelIndex());
 							rnLastConfigured.updateZoomMarkers(flycamx.getTotalZoomSteps());
 						}

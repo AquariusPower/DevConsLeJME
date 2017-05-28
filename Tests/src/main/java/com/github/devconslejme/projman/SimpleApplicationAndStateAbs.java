@@ -38,11 +38,11 @@ import com.jme3.renderer.RenderManager;
 import com.jme3.scene.Node;
 
 /**
- * Two behaviors, can be called from another application class!
+ * Two behaviors, can also be called from another application and behave as a app state.
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public abstract class SimpleAppStateAbs extends SimpleApplication implements AppState{
+public abstract class SimpleApplicationAndStateAbs extends SimpleApplication implements AppState{
   private boolean bInit = false;
   private boolean bEnabled = false;
   private Application	app;

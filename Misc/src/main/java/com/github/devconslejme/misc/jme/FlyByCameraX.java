@@ -275,31 +275,13 @@ public class FlyByCameraX extends FlyByCamera {
 	public FlyByCameraX(Camera cam) {
 		super(cam);
 		
-//		setMoveSpeed(1f);
-		
-//		reBindKeys();
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
-//				if(KeyCodeManagerI.i().getKeyListCopy().size()==0)return false;
 				if(!lazyPrepareKeyBindings())return false;
 				return true;
 			}
 		});
-		
-//		KeyBindCommandManagerI.i().putBindCommandLater("F5","hold to keep mouse cursor visible",new CallBoundKeyCmd(){
-//			@Override	public Boolean callOnKeyPressed(){
-//				bOverrideKeepFlyCamDisabled=true;
-//				setEnabled(false);
-//				return true;
-//			}
-//			
-//			@Override public Boolean callOnKeyReleased() {
-//				bOverrideKeepFlyCamDisabled=false;
-//				return true;
-//			};
-//			
-//		}.holdKeyPressedForContinuousCmd());
 		
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
@@ -310,7 +292,6 @@ public class FlyByCameraX extends FlyByCamera {
 		}.enableLoopMode().setName("EnsureMouseGrab"));
 		
 		setEnabledRaw(isEnabled()); //to initially set it properly
-//		setEnabled(!isEnabled());setEnabled(isEnabled()); //trick to setup more things
 		
 		/**
 		 * min is some default that is not so random... 
@@ -446,8 +427,10 @@ public class FlyByCameraX extends FlyByCamera {
 //				float fC = this.fMinFOVdeg;
 				int iUasdf=5; //4
 				if(iUasdf==5){
-					// parabole formula values for points (0,0)(70,50)(100,100)
-					double fA = 0.00952380952381, fB = 0.047619047619, fC = 0;
+					// parabole formula values for points c(0,0)b(70,50)a(100,100)
+//					int iMaxAX=100;double fA = 0.00952380952381, fB = 0.047619047619, fC = 0;
+					// parabole formula values for points c(0,0)b(600,130)a(1000,360)
+					int iMaxAX=1000;double fA = 0.000358333333333, fB = 0.00166666666667, fC = 0;
 					
 					int iYMaxFoV = (int)fMaxFOVdeg;
 					
@@ -468,7 +451,7 @@ public class FlyByCameraX extends FlyByCamera {
 					 * find the nearest X that results in the ending FoV (Y)
 					 */
 					int iEndingX=0;
-					for(int i=iStartX;i<100;i++){
+					for(int i=iStartX;i<iMaxAX;i++){
 						double fX=i;
 						double fY = fA*Math.pow(fX,2) + fB*fX + fC;
 						if(fY>fMaxFOVdeg){

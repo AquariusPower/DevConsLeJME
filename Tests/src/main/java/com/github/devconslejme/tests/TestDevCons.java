@@ -62,13 +62,15 @@ import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.OriginDevice;
 import com.github.devconslejme.misc.jme.RotateI;
 import com.github.devconslejme.misc.jme.SimpleAppState;
+import com.github.devconslejme.misc.jme.TextStringI;
 import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
-import com.github.devconslejme.projman.SimpleAppStateAbs;
+import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AppState;
 import com.jme3.audio.AudioListenerState;
 import com.jme3.collision.CollisionResult;
+import com.jme3.font.BitmapText;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
@@ -108,21 +110,18 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	
 	@Override
 	public void simpleInitApp() {
-		if(bEnableOpt)opt_initBasics();
-		
+		/** this should be the 1st thing configured */
 		com.github.devconslejme.devcons.PkgCfgI.i().configure(this,getGuiNode(), getRootNode());
 		
+		if(bEnableOpt)opt_initBasics();
+		
 		/**
-		 * to remove {@link JavaScriptI} auto global access to some class/object, ex.: 
+		 * if you want to remove {@link JavaScriptI} auto global access to some class/object ex.: 
 		JavaScriptI.i().addForbidClassAccessJS(TestDevCons.class);
 		 */
 		
 		if(bEnableOpt)opt_initAll();
 	}
-	
-	
-	
-	
 	
 	
 	
@@ -132,26 +131,26 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	 * or bEnableOpt=false just for a simpler test.
 	 ******************************************************************************************/
 	private static boolean	bEnableOpt = true;
-	
-//	ArrayList<SimpleAppStateAbs> aoUpdOpts = new ArrayList<SimpleAppStateAbs>();
 	private FlyByCameraX	flycam;
-
 	private OriginDevice	orde;
+	private float	fSpeedBkp;
+	
 	public OriginDevice getOriginDevice() {
 		return orde;
 	}
-
-	private float	fSpeedBkp;
-
-//	private Geometry	torX;
-//	private Geometry	torY;
-//	private Geometry	torZ;
-//	private EffectElectricity	ef;
-//	private TimedDelay	tdEffectRetarget;
-//	private float	fRetargetDefaultDelay=3;
 	
+	/**
+	 * To flycamX override work, at {@link #TestDevCons(AppState...)} the fly cam state must be NOT set.
+	 * Such state at {@link SimpleApplication#initialize()} would instance the default fly cam, and we
+	 * need to prevent that.
+	 */
 	@Override
 	public FlyByCameraX getFlyByCamera() {
+    if(flycam==null){
+    	flycam = new FlyByCameraX(getCamera());//.setAllowMove(true);
+    	flycam.registerWithInput(getInputManager());
+    }
+    
 		return flycam;
 	}
 	
@@ -159,8 +158,8 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	public TestDevCons(AppState... initialStates) {super(initialStates);}
 
 	private void opt_initBasics() {
-    flycam = new FlyByCameraX(getCamera());//.setAllowMove(true);
-    flycam.registerWithInput(getInputManager());
+//    flycam = new FlyByCameraX(getCamera());//.setAllowMove(true);
+//    flycam.registerWithInput(getInputManager());
 		
 		opt_disableSomeSimpleAppThings();
 	}
@@ -352,7 +351,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		}
 	}
 	
-	private void addTest(Class<? extends SimpleAppStateAbs> cl){
+	private void addTest(Class<? extends SimpleApplicationAndStateAbs> cl){
 		LoggingI.i().logSubEntry(
 			GlobalManagerI.i().get(cl) //will be auto instanced
 				.getClass().getSimpleName()+".initTest()");
@@ -416,13 +415,22 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	/** @DevSelfNote keep even if emtpy */ Object[] aobjDebugTest;
 	/** @DevSelfNote keep even if emtpy */ 
 	public Object debugTest(Object... aobj){
-		ArrowGeometry ag = GeometryI.i().createArrow(ColorRGBA.Yellow);
-		getGuiNode().attachChild(ag);
-		ag.setLocalTranslation(HWEnvironmentJmeI.i().getDisplay().getCenter(500f));
+//		BitmapText bt = new BitmapText(TextStringI.i().loadDefaultFont());
+		BitmapText bt = new BitmapText(TextStringI.i().loadDefaultMonoFont());
+		bt.setText(">>>>>>>>>>>>>>>>>>>> "+Character.toString((char)176)+" <<<<<<<<<<<<<<<<<<<<<<");
+//		bt.set
+		getGuiNode().attachChild(bt);
+		bt.setLocalTranslation(300,290,500);
+		return null;
+		
+//		ArrowGeometry ag = GeometryI.i().createArrow(ColorRGBA.Yellow);
+//		getGuiNode().attachChild(ag);
+//		ag.setLocalTranslation(HWEnvironmentJmeI.i().getDisplay().getCenter(500f));
+		
 //		Geometry geom = GeometryI.i().create(MeshI.i().cone(1f), ColorRGBA.Blue);
 //		aobjDebugTest=new Object[]{geom};
 //		getRootNode().attachChild(geom);
-		return ag;
+//		return ag;
 	}
 	/** @DevSelfNote keep even if emtpy */ 
 	public void updateDebugTest(float fTPF){

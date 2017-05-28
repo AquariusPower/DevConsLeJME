@@ -29,7 +29,7 @@ package com.github.devconslejme.projman;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class _TestBasicCodeToCopyFrom_ extends SimpleAppStateAbs {
+public class _TestBasicCodeToCopyFrom_ extends SimpleApplicationAndStateAbs {
 	public static void main(String[] args) {
 		_TestBasicCodeToCopyFrom_ test = new _TestBasicCodeToCopyFrom_();
 		test.start();

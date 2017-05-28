@@ -32,13 +32,13 @@ import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
-import com.github.devconslejme.projman.SimpleAppStateAbs;
+import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.simsilica.lemur.Button;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestContextMenu extends SimpleAppStateAbs{
+public class TestContextMenu extends SimpleApplicationAndStateAbs{
 	public static void main(String[] args) {
 		assert(true);
 		TestContextMenu test = new TestContextMenu();

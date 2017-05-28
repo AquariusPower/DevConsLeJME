@@ -97,7 +97,7 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 			}
 		}
 		
-		btInfo = new BitmapText(TextI.i().loadDefaultFont());
+		btInfo = new BitmapText(TextStringI.i().loadDefaultFont());
 		btInfo.setSize(12);
 		
 		geomInfoBkg.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(new ColorRGBA(0,0,0,0.25f)));
@@ -275,13 +275,13 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 		if(bShowMouseCursorPos)sb.append("MouseXY="+getMouse().getPos2D()+strSep);
 		if(bShowCamPos){
 			sb.append("CamPos="
-				+TextI.i().fmtVector3f(cam.getLocation(),2)
+				+TextStringI.i().fmtVector3f(cam.getLocation(),2)
 				+strSep);
 		}
 		if(bShowCamRot){
 			//TODO show a drawn line about Z at XY plane rotation, and another about up/downwards degrees
 			sb.append("CamRotDeg="
-				+TextI.i().fmtToDegrees(cam.getRotation(),1)
+				+TextStringI.i().fmtToDegrees(cam.getRotation(),1)
 				+strSep);
 		}
 		if(hmCustomInfo.size()>0){

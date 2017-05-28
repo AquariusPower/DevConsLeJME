@@ -63,7 +63,7 @@ import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.SimpleAppState;
-import com.github.devconslejme.misc.jme.TextI;
+import com.github.devconslejme.misc.jme.TextStringI;
 import com.github.devconslejme.misc.lemur.CaratAutoPositionListenerI;
 import com.github.devconslejme.misc.lemur.CursorListenerX;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
@@ -301,6 +301,9 @@ public class DevConsPluginStateI extends SimpleAppState implements IDialogHierar
 	public void configure(Integer iOpenDevConsKeyCode, Node nodeParent) {
 		this.app=GlobalManagerI.i().get(Application.class);
 		
+		font = TextStringI.i().loadFont("Interface/Fonts/DroidSansMono.fnt");
+		TextStringI.i().setDefaultMonoFont(font);
+		
 		this.iKeyCodeToggleConsole=iOpenDevConsKeyCode;
 		if(this.iKeyCodeToggleConsole==null)this.iKeyCodeToggleConsole=KeyInput.KEY_F10;
 //		setKeyCodeToggleConsole(iOpenDevConsKeyCode);
@@ -385,7 +388,8 @@ public class DevConsPluginStateI extends SimpleAppState implements IDialogHierar
 //		JavaScriptI.i().setJSBinding(this);
 		
 		// gui
-		font = app.getAssetManager().loadFont("Interface/Fonts/DroidSansMono.fnt");
+//		font = TextStringI.i().loadFont("Interface/Fonts/DroidSansMono.fnt");
+//		TextStringI.i().setDefaultMonoFont(font);
 		
 		initStyle();
 		
@@ -677,7 +681,7 @@ public class DevConsPluginStateI extends SimpleAppState implements IDialogHierar
 		super.update(tpf);
 		
 		if(bRequestUpdateNoWrap){
-			TextI.i().recursivelyApplyTextNoWrap(rzpMain);
+			TextStringI.i().recursivelyApplyTextNoWrap(rzpMain);
 			bRequestUpdateNoWrap=false;
 		}
 	}

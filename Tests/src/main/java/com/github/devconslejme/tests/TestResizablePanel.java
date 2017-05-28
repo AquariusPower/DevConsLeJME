@@ -30,7 +30,7 @@ package com.github.devconslejme.tests;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.lemur.HoverHighlightEffectI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
-import com.github.devconslejme.projman.SimpleAppStateAbs;
+import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.Vector3f;
 import com.simsilica.lemur.Button;
@@ -39,7 +39,7 @@ import com.simsilica.lemur.component.QuadBackgroundComponent;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestResizablePanel extends SimpleAppStateAbs {
+public class TestResizablePanel extends SimpleApplicationAndStateAbs {
 	public static void main(String[] args) {
 		TestResizablePanel tst = new TestResizablePanel();
 		tst.start();

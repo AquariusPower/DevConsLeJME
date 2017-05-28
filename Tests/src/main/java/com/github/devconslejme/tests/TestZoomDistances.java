@@ -28,7 +28,7 @@ package com.github.devconslejme.tests;
 
 import com.github.devconslejme.misc.jme.GeometryI;
 import com.github.devconslejme.misc.jme.MeshI;
-import com.github.devconslejme.projman.SimpleAppStateAbs;
+import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
@@ -36,7 +36,7 @@ import com.jme3.scene.Geometry;
 /**
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
-public class TestZoomDistances extends SimpleAppStateAbs {
+public class TestZoomDistances extends SimpleApplicationAndStateAbs {
 	public static void main(String[] args) {
 		TestZoomDistances test = new TestZoomDistances();
 		test.start();

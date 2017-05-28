@@ -55,17 +55,9 @@ public class PkgCfgI {
 		DetailedException.assertIsFalse("configured", bConfigured, this);
 		com.github.devconslejme.gendiag.PkgCfgI.i().configure(app,nodeGui,nodeVirtualWorld);
 		
-//		FileI.i().configure(JmeSystem.getStorageFolder(StorageFolderType.Internal), app.getClass());
-		DevConsPluginStateI.i().configure(null,nodeGui);
-//		FileI.i().configure(DevConsPluginStateI.i().getStorageFolder());
+		DevConsPluginStateI.i().configure(null,nodeGui); //first!
+		
 		if(KeyBindCommandManagerI.i().getCallRunUserCommand()==null){
-//			KeyBindCommandManagerI.i().setFuncRunUserCommand(new Function<String, Boolean>() {
-//				@Override
-//				public Boolean apply(String strJS) {
-//					JavaScriptI.i().execScript(strJS, false);
-//					return true;
-//				}
-//			});
 			KeyBindCommandManagerI.i().setCallRunUserCommand(new CallUserCustomCmd() {
 				@Override
 				public Boolean execUserCustomCmd(String strJSCmd) {

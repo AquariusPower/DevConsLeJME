@@ -26,7 +26,7 @@
 */
 package com.github.devconslejme.tests;
 
-import com.github.devconslejme.projman.SimpleAppStateAbs;
+import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.PhysicsTickListener;
@@ -37,7 +37,7 @@ import com.jme3.bullet.objects.PhysicsCharacter;
 /**
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
-public class TestPhysicsPicker extends SimpleAppStateAbs implements PhysicsTickListener {
+public class TestPhysicsPicker extends SimpleApplicationAndStateAbs implements PhysicsTickListener {
 	private BulletAppState	bullet;
 	private PhysicsSpace	physicsSpace;
 	private PhysicsCharacter	pchPlayer;

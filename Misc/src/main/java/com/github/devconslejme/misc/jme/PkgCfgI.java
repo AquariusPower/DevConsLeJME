@@ -55,6 +55,7 @@ public class PkgCfgI {
 	 * @param nodeVirtualWorld to allow virtual world functionalities
 	 */
 	public void configure(Application app,Node nodeGui, Node nodeVirtualWorld){
+		TextStringI.i();//before, to grant the overriding instance
 		DetailedException.assertIsFalse("configured", bConfigured, this);
 		
 		HWEnvironmentJmeI.i(); //sub class overriders/inheriters must instance before

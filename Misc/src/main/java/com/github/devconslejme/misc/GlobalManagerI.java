@@ -28,6 +28,7 @@
 package com.github.devconslejme.misc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -50,7 +51,7 @@ public class GlobalManagerI {
 	
   private static GlobalManagerI instance=new GlobalManagerI();
   public static void setGlobalOverride (GlobalManagerI inst){
-  	if(GlobalManagerI.instance!=null)throw new DetailedException("already set "+instance+", "+inst);
+  	if(GlobalManagerI.instance!=null)throw new NullPointerException("already set "+instance+", "+inst);
     GlobalManagerI.instance=inst;
   }
   public static GlobalManagerI i (){return instance;}
@@ -58,17 +59,27 @@ public class GlobalManagerI {
   private ArrayList<IGlobalAddListener> aigalList = new ArrayList<IGlobalAddListener>();
 	private HashMap<Class<Enum>,Enum[]> hmEnumVals = new HashMap<Class<Enum>,Enum[]>();
 	
+//	private JavaLangI	jl;
+//	private MessagesI	msg;
+//	
+//	public GlobalManagerI(){
+//		/**
+//		 * these local instances are to do not interfere with globals overriding 
+//		 */
+//		jl = new JavaLangI();
+//		msg = new MessagesI();
+//	}
+	
   public static interface IGlobalAddListener{
   	void globalInstanceAddedEvent(Class clType, Object objValue);
-
 		void globalEnumAddedEvent(Class<Enum> cle, Enum[] ae);
   }
   
   public void addGlobalAddListener(IGlobalAddListener igal){
   	if(!aigalList.contains(igal)){
   		aigalList.add(igal);
-  	}else{
-  		MessagesI.i().warnMsg(this, "already added "+igal);
+//  	}else{
+//  		msg.warnMsg(this, "already added "+igal);
   	}
   }
   
@@ -103,9 +114,9 @@ public class GlobalManagerI {
       		putGlobal(clSuper,obj);
       	}
 //      	putConcrete(obj=cl.newInstance()); // 
-			} catch (InstantiationException | IllegalAccessException e) {
-				NullPointerException npe = new DetailedException("unable to create new instance")
-					.initCauseAndReturnSelf(e);
+			} catch (InstantiationException | IllegalAccessException ex) {
+				NullPointerException npe = new NullPointerException("unable to create new instance");
+				npe.initCause(ex);
 				throw npe;
 			}
     }
@@ -120,10 +131,6 @@ public class GlobalManagerI {
   @SuppressWarnings("unchecked")
 	public <T> T putConcrete(T obj){
   	putGlobal((Class<T>)obj.getClass(), obj);
-//  	for(Class cl : new JavaLangI().getSuperClassesOf(obj, true)){
-//    	putGlobal(cl,obj);
-//  	}
-  	
   	return obj;
   }
   /**
@@ -135,7 +142,7 @@ public class GlobalManagerI {
   public <T> T putGlobal(Class<? extends T> cl,T obj){
   	Object objAlreadySet=hmInst.get(cl);
     if (objAlreadySet!=null){
-      throw new DetailedException("already set: "+cl+", "+objAlreadySet+", "+obj+" "
+      throw new NullPointerException("already set: "+cl+", "+objAlreadySet+", "+obj+" "
       	+(obj==objAlreadySet?"REDUNDANT/equalToAlreadySet!":""));
     }
     
@@ -148,9 +155,9 @@ public class GlobalManagerI {
     			obj.getClass().isInstance(objExisting) || 
     			obj.getClass().isAssignableFrom(objExisting.getClass())
     	){
-    		throw new DetailedException("there should have only one inherited global type",
-    			objExisting,objExisting.getClass(),objExisting.getClass().getClasses(),
-    			obj				 ,obj				 .getClass(),obj				.getClass().getClasses()
+    		throw new NullPointerException("there should have only one inherited global type\n"+
+    			objExisting+"\n"+objExisting.getClass()+"\n"+objExisting.getClass().getClasses()+"\n"+
+    			obj				 +"\n"+obj				.getClass()+"\n"+obj				.getClass().getClasses()+"\n"
     		);
     	}
     }
@@ -158,17 +165,26 @@ public class GlobalManagerI {
     hmInst.put(cl,obj);
     callListeners(cl,obj);
     
-		MessagesI.i().debugInfo(this,"created global instance: "+cl.getName(),obj);
+//    msg.debugInfo(this,"created global instance: "+cl.getName(),obj);
+		debugInfo(cl.getName(),obj);
 		
 		prepareEnumsOf(cl);
 		
 		return obj;
   }
+  
+  private void debugInfo(String strClass, Object objInstance){
+  	System.out.println("["+GlobalManagerI.class.getSimpleName()+"]Instance created: "+strClass+", "+objInstance);
+  	System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()).replace(",","\n"));
+  }
+  
+//  private HashMap<String,obj>
+  
 	@SuppressWarnings("unchecked")
 	protected void prepareEnumsOf(Class clWithEnums){
 		Class<?>[] acl = clWithEnums.getDeclaredClasses();
 		for(Class<?> cl:acl){
-			if(JavaLangI.i().isEnumClass(cl)){
+			if(Enum.class.isAssignableFrom(cl)){
 				Class<Enum> cle = (Class<Enum>)cl;
 				putEnumClass(cle,null); //TODO can enum .values() be collected in some way?
 			}
@@ -184,21 +200,21 @@ public class GlobalManagerI {
 	@SuppressWarnings("unchecked")
 	protected void callListeners(Class cl,Object obj) {
     for(IGlobalAddListener igal:aigalList){
-			if(JavaLangI.i().isEnumClass(cl)){
+			if(Enum.class.isAssignableFrom(cl)){
 				igal.globalEnumAddedEvent((Class<Enum>)cl,(Enum[])obj);
 			}else{
 				igal.globalInstanceAddedEvent(cl,obj);
 			}
     }
 	}
-	public Enum parseToEnum(String strFullEnumId){
-//		for(Class<Enum> cle:hmEnumVals.inverse().values()){ //keys
-		for(Class<Enum> cle:hmEnumVals.keySet()){ //keys
-			Enum e = JavaLangI.i().parseToEnum(cle,strFullEnumId);
-			if(e!=null)return e;
-		}
-		return null;
-	}
+//	public Enum parseToEnum(String strFullEnumId){
+////		for(Class<Enum> cle:hmEnumVals.inverse().values()){ //keys
+//		for(Class<Enum> cle:hmEnumVals.keySet()){ //keys
+//			Enum e = parseToEnum(cle,strFullEnumId);
+//			if(e!=null)return e;
+//		}
+//		return null;
+//	}
 	
 	public HashMap<Class<Enum>,Enum[]> getGlobalEnumsListCopy(){
 		return new HashMap<Class<Enum>,Enum[]>(hmEnumVals);
@@ -211,17 +227,19 @@ public class GlobalManagerI {
 	public <T extends Enum> T[] getGlobalEnumValuesClNm(String strClassName) {
 		try {
 			Class cl = Class.forName(strClassName);
-			if(JavaLangI.i().isEnumClass(cl)){
+			if(Enum.class.isAssignableFrom(cl)){
 				return (T[]) getGlobalEnumValuesClE(cl);
 			}
 		} catch (ClassNotFoundException ex) {
-			throw new DetailedException(ex, strClassName);
+			NullPointerException npe = new NullPointerException(strClassName);
+			npe.initCause(ex);
+			throw npe;
 		}
 		return null;
 	}
 	@SuppressWarnings("unchecked")
 	public <T extends Enum> T[] getGlobalEnumValuesCl(Class cl) {
-		if(JavaLangI.i().isEnumClass(cl)){
+		if(Enum.class.isAssignableFrom(cl)){
 			return (T[]) getGlobalEnumValuesClE(cl);
 		}
 		return null;
@@ -230,4 +248,5 @@ public class GlobalManagerI {
 	public <T extends Enum> T[] getGlobalEnumValuesClE(Class<T> cle) {
 		return (T[]) hmEnumVals.get(cle);
 	}
+	
 }

@@ -27,7 +27,7 @@
 
 package com.github.devconslejme.tests;
 
-import com.github.devconslejme.projman.SimpleAppStateAbs;
+import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.github.devconslejme.projman._TestBasicCodeToCopyFrom_;
 import com.jme3.app.SimpleApplication;
 import com.simsilica.lemur.GuiGlobals;
@@ -38,7 +38,7 @@ import com.simsilica.lemur.style.BaseStyles;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestMultiChildDialog extends SimpleAppStateAbs {
+public class TestMultiChildDialog extends SimpleApplicationAndStateAbs {
 	public static void main(String[] args) {
 		TestMultiChildDialog test = new TestMultiChildDialog();
 		test.start();

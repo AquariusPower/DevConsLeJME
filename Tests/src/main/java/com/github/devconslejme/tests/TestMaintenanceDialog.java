@@ -30,7 +30,7 @@ import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.gendiag.SimpleMaintenanceGenericDialog;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.projman.SimpleAppStateAbs;
+import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.app.SimpleApplication;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -40,7 +40,7 @@ import com.simsilica.lemur.style.BaseStyles;
 /**
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
-public class TestMaintenanceDialog extends SimpleAppStateAbs{
+public class TestMaintenanceDialog extends SimpleApplicationAndStateAbs{
 	private SimpleMaintenanceGenericDialog	smd;
 	private SimpleApplication	sapp;
 	

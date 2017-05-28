@@ -173,26 +173,34 @@ public class StringI {
 		return str;
 	}
 	
+	public String getAllCharactersSymbols(int iColumns){
+		String[] astr=new String[256];
+		for(int i=0;i<256;i++){
+			String str="'"+(char)i+"'";
+			str+="="+i+"=0x"+String.format("%02X",i);
+			astr[i]=str;
+		}
+		return StringI.i().createTable(iColumns, astr);
+	}
+	
 	public String createTable(int iColumns, String... astr){
-//		ArrayList<String> astrList = new ArrayList<String>();
 		int iMaxWidth=0;
 		for(String str:astr){
 			if(str.length()>iMaxWidth)iMaxWidth=str.length();
 		}
 		
-		String strOut="";
+		StringBuilder sb = new StringBuilder("");
 		int iCount=0;
 		for(String str:astr){
-//			strOut+=iCount+":"
-			strOut+=Strings.padStart(str, iMaxWidth, ' ')+" ";
+			sb.append(Strings.padStart(str, iMaxWidth, ' ')+" ");
 			iCount++;
-			if(iCount==3){
-				strOut+="\n";
+			if(iCount==iColumns){
+				sb.append("\n");
 				iCount=0;
 			}
 		}
 		
-		return strOut;
+		return sb.toString();
 	}
 	
 	/**

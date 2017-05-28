@@ -28,12 +28,14 @@ package com.github.devconslejme.misc.jme;
 
 import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.Workaround;
+import com.github.devconslejme.misc.jme.ReticleI.ReticleNode;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.StringI;
 import com.jme3.app.Application;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.font.LineWrapMode;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
@@ -43,8 +45,11 @@ import com.jme3.scene.Spatial;
 /*
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
-public class TextI {
-	public static TextI i(){return GlobalManagerI.i().get(TextI.class);}
+public class TextStringI extends StringI {
+//	public static TextStringI i(){return GlobalManagerI.i().get(TextStringI.class);}
+	public static TextStringI i(){return GlobalManagerI.i().retrieveOverridingSupers(TextStringI.class,true,StringI.class);}
+
+	private BitmapFont	bfDefaultMonoFont;
 	
 	public String fmtVector3f(Vector3f v3f,int iScale){
 		return ""
@@ -68,7 +73,12 @@ public class TextI {
   	return loadFont("Interface/Fonts/Default.fnt");
   }
   public BitmapFont loadDefaultMonoFont() {
+  	if(this.bfDefaultMonoFont!=null)return this.bfDefaultMonoFont;
   	return loadFont("Interface/Fonts/Console.fnt");
+  }
+  public void setDefaultMonoFont(BitmapFont bf){
+  	assert this.bfDefaultMonoFont==null;
+  	this.bfDefaultMonoFont = bf;
   }
   public BitmapFont loadFont(String strPath) {
   	return GlobalManagerI.i().get(Application.class).getAssetManager().loadFont(strPath);
@@ -108,5 +118,13 @@ public class TextI {
 			strText=strText.substring(0, iNL);
 			bt.setText(strText);
 		}
+	}
+	
+	public BitmapText createBitmapText(String strText, ColorRGBA color) {
+		BitmapText bt = new BitmapText(loadDefaultMonoFont());
+		bt.setSize(12);
+		bt.setText(strText);
+		bt.setColor(color);
+		return bt;
 	}
 }

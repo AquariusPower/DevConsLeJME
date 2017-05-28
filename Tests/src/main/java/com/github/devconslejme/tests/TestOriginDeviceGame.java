@@ -50,10 +50,10 @@ import com.github.devconslejme.misc.jme.OriginDevice;
 import com.github.devconslejme.misc.jme.OriginDevice.NodeAxis;
 import com.github.devconslejme.misc.jme.RotateI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
-import com.github.devconslejme.misc.jme.TextI;
+import com.github.devconslejme.misc.jme.TextStringI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.jme.WorldPickingI;
-import com.github.devconslejme.projman.SimpleAppStateAbs;
+import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.github.devconslejme.tests.TestDevCons.GeometryVolDbg;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
@@ -77,7 +77,7 @@ import com.jme3.scene.shape.Sphere;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestOriginDeviceGame extends SimpleAppStateAbs {
+public class TestOriginDeviceGame extends SimpleApplicationAndStateAbs {
 	public static void main(String[] args) {
 		TestDevCons.main(args); //TODO rm
 		if(false){TestOriginDeviceGame test = new TestOriginDeviceGame();test.start();}//TODO re-enable
@@ -364,7 +364,7 @@ public class TestOriginDeviceGame extends SimpleAppStateAbs {
 //			sb.append("("+lEnergyWattsPerMilis+">"+lLowEnergy+")w/ms, ");
 			sb.append("r=("+StringI.i().fmtFloat(fEnergyCoreRadius)+"/"
 				+StringI.i().fmtFloat(getRadius()/2f)+")");
-			sb.append("v3f="+TextI.i().fmtVector3f(getWorldTranslation(),2)+", ");
+			sb.append("v3f="+TextStringI.i().fmtVector3f(getWorldTranslation(),2)+", ");
 			
 			if(sptTarget!=null){
 				TargetToken tt = getTargetToken(sptTarget);
