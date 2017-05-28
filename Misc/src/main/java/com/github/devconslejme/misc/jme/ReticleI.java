@@ -62,13 +62,14 @@ public class ReticleI {
 	public static ReticleI i(){return GlobalManagerI.i().get(ReticleI.class);}
 
 	private ReticleNode	rnLastConfigured;
-	protected Vector3f	v3fAppWSize = new Vector3f();
+	private Vector3f	v3fAppWSize = new Vector3f();
 	private CallableXAnon	cxUpdate;
 	private Float	fRangeDist;
 	private Spatial	sptTarget;
 	private SimpleApplication	sapp;
 	private Application	app;
-	protected Geometry	geomTarget;
+	private Geometry	geomTarget;
+	private float	fBorderRadiusMarginPerc=0.1f;
 	
 	public void configure(){//keep even if empty to help init global
     KeyBindCommandManagerI.i().putBindCommandsLater("T",
@@ -229,12 +230,24 @@ public class ReticleI {
 		}
 		
 		public void updateZoomLevel(int iZoomIndex){
+			if(iZoomIndex>=ageomZoomMarkersList.size())return;//not ready
+			Geometry geom = ageomZoomMarkersList.get(ageomZoomMarkersList.size()-1-iZoomIndex);
+			zoomMarkerCurrent.setLocalTransform(geom.getLocalTransform());
+			zoomMarkerCurrent.scale(2f);
+			geom.getParent().attachChild(zoomMarkerCurrent);
+		}
+		
+		/**
+		 * keep for the calcs
+		 * @param iZoomIndex
+		 */
+		@Deprecated
+		public void _updateZoomLevel(int iZoomIndex){
 			if(iZoomIndexLast == iZoomIndex)return;
-//			RotateI.i().rotateSpinning(nodeBorder, Vector3f.UNIT_X, Vector3f.UNIT_Z, 
-//					(90+(fDegAnglePerZoomStep*((ageomZoomMarkersList.size()-1)-iZoomIndex)))*FastMath.DEG_TO_RAD);
 			/**
-			 * TODO may be RotateI.i().rotateSpinning() is not working well? for scaled binoc...
+			 * TODO is not working for scaled binoc...
 			 */
+//		RotateI.i().rotateSpinning(nodeBorder, Vector3f.UNIT_X, Vector3f.UNIT_Z, 
 			RotateI.i().rotateSpinning(nodeZoomMarkerCurrentRot, Vector3f.UNIT_X, Vector3f.UNIT_Z, 
 				(90+(fDegAnglePerZoomStep*((ageomZoomMarkersList.size()-1)-iZoomIndex)))*FastMath.DEG_TO_RAD);
 		}
@@ -296,11 +309,13 @@ public class ReticleI {
 		int iDMin=HWEnvironmentJmeI.i().getDisplay().getMinSize();
 		int iDMax=HWEnvironmentJmeI.i().getDisplay().getMaxSize();
 		
-		float fBinocXScale=1f; //TODO 1.5f; updateZoomLevel() may not be working well...
+//		float fBinocXScale=1f; //TODO 1.5f; updateZoomLevel() may not be working well...
+		float fBinocXScale=1.5f; //TODO 1.5f; updateZoomLevel() may not be working well...
 		/////////////////////////////// reticle border
 		rnStore.nodeBorderAndZoomMarkers = new Node();
 		rnStore.nodeBorder=new Node("Border");
 		rnStore.fBorderOR=(iDMin/2f)-rnStore.getBorderIR();
+		rnStore.fBorderOR*=(1f-fBorderRadiusMarginPerc);
 		Geometry border = GeometryI.i().create(new Torus(40, 5, rnStore.getBorderIR(), rnStore.fBorderOR),ColorRGBA.Gray);
 		rnStore.nodeBorder.attachChild(border);
 		rnStore.quaBorderStartAt = rnStore.nodeBorder.getLocalRotation().clone();
@@ -350,7 +365,7 @@ public class ReticleI {
 		float fBlockerOR=rnStore.fBorderOR+fBlockerIR; //TODO why had to -100?
 		fBlockerIR*=1.25f; //after outer radius calc TODO why 1.25f worked? torus creation inner radius innacuracy? or my fault?
 		Geometry blocker = GeometryI.i().create(new Torus(25, 5, fBlockerIR, fBlockerOR),
-			new ColorRGBA(0.0125f,0.025f,0.05f,0.97f)); //glass feeling, TODO use a texture?
+			new ColorRGBA(0.0125f,0.025f,0.05f,0.98f)); //glass feeling, TODO use a texture?
 		blocker.setQueueBucket(Bucket.Inherit); //restore gui one
 		blocker.move(new Vector3f(0,0,-fBlockerIR));
 		if(rnStore.bBinoculars)blocker.scale(fBinocXScale,1,1);
@@ -538,6 +553,13 @@ public class ReticleI {
 	}
 	public ReticleNode getLastReticuleNode() {
 		return rnLastConfigured;
+	}
+	public float getBorderRadiusMarginPerc() {
+		return fBorderRadiusMarginPerc;
+	}
+	public ReticleI setBorderRadiusMarginPerc(float fBorderRadiusMarginPerc) {
+		this.fBorderRadiusMarginPerc = fBorderRadiusMarginPerc;
+		return this; 
 	}
 
 }

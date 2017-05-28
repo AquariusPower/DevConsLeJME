@@ -54,7 +54,7 @@ public class RotateI {
 	public Vector3f rotateVector(Vector3f v3fTipToRotate, Vector3f v3fUp, float fAddAngleRadians) {
 		if(rhRotVec==null)rhRotVec=new RotateHelper();
 		//prepare
-		rhRotVec.nodePivotIsParent.setLocalTranslation(0,0,0);
+		rhRotVec.nodePivotIsParent.setLocalTranslation(0,0,0); //it will always be relative to 0,0,0 on it's parent 
 		rhRotVec.nodePivotIsParent.setLocalRotation(Quaternion.IDENTITY);
 		rhRotVec.nodeChild.setLocalTranslation(v3fTipToRotate);
 		//rotate
@@ -63,7 +63,15 @@ public class RotateI {
 		
 		return rhRotVec.nodeChild.getWorldTranslation();
 	}
-
+	
+	/**
+	 * you can rotate a spatial around itself
+	 * you can attach a spatial to an empty node and rotate the node (what will look like rotating the spatial around a pivot)
+	 * @param spt
+	 * @param v3fSpotToRotate
+	 * @param v3fUp
+	 * @param fAngleRadians
+	 */
 	public void rotateSpinning(Spatial spt, Vector3f v3fSpotToRotate,	Vector3f v3fUp, float fAngleRadians) {
 		Vector3f v3fNewUp = rotateVector(v3fSpotToRotate,v3fUp,fAngleRadians);
 		spt.rotateUpTo(v3fNewUp);
