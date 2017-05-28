@@ -53,6 +53,12 @@ import com.simsilica.lemur.event.CursorMotionEvent;
  */
 public class AbsorbClickCommandsI extends CursorListenerX{
 	public static AbsorbClickCommandsI i(){return GlobalManagerI.i().get(AbsorbClickCommandsI.class);}
+
+	private SimpleApplication	sappOpt;
+	
+	public void configure(){
+		sappOpt = G.i(SimpleApplication.class);
+	}
 	
 	private boolean	bDelegateClickCommands=true;
 	
@@ -192,8 +198,7 @@ public class AbsorbClickCommandsI extends CursorListenerX{
 	
 	public ArrayList<Button> containsClickCommandsRecursively(Node nodeParentest, boolean bAbsorb){
 		if(nodeParentest==null){
-			SimpleApplication sapp = G.i(SimpleApplication.class);
-			if(sapp!=null)nodeParentest=sapp.getGuiNode();
+			if(sappOpt!=null)nodeParentest=sappOpt.getGuiNode();
 		}
 		
 		ArrayList<Button> abtn = new ArrayList<Button>();

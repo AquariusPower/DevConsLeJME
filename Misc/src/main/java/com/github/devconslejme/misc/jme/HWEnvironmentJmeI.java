@@ -80,6 +80,7 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 	private Camera	cam;
 	private LinkedHashMap<String,String> hmCustomInfo = new LinkedHashMap<String,String>();
 	private boolean	bShowMouseCursorPos;
+	private SimpleApplication	sappOpt;
 	
 	public void configure(Node nodeGui){
 //		GlobalManagerI.i().putGlobal(EnvironmentI.class, this);
@@ -91,8 +92,9 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 		
 		app.getStateManager().attach(new EnvState());
 		this.nodeGui=nodeGui;
+		this.sappOpt=G.i(SimpleApplication.class);
 		if(this.nodeGui==null){
-			if(G.i(SimpleApplication.class)!=null){
+			if(sappOpt!=null){
 				this.nodeGui=G.i(SimpleApplication.class).getGuiNode();
 			}
 		}

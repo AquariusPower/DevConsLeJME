@@ -41,17 +41,17 @@ public class SpatialsManagerDialogI implements IUserInteraction{
 	public static SpatialsManagerDialogI i(){return GlobalManagerI.i().get(SpatialsManagerDialogI.class);}
 	
 	private SimpleMaintenanceGenericDialog	diagMaint;
-	private SimpleApplication	sapp;
+	private SimpleApplication	sappOpt;
 	private String	strFilter="";
 	
-	public void configure() {
-		sapp = GlobalManagerI.i().get(SimpleApplication.class);
+	public void configure(Node guiNode, Node rootNode) {
+		sappOpt = GlobalManagerI.i().get(SimpleApplication.class);
 		
 		diagMaint = new SimpleMaintenanceGenericDialog(SpatialsManagerDialogI.class.getSimpleName()){
 			@Override
 			public void updateMaintenanceList() {
-				recursiveAddSpatialsToMaintenance(null,sapp.getGuiNode());
-				recursiveAddSpatialsToMaintenance(null,sapp.getRootNode());
+				recursiveAddSpatialsToMaintenance(null,guiNode);
+				recursiveAddSpatialsToMaintenance(null,rootNode);
 			}
 		};
 		diagMaint.setTitle(SpatialsManagerDialogI.class.getSimpleName());

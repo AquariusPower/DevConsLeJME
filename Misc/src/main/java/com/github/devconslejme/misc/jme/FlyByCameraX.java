@@ -370,21 +370,30 @@ public class FlyByCameraX extends FlyByCamera {
 		return this; //for beans setter
 	}
 	
-	public int parabolaFindX(int iMaxX, double fA, double fB, double fC, double fTargetY){
+	public Double parabolaFindX(double iMaxX, int iMaxStepsX, double fA, double fB, double fC, double fTargetY){
 		/**
 		 * find the nearest X that results in the initial FoV (Y)
 		 */
-		int iStartX=0;
-		for(int i=0;i<iMaxX;i++){
-			double fX=i;
+		Double iFoundX=null;
+		double fStepX=(iMaxX/(double)iMaxStepsX);
+		for(double fX=0;fX<iMaxX;fX+=fStepX){
 			double fY = fA*Math.pow(fX,2) + fB*fX + fC;
 			if(fY>=fTargetY){
-				iStartX=i;
+				iFoundX=fX;
 				break;
 			}
 		}
-		return iStartX;
+		return iFoundX;
 	}
+	
+//	public Vector3f parabolaABC(Vector2f v2f1,Vector2f v2f2,Vector2f v2f3){
+//		// y=ax2+bx+c
+//		// 
+//		
+//		// v2f1.y=fA*v2f1.x*v2f1.x + fB*v2f1.x + fC;
+////		float fC=v2f1.y -fA*v2f1.x*v2f1.x -fB*v2f1.x;
+//		return null;
+//	}
 	
 	/**
 	 * 
@@ -394,7 +403,7 @@ public class FlyByCameraX extends FlyByCamera {
 	 * @return
 	 */
 //	public FlyByCameraX setZoomLimits(float fMinFOVdeg, Float fMidFoVDegOptional, float fMaxFOVdeg, int iFOVSteps) {
-	public FlyByCameraX setZoomLimits(boolean bParabole, float fMinFOVdeg, float fMaxFOVdeg, int iFOVSteps) {
+	public FlyByCameraX setZoomLimits(boolean bParabola, float fMinFOVdeg, float fMaxFOVdeg, int iFOVSteps) {
 		DetailedException.assertIsTrue("min steps", iFOVSteps>=2, iFOVSteps, fMinFOVdeg, fMaxFOVdeg);
 		this.bEnableZoomStepsAndLimits=true;
 		
@@ -408,48 +417,40 @@ public class FlyByCameraX extends FlyByCamera {
 		afFOVDegList.clear();
 		iFOVSteps--; //to let min fov be the first by multiplying the step by index 0 initially and the last FoV be the max one
 		
-		if(bParabole){
+		if(bParabola){
 			/**
 			 * the idea is to make the farer (smaller) FoV step less than
 			 */
+			
 			// parabole formula values for points c(0,0)b(70,50)a(100,100)
 //					int iMaxAX=100;double fA = 0.00952380952381, fB = 0.047619047619, fC = 0;
 			// parabole formula values for points c(0,0)b(600,130)a(1000,360)
-			int iMaxX=1000;double fA = 0.000358333333333, fB = 0.00166666666667, fC = 0;
-			
-			int iYMaxFoV = (int)fMaxFOVdeg;
-			
-			/**
-			 * find the nearest X that results in the initial FoV (Y)
+			double iMaxX=1000;double fA = 0.000358333333333, fB = 0.00166666666667, fC = 0;
+			/*
+			 
+			 y=ax2+bx+c
+			 
+			 (0,0) c=0 >>> 0=0+0+c
+			 (600,130) 130=a*600*600 + b*600 + 0 -> b = (130 -a*600*600)/600
+			 (1000,360) 360=a*1000*1000 + b*1000 + 0 -> b = (360 -a*1000*1000)/1000
+			 b=b -> (130 -a*600*600)/600=(360 -a*1000*1000)/1000
+			 (130 -a*600*600)*1000 = (360 -a*1000*1000)*600
+			 130*1000 -a*600*600*1000 = 360*600 -a*1000*1000*600
+			 -a*600*600*1000 +a*1000*1000*600 = 360*600 -130*1000
+			 
+			 
 			 */
-			int iStartX=parabolaFindX(iMaxX,fA,fB,fC,fMinFOVdeg);//0;
-//			for(int i=0;i<iMaxX;i++){
-//				double fX=i;
-//				double fY = fA*Math.pow(fX,2) + fB*fX + fC;
-//				if(fY>=fMinFOVdeg){
-//					iStartX=i;
-//					break;
-//				}
-//			}
 			
-			/**
-			 * find the nearest X that results in the ending FoV (Y)
-			 */
-			int iEndingX=parabolaFindX(iMaxX,fA,fB,fC,fMaxFOVdeg);//0;
-//			for(int i=0;i<iMaxX;i++){
-//				double fX=i;
-//				double fY = fA*Math.pow(fX,2) + fB*fX + fC;
-//				if(fY>=fMaxFOVdeg){
-//					iEndingX=i;
-//					break;
-//				}
-//			}
-			
-			int iDeltaX = (iEndingX-iStartX);
+			int iFindStepPrecision=1000;
+			/** find the nearest X that results in the initial FoV (Y) */
+			Double fStartX=parabolaFindX(iMaxX,iFindStepPrecision,fA,fB,fC,fMinFOVdeg);//0;
+			/** find the nearest X that results in the ending FoV (Y) */
+			Double fEndingX=parabolaFindX(iMaxX,iFindStepPrecision,fA,fB,fC,fMaxFOVdeg);//0;
+			double iDeltaX = (fEndingX-fStartX);
 			double dMultX = iDeltaX/(double)iFOVSteps;
 			
 			for(int iX=0;iX<=iFOVSteps;iX++){
-				double fX = iStartX+(iX*dMultX);
+				double fX = fStartX+(iX*dMultX);
 				double fY = fA*Math.pow(fX,2) + fB*fX + fC;
 				afFOVDegList.add((float)fY);
 			}

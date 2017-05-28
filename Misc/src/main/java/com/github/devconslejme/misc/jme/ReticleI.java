@@ -66,7 +66,7 @@ public class ReticleI {
 	private CallableXAnon	cxUpdate;
 	private Float	fRangeDist;
 	private Spatial	sptTarget;
-	private SimpleApplication	sapp;
+	private SimpleApplication	sappOpt;
 	private Application	app;
 	private Geometry	geomTarget;
 	private float	fBorderRadiusMarginPerc=0.1f;
@@ -197,7 +197,12 @@ public class ReticleI {
 					if(bVertical){
 						String str="";
 						if(bBinoculars){
-							str=(ai[i]==0 ? "" : "--- "+ai[i]);
+							switch(ai[i]){
+								case 0:str="";break;
+								case  2:str=">x< "+ai[i];break;
+								default:str="--- "+ai[i];break;
+							}
+//							str=(ai[i]==0 ? "" : "--- "+ai[i]);
 						}else{
 							str=(i==0?"    ":"=== ")+ai[i];
 						}
@@ -494,14 +499,14 @@ public class ReticleI {
 		if(rnLastConfigured!=null)rnLastConfigured.removeFromParent();
 		
 		app = G.i(Application.class);
-		sapp = G.i(SimpleApplication.class);
-		if(sapp!=null){ //TODO it cannot really independ of flycamX and sapp yet...
-			FlyByCamera flycam = sapp.getFlyByCamera();
+		sappOpt = G.i(SimpleApplication.class);
+		if(sappOpt!=null){ //TODO it cannot really independ of flycamX and sapp yet...
+			FlyByCamera flycam = sappOpt.getFlyByCamera();
 			FlyByCameraX flycamx=(flycam instanceof FlyByCameraX) ? (FlyByCameraX)flycam : null;
 			
 			rnLastConfigured = createReticle(rnStore);
-			if(flycamx!=null)flycamx.setReticle(rnLastConfigured, sapp.getGuiNode()); //TODO shouldnt be another layer, below the gui node?
-			sapp.getGuiNode().attachChild(rnLastConfigured);
+			if(flycamx!=null)flycamx.setReticle(rnLastConfigured, sappOpt.getGuiNode()); //TODO shouldnt be another layer, below the gui node?
+			sappOpt.getGuiNode().attachChild(rnLastConfigured);
 			rnLastConfigured.setLocalTranslation(HWEnvironmentJmeI.i().getDisplay().getCenter(
 				-((BoundingBox)rnLastConfigured.getWorldBound()).getExtent(null).length()
 			));
@@ -521,7 +526,7 @@ public class ReticleI {
 							Float fTargetDist=null;
 							if(acr.size()>0)fDist=(acr.get(0).getDistance());
 							
-							if(sptTarget!=null && sptTarget.hasAncestor(sapp.getRootNode())){
+							if(sptTarget!=null && sptTarget.hasAncestor(sappOpt.getRootNode())){
 								fTargetDist=(app.getCamera().getLocation().distance(sptTarget.getWorldTranslation()));
 								HighlighterI.i().applyAt(geomTarget);
 							}else{

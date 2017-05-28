@@ -91,6 +91,7 @@ public class PkgCfgI {
 		WorldPickingI.i().configure(flycam);
 		HighlighterI.i().configure(flycam);
 		ReticleI.i().configure();
+		CrossHairI.i().configure();
 		
 		// non standard cfgs
 //		WorldPickingI.i().addSkipType(DebugVisualsI.GeometryBVolDbg.class);

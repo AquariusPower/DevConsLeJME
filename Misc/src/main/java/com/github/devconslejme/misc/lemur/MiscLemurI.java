@@ -84,9 +84,12 @@ public class MiscLemurI {
 	private Node	nodeGui;
 
 	private Float	lPickingRayCastFromZ=null;
+
+//	private SimpleApplication	sappOpt;
 	
 	public void configure(Node nodeGui){
 		this.nodeGui=nodeGui;
+//		sappOpt=GlobalManagerI.i().get(SimpleApplication.class);
 	}
 	
 	public Integer getEntryHeightPixels(ListBox lstbx){
@@ -399,7 +402,8 @@ public class MiscLemurI {
 			}
 		};
 		
-		Node node = GlobalManagerI.i().get(SimpleApplication.class).getGuiNode();
+//		Node node = sappOpt==null ? null : sappOpt.getGuiNode();
+		Node node = this.nodeGui;
 		if(strStartAt!=null){
 			node = SpatialHierarchyI.i().getChildRecursiveExactMatch(node, new Function<Spatial,Boolean>() {
 				@Override

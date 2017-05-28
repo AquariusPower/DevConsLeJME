@@ -185,14 +185,22 @@ public class StringI {
 	
 	public String createTable(int iColumns, String... astr){
 		int iMaxWidth=0;
-		for(String str:astr){
+		for(int i=0;i<astr.length;i++){
+			String str=astr[i];
+			str=str.replace("\0","\\0");
+			str=str.replace("\r","\\r");
+			str=str.replace("\n","\\n");
+			str=str.replace("\t","\\t");
+			astr[i]=str;
 			if(str.length()>iMaxWidth)iMaxWidth=str.length();
 		}
+		iMaxWidth++;
 		
 		StringBuilder sb = new StringBuilder("");
 		int iCount=0;
 		for(String str:astr){
-			sb.append(Strings.padStart(str, iMaxWidth, ' ')+" ");
+			str=Strings.padStart(str, iMaxWidth, ' ');//+" ";
+			sb.append(str);
 			iCount++;
 			if(iCount==iColumns){
 				sb.append("\n");

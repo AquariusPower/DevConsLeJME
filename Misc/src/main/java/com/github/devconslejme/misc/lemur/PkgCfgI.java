@@ -67,6 +67,7 @@ public class PkgCfgI {
 		GuiGlobals.getInstance().getStyles().setDefaultStyle(BaseStyles.GLASS); //this can be set again later
 		
 		// after lemur inits
+		AbsorbClickCommandsI.i().configure();
 		initNonStandardLemurPickingRayCastFrom(); //first!
 		PopupHintHelpListenerI.i().configure(nodeGui);
 		DragParentestPanelListenerI.i().configure(nodeGui);

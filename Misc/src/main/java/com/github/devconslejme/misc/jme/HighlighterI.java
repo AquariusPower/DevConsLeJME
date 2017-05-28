@@ -65,6 +65,18 @@ public class HighlighterI {
 			
 			WorldPickingI.i().addSkip(geomHighlight);
 		}
+		
+		@Override
+		public void updateLogicalState(float tpf) {
+			/**
+			 * Also, for a few geometries regions (not all hit spots just a few), 
+			 * it was necessary to update this at every frame :/ TODO my fault?
+			 */
+			setLocalTransform(geomTarget.getLocalTransform());
+			
+			super.updateLogicalState(tpf);
+		}
+		
 		private Geometry	geomTarget;
 		private Geometry	geomHighlight;
 	}
@@ -80,10 +92,13 @@ public class HighlighterI {
 	private ColorGlow	cg;
 
 	private NodeHighLigh	nhMouseCursorOver;
+
+	private SimpleApplication	sappOpt;
 	
 	public void configure(FlyByCamera flycam){
 		this.flycam = flycam;
-		if(G.i(SimpleApplication.class)!=null){
+		this.sappOpt=G.i(SimpleApplication.class);
+		if(sappOpt!=null){
 			if(this.flycam==null)this.flycam=G.i(SimpleApplication.class).getFlyByCamera();
 		}
 		
@@ -157,11 +172,11 @@ public class HighlighterI {
 		 */
 		nh.geomTarget.getParent().attachChild(nh); //
 		
-		/**
-		 * Also, for a few geometries regions (not all hit spots just a few), 
-		 * it was necessary to update this at every frame :/ TODO my fault?
-		 */
-		nh.setLocalTransform(nh.geomTarget.getLocalTransform());
+//		/**
+//		 * Also, for a few geometries regions (not all hit spots just a few), 
+//		 * it was necessary to update this at every frame :/ TODO my fault?
+//		 */
+//		nh.setLocalTransform(nh.geomTarget.getLocalTransform());
 		
 		if(isDebug())DebugVisualsI.i().showWorldBoundAndRotAxes(nh);
 		

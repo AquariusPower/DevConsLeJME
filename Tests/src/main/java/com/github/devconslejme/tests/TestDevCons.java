@@ -314,7 +314,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		);
 		
 		//// Spatials manager dialog
-		SpatialsManagerDialogI.i().configure();
+		SpatialsManagerDialogI.i().configure(getGuiNode(),getRootNode());
 		DevConsPluginStateI.i().putButtonLater("SpatialsManager", "open Spatials hierarchy manager", 
 			new Command<Button>() {@Override public void execute(Button source) {
 				SpatialsManagerDialogI.i().show();
