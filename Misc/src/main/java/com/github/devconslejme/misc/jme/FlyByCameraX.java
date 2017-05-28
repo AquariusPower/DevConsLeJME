@@ -298,7 +298,9 @@ public class FlyByCameraX extends FlyByCamera {
 		 * it is not necessarily useful tho 
 		 * TODO improve this concept?
 		 */
-		setZoomLimits(false, getFOV()/2f, getFOV(), 2); // default 2 steps: min and max
+//		setZoomLimits(false, getFOV()/2f, getFOV(), 2); // default 2 steps: min and max
+		setZoomLimits(true, 1, getFOV(), 4);
+//		setZoomLimits(true, 1, 75, 6);
 	}
 	
 	@Override
@@ -367,6 +369,23 @@ public class FlyByCameraX extends FlyByCamera {
 		this.bAllowZooming = bAllowZooming;
 		return this; //for beans setter
 	}
+	
+	public int parabolaFindX(int iMaxX, double fA, double fB, double fC, double fTargetY){
+		/**
+		 * find the nearest X that results in the initial FoV (Y)
+		 */
+		int iStartX=0;
+		for(int i=0;i<iMaxX;i++){
+			double fX=i;
+			double fY = fA*Math.pow(fX,2) + fB*fX + fC;
+			if(fY>=fTargetY){
+				iStartX=i;
+				break;
+			}
+		}
+		return iStartX;
+	}
+	
 	/**
 	 * 
 	 * @param fMinFOVdeg
@@ -388,132 +407,51 @@ public class FlyByCameraX extends FlyByCamera {
 		
 		afFOVDegList.clear();
 		iFOVSteps--; //to let min fov be the first by multiplying the step by index 0 initially and the last FoV be the max one
-//		iFOVSteps--; //to let min fov be the first by multiplying the step by index 0 initially
 		
-//		if(fMidFoVDegOptional!=null){
 		if(bParabole){
-			int iUai=2;
-			if(iUai==3){
-				iFOVSteps=3;
-				for(int iX=0;iX<iFOVSteps;iX++){
-					float fRadFoV = FastMath.atan(FastMath.tan(fMaxFOVdeg*FastMath.DEG_TO_RAD) / (iFOVSteps-iX));
-					afFOVDegList.add(fRadFoV*FastMath.RAD_TO_DEG);
-				}
-			}else
-			if(iUai==1){
-				for(int iX=-1;iX<iFOVSteps;iX++){
-					float fRadFoV = FastMath.atan(FastMath.tan(fMaxFOVdeg*FastMath.DEG_TO_RAD) / (iFOVSteps-iX));
-					afFOVDegList.add(fRadFoV*FastMath.RAD_TO_DEG);
-				}
-			}else
-			if(iUai==2){
-				float fMidFoVDegOptional=fMaxFOVdeg/2f-fMinFOVdeg;
-				/**
-				 * y = ax^2 + bx + c
-				 * c = min fov
-				 * x = current fov step
-				 * 
-				 * for x=4 and y=45
-				 * 45-c-b*4 = a(4^2)
-				 * (45-c-b*4)/(4^2) = a
-				 * 
-				 * for x=3 and y=35
-				 * 35-c-b*3 = a(3^2)
-				 * (35-c-b*3)/(3^2) = a
-				 * 
-				 * (35-c-b*3)/(3^2) = (45-c-b*4)/(4^2)
-				 * ((35-c-b*3)*(4^2) -45 +c)/(3^2*4) = -b
-				 */
-//				float fC = this.fMinFOVdeg;
-				int iUasdf=5; //4
-				if(iUasdf==5){
-					// parabole formula values for points c(0,0)b(70,50)a(100,100)
+			/**
+			 * the idea is to make the farer (smaller) FoV step less than
+			 */
+			// parabole formula values for points c(0,0)b(70,50)a(100,100)
 //					int iMaxAX=100;double fA = 0.00952380952381, fB = 0.047619047619, fC = 0;
-					// parabole formula values for points c(0,0)b(600,130)a(1000,360)
-					int iMaxAX=1000;double fA = 0.000358333333333, fB = 0.00166666666667, fC = 0;
-					
-					int iYMaxFoV = (int)fMaxFOVdeg;
-					
-					/**
-					 * find the nearest X that results in the initial FoV (Y)
-					 */
-					int iStartX=0;
-					for(int i=0;i<iYMaxFoV;i++){
-						double fX=i;
-						double fY = fA*Math.pow(fX,2) + fB*fX + fC;
-						if(fY>fMinFOVdeg){
-							iStartX=i;
-							break;
-						}
-					}
-					
-					/**
-					 * find the nearest X that results in the ending FoV (Y)
-					 */
-					int iEndingX=0;
-					for(int i=iStartX;i<iMaxAX;i++){
-						double fX=i;
-						double fY = fA*Math.pow(fX,2) + fB*fX + fC;
-						if(fY>fMaxFOVdeg){
-							iEndingX=i;
-							break;
-						}
-					}
-					
-					int iDeltaX = (iEndingX-iStartX);
-					double dMultX = iDeltaX/(double)iFOVSteps;
-					
-					for(int iX=0;iX<=iFOVSteps;iX++){
-						double fX = iStartX+(iX*dMultX);
-						double fY = fA*Math.pow(fX,2) + fB*fX + fC;
-						afFOVDegList.add((float)fY);
-					}
-				}else
-				if(iUasdf==0){
-					iFOVSteps=4;
-					double fC = 0.5;
-					double fA = 0.0477282975093;
-					double fB = 0.00722956182849;
-					for(int iX=0;iX<iFOVSteps;iX++){
-						double fX = (float)iX*10;
-						double fY = fA*Math.pow(fX,2) + fB*iX + fC;
-	//					float fYTmp = 2f*FastMath.pow(4,2) + 2f*4 + fC;
-						afFOVDegList.add((float)fY);
-					}
-				}else
-				if(iUasdf==1){
-					iFOVSteps=6;
-					double fC = 0.5;
-					double fA = 0.0213204293572;
-					double fB = 0.00134409556641;
-					for(int iX=0;iX<=iFOVSteps;iX++){
-						double fX = (float)iX*10;
-						double fY = fA*Math.pow(fX,2) + fB*iX + fC;
-						afFOVDegList.add((float)fY);
-					}
-				}else
-//				new Spline(SplineType.Linear).;
-				if(iUasdf==4){
-					// parabola y=ax2+bx+cy=ax2+bx+c.
-					float fMultSteps=10f;
-					float fXA = iFOVSteps*fMultSteps;
-					Vector2f v2fA=new Vector2f(fXA,fMaxFOVdeg); //top right
-					Vector2f v2fC=new Vector2f(0,fMinFOVdeg); //a bit at Y axis
-					Vector2f v2fB=v2fA.interpolateLocal(v2fC, 0.5f).add(new Vector2f(fXA*(2f/5f),0)); //middle displaced half way the right
-					double fC=v2fC.y; // min fov
-				}else
-				if(iUasdf==3){
-					iFOVSteps=6;
-					double fC = 0.5;
-					double fA = 0.020;
-					double fB = 0.058;
-					for(int iX=0;iX<=iFOVSteps;iX++){
-						double fX = (float)iX*10;
-						double fY = fA*Math.pow(fX,2) + fB*iX + fC;
-						afFOVDegList.add((float)fY);
-					}
-				}
-				
+			// parabole formula values for points c(0,0)b(600,130)a(1000,360)
+			int iMaxX=1000;double fA = 0.000358333333333, fB = 0.00166666666667, fC = 0;
+			
+			int iYMaxFoV = (int)fMaxFOVdeg;
+			
+			/**
+			 * find the nearest X that results in the initial FoV (Y)
+			 */
+			int iStartX=parabolaFindX(iMaxX,fA,fB,fC,fMinFOVdeg);//0;
+//			for(int i=0;i<iMaxX;i++){
+//				double fX=i;
+//				double fY = fA*Math.pow(fX,2) + fB*fX + fC;
+//				if(fY>=fMinFOVdeg){
+//					iStartX=i;
+//					break;
+//				}
+//			}
+			
+			/**
+			 * find the nearest X that results in the ending FoV (Y)
+			 */
+			int iEndingX=parabolaFindX(iMaxX,fA,fB,fC,fMaxFOVdeg);//0;
+//			for(int i=0;i<iMaxX;i++){
+//				double fX=i;
+//				double fY = fA*Math.pow(fX,2) + fB*fX + fC;
+//				if(fY>=fMaxFOVdeg){
+//					iEndingX=i;
+//					break;
+//				}
+//			}
+			
+			int iDeltaX = (iEndingX-iStartX);
+			double dMultX = iDeltaX/(double)iFOVSteps;
+			
+			for(int iX=0;iX<=iFOVSteps;iX++){
+				double fX = iStartX+(iX*dMultX);
+				double fY = fA*Math.pow(fX,2) + fB*fX + fC;
+				afFOVDegList.add((float)fY);
 			}
 		}else{
 			float fFOVMaxDelta=fMaxFOVdeg-fMinFOVdeg;
