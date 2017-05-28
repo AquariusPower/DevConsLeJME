@@ -104,7 +104,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	public void simpleInitApp() {
 		/** this should be the 1st thing configured */
 		com.github.devconslejme.devcons.PkgCfgI.i().configure(this,getGuiNode(), getRootNode());
-		com.github.devconslejme.misc.jme.game.PkgCfgI.i().configure(this,getGuiNode(), getRootNode());
+		com.github.devconslejme.game.PkgCfgI.i().configure(this,getGuiNode(), getRootNode());
 		
 		if(bEnableOpt)opt_initBasics();
 		

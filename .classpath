@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="DevCons/src/main/java"/>
+	<classpathentry kind="src" path="Game/src/main/java"/>
 	<classpathentry kind="src" path="Debug/src/main/java"/>
 	<classpathentry kind="src" path="Misc/src/main/java"/>
 	<classpathentry kind="src" path="Tests/src/main/java"/>
@@ -20,5 +21,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/fast-classpath-scanner"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/ZayES-1.2.1"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/guava"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/WCOmoCSG"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -94,8 +94,8 @@ while true;do
 	#~ echo "$strAllDeps" |grep "^[.]/.*/misc/[^/]*class:" |egrep -v ":(java|com/github/devconslejme/misc)"
 
 	FUNCchk misc/jme 				misc
-	FUNCchk misc/jme/game 	misc misc/jme 
 	FUNCchk misc/lemur 			misc misc/jme  
+	FUNCchk game						misc misc/jme 
 	FUNCchk es 							misc misc/jme misc/lemur  
 	FUNCchk gendiag 				misc misc/jme misc/lemur es
 	FUNCchk devcons 				misc misc/jme misc/lemur es gendiag

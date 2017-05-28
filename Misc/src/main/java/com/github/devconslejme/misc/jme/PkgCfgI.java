@@ -27,13 +27,13 @@
 
 package com.github.devconslejme.misc.jme;
 
+import com.github.devconslejme.game.CrossHairI;
+import com.github.devconslejme.game.ReticleI;
 import com.github.devconslejme.misc.AssertionsI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.PkgCfgAbs;
 import com.github.devconslejme.misc.GlobalManagerI.G;
-import com.github.devconslejme.misc.jme.game.CrossHairI;
-import com.github.devconslejme.misc.jme.game.ReticleI;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.input.FlyByCamera;
