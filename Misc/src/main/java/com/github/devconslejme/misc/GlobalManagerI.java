@@ -32,6 +32,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 /**
+ * @DevSelfNote be careful to avoid using here other classes that may prevent globals overriding them
+ * 
  * This makes it easy to:
  * - override a global instance.
  * - list all globals (to use on javascript for ex.)

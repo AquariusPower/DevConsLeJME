@@ -41,7 +41,7 @@ function FUNCchk(){ # <package to validate> <<what package beyond self can it ac
 	
 	lastrOtherPkgs+=($lstrPkg)
 	
-	echoc --info "Any pkg dep shown below will be a high coupling problem for: @{g}$lstrPkg @{r}${lastrOtherPkgs[@]}"
+	echoc --info "Checking @{g}$lstrPkg @{r}${lastrOtherPkgs[@]}"
 	
 	local lstrOtherPkgs="`echo "${lastrOtherPkgs[@]}" |tr " " "|"`"
 	
@@ -87,20 +87,18 @@ while true;do
 	strDevConsDeps="`echo "$strAllDeps" |grep ":com/github/devconslejme"`"
 	echo "totDepsEntries='`echo "$strDevConsDeps" |wc -l`'"
 
+	echoc --info "Any pkg dep shown below will be a @rhigh coupling problem."
+	
 	# misc can only access misc
 	FUNCchk --basic misc
 	#~ echo "$strAllDeps" |grep "^[.]/.*/misc/[^/]*class:" |egrep -v ":(java|com/github/devconslejme/misc)"
 
-	FUNCchk misc/jme misc
-
-	# misc/lemur can only access misc or misc/jme or misc/lemur
-	FUNCchk misc/lemur misc/jme misc
-
-	FUNCchk es misc/lemur misc/jme misc
-	
-	FUNCchk gendiag misc/lemur misc/jme misc es
-
-	FUNCchk devcons gendiag misc/lemur misc/jme misc es
+	FUNCchk misc/jme 				misc
+	FUNCchk misc/jme/game 	misc misc/jme 
+	FUNCchk misc/lemur 			misc misc/jme  
+	FUNCchk es 							misc misc/jme misc/lemur  
+	FUNCchk gendiag 				misc misc/jme misc/lemur es
+	FUNCchk devcons 				misc misc/jme misc/lemur es gendiag
 
 	FUNCchk --basic extras
 	#~ echo "$strAllDeps" |grep "^[.]/.*/extras/[^/]*class:" |egrep -v ":(java|com/github/devconslejme/extras)"

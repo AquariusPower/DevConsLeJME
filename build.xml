@@ -46,7 +46,7 @@
 		
 	<target name="CreateAllJars" depends="javadocXmlFile.javadoc" description="Create all Jar files">
 		
-		<!-- BINARIES -->
+		<!-- /////////////////////// BINARIES ////////////////////////// -->
 		
 		<property name="subprojDevCons" value="devcons"/>
 		<jar jarfile="${projv}-${subprojDevCons}.jar" compress="true" >
@@ -96,7 +96,7 @@
 			</manifest>
 		</jar>
 		
-		<!-- MISC PACKAGES IS SPECIAL AS EACH SUB-FOLDER IS A NEW PACKAGE -->
+		<!-- //////// MISC PACKAGES IS SPECIAL AS EACH SUB-FOLDER IS A NEW PACKAGE //////// -->
 		
 		<jar jarfile="${projv}-misc.jar" compress="true" >
 			<fileset dir="./" includes="LICENSE" />
@@ -119,7 +119,7 @@
 			</fileset>
 		</jar>
 		
-		<!-- SOURCES ALL TOGUETHER -->
+		<!-- ///////////////// SOURCES ALL TOGUETHER /////////////////// -->
 		
 		<jar jarfile="${projv}-ALL-sources.jar" compress="true" >
 			<fileset dir="./">

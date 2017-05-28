@@ -28,7 +28,7 @@ package com.github.devconslejme.misc.jme;
 
 import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.Workaround;
-import com.github.devconslejme.misc.jme.ReticleI.ReticleNode;
+import com.github.devconslejme.misc.jme.game.ReticleI.ReticleNode;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.StringI;
 import com.jme3.app.Application;

@@ -25,20 +25,12 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.misc.jme;
+package com.github.devconslejme.misc.jme.game;
 
-import com.github.devconslejme.misc.AssertionsI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.GlobalManagerI.G;
-import com.github.devconslejme.misc.jme.game.CrossHairI;
-import com.github.devconslejme.misc.jme.game.ReticleI;
 import com.jme3.app.Application;
-import com.jme3.app.SimpleApplication;
-import com.jme3.input.FlyByCamera;
 import com.jme3.scene.Node;
-import com.jme3.system.JmeSystem;
-import com.jme3.system.JmeSystem.StorageFolderType;
 
 
 /**
@@ -50,53 +42,13 @@ public class PkgCfgI {
 	private boolean	bConfigured;
 	public boolean isConfigured() {return bConfigured;}
 	
-	/**
-	 * 
-	 * @param app to create global
-	 * @param nodeGui allow gui elements that depends only on JME
-	 * @param nodeVirtualWorld to allow virtual world functionalities
-	 */
-	public void configure(Application app,Node nodeGui, Node nodeVirtualWorld){
-		TextStringI.i();//before, to grant the global overriding instance
+	public void configure(Application app, Node nodeGui, Node nodeVirtualWorld){
 		DetailedException.assertIsFalse("configured", bConfigured, this);
 		
-		HWEnvironmentJmeI.i(); //sub class overriders/inheriters must instance before
-		com.github.devconslejme.misc.PkgCfgI.i().configure(
-			JmeSystem.getStorageFolder(StorageFolderType.Internal), 
-			app.getClass());
+		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app,nodeGui, nodeVirtualWorld);
 		
-		/**
-		 * FIRST!
-		 */
-		GlobalManagerI.i().putGlobal(Application.class, app);
-		FlyByCamera flycam=null;
-		if(app instanceof SimpleApplication){
-			/**
-			 * code depending on this should be optional...
-			 */
-			GlobalManagerI.i().putGlobal(SimpleApplication.class, (SimpleApplication)app);
-			flycam=G.i(SimpleApplication.class).getFlyByCamera();
-		}
-		GlobalManagerI.i().putGlobal(app.getClass(), app); //concrete
-		
-		// after first
-		DebugVisualsI.i().configure();
-		MiscJmeI.i().configure(nodeVirtualWorld);
-		new KeyCodeConfigureForJme().configure(20);
-		EffectManagerStateI.i().configure();
-		SimulationTimeStateI.i().configure();
-		QueueStateI.i().configure();
-		OrthogonalCursorStateI.i().configure(nodeGui);
-		AssertionsI.i().configure();
-		IndicatorI.i().configure(nodeGui);
-		HWEnvironmentJmeI.i().configure(nodeGui);
-		WorldPickingI.i().configure(flycam);
-		HighlighterI.i().configure(flycam);
-//		ReticleI.i().configure();
-//		CrossHairI.i().configure();
-		
-		// non standard cfgs
-//		WorldPickingI.i().addSkipType(DebugVisualsI.GeometryBVolDbg.class);
+		ReticleI.i().configure();
+		CrossHairI.i().configure();
 		
 		bConfigured=true;
 	}

@@ -24,7 +24,7 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package com.github.devconslejme.misc.jme;
+package com.github.devconslejme.misc.jme.game;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,6 +37,17 @@ import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.jme.ArrowGeometry;
+import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.jme.FlyByCameraX;
+import com.github.devconslejme.misc.jme.GeometryI;
+import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
+import com.github.devconslejme.misc.jme.HighlighterI;
+import com.github.devconslejme.misc.jme.MeshI;
+import com.github.devconslejme.misc.jme.RotateI;
+import com.github.devconslejme.misc.jme.SpatialHierarchyI;
+import com.github.devconslejme.misc.jme.TextStringI;
+import com.github.devconslejme.misc.jme.WorldPickingI;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.bounding.BoundingBox;
