@@ -32,6 +32,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.concurrent.Callable;
 
 import com.github.devconslejme.misc.ReportI.IReport;
 
@@ -60,17 +61,20 @@ public class MessagesI {
 		bLog=true;
 	}
 	
+	public void warnUniqueMsg(Object objSource, String strMsg, Object... aobj){
+//		new Runnable(){@Override public void run() {warnMsg(objSource,strMsg,aobj);}}.run();
+		warnMsg(objSource,strMsg,aobj);
+	}
 	/**
 	 * for things that will break non crucial functionalities
 	 * @param objSource
 	 * @param strMsg
-	 * @param aobj
+	 * @param aobjMoreInfo
 	 */
-	public void warnMsg(Object objSource, String strMsg, Object... aobj){
-		Object[] aobj2 = Arrays.copyOf(aobj, aobj.length+1);
-		aobj2[aobj2.length-1]=Thread.currentThread().getStackTrace()[2];
-		output(true,System.err,"WARN",objSource,strMsg,aobj2);
-//		output(true,"WARN",objSource,Object... aobj); 
+	public void warnMsg(Object objSource, String strMsg, Object... aobjMoreInfo){
+		Object[] aobjMoreInfoSte = Arrays.copyOf(aobjMoreInfo, aobjMoreInfo.length+1);//add one slot on the array
+		aobjMoreInfoSte[aobjMoreInfoSte.length-1]=Thread.currentThread().getStackTrace()[2];
+		output(true,System.err,"WARN",objSource,strMsg,aobjMoreInfoSte);
 	}
 	
 	/**
@@ -110,26 +114,38 @@ public class MessagesI {
 				+strMsgType+"["+cl.getSimpleName()+"]: "+strMsg, 
 				aobj);
 
-//		(bStderr ? (System.err) : (System.out)).println(strOutput);
 		if(ps!=null)ps.println(strOutput);
 		if(isLog()){
-//			if(flLog==null)flLog=FileI.i().createNewFile(this,"log",true);
 			FileI.i().appendLine(flLog,strOutput);
 		}
-//			strMsgType+"["+objSource.getClass().getSimpleName()+"]: "+str		); 
 		
-//		if(bStderr){
-//		if(ps==System.err){
 		if(bReviewable){
-			ReviewableMsg mdNew = new ReviewableMsg(getStackAsKey(),strOutput);
-			
-			ReviewableMsg mdExisting = hmMsgs.get(mdNew.strKey);
-			if(mdExisting!=null){
-				mdExisting.updateMsg(mdNew);
-			}else{
-				hmMsgs.put(mdNew.strKey, mdNew);
-			}
+			putReviewableMsg(strOutput);
+//			ReviewableMsg mdNew = new ReviewableMsg(getStackAsKey(),strOutput);
+//			
+//			ReviewableMsg mdExisting = hmMsgs.get(mdNew.strKey);
+//			if(mdExisting!=null){
+//				mdExisting.updateMsg(mdNew);
+//			}else{
+//				hmMsgs.put(mdNew.strKey, mdNew);
+//			}
 		}
+	}
+	
+	public ReviewableMsg putReviewableMsg(String strOutput){
+		ReviewableMsg mdNew = new ReviewableMsg(getStackAsKey(),strOutput);
+		
+		ReviewableMsg mdExisting = hmMsgs.get(mdNew.strKey);
+		ReviewableMsg mdRet = null;
+		if(mdExisting!=null){
+			mdExisting.updateMsg(mdNew);
+			mdRet=mdExisting;
+		}else{
+			hmMsgs.put(mdNew.strKey, mdNew);
+			mdRet=mdNew;
+		}
+		
+		return mdRet;
 	}
 	
 	private static class ReviewableMsg implements IReport{

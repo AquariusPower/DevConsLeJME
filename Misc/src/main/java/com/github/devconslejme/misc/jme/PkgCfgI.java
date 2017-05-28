@@ -30,6 +30,7 @@ package com.github.devconslejme.misc.jme;
 import com.github.devconslejme.misc.AssertionsI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.PkgCfgAbs;
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.jme.game.CrossHairI;
 import com.github.devconslejme.misc.jme.game.ReticleI;
@@ -44,11 +45,11 @@ import com.jme3.system.JmeSystem.StorageFolderType;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PkgCfgI {
+public class PkgCfgI extends PkgCfgAbs{
 	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
-	private boolean	bConfigured;
-	public boolean isConfigured() {return bConfigured;}
+//	private boolean	bConfigured;
+//	public boolean isConfigured() {return bConfigured;}
 	
 	/**
 	 * 
@@ -57,8 +58,9 @@ public class PkgCfgI {
 	 * @param nodeVirtualWorld to allow virtual world functionalities
 	 */
 	public void configure(Application app,Node nodeGui, Node nodeVirtualWorld){
+		super.configure();
 		TextStringI.i();//before, to grant the global overriding instance
-		DetailedException.assertIsFalse("configured", bConfigured, this);
+//		DetailedException.assertIsFalse("configured", bConfigured, this);
 		
 		HWEnvironmentJmeI.i(); //sub class overriders/inheriters must instance before
 		com.github.devconslejme.misc.PkgCfgI.i().configure(
@@ -98,6 +100,6 @@ public class PkgCfgI {
 		// non standard cfgs
 //		WorldPickingI.i().addSkipType(DebugVisualsI.GeometryBVolDbg.class);
 		
-		bConfigured=true;
+		setConfigured();
 	}
 }

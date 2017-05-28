@@ -33,7 +33,6 @@ import java.util.function.Function;
 import com.github.devconslejme.debug.DebugTrackProblemsJME;
 import com.github.devconslejme.debug.UnsafeDebugHacksI;
 import com.github.devconslejme.devcons.DevConsPluginStateI;
-import com.github.devconslejme.devcons.JavaScriptI;
 import com.github.devconslejme.devcons.LoggingI;
 import com.github.devconslejme.extras.DynamicFPSLimiter;
 import com.github.devconslejme.extras.OSCmd;
@@ -43,24 +42,18 @@ import com.github.devconslejme.gendiag.GlobalsManagerDialogI;
 import com.github.devconslejme.gendiag.KeyBindManagerDialogI;
 import com.github.devconslejme.gendiag.QueueManagerDialogI;
 import com.github.devconslejme.gendiag.SpatialsManagerDialogI;
-import com.github.devconslejme.gendiag.SimpleGenericDialog.CmdCfg;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.CheckProblemsI;
 import com.github.devconslejme.misc.CommandLineParser;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.SystemAlertI;
-import com.github.devconslejme.misc.jme.ArrowGeometry;
+import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI.IEnvironmentListener;
-import com.github.devconslejme.misc.jme.FlyByCameraX;
-import com.github.devconslejme.misc.jme.GeometryI;
-import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.OriginDevice;
-import com.github.devconslejme.misc.jme.RotateI;
 import com.github.devconslejme.misc.jme.SimpleAppState;
 import com.github.devconslejme.misc.jme.TextStringI;
 import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
@@ -71,7 +64,6 @@ import com.jme3.app.state.AppState;
 import com.jme3.audio.AudioListenerState;
 import com.jme3.collision.CollisionResult;
 import com.jme3.font.BitmapText;
-import com.jme3.math.ColorRGBA;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
@@ -112,6 +104,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	public void simpleInitApp() {
 		/** this should be the 1st thing configured */
 		com.github.devconslejme.devcons.PkgCfgI.i().configure(this,getGuiNode(), getRootNode());
+//		com.github.devconslejme.misc.jme.game.PkgCfgI.i().configure(this,getGuiNode(), getRootNode());
 		
 		if(bEnableOpt)opt_initBasics();
 		

@@ -27,8 +27,8 @@
 
 package com.github.devconslejme.misc.jme.game;
 
-import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.PkgCfgAbs;
 import com.jme3.app.Application;
 import com.jme3.scene.Node;
 
@@ -36,20 +36,18 @@ import com.jme3.scene.Node;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PkgCfgI {
+public class PkgCfgI extends PkgCfgAbs{
 	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
-	private boolean	bConfigured;
-	public boolean isConfigured() {return bConfigured;}
-	
 	public void configure(Application app, Node nodeGui, Node nodeVirtualWorld){
-		DetailedException.assertIsFalse("configured", bConfigured, this);
-		
-		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app,nodeGui, nodeVirtualWorld);
+		super.configure();
+		if(!com.github.devconslejme.misc.jme.PkgCfgI.i().isConfigured()){
+			com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app,nodeGui, nodeVirtualWorld);
+		}
 		
 		ReticleI.i().configure();
 		CrossHairI.i().configure();
 		
-		bConfigured=true;
+		setConfigured();
 	}
 }

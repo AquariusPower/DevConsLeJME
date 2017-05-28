@@ -33,11 +33,11 @@ import java.io.File;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PkgCfgI {
+public class PkgCfgI extends PkgCfgAbs{
 	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
-	private boolean	bConfigured;
-	public boolean isConfigured() {return bConfigured;}
+//	private boolean	bConfigured;
+//	public boolean isConfigured() {return bConfigured;}
 	
 	/**
 	 * 
@@ -45,7 +45,7 @@ public class PkgCfgI {
 	 * @param clAppMainClass to compose the relative storage path for the currently being run application/class
 	 */
 	public void configure(File flAppBaseUserDataFolder, Class clAppMainClass){
-		DetailedException.assertIsFalse("configured", bConfigured, this);
+		super.configure();
 		MainThreadI.i().configure();
 		
 		FileI.i().configure(flAppBaseUserDataFolder, clAppMainClass);
@@ -54,6 +54,6 @@ public class PkgCfgI {
 		KeyBindCommandManagerI.i().configure();
 		HWEnvironmentI.i().configure();
 		
-		bConfigured=true;
+		setConfigured();
 	}
 }

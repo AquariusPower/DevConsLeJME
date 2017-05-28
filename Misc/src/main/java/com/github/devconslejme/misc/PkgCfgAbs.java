@@ -25,57 +25,24 @@
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package com.github.devconslejme.devcons;
-
-import com.github.devconslejme.misc.Annotations.NonStandard;
-import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.KeyBindCommandManagerI;
-import com.github.devconslejme.misc.KeyBindCommandManagerI.CallUserCustomCmd;
-import com.github.devconslejme.misc.MessagesI;
-import com.github.devconslejme.misc.PkgCfgAbs;
-import com.jme3.app.Application;
-import com.jme3.scene.Node;
-
+package com.github.devconslejme.misc;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PkgCfgI extends PkgCfgAbs{
-	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
-
-	/**
-	 * 
-	 * @param app (forwarded)
-	 * @param nodeGui where to attach DevCons
-	 * @param nodeVirtualWorld (forwarded)
-	 */
-	public void configure(Application app, Node nodeGui, Node nodeVirtualWorld){
-		super.configure();
-		com.github.devconslejme.gendiag.PkgCfgI.i().configure(app,nodeGui,nodeVirtualWorld);
-		
-		DevConsPluginStateI.i().configure(null,nodeGui); //first!
-		
-		if(KeyBindCommandManagerI.i().getCallRunUserCommand()==null){
-			KeyBindCommandManagerI.i().setCallRunUserCommand(new CallUserCustomCmd() {
-				@Override
-				public Boolean execUserCustomCmd(String strJSCmd) {
-					JavaScriptI.i().setJSBinding(this); //this allows for accessing this callable from within the script
-					JavaScriptI.i().execScript(strJSCmd, false);
-					return true;
-				}
-			});
-		}
-		
-		initNonStandard();
-		
-		setConfigured();
-	}
+public abstract class PkgCfgAbs {
+	private boolean	bConfigured;
 	
-	@NonStandard
-	private void initNonStandard(){
-		/**
-		 * this special configuration will start appending log to a file
-		 */
-		MessagesI.i().initializeLogFile();
+	public void configure(){
+		DetailedException.assertIsFalse("configured", isConfigured(), this);
+	}
+
+	public boolean isConfigured() {
+		return bConfigured;
+	}
+
+	public PkgCfgAbs setConfigured() {
+		this.bConfigured = true;
+		return this; 
 	}
 }

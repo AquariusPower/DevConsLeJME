@@ -385,24 +385,20 @@ public class JavaScriptI implements IGlobalAddListener {
 		jse.getContext().setWriter(wrc);
 		
 		bndJSE = jse.createBindings();
-//		jse.getContext().setAttribute(name, value, scope);
-//		jse.eva
-//		for(EBaseCommand ebc:EBaseCommand.values()){
-//			astrIdList.add(ebc.s());
-//		}
 		
-//		setJSBinding(this);
 		/**
 		 * add all existing
 		 */
 		for(Object obj:GlobalManagerI.i().getListCopy()){
-			if(bndJSE.get(genKeyFor(obj))==null)setJSBinding(obj);
+			String strKey = genKeyFor(obj);
+			Object objExisting = bndJSE.get(strKey);
+			if(objExisting==null){
+				setJSBinding(obj);
+			}else{
+				MessagesI.i().warnUniqueMsg(this, "key already used", strKey, objExisting, obj);
+			}
 		}
-//		setJSBinding(Vector3f.class.getSimpleName(), new Vector3f());
-//		setJSBinding(new Vector3f());
-//		setJSBindingRaw(strCustomVarPrefix+"tmp"+Vector2f.class.getSimpleName(), new Vector2f());
-//		setJSBindingRaw(strCustomVarPrefix+"new"+Vector3f.class.getSimpleName(), new Vector3f());
-//		setJSBindingRaw(strCustomVarPrefix+"new"+Quaternion.class.getSimpleName(), new Quaternion());
+		
 		setJSBindingCanReplace("New", new New());
 		
 		/**
@@ -410,11 +406,6 @@ public class JavaScriptI implements IGlobalAddListener {
 		 */
 		GlobalManagerI.i().addGlobalAddListener(this);
 		
-//		for(int iCount=1;iCount<=10;iCount++){
-//			final int i=iCount;
-//			KeyBindCommandManagerI.i().putBindCommandLater("Ctrl+Shift+"+(i%10),"RepeatLastConsCmd"+i,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyReleased(){
-//				repeatLastCommand(i-1);return true;}});
-//		}
 		KeyBindCommandManagerI.i().putBindCommandsLater("Ctrl+R",new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			repeatLastCommand(0);return true;}}.setName("RepeatLastConsCmd"));
 	}

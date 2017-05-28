@@ -30,6 +30,7 @@ package com.github.devconslejme.misc.lemur;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.PkgCfgAbs;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.jme3.app.Application;
 import com.jme3.math.Vector2f;
@@ -44,11 +45,11 @@ import com.simsilica.lemur.style.BaseStyles;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PkgCfgI {
+public class PkgCfgI extends PkgCfgAbs{
 	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
 	
-	private boolean	bConfigured;
-	public boolean isConfigured() {return bConfigured;}
+//	private boolean	bConfigured;
+//	public boolean isConfigured() {return bConfigured;}
 
 	/**
 	 * 
@@ -57,7 +58,7 @@ public class PkgCfgI {
 	 * @param nodeVirtualWorld (forwarded)
 	 */
 	public void configure(Application app, Node nodeGui, Node nodeVirtualWorld){
-		DetailedException.assertIsFalse("configured", isConfigured(), this);
+		super.configure();
 		SystemAlertLemurI.i().configure(); //this is a global overrider
 		com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app,nodeGui, nodeVirtualWorld);
 		
@@ -76,7 +77,7 @@ public class PkgCfgI {
 		EffectsLemurI.i().configure();
 		new KeyCodeConfigureForLemur().configure();
 		
-		bConfigured=(true);
+		setConfigured();
 	}
 
 	/**
