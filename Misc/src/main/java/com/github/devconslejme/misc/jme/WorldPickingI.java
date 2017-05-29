@@ -38,6 +38,7 @@ import com.google.common.collect.Lists;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
 import com.jme3.input.FlyByCamera;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Plane;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector2f;
@@ -55,8 +56,10 @@ public class WorldPickingI {
 	
 	private ArrayList<CollisionResult>	acrLastPickList = new ArrayList<CollisionResult>();
 	private Ray	rayLastCast;
-	ArrayList<IPickListener> aplList = new ArrayList<IPickListener>();
+	private ArrayList<IPickListener> aplList = new ArrayList<IPickListener>();
 	private boolean	bAllowConsume=true;
+//	private Quad quadCamReversedPicking;
+	private Geometry	geomReversedPicking;
 	
 	public static interface IPickListener{
 		/**
@@ -128,34 +131,23 @@ public class WorldPickingI {
 		return acrLastPickList;
 	}
 	
+	public Vector3f getLocationAtScreen(Spatial sptFrom){
+//		quadCamReversedPicking = new Quad(
+//			HWEnvironmentJmeI.i().getDisplay().getWidth(), 
+//			HWEnvironmentJmeI.i().getDisplay().getHeight());
+//		
+//		geomReversedPicking = GeometryI.i().create(quadCamReversedPicking, ColorRGBA.Red); //if it all red... something went wrong!
+//		
+//		root
+		return AppI.i().getScreenCoordinates(sptFrom.getWorldTranslation());
+	}
+	
 	/**
 	 * 
 	 * @param nodeVirtualWorld can be null (will use default)
 	 * @return
 	 */
 	public ArrayList<CollisionResult> raycastPiercingAtCursor(Node nodeVirtualWorld){
-//		if(nodeVirtualWorld==null)nodeVirtualWorld=MiscJmeI.i().getNodeVirtualWorld();
-//		
-//		CollisionResults crs = new CollisionResults();
-//		
-//		Vector3f v3fCursorAtVirtualWorld3D = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(
-//			EnvironmentJmeI.i().getMouse().getPos2D(), 0f);
-//		
-//		Vector3f v3fDirection = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(
-//			EnvironmentJmeI.i().getMouse().getPos2D(), 1f);
-//		v3fDirection.subtractLocal(v3fCursorAtVirtualWorld3D).normalizeLocal();
-//		
-//		Ray ray = new Ray(v3fCursorAtVirtualWorld3D, v3fDirection);
-//		nodeVirtualWorld.collideWith(ray, crs);
-//		
-//		ArrayList<CollisionResult> acrList=new ArrayList<CollisionResult>();
-//		if(crs.size()>0){
-//			for(CollisionResult cr:Lists.newArrayList(crs.iterator())){
-//				if(!isSkip(cr.getGeometry()))acrList.add(cr);
-//			}
-//		}
-//		
-//		return acrList;
 		return raycastPiercingAt(nodeVirtualWorld, HWEnvironmentJmeI.i().getMouse().getPos3D());
 	}
 	
@@ -173,9 +165,9 @@ public class WorldPickingI {
 //		Vector3f v3fCursorAtVirtualWorld3D = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(
 //				EnvironmentJmeI.i().getMouse().getPos2D(), 0f);
 		Vector2f v2f = MiscJmeI.i().toV2f(v3fGuiNodeXY);
-		Vector3f v3fCursorAtVirtualWorld3D = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(v2f,0f);
+		Vector3f v3fCursorAtVirtualWorld3D = AppI.i().getWorldCoordinates(v2f,0f);
 		
-		Vector3f v3fDirection = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(v2f,1f);
+		Vector3f v3fDirection = AppI.i().getWorldCoordinates(v2f,1f);
 		v3fDirection.subtractLocal(v3fCursorAtVirtualWorld3D).normalizeLocal(); //norm just to grant it
 		
 		Ray ray = new Ray(v3fCursorAtVirtualWorld3D, v3fDirection);
@@ -192,11 +184,11 @@ public class WorldPickingI {
 	}
 	
 	public Object debugTest(Object... aobj){ //keep even if emtpy!
-		for(int i=0;i<6;i++){
-			Plane p = MiscJmeI.i().getApp().getCamera().getWorldPlane(i);
-//			Quad q = new Quad();p.get
-			LoggingI.i().logEntry("CamPlane"+i+":"+p);
-		}
+//		for(int i=0;i<6;i++){
+//			Plane p = MiscJmeI.i().getApp().getCamera().getWorldPlane(i);
+////			Quad q = new Quad();p.get
+//			LoggingI.i().logEntry("CamPlane"+i+":"+p);
+//		}
 		return null;
 	}
 	

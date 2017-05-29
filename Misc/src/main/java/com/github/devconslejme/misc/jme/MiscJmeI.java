@@ -264,9 +264,9 @@ public class MiscJmeI {
 		return this;
 	}
 
-	public Application getApp() {
-		return app;
-	}
+//	public Application getApp() {
+//		return app;
+//	}
 	
 	public boolean isSimpleApplication(){
 		return sappOptional!=null;

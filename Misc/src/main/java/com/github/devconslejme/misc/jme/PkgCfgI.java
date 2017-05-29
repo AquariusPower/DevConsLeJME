@@ -71,6 +71,7 @@ public class PkgCfgI extends PkgCfgAbs{
 		 * FIRST!
 		 */
 		GlobalManagerI.i().putGlobal(Application.class, app);
+		AppI.i().configure(app);
 		FlyByCamera flycam=null;
 		if(app instanceof SimpleApplication){
 			/**

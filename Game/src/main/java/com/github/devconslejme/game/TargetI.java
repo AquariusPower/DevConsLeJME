@@ -113,6 +113,10 @@ public class TargetI {
 	}
 	
 	protected void update(float tpf) {
+		if(tgtLastSingleTarget!=null && tgtLastSingleTarget.getRootSpatial().getParent()==null){
+			tgtLastSingleTarget=null;
+		}
+		
 		if(tgtLastSingleTarget!=null)updateTarget(tgtLastSingleTarget,tpf);
 		
 		for(TargetGeom tgt:atgtMulti.values()){
@@ -186,6 +190,7 @@ public class TargetI {
 	}
 	
 	public TargetGeom getLastTarget() {
+//		if(tgtLastSingleTarget!=null && tgtLastSingleTarget.getRootSpatial().getParent()==null)tgtLastSingleTarget=null;
 		return tgtLastSingleTarget;
 	}
 
