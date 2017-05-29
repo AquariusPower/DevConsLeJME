@@ -462,6 +462,13 @@ public class FlyByCameraX extends FlyByCamera {
 			}
 		}
 		
+		float fDefault = FastMath.tan(fMaxFOVdeg / 180f * FastMath.PI); 
+		for(int i=0;i<=iFOVSteps;i++){
+			float fNewRad = FastMath.atan((fDefault - FastMath.tan(10f / 180f * FastMath.PI) * i) / fDefault);
+			float fNewRadSame = FastMath.atan(1f - FastMath.tan(10f / 180f * FastMath.PI) * i / fDefault);
+			System.out.println("new="+fNewRad+",same="+fNewRadSame);
+		}
+		
 		iCurrentFOVDegStepIndex=afFOVDegList.size()-1; // last/max one = no zoom
 		
 		iBkpFOVStepIndex=0;//reset
