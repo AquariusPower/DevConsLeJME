@@ -87,24 +87,13 @@ public class ReticleI {
     	new CallBoundKeyCmd(){
     		@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 					resetTarget();
+					if(rnLastConfigured==null)return true;//not ready, ignore
 					
 					ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingFromCenterTo(null,rnLastConfigured.v3fMarkersCenter);
-//					boolean bReset=false;
 					if(acr.size()>0){
-//						Geometry geomTargetNew = acr.get(0).getGeometry();
 						geomTarget = acr.get(0).getGeometry();
-//						if(geomTarget==geomTargetNew){
-//							bReset=true;
-//						}else{
-							sptTarget=SpatialHierarchyI.i().getParentest(geomTarget, Node.class, true, false);
-//						}
+						sptTarget=SpatialHierarchyI.i().getParentest(geomTarget, Node.class, true, false);
 					}
-					
-//					if(bReset){
-//						resetTarget();
-////						sptTarget=null;
-////						geomTarget=null;
-//					}
 					return true;
 				}
 			}.setName("AcquireTarget")

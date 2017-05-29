@@ -54,7 +54,7 @@ public class CrossHairI {
 	public void configure(){
 		sappOpt=G.i(SimpleApplication.class);
 		
-		create();
+//		create();
 		
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
@@ -62,10 +62,11 @@ public class CrossHairI {
 				update(getTPF());
 				return true;
 			}
-		}).enableLoopMode().setDelaySeconds(0.5f);
+		}).enableLoopMode().setDelaySeconds(0.25f);
 	} //keep even if emtpy
 	
 	protected void update(float tpf) {
+		if(node==null)return;
 		if(HWEnvironmentJmeI.i().getMouse().isCursorVisible()){
 			node.removeFromParent();
 		}else{
@@ -73,7 +74,7 @@ public class CrossHairI {
 		}
 	}
 
-	public Spatial create(){
+	public Spatial reinitialize(){
 		if(node!=null && node.getParent()!=null)node.removeFromParent();
 		
 		Vector3f[] av3f={
