@@ -24,32 +24,31 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
 package com.github.devconslejme.game;
 
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.PkgCfgAbs;
-import com.github.devconslejme.misc.jme.FlyByCameraX;
-import com.jme3.app.Application;
-import com.jme3.scene.Node;
-
+import com.github.devconslejme.misc.StringI;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PkgCfgI extends PkgCfgAbs{
-	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
+public class DistancesI {
+	public static DistancesI i(){return GlobalManagerI.i().get(DistancesI.class);}
+
+	private String	strUnit="m";
 	
-	public void configure(Application app, Node nodeGui, Node nodeVirtualWorld, FlyByCameraX flycamx){
-		super.configure();
-		if(!com.github.devconslejme.misc.jme.PkgCfgI.i().isConfigured()){
-			com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app,nodeGui, nodeVirtualWorld);
-		}
-		
-		ReticleI.i().configure(nodeGui,flycamx);
-		CrossHairI.i().configure(nodeGui);
-		TargetI.i().configure(nodeVirtualWorld);
-		
-		setConfigured();
+	public DistancesI setUnit(String str){ //TODO Km etc
+		this.strUnit=str;
+		return this; 
 	}
+	
+	public String fmtDist(Float f){
+		if(f==null)return "...";
+		return StringI.i().fmtFloat(f,1)+strUnit;
+	}
+
+	public String getUnit() {
+		return strUnit;
+	}
+
 }

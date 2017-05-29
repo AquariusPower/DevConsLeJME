@@ -29,25 +29,23 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 
+import com.github.devconslejme.devcons.LoggingI;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.KeyCodeManagerI;
 import com.google.common.collect.Lists;
-import com.jme3.app.Application;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
 import com.jme3.input.FlyByCamera;
-import com.jme3.input.MouseInput;
-import com.jme3.input.controls.ActionListener;
-import com.jme3.input.controls.MouseButtonTrigger;
+import com.jme3.math.Plane;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.shape.Quad;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -178,7 +176,7 @@ public class WorldPickingI {
 		Vector3f v3fCursorAtVirtualWorld3D = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(v2f,0f);
 		
 		Vector3f v3fDirection = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(v2f,1f);
-		v3fDirection.subtractLocal(v3fCursorAtVirtualWorld3D).normalizeLocal();
+		v3fDirection.subtractLocal(v3fCursorAtVirtualWorld3D).normalizeLocal(); //norm just to grant it
 		
 		Ray ray = new Ray(v3fCursorAtVirtualWorld3D, v3fDirection);
 		nodeVirtualWorld.collideWith(ray, crs);
@@ -191,6 +189,15 @@ public class WorldPickingI {
 		}
 		
 		return acrList;
+	}
+	
+	public Object debugTest(Object... aobj){ //keep even if emtpy!
+		for(int i=0;i<6;i++){
+			Plane p = MiscJmeI.i().getApp().getCamera().getWorldPlane(i);
+//			Quad q = new Quad();p.get
+			LoggingI.i().logEntry("CamPlane"+i+":"+p);
+		}
+		return null;
 	}
 	
 	/**

@@ -103,8 +103,8 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	@Override
 	public void simpleInitApp() {
 		/** this should be the 1st thing configured */
-		com.github.devconslejme.devcons.PkgCfgI.i().configure(this,getGuiNode(), getRootNode());
-		com.github.devconslejme.game.PkgCfgI.i().configure(this,getGuiNode(), getRootNode());
+		com.github.devconslejme.devcons.PkgCfgI.i().configure(this, getGuiNode(), getRootNode());
+		com.github.devconslejme.game.PkgCfgI.i().configure(this, getGuiNode(), getRootNode(), flycamx);
 		
 		if(bEnableOpt)opt_initBasics();
 		
@@ -124,7 +124,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	 * or bEnableOpt=false just for a simpler test.
 	 ******************************************************************************************/
 	private static boolean	bEnableOpt = true;
-	private FlyByCameraX	flycam;
+	private FlyByCameraX	flycamx;
 	private OriginDevice	orde;
 	private float	fSpeedBkp;
 	
@@ -139,12 +139,12 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	 */
 	@Override
 	public FlyByCameraX getFlyByCamera() {
-    if(flycam==null){
-    	flycam = new FlyByCameraX(getCamera());//.setAllowMove(true);
-    	flycam.registerWithInput(getInputManager());
+    if(flycamx==null){
+    	flycamx = new FlyByCameraX(getCamera());//.setAllowMove(true);
+    	flycamx.registerWithInput(getInputManager());
     }
     
-		return flycam;
+		return flycamx;
 	}
 	
 	public TestDevCons() {super();}

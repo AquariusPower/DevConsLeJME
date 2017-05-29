@@ -29,6 +29,7 @@ package com.github.devconslejme.game;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import com.github.devconslejme.game.TargetI.TargetGeom;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
@@ -76,28 +77,19 @@ public class ReticleI {
 	private Vector3f	v3fAppWSize = new Vector3f();
 	private CallableXAnon	cxUpdate;
 	private Float	fRangeDist;
-	private Spatial	sptTarget;
-	private SimpleApplication	sappOpt;
+//	private Spatial	sptTarget;
+//	private SimpleApplication	sappOpt;
 	private Application	app;
-	private Geometry	geomTarget;
+//	private Geometry	geomTarget;
 	private float	fBorderRadiusMarginPerc=0.1f;
+	protected TargetGeom	tgtLast;
+	private TargetGeom	tgt;
+	private Node	nodeGui;
+	private FlyByCameraX	flycamx;
 	
-	public void configure(){//keep even if empty to help init global
-    KeyBindCommandManagerI.i().putBindCommandsLater("T",
-    	new CallBoundKeyCmd(){
-    		@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
-					resetTarget();
-					if(rnLastConfigured==null)return true;//not ready, ignore
-					
-					ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingFromCenterTo(null,rnLastConfigured.v3fMarkersCenter);
-					if(acr.size()>0){
-						geomTarget = acr.get(0).getGeometry();
-						sptTarget=SpatialHierarchyI.i().getParentest(geomTarget, Node.class, true, false);
-					}
-					return true;
-				}
-			}.setName("AcquireTarget")
-		);
+	public void configure(Node nodeGui, FlyByCameraX flycamx){
+		this.nodeGui = nodeGui;//keep even if empty to help init global
+		this.flycamx = flycamx;
 	} 
 	
 	public static class ReticleNode extends Node{
@@ -279,21 +271,22 @@ public class ReticleI {
 			return this; 
 		}
 
-		public void updateInfo(Float fTargetDist,Float fRangeDist,Float fFoV) {
+		public void updateInfo(TargetGeom tgt,Float fRangeDist,Float fFoV) {
 //			if(btRangeDist.getLocalTranslation().length()>0)System.out.println(btRangeDist.getWorldTranslation());
 			btInfo.setText(""
 				+(fFoV==null?"":"FoV "+StringI.i().fmtFloat(fFoV,0)+""+Character.toString((char)176)+"")//"°")
 				+"\n"
-				+"RF "+(fRangeDist==null?"...":StringI.i().fmtFloat(fRangeDist,1)+"m")
+//				+"RF "+(fRangeDist==null?"...":StringI.i().fmtFloat(fRangeDist,1)+"m")
+				+"RF "+DistancesI.i().fmtDist(fRangeDist)
 				+"\n"
-				+(fTargetDist==null?"":"Tg "+StringI.i().fmtFloat(fTargetDist,1)+"m") //last (may not be set)
+				+(tgt==null?"":"Tg "+tgt.getDistanceStr()) //last (may not be set)
 			);
 		}
 		
 	}
 	
-	public ReticleI setRangeFinderTarget(Spatial spt){
-		this.sptTarget = spt;
+	public ReticleI setRangeFinderTarget(TargetGeom tgt){
+		this.tgt = tgt;
 		return this;
 	}
 	public ReticleI setRangeFinderDistanceValue(Float fRangeDist){
@@ -499,14 +492,14 @@ public class ReticleI {
 		if(rnLastConfigured!=null)rnLastConfigured.removeFromParent();
 		
 		app = G.i(Application.class);
-		sappOpt = G.i(SimpleApplication.class);
-		if(sappOpt!=null){ //TODO it cannot really independ of flycamX and sapp yet...
-			FlyByCamera flycam = sappOpt.getFlyByCamera();
-			FlyByCameraX flycamx=(flycam instanceof FlyByCameraX) ? (FlyByCameraX)flycam : null;
+//		sappOpt = G.i(SimpleApplication.class);
+//		if(sappOpt!=null){ //TODO it cannot really independ of flycamX and sapp yet...
+//			FlyByCamera flycam = sappOpt.getFlyByCamera();
+//			FlyByCameraX flycamx=(flycam instanceof FlyByCameraX) ? (FlyByCameraX)flycam : null;
 			
 			rnLastConfigured = createReticle(rnStore);
-			if(flycamx!=null)flycamx.setReticle(rnLastConfigured, sappOpt.getGuiNode()); //TODO shouldnt be another layer, below the gui node?
-			sappOpt.getGuiNode().attachChild(rnLastConfigured);
+			if(flycamx!=null)flycamx.setReticle(rnLastConfigured, nodeGui); //TODO shouldnt be another layer, below the gui node?
+			nodeGui.attachChild(rnLastConfigured);
 			rnLastConfigured.setLocalTranslation(HWEnvironmentJmeI.i().getDisplay().getCenter(
 				-((BoundingBox)rnLastConfigured.getWorldBound()).getExtent(null).length()
 			));
@@ -523,18 +516,33 @@ public class ReticleI {
 						}else{
 							ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingFromCenterTo(null,rnLastConfigured.v3fMarkersCenter);
 							Float fDist=null;
-							Float fTargetDist=null;
+//							Float fTargetDist=null;
 							if(acr.size()>0)fDist=(acr.get(0).getDistance());
 							
-							if(sptTarget!=null && sptTarget.hasAncestor(sappOpt.getRootNode())){
-								fTargetDist=(app.getCamera().getLocation().distance(sptTarget.getWorldTranslation()));
-								HighlighterI.i().applyAt(geomTarget);
-							}else{
-								resetTarget();
-								fTargetDist=null;
-							}
+							TargetI.i().setRayCastFromXY(rnLastConfigured.v3fMarkersCenter);
+							TargetGeom tgt = TargetI.i().getLastTarget();
+//							if(tgt!=null)fTargetDist=tgt.getDistance();
 							
-							rnLastConfigured.updateInfo(fTargetDist,fDist,flycamx.getFOV());
+//							public ReticleI setRangeFinderTarget(Target tgt){
+//								this.tgt = tgt;
+//								return this;
+//							}
+//							public ReticleI setRangeFinderDistanceValue(Float fRangeDist){
+//								this.fRangeDist = fRangeDist;
+//								return this;
+//							}
+
+//							tgtLast = TargetI.i().getLastTarget();
+//							if(tgtLast!=null && tgtLast.getRootSpatial().hasAncestor(sappOpt.getRootNode())){
+//								fTargetDist=(app.getCamera().getLocation().distance(
+//									tgtLast.getRootSpatial().getWorldTranslation()));
+//								HighlighterI.i().applyAt(tgtLast.getGeometryHit());
+//							}else{
+//								resetLastTarget();
+//								fTargetDist=null;
+//							}
+							
+							rnLastConfigured.updateInfo(tgt,fDist,flycamx.getFOV());
 							rnLastConfigured.updateZoomLevel(flycamx.getCurrentZoomLevelIndex());
 							rnLastConfigured.updateZoomMarkers(flycamx.getTotalZoomSteps());
 						}
@@ -551,15 +559,15 @@ public class ReticleI {
 //				el.setPlay(true);
 //				EffectManagerStateI.i().add(el);
 			
-		}
+//		}
 		
 	}
 
-	protected void resetTarget() {
-		if(geomTarget!=null)HighlighterI.i().removeFrom(geomTarget);
-		sptTarget=null;
-		geomTarget=null;
-	}
+//	protected void resetTarget() {
+//		if(geomTarget!=null)HighlighterI.i().removeFrom(geomTarget);
+//		sptTarget=null;
+//		geomTarget=null;
+//	}
 	public ReticleNode getLastReticuleNode() {
 		return rnLastConfigured;
 	}

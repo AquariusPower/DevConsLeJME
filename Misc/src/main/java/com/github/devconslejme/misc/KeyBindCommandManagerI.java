@@ -322,8 +322,13 @@ public class KeyBindCommandManagerI {
 			return false; // in this case, it is expected that the on key released have been overriden and is returning not null
 		}
 		
-//	public abstract Boolean callOnKeyPressed();
+		/** 
+		 * @return null to ignore this call, false to retry it in the queue
+		 */
 		public Boolean callOnKeyPressed(int iClickCountIndex){return null;}
+		/** 
+		 * @return see {@link #callOnKeyPressed(int)}
+		 */
 		public Boolean callOnKeyReleased(int iClickCountIndex){return null;}
 		
 		/**

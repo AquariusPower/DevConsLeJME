@@ -35,12 +35,14 @@ import com.github.devconslejme.misc.jme.GeometryI;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Curve;
+import com.jme3.scene.shape.Line;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -50,12 +52,14 @@ public class CrossHairI {
 
 	private SimpleApplication	sappOpt;
 	private Node	node;
+	private Node	nodeToAttach;
 	
-	public void configure(){
-		sappOpt=G.i(SimpleApplication.class);
+	public void configure(Node nodeToAttach){
+//		sappOpt=G.i(SimpleApplication.class);
 		
 //		create();
 		
+		this.nodeToAttach = nodeToAttach;
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
@@ -70,20 +74,34 @@ public class CrossHairI {
 		if(HWEnvironmentJmeI.i().getMouse().isCursorVisible()){
 			node.removeFromParent();
 		}else{
-			sappOpt.getGuiNode().attachChild(node);
+			nodeToAttach.attachChild(node);
 		}
 	}
 
 	public Spatial reinitialize(){
 		if(node!=null && node.getParent()!=null)node.removeFromParent();
 		
+		node=new Node("CrossHair");
+		
+		//////////////////// "dot"
+		float fDotRadius=0.25f;
+		Geometry geomDotV = GeometryI.i().create(new Line(new Vector3f(0,-fDotRadius,0),new Vector3f(0,fDotRadius,0)), 
+			ColorI.i().colorChangeCopy(ColorRGBA.Cyan, 0f, 0.75f));
+		geomDotV.setQueueBucket(Bucket.Gui);
+		node.attachChild(geomDotV);
+		
+		Geometry geomDotH = (Geometry)geomDotV.deepClone();
+		geomDotH.rotate(0,0,FastMath.DEG_TO_RAD*90);
+		node.attachChild(geomDotH);
+		
+		geomDotH.move(-fDotRadius/4f,0,0); //after cloning!
+		
+		/////////////////// fire spread
 		Vector3f[] av3f={
 				new Vector3f(0,-1,0),
 				new Vector3f(1,0,0),
 				new Vector3f(0,1,0)
 		};
-		
-		node=new Node("CrossHair");
 		
 		Geometry geomA = GeometryI.i().create(new Curve(av3f, 1), 
 			ColorI.i().colorChangeCopy(ColorRGBA.Cyan, 0f, 0.25f));
@@ -94,7 +112,7 @@ public class CrossHairI {
 		geomB.lookAt(Vector3f.UNIT_Z.negate(), Vector3f.UNIT_Y);
 		node.attachChild(geomB);
 		
-		geomA.move(1,0,0);
+		geomA.move(1,0,0); //after cloning!
 		geomB.move(-1,0,0);
 		
 		node.scale(10);
