@@ -27,6 +27,8 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.github.devconslejme.gendiag;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import com.github.devconslejme.es.DialogHierarchyComp.DiagCompBean;
 import com.github.devconslejme.es.DialogHierarchySystemI;
@@ -41,6 +43,7 @@ import com.github.devconslejme.misc.lemur.AbsorbClickCommandsI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.github.devconslejme.misc.lemur.ResizablePanel.IResizableListener;
+import com.jme3.audio.Environment;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.simsilica.lemur.Button;
@@ -72,11 +75,17 @@ public class MinimizedDialogsPanelI implements IResizableListener{
 			public Boolean call() {
 				if(!bInitialized)return false;
 				
-				int iMinChildren = cntrMinimized.getLayout().getChildren().size();
-				if(minimizedDiags.getParent()==null){
-					if(iMinChildren>0)nodeToMonitor.attachChild(minimizedDiags);
+				boolean bShow = false;
+				if(HWEnvironmentJmeI.i().getMouse().isCursorVisible()){
+					if(cntrMinimized.getLayout().getChildren().size() > 0){
+						bShow=true;
+					}
+				}
+				
+				if(bShow){
+					if(minimizedDiags.getParent()==null)nodeToMonitor.attachChild(minimizedDiags);
 				}else{
-					if(iMinChildren==0)minimizedDiags.removeFromParent();
+					if(minimizedDiags.getParent()!=null)minimizedDiags.removeFromParent();
 				}
 				
 				return true;
@@ -103,11 +112,20 @@ public class MinimizedDialogsPanelI implements IResizableListener{
 		});
 	}
 	
+	public static class ButtonMinimized extends Button{
+		private AbstractGenericDialog	gendiag;
+
+		public ButtonMinimized(String s) {
+			super(s);
+		}
+	}
+	
 	@SuppressWarnings("unchecked")
 	public void minimize(AbstractGenericDialog sgd) {
 		if(dhs.getHierarchyComp(sgd.getDialog()).getHierarchyParent()!=null)return;
 		
-		Button btn = new Button(sgd.getTitle());
+		ButtonMinimized btn = new ButtonMinimized(sgd.getTitle());
+		btn.gendiag = sgd;
 		PopupHintHelpListenerI.i().setPopupHintHelp(btn, btn.getText());
 		TextStringI.i().recursivelyApplyTextNoWrap(btn);
 		//TODO rotate text 90degreess if in the vertical?
@@ -115,13 +133,12 @@ public class MinimizedDialogsPanelI implements IResizableListener{
 		addMinimized(btn, cntrMinimized.getLayout().getChildren().size());
 //		cntrMinimized.addChild(btn, cntrMinimized.getLayout().getChildren().size());
 //		btn.addClickCommands(new Command<Button>() {
+		sgd.getDialogVisuals().setMinimizedButton(btn);
 		AbsorbClickCommandsI.i().addClickCommands(btn,new Command<Button>() {
 			@Override
 			public void execute(Button source) {
-				DialogHierarchyStateI.i().showDialog(sgd.getDialog());
-				btn.removeFromParent();
-				
-				update();
+				assert btn==source;
+				restoreDialog(sgd);
 			}
 
 		});
@@ -129,23 +146,34 @@ public class MinimizedDialogsPanelI implements IResizableListener{
 		sgd.close();
 	}
 	
+	public void restoreDialog(AbstractGenericDialog sgd){
+		DialogHierarchyStateI.i().showDialog(sgd.getDialog());
+		sgd.getDialogVisuals().resetMinimizedButton();
+		update();
+	}
+	
 	private void update() {
-		//read remaining
-		ArrayList<Node> children = new ArrayList<Node>(cntrMinimized.getLayout().getChildren()); //remaining
-		cntrMinimized.getLayout().clearChildren();
-//		Vector3f v3fMaxSize = new Vector3f();
-		int i=0;for(Node child:children){
-			Button btnChild = (Button)child;
-			addMinimized(btnChild, i++);
-			Vector3f v3fPrefSize = btnChild.getPreferredSize();
-//			if(v3fMaxSize.x < v3fPrefSize.x)v3fMaxSize.x=v3fPrefSize.x;
-//			if(v3fMaxSize.y < v3fPrefSize.y)v3fMaxSize.y=v3fPrefSize.y;
-		}
+		if(minimizedDiags.getParent()==null)return;
 		
-		Vector3f v3fSize = minimizedDiags.getSize().clone();
-		if(v3fSize.x<fMinSize)v3fSize.x=fMinSize;
-		if(v3fSize.y<fMinSize)v3fSize.y=fMinSize;
-		minimizedDiags.setPreferredSizeWH(v3fSize);
+//		if(HWEnvironmentJmeI.i().getMouse().isCursorVisible()){
+//			if(cntrMinimized.getParent()==null)todo;
+			
+			//read remaining
+			ArrayList<Node> children = new ArrayList<Node>(cntrMinimized.getLayout().getChildren()); //remaining
+			cntrMinimized.getLayout().clearChildren();
+			int i=0;for(Node child:children){
+				Button btnChild = (Button)child;
+				addMinimized(btnChild, i++);
+				Vector3f v3fPrefSize = btnChild.getPreferredSize();
+			}
+			
+			Vector3f v3fSize = minimizedDiags.getSize().clone();
+			if(v3fSize.x<fMinSize)v3fSize.x=fMinSize;
+			if(v3fSize.y<fMinSize)v3fSize.y=fMinSize;
+			minimizedDiags.setPreferredSizeWH(v3fSize);
+//		}else{
+//			if(cntrMinimized.getParent()!=null)cntrMinimized.removeFromParent();
+//		}
 	}
 	
 	private void addMinimized(Node node,int iIndex){
@@ -171,5 +199,14 @@ public class MinimizedDialogsPanelI implements IResizableListener{
 
 	@Override
 	public void resizableEndedResizingEvent(ResizablePanel rzpSource) { }
+
+	public ArrayList<ResizablePanel> getAllOpenedAndMinimizedDialogs() {
+		ArrayList<ResizablePanel> a = new ArrayList<ResizablePanel>();
+		List<ButtonMinimized> descendantMatches = cntrMinimized.descendantMatches(ButtonMinimized.class, null);
+		for(ButtonMinimized btn:descendantMatches){
+			a.add(btn.gendiag.getDialog());
+		}
+		return a;
+	}
 	
 }

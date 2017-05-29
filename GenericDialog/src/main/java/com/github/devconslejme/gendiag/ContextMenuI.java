@@ -31,25 +31,24 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
-import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.es.DialogHierarchyComp;
 import com.github.devconslejme.es.DialogHierarchyComp.DiagCompBean;
+import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI.DialogVisuals;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.HierarchySorterI.EHierarchyType;
-import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.StringI.EStringMatchMode;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.IndicatorI;
 import com.github.devconslejme.misc.jme.IndicatorI.GeomIndicator;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
-import com.github.devconslejme.misc.jme.UserDataI.IUDKey;
 import com.github.devconslejme.misc.lemur.AbsorbClickCommandsI;
 import com.github.devconslejme.misc.lemur.CursorListenerX;
 import com.github.devconslejme.misc.lemur.DragParentestPanelListenerI;
@@ -57,6 +56,7 @@ import com.github.devconslejme.misc.lemur.MiscLemurI;
 import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.github.devconslejme.misc.lemur.ResizablePanel.IResizableListener;
+import com.github.devconslejme.misc.lemur.SizeAndLocationI;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
@@ -65,7 +65,6 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Sphere;
-import com.simsilica.es.EntityId;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
 import com.simsilica.lemur.Container;
@@ -96,15 +95,14 @@ public class ContextMenuI implements IResizableListener{
 	 * use {@link ContextMenuAnon} for anonymous classes
 	 */
 	public static class ContextMenu<SELF extends ContextMenu<SELF>>{
-		LinkedHashMap<String,ContextButton> hmContextOptions = new LinkedHashMap<String,ContextButton>();
-		private Panel pnlSource;
+		private DialogVisuals	vs;
+		private LinkedHashMap<String,ContextButton> hmContextOptions = new LinkedHashMap<String,ContextButton>();
+		private Panel pnlSourceLink;
 		private ResizablePanel	rzpDialogHierarchyParent;
 		private ContextButton	btnChoice;
 		private boolean	bSingleChoiceMode;
-//		private ResizablePanel	rzpContextMenu;
 		private String	strStyle;
 		private Container	cntrContextOptions;
-//		private EntityId	entid;
 		private Button	btnTitle;
 		
 		private Command<Button>	cmdCloseOnClick = new Command<Button>() {
@@ -117,11 +115,15 @@ public class ContextMenuI implements IResizableListener{
 				}
 			}
 		};
-		private DialogVisuals	vs;
 		
 		public String getReport(){
 			return toString()+","+DialogHierarchyStateI.i().getHierarchyComp(vs.getDialog()).toString();
 		}
+		
+		/**
+		 * override for dynamic conxtext menu entries
+		 */
+		public void recreateEntries() {}
 		
 		public ContextMenu(ResizablePanel	rzpDialogHierarchyParent){
 			this.rzpDialogHierarchyParent=rzpDialogHierarchyParent;
@@ -184,7 +186,7 @@ public class ContextMenuI implements IResizableListener{
 		 * @return 
 		 */
 		private SELF setContextSource(Panel pnlSource){
-			this.pnlSource=pnlSource;
+			this.pnlSourceLink=pnlSource;
 			return getThis();
 		}
 		
@@ -194,7 +196,7 @@ public class ContextMenuI implements IResizableListener{
 		 */
 		@SuppressWarnings("unchecked")
 		public <T extends Panel> T getContextSource(){
-			return (T)pnlSource;
+			return (T)pnlSourceLink;
 		}
 		
 		public ContextMenu createSubMenu(String strTextKey){
@@ -296,38 +298,12 @@ public class ContextMenuI implements IResizableListener{
 		public <T> T getCurrentContextSourceStoredValue() {
 			return (T)objCurrentContextSourceStoredValue;
 		}
+
+		public void close() {
+			vs.getDialog().close();
+		}
 		
-//		public ContextMenu setHierarchyParent(ResizablePanel hrpParent) {
-//			this.hrpParent=hrpParent;
-//			return this;
-//		}
 	}
-	
-//	/**
-//	 * keep private to keep this logic restricted to this class.
-//	 * To avoid creating usage confusion outside here.
-//	 */
-//	private static enum EContext implements IUDKey{
-////		Choice(Button.class),
-////		Menu(ContextMenu.class),
-////		HintUpdater(CallableX.class),
-//		PopupHintHelp(String.class),
-//		;
-//		
-//		private Class	cl;
-//		private EContext(Class cl) {
-//			this.cl=cl;
-//		}
-//		
-////		public String uId(){return EContext.class.getName()+"/"+toString();}
-//		@Override
-//		public String getUId(){return JavaLangI.i().enumUId(this);}
-//		
-//		@Override
-//		public Class getType() {
-//			return cl;
-//		}
-//	}
 	
 	/**
 	 * {@link ContextButton} 1 to 1 {@link HintUpdaterPerCtxtBtn}<br>
@@ -343,13 +319,10 @@ public class ContextMenuI implements IResizableListener{
 
 		public void setPopupHintHelp(String str){
 			this.strPopupHintHelp=str;
-//			putKeyValue(EContext.PopupHintHelp.getUId(),str);
-//			this.setLoopEnabled(true).setPopupHintHelp(""); //tst dummy
 		}
 
 		public String getPopupHintHelp() {
 			return strPopupHintHelp;
-//			return getValue(EContext.PopupHintHelp.getUId());
 		}
 		
 		private void setContextButtonParent(ContextButton cb){
@@ -617,6 +590,7 @@ public class ContextMenuI implements IResizableListener{
 		DragParentestPanelListenerI.i().applyAt(cm.btnTitle);
 		cm.cntrContextOptions.addChild(cm.btnTitle, i++, 0);
 		
+		cm.recreateEntries();
 		assert(cm.hmContextOptions.size()>0);
 		
 		for(Entry<String, ContextButton> entry : (cm.hmContextOptions).entrySet()){
@@ -647,30 +621,37 @@ public class ContextMenuI implements IResizableListener{
 		
 		DialogHierarchyStateI.i().showDialogAsModal(cm.getDialogHierarchyParent(), cm.vs.getDialog());
 		
+//		cm.hmContextOptions.get(0).getsi
 		cm.vs.getDialog().setPreferredSizeWH(
 			new Vector3f(
-				200, 
-				30*cm.hmContextOptions.size(), 
+				200, //TODO find a better width
+				30*cm.hmContextOptions.size(), //TODO find a better height, based on bitmap font height? or button height? or adjust the size later after cm is ready? 
 				0)//cm.rzpContextMenu.getPreferredSize().z)
 		);
 		
 		int iDisplacement=20;
-		cm.vs.getDialog().setLocalTranslationXY(new Vector3f(
-			v2fMouseCursorPos.getX()-iDisplacement, 
-			v2fMouseCursorPos.getY()+iDisplacement, 
-			0)); // z will be fixed by diag hierarchy
+		Vector3f v3f = 
+	//		cm.vs.getDialog().setLocalTranslationXY(
+			new Vector3f(
+				v2fMouseCursorPos.getX()-iDisplacement, 
+				v2fMouseCursorPos.getY()+iDisplacement, 
+				0); // z will be fixed by diag hierarchy
+		QueueI.i().enqueue(new CallableXAnon() { //later to let the diag settle down in size
+			@Override
+			public Boolean call() {
+				if(!cm.vs.getDialog().isOpened())return false;
+				if(cm.vs.getDialog().getSize().length()==0)return false; //wait it be ready
+				SizeAndLocationI.i().positionFullyInsideScreenLimits(cm.vs.getDialog(),v3f);
+				return true;
+			}
+		});
+//		SizeAndLocationI.i().setLocalTranslationZ(cm.vs.getDialog(), MiscJmeI.i().getZAboveAllAtGuiNode());
 	}
 	
-//	public boolean isTheContextMenu(ResizablePanel hs) {
-//		return (hs==rzpContextMenu);
-//	}
-
-
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder
-				.append("ContextMenuI [bUseContextMenuAvailablePermanentIndicators=");
+		builder.append("ContextMenuI [bUseContextMenuAvailablePermanentIndicators=");
 		builder.append(bUseContextMenuAvailablePermanentIndicators);
 		builder.append(", giContextMenuAvailableIndicator=");
 		builder.append(giContextMenuAvailableIndicator);

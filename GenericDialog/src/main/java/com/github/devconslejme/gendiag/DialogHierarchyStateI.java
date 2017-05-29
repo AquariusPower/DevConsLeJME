@@ -28,11 +28,12 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.github.devconslejme.gendiag;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.github.devconslejme.es.DialogHierarchyComp;
 import com.github.devconslejme.es.DialogHierarchyComp.DiagCompBean;
 import com.github.devconslejme.es.DialogHierarchySystemI;
-import com.github.devconslejme.gendiag.DialogHierarchyStateI.IUserInteraction;
+import com.github.devconslejme.gendiag.MinimizedDialogsPanelI.ButtonMinimized;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
@@ -191,25 +192,28 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 		private EntityId entid;
 		private ResizablePanel rzpDiag;
 		private ResizablePanel pnlBlocker;
+		private AbstractGenericDialog gendiagOptional;
 		
 		/** only one effect per child, but many per parent */
 		private IEffect ieffLinkToParent;
 		
 		private boolean bAllowPositionRelativeToParent=true;
 		private Vector3f	v3fPositionRelativeToParent = new Vector3f(20, -20, 0); //cascade like
-//		@Override
-//		public boolean equals(Object obj) {
-//			if(obj==rzpDiag)return true;
-//			if(obj==pnlBlocker)return true;
-//			if(obj==ieff)return true;
-//			if((Long)obj==entid.getId())return true;
-//			return false;
-//		}
+		private ButtonMinimized	btnm;
+		
 		public EntityId getEntityId() {
 			return entid;
 		}
 		private void setEntityId(EntityId entid) {
 			this.entid = entid;
+		}
+		
+		public AbstractGenericDialog getGenDiagOpt(){
+			return gendiagOptional;
+		}
+		public DialogVisuals setGenDiagOpt(AbstractGenericDialog abstractGenericDialog) {
+			this.gendiagOptional=abstractGenericDialog;
+			return this;
 		}
 		
 		public ResizablePanel getDialog() {
@@ -249,6 +253,16 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 		 */
 		public void ignorePositionRelativeToParent() {
 			this.bAllowPositionRelativeToParent = false;
+		}
+		public ButtonMinimized resetMinimizedButton() {
+			btnm.removeFromParent();
+			return btnm;
+		}
+		public void setMinimizedButton(ButtonMinimized btn) {
+			this.btnm = btn;
+		}
+		public boolean isHasMinimizedButton() {
+			return btnm!=null;
 		}
 		
 	}
@@ -827,6 +841,26 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 
 	public IUserInteraction getGlobalUserInteractionListener() {
 		return iuiGlobalUserInteractionListener;
+	}
+
+	public void raiseDialogLater(DialogVisuals vs) {
+		if(vs.isHasMinimizedButton()){
+			MinimizedDialogsPanelI.i().restoreDialog(vs.getGenDiagOpt());
+		}
+		
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				setFocusRecursively(vs.getEntityId());
+				return true;
+			}
+		});
+	}
+
+	public ArrayList<ResizablePanel> getAllOpenedAndMinimizedDialogs() {
+		ArrayList<ResizablePanel> arzpList = new ArrayList<ResizablePanel>(Arrays.asList(getAllOpenedDialogs()));
+		arzpList.addAll(MinimizedDialogsPanelI.i().getAllOpenedAndMinimizedDialogs());
+		return arzpList;
 	}
 
 }

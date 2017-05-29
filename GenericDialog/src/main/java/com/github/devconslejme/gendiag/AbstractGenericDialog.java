@@ -76,6 +76,8 @@ public abstract class AbstractGenericDialog implements IResizableListener{
 		
 		vs.getDialog().addResizableListener(this);
 		
+		vs.setGenDiagOpt(this);
+		
 //		initPreContentsContainer();
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override

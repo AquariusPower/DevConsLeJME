@@ -127,7 +127,12 @@ public class PopupHintHelpListenerI implements CursorListener{
 			lblPopupHelp.setText(strPopupHelp);
 			lblPopupHelp.setInsets(new Insets3f(3, 3, 3, 3));
 			
-			positionFullyInsideScreenLimits(v2fMousePos);
+//			positionFullyInsideScreenLimits(v2fMousePos);
+			SizeAndLocationI.i().positionFullyInsideScreenLimits(
+				cntrPopupHelp,
+				MiscJmeI.i().toV3f(v2fMousePos,MiscJmeI.i().getZAboveAllAtGuiNode()),
+				true
+			);
 			
 			if(cntrPopupHelp.getParent()==null)nodeGui.attachChild(cntrPopupHelp);
 		}else{
@@ -137,28 +142,28 @@ public class PopupHintHelpListenerI implements CursorListener{
 		}
 	}
 	
-	private void positionFullyInsideScreenLimits(Vector2f v2fMousePos) {
-		Vector3f v3fSize = lblPopupHelp.getSize();
-		
-		float fDistFromCursor=10f;
-		
-		float fX = v2fMousePos.x-v3fSize.x/2;
-		if(fX<0){
-			fX=0;
-		}else{
-			float fDiff = (fX+cntrPopupHelp.getSize().x) - HWEnvironmentJmeI.i().getDisplay().getWidth();
-			if(fDiff>0)fX-=fDiff;
-		}
-		
-		float fY = v2fMousePos.y+v3fSize.y+fDistFromCursor;
-		if(fY>HWEnvironmentJmeI.i().getDisplay().getHeight()){
-			fY=HWEnvironmentJmeI.i().getDisplay().getHeight();
-		}else{
-			if( (fY - cntrPopupHelp.getSize().y) < 0 )fY=cntrPopupHelp.getSize().y;
-		}
-		
-		cntrPopupHelp.setLocalTranslation(fX,fY,MiscJmeI.i().getZAboveAllAtGuiNode());
-	}
+//	private void positionFullyInsideScreenLimits(Vector2f v2fMousePos) {
+//		Vector3f v3fSize = lblPopupHelp.getSize();
+//		
+//		float fDistFromCursor=10f;
+//		
+//		float fX = v2fMousePos.x-v3fSize.x/2;
+//		if(fX<0){
+//			fX=0;
+//		}else{
+//			float fDiff = (fX+cntrPopupHelp.getSize().x) - HWEnvironmentJmeI.i().getDisplay().getWidth();
+//			if(fDiff>0)fX-=fDiff;
+//		}
+//		
+//		float fY = v2fMousePos.y+v3fSize.y+fDistFromCursor;
+//		if(fY>HWEnvironmentJmeI.i().getDisplay().getHeight()){
+//			fY=HWEnvironmentJmeI.i().getDisplay().getHeight();
+//		}else{
+//			if( (fY - cntrPopupHelp.getSize().y) < 0 )fY=cntrPopupHelp.getSize().y;
+//		}
+//		
+//		cntrPopupHelp.setLocalTranslation(fX,fY,MiscJmeI.i().getZAboveAllAtGuiNode());
+//	}
 
 	public static class PopupHelpUserData{
 		String strPopupHelp=null;

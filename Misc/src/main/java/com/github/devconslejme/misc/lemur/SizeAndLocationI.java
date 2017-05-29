@@ -26,12 +26,15 @@
 */
 package com.github.devconslejme.misc.lemur;
 
+import org.omg.CORBA.Request;
+
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Panel;
@@ -70,8 +73,8 @@ public class SizeAndLocationI {
 	 * @param v3fPos
 	 */
 	public void setLocalTranslationXY(Panel pnl, Vector3f v3fPos) {
-		if (pnl instanceof ResizablePanel) {
-			ResizablePanel rzp = (ResizablePanel) pnl;
+		if (pnl instanceof PanelBase) {
+			PanelBase rzp = (PanelBase) pnl;
 			rzp.setLocalTranslationXY(v3fPos);
 		}else{
 			pnl.setLocalTranslation(v3fPos.x, v3fPos.y, pnl.getLocalTranslation().z);
@@ -81,7 +84,11 @@ public class SizeAndLocationI {
 	public void setLocalTranslationZ(Panel pnl, float fZ) {
 		Vector3f v3f = pnl.getLocalTranslation().clone();
 		v3f.z=fZ;
-		pnl.setLocalTranslation(v3f);
+		if(pnl instanceof PanelBase){
+			((PanelBase)pnl).setLocalTranslationZ(fZ);
+		}else{
+			pnl.setLocalTranslation(v3f);
+		}
 	}
 
 	public SizeAndLocationI setMinSizeZ(float fZ) {
@@ -186,5 +193,36 @@ public class SizeAndLocationI {
 	 */
 	public float getMinSizeZ() {
 		return fMinSizeZ;
+	}
+
+	public Vector3f positionFullyInsideScreenLimits(Panel pnl, Vector3f v3fPos) {
+		return positionFullyInsideScreenLimits(pnl,v3fPos,false);
+	}
+	public Vector3f positionFullyInsideScreenLimits(Panel pnl, Vector3f v3fPos, boolean bPopupMode) {
+		float fYDistFromCursor=10f;
+//		Vector3f v3fSize = lblPopupHelp.getSize();
+		Vector3f v3fSize = pnl.getSize();
+		
+		float fX = v3fPos.x+(bPopupMode?-v3fSize.x/2:0);
+		if(fX<0){
+			fX=0;
+		}else{
+			float fDiff = (fX+v3fSize.x) - HWEnvironmentJmeI.i().getDisplay().getWidth();
+			if(fDiff>0)fX-=fDiff;
+		}
+		
+		float fY = v3fPos.y+(bPopupMode?v3fSize.y+fYDistFromCursor:0f);
+		if(fY>HWEnvironmentJmeI.i().getDisplay().getHeight()){
+			fY=HWEnvironmentJmeI.i().getDisplay().getHeight();
+		}else{
+			if( (fY - v3fSize.y) < 0 )fY=v3fSize.y;
+		}
+		
+		Vector3f v3fNew = new Vector3f(fX,fY,0);
+		setLocalTranslationXY(pnl, v3fNew);
+		setLocalTranslationZ(pnl, v3fPos.z);
+//		cntrPopupHelp.setLocalTranslation(fX,fY,MiscJmeI.i().getZAboveAllAtGuiNode());
+		
+		return v3fNew;
 	}
 }

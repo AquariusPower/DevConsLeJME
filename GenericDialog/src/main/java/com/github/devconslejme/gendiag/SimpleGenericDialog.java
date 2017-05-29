@@ -42,6 +42,7 @@ import com.github.devconslejme.gendiag.ContextMenuI.ContextButton;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
 import com.github.devconslejme.gendiag.ContextMenuI.HintUpdaterPerCtxtBtn;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.DialogVisuals;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI.IUserInteraction;
 import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.SimpleVarReadOnly;
@@ -608,43 +609,26 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			}
 		}
 	});
+	private Button	btnOtherDialogs;
+	
+	ContextMenu cmOtherDiags;
 	
 	private void initSectionInfoTitle() {
 
 		cmdInfoSectionTitleButtons = new Command<Button>() {
-//			private String	strUDKeyPosBeforeMaximize = SimpleGenericDialog.class+"/PosBeforeMaximize";
 			@Override
 			public void execute(Button source) {
 				if(source==btnMaximizeRestore){ //toggle
 					toggleMaximize();
-//					if(bKeepMaximized){							/**							 * restore							 */
-//						getDialog().restoreDefaultSafeSize();
-//						
-//						MaximizeUD mud = UserDataI.i().getMustExistOrNull(getDialog(), MaximizeUD.class);
-//						DetailedException.assertNotNull(mud,getDialog(),this);
-//						Vector3f v3fPosBeforeMaximize = mud.getPosBeforeMaximize();
-//						getDialog().setLocalTranslationXY(v3fPosBeforeMaximize);
-//						
-//						bKeepMaximized=false;
-//					}else{							/**							 * maximize							 */
-//						getDialog().applyCurrentSafeSizeAsDefault();
-//						
-////						getDialog().setUserData(strUDKeyPosBeforeMaximize,getDialog().getLocalTranslation().clone());
-//						UserDataI.i().overwriteSafely(
-//							getDialog(), 
-//							new MaximizeUD().setPosBeforeMaximize(
-//								getDialog().getLocalTranslation().clone()
-//							)
-//						);
-//						
-//						bKeepMaximized=true;
-//					}
 				}else
 				if(source==btnClose){
 					getDialog().close();
 				}else
 				if(source==btnMinimize){
 					MinimizedDialogsPanelI.i().minimize(SimpleGenericDialog.this);
+				}else
+				if(source==btnOtherDialogs){
+					//the context menu button click will be used
 				}else
 				if(source==btnTitleText){
 					mcTitle.updateIncClicks();
@@ -655,11 +639,35 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			}
 		};
 		
-//		strTitle="(no title)";
-		
 		// title row
 		cntrDiagControls = new Container();
 		iDiagControlColumnInitIndex=0;
+		
+		btnOtherDialogs=appendNewDiagControl("O","other root dialogs");
+		cmOtherDiags = new ContextMenu(getDialog()){
+			@Override
+			public void recreateEntries() {
+				super.recreateEntries();
+				
+//				boolean bHas=false;
+				/**
+				 * there will always have at least this self dialog
+				 */
+				for(ResizablePanel diag:DialogHierarchyStateI.i().getAllOpenedAndMinimizedDialogs()){
+//					bHas=true;
+					DialogVisuals vs = DialogHierarchyStateI.i().getVisuals(diag);
+					addNewEntry(vs.getGenDiagOpt().getTitle(), new ApplyContextChoiceCmd() {
+						@Override
+						public void executeContextCommand(ContextButton cbSource) {
+							cmOtherDiags.close();
+							DialogHierarchyStateI.i().raiseDialogLater(vs);
+						}
+					});
+				}
+			}
+		};
+		ContextMenuI.i().applyContextMenuAtSource(btnOtherDialogs,cmOtherDiags);
+		
 		btnMinimize=appendNewDiagControl("_","Minimize");
 		btnMaximizeRestore=appendNewDiagControl("[ ]","Maximize/Restore");
 		btnClose=appendNewDiagControl("X","Close");
