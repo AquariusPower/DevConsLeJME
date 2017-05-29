@@ -28,8 +28,10 @@ package com.github.devconslejme.tests;
 
 import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.bullet.BulletAppState;
+import com.jme3.bullet.BulletAppState.ThreadingType;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.PhysicsTickListener;
+import com.jme3.bullet.PhysicsSpace.BroadphaseType;
 import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
 import com.jme3.bullet.control.CharacterControl;
 import com.jme3.bullet.objects.PhysicsCharacter;
@@ -55,7 +57,11 @@ public class TestPhysicsPicker extends SimpleApplicationAndStateAbs implements P
 	
 	@Override
 	public void update(float tpf) {
+		System.out.println("Main:"+Thread.currentThread().getName());
+		try {Thread.sleep(100);} catch (InterruptedException e) {}
 	}
+	
+//public static class BulletAppStateX extends BulletAppState{}
 	
 	/**
 	 * public so can be called from devcons user cmds
@@ -65,7 +71,7 @@ public class TestPhysicsPicker extends SimpleApplicationAndStateAbs implements P
 		super.initTest();
 		
 		bullet = new BulletAppState();
-		
+//		bullet.setThreadingType(ThreadingType.PARALLEL);
 		getStateManager().attach(bullet);
 		
 		physicsSpace = bullet.getPhysicsSpace();
@@ -76,14 +82,16 @@ public class TestPhysicsPicker extends SimpleApplicationAndStateAbs implements P
 		
 		new CharacterControl();
 	}
-	
-//	public static class BulletAppStateX extends BulletAppState{}
 
 	@Override
 	public void prePhysicsTick(PhysicsSpace space, float tpf) {
+		System.out.println("PhPre:"+Thread.currentThread().getName());
+		try {Thread.sleep(50);} catch (InterruptedException e) {}
 	}
 
 	@Override
 	public void physicsTick(PhysicsSpace space, float tpf) {
+		System.out.println("PhTick:"+Thread.currentThread().getName());
+		try {Thread.sleep(50);} catch (InterruptedException e) {}
 	}
 }
