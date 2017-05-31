@@ -34,10 +34,13 @@ import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
+import com.github.devconslejme.misc.KeyCodeManagerI;
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.HighlighterI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
+import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.jme.WorldPickingI;
 import com.jme3.app.Application;
 import com.jme3.collision.CollisionResult;
@@ -45,6 +48,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.UserData;
 
 /**
  * TODO show target indicator on the gui layer (ray cast?)
@@ -59,21 +63,34 @@ public class TargetI {
 	private Vector3f v3fRayCastFromXY;
 	private Node	nodeWorld;
 	private Application	app;
-
+	
+	public static interface IActivetableListener{
+		void activateEvent(); 
+	}
+	
 	public void configure(Node nodeWorld){
 		this.app=G.i(Application.class);
 		
 		this.nodeWorld=nodeWorld;
 		
-		KeyBindCommandManagerI.i().putBindCommandsLater("Shift+T",new CallBoundKeyCmd(){
+		KeyBindCommandManagerI.i().putBindCommandsLater(KeyCodeManagerI.i().getMouseTriggerKey(0).getFullId(),new CallBoundKeyCmd(){
+			@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
+				for(TargetGeom t:TargetI.i().getAllTargets()){
+					t.activateIfPossible();
+				}
+				return true;
+			}
+		}.setName("Activate"));
+		
+		String strK=KeyCodeManagerI.i().getMouseTriggerKey(1).getFullId();
+		KeyBindCommandManagerI.i().putBindCommandsLater("Shift+"+strK,new CallBoundKeyCmd(){
 			@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 				TargetGeom tgt = acquireNewTarget(v3fRayCastFromXY);
 				if(tgt!=null)addOrRemoveAtMultiTargetList(tgt);
 				return true;
 			}
 		}.setName("AddTargetMulti"));
-		
-    KeyBindCommandManagerI.i().putBindCommandsLater("T",new CallBoundKeyCmd(){
+    KeyBindCommandManagerI.i().putBindCommandsLater(strK,new CallBoundKeyCmd(){
     	@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 				clearLastTarget();
 				tgtLastSingleTarget=acquireNewTarget(v3fRayCastFromXY);
@@ -103,10 +120,11 @@ public class TargetI {
 		
 		if(tgt!=null){
 			updateTarget(tgt, null);
-			LoggingI.i().logEntry("Target:"
-				+tgt.getRootSpatial().getName()
-				+"("+tgt.getGeometryHit().getName()+")" //TODO head, arm etc
-				+"@"+tgt.getDistanceStr());
+			MessagesI.i().output(System.out,"Info",this,
+				"Target:"
+					+tgt.getRootSpatial().getName()
+					+"("+tgt.getGeometryHit().getName()+")" //TODO head, arm etc
+					+"@"+tgt.getDistanceStr());
 		}
 		
 		return tgt;
@@ -145,6 +163,16 @@ public class TargetI {
 	
 	public ArrayList<TargetGeom> getMultiTargetListCopy(){
 		return new ArrayList<TargetGeom>(atgtMulti.values());
+	}
+	
+	/**
+	 * last single + multi
+	 * @return
+	 */
+	public ArrayList<TargetGeom> getAllTargets() {
+		ArrayList<TargetGeom> at = getMultiTargetListCopy();
+		if(tgtLastSingleTarget!=null)at.add(0,tgtLastSingleTarget);
+		return at;
 	}
 	
 	/**
@@ -214,6 +242,15 @@ public class TargetI {
 			this.sptRoot = spt;
 		}
 
+		public void activateIfPossible() {
+			IActivetableListener ial = UserDataI.i().getMustExistOrNull(geomTarget,IActivetableListener.class);
+			if(ial!=null)ial.activateEvent();
+			if(sptRoot!=geomTarget){
+				IActivetableListener ialRoot = UserDataI.i().getMustExistOrNull(sptRoot,IActivetableListener.class);
+				if(ialRoot!=null)ialRoot.activateEvent();
+			}
+		}
+
 		public boolean isAllowReset() {
 			return bAllowReset;
 		}
@@ -249,4 +286,5 @@ public class TargetI {
 		}
 
 	}
+
 }

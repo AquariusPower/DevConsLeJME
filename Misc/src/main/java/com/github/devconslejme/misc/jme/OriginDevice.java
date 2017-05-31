@@ -355,6 +355,12 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		@Override	public void applyMultiClick(int totalClicks) {
 			switch(totalClicks){
 				case 1:
+					createPet(mcMainShapeMB0.ea);
+					break;
+				case 2:
+					mcMainShapeMB0.axi.getRotatingTorus().toggleInvertRotation();
+					break;
+				case 3:
 					if(eaExclusiveRotations==mcMainShapeMB0.ea){
 						eaExclusiveRotations=null;
 					}else{
@@ -364,13 +370,6 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 							getAxisInfo(ea).getRotatingTorus().resetRotation();
 						}
 					}
-					break;
-				case 2:
-					mcMainShapeMB0.axi.getRotatingTorus().toggleInvertRotation();
-					break;
-				case 3:
-				default: //3 or more keep spawning temporary pets
-					createPet(mcMainShapeMB0.ea);
 					break;
 			}
 		}

@@ -95,7 +95,7 @@ while true;do
 
 	FUNCchk misc/jme 				misc
 	FUNCchk misc/lemur 			misc misc/jme  
-	FUNCchk game						misc misc/jme 
+	FUNCchk game						misc misc/jme misc/lemur  
 	FUNCchk es 							misc misc/jme misc/lemur  
 	FUNCchk gendiag 				misc misc/jme misc/lemur es
 	FUNCchk devcons 				misc misc/jme misc/lemur es gendiag
