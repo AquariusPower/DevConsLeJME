@@ -48,7 +48,7 @@ public class PkgCfgI extends PkgCfgAbs{
 		
 		ReticleI.i().configure(nodeGui,flycamx);
 		CrossHairI.i().configure(nodeGui);
-		TargetI.i().configure(nodeVirtualWorld);
+		TargetI.i().configure(nodeVirtualWorld,flycamx);
 		
 		setConfigured();
 	}

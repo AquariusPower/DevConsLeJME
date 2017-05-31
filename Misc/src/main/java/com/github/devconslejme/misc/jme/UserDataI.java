@@ -56,7 +56,13 @@ public class UserDataI {
 	 * see {@link #setUserDataPSHSafely(Spatial, String, Object)}
 	 */
 	private <T extends Spatial> boolean setUserDataPSHSafely(T spt, Object obj) {
-		boolean b=false;
+		boolean b=false; 
+		/**
+		 * @DevSelfNote 
+		 * do not allow interfaces here, because two or more objects implementing the
+		 * same interface would conflict/overwrite the previous ones.
+		 * An abstract composite should suffice.
+		 */
 		for(Class<?> cl:JavaLangI.i().getSuperClassesOf(obj,true)){
 			b=setUserDataPSHSafely(spt, cl.getName(), obj);
 		}

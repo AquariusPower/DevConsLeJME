@@ -26,32 +26,69 @@
 */
 package com.github.devconslejme.misc.jme;
 
-import com.github.devconslejme.game.TargetI;
-import com.github.devconslejme.game.TargetI.TargetGeom;
+import java.util.ArrayList;
+
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.KeyBindCommandManagerI;
-import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
-import com.github.devconslejme.misc.KeyCodeManagerI;
+import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-@Deprecated
 public class ActivatorI {
 	public static ActivatorI i(){return GlobalManagerI.i().get(ActivatorI.class);}
 	
-	public void configure(){
-		String strK=KeyCodeManagerI.i().getMouseTriggerKey(0).getFullId();
-		KeyBindCommandManagerI.i().putBindCommandsLater(strK,new CallBoundKeyCmd(){
-			@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
-				for(TargetGeom t:TargetI.i().getAllTargets()){
-				}
-				return true;
-			}
-		}.setName("Activate"));
+	/**
+	 * all parent hierarchy may also be activated if each contains the listener,
+	 * beware what you put there. 
+	 * @param spt
+	 * @param ial
+	 */
+	public void appllyActivetableListener(Spatial spt, Activetable ial){
+		UserDataI.i().putSafelyMustNotExist(spt, ial);
 	}
 	
-	public static interface IActivatableListener{
-		void activateEvent(int iActionIndex); 
+	public void configure(){
+//		String strK=KeyCodeManagerI.i().getMouseTriggerKey(0).getFullId();
+//		KeyBindCommandManagerI.i().putBindCommandsLater(strK,new CallBoundKeyCmd(){
+//			@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
+//				for(TargetGeom t:TargetI.i().getAllTargets()){
+//				}
+//				return true;
+//			}
+//		}.setName("Activate"));
+	}
+	
+	public static abstract class Activetable{
+		/**
+		 * 
+		 * @param sptSource
+		 * @return if consumed (true) will prevent further parent's hierarchy activation
+		 */
+		public abstract boolean activateEvent(Spatial sptSource); 
+	}
+	
+	protected boolean activateIfPossibleRaw(ArrayList<Spatial> aspt,Spatial spt){
+		Activetable ial = UserDataI.i().getMustExistOrNull(spt,Activetable.class);
+		if(ial!=null){
+			aspt.add(spt);
+			if(ial.activateEvent(spt)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public ArrayList<Spatial> activateIfPossible(Spatial spt) {
+		ArrayList<Spatial> aspt=new ArrayList<Spatial>();
+		if(!activateIfPossibleRaw(aspt,spt)){
+			for (Node node : SpatialHierarchyI.i().getAllParents(spt,false)) {
+				if(activateIfPossibleRaw(aspt,node)){
+					break;
+				}
+			}
+		}
+		
+		return aspt;
 	}
 }

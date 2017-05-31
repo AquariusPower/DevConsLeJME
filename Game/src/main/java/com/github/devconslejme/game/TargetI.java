@@ -29,7 +29,6 @@ package com.github.devconslejme.game;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.github.devconslejme.devcons.LoggingI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
@@ -38,9 +37,10 @@ import com.github.devconslejme.misc.KeyCodeManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.jme.ActivatorI;
+import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.HighlighterI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
-import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.jme.WorldPickingI;
 import com.jme3.app.Application;
 import com.jme3.collision.CollisionResult;
@@ -48,9 +48,11 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.UserData;
 
 /**
+ * Targets (and/or their root) can carry an {@link IActivetableListener}, that will be triggered when
+ * they are selected.
+ * 
  * TODO show target indicator on the gui layer (ray cast?)
  * TODO region select, create a box aligned to the cam rotation, extend it quite far, test each target for linesight with the raycast
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -63,26 +65,27 @@ public class TargetI {
 	private Vector3f v3fRayCastFromXY;
 	private Node	nodeWorld;
 	private Application	app;
+	private FlyByCameraX	flycamx;
 	
-	public static interface IActivetableListener{
-		void activateEvent(); 
-	}
-	
-	public void configure(Node nodeWorld){
+	public void configure(Node nodeWorld, FlyByCameraX flycamx){
+		this.flycamx = flycamx;
 		this.app=G.i(Application.class);
 		
 		this.nodeWorld=nodeWorld;
 		
-		KeyBindCommandManagerI.i().putBindCommandsLater(KeyCodeManagerI.i().getMouseTriggerKey(0).getFullId(),new CallBoundKeyCmd(){
-			@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
-				for(TargetGeom t:TargetI.i().getAllTargets()){
-					t.activateIfPossible();
+		KeyBindCommandManagerI.i().putBindCommandsLater(
+			flycamx.getCfgAddFlyCamMod(KeyCodeManagerI.i().getMouseTriggerKey(0).getFullId()),
+			new CallBoundKeyCmd(){
+				@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
+					for(TargetGeom t:TargetI.i().getAllTargetsListCopy()){
+						t.activateIfPossible();
+					}
+					return true;
 				}
-				return true;
-			}
-		}.setName("Activate"));
+			}.setName("Activate")
+		);
 		
-		String strK=KeyCodeManagerI.i().getMouseTriggerKey(1).getFullId();
+		String strK=flycamx.getCfgAddFlyCamMod(KeyCodeManagerI.i().getMouseTriggerKey(1).getFullId());
 		KeyBindCommandManagerI.i().putBindCommandsLater("Shift+"+strK,new CallBoundKeyCmd(){
 			@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 				TargetGeom tgt = acquireNewTarget(v3fRayCastFromXY);
@@ -114,8 +117,17 @@ public class TargetI {
 			null, v3f); //rnLastConfigured.v3fMarkersCenter
 		if(acr.size()>0){
 			Geometry geom = acr.get(0).getGeometry();
-			tgt = new TargetGeom(SpatialHierarchyI.i().getParentest(geom, Node.class, true, false));
-			tgt.geomTarget=(geom);
+			
+			// re-use existing, also to avoid duplicated activation
+			tgt=atgtMulti.get(geom);
+			if(tgt==null && tgtLastSingleTarget!=null && tgtLastSingleTarget.getGeometryHit()==geom){
+				tgt=tgtLastSingleTarget;
+			}
+			
+			if(tgt==null){ //new one
+				tgt = new TargetGeom(SpatialHierarchyI.i().getParentest(geom, Node.class, true, false));
+				tgt.geomTarget=(geom);
+			}
 		}
 		
 		if(tgt!=null){
@@ -169,9 +181,9 @@ public class TargetI {
 	 * last single + multi
 	 * @return
 	 */
-	public ArrayList<TargetGeom> getAllTargets() {
+	public ArrayList<TargetGeom> getAllTargetsListCopy() {
 		ArrayList<TargetGeom> at = getMultiTargetListCopy();
-		if(tgtLastSingleTarget!=null)at.add(0,tgtLastSingleTarget);
+		if(tgtLastSingleTarget!=null && !at.contains(tgtLastSingleTarget))at.add(0,tgtLastSingleTarget);
 		return at;
 	}
 	
@@ -243,12 +255,19 @@ public class TargetI {
 		}
 
 		public void activateIfPossible() {
-			IActivetableListener ial = UserDataI.i().getMustExistOrNull(geomTarget,IActivetableListener.class);
-			if(ial!=null)ial.activateEvent();
-			if(sptRoot!=geomTarget){
-				IActivetableListener ialRoot = UserDataI.i().getMustExistOrNull(sptRoot,IActivetableListener.class);
-				if(ialRoot!=null)ialRoot.activateEvent();
-			}
+			ActivatorI.i().activateIfPossible(geomTarget); //sptRoot will also be considered
+//			for (Node node : SpatialHierarchyI.i().getAllParents(geomTarget,false)) {
+////				if(sptRoot!=node)ActivatorI.i().activateIfPossible(node);
+//				ActivatorI.i().activateIfPossible(node); //sptRoot will also be considered
+//			}
+//			if(sptRoot!=geomTarget)ActivatorI.i().activateIfPossible(sptRoot);
+			
+//			IActivetableListener ial = UserDataI.i().getMustExistOrNull(geomTarget,IActivetableListener.class);
+//			if(ial!=null)ial.activateEvent();
+//			if(sptRoot!=geomTarget){
+//				IActivetableListener ialRoot = UserDataI.i().getMustExistOrNull(sptRoot,IActivetableListener.class);
+//				if(ialRoot!=null)ialRoot.activateEvent();
+//			}
 		}
 
 		public boolean isAllowReset() {

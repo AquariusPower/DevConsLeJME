@@ -119,8 +119,8 @@ public class FlyByCameraX extends FlyByCamera {
       CameraInput.FLYCAM_ZOOMOUT
     );
     
-    // FlyCam key! Contextualized keybindings!
-    keyFlyCamMod = KeyCodeManagerI.i().createSpecialExternalContextKey(cc,"FlyCamContext");
+//    // FlyCam key! Contextualized keybindings!
+//    keyFlyCamMod = KeyCodeManagerI.i().createSpecialExternalContextKey(cc,"FlyCamContext");
     
     // fly cam temp disabler (must work outside of the flycam context too!!!)
     KeyBindCommandManagerI.i().putBindCommandsLater("F5",2,
@@ -275,6 +275,9 @@ public class FlyByCameraX extends FlyByCamera {
 	public FlyByCameraX(Camera cam) {
 		super(cam);
 		
+    // FlyCam key! Contextualized keybindings!
+    keyFlyCamMod = KeyCodeManagerI.i().createSpecialExternalContextKey(cc,"FlyCamContext");
+    
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
