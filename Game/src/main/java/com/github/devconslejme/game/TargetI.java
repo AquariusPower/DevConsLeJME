@@ -61,7 +61,7 @@ public class TargetI {
 	public static TargetI i(){return GlobalManagerI.i().get(TargetI.class);}
 	
 	private TargetGeom tgtLastSingleTarget;
-	private HashMap<Geometry,TargetGeom> atgtMulti = new HashMap();
+	private HashMap<Geometry,TargetGeom> hmGeomTgt = new HashMap();
 	private Vector3f v3fRayCastFromXY;
 	private Node	nodeWorld;
 	private Application	app;
@@ -119,7 +119,7 @@ public class TargetI {
 			Geometry geom = acr.get(0).getGeometry();
 			
 			// re-use existing, also to avoid duplicated activation
-			tgt=atgtMulti.get(geom);
+			tgt=hmGeomTgt.get(geom);
 			if(tgt==null && tgtLastSingleTarget!=null && tgtLastSingleTarget.getGeometryHit()==geom){
 				tgt=tgtLastSingleTarget;
 			}
@@ -149,7 +149,7 @@ public class TargetI {
 		
 		if(tgtLastSingleTarget!=null)updateTarget(tgtLastSingleTarget,tpf);
 		
-		for(TargetGeom tgt:atgtMulti.values()){
+		for(TargetGeom tgt:hmGeomTgt.values()){
 			if(tgt==tgtLastSingleTarget)continue; //skip already updated
 			updateTarget(tgt,tpf);
 		}
@@ -167,14 +167,14 @@ public class TargetI {
 //	}
 	
 	public void clearMultiTargetList(){
-		for(TargetGeom tgt:atgtMulti.values()){
+		for(TargetGeom tgt:hmGeomTgt.values()){
 			resetTargetIndicators(tgt);
 		}
-		atgtMulti.clear();
+		hmGeomTgt.clear();
 	}
 	
 	public ArrayList<TargetGeom> getMultiTargetListCopy(){
-		return new ArrayList<TargetGeom>(atgtMulti.values());
+		return new ArrayList<TargetGeom>(hmGeomTgt.values());
 	}
 	
 	/**
@@ -213,11 +213,11 @@ public class TargetI {
 	}
 	
 	protected TargetGeom addOrRemoveAtMultiTargetList(TargetGeom tgt){
-		if(atgtMulti.containsKey(tgt.getGeometryHit())){
+		if(hmGeomTgt.containsKey(tgt.getGeometryHit())){
 			resetTargetIndicators(tgt);
-			atgtMulti.remove(tgt.getGeometryHit());
+			hmGeomTgt.remove(tgt.getGeometryHit());
 		}else{
-			atgtMulti.put(tgt.getGeometryHit(),tgt);
+			hmGeomTgt.put(tgt.getGeometryHit(),tgt);
 		}
 		return tgt;
 	}
