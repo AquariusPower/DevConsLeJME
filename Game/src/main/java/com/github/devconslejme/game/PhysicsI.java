@@ -183,8 +183,8 @@ public class PhysicsI implements PhysicsTickListener{
 			throw new DetailedException("unsupported "+bv.getClass(),spt);
 		}
 		
-		assert spt.getWorldScale().lengthSquared()==3f : "scaled collision shape may cause imprecision and even ccd will fail"; //TODO make just a warning?
-		if(spt.getWorldScale().lengthSquared()!=3f){
+		assert spt.getWorldScale().lengthSquared()==3f : "scaled collision shape may cause imprecision and even ccd will fail";
+		if(spt.getWorldScale().lengthSquared()!=3f){ //TODO enable this one day?
 			cs.setScale(spt.getWorldScale());
 		}
 		
@@ -324,7 +324,11 @@ public class PhysicsI implements PhysicsTickListener{
 	public void setSpeed(float speed) {
 		bullet.setSpeed(speed);
 	}
-
+	
+	public void throwAtDirImpulse(Spatial spt, float fImpulseAtDirection){
+		PhysicsI.i().enqueue(spt, new Impulse().setImpulseAtDir(fImpulseAtDirection));
+	}
+	
 	public Object debugTest(Object... aobj){
 		setDebugEnabled(true);
 		
@@ -336,7 +340,9 @@ public class PhysicsI implements PhysicsTickListener{
 		
 		/**/
 		PhysicsI.i().imbueFromWBounds(geom);
-		PhysicsI.i().enqueue(geom, new Impulse().setImpulseAtDir(10f));
+//		PhysicsI.i().enqueue(geom, new Impulse().setImpulseAtDir(10f));
+		double d=(double)aobj[0];
+		PhysicsI.i().throwAtDirImpulse(geom, (float)d);
 		/**/
 		
 //		PhysicsI.i().syncPhysTransfFromSpt(geom);
