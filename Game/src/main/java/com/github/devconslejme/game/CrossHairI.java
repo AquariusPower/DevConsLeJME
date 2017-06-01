@@ -140,7 +140,7 @@ public class CrossHairI {
 		
 		centralize(nodeDot);
 		
-		/////////////////// target/fire spread
+		/////////////////// target TODO fire spread helper indicator based on distance and target area
 		Vector3f[] av3f={
 				new Vector3f(0,-1,0),
 				new Vector3f(1,0,0),

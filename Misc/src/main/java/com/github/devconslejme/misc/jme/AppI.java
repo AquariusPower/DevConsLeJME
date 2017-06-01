@@ -28,12 +28,13 @@ package com.github.devconslejme.misc.jme;
 
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.Application;
+import com.jme3.app.state.AppState;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 
 /**
- * to avoid direcly exposing things like the Camera object
- * TODO remove the global app?
+ * to avoid direcly exposing things like the Camera object preventing configuring it from anywhere
+ * TODO remove the global app
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
@@ -52,6 +53,11 @@ public class AppI {
 
 	public Vector3f getWorldCoordinates(Vector2f screenPos, float projectionZPos) {
 		return app.getCamera().getWorldCoordinates(screenPos, projectionZPos);
+	}
+
+	public AppI attatchAppState(AppState as) {
+		if(!app.getStateManager().hasState(as))app.getStateManager().attach(as);
+		return this;
 	}
 	
 }
