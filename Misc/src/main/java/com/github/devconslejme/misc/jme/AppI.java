@@ -61,27 +61,17 @@ public class AppI {
 	 * @param v3fScreenPos x,y= screen pos, z =projection pos
 	 * @return
 	 */
-	public Vector3f getWorldCoordinates(Vector3f v3fScreenPos) {
-//		sappOpt.getFlyByCamera().get
+	public Vector3f getScreenPosAtWorldCoordinatesForRayCasting(Vector3f v3fScreenPos) {
 		return app.getCamera().getWorldCoordinates(new Vector2f(v3fScreenPos.x,v3fScreenPos.y), v3fScreenPos.z);
-//		return getWorldCoordinates(new Vector2f(v3fScreenPos.x,v3fScreenPos.y), v3fScreenPos.z); 
 	}
-//	public Vector3f getWorldCoordinates(Vector2f screenPos, float projectionZPos) {
-//		return app.getCamera().getWorldCoordinates(screenPos, projectionZPos);
-//	}
 	
-	public Vector3f placeAtWCoordCamDirCenter(Spatial spt,float fDistCamZ,boolean bLookAtDir) {
-		return placeAtWCoordCamDirXY(spt, HWEnvironmentJmeI.i().getDisplay().getCenter(fDistCamZ), bLookAtDir);
-//	public Vector3f placeAtgetWorldCoordinatesDirectionCenterCamera() {
-//		return getWorldCoordinatesDirectionAtCameraXY(HWEnvironmentJmeI.i().getDisplay().getCenter(0f));
-		
-//	public Vector3f getWorldCoordinatesDirectionCenterCamera() {
-//		return 
-//			getWorldCoordinates(		HWEnvironmentJmeI.i().getDisplay().getCenter(1f))
-//				.subtract(
-//					getWorldCoordinates(HWEnvironmentJmeI.i().getDisplay().getCenter(0f))
-//				);
+	public Vector3f getCamWPos(float fInFrontDistZ){
+		return app.getCamera().getLocation().add(app.getCamera().getDirection().mult(fInFrontDistZ));
 	}
+	
+//	public Vector3f placeAtWCoordCamDirCenter(Spatial spt,float fDistCamZ,boolean bLookAtDir) {
+//		return placeAtWCoordCamDirXY(spt, HWEnvironmentJmeI.i().getDisplay().getCenter(fDistCamZ), bLookAtDir);
+//	}
 	/**
 	 * 
 	 * @param spt
@@ -90,19 +80,13 @@ public class AppI {
 	 * @return 
 	 * @return
 	 */
-	public Vector3f placeAtWCoordCamDirXY(Spatial spt,Vector3f v3fScreenPos,boolean bLookAtDir) {
-		spt.setLocalTranslation(getWorldCoordinates(v3fScreenPos));
+	public Vector3f placeAtCamWPos(Spatial spt,float fInFrontDistZ,boolean bLookAtDir) {
+		spt.setLocalTranslation(getCamWPos(fInFrontDistZ));
 		if(bLookAtDir){
-			spt.lookAt(app.getCamera().getDirection(),Vector3f.UNIT_Y);
+			spt.lookAt(getCamWPos(fInFrontDistZ*2f),Vector3f.UNIT_Y); //if z dist is negative will work too
 		}
 		return spt.getWorldTranslation();
 	}
-//		return 
-//			getWorldCoordinates(	new Vector3f(v3fScreenPos.x,v3fScreenPos.y,1f))
-//			.subtract(
-//				getWorldCoordinates(new Vector3f(v3fScreenPos.x,v3fScreenPos.y,0f))
-//				);
-//	}
 
 	public AppI attatchAppState(AppState as) {
 		if(!app.getStateManager().hasState(as))app.getStateManager().attach(as);

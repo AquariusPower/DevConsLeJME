@@ -156,7 +156,7 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 	
 	private void clickToRaise(CursorButtonEvent event, Spatial target,				Spatial capture, boolean bBlockerCheck) {
 		DialogVisuals vs = DialogHierarchyStateI.i().getVisuals(
-				SpatialHierarchyI.i().getParentest(capture!=null?capture:target, ResizablePanel.class, true));
+				SpatialHierarchyI.i().getParentestOrSelf(capture!=null?capture:target, ResizablePanel.class, true));
 			
 		if(vs!=null){
 			if(bBlockerCheck){
@@ -309,7 +309,7 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 						continue;
 					}
 					
-					ResizablePanel rzp = SpatialHierarchyI.i().getParentest(pnl, ResizablePanel.class, true);
+					ResizablePanel rzp = SpatialHierarchyI.i().getParentestOrSelf(pnl, ResizablePanel.class, true);
 					DialogHierarchyComp hc = DialogHierarchyStateI.i().getHierarchyComp(rzp);
 					if(!hc.isOpened())continue;
 					
@@ -539,7 +539,7 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 		Spatial spt = focusState.getFocus();
 		if(spt==null)return;
 		
-		ResizablePanel rzp = SpatialHierarchyI.i().getParentest(spt, ResizablePanel.class, true);
+		ResizablePanel rzp = SpatialHierarchyI.i().getParentestOrSelf(spt, ResizablePanel.class, true);
 		DialogHierarchyComp hc = getHierarchyComp(rzp);
 		if(hc==null)return;
 		

@@ -28,11 +28,8 @@ package com.github.devconslejme.game;
 
 import java.util.ArrayList;
 
-import com.github.devconslejme.devcons.LoggingI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.AppI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.GeometryI;
@@ -52,6 +49,8 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.shape.Box;
+import com.simsilica.lemur.geom.MBox;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -71,6 +70,7 @@ public class PhysicsI implements PhysicsTickListener{
 		private Vector3f	v3fImpulse;
 		private Vector3f	v3fTorque;
 		private Vector3f	v3fTorqueImpulse;
+		private Float	fImpulse;
 		
 		public Spatial getSpt() {
 			return spt;
@@ -114,6 +114,10 @@ public class PhysicsI implements PhysicsTickListener{
 		}
 		public Vector3f getImpulse() {
 			return v3fImpulse;
+		}
+		public Impulse setImpulseAtDir(float fImpulse) {
+			this.fImpulse=fImpulse;
+			return this;
 		}
 		public Impulse setImpulse(Vector3f v3fImpulse) {
 			this.v3fImpulse = v3fImpulse;
@@ -165,20 +169,42 @@ public class PhysicsI implements PhysicsTickListener{
 		BoundingVolume bv = spt.getWorldBound();
 		RigidBodyControl rbc=null;
 		CollisionShape cs=null;
+		float fPseudoDiameter = 0f;
 		if (bv instanceof BoundingBox) {
 			BoundingBox bb = (BoundingBox) bv;
 			cs = new BoxCollisionShape(bb.getExtent(null));
+			fPseudoDiameter=2f*bb.getExtent(null).length();
 		}else
 		if (bv instanceof BoundingSphere) {
-			BoundingSphere bb = (BoundingSphere) bv;
-			cs = new SphereCollisionShape(bb.getRadius());
+			BoundingSphere bs = (BoundingSphere) bv;
+			cs = new SphereCollisionShape(bs.getRadius());
+			fPseudoDiameter=2f*bs.getRadius();
 		}else{
 			throw new DetailedException("unsupported "+bv.getClass(),spt);
 		}
 		
-		cs.setScale(spt.getWorldScale());
+		assert spt.getWorldScale().lengthSquared()==3f : "scaled collision shape may cause imprecision and even ccd will fail"; //TODO make just a warning?
+		if(spt.getWorldScale().lengthSquared()!=3f){
+			cs.setScale(spt.getWorldScale());
+		}
+		
 		rbc= new RigidBodyControl(cs);
 		rbc.setMass(1f);
+		
+//		float fCCdMotionThreshold = fPseudoDiameter/11f; //TODO find a good threshold...
+		float fCCdMotionThreshold = fPseudoDiameter/2f; //TODO find a good threshold...
+		rbc.setCcdMotionThreshold(fCCdMotionThreshold);
+		
+		/**
+		 * "Each time the object moves more than (motionThreshold) within one frame a sphere of radius 
+		 * (sweptSphereRadius) is swept from the first position of the object to the position in the 
+		 * next frame to check if there was any objects in between that were missed because the object 
+		 * moved too fast." - https://hub.jmonkeyengine.org/t/ccd-usage/24655/13
+		 * 
+		 * "The radius is just the radius of the sphere that is swept to do this check, so make it so 
+		 * large that it resembles your object." - https://hub.jmonkeyengine.org/t/ccd-usage/24655/2
+		 */
+		rbc.setCcdSweptSphereRadius(fPseudoDiameter/2f);
 		
 		spt.addControl(rbc);
 		
@@ -222,6 +248,13 @@ public class PhysicsI implements PhysicsTickListener{
 					}
 				}
 				
+				if(imp.fImpulse!=null){
+					imp.rbc.applyImpulse(
+						imp.rbc.getPhysicsRotation().getRotationColumn(2).mult(imp.fImpulse), 
+						Vector3f.ZERO
+					);
+				}
+				
 				if(imp.v3fImpulse!=null && imp.v3fRelPos!=null)
 					imp.rbc.applyImpulse(imp.v3fImpulse, imp.v3fRelPos);
 				
@@ -245,9 +278,18 @@ public class PhysicsI implements PhysicsTickListener{
 	}
 	
 	public void initTest(){
-		Geometry geomFloor = GeometryI.i().create(MeshI.i().box(0.5f), ColorI.i().colorChangeCopy(ColorRGBA.Green,-0.5f,1f));
+//		SubdivisionSurfaceModifier s = new SubdivisionSurfaceModifier(modifierStructure, blenderContext);
+		
 		int iSize=50;
-		geomFloor.scale(iSize, 0.1f, iSize); //b4 imbue
+		Geometry geomFloor=null;
+//		if(false){
+//		MBox mb = new MBox(iSize, 0.1f, iSize, iSize, 1, iSize);
+//		geomFloor = GeometryI.i().create(mb, ColorI.i().colorChangeCopy(ColorRGBA.Green,-0.5f,1f));
+//		}else{
+		geomFloor = GeometryI.i().create(new Box(iSize,0.1f,iSize), ColorI.i().colorChangeCopy(ColorRGBA.Green,-0.5f,1f));
+//		geomFloor = GeometryI.i().create(MeshI.i().box(0.5f), ColorI.i().colorChangeCopy(ColorRGBA.Green,-0.5f,1f));
+//		geomFloor.scale(iSize, 0.1f, iSize); //b4 imbue
+//		}
 		geomFloor.move(0,-7f,0);
 		PhysicsI.i().imbueFromWBounds(geomFloor).setMass(0f);
 		AppI.i().getRootNode().attachChild(geomFloor);
@@ -257,16 +299,45 @@ public class PhysicsI implements PhysicsTickListener{
 		AppI.i().getRootNode().attachChild(geom);
 	}
 	
+	
+	
+	public void setEnabled(boolean enabled) {
+		bullet.setEnabled(enabled);
+	}
+
+	public boolean isEnabled() {
+		return bullet.isEnabled();
+	}
+
+	public void setDebugEnabled(boolean debugEnabled) {
+		bullet.setDebugEnabled(debugEnabled);
+	}
+
+	public boolean isDebugEnabled() {
+		return bullet.isDebugEnabled();
+	}
+
+	public float getSpeed() {
+		return bullet.getSpeed();
+	}
+
+	public void setSpeed(float speed) {
+		bullet.setSpeed(speed);
+	}
+
 	public Object debugTest(Object... aobj){
-		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), ColorRGBA.Yellow);
-		geom.scale(0.1f); //b4 imbue
-		AppI.i().placeAtWCoordCamDirCenter(geom, 1f, true);
+		setDebugEnabled(true);
+		
+		Geometry geom = GeometryI.i().create(MeshI.i().box(0.05f), ColorRGBA.Yellow);
+//		geom.scale(0.1f); //b4 imbue
+		AppI.i().placeAtCamWPos(geom, 1f, true);
+//		DebugVisualsI.i().showWorldBoundAndRotAxes(geom);
 		AppI.i().getRootNode().attachChild(geom);
 		
-		if(false){
+		/**/
 		PhysicsI.i().imbueFromWBounds(geom);
-		PhysicsI.i().enqueue(geom, new Impulse());
-		}
+		PhysicsI.i().enqueue(geom, new Impulse().setImpulseAtDir(10f));
+		/**/
 		
 //		PhysicsI.i().syncPhysTransfFromSpt(geom);
 //		TargetI.i().applyAt(geom);

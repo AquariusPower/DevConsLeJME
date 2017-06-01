@@ -419,7 +419,7 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 //	}
 	private ResizablePanel getParentest(){
 		if(rzpParentest!=null)return rzpParentest;
-		return SpatialHierarchyI.i().getParentest(this,ResizablePanel.class,true);
+		return SpatialHierarchyI.i().getParentestOrSelf(this,ResizablePanel.class,true);
 	}
 	
 	/**

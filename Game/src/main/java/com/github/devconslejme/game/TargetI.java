@@ -39,6 +39,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ActivatorI;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
+import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.HighlighterI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.WorldPickingI;
@@ -89,14 +90,14 @@ public class TargetI {
 		KeyBindCommandManagerI.i().putBindCommandsLater("Shift+"+strK,new CallBoundKeyCmd(){
 			@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 				TargetGeom tgt = acquireNewTarget(v3fRayCastFromXY);
-				if(tgt!=null)addOrRemoveAtMultiTargetList(tgt);
+				if(tgt!=null)addOrRemoveAtMultiTargetList(tgt); //toggles
 				return true;
 			}
 		}.setName("AddTargetMulti"));
     KeyBindCommandManagerI.i().putBindCommandsLater(strK,new CallBoundKeyCmd(){
     	@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 				clearLastTarget();
-				tgtLastSingleTarget=acquireNewTarget(v3fRayCastFromXY);
+				tgtLastSingleTarget=acquireNewTarget(v3fRayCastFromXY); //can be the same, wont toggle
 				return true;
 			}
     }.setName("SetSingleTarget"));
@@ -118,14 +119,14 @@ public class TargetI {
 		if(acr.size()>0){
 			Geometry geom = acr.get(0).getGeometry();
 			
-			// re-use existing, also to avoid duplicated activation
-			tgt=hmGeomTgt.get(geom);
-			if(tgt==null && tgtLastSingleTarget!=null && tgtLastSingleTarget.getGeometryHit()==geom){
-				tgt=tgtLastSingleTarget;
-			}
+//			// re-use existing, also to avoid duplicated activation
+//			tgt=hmGeomTgt.get(geom);
+//			if(tgt==null && tgtLastSingleTarget!=null && tgtLastSingleTarget.getGeometryHit()==geom){
+//				tgt=tgtLastSingleTarget;
+//			}
 			
 			if(tgt==null){ //new one
-				tgt = new TargetGeom(SpatialHierarchyI.i().getParentest(geom, Node.class, true, false));
+				tgt = new TargetGeom(geom);
 				tgt.geomTarget=(geom);
 			}
 		}
@@ -153,6 +154,18 @@ public class TargetI {
 			if(tgt==tgtLastSingleTarget)continue; //skip already updated
 			updateTarget(tgt,tpf);
 		}
+		
+		StringBuilder sb = new StringBuilder("");
+		for(TargetGeom tgt:getAllTargetsListCopy()){
+			sb.append(tgt.getGeometryHit().getName());
+			if(tgtLastSingleTarget!=null){
+				if(tgt.getGeometryHit()==tgtLastSingleTarget.getGeometryHit()){
+					sb.append("(LAST)");
+				}
+			}
+			sb.append(", ");
+		}
+		HWEnvironmentJmeI.i().putCustomInfo("Tgts:", sb.toString());
 	}
 
 //	protected void updateTarget2(Target tgt, float fTPF){
@@ -183,7 +196,19 @@ public class TargetI {
 	 */
 	public ArrayList<TargetGeom> getAllTargetsListCopy() {
 		ArrayList<TargetGeom> at = getMultiTargetListCopy();
-		if(tgtLastSingleTarget!=null && !at.contains(tgtLastSingleTarget))at.add(0,tgtLastSingleTarget);
+		/**
+		 * single has priority, will be 1st always!
+		 */
+		if(tgtLastSingleTarget!=null){
+			TargetGeom tgtMatchingLast = hmGeomTgt.get(tgtLastSingleTarget.geomTarget);
+			if(tgtMatchingLast==null){
+				tgtMatchingLast=tgtLastSingleTarget;
+			}else{
+				at.remove(tgtMatchingLast);
+			}
+			at.add(0,tgtMatchingLast);
+		}
+		
 		return at;
 	}
 	
@@ -247,11 +272,11 @@ public class TargetI {
 		protected Float fTargetDist;
 		private Geometry	geomTarget;
 		private boolean bEnemy=false;
-		private Spatial	sptRoot;
+		private Spatial	sptAtRoot;
 		private boolean	bAllowReset=true; //can be disabled outside here to stop glowing for ex 
 
-		public TargetGeom(Spatial spt){
-			this.sptRoot = spt;
+		public TargetGeom(Spatial sptSomeParentOrParentesOrSelf){
+			this.sptAtRoot = SpatialHierarchyI.i().getParentestOrSelf(sptSomeParentOrParentesOrSelf, Spatial.class, true, false);
 		}
 
 		public void activateIfPossible() {
@@ -275,7 +300,7 @@ public class TargetI {
 		}
 
 		public Spatial getRootSpatial() {
-			return sptRoot;
+			return sptAtRoot;
 		}
 
 		public boolean isEnemy() {

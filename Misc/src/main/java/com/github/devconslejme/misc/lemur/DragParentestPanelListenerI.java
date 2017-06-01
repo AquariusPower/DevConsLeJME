@@ -189,7 +189,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 				
 				//find parentest 
 				Panel pnlParentest = di.pnlApplyDragAt; //capture.getUserData(JavaLangI.i().enumUId(EDrag.ApplyDragAt));
-				if(pnlParentest==null)pnlParentest = SpatialHierarchyI.i().getParentest(capture, Panel.class, true);
+				if(pnlParentest==null)pnlParentest = SpatialHierarchyI.i().getParentestOrSelf(capture, Panel.class, true);
 				
 				// base dist calc
 				v3fInitialDragPos = pnlParentest.getWorldTranslation().clone();
@@ -254,7 +254,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 		}
 //		DragInfo di = UserDataI.i().getUserDataPSH(capture, DragInfo.class);
 		ResizablePanel pnlParentest = (ResizablePanel)di.pnlApplyDragAt;//capture.getUserData(JavaLangI.i().enumUId(EDrag.ApplyDragAt));
-		if(pnlParentest==null)pnlParentest = SpatialHierarchyI.i().getParentest(capture, ResizablePanel.class, true);
+		if(pnlParentest==null)pnlParentest = SpatialHierarchyI.i().getParentestOrSelf(capture, ResizablePanel.class, true);
 		
 		// position parentest
 		Vector3f v3f = v3fCurPos.add(v3fDistToCursor);

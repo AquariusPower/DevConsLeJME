@@ -314,10 +314,10 @@ public abstract class EffectBaseAbs<THIS extends EffectBaseAbs> implements IEffe
 		 * expectedly gui or virtual world root nodes
 		 */
 		if(nodeParent==null && sptFollowFrom!=null){
-			nodeParent=SpatialHierarchyI.i().getParentest(sptFollowFrom, Node.class, false); 
+			nodeParent=SpatialHierarchyI.i().getParentestOrSelf(sptFollowFrom, Node.class, false); 
 		}
 		if(nodeParent==null && sptFollowTo!=null){
-			nodeParent=SpatialHierarchyI.i().getParentest(sptFollowTo, Node.class, false);
+			nodeParent=SpatialHierarchyI.i().getParentestOrSelf(sptFollowTo, Node.class, false);
 		}
 		
 		validateParent();

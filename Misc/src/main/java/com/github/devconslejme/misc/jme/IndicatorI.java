@@ -279,7 +279,7 @@ public class IndicatorI {
 	private boolean update(float fTPF,GeomIndicator gi) {
 		if(gi.isEnabled()){
 			if(gi.getParent()==null){
-				SpatialHierarchyI.i().getParentest(gi.getTarget(), Node.class, true)
+				SpatialHierarchyI.i().getParentestOrSelf(gi.getTarget(), Node.class, true)
 					.attachChild(gi);
 			}
 			

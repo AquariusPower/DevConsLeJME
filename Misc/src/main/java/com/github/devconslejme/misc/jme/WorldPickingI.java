@@ -166,10 +166,10 @@ public class WorldPickingI {
 //				EnvironmentJmeI.i().getMouse().getPos2D(), 0f);
 //		Vector2f v2f = MiscJmeI.i().toV2f(v3fGuiNodeXY);
 		v3fGuiNodeXY.z=0;
-		Vector3f v3fCursorAtVirtualWorld3D = AppI.i().getWorldCoordinates(v3fGuiNodeXY);
+		Vector3f v3fCursorAtVirtualWorld3D = AppI.i().getScreenPosAtWorldCoordinatesForRayCasting(v3fGuiNodeXY);
 		
 		v3fGuiNodeXY.z=1;
-		Vector3f v3fDirection = AppI.i().getWorldCoordinates(v3fGuiNodeXY);
+		Vector3f v3fDirection = AppI.i().getScreenPosAtWorldCoordinatesForRayCasting(v3fGuiNodeXY);
 		v3fDirection.subtractLocal(v3fCursorAtVirtualWorld3D).normalizeLocal(); //norm just to grant it
 		
 		Ray ray = new Ray(v3fCursorAtVirtualWorld3D, v3fDirection);
@@ -206,7 +206,7 @@ public class WorldPickingI {
 			return getLastWorldPickGeometry();
 		}
 		
-		return SpatialHierarchyI.i().getParentest(getLastWorldPickGeometry(), Node.class, true, false);
+		return SpatialHierarchyI.i().getParentestOrSelf(getLastWorldPickGeometry(), Node.class, true, false);
 //		ArrayList<Node> anode = SpatialHierarchyI.i().getAllParents(getLastWorldPick(),false);
 //		return anode.get(anode.size()-1);
 	}

@@ -50,8 +50,8 @@ public class SpatialHierarchyI {
 	 * @param bIncludeStartFrom
 	 * @return
 	 */
-	public <T extends Spatial> T getParentest(Spatial sptStartFrom, Class<T> clTypeParentest, boolean bIncludeStartFrom){
-		return getParentest(sptStartFrom, clTypeParentest, bIncludeStartFrom, true);
+	public <T extends Spatial> T getParentestOrSelf(Spatial sptStartFrom, Class<T> clTypeParentest, boolean bIncludeStartFrom){
+		return getParentestOrSelf(sptStartFrom, clTypeParentest, bIncludeStartFrom, true);
 	}
 	
 	/**
@@ -60,32 +60,58 @@ public class SpatialHierarchyI {
 	 * @param clTypeParentest
 	 * @param bIncludeStartFrom
 	 * @param bIncludeLast if false will skip any kind of last parent, not necessarily the maching type required
-	 * @return
+	 * @return 
 	 */
 	@SuppressWarnings({ "unchecked" })
-	public <T extends Spatial> T getParentest(Spatial sptStartFrom, Class<T> clTypeParentest, boolean bIncludeStartFrom, boolean bIncludeLast){
-		T parentest = null;
+	public <T extends Spatial> T getParentestOrSelf(Spatial sptStartFrom, Class<T> clTypeParentest, boolean bIncludeStartFrom, boolean bIncludeLast){
+//		Spatial sptRet = bIncludeStartFrom ? sptStartFrom : null;
+//		
+//		if(!bIncludeLast){ //skip top nodes like root and gui
+//			if(sptStartFrom.getParent().getParent()==null){ //YES double parent check!!!
+//				return (T)sptRet;
+//			}
+//		}
+//		
+//		sptStartFrom.des
+		
+		
+		T ret = null;
 		if(bIncludeStartFrom && clTypeParentest.isInstance(sptStartFrom)){
-			parentest=(T)sptStartFrom;
+			ret=(T)sptStartFrom;
 		}
 		
 		Node nodeParent = sptStartFrom.getParent();
+		boolean bBreakNow=false;
+		boolean bIsLast=false;
 		while(nodeParent!=null){
-			if(clTypeParentest.isInstance(nodeParent)){
-				parentest=(T)nodeParent;
+			if(nodeParent.getParent()==null){ //it is already the top node.
+				bBreakNow=true;
+				bIsLast=true;
 			}
+//			boolean bAtTopNode = false;
+//			if(nodeParent.getParent().getParent()==null){ //YES double parent check!!!
+//				break; //skips the top/root/gui nodes 
+//			}
 			
-			if(!bIncludeLast && nodeParent.getParent()!=null){
-				// ex.:parent->rootNode  ->null
-				if(nodeParent.getParent().getParent()==null){ //YES double parent check!!!
-					break; //skips the top/root/gui nodes 
+			if(clTypeParentest.isInstance(nodeParent)){
+				if(bIncludeLast || !bIsLast){
+					ret=(T)nodeParent;
 				}
 			}
+			
+			if(bBreakNow)break;
+			
+//			if(!bIncludeLast && nodeParent.getParent()!=null){
+//				// ex.:parent->rootNode  ->null
+//				if(nodeParent.getParent().getParent()==null){ //YES double parent check!!!
+//					break; //skips the top/root/gui nodes 
+//				}
+//			}
 			
 			nodeParent=nodeParent.getParent();
 		}
 		
-		return parentest;
+		return ret;
 	}
 	
 	/**
