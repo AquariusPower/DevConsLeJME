@@ -30,7 +30,7 @@ import com.jme3.app.state.AbstractAppState;
 
 /**
  * {@link AbstractAppState} is not abstract per se...
- * This class is just to make that clear.
+ * This class is just to make that naming clear.
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class SimpleAppState extends AbstractAppState{}

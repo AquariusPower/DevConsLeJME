@@ -28,11 +28,15 @@ package com.github.devconslejme.game;
 
 import java.util.ArrayList;
 
+import com.github.devconslejme.devcons.LoggingI;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.AppI;
+import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.jme.GeometryI;
+import com.github.devconslejme.misc.jme.MeshI;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
@@ -44,7 +48,9 @@ import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
 
 /**
@@ -231,8 +237,46 @@ public class PhysicsI implements PhysicsTickListener{
 		}
 	}
 
+	/**
+	 * TODO write current forces to spatials for easy access?
+	 */
 	@Override
 	public void physicsTick(PhysicsSpace space, float tpf) {
-		//TODO write current forces to spatials for easy access?
+	}
+	
+	public void initTest(){
+		Geometry geomFloor = GeometryI.i().create(MeshI.i().box(0.5f), ColorI.i().colorChangeCopy(ColorRGBA.Green,-0.5f,1f));
+		int iSize=50;
+		geomFloor.scale(iSize, 0.1f, iSize); //b4 imbue
+		geomFloor.move(0,-7f,0);
+		PhysicsI.i().imbueFromWBounds(geomFloor).setMass(0f);
+		AppI.i().getRootNode().attachChild(geomFloor);
+		
+		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), ColorRGBA.Blue);
+		imbueFromWBounds(geom).setMass(1f);
+		AppI.i().getRootNode().attachChild(geom);
+	}
+	
+	public Object debugTest(Object... aobj){
+		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), ColorRGBA.Yellow);
+		geom.scale(0.1f); //b4 imbue
+		AppI.i().placeAtWCoordCamDirCenter(geom, 1f, true);
+		AppI.i().getRootNode().attachChild(geom);
+		
+		if(false){
+		PhysicsI.i().imbueFromWBounds(geom);
+		PhysicsI.i().enqueue(geom, new Impulse());
+		}
+		
+//		PhysicsI.i().syncPhysTransfFromSpt(geom);
+//		TargetI.i().applyAt(geom);
+//		LoggingI.i().logEntry(""+geom.getWorldTranslation());
+		return null;
+	}
+
+	private void syncPhysTransfFromSpt(Spatial spt) {
+		RigidBodyControl rbc = spt.getControl(RigidBodyControl.class);
+		rbc.setPhysicsLocation(spt.getWorldTranslation());
+		rbc.setPhysicsRotation(spt.getWorldRotation());
 	}
 }

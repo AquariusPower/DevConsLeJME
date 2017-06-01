@@ -28,9 +28,12 @@ package com.github.devconslejme.misc.jme;
 
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.Application;
+import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AppState;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 
 /**
  * to avoid direcly exposing things like the Camera object preventing configuring it from anywhere
@@ -42,22 +45,76 @@ public class AppI {
 	public static AppI i(){return GlobalManagerI.i().get(AppI.class);}
 
 	private Application	app;
+	private SimpleApplication	sappOpt;
 	
 	public void configure(Application app){
 		this.app=app;
+		this.sappOpt=(app instanceof SimpleApplication)?(SimpleApplication)app:null;
 	}
 	
 	public Vector3f getScreenCoordinates(Vector3f worldPos){
 		return app.getCamera().getScreenCoordinates(worldPos);
 	}
-
-	public Vector3f getWorldCoordinates(Vector2f screenPos, float projectionZPos) {
-		return app.getCamera().getWorldCoordinates(screenPos, projectionZPos);
+	
+	/**
+	 * 
+	 * @param v3fScreenPos x,y= screen pos, z =projection pos
+	 * @return
+	 */
+	public Vector3f getWorldCoordinates(Vector3f v3fScreenPos) {
+//		sappOpt.getFlyByCamera().get
+		return app.getCamera().getWorldCoordinates(new Vector2f(v3fScreenPos.x,v3fScreenPos.y), v3fScreenPos.z);
+//		return getWorldCoordinates(new Vector2f(v3fScreenPos.x,v3fScreenPos.y), v3fScreenPos.z); 
 	}
+//	public Vector3f getWorldCoordinates(Vector2f screenPos, float projectionZPos) {
+//		return app.getCamera().getWorldCoordinates(screenPos, projectionZPos);
+//	}
+	
+	public Vector3f placeAtWCoordCamDirCenter(Spatial spt,float fDistCamZ,boolean bLookAtDir) {
+		return placeAtWCoordCamDirXY(spt, HWEnvironmentJmeI.i().getDisplay().getCenter(fDistCamZ), bLookAtDir);
+//	public Vector3f placeAtgetWorldCoordinatesDirectionCenterCamera() {
+//		return getWorldCoordinatesDirectionAtCameraXY(HWEnvironmentJmeI.i().getDisplay().getCenter(0f));
+		
+//	public Vector3f getWorldCoordinatesDirectionCenterCamera() {
+//		return 
+//			getWorldCoordinates(		HWEnvironmentJmeI.i().getDisplay().getCenter(1f))
+//				.subtract(
+//					getWorldCoordinates(HWEnvironmentJmeI.i().getDisplay().getCenter(0f))
+//				);
+	}
+	/**
+	 * 
+	 * @param spt
+	 * @param v3fScreenPos z is distance from camera
+	 * @param bLookAtDir
+	 * @return 
+	 * @return
+	 */
+	public Vector3f placeAtWCoordCamDirXY(Spatial spt,Vector3f v3fScreenPos,boolean bLookAtDir) {
+		spt.setLocalTranslation(getWorldCoordinates(v3fScreenPos));
+		if(bLookAtDir){
+			spt.lookAt(app.getCamera().getDirection(),Vector3f.UNIT_Y);
+		}
+		return spt.getWorldTranslation();
+	}
+//		return 
+//			getWorldCoordinates(	new Vector3f(v3fScreenPos.x,v3fScreenPos.y,1f))
+//			.subtract(
+//				getWorldCoordinates(new Vector3f(v3fScreenPos.x,v3fScreenPos.y,0f))
+//				);
+//	}
 
 	public AppI attatchAppState(AppState as) {
 		if(!app.getStateManager().hasState(as))app.getStateManager().attach(as);
 		return this;
+	}
+	
+	public boolean isSApp(){
+		return sappOpt!=null;
+	}
+	
+	public Node getRootNode() {
+		return sappOpt.getRootNode();
 	}
 	
 }

@@ -164,10 +164,12 @@ public class WorldPickingI {
 		
 //		Vector3f v3fCursorAtVirtualWorld3D = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(
 //				EnvironmentJmeI.i().getMouse().getPos2D(), 0f);
-		Vector2f v2f = MiscJmeI.i().toV2f(v3fGuiNodeXY);
-		Vector3f v3fCursorAtVirtualWorld3D = AppI.i().getWorldCoordinates(v2f,0f);
+//		Vector2f v2f = MiscJmeI.i().toV2f(v3fGuiNodeXY);
+		v3fGuiNodeXY.z=0;
+		Vector3f v3fCursorAtVirtualWorld3D = AppI.i().getWorldCoordinates(v3fGuiNodeXY);
 		
-		Vector3f v3fDirection = AppI.i().getWorldCoordinates(v2f,1f);
+		v3fGuiNodeXY.z=1;
+		Vector3f v3fDirection = AppI.i().getWorldCoordinates(v3fGuiNodeXY);
 		v3fDirection.subtractLocal(v3fCursorAtVirtualWorld3D).normalizeLocal(); //norm just to grant it
 		
 		Ray ray = new Ray(v3fCursorAtVirtualWorld3D, v3fDirection);
