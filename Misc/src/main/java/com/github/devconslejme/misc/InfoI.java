@@ -101,6 +101,9 @@ public class InfoI {
 		}else
 		if(String.class.isInstance(inf.objValue)){
 			return (String)inf.objValue;
+		}else
+		if(Boolean.class.isInstance(inf.objValue)){
+			return ""+inf.objValue;
 		}
 		
 		throw new UnsupportedOperationException("type not supported "+inf.objValue.getClass());
@@ -138,8 +141,19 @@ public class InfoI {
 	 * @param iFloatScale
 	 */
 	public void putAt(HashMap<String, Info> hm, String strKey, Float f, int iFloatScale) {
-		if(f==null)hm.remove(strKey);
+		if(chkRemove(hm,strKey,f))return;
 		hm.put(strKey, new Info(strKey,f,iFloatScale));
+	}
+	public void putAt(HashMap<String, Info> hm, String strKey, Object objValue) {
+		if(chkRemove(hm,strKey,objValue))return;
+		hm.put(strKey, new Info(strKey,objValue));
+	}
+	public boolean chkRemove(HashMap<String, Info> hm, String strKey, Object objValue){
+		if(objValue==null){
+			hm.remove(strKey);
+			return true;
+		}
+		return false;
 	}
 	
 	public String prepareFullInfo(Collection<HashMap<String, Info>> values) {

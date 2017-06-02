@@ -29,17 +29,17 @@ package com.github.devconslejme.misc.jme;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.github.devconslejme.game.TargetI;
-import com.github.devconslejme.game.TargetI.TargetGeom;
+import javax.xml.crypto.dsig.spec.HMACParameterSpec;
+
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.InfoI;
 import com.github.devconslejme.misc.InfoI.Info;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.TimedDelay;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
@@ -57,7 +57,6 @@ import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.Matrix3f;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
@@ -72,6 +71,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	
 	private ArrayList<PhysicsData> apdDisintegrate = new ArrayList<PhysicsData>();
 	private long	lTickCount=0;
+	private HashMap<PhysicsRigidBody,PhysicsData> hmDisintegratables=new HashMap<PhysicsRigidBody,PhysicsData>(); 
 	
 	public static class Impulse{
 		private Spatial	spt;
@@ -195,11 +195,26 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
+				HWEnvironmentJmeI.i().putCustomInfo("Phys",""
+//					+"Disintegrated="+apdDisintegrate.size()+", "
+					+"Disintegratables="+hmDisintegratables.size()+", "
+					+"Spd="+bullet.getSpeed()+", "
+					+"Grav="+ps.getGravity(new Vector3f())+", "
+					+"Min="+ps.getWorldMin()+", "
+					+"Max="+ps.getWorldMax()+", "
+					+"TotChars="+ps.getCharacterList().size()+", "
+					+"TotGhosts="+ps.getGhostObjectList().size()+", "
+					+"TotRBCs="+ps.getRigidBodyList().size()+", "
+					+"TotVehicles="+ps.getVehicleList().size()+", "
+					+"TotJoints="+ps.getJointList().size()+", "
+				);
+				
 				for(PhysicsData pd:apdDisintegrate){
 					erasePhysicsFrom(pd.sptLink);
 					pd.sptLink.removeFromParent();
 				}
 				apdDisintegrate.clear();
+				
 				return true;
 			}
 		}).enableLoopMode().setDelaySeconds(0.5f);
@@ -232,6 +247,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		Quaternion	quaLastSafeRot;
 		boolean	bTerrain;
 		long	lRestingAtTickCount;
+		private boolean	bResting;
 		
 		public PhysicsData(Spatial spt) {
 			this.sptLink = spt;
@@ -247,6 +263,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 
 		public PhysicsData setAllowDisintegration(boolean bAllowDisintegration) {
 			this.bAllowDisintegration = bAllowDisintegration;
+			PhysicsI.i().hmDisintegratables.put(rbc, this);
 			return this; 
 		}
 
@@ -295,6 +312,14 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			
 			// rot may not be available
 			if(quaRot!=null)this.quaLastSafeRot=quaRot.clone();
+		}
+
+		public boolean isResting() {
+			return bResting;
+		}
+
+		public void setResting(boolean b) {
+			this.bResting=b;
 		}
 	}
 	
@@ -390,6 +415,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			InfoJmeI.i().putAt(hmStore,"spd",pd.rbc.getLinearVelocity(),2);
 			InfoJmeI.i().putAt(hmStore,"angv",pd.rbc.getAngularVelocity(),1);
 			InfoJmeI.i().putAt(hmStore,"grav",pd.rbc.getGravity(),1);
+			InfoJmeI.i().putAt(hmStore,"rest",pd.isResting());
 		}
 	}
 	
@@ -407,6 +433,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	
 	public PhysicsData erasePhysicsFrom(Spatial spt){
 		RigidBodyControl rbc = spt.getControl(RigidBodyControl.class);
+		
+		if(hmDisintegratables.containsKey(rbc)){
+			hmDisintegratables.remove(rbc);
+		}
 		
 		removeFromPhysicsSpace(spt);
 		spt.removeControl(rbc); //AFTER from space removal
@@ -480,7 +510,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			arbcQueue.clear();
 		}
 	}
-
+	
+	TimedDelay tdDisintegrate = new TimedDelay(10f).setActive(true);
+	TimedDelay tdSaveSafeSpotRot = new TimedDelay(3f).setActive(true);
+	
 	/**
 	 * THIS IS ANOTHER THREAD
 	 * TODO write current forces to spatials for easy access?
@@ -489,28 +522,29 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	public void physicsTick(PhysicsSpace ps, float tpf) {
 		lTickCount++;
 		for(PhysicsRigidBody prb:ps.getRigidBodyList()){
-//			if(prb.getLinearVelocity().length()==0 && prb.getAngularVelocity().length()==0){
+			PhysicsData pd = getPhysicsDataFrom(prb);
 			if(isResting(prb)){
-				PhysicsData pd = getPhysicsDataFrom(prb);
-				if(!pd.isWasSafePosRotSavedAtPreviousTickAndUpdate(lTickCount)){
+//				if(!pd.isWasSafePosRotSavedAtPreviousTickAndUpdate(lTickCount)){
+				if(!pd.isResting()){
 					pd.saveSafePosRot(lTickCount, prb.getPhysicsLocation(),prb.getPhysicsRotation());
+					pd.setResting(true);
 				}
+			}else{
+				pd.setResting(false);
 			}
+		}
 			
-			if(!bbSpace.contains(prb.getPhysicsLocation())){
-//				Spatial spt=(Spatial)prb.getUserObject();
-//				assert spt!=null;
-//				PhysicsData pd = getPhysicsDataFrom(spt);
-				PhysicsData pd = getPhysicsDataFrom(prb);
-//				assert pd!=null;
-				if(pd.isAllowDisintegration()){
-					requestDisintegration(pd);
-//					pd.disintegrateLater();
-				}else{
-					if(pd.getLastSafeSpot()!=null){
-						resetForces(pd);
-						pd.restoreSafeSpotRot();
-//						restoreLocationToLastSafeSpotLater(pd);
+		if(tdDisintegrate.isReady(true)){
+			for(PhysicsRigidBody prb:ps.getRigidBodyList()){
+				if(!bbSpace.contains(prb.getPhysicsLocation())){
+					PhysicsData pd = getPhysicsDataFrom(prb);
+					if(pd.isAllowDisintegration()){
+						requestDisintegration(pd);
+					}else{
+						if(pd.getLastSafeSpot()!=null){
+							resetForces(pd);
+							pd.restoreSafeSpotRot();
+						}
 					}
 				}
 			}
@@ -622,7 +656,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		pd.setAllowDisintegration(true);
 		PhysicsI.i().throwAtSelfDirImpulse(geom, fDesiredSpeed*pd.fMass); //the final speed depends on the mass
 	}
-
+	
 	public void syncPhysTransfFromSpt(Spatial spt) {
 		RigidBodyControl rbc = spt.getControl(RigidBodyControl.class);
 		rbc.setPhysicsLocation(spt.getWorldTranslation());
@@ -646,6 +680,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	 */
 	@Override
 	public boolean collide(PhysicsCollisionObject nodeA,PhysicsCollisionObject nodeB) {
+		//TODO can be used here for fast access to PhysicsData: hmDisintegratables
 //		checkAndSaveSafeSpot(
 //			(Spatial)nodeA.getUserObject(),
 //			null,

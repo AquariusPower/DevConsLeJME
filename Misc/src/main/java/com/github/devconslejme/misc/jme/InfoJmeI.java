@@ -55,7 +55,8 @@ public class InfoJmeI extends InfoI{
 	 * @param iFloatScale
 	 */
 	public void putAt(HashMap<String, Info> hm, String strKey,Vector3f v3f, int iFloatScale) {
-		if(v3f==null)hm.remove(strKey);
+		if(chkRemove(hm, strKey, v3f))return;
+//		if(v3f==null)hm.remove(strKey);
 		hm.put(strKey, new InfoJme(strKey,v3f,iFloatScale));
 	}
 	
