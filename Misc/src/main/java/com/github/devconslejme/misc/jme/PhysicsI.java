@@ -40,6 +40,7 @@ import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.TimedDelay;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
@@ -711,5 +712,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		
 		if(pdA.isTerrain())pdB.saveSafePosRot(v3fB,quaRotB);
 		if(pdB.isTerrain())pdA.saveSafePosRot(v3fA,quaRotA);
+	}
+
+	public void wakeUp(PhysicsData pd) {
+		pd.rbc.activate();
 	}
 }

@@ -109,24 +109,30 @@ public class InfoI {
 		throw new UnsupportedOperationException("type not supported "+inf.objValue.getClass());
 	}
 	
-	public String prepareFullInfo(HashMap<String,Info>... ahminf){
+	@Deprecated
+	private String prepareFullInfo(HashMap<String,Info>... ahminf){
 		StringBuilder sb = new StringBuilder("");
 		int i=0;
 		for(HashMap<String, Info> hm:ahminf){
-			sb.append(prepareFullInfo(hm));
+			sb.append(prepareFullInfoRecursive(hm));
 			if(i<ahminf.length-1)sb.append(strInfoSeparator);
 			i++;
 		}
 		return sb.toString();
 	}
-	public String prepareFullInfo(HashMap<String,Info> hminf){
+	public String prepareFullInfoRecursive(HashMap<String,Info> hminf){
 		StringBuilder sb = new StringBuilder("");
 		ArrayList<Info> ainf = new ArrayList<Info>(hminf.values());
 		for(int i=0;i<ainf.size();i++){
 			Info inf = ainf.get(i);
-			sb.append(inf.strKey);
-			sb.append("=");
-			sb.append(fmtInfoValue(inf));
+			if(inf.getValue() instanceof HashMap){
+				sb.append("<"+inf.strKey+"> ");
+				sb.append(prepareFullInfoRecursive(inf.getValue()));
+			}else{
+				sb.append(inf.strKey);
+				sb.append("=");
+				sb.append(fmtInfoValue(inf));
+			}
 			
 			if(i<hminf.size()-1)sb.append(strInfoSeparator);
 		}
@@ -156,7 +162,8 @@ public class InfoI {
 		return false;
 	}
 	
-	public String prepareFullInfo(Collection<HashMap<String, Info>> values) {
+	@Deprecated
+	private String prepareFullInfo(Collection<HashMap<String, Info>> values) {
 		@SuppressWarnings("unchecked") HashMap<String, Info>[] ahm = new HashMap[values.size()];
 		int i=0;
 		for(HashMap<String, Info> hm:values){

@@ -26,7 +26,20 @@
 */
 package com.github.devconslejme.misc.jme;
 
+import java.util.ArrayList;
+
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.ICompositeRestrictedAccessControl;
+import com.github.devconslejme.misc.Key;
+import com.github.devconslejme.misc.KeyBindCommandManagerI;
+import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
+import com.github.devconslejme.misc.KeyCodeManagerI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
+import com.jme3.collision.CollisionResult;
+import com.jme3.math.FastMath;
+import com.jme3.math.Vector3f;
 
 /**
  * TODO after picking, using the mouse, move and rotate using wheel and moving the mouse, aligned with whatever is just below it
@@ -35,5 +48,76 @@ import com.github.devconslejme.misc.GlobalManagerI;
  */
 public class ManipulatorI {
 	public static ManipulatorI i(){return GlobalManagerI.i().get(ManipulatorI.class);}
+
+	public static class CompositeControl implements ICompositeRestrictedAccessControl{private CompositeControl(){};};
+	private ICompositeRestrictedAccessControl	cc=new CompositeControl();
+		
+	private CollisionResult	crManipulating;
+	private Key	keyContext;
+	
+	public void configure(){
+		keyContext = KeyCodeManagerI.i().createSpecialExternalContextKey(cc, "ContextManipulatorGrab");
+		
+		KeyBindCommandManagerI.i().putBindCommandsLater("Ctrl+G", new CallBoundKeyCmd(){
+			@Override
+			public Boolean callOnKeyReleased(int iClickCountIndex) {
+				if(crManipulating!=null){
+					PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(crManipulating.getGeometry());
+					if(pd!=null)PhysicsI.i().wakeUp(pd);
+					crManipulating=null;
+				}else{
+					ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+					if(acr.size()>0)crManipulating=acr.get(0);
+				}
+				return true;
+			};
+		}.setName("ManipulatorGrab"));
+		
+		KeyBindCommandManagerI.i().putBindCommandsLater(
+			KeyCodeManagerI.i().getMouseAxisKey(2,true).composeCfgPrependModifiers(keyContext),
+			new CallBoundKeyCmd(){@Override	public Boolean callOnKeyReleased(int iClickCountIndex) {
+				rotateManipulated(true); return true;};}.setName("ManipGrabRotCW")
+		);
+		KeyBindCommandManagerI.i().putBindCommandsLater(
+			KeyCodeManagerI.i().getMouseAxisKey(2,false).composeCfgPrependModifiers(keyContext),
+			new CallBoundKeyCmd(){@Override	public Boolean callOnKeyReleased(int iClickCountIndex) {
+				rotateManipulated(false); return true;};}.setName("ManipGrabRotCCW")
+		);
+		
+		initUpdateManipulated();
+	}
+	
+	protected void rotateManipulated(boolean bCW){
+		crManipulating.getGeometry().rotate(0, (bCW?1:-1)*10*FastMath.DEG_TO_RAD, 0);
+		
+		PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(crManipulating.getGeometry());
+		if(pd!=null)PhysicsI.i().syncPhysTransfFromSpt(crManipulating.getGeometry());
+	}
+
+	protected void initUpdateManipulated() {
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				keyContext.setPressedSpecialExternalContextKeyMode(cc, crManipulating!=null);
+				if(!keyContext.isPressed())return true;//skip
+				updateManipulated(getTPF());
+				return true;
+			}
+		}).enableLoopMode();
+	}
+	
+	protected void updateManipulated(float tpf) {
+		AppI.i().placeAtCamWPos(crManipulating.getGeometry(), crManipulating.getDistance()+1f, false);
+		crManipulating.getGeometry().rotateUpTo(Vector3f.UNIT_Y);
+		
+		PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(crManipulating.getGeometry());
+		if(pd!=null){
+			PhysicsI.i().syncPhysTransfFromSpt(crManipulating.getGeometry());
+			PhysicsI.i().resetForces(pd);
+		}
+		
+		HWEnvironmentJmeI.i().putCustomInfo("Grabbed", crManipulating.toString());
+	}
+	
 	
 }

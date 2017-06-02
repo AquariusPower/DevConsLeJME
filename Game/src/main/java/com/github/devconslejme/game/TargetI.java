@@ -191,7 +191,7 @@ public class TargetI {
 			);
 			if(tgtLastSingleTarget.hmSubInfos.size()>0){
 				sb.append(
-					InfoI.i().prepareFullInfo(tgtLastSingleTarget.hmSubInfos.values())
+					InfoI.i().prepareFullInfoRecursive(tgtLastSingleTarget.hmSubInfos)
 				);
 			}
 		}
@@ -308,15 +308,18 @@ public class TargetI {
 		private boolean bEnemy=false;
 		private Spatial	sptAtRoot;
 		private boolean	bAllowReset=true; //can be disabled outside here to stop glowing for ex 
-		private HashMap<String,HashMap<String,Info>> hmSubInfos = new HashMap<String,HashMap<String,Info>>();
+//		private HashMap<String,HashMap<String,Info>> hmSubInfos = new HashMap<String,HashMap<String,Info>>();
+		private HashMap<String,Info> hmSubInfos = new HashMap<String,Info>();
 		
 		public HashMap<String,Info> getOrCreateSubInfo(String strSubInfoKey){
-			HashMap<String, Info> hm = hmSubInfos.get(strSubInfoKey);
-			if(hm==null){
-				hm=new HashMap<String, Info>();
-				hmSubInfos.put(strSubInfoKey, hm);
+			Info inf = hmSubInfos.get(strSubInfoKey);
+			if(inf==null){
+				HashMap<String, Info> hm=new HashMap<String, Info>();
+				hmSubInfos.put(strSubInfoKey, new Info(strSubInfoKey,hm));
+				return hm;
 			}
-			return hm;
+			
+			return inf.getValue();
 		}
 
 		public TargetGeom(Spatial sptSomeParentOrParentesOrSelf){
