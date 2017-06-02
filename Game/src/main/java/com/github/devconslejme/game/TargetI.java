@@ -100,8 +100,11 @@ public class TargetI {
 		}.setName("AddTargetMulti"));
     KeyBindCommandManagerI.i().putBindCommandsLater(strK,new CallBoundKeyCmd(){
     	@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
-				clearLastSingleTarget();
-				tgtLastSingleTarget=acquireNewTarget(v3fRayCastFromXY); //can be the same, wont toggle
+				TargetGeom tgt = acquireNewTarget(v3fRayCastFromXY); //can be the same, wont toggle
+				if(tgt!=null){
+					clearLastSingleTarget();
+					tgtLastSingleTarget=acquireNewTarget(v3fRayCastFromXY); //can be the same, wont toggle
+				}
 				return true;
 			}
     }.setName("SetSingleTarget"));

@@ -70,6 +70,9 @@ import com.jme3.scene.shape.Box;
 public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListener, PhysicsCollisionListener{
 	public static PhysicsI i(){return GlobalManagerI.i().get(PhysicsI.class);}
 	
+	private ArrayList<PhysicsData> apdDisintegrate = new ArrayList<PhysicsData>();
+	private long	lTickCount=0;
+	
 	public static class Impulse{
 		private Spatial	spt;
 		private RigidBodyControl	rbc;
@@ -223,11 +226,12 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		Spatial	sptLink;
 		Float	fDensity;
 		float	fVolume;
-		boolean	bAllowDisintegration;
+		boolean	bAllowDisintegration=false;
 //		private boolean	bDisintegrate;
 		Vector3f	v3fLastSafeSpot;
 		Quaternion	quaLastSafeRot;
 		boolean	bTerrain;
+		long	lRestingAtTickCount;
 		
 		public PhysicsData(Spatial spt) {
 			this.sptLink = spt;
@@ -264,7 +268,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			this.bTerrain = bTerrain;
 			return this; 
 		}
-
+		
 		public void saveSafePosRotFromSpatialLink() {
 			saveSafePosRot(sptLink.getWorldTranslation(), sptLink.getWorldRotation());
 		}
@@ -273,14 +277,26 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			rbc.setPhysicsLocation(v3fLastSafeSpot);
 			rbc.setPhysicsRotation(quaLastSafeRot);
 		}
-
+		
+		public boolean isWasSafePosRotSavedAtPreviousTickAndUpdate(long lTickCount){
+			boolean b = lTickCount-1 == this.lRestingAtTickCount;
+			if(b)this.lRestingAtTickCount=lTickCount;
+			return b;
+		}
+		
 		public void saveSafePosRot(Vector3f v3fPos, Quaternion quaRot) {
-			if(v3fPos!=null)this.v3fLastSafeSpot=v3fPos.clone();
+			saveSafePosRot(-1, v3fPos, quaRot);
+		}
+		public void saveSafePosRot(long lRestingAtTickCount, Vector3f v3fPos, Quaternion quaRot) {
+			this.lRestingAtTickCount = lRestingAtTickCount;
+//			if(v3fPos!=null)
+			assert v3fPos!=null;
+			this.v3fLastSafeSpot=v3fPos.clone();
+			
+			// rot may not be available
 			if(quaRot!=null)this.quaLastSafeRot=quaRot.clone();
 		}
 	}
-	
-	private ArrayList<PhysicsData> apdDisintegrate = new ArrayList<PhysicsData>();
 	
 	synchronized public void requestDisintegration(PhysicsData pd){
 		if(!apdDisintegrate.contains(pd))apdDisintegrate.add(pd);
@@ -357,6 +373,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		return pd;
 	}
 	
+	public PhysicsData getPhysicsDataFrom(PhysicsRigidBody prb){
+		Spatial spt=(Spatial)prb.getUserObject();
+		PhysicsData pd = getPhysicsDataFrom(spt);
+		return pd;
+	}
 	public PhysicsData getPhysicsDataFrom(Spatial spt){
 		return UserDataI.i().getMustExistOrNull(spt, PhysicsData.class);
 	}
@@ -386,10 +407,13 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	
 	public PhysicsData erasePhysicsFrom(Spatial spt){
 		RigidBodyControl rbc = spt.getControl(RigidBodyControl.class);
-		spt.removeControl(rbc);
+		
 		removeFromPhysicsSpace(spt);
+		spt.removeControl(rbc); //AFTER from space removal
+		
 		PhysicsData pd = getPhysicsDataFrom(spt);
 		UserDataI.i().eraseAllOf(spt,pd);
+		
 		return pd;
 	}
 	
@@ -463,10 +487,22 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	 */
 	@Override
 	public void physicsTick(PhysicsSpace ps, float tpf) {
+		lTickCount++;
 		for(PhysicsRigidBody prb:ps.getRigidBodyList()){
+//			if(prb.getLinearVelocity().length()==0 && prb.getAngularVelocity().length()==0){
+			if(isResting(prb)){
+				PhysicsData pd = getPhysicsDataFrom(prb);
+				if(!pd.isWasSafePosRotSavedAtPreviousTickAndUpdate(lTickCount)){
+					pd.saveSafePosRot(lTickCount, prb.getPhysicsLocation(),prb.getPhysicsRotation());
+				}
+			}
+			
 			if(!bbSpace.contains(prb.getPhysicsLocation())){
-				Spatial spt=(Spatial)prb.getUserObject();
-				PhysicsData pd = getPhysicsDataFrom(spt);
+//				Spatial spt=(Spatial)prb.getUserObject();
+//				assert spt!=null;
+//				PhysicsData pd = getPhysicsDataFrom(spt);
+				PhysicsData pd = getPhysicsDataFrom(prb);
+//				assert pd!=null;
 				if(pd.isAllowDisintegration()){
 					requestDisintegration(pd);
 //					pd.disintegrateLater();
@@ -480,6 +516,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			}
 		}
 	}
+	
+	
 	
 	public void resetForces(PhysicsData pd){
 		pd.getRBC().setAngularVelocity(Vector3f.ZERO);
@@ -593,38 +631,39 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 
 	@Override
 	public void collision(PhysicsCollisionEvent event) {
-		checkAndSaveSafeSpot(
-			event.getNodeA(),
-			event.getPositionWorldOnA(),
-			null, //TODO request event.getRotationWorldOnA()
-			event.getNodeB(),
-			event.getPositionWorldOnB(),
-			null //TODO request event.getRotationWorldOnB()
-		);
-//		PhysicsData pdA = getPhysicsDataFrom(event.getNodeA());
-//		PhysicsData pdB = getPhysicsDataFrom(event.getNodeB());
-//		
-//		if(pdA.isTerrain())pdB.saveSafePosRot(event.getPositionWorldOnB(),null);//TODO request event.getRotationWorldOnB()
-//		if(pdB.isTerrain())pdA.saveSafePosRot(event.getPositionWorldOnA(),null);//TODO request event.getRotationWorldOnA()
+//		checkAndSaveSafeSpot(
+//			event.getNodeA(),
+//			event.getPositionWorldOnA(),
+//			null, //TODO request them creating event.getRotationWorldOnA() if possible?
+//			event.getNodeB(),
+//			event.getPositionWorldOnB(),
+//			null //TODO request them creating event.getRotationWorldOnB() if possible?
+//		);
 	}
-
+	
+	/**
+	 * this is for collision groups {@link PhysicsCollisionGroupListener}
+	 */
 	@Override
 	public boolean collide(PhysicsCollisionObject nodeA,PhysicsCollisionObject nodeB) {
-		checkAndSaveSafeSpot(
-			(Spatial)nodeA.getUserObject(),
-			null,
-			null,
-			(Spatial)nodeB.getUserObject(),
-			null,
-			null
-		);
-//		PhysicsData pdA = getPhysicsDataFrom((Spatial)nodeA.getUserObject());
-//		PhysicsData pdB = getPhysicsDataFrom((Spatial)nodeB.getUserObject());
+//		checkAndSaveSafeSpot(
+//			(Spatial)nodeA.getUserObject(),
+//			null,
+//			null,
+//			(Spatial)nodeB.getUserObject(),
+//			null,
+//			null
+//		);
 		
 		return true; //allow all collisions
 	}
 	
-	protected void checkAndSaveSafeSpot(
+	public boolean isResting(PhysicsRigidBody prb){
+		return (prb.getLinearVelocity().length()==0 && prb.getAngularVelocity().length()==0);
+	}
+	
+	@Deprecated
+	private void checkAndSaveSafeSpot(
 		Spatial sptA, 
 		Vector3f v3fA, 
 		Quaternion quaRotA, 

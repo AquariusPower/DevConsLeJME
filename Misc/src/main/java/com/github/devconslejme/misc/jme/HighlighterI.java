@@ -154,7 +154,12 @@ public class HighlighterI {
 		}
 		
 		// other selecteds
-		for(NodeHighLigh nh:ahlnList.values()){
+		for(NodeHighLigh nh:ahlnList.values().toArray(new NodeHighLigh[0])){
+			if(nh.geomTarget.getParent()==null){
+				ahlnList.remove(nh.geomTarget); //maintenance task
+				continue;
+			}
+			
 			update(nh,tpf);
 		}
 		
