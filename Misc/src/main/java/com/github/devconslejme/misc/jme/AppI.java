@@ -27,6 +27,8 @@
 package com.github.devconslejme.misc.jme;
 
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AppState;
@@ -46,12 +48,31 @@ public class AppI {
 
 	private Application	app;
 	private SimpleApplication	sappOpt;
+	private Spatial	sptCamFollowMove;
 	
 	public void configure(Application app){
 		this.app=app;
 		this.sappOpt=(app instanceof SimpleApplication)?(SimpleApplication)app:null;
+		
+		initUpdateCamera();
 	}
 	
+	private void initUpdateCamera() {
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				updateCamera(getTPF());
+				return true;
+			}
+		}).enableLoopMode();
+	}
+
+	protected void updateCamera(float tpf) {
+		if(sptCamFollowMove!=null){
+			app.getCamera().setLocation(sptCamFollowMove.getWorldTranslation());
+		}
+	}
+
 	public Vector3f getScreenCoordinates(Vector3f worldPos){
 		return app.getCamera().getScreenCoordinates(worldPos);
 	}
@@ -99,6 +120,19 @@ public class AppI {
 	
 	public Node getRootNode() {
 		return sappOpt.getRootNode();
+	}
+
+	public Vector3f getCamLookingAtDir() {
+		return app.getCamera().getDirection().clone();
+	}
+	
+	public Vector3f getCamLeftDir() {
+		return app.getCamera().getLeft().clone();
+	}
+
+	public AppI setCamFollow(Spatial spt) {
+		this.sptCamFollowMove=spt;
+		return this;
 	}
 	
 }

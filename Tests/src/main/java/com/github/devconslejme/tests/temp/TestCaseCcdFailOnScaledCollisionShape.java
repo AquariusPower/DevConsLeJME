@@ -11,6 +11,10 @@ import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 
+/**
+ * TEST CASE FAILED: the problem was between the chair and the keyboard! :>
+ */
+@Deprecated
 public class TestCaseCcdFailOnScaledCollisionShape extends SimpleApplication implements PhysicsTickListener {
 	public static void main(String[] args) {
 		TestCaseCcdFailOnScaledCollisionShape test = new TestCaseCcdFailOnScaledCollisionShape();
