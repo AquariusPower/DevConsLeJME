@@ -99,6 +99,7 @@ public class PkgCfgI extends PkgCfgAbs{
 		HWEnvironmentJmeI.i().configure(nodeGui);
 		WorldPickingI.i().configure(flycam);
 		HighlighterI.i().configure(flycam);
+		PhysicsI.i().configure();
 //		ReticleI.i().configure();
 //		CrossHairI.i().configure();
 		

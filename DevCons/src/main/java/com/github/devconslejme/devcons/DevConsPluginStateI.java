@@ -301,8 +301,9 @@ public class DevConsPluginStateI extends SimpleAppState implements IDialogHierar
 	public void configure(Integer iOpenDevConsKeyCode, Node nodeParent) {
 		this.app=GlobalManagerI.i().get(Application.class);
 		
-		font = StringTextJmeI.i().loadFont("Interface/Fonts/DroidSansMono.fnt");
-		StringTextJmeI.i().setDefaultMonoFont(font);
+//		font = StringTextJmeI.i().loadFont("Interface/Fonts/DroidSansMono.fnt"); 
+		font = StringTextDevConsI.i().getDefaultMonoFont(); 
+//		StringTextJmeI.i().setDefaultMonoFontOverride(font);
 		
 		this.iKeyCodeToggleConsole=iOpenDevConsKeyCode;
 		if(this.iKeyCodeToggleConsole==null)this.iKeyCodeToggleConsole=KeyInput.KEY_F10;

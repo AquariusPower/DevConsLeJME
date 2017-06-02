@@ -40,6 +40,8 @@ import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.font.BitmapText;
+import com.jme3.font.LineWrapMode;
+import com.jme3.font.Rectangle;
 import com.jme3.input.InputManager;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -99,11 +101,11 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 			}
 		}
 		
-		btInfo = new BitmapText(StringTextJmeI.i().loadDefaultFont());
-		btInfo.setSize(12);
+		btInfo = StringTextJmeI.i().createBitmapTextMono("", ColorRGBA.White);
 		
-		geomInfoBkg.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(new ColorRGBA(0,0,0,0.25f)));
+		geomInfoBkg.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(new ColorRGBA(0,0,0,0.5f)));
 		btInfo.setLocalTranslation(new Vector3f(0,0,1));
+		btInfo.setLineWrapMode(LineWrapMode.Word);
 		nodeInfo.attachChild(btInfo);
 		nodeInfo.attachChild(geomInfoBkg);
 		nodeInfo.setName(HWEnvironmentJmeI.class.getSimpleName()+":info");
@@ -316,6 +318,9 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 			v3f.y=btInfo.getHeight();
 		}
 		nodeInfo.setLocalTranslation(v3f);
+		
+		btInfo.setBox(new Rectangle(0,0,HWEnvironmentJmeI.i().getDisplay().getWidth(),btInfo.getHeight()));
+//		btInfo.setSize(15);
 		
 		if(nodeInfo.getParent()==null)nodeGui.attachChild(nodeInfo);
 	}

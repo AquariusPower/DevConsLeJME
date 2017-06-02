@@ -24,11 +24,12 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package com.github.devconslejme.game;
+package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import com.github.devconslejme.game.TargetI;
 import com.github.devconslejme.game.TargetI.TargetGeom;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
@@ -39,12 +40,6 @@ import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
-import com.github.devconslejme.misc.jme.AppI;
-import com.github.devconslejme.misc.jme.ColorI;
-import com.github.devconslejme.misc.jme.GeometryI;
-import com.github.devconslejme.misc.jme.InfoJmeI;
-import com.github.devconslejme.misc.jme.MeshI;
-import com.github.devconslejme.misc.jme.UserDataI;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
@@ -52,12 +47,17 @@ import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.BulletAppState.ThreadingType;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.PhysicsTickListener;
+import com.jme3.bullet.collision.PhysicsCollisionEvent;
+import com.jme3.bullet.collision.PhysicsCollisionGroupListener;
+import com.jme3.bullet.collision.PhysicsCollisionListener;
+import com.jme3.bullet.collision.PhysicsCollisionObject;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Matrix3f;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
@@ -67,7 +67,7 @@ import com.jme3.scene.shape.Box;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class PhysicsI implements PhysicsTickListener{
+public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListener, PhysicsCollisionListener{
 	public static PhysicsI i(){return GlobalManagerI.i().get(PhysicsI.class);}
 	
 	public static class Impulse{
@@ -154,26 +154,55 @@ public class PhysicsI implements PhysicsTickListener{
 
 	private BulletAppState	bullet;
 	private PhysicsSpace	ps;
+	private BoundingBox	bbSpace;
 	
 	public void configure(){
 		bullet = new BulletAppState();
 		bullet.setThreadingType(ThreadingType.PARALLEL);
 		AppI.i().attatchAppState(bullet);
 		
-//		QueueI.i().enqueue(new CallableXAnon() {
-//			@Override
-//			public Boolean call() {
-				ps = bullet.getPhysicsSpace();
-				ps.addTickListener(PhysicsI.this);
-//				return true;
-//			}
-//		});
-				
-		initUpdateLastTargetInfo();
+		ps = bullet.getPhysicsSpace();
+		ps.addTickListener(PhysicsI.this);
+		ps.addCollisionListener(this);
+		ps.addCollisionGroupListener(this, 
+			PhysicsCollisionObject.COLLISION_GROUP_01&
+			PhysicsCollisionObject.COLLISION_GROUP_02&
+			PhysicsCollisionObject.COLLISION_GROUP_03&
+			PhysicsCollisionObject.COLLISION_GROUP_04&
+			PhysicsCollisionObject.COLLISION_GROUP_05&
+			PhysicsCollisionObject.COLLISION_GROUP_06&
+			PhysicsCollisionObject.COLLISION_GROUP_07&
+			PhysicsCollisionObject.COLLISION_GROUP_08&
+			PhysicsCollisionObject.COLLISION_GROUP_09&
+			PhysicsCollisionObject.COLLISION_GROUP_10&
+			PhysicsCollisionObject.COLLISION_GROUP_11&
+			PhysicsCollisionObject.COLLISION_GROUP_12&
+			PhysicsCollisionObject.COLLISION_GROUP_13&
+			PhysicsCollisionObject.COLLISION_GROUP_14&
+			PhysicsCollisionObject.COLLISION_GROUP_15&
+			PhysicsCollisionObject.COLLISION_GROUP_16
+		);
+		
+		bbSpace = new BoundingBox(ps.getWorldMin(), ps.getWorldMax());
+		
+		initMaintenanceUpdateLoop();
 	}
 	
+	private void initMaintenanceUpdateLoop() {
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				for(PhysicsData pd:apdDisintegrate){
+					erasePhysicsFrom(pd.sptLink);
+					pd.sptLink.removeFromParent();
+				}
+				apdDisintegrate.clear();
+				return true;
+			}
+		}).enableLoopMode().setDelaySeconds(0.5f);
+	}
+
 	private ArrayList<Impulse> arbcQueue = new ArrayList();
-//	private boolean	bTestBuggyFloor;
 	
 	/**
 	 * 
@@ -185,7 +214,7 @@ public class PhysicsI implements PhysicsTickListener{
 	}
 	public static class PhysicsData{
 		float fMass;
-		Quaternion	quaBkp;
+		Quaternion	quaWRotBkp;
 		BoundingVolume	bv;
 		BoundingBox	bb;
 		CollisionShape	cs;
@@ -193,7 +222,12 @@ public class PhysicsI implements PhysicsTickListener{
 		RigidBodyControl	rbc;
 		Spatial	sptLink;
 		Float	fDensity;
-		public float	fVolume;
+		float	fVolume;
+		boolean	bAllowDisintegration;
+//		private boolean	bDisintegrate;
+		Vector3f	v3fLastSafeSpot;
+		Quaternion	quaLastSafeRot;
+		boolean	bTerrain;
 		
 		public PhysicsData(Spatial spt) {
 			this.sptLink = spt;
@@ -202,21 +236,72 @@ public class PhysicsI implements PhysicsTickListener{
 		public PhysicsRigidBody getRBC() {
 			return rbc;
 		}
+
+		public boolean isAllowDisintegration() {
+			return bAllowDisintegration;
+		}
+
+		public PhysicsData setAllowDisintegration(boolean bAllowDisintegration) {
+			this.bAllowDisintegration = bAllowDisintegration;
+			return this; 
+		}
+
+//		public void disintegrateLater() {
+//			PhysicsI.i().requestDisintegration(this);
+////			apdDisintegrate.add(this);
+////			bDisintegrate=true;
+//		}
+
+		public Vector3f getLastSafeSpot() {
+			return v3fLastSafeSpot;
+		}
+
+		public boolean isTerrain() {
+			return bTerrain;
+		}
+
+		public PhysicsData setTerrain(boolean bTerrain) {
+			this.bTerrain = bTerrain;
+			return this; 
+		}
+
+		public void saveSafePosRotFromSpatialLink() {
+			saveSafePosRot(sptLink.getWorldTranslation(), sptLink.getWorldRotation());
+		}
+
+		public void restoreSafeSpotRot() {
+			rbc.setPhysicsLocation(v3fLastSafeSpot);
+			rbc.setPhysicsRotation(quaLastSafeRot);
+		}
+
+		public void saveSafePosRot(Vector3f v3fPos, Quaternion quaRot) {
+			if(v3fPos!=null)this.v3fLastSafeSpot=v3fPos.clone();
+			if(quaRot!=null)this.quaLastSafeRot=quaRot.clone();
+		}
 	}
+	
+	private ArrayList<PhysicsData> apdDisintegrate = new ArrayList<PhysicsData>();
+	
+	synchronized public void requestDisintegration(PhysicsData pd){
+		if(!apdDisintegrate.contains(pd))apdDisintegrate.add(pd);
+	}
+	
 	public PhysicsData imbueFromWBounds(Spatial spt, Float fDensityAutoMassFromVolume){
 		assert !UserDataI.i().contains(spt, PhysicsData.class);
 		
 		PhysicsData pd = new PhysicsData(spt);
 		pd.fDensity=fDensityAutoMassFromVolume;
+		pd.saveSafePosRotFromSpatialLink();
 		
 		//bkp rot
-		pd.quaBkp = spt.getWorldRotation().clone();
-		spt.lookAt(spt.getLocalTranslation().add(0,0,1), Vector3f.UNIT_Y);
+		pd.quaWRotBkp = spt.getWorldRotation().clone();
+		// reset rot: look at z+1 from where it is, and up to y=1
+		spt.lookAt(spt.getWorldTranslation().add(0,0,1), Vector3f.UNIT_Y);
 		
 		pd.bv = spt.getWorldBound().clone(); //the world bound will already be a scaled result...
 		
 		//restore rot
-		spt.lookAt(spt.getLocalTranslation().add(pd.quaBkp.getRotationColumn(2)), pd.quaBkp.getRotationColumn(1));
+		spt.lookAt(spt.getWorldTranslation().add(pd.quaWRotBkp.getRotationColumn(2)), pd.quaWRotBkp.getRotationColumn(1));
 		
 		// create collision shape from bounds
 		float fPseudoDiameter = 0f;
@@ -263,7 +348,7 @@ public class PhysicsI implements PhysicsTickListener{
 		 */
 		pd.rbc.setCcdSweptSphereRadius(fPseudoDiameter/2f);
 		
-		spt.addControl(pd.rbc);
+		spt.addControl(pd.rbc); //this will put the rbc at spatial's W/L location/rotation
 		
 		ps.add(spt);
 		
@@ -276,37 +361,39 @@ public class PhysicsI implements PhysicsTickListener{
 		return UserDataI.i().getMustExistOrNull(spt, PhysicsData.class);
 	}
 	
-	private void initUpdateLastTargetInfo() {
-		QueueI.i().enqueue(new CallableXAnon() {
-			@Override
-			public Boolean call() {
-				TargetGeom tgt = TargetI.i().getLastSingleTarget();
-				if(tgt!=null){
-					PhysicsData pd = getPhysicsDataFrom(tgt.getGeometryHit());
-					if(pd!=null){
-						HashMap<String, Info> hm = tgt.getOrCreateSubInfo("Phys");
-						InfoJmeI.i().putAt(hm,"mass",pd.fMass,3);
-						InfoJmeI.i().putAt(hm,"vol",pd.fVolume,3);
-						InfoJmeI.i().putAt(hm,"spd",pd.rbc.getLinearVelocity(),2);
-						InfoJmeI.i().putAt(hm,"angv",pd.rbc.getAngularVelocity(),1);
-						InfoJmeI.i().putAt(hm,"grav",pd.rbc.getGravity(),1);
-					}
-				}
-				return true;
-			}
-		}).enableLoopMode().setDelaySeconds(0.5f);
+	public void putPhysicsData(Spatial sptSourceRetrieveFrom, HashMap<String,Info> hmStore){
+		PhysicsData pd = getPhysicsDataFrom(sptSourceRetrieveFrom);
+		if(pd!=null){
+			InfoJmeI.i().putAt(hmStore,"mass",pd.fMass,3);
+			InfoJmeI.i().putAt(hmStore,"vol",pd.fVolume,3);
+			InfoJmeI.i().putAt(hmStore,"spd",pd.rbc.getLinearVelocity(),2);
+			InfoJmeI.i().putAt(hmStore,"angv",pd.rbc.getAngularVelocity(),1);
+			InfoJmeI.i().putAt(hmStore,"grav",pd.rbc.getGravity(),1);
+		}
 	}
+	
+//	private void initUpdateLastTargetInfo() {
+//		QueueI.i().enqueue(new CallableXAnon() {
+//			@Override
+//			public Boolean call() {
+//				TargetGeom tgt = TargetI.i().getLastSingleTarget();
+//				if(tgt!=null){
+//				}
+//				return true;
+//			}
+//		}).enableLoopMode().setDelaySeconds(0.5f);
+//	}
 	
 	public PhysicsData erasePhysicsFrom(Spatial spt){
 		RigidBodyControl rbc = spt.getControl(RigidBodyControl.class);
 		spt.removeControl(rbc);
-		remove(spt);
+		removeFromPhysicsSpace(spt);
 		PhysicsData pd = getPhysicsDataFrom(spt);
 		UserDataI.i().eraseAllOf(spt,pd);
 		return pd;
 	}
 	
-	public void remove(Spatial spt){
+	public void removeFromPhysicsSpace(Spatial spt){
 		ps.remove(spt);
 	}
 	
@@ -330,7 +417,10 @@ public class PhysicsI implements PhysicsTickListener{
 			arbcQueue.add(imp);
 		}
 	}
-
+	
+	/**
+	 * THIS IS ANOTHER THREAD
+	 */
 	@Override
 	public void prePhysicsTick(PhysicsSpace ps, float tpf) {
 		synchronized(arbcQueue){
@@ -368,14 +458,39 @@ public class PhysicsI implements PhysicsTickListener{
 	}
 
 	/**
+	 * THIS IS ANOTHER THREAD
 	 * TODO write current forces to spatials for easy access?
 	 */
 	@Override
 	public void physicsTick(PhysicsSpace ps, float tpf) {
-//		ps.getWorldMax()
+		for(PhysicsRigidBody prb:ps.getRigidBodyList()){
+			if(!bbSpace.contains(prb.getPhysicsLocation())){
+				Spatial spt=(Spatial)prb.getUserObject();
+				PhysicsData pd = getPhysicsDataFrom(spt);
+				if(pd.isAllowDisintegration()){
+					requestDisintegration(pd);
+//					pd.disintegrateLater();
+				}else{
+					if(pd.getLastSafeSpot()!=null){
+						resetForces(pd);
+						pd.restoreSafeSpotRot();
+//						restoreLocationToLastSafeSpotLater(pd);
+					}
+				}
+			}
+		}
 	}
 	
-//	public void initTest(boolean bTestBuggyFloor){
+	public void resetForces(PhysicsData pd){
+		pd.getRBC().setAngularVelocity(Vector3f.ZERO);
+		pd.getRBC().setLinearVelocity(Vector3f.ZERO);
+	}
+	
+//	protected void restoreLocationToLastSafeSpotLater(PhysicsData pd) {
+//		pd.
+//	}
+
+	//	public void initTest(boolean bTestBuggyFloor){
 	public void initTest(){
 		setDebugEnabled(true);
 //		SubdivisionSurfaceModifier s = new SubdivisionSurfaceModifier(modifierStructure, blenderContext);
@@ -394,7 +509,8 @@ public class PhysicsI implements PhysicsTickListener{
 			geomFloor = GeometryI.i().create(new Box(iSize,0.1f,iSize), ColorI.i().colorChangeCopy(ColorRGBA.Brown,0.20f,1f));
 //		}
 		geomFloor.move(0,-7f,0);
-		PhysicsI.i().imbueFromWBounds(geomFloor).getRBC().setMass(0f);
+		PhysicsI.i().imbueFromWBounds(geomFloor).setTerrain(true)
+			.getRBC().setMass(0f);
 		AppI.i().getRootNode().attachChild(geomFloor);
 		
 		{
@@ -465,6 +581,7 @@ public class PhysicsI implements PhysicsTickListener{
 		AppI.i().getRootNode().attachChild(geom);
 		
 		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geom,fDensity);
+		pd.setAllowDisintegration(true);
 		PhysicsI.i().throwAtSelfDirImpulse(geom, fDesiredSpeed*pd.fMass); //the final speed depends on the mass
 	}
 
@@ -472,5 +589,53 @@ public class PhysicsI implements PhysicsTickListener{
 		RigidBodyControl rbc = spt.getControl(RigidBodyControl.class);
 		rbc.setPhysicsLocation(spt.getWorldTranslation());
 		rbc.setPhysicsRotation(spt.getWorldRotation());
+	}
+
+	@Override
+	public void collision(PhysicsCollisionEvent event) {
+		checkAndSaveSafeSpot(
+			event.getNodeA(),
+			event.getPositionWorldOnA(),
+			null, //TODO request event.getRotationWorldOnA()
+			event.getNodeB(),
+			event.getPositionWorldOnB(),
+			null //TODO request event.getRotationWorldOnB()
+		);
+//		PhysicsData pdA = getPhysicsDataFrom(event.getNodeA());
+//		PhysicsData pdB = getPhysicsDataFrom(event.getNodeB());
+//		
+//		if(pdA.isTerrain())pdB.saveSafePosRot(event.getPositionWorldOnB(),null);//TODO request event.getRotationWorldOnB()
+//		if(pdB.isTerrain())pdA.saveSafePosRot(event.getPositionWorldOnA(),null);//TODO request event.getRotationWorldOnA()
+	}
+
+	@Override
+	public boolean collide(PhysicsCollisionObject nodeA,PhysicsCollisionObject nodeB) {
+		checkAndSaveSafeSpot(
+			(Spatial)nodeA.getUserObject(),
+			null,
+			null,
+			(Spatial)nodeB.getUserObject(),
+			null,
+			null
+		);
+//		PhysicsData pdA = getPhysicsDataFrom((Spatial)nodeA.getUserObject());
+//		PhysicsData pdB = getPhysicsDataFrom((Spatial)nodeB.getUserObject());
+		
+		return true; //allow all collisions
+	}
+	
+	protected void checkAndSaveSafeSpot(
+		Spatial sptA, 
+		Vector3f v3fA, 
+		Quaternion quaRotA, 
+		Spatial sptB, 
+		Vector3f v3fB,  
+		Quaternion quaRotB
+	){
+		PhysicsData pdA = getPhysicsDataFrom(sptA);
+		PhysicsData pdB = getPhysicsDataFrom(sptB);
+		
+		if(pdA.isTerrain())pdB.saveSafePosRot(v3fB,quaRotB);
+		if(pdB.isTerrain())pdA.saveSafePosRot(v3fA,quaRotA);
 	}
 }

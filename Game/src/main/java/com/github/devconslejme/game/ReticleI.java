@@ -346,7 +346,7 @@ public class ReticleI {
 		rnStore.nodeZoomMarkerCurrent.attachChild(rnStore.nodeZoomMarkerCurrentRot);
 		
 		///////////////////////////// auto target/dist range info
-		BitmapText bt = StringTextJmeI.i().createBitmapText("Tgt:+99999.9m\nDummy",ColorRGBA.Green); //TODO maximum displayable distance, create a formatter and get from there considering the world limits
+		BitmapText bt = StringTextJmeI.i().createBitmapTextMono("Tgt:+99999.9m\nDummy",ColorRGBA.Green); //TODO maximum displayable distance, create a formatter and get from there considering the world limits
 		bt.setBox(new Rectangle(0, 0, bt.getLineWidth(), bt.getHeight()));
 		bt.setAlignment(Align.Right);
 //		bt = new BitmapText(TextI.i().loadDefaultMonoFont());
@@ -423,7 +423,7 @@ public class ReticleI {
 		}
 		
 		for(int i=0;i<iTotal;i++){
-			BitmapText bt=StringTextJmeI.i().createBitmapText("",ColorRGBA.DarkGray);
+			BitmapText bt=StringTextJmeI.i().createBitmapTextMono("",ColorRGBA.DarkGray);
 			rnStore.attachChild(bt);
 //			BitmapText bt=new BitmapText(TextI.i().loadDefaultMonoFont());
 //			bt.setColor(ColorRGBA.DarkGray);

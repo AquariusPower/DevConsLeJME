@@ -30,6 +30,7 @@ import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.StringI;
+import com.google.common.base.Strings;
 import com.jme3.app.Application;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
@@ -45,10 +46,9 @@ import com.jme3.scene.Spatial;
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
 public class StringTextJmeI extends StringI {
-//	public static TextStringI i(){return GlobalManagerI.i().get(TextStringI.class);}
 	public static StringTextJmeI i(){return GlobalManagerI.i().retrieveOverridingSupers(StringTextJmeI.class,true,StringI.class);}
 
-	private BitmapFont	bfDefaultMonoFont;
+	private BitmapFont	bfDefaultMonoFontOverride;
 	
 	public String fmtVector3f(Vector3f v3f,int iScale){
 		return ""
@@ -60,25 +60,37 @@ public class StringTextJmeI extends StringI {
 	
 	public String fmtToDegrees(Quaternion qua,int iScale){
 		float[] afAngles = qua.toAngles(null);
-		return ""
-			+StringI.i().fmtFloat(afAngles[0]*FastMath.RAD_TO_DEG,iScale)+"f,"
-			+StringI.i().fmtFloat(afAngles[1]*FastMath.RAD_TO_DEG,iScale)+"f,"
-			+StringI.i().fmtFloat(afAngles[2]*FastMath.RAD_TO_DEG,iScale)+"f"
+		return "" //max of 5 to pad is ex "-180."
+			+Strings.padStart(StringI.i().fmtFloat(afAngles[0]*FastMath.RAD_TO_DEG,iScale),5+iScale,' ')+"f,"
+			+Strings.padStart(StringI.i().fmtFloat(afAngles[1]*FastMath.RAD_TO_DEG,iScale),5+iScale,' ')+"f,"
+			+Strings.padStart(StringI.i().fmtFloat(afAngles[2]*FastMath.RAD_TO_DEG,iScale),5+iScale,' ')+"f"
+//			+String.format("%03."+iScale+"f", afAngles[0]*FastMath.RAD_TO_DEG)+"f,"
+//			+StringI.i().fmtFloat(afAngles[0]*FastMath.RAD_TO_DEG,iScale)+"f,"
+//			+StringI.i().fmtFloat(afAngles[1]*FastMath.RAD_TO_DEG,iScale)+"f,"
+//			+StringI.i().fmtFloat(afAngles[2]*FastMath.RAD_TO_DEG,iScale)+"f"
 //			+StringI.i().fmtFloat(qua.getW()*FastMath.RAD_TO_DEG,1)+""
 			;
 	}
 	
-  public BitmapFont loadDefaultFont() {
+  public BitmapFont getDefaultFont() {
   	return loadFont("Interface/Fonts/Default.fnt");
   }
-  public BitmapFont loadDefaultMonoFont() {
-  	if(this.bfDefaultMonoFont!=null)return this.bfDefaultMonoFont;
+  public BitmapFont getDefaultMonoFont() {
+  	if(this.bfDefaultMonoFontOverride!=null)return this.bfDefaultMonoFontOverride;
   	return loadFont("Interface/Fonts/Console.fnt");
   }
-  public void setDefaultMonoFont(BitmapFont bf){
-  	assert this.bfDefaultMonoFont==null;
-  	this.bfDefaultMonoFont = bf;
+  public void setDefaultMonoFontOverride(BitmapFont bf){
+  	assert this.bfDefaultMonoFontOverride==null;
+  	this.bfDefaultMonoFontOverride = bf;
   }
+  public boolean isDefaultMonoFontOverrideSet(){
+  	return this.bfDefaultMonoFontOverride!=null;
+  }
+  /**
+   * may be cached or not
+   * @param strPath
+   * @return
+   */
   public BitmapFont loadFont(String strPath) {
   	return GlobalManagerI.i().get(Application.class).getAssetManager().loadFont(strPath);
   }
@@ -119,11 +131,17 @@ public class StringTextJmeI extends StringI {
 		}
 	}
 	
-	public BitmapText createBitmapText(String strText, ColorRGBA color) {
-		BitmapText bt = new BitmapText(loadDefaultMonoFont());
+	public BitmapText createBitmapText(BitmapFont bf,String strText, ColorRGBA color) {
+		BitmapText bt = new BitmapText(bf);
 		bt.setSize(12);
 		bt.setText(strText);
 		bt.setColor(color);
 		return bt;
+	}
+	public BitmapText createBitmapText(String strText, ColorRGBA color) {
+		return createBitmapText(getDefaultFont(),strText,color);
+	}
+	public BitmapText createBitmapTextMono(String strText, ColorRGBA color) {
+		return createBitmapText(getDefaultMonoFont(),strText,color);
 	}
 }

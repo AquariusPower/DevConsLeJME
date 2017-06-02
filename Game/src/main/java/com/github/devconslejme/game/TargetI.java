@@ -43,6 +43,7 @@ import com.github.devconslejme.misc.jme.ActivatorI;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.HighlighterI;
+import com.github.devconslejme.misc.jme.PhysicsI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.StringTextJmeI;
 import com.github.devconslejme.misc.jme.WorldPickingI;
@@ -181,17 +182,15 @@ public class TargetI {
 				tgtLastSingleTarget.getGeometryHit().getWorldRotation(),2)+")");
 			sb.append(strSep);
 			
+			PhysicsI.i().putPhysicsData(
+				tgtLastSingleTarget.getGeometryHit(), 
+				tgtLastSingleTarget.getOrCreateSubInfo("Phys")
+			);
 			if(tgtLastSingleTarget.hmSubInfos.size()>0){
 				sb.append(
-//					InfoI.i().prepareFullInfo(tgtLastSingleTarget.hmSubInfos.values().toArray(new HashMap<String,Info>[0]))
 					InfoI.i().prepareFullInfo(tgtLastSingleTarget.hmSubInfos.values())
 				);
-//					InfoI.i().prepareFullInfo(
-//						(HashMap<String, Info>[])tgtLastSingleTarget.hmSubInfos.values().toArray()));
 			}
-//			for(HashMap<String, Info> hm:tgtLastSingleTarget.hmSubInfos.values()){
-//				sb.append(InfoI.i().prepareFullInfo(hm));
-//			}
 		}
 		HWEnvironmentJmeI.i().putCustomInfo("SgTgt:", tgtLastSingleTarget==null ? null : sb.toString());
 		
@@ -210,17 +209,6 @@ public class TargetI {
 		}
 		HWEnvironmentJmeI.i().putCustomInfo("MlTgt:", atgt.size()==0 ? null : sb.toString());
 	}
-
-//	protected void updateTarget2(Target tgt, float fTPF){
-//		if(tgt==tgtLast){
-//			if(tgtLast!=null){
-//				updateTarget(tgtLast,fTPF);
-//			}else{
-//				resetTarget(tgtLast);
-//				tgtLast=null;
-//			}
-//		}
-//	}
 	
 	public void clearMultiTargetList(){
 		for(TargetGeom tgt:hmGeomTgt.values()){

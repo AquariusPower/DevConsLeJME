@@ -106,9 +106,10 @@ public class OrthogonalCursorStateI extends SimpleAppState{
 		nodeParent.attachChild(geom);
 		
 		// info
-		bt = StringTextJmeI.i().loadDefaultMonoFont().createLabel("");
-		bt.setColor(ColorI.i().colorChangeCopy(color, 0f, 0.3f));
-		bt.setSize(13);
+		bt = StringTextJmeI.i().createBitmapTextMono("", ColorI.i().colorChangeCopy(color, 0f, 0.3f));
+//		bt = StringTextJmeI.i().loadDefaultMonoFont().createLabel("");
+//		bt.setColor(ColorI.i().colorChangeCopy(color, 0f, 0.3f));
+//		bt.setSize(13);
 		nodeInfo=new Node();
 		nodeHook = new Node();
 		nodeHook.attachChild(bt);

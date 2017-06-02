@@ -24,34 +24,25 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-package com.github.devconslejme.game;
+package com.github.devconslejme.devcons;
 
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.PkgCfgAbs;
-import com.github.devconslejme.misc.jme.FlyByCameraX;
-import com.github.devconslejme.misc.jme.PhysicsI;
-import com.jme3.app.Application;
-import com.jme3.scene.Node;
+import com.github.devconslejme.misc.StringI;
+import com.github.devconslejme.misc.jme.StringTextJmeI;
+import com.jme3.font.BitmapFont;
 
-
-/**
- * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
- */
-public class PkgCfgI extends PkgCfgAbs{
-	public static PkgCfgI i(){return GlobalManagerI.i().get(PkgCfgI.class);}
+/*
+* @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+*/
+public class StringTextDevConsI extends StringTextJmeI {
+	public static StringTextJmeI i(){return GlobalManagerI.i().retrieveOverridingSupers(StringTextDevConsI.class,true,StringTextJmeI.class,StringI.class);}
 	
-	public void configure(Application app, Node nodeGui, Node nodeVirtualWorld, FlyByCameraX flycamx){
-		super.configure();
-		if(!com.github.devconslejme.misc.jme.PkgCfgI.i().isConfigured()){
-			com.github.devconslejme.misc.jme.PkgCfgI.i().configure(app,nodeGui, nodeVirtualWorld);
-		}
-		
-		ReticleI.i().configure(nodeGui,flycamx);
-		CrossHairI.i().configure(nodeGui);
-		TargetI.i().configure(nodeVirtualWorld,flycamx);
-//		PhysicsI.i().configure();
-		
-		setConfigured();
+//	public void configure() {
+//		setDefaultMonoFontOverride(loadFont("Interface/Fonts/DroidSansMono.fnt"));
+//	}
+	@Override
+	public BitmapFont getDefaultMonoFont() {
+		if(!isDefaultMonoFontOverrideSet())setDefaultMonoFontOverride(loadFont("Interface/Fonts/DroidSansMono.fnt"));
+		return super.getDefaultMonoFont();
 	}
 }

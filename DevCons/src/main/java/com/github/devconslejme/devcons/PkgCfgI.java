@@ -51,6 +51,7 @@ public class PkgCfgI extends PkgCfgAbs{
 	 */
 	public void configure(Application app, Node nodeGui, Node nodeVirtualWorld){
 		super.configure();
+		StringTextDevConsI.i(); //overrider
 		com.github.devconslejme.gendiag.PkgCfgI.i().configure(app,nodeGui,nodeVirtualWorld);
 		
 		DevConsPluginStateI.i().configure(null,nodeGui); //first!

@@ -64,6 +64,7 @@ import com.jme3.app.state.AppState;
 import com.jme3.audio.AudioListenerState;
 import com.jme3.collision.CollisionResult;
 import com.jme3.font.BitmapText;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
@@ -390,8 +391,9 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	/** @DevSelfNote keep even if emtpy */ 
 	public Object debugTest(Object... aobj){
 //		BitmapText bt = new BitmapText(TextStringI.i().loadDefaultFont());
-		BitmapText bt = new BitmapText(StringTextJmeI.i().loadDefaultMonoFont());
-		bt.setText(">>>>>>>>>>>>>>>>>>>> "+Character.toString((char)176)+" <<<<<<<<<<<<<<<<<<<<<<");
+		BitmapText bt = StringTextJmeI.i().createBitmapTextMono(">>>>>>>>>>>>>>>>>>>> "+Character.toString((char)176)+" <<<<<<<<<<<<<<<<<<<<<<",ColorRGBA.White);
+//		BitmapText bt = new BitmapText(StringTextJmeI.i().loadDefaultMonoFont());
+//		bt.setText(">>>>>>>>>>>>>>>>>>>> "+Character.toString((char)176)+" <<<<<<<<<<<<<<<<<<<<<<");
 //		bt.set
 		getGuiNode().attachChild(bt);
 		bt.setLocalTranslation(300,290,500);
