@@ -47,7 +47,7 @@ import com.github.devconslejme.misc.jme.HighlighterI;
 import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.RotateI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
-import com.github.devconslejme.misc.jme.TextStringI;
+import com.github.devconslejme.misc.jme.StringTextJmeI;
 import com.github.devconslejme.misc.jme.WorldPickingI;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
@@ -112,6 +112,7 @@ public class ReticleI {
 		public Geometry	zoomMarkerCurrent;
 		public Node	nodeZoomMarkerCurrent;
 		public Node	nodeZoomMarkerCurrentRot;
+		private int	iZoomIndex;
 		
 		public ReticleNode(){
 			setName(ReticleNode.class.getSimpleName());
@@ -228,7 +229,9 @@ public class ReticleI {
 		
 		public void updateZoomLevel(int iZoomIndex){
 			if(iZoomIndex>=ageomZoomMarkersList.size())return;//not ready
-			Geometry geom = ageomZoomMarkersList.get(ageomZoomMarkersList.size()-1-iZoomIndex);
+			
+			this.iZoomIndex = ageomZoomMarkersList.size()-1-iZoomIndex;
+			Geometry geom = ageomZoomMarkersList.get(this.iZoomIndex);
 			zoomMarkerCurrent.setLocalTransform(geom.getLocalTransform());
 			zoomMarkerCurrent.scale(2f);
 			geom.getParent().attachChild(zoomMarkerCurrent);
@@ -274,6 +277,8 @@ public class ReticleI {
 		public void updateInfo(TargetGeom tgt,Float fRangeDist,Float fFoV) {
 //			if(btRangeDist.getLocalTranslation().length()>0)System.out.println(btRangeDist.getWorldTranslation());
 			btInfo.setText(""
+				+(iZoomIndex+1)+"x"
+				+"\n"
 				+(fFoV==null?"":"FoV "+StringI.i().fmtFloat(fFoV,0)+""+Character.toString((char)176)+"")//"°")
 				+"\n"
 //				+"RF "+(fRangeDist==null?"...":StringI.i().fmtFloat(fRangeDist,1)+"m")
@@ -341,7 +346,7 @@ public class ReticleI {
 		rnStore.nodeZoomMarkerCurrent.attachChild(rnStore.nodeZoomMarkerCurrentRot);
 		
 		///////////////////////////// auto target/dist range info
-		BitmapText bt = TextStringI.i().createBitmapText("Tgt:+99999.9m\nDummy",ColorRGBA.Green); //TODO maximum displayable distance, create a formatter and get from there considering the world limits
+		BitmapText bt = StringTextJmeI.i().createBitmapText("Tgt:+99999.9m\nDummy",ColorRGBA.Green); //TODO maximum displayable distance, create a formatter and get from there considering the world limits
 		bt.setBox(new Rectangle(0, 0, bt.getLineWidth(), bt.getHeight()));
 		bt.setAlignment(Align.Right);
 //		bt = new BitmapText(TextI.i().loadDefaultMonoFont());
@@ -418,7 +423,7 @@ public class ReticleI {
 		}
 		
 		for(int i=0;i<iTotal;i++){
-			BitmapText bt=TextStringI.i().createBitmapText("",ColorRGBA.DarkGray);
+			BitmapText bt=StringTextJmeI.i().createBitmapText("",ColorRGBA.DarkGray);
 			rnStore.attachChild(bt);
 //			BitmapText bt=new BitmapText(TextI.i().loadDefaultMonoFont());
 //			bt.setColor(ColorRGBA.DarkGray);
@@ -514,13 +519,13 @@ public class ReticleI {
 							v3fAppWSize.set(v3fAppWSizeCurrent);
 //							QueueI.i().removeLoopFromQueue(this); //a new one will be created
 						}else{
-							ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingFromCenterTo(null,rnLastConfigured.v3fMarkersCenter);
+							ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingDisplFromCenter(null, rnLastConfigured.v3fMarkersCenter);
 							Float fDist=null;
 //							Float fTargetDist=null;
 							if(acr.size()>0)fDist=(acr.get(0).getDistance());
 							
 							TargetI.i().setRayCastFromXY(rnLastConfigured.v3fMarkersCenter);
-							TargetGeom tgt = TargetI.i().getLastTarget();
+							TargetGeom tgt = TargetI.i().getLastSingleTarget();
 //							if(tgt!=null)fTargetDist=tgt.getDistance();
 							
 //							public ReticleI setRangeFinderTarget(Target tgt){

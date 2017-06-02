@@ -59,10 +59,14 @@ public class PkgCfgI extends PkgCfgAbs{
 	 */
 	public void configure(Application app,Node nodeGui, Node nodeVirtualWorld){
 		super.configure();
-		TextStringI.i();//before, to grant the global overriding instance
-//		DetailedException.assertIsFalse("configured", bConfigured, this);
 		
-		HWEnvironmentJmeI.i(); //sub class overriders/inheriters must instance before
+		/**
+		 * before dep pkg cfg, to grant the global overriding instance of sub class overriders/inheriters
+		 */
+		StringTextJmeI.i();
+		InfoJmeI.i();
+		HWEnvironmentJmeI.i();
+		
 		com.github.devconslejme.misc.PkgCfgI.i().configure(
 			JmeSystem.getStorageFolder(StorageFolderType.Internal), 
 			app.getClass());

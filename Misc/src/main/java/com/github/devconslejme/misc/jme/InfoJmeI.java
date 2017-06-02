@@ -24,64 +24,52 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package com.github.devconslejme.misc;
 
-import java.util.ArrayList;
+package com.github.devconslejme.misc.jme;
 
-import com.github.devconslejme.misc.Annotations.SimpleVarReadOnly;
+import java.util.HashMap;
 
+import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.InfoI;
+import com.github.devconslejme.misc.StringI;
+import com.jme3.math.Vector3f;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class HWEnvironmentI {
-	public static HWEnvironmentI i(){return GlobalManagerI.i().get(HWEnvironmentI.class);}
-
-	private long lTotalFrameCount;
-	private float	fTPF;
-	private float	fSumTPF;
-	private int	iFPSFrameCount;
-	private int	iFPS;
+public class InfoJmeI extends InfoI{
+	public static InfoJmeI i(){return GlobalManagerI.i().retrieveOverridingSupers(InfoJmeI.class, true, InfoI.class);}
 	
-	/**
-	 * just for clarity
-	 */
-	public void configure(){}
-	
-	public long getTotalFrameCount() {
-		return lTotalFrameCount;
-	}
-
-//	protected EnvironmentI setTotalFrameCount(long lTotalFrameCount) {
-//		this.lTotalFrameCount = lTotalFrameCount;
-//		return this; 
-//	}
-	
-	public void update(float tpf){
-		fTPF=tpf;
-		
-		lTotalFrameCount++; //TODO can this overflow!? :O
-		
-		calcFPS();
-	}
-
-	private void calcFPS() {
-		fSumTPF+=fTPF;
-		iFPSFrameCount++;
-		if(fSumTPF>=1f){
-			iFPS=iFPSFrameCount;
-			fSumTPF-=1f;//precision keeping the tiny bit for the next sum TODO may cause trouble?
-			iFPSFrameCount=0;
+	public static class InfoJme extends Info{
+		public InfoJme(String strKey, Vector3f v3f, int iFloatScale) {
+			super(strKey,v3f);
+			super.iFloatScale=iFloatScale;
 		}
 	}
-
-	@SimpleVarReadOnly
-	public float getTPF() {
-		return fTPF;
+	
+	/**
+	 * 
+	 * @param hm
+	 * @param strKey
+	 * @param v3f if null, will remove the key too
+	 * @param iFloatScale
+	 */
+	public void putAt(HashMap<String, Info> hm, String strKey,Vector3f v3f, int iFloatScale) {
+		if(v3f==null)hm.remove(strKey);
+		hm.put(strKey, new InfoJme(strKey,v3f,iFloatScale));
 	}
 	
-	@SimpleVarReadOnly
-	public float getFPS() {
-		return iFPS;
+	@Override
+	public String fmtInfoValue(Info inf) {
+		if(Vector3f.class.isInstance(inf.getValue())){
+			return StringTextJmeI.i().fmtVector3f(
+				inf.getValue(), 
+				inf.getFloatScale()==null ? getInfoValueFloatScale() : inf.getFloatScale()
+			);
+		}
+		
+		return super.fmtInfoValue(inf);
 	}
+
 }
+

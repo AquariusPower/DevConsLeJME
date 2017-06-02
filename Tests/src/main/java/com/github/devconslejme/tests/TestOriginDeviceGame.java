@@ -50,7 +50,7 @@ import com.github.devconslejme.misc.jme.OriginDevice;
 import com.github.devconslejme.misc.jme.OriginDevice.NodeAxis;
 import com.github.devconslejme.misc.jme.RotateI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
-import com.github.devconslejme.misc.jme.TextStringI;
+import com.github.devconslejme.misc.jme.StringTextJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.jme.WorldPickingI;
 import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
@@ -364,7 +364,7 @@ public class TestOriginDeviceGame extends SimpleApplicationAndStateAbs {
 //			sb.append("("+lEnergyWattsPerMilis+">"+lLowEnergy+")w/ms, ");
 			sb.append("r=("+StringI.i().fmtFloat(fEnergyCoreRadius)+"/"
 				+StringI.i().fmtFloat(getRadius()/2f)+")");
-			sb.append("v3f="+TextStringI.i().fmtVector3f(getWorldTranslation(),2)+", ");
+			sb.append("v3f="+StringTextJmeI.i().fmtVector3f(getWorldTranslation(),2)+", ");
 			
 			if(sptTarget!=null){
 				TargetToken tt = getTargetToken(sptTarget);

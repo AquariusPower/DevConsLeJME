@@ -55,7 +55,7 @@ import com.github.devconslejme.misc.jme.HWEnvironmentJmeI.IEnvironmentListener;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.OriginDevice;
 import com.github.devconslejme.misc.jme.SimpleAppState;
-import com.github.devconslejme.misc.jme.TextStringI;
+import com.github.devconslejme.misc.jme.StringTextJmeI;
 import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
 import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.app.Application;
@@ -390,7 +390,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	/** @DevSelfNote keep even if emtpy */ 
 	public Object debugTest(Object... aobj){
 //		BitmapText bt = new BitmapText(TextStringI.i().loadDefaultFont());
-		BitmapText bt = new BitmapText(TextStringI.i().loadDefaultMonoFont());
+		BitmapText bt = new BitmapText(StringTextJmeI.i().loadDefaultMonoFont());
 		bt.setText(">>>>>>>>>>>>>>>>>>>> "+Character.toString((char)176)+" <<<<<<<<<<<<<<<<<<<<<<");
 //		bt.set
 		getGuiNode().attachChild(bt);

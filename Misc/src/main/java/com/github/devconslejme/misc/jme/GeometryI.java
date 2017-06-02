@@ -30,6 +30,7 @@ import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ArrowGeometry.EFollowMode;
+import com.jme3.bounding.BoundingSphere;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue.Bucket;
@@ -37,7 +38,7 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.debug.Arrow;
+import com.jme3.scene.shape.Sphere;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -64,6 +65,10 @@ public class GeometryI {
 		if(geomStore==null)geomStore = (T)new Geometry();
 		geomStore.setName(mesh.getClass().getSimpleName());
 		geomStore.setMesh(mesh);
+		if(mesh instanceof Sphere){
+			Sphere s = ((Sphere)mesh);
+			geomStore.setModelBound(new BoundingSphere(s.getRadius(),Vector3f.ZERO));
+		}
 		if(color!=null)geomStore.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(color));
 		if(bTransparent)geomStore.setQueueBucket(Bucket.Transparent);
 		return geomStore;

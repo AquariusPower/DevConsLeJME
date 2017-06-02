@@ -99,7 +99,7 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 			}
 		}
 		
-		btInfo = new BitmapText(TextStringI.i().loadDefaultFont());
+		btInfo = new BitmapText(StringTextJmeI.i().loadDefaultFont());
 		btInfo.setSize(12);
 		
 		geomInfoBkg.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(new ColorRGBA(0,0,0,0.25f)));
@@ -256,8 +256,17 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 //		this.bShowFPS = bShowFPS;
 //	}
 	
+	/**
+	 * 
+	 * @param strKey
+	 * @param strValue if null will remove the key
+	 */
 	public void putCustomInfo(String strKey,String strValue){
-		hmCustomInfo.put(strKey, strValue);
+		if(strValue==null){
+			hmCustomInfo.remove(strKey);
+		}else{
+			hmCustomInfo.put(strKey, strValue);
+		}
 	}
 	
 	protected void updateInfo(){
@@ -277,13 +286,13 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 		if(bShowMouseCursorPos)sb.append("MouseXY="+getMouse().getPos2D()+strSep);
 		if(bShowCamPos){
 			sb.append("CamPos="
-				+TextStringI.i().fmtVector3f(cam.getLocation(),2)
+				+StringTextJmeI.i().fmtVector3f(cam.getLocation(),2)
 				+strSep);
 		}
 		if(bShowCamRot){
 			//TODO show a drawn line about Z at XY plane rotation, and another about up/downwards degrees
 			sb.append("CamRotDeg="
-				+TextStringI.i().fmtToDegrees(cam.getRotation(),1)
+				+StringTextJmeI.i().fmtToDegrees(cam.getRotation(),1)
 				+strSep);
 		}
 		if(hmCustomInfo.size()>0){

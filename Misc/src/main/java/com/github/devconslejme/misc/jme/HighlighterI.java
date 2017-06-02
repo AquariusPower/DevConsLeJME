@@ -157,6 +157,8 @@ public class HighlighterI {
 		for(NodeHighLigh nh:ahlnList.values()){
 			update(nh,tpf);
 		}
+		
+		HWEnvironmentJmeI.i().putCustomInfo("Highlighting", nhMouseCursorOver.geomTarget!=null ? nhMouseCursorOver.geomTarget.toString() : null);
 	}
 	
 	protected void update(NodeHighLigh nh,  float tpf) {
@@ -180,7 +182,7 @@ public class HighlighterI {
 		
 		if(isDebug())DebugVisualsI.i().showWorldBoundAndRotAxes(nh);
 		
-		HWEnvironmentJmeI.i().putCustomInfo("Highlighting", nh.geomTarget!=null ? nh.geomTarget.toString() : "(nothing)");
+//		HWEnvironmentJmeI.i().putCustomInfo("Highlighting", nh.geomTarget!=null ? nh.geomTarget.toString() : "(nothing)");
 	}
 
 	public boolean isDebug() {

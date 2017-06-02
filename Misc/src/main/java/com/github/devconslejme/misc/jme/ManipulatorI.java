@@ -24,64 +24,16 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package com.github.devconslejme.misc;
+package com.github.devconslejme.misc.jme;
 
-import java.util.ArrayList;
-
-import com.github.devconslejme.misc.Annotations.SimpleVarReadOnly;
-
+import com.github.devconslejme.misc.GlobalManagerI;
 
 /**
+ * TODO after picking, using the mouse, move and rotate using wheel and moving the mouse, aligned with whatever is just below it
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class HWEnvironmentI {
-	public static HWEnvironmentI i(){return GlobalManagerI.i().get(HWEnvironmentI.class);}
-
-	private long lTotalFrameCount;
-	private float	fTPF;
-	private float	fSumTPF;
-	private int	iFPSFrameCount;
-	private int	iFPS;
+public class ManipulatorI {
+	public static ManipulatorI i(){return GlobalManagerI.i().get(ManipulatorI.class);}
 	
-	/**
-	 * just for clarity
-	 */
-	public void configure(){}
-	
-	public long getTotalFrameCount() {
-		return lTotalFrameCount;
-	}
-
-//	protected EnvironmentI setTotalFrameCount(long lTotalFrameCount) {
-//		this.lTotalFrameCount = lTotalFrameCount;
-//		return this; 
-//	}
-	
-	public void update(float tpf){
-		fTPF=tpf;
-		
-		lTotalFrameCount++; //TODO can this overflow!? :O
-		
-		calcFPS();
-	}
-
-	private void calcFPS() {
-		fSumTPF+=fTPF;
-		iFPSFrameCount++;
-		if(fSumTPF>=1f){
-			iFPS=iFPSFrameCount;
-			fSumTPF-=1f;//precision keeping the tiny bit for the next sum TODO may cause trouble?
-			iFPSFrameCount=0;
-		}
-	}
-
-	@SimpleVarReadOnly
-	public float getTPF() {
-		return fTPF;
-	}
-	
-	@SimpleVarReadOnly
-	public float getFPS() {
-		return iFPS;
-	}
 }

@@ -272,6 +272,17 @@ public class StringI {
 	public String fmtFloat(float fValue) {
 		return fmtFloat(fValue,2);
 	}
+//	StringBuilder sbFloatArray = new StringBuilder();
+	public String[] fmtFloat(int iScale, Float... afValue) {
+//		sbFloatArray.delete(0, sbFloatArray.length());
+		String[] astr = new String[afValue.length];
+		int i=0;
+		for(float f:afValue){
+			astr[i++]=fmtFloat(f,iScale);
+		}
+//		return sbFloatArray.toString();
+		return astr;
+	}
 	public String fmtFloat(float fValue, int iScale) {
 		return String.format("%."+iScale+"f", fValue);
 	}

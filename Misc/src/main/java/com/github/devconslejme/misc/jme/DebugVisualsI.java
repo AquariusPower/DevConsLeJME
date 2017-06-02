@@ -26,19 +26,21 @@
 */
 package com.github.devconslejme.misc.jme;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
 import com.github.devconslejme.misc.Annotations.Bean;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.KeyBindCommandManagerI;
+import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
-import com.jme3.bullet.debug.BulletDebugAppState.DebugAppStateFilter;
+import com.jme3.collision.CollisionResult;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -66,6 +68,16 @@ public class DebugVisualsI {
 				return true;
 			}
 		}.enableLoopMode());
+		
+		KeyBindCommandManagerI.i().putBindCommandsLater("Ctrl+D",new CallBoundKeyCmd(){
+			@Override
+			public Boolean callOnKeyReleased(int iClickCountIndex) {
+				ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+				if(acr.size()>0)toggleWorldBoundAndRotAxes(acr.get(0).getGeometry());
+				return true;
+			}
+		}.setName("ToggleDebugVisualsAt"));
+		
 	} //just to let the global be promptly instantiated
 	
 	protected void update(float tpf) {
@@ -437,7 +449,16 @@ public class DebugVisualsI {
 	}
 	
 	public void hideWorldBoundAndRotAxes(Spatial spt) {
-		ahmShowWorldBound.remove(spt);
+		NodeDbg nd = ahmShowWorldBound.remove(spt);
+		if(nd!=null)nd.removeFromParent();
+	}
+	
+	public void toggleWorldBoundAndRotAxes(Spatial spt){
+		if(ahmShowWorldBound.get(spt)==null){
+			showWorldBoundAndRotAxes(spt);
+		}else{
+			hideWorldBoundAndRotAxes(spt);
+		}
 	}
 	
 	public boolean isShowSpatialsWorldBoundsEnabled() {

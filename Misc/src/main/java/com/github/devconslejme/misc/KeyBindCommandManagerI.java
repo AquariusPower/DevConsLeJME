@@ -323,7 +323,7 @@ public class KeyBindCommandManagerI {
 		}
 		
 		/** 
-		 * @return null to ignore this call, false to retry it in the queue
+		 * @return null to ignore this call, false to retry it in the queue, true to acknowledge the consume
 		 */
 		public Boolean callOnKeyPressed(int iClickCountIndex){return null;}
 		/** 

@@ -60,7 +60,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
-import com.github.devconslejme.misc.jme.TextStringI;
+import com.github.devconslejme.misc.jme.StringTextJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.lemur.AbsorbClickCommandsI;
 import com.github.devconslejme.misc.lemur.CursorListenerX;
@@ -999,7 +999,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 				}
 				ce.setBtn(new Button(strVal, getDialog().getStyle())); //show value
 				ce.addChild(ce.getBtnShowVal(), 0);
-				TextStringI.i().recursivelyApplyTextNoWrap(ce.getBtnShowVal());
+				StringTextJmeI.i().recursivelyApplyTextNoWrap(ce.getBtnShowVal());
 				
 				if(mSetter!=null){
 					strButtonHintHelp=ESimpleType.Boolean.is(etypeGetterRet)?"click to toggle":"click to change value";

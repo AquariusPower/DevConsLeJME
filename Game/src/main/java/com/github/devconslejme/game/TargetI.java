@@ -31,6 +31,8 @@ import java.util.HashMap;
 
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
+import com.github.devconslejme.misc.InfoI;
+import com.github.devconslejme.misc.InfoI.Info;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.KeyCodeManagerI;
@@ -42,6 +44,7 @@ import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.HighlighterI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
+import com.github.devconslejme.misc.jme.StringTextJmeI;
 import com.github.devconslejme.misc.jme.WorldPickingI;
 import com.jme3.app.Application;
 import com.jme3.collision.CollisionResult;
@@ -96,7 +99,7 @@ public class TargetI {
 		}.setName("AddTargetMulti"));
     KeyBindCommandManagerI.i().putBindCommandsLater(strK,new CallBoundKeyCmd(){
     	@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
-				clearLastTarget();
+				clearLastSingleTarget();
 				tgtLastSingleTarget=acquireNewTarget(v3fRayCastFromXY); //can be the same, wont toggle
 				return true;
 			}
@@ -114,7 +117,7 @@ public class TargetI {
 	protected TargetGeom acquireNewTarget(Vector3f v3f){
 		TargetGeom tgt=null;
 		
-		ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingFromCenterTo(
+		ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingDisplFromCenter(
 			null, v3f); //rnLastConfigured.v3fMarkersCenter
 		if(acr.size()>0){
 			Geometry geom = acr.get(0).getGeometry();
@@ -143,6 +146,10 @@ public class TargetI {
 		return tgt;
 	}
 	
+//	public void setAppendedSingleTargetInfo(String str){
+//		this.strSgTgtInfo=str;
+//	}
+	
 	protected void update(float tpf) {
 		if(tgtLastSingleTarget!=null && tgtLastSingleTarget.getRootSpatial().getParent()==null){
 			tgtLastSingleTarget=null;
@@ -155,17 +162,53 @@ public class TargetI {
 			updateTarget(tgt,tpf);
 		}
 		
-		StringBuilder sb = new StringBuilder("");
-		for(TargetGeom tgt:getAllTargetsListCopy()){
+		//////////////////////////// infos /////////////////////////////////////
+		StringBuilder sb;
+		
+		////////////////// single tgt
+		sb=new StringBuilder("");
+		if(tgtLastSingleTarget!=null){
+			String strSep=", ";
+			
+			sb.append(tgtLastSingleTarget.getGeometryHit().getName()).append(strSep);
+			sb.append(tgtLastSingleTarget.getDistanceStr()).append(strSep);
+			
+			sb.append("pos("+StringTextJmeI.i().fmtVector3f(
+				tgtLastSingleTarget.getGeometryHit().getWorldTranslation(),2)+")");
+			sb.append(strSep);
+			
+			sb.append("rotdeg("+StringTextJmeI.i().fmtToDegrees(
+				tgtLastSingleTarget.getGeometryHit().getWorldRotation(),2)+")");
+			sb.append(strSep);
+			
+			if(tgtLastSingleTarget.hmSubInfos.size()>0){
+				sb.append(
+//					InfoI.i().prepareFullInfo(tgtLastSingleTarget.hmSubInfos.values().toArray(new HashMap<String,Info>[0]))
+					InfoI.i().prepareFullInfo(tgtLastSingleTarget.hmSubInfos.values())
+				);
+//					InfoI.i().prepareFullInfo(
+//						(HashMap<String, Info>[])tgtLastSingleTarget.hmSubInfos.values().toArray()));
+			}
+//			for(HashMap<String, Info> hm:tgtLastSingleTarget.hmSubInfos.values()){
+//				sb.append(InfoI.i().prepareFullInfo(hm));
+//			}
+		}
+		HWEnvironmentJmeI.i().putCustomInfo("SgTgt:", tgtLastSingleTarget==null ? null : sb.toString());
+		
+		//////////////////// multi tgt
+		ArrayList<TargetGeom> atgt = getMultiTargetListCopy();
+		sb = new StringBuilder("");
+//		for(TargetGeom tgt:getAllTargetsListCopy()){
+		for(TargetGeom tgt:atgt){
 			sb.append(tgt.getGeometryHit().getName());
 			if(tgtLastSingleTarget!=null){
 				if(tgt.getGeometryHit()==tgtLastSingleTarget.getGeometryHit()){
-					sb.append("(LAST)");
+					sb.append("(Sg)");
 				}
 			}
 			sb.append(", ");
 		}
-		HWEnvironmentJmeI.i().putCustomInfo("Tgts:", sb.toString());
+		HWEnvironmentJmeI.i().putCustomInfo("MlTgt:", atgt.size()==0 ? null : sb.toString());
 	}
 
 //	protected void updateTarget2(Target tgt, float fTPF){
@@ -232,7 +275,7 @@ public class TargetI {
 		if(tgt.getGeometryHit()!=null)HighlighterI.i().removeFrom(tgt.getGeometryHit());
 	}
 	
-	public void clearLastTarget(){
+	public void clearLastSingleTarget(){
 		if(tgtLastSingleTarget!=null)resetTargetIndicators(tgtLastSingleTarget);
 		tgtLastSingleTarget=null;
 	}
@@ -254,7 +297,7 @@ public class TargetI {
 		return new TargetGeom(spt);
 	}
 	
-	public TargetGeom getLastTarget() {
+	public TargetGeom getLastSingleTarget() {
 //		if(tgtLastSingleTarget!=null && tgtLastSingleTarget.getRootSpatial().getParent()==null)tgtLastSingleTarget=null;
 		return tgtLastSingleTarget;
 	}
@@ -274,6 +317,16 @@ public class TargetI {
 		private boolean bEnemy=false;
 		private Spatial	sptAtRoot;
 		private boolean	bAllowReset=true; //can be disabled outside here to stop glowing for ex 
+		private HashMap<String,HashMap<String,Info>> hmSubInfos = new HashMap<String,HashMap<String,Info>>();
+		
+		public HashMap<String,Info> getOrCreateSubInfo(String strSubInfoKey){
+			HashMap<String, Info> hm = hmSubInfos.get(strSubInfoKey);
+			if(hm==null){
+				hm=new HashMap<String, Info>();
+				hmSubInfos.put(strSubInfoKey, hm);
+			}
+			return hm;
+		}
 
 		public TargetGeom(Spatial sptSomeParentOrParentesOrSelf){
 			this.sptAtRoot = SpatialHierarchyI.i().getParentestOrSelf(sptSomeParentOrParentesOrSelf, Spatial.class, true, false);

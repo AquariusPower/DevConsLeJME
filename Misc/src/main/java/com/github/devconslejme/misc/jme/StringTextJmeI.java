@@ -26,7 +26,6 @@
 */
 package com.github.devconslejme.misc.jme;
 
-import com.github.devconslejme.game.ReticleI.ReticleNode;
 import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.GlobalManagerI;
@@ -45,9 +44,9 @@ import com.jme3.scene.Spatial;
 /*
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
-public class TextStringI extends StringI {
+public class StringTextJmeI extends StringI {
 //	public static TextStringI i(){return GlobalManagerI.i().get(TextStringI.class);}
-	public static TextStringI i(){return GlobalManagerI.i().retrieveOverridingSupers(TextStringI.class,true,StringI.class);}
+	public static StringTextJmeI i(){return GlobalManagerI.i().retrieveOverridingSupers(StringTextJmeI.class,true,StringI.class);}
 
 	private BitmapFont	bfDefaultMonoFont;
 	

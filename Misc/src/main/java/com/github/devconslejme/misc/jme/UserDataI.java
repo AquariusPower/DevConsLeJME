@@ -205,6 +205,14 @@ public class UserDataI {
 	private <R> R retrieve(Spatial spt, Class<R> cl, boolean bCreateIfNull){
 		return getUserDataPSH(spt, cl, bCreateIfNull);
 	}
+
+	public void eraseAllOf(Spatial spt, Object obj) {
+		for(String strKey:spt.getUserDataKeys()){
+			if(spt.getUserData(strKey)==obj){
+				spt.setUserData(strKey, null);
+			}
+		}
+	}
 	
 //	private class OldMethodsJustToAvoidUsingOrReimplementingSelfNote{
 //		private <R> R retrieve(Spatial spt, Class<R> cl, boolean bCreateIfNull){

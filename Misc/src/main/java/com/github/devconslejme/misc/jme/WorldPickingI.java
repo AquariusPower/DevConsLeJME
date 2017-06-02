@@ -59,7 +59,7 @@ public class WorldPickingI {
 	private ArrayList<IPickListener> aplList = new ArrayList<IPickListener>();
 	private boolean	bAllowConsume=true;
 //	private Quad quadCamReversedPicking;
-	private Geometry	geomReversedPicking;
+//	private Geometry	geomReversedPicking;
 	
 	public static interface IPickListener{
 		/**
@@ -131,7 +131,7 @@ public class WorldPickingI {
 		return acrLastPickList;
 	}
 	
-	public Vector3f getLocationAtScreen(Spatial sptFrom){
+	public Vector3f getProjectedLocationAtScreenOfSpatialAtWorld(Spatial sptFrom){
 //		quadCamReversedPicking = new Quad(
 //			HWEnvironmentJmeI.i().getDisplay().getWidth(), 
 //			HWEnvironmentJmeI.i().getDisplay().getHeight());
@@ -144,19 +144,36 @@ public class WorldPickingI {
 	
 	/**
 	 * 
-	 * @param nodeVirtualWorld can be null (will use default)
+	 * @param nodeVirtualWorld see {@link #raycastPiercingAt(Node, Vector3f)}
 	 * @return
 	 */
 	public ArrayList<CollisionResult> raycastPiercingAtCursor(Node nodeVirtualWorld){
 		return raycastPiercingAt(nodeVirtualWorld, HWEnvironmentJmeI.i().getMouse().getPos3D());
 	}
 	
+	/**
+	 * 
+	 * @param nodeVirtualWorld see {@link #raycastPiercingAt(Node, Vector3f)}
+	 * @return
+	 */
 	public ArrayList<CollisionResult> raycastPiercingAtCenter(Node nodeVirtualWorld){
 		return raycastPiercingAt(nodeVirtualWorld, HWEnvironmentJmeI.i().getDisplay().getCenter(0f)); //z will be ignored
 	}
-	public ArrayList<CollisionResult> raycastPiercingFromCenterTo(Node nodeVirtualWorld, Vector3f v3fDisplaceFromCenterXY){
+	/**
+	 * 
+	 * @param nodeVirtualWorld see {@link #raycastPiercingAt(Node, Vector3f)}
+	 * @param v3fDisplaceFromCenterXY
+	 * @return
+	 */
+	public ArrayList<CollisionResult> raycastPiercingDisplFromCenter(Node nodeVirtualWorld, Vector3f v3fDisplaceFromCenterXY){
 		return raycastPiercingAt(nodeVirtualWorld, HWEnvironmentJmeI.i().getDisplay().getCenter(0f).add(v3fDisplaceFromCenterXY)); //z will be ignored
 	}
+	/**
+	 * 
+	 * @param nodeVirtualWorld automatic to default if null
+	 * @param v3fGuiNodeXY
+	 * @return can be empty
+	 */
 	public ArrayList<CollisionResult> raycastPiercingAt(Node nodeVirtualWorld, Vector3f v3fGuiNodeXY){
 		if(nodeVirtualWorld==null)nodeVirtualWorld=MiscJmeI.i().getNodeVirtualWorld();
 		

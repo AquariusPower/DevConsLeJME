@@ -469,6 +469,9 @@ public class FlyByCameraX extends FlyByCamera {
 		
 		iBkpFOVStepIndex=0;//reset
 		
+		String[] astr = StringI.i().fmtFloat(2,afFOVDegList.toArray(new Float[0]));
+		strAllZoomSteps=""+astr.length+"["+String.join(",", astr)+"]";
+		
 		return this; //for beans setter
 	}
 	
@@ -539,6 +542,8 @@ public class FlyByCameraX extends FlyByCamera {
 		private CompositeControl(){}; 
 	}; private CompositeControl cc;
 	
+	private String	strAllZoomSteps;
+	
 	public void update(float fTPF){
 		if(tdMouseGrab.isReady(true)){
 			if(isEnabled() && HWEnvironmentJmeI.i().getMouse().isCursorVisible()){
@@ -574,14 +579,17 @@ public class FlyByCameraX extends FlyByCamera {
 		
 		if(tdMouseInfo.isReady(true)){
 			String strFOV="{ ";
-			strFOV+="fov="+StringI.i().fmtFloat(getFOV(),2);
+			String strCurrent=StringI.i().fmtFloat(afFOVDegList.get(iCurrentFOVDegStepIndex),2);
+//			String strCurrent=StringI.i().fmtFloat(getFOV(),2);
+			strFOV+="FoV=";
+			strFOV+=StringI.i().fmtFloat(getFOV(),2);
 			if(bEnableZoomStepsAndLimits){
 				/** (current zoom/toggleBkpZoom) [zoom list], zoomRotateSpeed */
-				strFOV+="("+StringI.i().fmtFloat(afFOVDegList.get(iCurrentFOVDegStepIndex),2)
-//						+"/"+getBkpZoomFOV()+") ";
-					+"/"+afFOVDegList.get(iBkpFOVStepIndex)+") ";
-				strFOV+=afFOVDegList.toString()+", ";
-				strFOV+="zmRtSpd="+fZoomedRotationSpeed;
+//				strFOV+="("+StringI.i().fmtFloat(afFOVDegList.get(iCurrentFOVDegStepIndex),2)
+////						+"/"+getBkpZoomFOV()+") ";
+//					+"/"+afFOVDegList.get(iBkpFOVStepIndex)+") ";
+				strFOV+="of"+strAllZoomSteps.replaceFirst("[^0-9]"+strCurrent+"[^0-9]","<"+strCurrent+">")+", ";
+				strFOV+="zmRtSpd="+StringI.i().fmtFloat(fZoomedRotationSpeed,3);
 			}
 			strFOV+=" }";
 			HWEnvironmentJmeI.i().putCustomInfo("CamFOVdeg", strFOV);

@@ -34,6 +34,7 @@ import com.github.devconslejme.misc.jme.AppI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.GeometryI;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
+import com.github.devconslejme.misc.jme.MeshI;
 import com.jme3.app.SimpleApplication;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
@@ -75,14 +76,14 @@ public class CrossHairI {
 				update(getTPF());
 				return true;
 			}
-		}).enableLoopMode().setDelaySeconds(0.1f);
+		}).enableLoopMode().setDelaySeconds(1f/15f);
 	} //keep even if emtpy
 	
 	protected void update(float tpf) {
 		boolean bCursorVisible = HWEnvironmentJmeI.i().getMouse().isCursorVisible();
 		
 		if(nodeTarget!=null){
-			TargetGeom tgt = TargetI.i().getLastTarget();
+			TargetGeom tgt = TargetI.i().getLastSingleTarget();
 			
 			if(tgt==null){
 				if(bKeepTargetCrhOnCenterIfNoTarget && !bCursorVisible){
@@ -105,7 +106,8 @@ public class CrossHairI {
 				float fAreaAtScreen = AreaUtils.calcScreenArea(tgt.getGeometryHit().getWorldBound(), tgt.getDistance(), HWEnvironmentJmeI.i().getDisplay().getWidth());
 				float fPseudoRadiusAtScreen = FastMath.sqrt(fAreaAtScreen);
 //				nodeTarget.setLocalScale(fPseudoRadiusAtScreen/fScale);
-				nodeTarget.setLocalScale(fPseudoRadiusAtScreen/(fScale/2f));
+				float fFinalScale=FastMath.clamp(fPseudoRadiusAtScreen/(fScale/2f), 5f, 50f);
+				nodeTarget.setLocalScale(fFinalScale);
 			}
 		}
 		
@@ -132,11 +134,23 @@ public class CrossHairI {
 		geomDotV.setQueueBucket(Bucket.Gui);
 		nodeDot.attachChild(geomDotV);
 		
+//		Geometry geomDotV2 = geomDotV.clone(true);
+//		geomDotV2.getMaterial().setColor("Color", ColorRGBA.Red);
+//		geomDotV2.getMaterial().getAdditionalRenderState().setLineWidth(5);
+//		geomDotV2.move(0,0,-1);
+//		nodeDot.attachChild(geomDotV2);
+		
 		Geometry geomDotH = (Geometry)geomDotV.deepClone();
 		geomDotH.rotate(0,0,FastMath.DEG_TO_RAD*90);
+		geomDotH.move(-fDotRadius/4f,0,0); //after cloning!
 		nodeDot.attachChild(geomDotH);
 		
-		geomDotH.move(-fDotRadius/4f,0,0); //after cloning!
+		float fBkgRadius=fDotRadius*1.25f;
+		float fDisplBkg=-fBkgRadius/10f;//TODO why it is required to look good?
+		Geometry geomDotBkg = GeometryI.i().create(MeshI.i().sphere(fBkgRadius),ColorRGBA.Red);
+		geomDotBkg.move(fDisplBkg,fDisplBkg,-1);
+//		geomDotBkg.move(0,0,-1);
+		nodeDot.attachChild(geomDotBkg);
 		
 		centralize(nodeDot);
 		

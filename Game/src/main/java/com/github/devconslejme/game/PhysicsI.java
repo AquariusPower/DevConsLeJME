@@ -27,13 +27,24 @@
 package com.github.devconslejme.game;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
+import com.github.devconslejme.game.TargetI.TargetGeom;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.InfoI;
+import com.github.devconslejme.misc.InfoI.Info;
+import com.github.devconslejme.misc.KeyBindCommandManagerI;
+import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
+import com.github.devconslejme.misc.MessagesI;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.AppI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.GeometryI;
+import com.github.devconslejme.misc.jme.InfoJmeI;
 import com.github.devconslejme.misc.jme.MeshI;
+import com.github.devconslejme.misc.jme.UserDataI;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
@@ -45,12 +56,13 @@ import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
+import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
-import com.simsilica.lemur.geom.MBox;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -156,44 +168,89 @@ public class PhysicsI implements PhysicsTickListener{
 //				return true;
 //			}
 //		});
+				
+		initUpdateLastTargetInfo();
 	}
 	
 	private ArrayList<Impulse> arbcQueue = new ArrayList();
+//	private boolean	bTestBuggyFloor;
 	
 	/**
 	 * 
 	 * @param spt
 	 * @return dynamic: mass 1f
 	 */
-	public RigidBodyControl imbueFromWBounds(Spatial spt){
-		BoundingVolume bv = spt.getWorldBound();
-		RigidBodyControl rbc=null;
-		CollisionShape cs=null;
+	public PhysicsData imbueFromWBounds(Spatial spt){
+		return imbueFromWBounds(spt,null);
+	}
+	public static class PhysicsData{
+		float fMass;
+		Quaternion	quaBkp;
+		BoundingVolume	bv;
+		BoundingBox	bb;
+		CollisionShape	cs;
+		BoundingSphere	bs;
+		RigidBodyControl	rbc;
+		Spatial	sptLink;
+		Float	fDensity;
+		public float	fVolume;
+		
+		public PhysicsData(Spatial spt) {
+			this.sptLink = spt;
+		}
+
+		public PhysicsRigidBody getRBC() {
+			return rbc;
+		}
+	}
+	public PhysicsData imbueFromWBounds(Spatial spt, Float fDensityAutoMassFromVolume){
+		assert !UserDataI.i().contains(spt, PhysicsData.class);
+		
+		PhysicsData pd = new PhysicsData(spt);
+		pd.fDensity=fDensityAutoMassFromVolume;
+		
+		//bkp rot
+		pd.quaBkp = spt.getWorldRotation().clone();
+		spt.lookAt(spt.getLocalTranslation().add(0,0,1), Vector3f.UNIT_Y);
+		
+		pd.bv = spt.getWorldBound().clone(); //the world bound will already be a scaled result...
+		
+		//restore rot
+		spt.lookAt(spt.getLocalTranslation().add(pd.quaBkp.getRotationColumn(2)), pd.quaBkp.getRotationColumn(1));
+		
+		// create collision shape from bounds
 		float fPseudoDiameter = 0f;
-		if (bv instanceof BoundingBox) {
-			BoundingBox bb = (BoundingBox) bv;
-			cs = new BoxCollisionShape(bb.getExtent(null));
-			fPseudoDiameter=2f*bb.getExtent(null).length();
+		if (pd.bv instanceof BoundingBox) {
+			pd.bb = (BoundingBox) pd.bv.clone();
+			pd.cs = new BoxCollisionShape(pd.bb.getExtent(null));
+			fPseudoDiameter=2f*pd.bb.getExtent(null).length();
 		}else
-		if (bv instanceof BoundingSphere) {
-			BoundingSphere bs = (BoundingSphere) bv;
-			cs = new SphereCollisionShape(bs.getRadius());
-			fPseudoDiameter=2f*bs.getRadius();
+		if (pd.bv instanceof BoundingSphere) {
+			pd.bs = (BoundingSphere) pd.bv.clone();
+			pd.cs = new SphereCollisionShape(pd.bs.getRadius());
+			fPseudoDiameter=2f*pd.bs.getRadius();
 		}else{
-			throw new DetailedException("unsupported "+bv.getClass(),spt);
+			throw new DetailedException("unsupported "+pd.bv.getClass(),spt);
 		}
 		
-		assert spt.getWorldScale().lengthSquared()==3f : "scaled collision shape may cause imprecision and even ccd will fail";
-		if(spt.getWorldScale().lengthSquared()!=3f){ //TODO enable this one day?
-			cs.setScale(spt.getWorldScale());
+//		if(false)assert spt.getWorldScale().lengthSquared()==3f : "scaled collision shape may cause imprecision and even ccd will fail";
+//		if(spt.getWorldScale().lengthSquared()!=3f){ //TODO enable this one day?
+//			cs.setScale(spt.getWorldScale());
+//		}
+		
+		pd.fVolume = pd.bv.getVolume();
+		
+		pd.rbc=new RigidBodyControl(pd.cs);
+		pd.fMass=1f;
+		if(pd.fDensity!=null){
+			pd.fMass=pd.fVolume*pd.fDensity;
 		}
+		pd.rbc.setMass(pd.fMass);
 		
-		rbc= new RigidBodyControl(cs);
-		rbc.setMass(1f);
-		
-//		float fCCdMotionThreshold = fPseudoDiameter/11f; //TODO find a good threshold...
-		float fCCdMotionThreshold = fPseudoDiameter/2f; //TODO find a good threshold...
-		rbc.setCcdMotionThreshold(fCCdMotionThreshold);
+//		float fCCdMotionThreshold = fPseudoDiameter;
+//		float fCCdMotionThreshold = fPseudoDiameter*0.75f;
+		float fCCdMotionThreshold = fPseudoDiameter/2f;
+		pd.rbc.setCcdMotionThreshold(fCCdMotionThreshold);
 		
 		/**
 		 * "Each time the object moves more than (motionThreshold) within one frame a sphere of radius 
@@ -204,13 +261,53 @@ public class PhysicsI implements PhysicsTickListener{
 		 * "The radius is just the radius of the sphere that is swept to do this check, so make it so 
 		 * large that it resembles your object." - https://hub.jmonkeyengine.org/t/ccd-usage/24655/2
 		 */
-		rbc.setCcdSweptSphereRadius(fPseudoDiameter/2f);
+		pd.rbc.setCcdSweptSphereRadius(fPseudoDiameter/2f);
 		
-		spt.addControl(rbc);
+		spt.addControl(pd.rbc);
 		
 		ps.add(spt);
 		
-		return rbc;
+		UserDataI.i().putSafelyMustNotExist(spt, pd);
+		
+		return pd;
+	}
+	
+	public PhysicsData getPhysicsDataFrom(Spatial spt){
+		return UserDataI.i().getMustExistOrNull(spt, PhysicsData.class);
+	}
+	
+	private void initUpdateLastTargetInfo() {
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				TargetGeom tgt = TargetI.i().getLastSingleTarget();
+				if(tgt!=null){
+					PhysicsData pd = getPhysicsDataFrom(tgt.getGeometryHit());
+					if(pd!=null){
+						HashMap<String, Info> hm = tgt.getOrCreateSubInfo("Phys");
+						InfoJmeI.i().putAt(hm,"mass",pd.fMass,3);
+						InfoJmeI.i().putAt(hm,"vol",pd.fVolume,3);
+						InfoJmeI.i().putAt(hm,"spd",pd.rbc.getLinearVelocity(),2);
+						InfoJmeI.i().putAt(hm,"angv",pd.rbc.getAngularVelocity(),1);
+						InfoJmeI.i().putAt(hm,"grav",pd.rbc.getGravity(),1);
+					}
+				}
+				return true;
+			}
+		}).enableLoopMode().setDelaySeconds(0.5f);
+	}
+	
+	public PhysicsData erasePhysicsFrom(Spatial spt){
+		RigidBodyControl rbc = spt.getControl(RigidBodyControl.class);
+		spt.removeControl(rbc);
+		remove(spt);
+		PhysicsData pd = getPhysicsDataFrom(spt);
+		UserDataI.i().eraseAllOf(spt,pd);
+		return pd;
+	}
+	
+	public void remove(Spatial spt){
+		ps.remove(spt);
 	}
 	
 	public void add(Spatial spt){
@@ -274,10 +371,13 @@ public class PhysicsI implements PhysicsTickListener{
 	 * TODO write current forces to spatials for easy access?
 	 */
 	@Override
-	public void physicsTick(PhysicsSpace space, float tpf) {
+	public void physicsTick(PhysicsSpace ps, float tpf) {
+//		ps.getWorldMax()
 	}
 	
+//	public void initTest(boolean bTestBuggyFloor){
 	public void initTest(){
+		setDebugEnabled(true);
 //		SubdivisionSurfaceModifier s = new SubdivisionSurfaceModifier(modifierStructure, blenderContext);
 		
 		int iSize=50;
@@ -286,20 +386,37 @@ public class PhysicsI implements PhysicsTickListener{
 //		MBox mb = new MBox(iSize, 0.1f, iSize, iSize, 1, iSize);
 //		geomFloor = GeometryI.i().create(mb, ColorI.i().colorChangeCopy(ColorRGBA.Green,-0.5f,1f));
 //		}else{
-		geomFloor = GeometryI.i().create(new Box(iSize,0.1f,iSize), ColorI.i().colorChangeCopy(ColorRGBA.Green,-0.5f,1f));
-//		geomFloor = GeometryI.i().create(MeshI.i().box(0.5f), ColorI.i().colorChangeCopy(ColorRGBA.Green,-0.5f,1f));
-//		geomFloor.scale(iSize, 0.1f, iSize); //b4 imbue
+//		if(bTestBuggyFloor){
+//			geomFloor = GeometryI.i().create(MeshI.i().box(0.5f), ColorI.i().colorChangeCopy(ColorRGBA.Brown,0.25f,1f));
+//			geomFloor.scale(iSize, 0.1f, iSize); //b4 imbue
+//		}else{
+//		geomFloor = GeometryI.i().create(new Box(iSize,0.1f,iSize), ColorI.i().colorChangeCopy(ColorRGBA.Green,-0.5f,1f));
+			geomFloor = GeometryI.i().create(new Box(iSize,0.1f,iSize), ColorI.i().colorChangeCopy(ColorRGBA.Brown,0.20f,1f));
 //		}
 		geomFloor.move(0,-7f,0);
-		PhysicsI.i().imbueFromWBounds(geomFloor).setMass(0f);
+		PhysicsI.i().imbueFromWBounds(geomFloor).getRBC().setMass(0f);
 		AppI.i().getRootNode().attachChild(geomFloor);
 		
-		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), ColorRGBA.Blue);
-		imbueFromWBounds(geom).setMass(1f);
+		{
+		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), ColorRGBA.Red);
+		imbueFromWBounds(geom,3f);
 		AppI.i().getRootNode().attachChild(geom);
+		}{
+		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), ColorRGBA.Green);
+		imbueFromWBounds(geom,2f);
+		AppI.i().getRootNode().attachChild(geom);
+		}{
+		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), ColorRGBA.Blue);
+		imbueFromWBounds(geom,1f);
+		AppI.i().getRootNode().attachChild(geom);
+		}
+		
+    KeyBindCommandManagerI.i().putBindCommandsLater("Space",new CallBoundKeyCmd(){
+    		@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
+    			testCamProjectile(100,0.1f,6f);			return true;}
+			}.setName("TestShootProjectile").holdKeyPressedForContinuousCmd().setDelaySeconds(0.33f)
+		);
 	}
-	
-	
 	
 	public void setEnabled(boolean enabled) {
 		bullet.setEnabled(enabled);
@@ -325,33 +442,33 @@ public class PhysicsI implements PhysicsTickListener{
 		bullet.setSpeed(speed);
 	}
 	
-	public void throwAtDirImpulse(Spatial spt, float fImpulseAtDirection){
+	/**
+	 * Do not use with bullets, they are too tiny, too little mass, too fast...
+	 * For such bullets use raycast and apply forces on the hit target.
+	 * @param spt
+	 * @param fImpulseAtDirection
+	 */
+	public void throwAtSelfDirImpulse(Spatial spt, float fImpulseAtDirection){
+		PhysicsData pd = getPhysicsDataFrom(spt);
+		if(pd!=null && pd.fMass<0.01f && fImpulseAtDirection>300){
+			MessagesI.i().warnMsg(this, "this looks like a bullet, avoid using this method!", spt, pd, fImpulseAtDirection);
+		}
 		PhysicsI.i().enqueue(spt, new Impulse().setImpulseAtDir(fImpulseAtDirection));
 	}
 	
 	public Object debugTest(Object... aobj){
-		setDebugEnabled(true);
-		
-		Geometry geom = GeometryI.i().create(MeshI.i().box(0.05f), ColorRGBA.Yellow);
-//		geom.scale(0.1f); //b4 imbue
+		return null; //keep even if emtpy
+	}
+	public void testCamProjectile(float fDesiredSpeed, float fRadius, float fDensity){
+		Geometry geom = GeometryI.i().create(MeshI.i().sphere(fRadius), ColorRGBA.Yellow);
 		AppI.i().placeAtCamWPos(geom, 1f, true);
-//		DebugVisualsI.i().showWorldBoundAndRotAxes(geom);
 		AppI.i().getRootNode().attachChild(geom);
 		
-		/**/
-		PhysicsI.i().imbueFromWBounds(geom);
-//		PhysicsI.i().enqueue(geom, new Impulse().setImpulseAtDir(10f));
-		double d=(double)aobj[0];
-		PhysicsI.i().throwAtDirImpulse(geom, (float)d);
-		/**/
-		
-//		PhysicsI.i().syncPhysTransfFromSpt(geom);
-//		TargetI.i().applyAt(geom);
-//		LoggingI.i().logEntry(""+geom.getWorldTranslation());
-		return null;
+		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geom,fDensity);
+		PhysicsI.i().throwAtSelfDirImpulse(geom, fDesiredSpeed*pd.fMass); //the final speed depends on the mass
 	}
 
-	private void syncPhysTransfFromSpt(Spatial spt) {
+	public void syncPhysTransfFromSpt(Spatial spt) {
 		RigidBodyControl rbc = spt.getControl(RigidBodyControl.class);
 		rbc.setPhysicsLocation(spt.getWorldTranslation());
 		rbc.setPhysicsRotation(spt.getWorldRotation());
