@@ -320,6 +320,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		private PhysicsData	pdGlueWhere;
 //		private boolean	bApplyGluedMode;
 		public boolean	bGlueApplied;
+		private boolean	bProjectile;
 		
 		public PhysicsData(Spatial spt) {
 			this.sptLink = spt;
@@ -414,6 +415,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 
 		public void setGlueWhere(PhysicsData pdWhere) {
 			this.pdGlueWhere=pdWhere;
+		}
+
+		public boolean isProjectile() {
+			return bProjectile;
 		}
 	}
 	
@@ -832,6 +837,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		
 		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,fDensity);
 		pd.setAllowDisintegration(true);
+		pd.bProjectile=(true);
 		pd.getRBC().setGravity(ps.getGravity(new Vector3f()).mult(0.25f));
 		
 		throwFromCam(pd,fDesiredSpeed);
@@ -913,31 +919,34 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		if(event.getNodeB()==null || event.getNodeA()==null)return;
 		if(false)syso(":collision():"+event.getNodeA().getName()+" <-> "+event.getNodeB().getName());
 		
-		// glued mode
-		boolean bGlued=false;
 		PhysicsData pdA = getPhysicsDataFrom(event.getNodeA());
 		PhysicsData pdB = getPhysicsDataFrom(event.getNodeB());
 		if(pdA==null || pdB==null)return;
-		if(pdA.bDisintegrated || pdB.bDisintegrated)return;
-		if(pdA.bGlueApplied || pdA.bGlueApplied)return; //only the 1st time matters
-//		if(pdA.bApplyGluedMode){
-		if(pdA.pdGlueWhere==pdB){
-//		if(event.getNodeA() instanceof GeometryTestProjectile){
-//			applyGluedMode(event.getNodeA(),event.getNodeB());
-			pdA.v3fGlueSpot = event.getPositionWorldOnB().clone();
-			applyGluedMode(pdA);
-//			if(!PhysicsI.i().apdGlue.contains(this))PhysicsI.i().apdGlue.add(this);
-			bGlued=true;
-		}
-		if(pdB.pdGlueWhere==pdA){
-//		if(event.getNodeB() instanceof GeometryTestProjectile){
-//			applyGluedMode(event.getNodeB(),event.getNodeA());
-			pdB.v3fGlueSpot = event.getPositionWorldOnA().clone();
-			applyGluedMode(pdB);
-			             
-			bGlued=true;
-		}
-		if(bGlued)return;
+		
+		// glued mode
+//		if(pdA.isProjectile() || pdB.isProjectile()){
+//			boolean bGlued=false;
+//			if(pdA.bDisintegrated || pdB.bDisintegrated)return;
+//			if(pdA.bGlueApplied || pdA.bGlueApplied)return; //only the 1st collision matters
+			
+		syso(pdA.sptLink.getName()+","+pdB.sptLink.getName());
+		
+			if(pdA.isProjectile() && pdA.pdGlueWhere==null && !pdA.bDisintegrated && !pdA.bGlueApplied){
+				pdA.pdGlueWhere=pdB;
+				pdA.v3fGlueSpot = event.getPositionWorldOnB().clone();
+				applyGluedMode(pdA);
+//				bGlued=true;
+			}
+			if(pdB.isProjectile() && pdB.pdGlueWhere==null && !pdB.bDisintegrated && !pdB.bGlueApplied){
+				pdB.pdGlueWhere=pdA;
+				pdB.v3fGlueSpot = event.getPositionWorldOnA().clone();
+				applyGluedMode(pdB);
+				             
+//				bGlued=true;
+			}
+//			if(bGlued)return; //skip remaining checks
+			
+//		}
 		
 	}
 	
@@ -963,47 +972,47 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		if(CharacterI.i().isCharacter(nodeA))return true;
 		if(CharacterI.i().isCharacter(nodeB))return true;
 		
-		if(nodeA.getUserObject() instanceof GeometryTestProjectile && nodeB.getUserObject() instanceof GeometryTestProjectile){
-			return false;
-		}
-		
-//		boolean bGlued=
-//			( nodeA.getUserObject() instanceof GeometryTestProjectile) && !(nodeB.getUserObject() instanceof GeometryTestProjectile)
-//			||
-//			!(nodeA.getUserObject() instanceof GeometryTestProjectile) &&  (nodeB.getUserObject() instanceof GeometryTestProjectile)
-//		;
-		boolean bGlued=(nodeA.getUserObject() instanceof GeometryTestProjectile || nodeB.getUserObject() instanceof GeometryTestProjectile);
-		if(bGlued){
-			PhysicsData pdA = getPhysicsDataFrom(nodeA);
-			PhysicsData pdB = getPhysicsDataFrom(nodeB);
-			boolean bSkip=false; //disintegrated or already set glue
-			if(pdA.bDisintegrated || pdA.pdGlueWhere!=null){
-//				resetForces(pdA);
-//				pdA.rbc.setEnabled(false);
-				bSkip=true;
-			}
-			if(pdB.bDisintegrated || pdB.pdGlueWhere!=null){
-//				resetForces(pdB);
-//				pdB.rbc.setEnabled(false);
-				bSkip=true;
-			}
-//			syso(pdA.sptLink.getName()+","+pdB.sptLink.getName());
-			if(bSkip)return false; //only the 1st matters
-			
-//			if(false){
-			if(nodeA.getUserObject() instanceof GeometryTestProjectile){
-//				ps.remove(nodeA); //remove physics control to stop moving NOW, to "stay" where it is
-				pdA.setGlueWhere(pdB);
-			}
-			
-			if(nodeB.getUserObject() instanceof GeometryTestProjectile){
-//				ps.remove(nodeB); //remove physics control to stop moving NOW, to "stay" where it is
-				pdB.setGlueWhere(pdA);
-			}
+//		if(nodeA.getUserObject() instanceof GeometryTestProjectile && nodeB.getUserObject() instanceof GeometryTestProjectile){
+//			return false;
+//		}
+//		
+////		boolean bGlued=
+////			( nodeA.getUserObject() instanceof GeometryTestProjectile) && !(nodeB.getUserObject() instanceof GeometryTestProjectile)
+////			||
+////			!(nodeA.getUserObject() instanceof GeometryTestProjectile) &&  (nodeB.getUserObject() instanceof GeometryTestProjectile)
+////		;
+//		boolean bGlued=(nodeA.getUserObject() instanceof GeometryTestProjectile || nodeB.getUserObject() instanceof GeometryTestProjectile);
+//		if(bGlued){
+//			PhysicsData pdA = getPhysicsDataFrom(nodeA);
+//			PhysicsData pdB = getPhysicsDataFrom(nodeB);
+//			boolean bSkip=false; //disintegrated or already set glue
+//			if(pdA.bDisintegrated || pdA.pdGlueWhere!=null){
+////				resetForces(pdA);
+////				pdA.rbc.setEnabled(false);
+//				bSkip=true;
 //			}
-		
-			return true; //true to generate the collision event with the applied force, hit spot etc
-		}
+//			if(pdB.bDisintegrated || pdB.pdGlueWhere!=null){
+////				resetForces(pdB);
+////				pdB.rbc.setEnabled(false);
+//				bSkip=true;
+//			}
+////			syso(pdA.sptLink.getName()+","+pdB.sptLink.getName());
+//			if(bSkip)return false; //only the 1st matters
+//			
+////			if(false){
+//			if(nodeA.getUserObject() instanceof GeometryTestProjectile){
+////				ps.remove(nodeA); //remove physics control to stop moving NOW, to "stay" where it is
+//				pdA.setGlueWhere(pdB);
+//			}
+//			
+//			if(nodeB.getUserObject() instanceof GeometryTestProjectile){
+////				ps.remove(nodeB); //remove physics control to stop moving NOW, to "stay" where it is
+//				pdB.setGlueWhere(pdA);
+//			}
+////			}
+//		
+//			return true; //true to generate the collision event with the applied force, hit spot etc
+//		}
 		
 //		PhysicsData pdA = getPhysicsDataFrom(nodeA);
 //		PhysicsData pdB = getPhysicsDataFrom(nodeB);
