@@ -39,13 +39,19 @@ import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.AppI;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.GeometryI;
+import com.github.devconslejme.misc.jme.MeshI;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.PhysicsI;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
+import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.WorldPickingI;
+import com.jme3.bullet.collision.PhysicsCollisionObject;
 import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.collision.CollisionResult;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 
@@ -59,6 +65,8 @@ public class CharacterI {
 	 * see  {@link BetterCharacterControl}
 	 */
 	public static class BetterCharacterControlX extends BetterCharacterControl{
+		private Spatial	nodeHead;
+
 		/**
 		 * see {@link BetterCharacterControl#BetterCharacterControl(float, float, float)}
 		 */
@@ -80,6 +88,15 @@ public class CharacterI {
 		public Spatial getSpatial() {
 			return super.spatial;
 		}
+
+		public void setHead(Spatial nodeHead) {
+			this.nodeHead = nodeHead;
+		}
+
+		@Override
+		protected void setPhysicsLocation(Vector3f vec) {
+			super.setPhysicsLocation(vec);
+		}
 	}
 
 	public static class CompositeControl implements ICompositeRestrictedAccessControl{private CompositeControl(){};};
@@ -93,16 +110,41 @@ public class CharacterI {
 
 	private FlyByCameraX	flycamx;
 	
+	public static class NodeBody extends Node{}
+	
 	public BetterCharacterControlX create(){
+		ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+		if(acr.size()==0)return null;
+		CollisionResult cr = acr.get(0);
+		PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(cr.getGeometry());
+		if(!pd.isTerrain())return null;
+		
 //		PhysicsCharacter pc = new PhysicsCharacter(new CapsuleCollisionShape(), 2f);
-		BetterCharacterControlX bcc = new BetterCharacterControlX(0.25f, 1.7f, 70f);
-		Geometry geom = GeometryI.i().create(new Box(0.25f,1.7f/2f,0.25f), ColorRGBA.Orange);
-		geom.addControl(bcc);
-//		geom.getWorldBound().setCenter(0,1.7f/2f,0);
-//		geom.setLocalTranslation(0,1.7f/2f,0);
-		AppI.i().getRootNode().attachChild(geom);
-		PhysicsI.i().add(geom);
+		float fHeight=1.7f;
+		BetterCharacterControlX bcc = new BetterCharacterControlX(0.25f, fHeight, 70f);
+		
+		NodeBody nodeBody = new NodeBody();
+		
+		Geometry geomBody = GeometryI.i().create(new Box(0.25f,fHeight/2f,0.25f), ColorRGBA.Orange);
+		geomBody.setLocalTranslation(0, fHeight/2f, 0);
+		nodeBody.attachChild(geomBody);
+		
+		Geometry nodeHead=GeometryI.i().create(MeshI.i().sphere(0.15f), ColorRGBA.Yellow);
+		nodeHead.setLocalTranslation(0, fHeight, 0);
+		nodeBody.attachChild(nodeHead);
+		
+		bcc.setHead(nodeHead);
+		
+		nodeBody.addControl(bcc);
+		
+		AppI.i().getRootNode().attachChild(nodeBody);
+		
+		PhysicsI.i().add(nodeBody);
+		
+		bcc.setPhysicsLocation(cr.getContactPoint().add(0,0.25f,0));
+		
 		bccLast = bcc;
+		
 		return bcc;
 	}
 	
@@ -131,7 +173,7 @@ public class CharacterI {
 			bccLast.setWalkDirection(v3fMove);
 		}
 			
-		AppI.i().setCamFollow(keyContext.isPressed() ? bccLast.getSpatial() : null);
+		AppI.i().setCamFollow(keyContext.isPressed() ? bccLast.nodeHead : null);
 		flycamx.setAllowMove(!keyContext.isPressed());
 	}
 	
@@ -149,7 +191,7 @@ public class CharacterI {
 						ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
 						if(acr.size()>0){
 							Geometry geom = acr.get(0).getGeometry();
-							BetterCharacterControlX bcc = geom.getControl(BetterCharacterControlX.class);
+							BetterCharacterControlX bcc = getBCCFrom(geom);
 							if(bcc!=null)bccLast=bcc;
 						}
 					}
@@ -164,6 +206,16 @@ public class CharacterI {
 		bindLater("Down", false, false);
 		
 		initUpdateCharacterMovement();
+	}
+	
+	public BetterCharacterControlX getBCCFrom(Spatial spt){
+		NodeBody nb = getBodyFrom(spt);
+		BetterCharacterControlX bcc = nb.getControl(BetterCharacterControlX.class);
+		return bcc;
+	}
+	
+	public NodeBody getBodyFrom(Spatial spt){
+		return SpatialHierarchyI.i().getParentestOrSelf(spt, NodeBody.class, true, false);
 	}
 	
 	private void initUpdateCharacterMovement() {
@@ -207,6 +259,15 @@ public class CharacterI {
 	public CharacterI setSpeed(float fSpeed) {
 		this.fSpeed = fSpeed;
 		return this; 
+	}
+	
+	
+	public boolean isCharacter(PhysicsCollisionObject pco) {
+		return (pco.getUserObject() instanceof NodeBody);
+	}
+	@Deprecated 
+	public boolean isCharacterForSure(PhysicsCollisionObject pco) {
+		return ((Spatial)pco.getUserObject()).getControl(BetterCharacterControlX.class)!=null;
 	}
 	
 }

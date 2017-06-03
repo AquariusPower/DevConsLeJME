@@ -34,6 +34,8 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AppState;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.post.FilterPostProcessor;
+import com.jme3.post.filters.BloomFilter;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 
@@ -49,14 +51,28 @@ public class AppI {
 	private Application	app;
 	private SimpleApplication	sappOpt;
 	private Spatial	sptCamFollowMove;
+	private FilterPostProcessor	fpp;
+	private BloomFilter	bloomFilter;
 	
 	public void configure(Application app){
 		this.app=app;
 		this.sappOpt=(app instanceof SimpleApplication)?(SimpleApplication)app:null;
 		
 		initUpdateCamera();
+		initFilters();
 	}
 	
+	public void setBloomFilterEnabled(boolean enabled) {
+		bloomFilter.setEnabled(enabled);
+	}
+
+	private void initFilters() {
+    fpp = new FilterPostProcessor(app.getAssetManager());
+    bloomFilter = new BloomFilter(BloomFilter.GlowMode.Objects);
+    fpp.addFilter(bloomFilter);
+    app.getViewPort().addProcessor(fpp);
+	}
+
 	private void initUpdateCamera() {
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override

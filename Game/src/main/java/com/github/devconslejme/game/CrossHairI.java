@@ -35,6 +35,7 @@ import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.GeometryI;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.MeshI;
+import com.github.devconslejme.misc.jme.ColorI.EColor;
 import com.jme3.app.SimpleApplication;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
@@ -134,12 +135,6 @@ public class CrossHairI {
 		geomDotV.setQueueBucket(Bucket.Gui);
 		nodeDot.attachChild(geomDotV);
 		
-//		Geometry geomDotV2 = geomDotV.clone(true);
-//		geomDotV2.getMaterial().setColor("Color", ColorRGBA.Red);
-//		geomDotV2.getMaterial().getAdditionalRenderState().setLineWidth(5);
-//		geomDotV2.move(0,0,-1);
-//		nodeDot.attachChild(geomDotV2);
-		
 		Geometry geomDotH = (Geometry)geomDotV.deepClone();
 		geomDotH.rotate(0,0,FastMath.DEG_TO_RAD*90);
 		geomDotH.move(-fDotRadius/4f,0,0); //after cloning!
@@ -164,7 +159,7 @@ public class CrossHairI {
 		Geometry geomA = GeometryI.i().create(new Curve(av3f, 1), 
 			ColorI.i().colorChangeCopy(ColorRGBA.Cyan, 0f, fTgtColorAlpha));
 		matTarget = geomA.getMaterial();//.getAdditionalRenderState().setLineWidth(3);
-		colorTarget = (ColorRGBA)geomA.getMaterial().getParam("Color").getValue();
+		colorTarget = (ColorRGBA)geomA.getMaterial().getParam(EColor.Color.s()).getValue();
 		geomA.setQueueBucket(Bucket.Gui);
 		nodeTarget.attachChild(geomA);
 		

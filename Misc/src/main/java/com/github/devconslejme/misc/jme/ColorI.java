@@ -213,6 +213,13 @@ public class ColorI {
 //			);
 //	}
 	
+	public static enum EColor{
+		Color,
+		GlowColor,
+		;
+		public String s(){return toString();}
+	}
+	
 	HashMap<Integer,Material> hmMatUnshadedColor = new HashMap<Integer,Material>();
 	/**
 	 * uses a cache too
@@ -220,14 +227,14 @@ public class ColorI {
 	 * @return
 	 */
 	public Material retrieveMaterialUnshadedColor(ColorRGBA color){
-		color = color.clone();color.clamp(); //fix the color
+		color = color.clone();color.clamp(); //"fix" the color
 		
 		int i = color.asIntRGBA();
 		Material mat = hmMatUnshadedColor.get(i);
 		if(mat==null){
 			mat = new Material(GlobalManagerI.i().get(Application.class).getAssetManager(), 
 				"Common/MatDefs/Misc/Unshaded.j3md");
-			mat.setColor("Color", color);
+			mat.setColor(EColor.Color.s(), color);
 			if(color.a<1f)mat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
       //			mat.setTransparent(color.a<1f);
 			hmMatUnshadedColor.put(i,mat);

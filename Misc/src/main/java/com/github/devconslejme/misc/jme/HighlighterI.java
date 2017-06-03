@@ -33,11 +33,13 @@ import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI.ColorGlow;
+import com.github.devconslejme.misc.jme.ColorI.EColor;
 import com.jme3.app.SimpleApplication;
 import com.jme3.collision.CollisionResult;
 import com.jme3.input.FlyByCamera;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.GeometryGroupNode;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Sphere;
 
@@ -56,8 +58,7 @@ public class HighlighterI {
 			 */
 //			geomHighlight = GeometryI.i().create(new Sphere(),new ColorRGBA(1,1,1,0.5f));
 			geomHighlight = GeometryI.i().create(new Sphere(),new ColorRGBA(1,1,1,0.5f)); 
-			geomHighlight.getMaterial().setColor("Color",HighlighterI.i().colorHighlight); //only a copy of that color will be there, we need to apply the glowing one
-//			colorHighlight=(ColorRGBA)geomHighlight.getMaterial().getParam("Color").getValue();
+			geomHighlight.getMaterial().setColor(EColor.Color.s(),HighlighterI.i().colorHighlight); //only a copy of that color will be there, we need to apply the glowing one
 			geomHighlight.setName("HighLight");
 			
 			// this way more things can be added to the node
@@ -177,7 +178,11 @@ public class HighlighterI {
 		 * This makes the placement be precise even with moving spatials, but may be destructive if 
 		 * this child is not expected to be there (like if the childs there are scanned for some reason).
 		 */
-		nh.geomTarget.getParent().attachChild(nh); //
+		Node sptParent = nh.geomTarget.getParent();
+		if(sptParent instanceof GeometryGroupNode){
+			sptParent=sptParent.getParent();
+		}
+		sptParent.attachChild(nh); //
 		
 //		/**
 //		 * Also, for a few geometries regions (not all hit spots just a few), 
