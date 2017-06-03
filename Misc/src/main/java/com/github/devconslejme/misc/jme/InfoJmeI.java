@@ -31,6 +31,7 @@ import java.util.HashMap;
 
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.InfoI;
+import com.github.devconslejme.misc.InfoI.Info;
 import com.github.devconslejme.misc.StringI;
 import com.jme3.math.Vector3f;
 
@@ -40,6 +41,7 @@ import com.jme3.math.Vector3f;
 public class InfoJmeI extends InfoI{
 	public static InfoJmeI i(){return GlobalManagerI.i().retrieveOverridingSupers(InfoJmeI.class, true, InfoI.class);}
 	
+	/** do not create the hashmaps with this one, use only the super, this is just for the constructor */
 	public static class InfoJme extends Info{
 		public InfoJme(String strKey, Vector3f v3f, int iFloatScale) {
 			super(strKey,v3f);
@@ -54,7 +56,7 @@ public class InfoJmeI extends InfoI{
 	 * @param v3f if null, will remove the key too
 	 * @param iFloatScale
 	 */
-	public void putAt(HashMap<String, Info> hm, String strKey,Vector3f v3f, int iFloatScale) {
+	public void putAt(HashMap<String,Info> hm, String strKey,Vector3f v3f, int iFloatScale) {
 		if(chkRemove(hm, strKey, v3f))return;
 //		if(v3f==null)hm.remove(strKey);
 		hm.put(strKey, new InfoJme(strKey,v3f,iFloatScale));
@@ -71,6 +73,11 @@ public class InfoJmeI extends InfoI{
 		
 		return super.fmtInfoValue(inf);
 	}
+
+//	@Override
+//	public <T extends InfoJme> HashMap<String,T> createHashMap() {
+//		return new HashMap<String, InfoJme>();
+//	}
 
 }
 

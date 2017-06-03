@@ -291,26 +291,36 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 		StringBuilder sb=new StringBuilder();
 		String strSep="\n";
 		
-		if(bShowFPS)sb.append("FPS="+getFPS()+strSep);
-		if(bShowMouseCursorPos)sb.append("MouseXY="+getMouse().getPos2D()+strSep);
-		if(bShowCamPos){
-			sb.append("CamPos="
-				+StringTextJmeI.i().fmtVector3f(cam.getLocation(),2)
-				+strSep);
+		{//one line
+			String strSep2=", ";
+			if(bShowFPS)sb.append("FPS="+getFPS()+strSep2);
+			if(bShowMouseCursorPos)sb.append("MouseXY="+getMouse().getPos2D()+strSep2);
+			if(bShowCamPos){
+				sb.append("CamPos="
+					+StringTextJmeI.i().fmtVector3f(cam.getLocation(),2)
+					+strSep2);
+			}
+			if(bShowCamRot){
+				//TODO show a drawn line about Z at XY plane rotation, and another about up/downwards degrees
+				sb.append("CamRotDeg="
+					+StringTextJmeI.i().fmtToDegrees(cam.getRotation(),1)
+					+strSep2);
+			}
+			
+			//TODO if not empty..
+			sb.append(strSep);
 		}
-		if(bShowCamRot){
-			//TODO show a drawn line about Z at XY plane rotation, and another about up/downwards degrees
-			sb.append("CamRotDeg="
-				+StringTextJmeI.i().fmtToDegrees(cam.getRotation(),1)
-				+strSep);
-		}
+		
 		if(hmCustomInfo.size()>0){
 			for(Entry<String, String> entry:hmCustomInfo.entrySet()){
 				sb.append(entry.getKey()+"="+entry.getValue()+strSep);
 			}
 		}
 		
-		btInfo.setText(sb.toString());
+		/////////////////// prepare  the bitmap text //////////////////////
+		btInfo.setBox(null); //to recalculate the height properly
+		btInfo.setText(sb.toString().trim()); //trim to remove last NL
+		//btInfo.setText("");btInfo.updateLogicalState()
 //		btInfo.setColor("(?m)^(?=[^=]*)=",ColorRGBA.Yellow); //(?m) multiline mode
 		btInfo.setColor("(?m)^[^=]*=",ColorRGBA.Cyan); //(?m) multiline mode
 		btInfo.setColor("[0-9.]*",ColorRGBA.Green); //(?m) multiline mode

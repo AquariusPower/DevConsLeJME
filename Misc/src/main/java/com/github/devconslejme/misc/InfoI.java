@@ -146,15 +146,15 @@ public class InfoI {
 	 * @param f if null removes the key too
 	 * @param iFloatScale
 	 */
-	public void putAt(HashMap<String, Info> hm, String strKey, Float f, int iFloatScale) {
+	public void putAt(HashMap<String,Info> hm, String strKey, Float f, int iFloatScale) {
 		if(chkRemove(hm,strKey,f))return;
 		hm.put(strKey, new Info(strKey,f,iFloatScale));
 	}
 	public void putAt(HashMap<String, Info> hm, String strKey, Object objValue) {
-		if(chkRemove(hm,strKey,objValue))return;
+		if(chkRemove(hm,strKey,objValue))return; // hm.get(strKey)
 		hm.put(strKey, new Info(strKey,objValue));
 	}
-	public boolean chkRemove(HashMap<String, Info> hm, String strKey, Object objValue){
+	public boolean chkRemove(HashMap<String,?> hm, String strKey, Object objValue){
 		if(objValue==null){
 			hm.remove(strKey);
 			return true;
@@ -173,4 +173,7 @@ public class InfoI {
 		return prepareFullInfo(ahm);
 	}
 
+//	public <T extends Info> HashMap<String,T> createHashMap() {
+//		return new HashMap<String,T>();
+//	}
 }

@@ -40,6 +40,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.TimeFormatI;
 import com.github.devconslejme.misc.TimedDelay;
+import com.github.devconslejme.misc.jme.InfoJmeI.InfoJme;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
@@ -161,6 +162,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	private BulletAppState	bullet;
 	private PhysicsSpace	ps;
 	private BoundingBox	bbSpace;
+	private HashMap<String, Info>	hmInfo;
 	
 	public void configure(){
 		bullet = new BulletAppState();
@@ -193,11 +195,29 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 	
 	private void initMaintenanceUpdateLoop() {
+		hmInfo = new HashMap<String,Info>();
+		
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
+				InfoJmeI.i().putAt(hmInfo,"Disintegratables",hmDisintegratables.size());
+				InfoJmeI.i().putAt(hmInfo,"Spd",bullet.getSpeed(),2);
+				InfoJmeI.i().putAt(hmInfo,"Grav",ps.getGravity(new Vector3f()),1);
+				InfoJmeI.i().putAt(hmInfo,"Min",ps.getWorldMin(),0);
+				InfoJmeI.i().putAt(hmInfo,"Max",ps.getWorldMax(),0);
+				InfoJmeI.i().putAt(hmInfo,"TotChars",ps.getCharacterList().size());
+				InfoJmeI.i().putAt(hmInfo,"TotGhosts",ps.getGhostObjectList().size());
+				InfoJmeI.i().putAt(hmInfo,"TotRBCs",ps.getRigidBodyList().size());
+				InfoJmeI.i().putAt(hmInfo,"TotVehicles",ps.getVehicleList().size());
+				InfoJmeI.i().putAt(hmInfo,"TotJoints",ps.getJointList().size());
+				
+				if(pdLastThrownFromCam!=null){
+					InfoJmeI.i().putAt(hmInfo,"LtTrwSpd",pdLastThrownFromCam.imp.fImpulseAtSelfDirection);
+				}
+				
+				HWEnvironmentJmeI.i().putCustomInfo("Phys",InfoJmeI.i().prepareFullInfoRecursive(hmInfo));
+				/*
 				HWEnvironmentJmeI.i().putCustomInfo("Phys",""
-//					+"Disintegrated="+apdDisintegrate.size()+", "
 					+"Disintegratables="+hmDisintegratables.size()+", "
 					+"Spd="+bullet.getSpeed()+", "
 					+"Grav="+ps.getGravity(new Vector3f())+", "
@@ -208,7 +228,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 					+"TotRBCs="+ps.getRigidBodyList().size()+", "
 					+"TotVehicles="+ps.getVehicleList().size()+", "
 					+"TotJoints="+ps.getJointList().size()+", "
+					+"LtTrwSpd="+pdLastThrownFromCam.imp.fImpulseAtSelfDirection+", "
 				);
+				*/
 				
 				for(PhysicsData pd:apdDisintegrate){
 					erasePhysicsFrom(pd.sptLink);
@@ -249,6 +271,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		boolean	bTerrain;
 		long	lRestingAtTickCount;
 		private boolean	bResting;
+		private Impulse	imp;
 		
 		public PhysicsData(Spatial spt) {
 			this.sptLink = spt;
@@ -321,6 +344,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 
 		public void setResting(boolean b) {
 			this.bResting=b;
+		}
+
+		public void setLastImpuse(Impulse imp) {
+			this.imp = imp;
 		}
 	}
 	
@@ -419,6 +446,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			InfoJmeI.i().putAt(hmStore,"angv",pd.rbc.getAngularVelocity(),1);
 			InfoJmeI.i().putAt(hmStore,"grav",pd.rbc.getGravity(),1);
 			InfoJmeI.i().putAt(hmStore,"rest",pd.isResting());
+//			InfoJmeI.i().putAt(hmStore,"LtTrwSpd",pd.imp.fImpulseAtSelfDirection);
 		}
 	}
 	
@@ -516,6 +544,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	
 	TimedDelay tdDisintegrate = new TimedDelay(10f).setActive(true);
 	TimedDelay tdSaveSafeSpotRot = new TimedDelay(3f).setActive(true);
+	private PhysicsData	pdLastThrownFromCam;
 	
 	/**
 	 * THIS IS ANOTHER THREAD
@@ -634,26 +663,48 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	 * For such bullets use raycast and apply forces on the hit target.
 	 * @param spt
 	 * @param fImpulseAtDirection
+	 * @return 
 	 */
-	public void throwAtSelfDirImpulse(Spatial spt, float fImpulseAtDirection){
+	public Impulse throwAtSelfDirImpulse(Spatial spt, float fImpulseAtDirection){
 		PhysicsData pd = getPhysicsDataFrom(spt);
 		if(pd!=null && pd.fMass<0.01f && fImpulseAtDirection>300){
 			MessagesI.i().warnMsg(this, "this looks like a bullet, avoid using this method!", spt, pd, fImpulseAtDirection);
 		}
-		PhysicsI.i().applyImpulseLater(spt, new Impulse().setImpulseAtSelfDir(fImpulseAtDirection));
+		Impulse imp = new Impulse().setImpulseAtSelfDir(fImpulseAtDirection);
+		PhysicsI.i().applyImpulseLater(spt, imp);
+		pd.setLastImpuse(imp);
+		return imp;
 	}
 	
 	public Object debugTest(Object... aobj){
 		return null; //keep even if emtpy
 	}
-	public void testCamProjectile(float fDesiredSpeed, float fRadius, float fDensity){
+//	public void testCamProjectile(float fDesiredSpeed, float fRadius, float fDensity){
+//		Geometry geom = GeometryI.i().create(MeshI.i().sphere(fRadius), ColorRGBA.Yellow);
+//		AppI.i().placeAtCamWPos(geom, 1f, true);
+//		AppI.i().getRootNode().attachChild(geom);
+//		
+//		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geom,fDensity);
+//		pd.setAllowDisintegration(true);
+//		PhysicsI.i().throwAtSelfDirImpulse(geom, fDesiredSpeed*pd.fMass); //the final speed depends on the mass
+//	}
+	public PhysicsData testCamProjectile(float fDesiredSpeed, float fRadius, float fDensity){
 		Geometry geom = GeometryI.i().create(MeshI.i().sphere(fRadius), ColorRGBA.Yellow);
-		AppI.i().placeAtCamWPos(geom, 1f, true);
 		AppI.i().getRootNode().attachChild(geom);
 		
 		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geom,fDensity);
 		pd.setAllowDisintegration(true);
-		PhysicsI.i().throwAtSelfDirImpulse(geom, fDesiredSpeed*pd.fMass); //the final speed depends on the mass
+		
+		throwFromCam(pd,fDesiredSpeed);
+		
+		return pd;
+	}
+	public Impulse throwFromCam(PhysicsData pd,float fDesiredSpeed){
+		AppI.i().placeAtCamWPos(pd.sptLink, 1f, true); //orientated z
+		syncPhysTransfFromSpt(pd.sptLink);
+		Impulse imp = throwAtSelfDirImpulse(pd.sptLink, fDesiredSpeed*pd.fMass); //the final speed depends on the mass
+		pdLastThrownFromCam=pd;
+		return imp;
 	}
 	
 	public void syncPhysTransfFromSpt(Spatial spt) {
