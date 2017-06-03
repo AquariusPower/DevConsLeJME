@@ -952,7 +952,12 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		try{return threadPhysicsDoAboutToCollideWithGroupChkAllowed(nodeA,nodeB);}catch(Exception ex){DetailedException.forceExitTrapIrrevocablySuspendCurrentThread(ex);}
 		return false; //dummy, never reached...
 	}
-	/** name just for clarity */
+	/** 
+	 * (new name also for clarity)
+	 * 
+	 * On a single tick it may be about to collide with more than one!!!
+	 * And the collision order may NOT be the expected one!!! 
+	 */
 	@NotMainThread
 	protected boolean threadPhysicsDoAboutToCollideWithGroupChkAllowed(PhysicsCollisionObject nodeA,PhysicsCollisionObject nodeB) {
 		if(CharacterI.i().isCharacter(nodeA))return true;
@@ -971,7 +976,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		if(bGlued){
 			PhysicsData pdA = getPhysicsDataFrom(nodeA);
 			PhysicsData pdB = getPhysicsDataFrom(nodeB);
-			boolean bSkip=false;
+			boolean bSkip=false; //disintegrated or already set glue
 			if(pdA.bDisintegrated || pdA.pdGlueWhere!=null){
 //				resetForces(pdA);
 //				pdA.rbc.setEnabled(false);
@@ -982,6 +987,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //				pdB.rbc.setEnabled(false);
 				bSkip=true;
 			}
+//			syso(pdA.sptLink.getName()+","+pdB.sptLink.getName());
 			if(bSkip)return false; //only the 1st matters
 			
 //			if(false){
@@ -1017,6 +1023,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		return true; //allow all collisions
 	}
 	
+	/**
+	 * ex.: use this for insta bullet shots or pushing things 
+	 * @param fImpulse
+	 * @return
+	 */
 	public CollisionResult applyImpulseHitTargetAtCamDirection(float fImpulse){
 		for(CollisionResult cr:WorldPickingI.i().raycastPiercingAtCenter(null)){
 			if(getPhysicsDataFrom(cr.getGeometry())==null)continue;
@@ -1044,8 +1055,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 	
 	public void syso(String str){
-		// this is weighty!
-		if(false)System.out.println(TimeFormatI.i().getRealTimeFormatted()+":"+Thread.currentThread().getName()+str);
+//		if(false)// this is weighty!
+			System.out.println(lTickCount+":"+System.nanoTime()+":"+TimeFormatI.i().getRealTimeFormatted()+":"+Thread.currentThread().getName()+":"+str);
 	}
 	
 	public boolean isResting(PhysicsRigidBody prb){
