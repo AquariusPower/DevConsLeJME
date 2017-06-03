@@ -33,14 +33,14 @@ import com.github.devconslejme.game.CharacterI;
 import com.github.devconslejme.misc.Annotations.NotMainThread;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.SimulationTimeI;
-import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.InfoI.Info;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.SimulationTimeI;
+import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.TimeFormatI;
 import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.jme.ColorI.EColor;
@@ -66,9 +66,11 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.Node;
 import com.jme3.scene.SimpleBatchNode;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
+import com.jme3.scene.shape.Sphere;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -220,7 +222,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			@Override
 			public Boolean call() {
 				updateInfo();
+				
+				updateGlue(); //b4 disintegration!!! (so it may even just disintegrate safely)
 				updateDisintegration();
+				
 				return true;
 			}
 		}).enableLoopMode().setDelaySeconds(0.5f);
@@ -307,6 +312,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		private boolean	bResting;
 		private Impulse	imp;
 		private long	lMaterializedSTime;
+		private Vector3f	v3fGlueAt;
+		private PhysicsData	pdGlueWhere;
 		
 		public PhysicsData(Spatial spt) {
 			this.sptLink = spt;
@@ -388,7 +395,29 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		public void updateMaterializedAt() {
 			this.lMaterializedSTime=SimulationTimeI.i().getNanoTime();
 		}
+
+		public boolean isExplodeIfHit(PhysicsData pdWhere) {
+			return bAllowDisintegration && pdWhere.bAllowDisintegration;
+		}
+
+		public void setGlueWhere(PhysicsData pdWhere) {
+			this.v3fGlueAt = rbc.getPhysicsLocation();
+			this.pdGlueWhere = pdWhere;
+			if(!PhysicsI.i().apdGlue.contains(this))PhysicsI.i().apdGlue.add(this);
+		}
 	}
+	
+	public void updateGlue(){
+		for(PhysicsData pdWhat:apdGlue){
+			if(pdWhat.pdGlueWhere.sptLink instanceof Node){ //will move around with the target
+				Vector3f v3f = pdWhat.pdGlueWhere.sptLink.worldToLocal(pdWhat.v3fGlueAt,null);
+				((Node)pdWhat.pdGlueWhere.sptLink).attachChild(pdWhat.sptLink);
+				pdWhat.sptLink.setLocalTranslation(v3f);
+			}
+		}
+	}
+	
+	ArrayList<PhysicsData> apdGlue = new ArrayList<PhysicsData>();
 	
 	synchronized public void requestDisintegration(PhysicsData pd){
 		if(!apdDisintegrate.contains(pd))apdDisintegrate.add(pd);
@@ -612,7 +641,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		
 //		if(true)return;
 		
-		// safe spot
+		// save safe spot
 		lTickCount++;
 		for(PhysicsRigidBody prb:ps.getRigidBodyList()){
 			if(CharacterI.i().isCharacter(prb))continue;
@@ -634,7 +663,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			}
 		}
 			
-		// auto disintegrate at world bounds
+		// auto disintegrate at world bounds or restore last safe spot
 		if(tdDisintegrate.isReady(true)){
 			for(PhysicsRigidBody prb:ps.getRigidBodyList()){
 				if(!bbSpace.contains(prb.getPhysicsLocation())){
@@ -788,8 +817,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 		
 		if(geomTestProjectileFactory==null){
-			geomTestProjectileFactory = GeometryI.i().create(MeshI.i().sphere(fRadius), ColorRGBA.Yellow, false, new GeometryTestProjectile());
-			geomTestProjectileFactory.getMaterial().setColor(EColor.GlowColor.s(), ColorRGBA.Blue.mult(10));
+			geomTestProjectileFactory = GeometryI.i().create(new Sphere(3,4,fRadius), ColorRGBA.Cyan, false, new GeometryTestProjectile());
+//			geomTestProjectileFactory = GeometryI.i().create(MeshI.i().sphere(fRadius), ColorRGBA.Cyan, false, new GeometryTestProjectile());
+//			geomTestProjectileFactory = GeometryI.i().create(MeshI.i().box(fRadius), ColorRGBA.Cyan, false, new GeometryTestProjectile());
+			geomTestProjectileFactory.scale(0.25f,0.25f,1f);
+			geomTestProjectileFactory.getMaterial().setColor(EColor.GlowColor.s(), ColorRGBA.Blue.mult(10)); //requires the bloom post processor with glow objects mode
 		}
 		
 		GeometryTestProjectile geomClone = geomTestProjectileFactory.clone();
@@ -832,14 +864,25 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	@Override
 	public boolean collide(PhysicsCollisionObject nodeA,PhysicsCollisionObject nodeB) {
 //		if(DetailedException.isExitRequested())return false; //may prevent further errors elsewhere by preventing all collisions?
-		try{return threadPhysicsDoCollideWithGroup(nodeA,nodeB);}catch(Exception ex){DetailedException.forceExitTrapIrrevocablySuspendCurrentThread(ex);}
+		try{return threadPhysicsDoAboutToCollideWithGroup(nodeA,nodeB);}catch(Exception ex){DetailedException.forceExitTrapIrrevocablySuspendCurrentThread(ex);}
 		return false; //dummy, never reached...
 	}
 	/** name just for clarity */
 	@NotMainThread
-	protected boolean threadPhysicsDoCollideWithGroup(PhysicsCollisionObject nodeA,PhysicsCollisionObject nodeB) {
+	protected boolean threadPhysicsDoAboutToCollideWithGroup(PhysicsCollisionObject nodeA,PhysicsCollisionObject nodeB) {
 		if(CharacterI.i().isCharacter(nodeA))return true;
 		if(CharacterI.i().isCharacter(nodeB))return true;
+		
+		boolean bGlued=false;
+		if(nodeA.getUserObject() instanceof GeometryTestProjectile){
+			threadPhysicsGlue(nodeA,nodeB);
+			bGlued=true;
+		}
+		if(nodeB.getUserObject() instanceof GeometryTestProjectile){
+			threadPhysicsGlue(nodeB,nodeA);
+			bGlued=true;
+		}
+		if(bGlued)return false;
 		
 		PhysicsData pdA = getPhysicsDataFrom(nodeA);
 		PhysicsData pdB = getPhysicsDataFrom(nodeB);
@@ -859,6 +902,22 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		return true; //allow all collisions
 	}
 	
+	private void threadPhysicsGlue(PhysicsCollisionObject pcoWhat, PhysicsCollisionObject pcoWhere) {
+		PhysicsData pdWhat = getPhysicsDataFrom(pcoWhat);
+		PhysicsData pdWhere = getPhysicsDataFrom(pcoWhere);
+		
+		if(pdWhat.isExplodeIfHit(pdWhere)){
+			requestDisintegration(pdWhat);
+			requestDisintegration(pdWhere);
+			//TODO explode effect
+			return;
+		}
+		
+		pdWhat.setGlueWhere(pdWhere);
+		
+		ps.remove(pdWhat.getRBC()); //remove physics control to stop moving NOW, to "stay" where it is
+	}
+
 	public CollisionResult applyImpulseHitTargetAtCamDirection(float fImpulse){
 		ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
 		if(acr.size()>0){
