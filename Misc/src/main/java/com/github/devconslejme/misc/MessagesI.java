@@ -78,7 +78,7 @@ public class MessagesI {
 	}
 	protected String warnMsgWork(Object objSource, String strMsg, Object... aobjMoreInfo){
 		Object[] aobjMoreInfoSte = Arrays.copyOf(aobjMoreInfo, aobjMoreInfo.length+1);//add one slot on the array
-		aobjMoreInfoSte[aobjMoreInfoSte.length-1]=Thread.currentThread().getStackTrace()[2];
+		aobjMoreInfoSte[aobjMoreInfoSte.length-1]=Thread.currentThread().getStackTrace()[3];
 		return output(System.err,"WARN",objSource,strMsg,aobjMoreInfoSte);
 	}
 	

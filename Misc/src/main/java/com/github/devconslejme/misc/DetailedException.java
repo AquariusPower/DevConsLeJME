@@ -49,7 +49,16 @@ public class DetailedException extends NullPointerException{
 //	private static IUserInputDetector	userInputDetector;
 	private static String	strErrorMessage;
 	private static String strHeader = "["+DetailedException.class.getSimpleName()+"]";
-
+	private static IHandleExitListener ihell;
+	
+	public static void setHandleExitListener(IHandleExitListener ihe){
+		DetailedException.ihell=ihe;
+	}
+	
+	public static interface IHandleExitListener{
+		void requestExitEvent(Exception exExitRequestCause);
+	}
+	
 	public static interface IHandleExceptions{
 		void handleExceptionThreaded(Exception e);
 	}
@@ -96,7 +105,7 @@ public class DetailedException extends NullPointerException{
 	
 	private static String prepareExceptionReport(String strMessage, Object... aobj){
 		if(JavaLangI.i().isRecursiveLoopOnMethod("<init>",DetailedException.class)){
-			System.err.println(strHeader+"Recursive loop exception, stack dump below:");
+			output("Recursive loop exception, stack dump below:");
 			Thread.dumpStack();
 			return strMessage+"\n"+
 				strHeader+" Recursive loop (prevented) at exception ("+DetailedException.class+") call...)";
@@ -105,20 +114,53 @@ public class DetailedException extends NullPointerException{
 		try{
 			return ReportI.i().prepareReport(strMessage,aobj);
 		}catch(Exception ex){
-			System.err.println(strHeader+"another exception happened while gathering information to this exception...");
+			output("another exception happened while gathering information to this exception...");
 			ex.printStackTrace();
 			return "(failed to gather further exception information)";
 		}
 	}
-	private String	strMessageKey;
-	public String getMessageKey() {
-		return strMessageKey;
+//	private String	strMessageKey;
+//	public String getMessageKey() {
+//		return strMessageKey;
+//	}
+	
+	/**
+	 * in favor of {@link #forceExitTrapIrrevocablySuspendCurrentThread(Exception, Object...)}
+	 * @param ex
+	 * @param aobj
+	 */
+	@Deprecated
+	public static void forceExitOtherThread(Exception ex,Object... aobj) {
+		throw new DetailedException(true,"all unhandled exceptions at other threads should be fatal!",Thread.currentThread(),aobj)
+			.setCauseAndReturnSelf(ex);
+	}
+	public static void forceExitTrapIrrevocablySuspendCurrentThread(Exception ex,Object... aobj) {
+//		DetailedException dex = new DetailedException(true,"all unhandled exceptions at other threads should be fatal!",Thread.currentThread(),aobj);
+		DetailedException dex = new DetailedException(true,"Suspending thread",Thread.currentThread(),aobj)
+			.setCauseAndReturnSelf(ex);
+		
+		dex.printStackTrace();
+		
+		if(ihell!=null){
+			ihell.requestExitEvent(ex);
+			while(true){
+				try {
+					output(Thread.currentThread().getName()+": waiting exit request be processed. Thread suspended!");
+					Thread.sleep(3000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}else{
+			output("no exit handlers found, exiting now!");
+			System.exit(1);
+		}
 	}
 
 	public DetailedException(boolean bExitApplication, String strMessage, Object... aobj) {
 		super(prepareExceptionReport(strMessage, aobj));
 		
-		this.strMessageKey=strMessage;
+//		this.strMessageKey=strMessage;
 		
 		if(bExitApplication){// && (userInputDetector!=null && !userInputDetector.isConsoleCommandRunningFromDirectUserInput())){
 			DetailedException.exRequestExit = this;
@@ -262,7 +304,7 @@ public class DetailedException extends NullPointerException{
 	@Deprecated
 	@Override
 	public synchronized Throwable initCause(Throwable cause) {
-		System.err.println("WARNING: "+DetailedException.class.getSimpleName()+": there are more useful methods...");
+		output("WARNING: "+DetailedException.class.getSimpleName()+": there are more useful methods...");
 		return super.initCause(cause);
 	}
 	public static String getExitErrorMessage() {
@@ -276,6 +318,10 @@ public class DetailedException extends NullPointerException{
 
 	public static void assertIsInitialized(boolean bInitializedIndicator, Object... aobjMoreObjectsForDebugInfo) {
 		assertIsTrue("initialized", bInitializedIndicator, aobjMoreObjectsForDebugInfo);
+	}
+	
+	private static void output(String str){
+		System.err.println(strHeader+str);
 	}
 }
 

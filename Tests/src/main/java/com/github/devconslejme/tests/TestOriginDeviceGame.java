@@ -42,8 +42,8 @@ import com.github.devconslejme.misc.jme.EffectArrow;
 import com.github.devconslejme.misc.jme.EffectElectricity;
 import com.github.devconslejme.misc.jme.EffectManagerStateI;
 import com.github.devconslejme.misc.jme.EnergyJme;
-import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.GeometryI;
+import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.OriginDevice;
@@ -54,7 +54,6 @@ import com.github.devconslejme.misc.jme.StringTextJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.jme.WorldPickingI;
 import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
-import com.github.devconslejme.tests.TestDevCons.GeometryVolDbg;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
@@ -79,7 +78,7 @@ import com.jme3.scene.shape.Sphere;
  */
 public class TestOriginDeviceGame extends SimpleApplicationAndStateAbs {
 	public static void main(String[] args) {
-		TestDevCons.main(args); //TODO rm
+		TestDevConsFull.main(args); //TODO rm
 		if(false){TestOriginDeviceGame test = new TestOriginDeviceGame();test.start();}//TODO re-enable
 	}
 
@@ -100,6 +99,8 @@ public class TestOriginDeviceGame extends SimpleApplicationAndStateAbs {
 		orde.update(tpf);
 		HWEnvironmentJmeI.i().putCustomInfo("OrdeEnergy", ""+orde.energyInfo());
 	}
+	
+	public class GeometryVolDbg extends Geometry{}
 	
 	/**
 	 * public so can be called from devcons user cmds

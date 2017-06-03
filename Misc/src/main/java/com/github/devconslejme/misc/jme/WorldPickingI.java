@@ -144,29 +144,29 @@ public class WorldPickingI {
 	
 	/**
 	 * 
-	 * @param nodeVirtualWorld see {@link #raycastPiercingAt(Node, Vector3f)}
+	 * @param nodeVirtualWorld see {@link #raycastPiercingAtXY(Node, Vector3f)}
 	 * @return
 	 */
 	public ArrayList<CollisionResult> raycastPiercingAtCursor(Node nodeVirtualWorld){
-		return raycastPiercingAt(nodeVirtualWorld, HWEnvironmentJmeI.i().getMouse().getPos3D());
+		return raycastPiercingAtXY(nodeVirtualWorld, HWEnvironmentJmeI.i().getMouse().getPos3D());
 	}
 	
 	/**
 	 * 
-	 * @param nodeVirtualWorld see {@link #raycastPiercingAt(Node, Vector3f)}
+	 * @param nodeVirtualWorld see {@link #raycastPiercingAtXY(Node, Vector3f)}
 	 * @return
 	 */
 	public ArrayList<CollisionResult> raycastPiercingAtCenter(Node nodeVirtualWorld){
-		return raycastPiercingAt(nodeVirtualWorld, HWEnvironmentJmeI.i().getDisplay().getCenter(0f)); //z will be ignored
+		return raycastPiercingAtXY(nodeVirtualWorld, HWEnvironmentJmeI.i().getDisplay().getCenter(0f)); //z will be ignored
 	}
 	/**
 	 * 
-	 * @param nodeVirtualWorld see {@link #raycastPiercingAt(Node, Vector3f)}
+	 * @param nodeVirtualWorld see {@link #raycastPiercingAtXY(Node, Vector3f)}
 	 * @param v3fDisplaceFromCenterXY
 	 * @return
 	 */
 	public ArrayList<CollisionResult> raycastPiercingDisplFromCenter(Node nodeVirtualWorld, Vector3f v3fDisplaceFromCenterXY){
-		return raycastPiercingAt(nodeVirtualWorld, HWEnvironmentJmeI.i().getDisplay().getCenter(0f).add(v3fDisplaceFromCenterXY)); //z will be ignored
+		return raycastPiercingAtXY(nodeVirtualWorld, HWEnvironmentJmeI.i().getDisplay().getCenter(0f).add(v3fDisplaceFromCenterXY)); //z will be ignored
 	}
 	/**
 	 * 
@@ -174,7 +174,7 @@ public class WorldPickingI {
 	 * @param v3fGuiNodeXY
 	 * @return can be empty
 	 */
-	public ArrayList<CollisionResult> raycastPiercingAt(Node nodeVirtualWorld, Vector3f v3fGuiNodeXY){
+	public ArrayList<CollisionResult> raycastPiercingAtXY(Node nodeVirtualWorld, Vector3f v3fGuiNodeXY){
 		if(nodeVirtualWorld==null)nodeVirtualWorld=MiscJmeI.i().getNodeVirtualWorld();
 		
 		CollisionResults crs = new CollisionResults();

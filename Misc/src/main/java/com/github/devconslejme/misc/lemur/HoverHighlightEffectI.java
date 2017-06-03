@@ -53,7 +53,7 @@ import com.simsilica.lemur.event.MouseEventControl;
 public class HoverHighlightEffectI {
 	public static HoverHighlightEffectI i(){return GlobalManagerI.i().get(HoverHighlightEffectI.class);}
 	
-	public static class EffectUserData{
+	private static class EffectUserData{
 		private QuadBackgroundComponent	qbcHighLightTarget;
 
 		public QuadBackgroundComponent getQbcHighLightTarget() {
@@ -124,11 +124,13 @@ public class HoverHighlightEffectI {
 	private DummyEffect	efDummy;
 	public void applyAt(Panel pnlToThisElement, QuadBackgroundComponent qbcTargetToBeHighlighted){
 		MouseEventControl.addListenersToSpatial(pnlToThisElement, hml);
-//		UserDataI.i().setUserDataPSHSafely(pnlToThisElement, EEffectIds.UserDataHighLightTarget.s(), qbcTargetToBeHighlighted);
 		UserDataI.i().overwriteSafely(pnlToThisElement, new EffectUserData().setQbcHighLightTarget(qbcTargetToBeHighlighted));
-//		pnl.setUserData(EEffectIds.UserDataHighLightTarget.s(), qbc);
 		efDummy = setupSimpleEffect(pnlToThisElement, EEffectIds.EffectActivateHighLight, efHighLightBkg, efDummy);
 		pnlToThisElement.addEffect(EEffectIds.EffectDeactivateHighLight.s(),efDummy);
+	}
+	
+	public boolean isAlreadySetFor(Panel pnl){
+		return UserDataI.i().contains(pnl, EffectUserData.class);
 	}
 
 	/**

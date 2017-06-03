@@ -45,6 +45,8 @@ import com.github.devconslejme.gendiag.SpatialsManagerDialogI;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.CheckProblemsI;
 import com.github.devconslejme.misc.CommandLineParser;
+import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.DetailedException.IHandleExitListener;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.MessagesI;
@@ -77,24 +79,25 @@ import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Command;
 
 /**
+ * this will integrate everything possible, even access to all other tests from here will be available.
+ * for a raw, simplest basic console plugin, see {@link TestDevConsSimple} instead.
+ * 
  * this {@link GlobalManagerI} global will be auto set as {@link Application} thru the package configuration.
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class TestDevCons extends SimpleApplication implements IEnvironmentListener, IPickListener{
-	public class GeometryVolDbg extends Geometry{
-	}
-
+public class TestDevConsFull extends SimpleApplication implements IEnvironmentListener, IPickListener, IHandleExitListener{
 	public static void main(String[] args) {
 		if(bEnableOpt)opt_initSingleAppInstanceAtMain();
 		
-		TestDevCons tst = new TestDevCons();
+		TestDevConsFull tst = new TestDevConsFull();
+		if(bEnableOpt)DetailedException.setHandleExitListener(tst);
 		
 		/**
-		 * this is mainly to disable default key bindings and features,
-		 * to also easify replacing them 
+		 * this is mainly to disable default key bindings and other features like flycam,
+		 * to also easify replacing them because of the way the legacy simple app works.
 		 */
-		if(bEnableOpt)tst = new TestDevCons(new AudioListenerState()); //the above will just be ignored
+		if(bEnableOpt)tst = new TestDevConsFull(new AudioListenerState()); //the above will just be ignored
 		
 		if(bEnableOpt)opt_initWindow(tst);
 		
@@ -105,9 +108,9 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	public void simpleInitApp() {
 		/** this should be the 1st thing configured */
 		com.github.devconslejme.devcons.PkgCfgI.i().configure(this, getGuiNode(), getRootNode());
-		com.github.devconslejme.game.PkgCfgI.i().configure(this, getGuiNode(), getRootNode(), flycamx);
+		if(bEnableOpt)com.github.devconslejme.game.PkgCfgI.i().configure(this, getGuiNode(), getRootNode(), flycamx);
 		
-		if(bEnableOpt)opt_initBasics();
+		if(bEnableOpt)opt_initAppBasics();
 		
 		/**
 		 * if you want to remove {@link JavaScriptI} auto global access to some class/object ex.: 
@@ -148,13 +151,10 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		return flycamx;
 	}
 	
-	public TestDevCons() {super();}
-	public TestDevCons(AppState... initialStates) {super(initialStates);}
+	public TestDevConsFull() {super();}
+	public TestDevConsFull(AppState... initialStates) {super(initialStates);}
 
-	private void opt_initBasics() {
-//    flycam = new FlyByCameraX(getCamera());//.setAllowMove(true);
-//    flycam.registerWithInput(getInputManager());
-		
+	private void opt_initAppBasics() {
 		opt_disableSomeSimpleAppThings();
 	}
 	
@@ -189,7 +189,7 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 			.setShowMouseCursorPos(true);
 	}
 
-	public TestDevCons setSpeed(float f){
+	public TestDevConsFull setSpeed(float f){
 		if(f<0){
 			MessagesI.i().warnMsg(this, "positive only", f, speed);
 		}else{
@@ -215,21 +215,17 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	
 	private void opt_disableSomeSimpleAppThings() {
 		MiscJmeI.i().enqueueUnregisterKeyMappings(
-//			DebugKeysAppState.INPUT_MAPPING_MEMORY,
-//			DebugKeysAppState.INPUT_MAPPING_CAMERA_POS,
-//			SimpleApplication.INPUT_MAPPING_HIDE_STATS,
 			SimpleApplication.INPUT_MAPPING_EXIT //this is important to let ESC be used for more things
 		);
-//		stateManager.getState(StatsAppState.class).setDisplayStatView(false);
 	}
 	
 	@SuppressWarnings("unused")
-	private static void opt_initWindow(TestDevCons tdc) {
+	private static void opt_initWindow(TestDevConsFull tdc) {
 		HWEnvironmentJmeI.i().getDisplay().setResizable(true);
 		HWEnvironmentJmeI.i().addListener(tdc);
 		
 		AppSettings as = new AppSettings(true);
-		as.setTitle(TestDevCons.class.getSimpleName());
+		as.setTitle(TestDevConsFull.class.getSimpleName()); //important at least for linux xdotool
 		as.setResolution(1230,690);
 		as.setResizable(true);
 		if(false)as.setFrameRate(60); //using dynamic fps limiter
@@ -295,11 +291,6 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 				SpatialsManagerDialogI.i().show();
 			}}, null
 		);
-//		SpatialsManagerDialogI.i().addCmdCfgToAll(new CmdCfg("CpVal") {@Override	public void execute(Button source) {
-//			JavaScriptI.i().setCustomUserVar(strParams);
-//			JavaScriptI.i().setJSBinding(od.getStoredValue());
-//		}}.setHintHelp("copy stored linked value to a DevCons variable"));
-
 		
 		//// OS Cmds
 		G.i(OSCmd.class).configure(new Function<String, ArrayList<String>>() {
@@ -353,8 +344,10 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 		super.simpleUpdate(fTPF);
 		
 		if(bEnableOpt){
-//			for(SimpleApplication obj:aoUpdOpts){
-//				obj.simpleUpdate(fTPF);
+			if(DetailedException.isExitRequested())return; //suspend all processing avoiding more possible/derived problems
+//			if(DetailedException.isExitRequested()){
+//				GlobalManagerI.i().get(SingleAppInstance.class).setExitRequestCause(DetailedException.getExitRequestCause());
+//				return; //suspend all processing
 //			}
 			
 			orde.update(fTPF);
@@ -390,30 +383,18 @@ public class TestDevCons extends SimpleApplication implements IEnvironmentListen
 	/** @DevSelfNote keep even if emtpy */ Object[] aobjDebugTest;
 	/** @DevSelfNote keep even if emtpy */ 
 	public Object debugTest(Object... aobj){
-//		BitmapText bt = new BitmapText(TextStringI.i().loadDefaultFont());
 		BitmapText bt = StringTextJmeI.i().createBitmapTextMono(">>>>>>>>>>>>>>>>>>>> "+Character.toString((char)176)+" <<<<<<<<<<<<<<<<<<<<<<",ColorRGBA.White);
-//		BitmapText bt = new BitmapText(StringTextJmeI.i().loadDefaultMonoFont());
-//		bt.setText(">>>>>>>>>>>>>>>>>>>> "+Character.toString((char)176)+" <<<<<<<<<<<<<<<<<<<<<<");
-//		bt.set
 		getGuiNode().attachChild(bt);
 		bt.setLocalTranslation(300,290,500);
 		return null;
-		
-//		ArrowGeometry ag = GeometryI.i().createArrow(ColorRGBA.Yellow);
-//		getGuiNode().attachChild(ag);
-//		ag.setLocalTranslation(HWEnvironmentJmeI.i().getDisplay().getCenter(500f));
-		
-//		Geometry geom = GeometryI.i().create(MeshI.i().cone(1f), ColorRGBA.Blue);
-//		aobjDebugTest=new Object[]{geom};
-//		getRootNode().attachChild(geom);
-//		return ag;
 	}
 	/** @DevSelfNote keep even if emtpy */ 
-	public void updateDebugTest(float fTPF){
-//		if(aobjDebugTest==null)return;
-//		Geometry geom = ((Geometry)aobjDebugTest[0]);
-//		if(false)
-//			geom.setLocalTranslation(3,1,0);
-//		RotateI.i().rotateAroundPivot(geom, orde, 0.01f, true);
+	public void updateDebugTest(float fTPF){}
+
+	@Override
+	public void requestExitEvent(Exception exExitRequestCause) {
+		HWEnvironmentJmeI.i().getMouse().forceUngrab();
+		GlobalManagerI.i().get(SingleAppInstance.class).setExitRequestCause(exExitRequestCause);
+//			DetailedException.getExitRequestCause());
 	}
 }

@@ -176,7 +176,7 @@ public class GlobalManagerI {
   }
   
   private void debugInfo(String strClass, Object objInstance){
-  	System.out.println("["+GlobalManagerI.class.getSimpleName()+"]Instance created: "+strClass+", "+objInstance);
+  	System.out.println("["+GlobalManagerI.class.getSimpleName()+"]Instance created: "+strClass);//+", "+objInstance);
   	System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()).replace(",","\n"));
   }
   

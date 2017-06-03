@@ -242,6 +242,13 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 		public boolean isCursorVisible() {
 			return !Mouse.isGrabbed();
 		}
+		
+		/**
+		 * use sparingly, mainly for debug pourposes
+		 */
+		public void forceUngrab(){
+			Mouse.setGrabbed(false);
+		}
 	}
 	
 	public MouseI getMouse() {

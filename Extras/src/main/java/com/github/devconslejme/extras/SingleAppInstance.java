@@ -68,7 +68,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 	private long	lSelfLockCreationTimeMilis;
 	private String	strExitReasonOtherInstance;
 	private int	lCheckCountsTD;
-	private boolean	bExitApplicationTD;
+	private boolean	bSimultAppSelfAutoExit;
 	private long	lCheckTotalDelay;
 	private boolean	bUseFilesystemFileAttributeModifiedTime;
 	private boolean	bRecreateLockEveryLoop;
@@ -170,7 +170,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 	private boolean checkExitTD(){
 //		if(!btgSingleInstaceMode.b())return false;
 		
-		bExitApplicationTD=false;
+		bSimultAppSelfAutoExit=false;
 		String strReport="";
 		strReport+="-----------------SimultaneousLocks--------------------\n";
 		strReport+="ThisLock:  "+flSelfLock.getName()+" "+getSelfMode(true)+"\n";
@@ -206,13 +206,13 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 			 * the priority is to keep the release mode instance running
 			 * despite.. it may never happen at the end user machine...
 			 */
-			if(bExitApplicationTD){
+			if(bSimultAppSelfAutoExit){
 				if(!bDebugIDE){ // self is release mode
 					if(ermOther.compareTo(ERunMode.Debug)==0){
 						/**
 						 * will ignore exit request if the other is in debug mode.
 						 */
-						bExitApplicationTD=false;
+						bSimultAppSelfAutoExit=false;
 					}
 				}
 			}else{
@@ -232,7 +232,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 			iSimultaneousLocksCount++;
 		}
 		
-		if(bExitApplicationTD){
+		if(bSimultAppSelfAutoExit){
 			msgOutputTD(strReport);
 		}else{
 			if(iSimultaneousLocksCount>0){
@@ -243,12 +243,12 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 		
 		lCheckCountsTD++;
 		
-		return bExitApplicationTD;
+		return bSimultAppSelfAutoExit;
 	}
 	
 	private void applyExitReasonAboutOtherInstanceStatus(String str){
 		strExitReasonOtherInstance=str;
-		bExitApplicationTD=true;
+		bSimultAppSelfAutoExit=true;
 	}
 	
 	private class SingleAppInstanceRunnableChecker implements Runnable{
@@ -280,6 +280,8 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 //						flSelfLock.delete();
 						break;
 					}
+					
+					if(twbExitErrorCause!=null)break; //some problem happened
 					
 					/**
 					 * This will also update the file creation time...
@@ -321,7 +323,14 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 				twbExitErrorCause.printStackTrace();
 			}
 			
-			System.exit(0);
+			/**
+			 * Hard exit:
+			 * May be unclean with things not getting saved, but for data consistency
+			 * and overall quality, an app behavior that reaches an exceptional erractic flow 
+			 * should not be allowed to save anything...
+			 * So, whatever it wants to save, do it b4 the exception happens.
+			 */
+			System.exit(1); 
 		}
 
 	}
@@ -366,7 +375,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 				i++;
 			}
 		}
-		msgOutputTD("Non obvious problems found: "+i);
+		msgOutputTD("Total of non-obvious problems: "+i);
 	}
 	
 	private Long getCreationTimeOfTD(File fl){ //LINE 1
@@ -554,7 +563,7 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 			long lWaitDelayMilis=100;
 			long lMaxDelayToWaitForChecksMilis=1000;
 			while(true){
-				if(bExitApplicationTD){
+				if(bSimultAppSelfAutoExit){
 					/**
 					 * if the application is exiting, keep sleeping.
 					 */
@@ -618,7 +627,15 @@ public class SingleAppInstance { //implements IReflexFillCfg{
 	}
 
 	public void setExitRequestCause(Throwable t) {
-//		this.strExitErrorMessage=strErrMsg;
+		if(t==null){msgOutputTD("exit request cant be stopped");return;}
+		
+		msgOutputTD("setting ExitRequestCause"
+			+(this.twbExitErrorCause!=null && this.twbExitErrorCause!=t ? ", CHANGED!!!" : ""));
+		t.printStackTrace();
+		
+		/**
+		 * np if it gets changed, the above log will help on tracking that!
+		 */
 		this.twbExitErrorCause=t;
 	}
 	

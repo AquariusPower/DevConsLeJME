@@ -104,8 +104,22 @@ public class KeyCodeConfigureForJme {//implements AnalogListener,ActionListener{
 			}
 		};
   	
+		// add all possible/compatible keyboard keys as input manager/mapping/trigger
 		for(Key key:KeyCodeManagerI.i().getKeyListCopy()){
-			addKeyCodeMapping(key);
+			if(key.isKeyGroupMonitor())continue;
+			
+			if(key.getKeyCode()<=255){ //keytrigger limit TODO JME's only? or is a default to all keyboards?
+				String strMapping=key.getFullId();
+				
+				if(!inputman.hasMapping(strMapping)){
+					inputman.addMapping(strMapping, new KeyTrigger(key.getKeyCode()));
+				}
+				
+				/**
+				 * if the "keycode id" mapping already existed, it will just add a listener to it!
+				 */
+				inputman.addListener(aclTriggers, strMapping);
+			}
 		}
 		
 		// mouse buttons
@@ -255,28 +269,24 @@ public class KeyCodeConfigureForJme {//implements AnalogListener,ActionListener{
 	}
 
 
-	private void addKeyCodeMapping(Key key){
-		if(!key.isKeyWithCode())return;
-		
-//		if(bRemoveConflictingKeyCodeMappings)removeKeyCodeMaping(key);
-		
-		String strMapping=key.getFullId();
-//		if(im.hasMapping(strMapping)){
-//			throw new PrerequisitesNotMetException("this unique mapping should not be already set",strMapping);
+//	private void addKeyCodeMapping(Key key){
+//		assert key.isKeyWithCode();
+//		
+//		String strMapping=key.getFullId();
+//		
+//		if(key.getKeyCode()<=255){ //keytrigger limit TODO JME's only? or is a default to all keyboards?
+//			if(!inputman.hasMapping(strMapping)){
+//				inputman.addMapping(strMapping, new KeyTrigger(key.getKeyCode()));
+//			}
+//			/**
+//			 * if the "keycode id" mapping already existed, it will just add a listener to it!
+//			 */
+//			inputman.addListener(aclTriggers, strMapping);
+//		}else{
+//			throw new DetailedException("not supported keycode by input manager/mapping/trigger",key);
+////			MessagesI.i().warnMsg(this, "still not supported", key);
 //		}
-		
-		if(key.getKeyCode()<=255){ //keytrigger limit
-			if(!inputman.hasMapping(strMapping)){
-				inputman.addMapping(strMapping, new KeyTrigger(key.getKeyCode()));
-			}
-			/**
-			 * if the "keycode id" mapping already existed, it will just add a listener to it!
-			 */
-			inputman.addListener(aclTriggers, strMapping);
-		}else{
-			MessagesI.i().warnMsg(this, "still not supported", key);
-		}
-	}
+//	}
 
 	/**
 	 * @DevSelfNote Deprecated! keep as reference/info/reason to prevent reimplementation...

@@ -339,21 +339,6 @@ public class DragParentestPanelListenerI implements CursorListener{
 //		highlightBackground(target,false);
 	}
 	
-
-	public void applyAt(Panel pnl) {
-		applyAt(pnl,null);
-		
-		if(isHightlightToo()){
-			GuiComponent gc = pnl.getBackground();
-			if (gc instanceof QuadBackgroundComponent) {
-				QuadBackgroundComponent qbc = (QuadBackgroundComponent) gc;
-				HoverHighlightEffectI.i().applyAt(pnl, qbc);
-			}else{
-				MessagesI.i().debugInfo(this, "unable to apply "+HoverHighlightEffectI.class.getSimpleName(), pnl, gc);
-			}
-		}
-	}
-	
 	/**
 	 * Keeping this here as a reference to re-understand and create some test case may be
 	 * 
@@ -414,6 +399,19 @@ public class DragParentestPanelListenerI implements CursorListener{
 			DragInfo diOther = new DragInfo();
 			diOther.pnlApplyingDragFrom=pnl;
 			UserDataI.i().overwriteSafely(pnlApplyDragAt,diOther);
+		}
+	}
+	public void applyAt(Panel pnl) {
+		applyAt(pnl,null);
+		
+		if(isHightlightToo() && !HoverHighlightEffectI.i().isAlreadySetFor(pnl)){
+			GuiComponent gc = pnl.getBackground();
+			if (gc instanceof QuadBackgroundComponent) {
+				QuadBackgroundComponent qbc = (QuadBackgroundComponent) gc;
+				HoverHighlightEffectI.i().applyAt(pnl, qbc);
+			}else{
+				MessagesI.i().debugInfo(this, "unable to apply "+HoverHighlightEffectI.class.getSimpleName(), pnl, gc);
+			}
 		}
 	}
 	

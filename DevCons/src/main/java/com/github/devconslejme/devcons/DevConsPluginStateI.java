@@ -139,7 +139,7 @@ public class DevConsPluginStateI extends SimpleAppState implements IDialogHierar
 	private HashMap<String,VarMon> hmVarMon = new HashMap<String,VarMon>();
 	private ListBox<String> lstbxVarMonitorBar = new ListBox<String>();
 	private CallableXScrollTo cxScrollTo;
-	private boolean	bKeepScrollAtBottom;
+	private boolean	bKeepScrollAtBottom=true;
 	private VersionedReference<List<String>>	vrListBoxChangedToAutoScrollToBottom;
 	private VersionedReference<Double>	vrSliderChangedToSuspendAutoScrollBottom;
 	private ResizablePanel	rzpMain;

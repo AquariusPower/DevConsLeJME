@@ -29,8 +29,7 @@ package com.github.devconslejme.misc.jme;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import javax.xml.crypto.dsig.spec.HMACParameterSpec;
-
+import com.github.devconslejme.misc.Annotations.NotMainThread;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.InfoI.Info;
@@ -39,8 +38,8 @@ import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.TimeFormatI;
 import com.github.devconslejme.misc.TimedDelay;
-import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
@@ -57,6 +56,7 @@ import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.objects.PhysicsRigidBody;
+import com.jme3.collision.CollisionResult;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
@@ -82,11 +82,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		
 		private Vector3f	v3fForce;
 		private Vector3f	v3fForceLocation;
-		private Vector3f	v3fRelPos;
+		private Vector3f	v3fImpulseRelPos;
 		private Vector3f	v3fImpulse;
 		private Vector3f	v3fTorque;
 		private Vector3f	v3fTorqueImpulse;
-		private Float	fImpulse;
+		private Float	fImpulseAtSelfDirection;
 		
 		public Spatial getSpt() {
 			return spt;
@@ -121,25 +121,27 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			this.v3fForceLocation = v3fForceLocation;
 			return this;
 		}
-		public Vector3f getRelPos() {
-			return v3fRelPos;
-		}
-		public Impulse setRelPos(Vector3f v3fRelPos) {
-			this.v3fRelPos = v3fRelPos;
-			return this;
-		}
 		public Vector3f getImpulse() {
 			return v3fImpulse;
 		}
-		public Impulse setImpulseAtDir(float fImpulse) {
-			this.fImpulse=fImpulse;
+		public Impulse setImpulseAtSelfDir(float fImpulse) {
+			assert v3fImpulse==null;
+			this.fImpulseAtSelfDirection=fImpulse;
 			return this;
 		}
-		public Impulse setImpulse(Vector3f v3fImpulse) {
+		/**
+		 * 
+		 * @param v3fImpulse
+		 * @param v3fRelPos can be null (will default to zero)
+		 * @return
+		 */
+		public Impulse setImpulse(Vector3f v3fImpulse,Vector3f v3fRelPos) {
+			assert fImpulseAtSelfDirection==null;
 			this.v3fImpulse = v3fImpulse;
+			this.v3fImpulseRelPos = v3fRelPos==null?Vector3f.ZERO:v3fRelPos;
 			return this;
 		}
-		public Vector3f getV3fTorque() {
+		public Vector3f getTorque() {
 			return v3fTorque;
 		}
 		public Impulse setTorque(Vector3f v3fTorque) {
@@ -168,24 +170,22 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		ps = bullet.getPhysicsSpace();
 		ps.addTickListener(PhysicsI.this);
 		ps.addCollisionListener(this);
-		ps.addCollisionGroupListener(this, 
-			PhysicsCollisionObject.COLLISION_GROUP_01&
-			PhysicsCollisionObject.COLLISION_GROUP_02&
-			PhysicsCollisionObject.COLLISION_GROUP_03&
-			PhysicsCollisionObject.COLLISION_GROUP_04&
-			PhysicsCollisionObject.COLLISION_GROUP_05&
-			PhysicsCollisionObject.COLLISION_GROUP_06&
-			PhysicsCollisionObject.COLLISION_GROUP_07&
-			PhysicsCollisionObject.COLLISION_GROUP_08&
-			PhysicsCollisionObject.COLLISION_GROUP_09&
-			PhysicsCollisionObject.COLLISION_GROUP_10&
-			PhysicsCollisionObject.COLLISION_GROUP_11&
-			PhysicsCollisionObject.COLLISION_GROUP_12&
-			PhysicsCollisionObject.COLLISION_GROUP_13&
-			PhysicsCollisionObject.COLLISION_GROUP_14&
-			PhysicsCollisionObject.COLLISION_GROUP_15&
-			PhysicsCollisionObject.COLLISION_GROUP_16
-		);
+		ps.addCollisionGroupListener(this, PhysicsCollisionObject.COLLISION_GROUP_01);
+		ps.addCollisionGroupListener(this, PhysicsCollisionObject.COLLISION_GROUP_02);
+		ps.addCollisionGroupListener(this, PhysicsCollisionObject.COLLISION_GROUP_03);
+		ps.addCollisionGroupListener(this, PhysicsCollisionObject.COLLISION_GROUP_04);
+		ps.addCollisionGroupListener(this, PhysicsCollisionObject.COLLISION_GROUP_05);
+		ps.addCollisionGroupListener(this, PhysicsCollisionObject.COLLISION_GROUP_06);
+		ps.addCollisionGroupListener(this, PhysicsCollisionObject.COLLISION_GROUP_07);
+		ps.addCollisionGroupListener(this, PhysicsCollisionObject.COLLISION_GROUP_08);
+		ps.addCollisionGroupListener(this, PhysicsCollisionObject.COLLISION_GROUP_09);
+		ps.addCollisionGroupListener(this, PhysicsCollisionObject.COLLISION_GROUP_10);
+		ps.addCollisionGroupListener(this, PhysicsCollisionObject.COLLISION_GROUP_11);
+		ps.addCollisionGroupListener(this, PhysicsCollisionObject.COLLISION_GROUP_12);
+		ps.addCollisionGroupListener(this, PhysicsCollisionObject.COLLISION_GROUP_13);
+		ps.addCollisionGroupListener(this, PhysicsCollisionObject.COLLISION_GROUP_14);
+		ps.addCollisionGroupListener(this, PhysicsCollisionObject.COLLISION_GROUP_15);
+		ps.addCollisionGroupListener(this, PhysicsCollisionObject.COLLISION_GROUP_16);
 		
 		bbSpace = new BoundingBox(ps.getWorldMin(), ps.getWorldMax());
 		
@@ -368,6 +368,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		pd.fVolume = pd.bv.getVolume();
 		
 		pd.rbc=new RigidBodyControl(pd.cs);
+//		pd.rbc.getCollideWithGroups();
+//		pd.rbc.getCollisionGroup();
+		
 		pd.fMass=1f;
 		if(pd.fDensity!=null){
 			pd.fMass=pd.fVolume*pd.fDensity;
@@ -392,15 +395,14 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		
 		spt.addControl(pd.rbc); //this will put the rbc at spatial's W/L location/rotation
 		
-		ps.add(spt);
-		
-		UserDataI.i().putSafelyMustNotExist(spt, pd);
+		UserDataI.i().putSafelyMustNotExist(spt, pd); //BEFORE adding to phys space as its thread will be trying to retrieve it!
+		ps.add(spt); //LAST THING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		
 		return pd;
 	}
 	
-	public PhysicsData getPhysicsDataFrom(PhysicsRigidBody prb){
-		Spatial spt=(Spatial)prb.getUserObject();
+	public PhysicsData getPhysicsDataFrom(PhysicsCollisionObject pco){
+		Spatial spt=(Spatial)pco.getUserObject();
 		PhysicsData pd = getPhysicsDataFrom(spt);
 		return pd;
 	}
@@ -456,16 +458,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		ps.add(spt);
 	}
 	
-	public void enqueue(Spatial spt, Impulse imp){
-//		if(obj instanceof Spatial){
-			imp.spt = spt;//(Spatial)obj;
-			imp.rbc = imp.spt.getControl(RigidBodyControl.class);
-//		}else
-//		if(obj instanceof RigidBodyControl){
-//			imp.rbc=(RigidBodyControl)obj;
-//		}else{
-//			throw new DetailedException("unsupported type "+obj.getClass().getName(),obj,imp);
-//		}
+	public void applyImpulseLater(Spatial spt, Impulse imp){
+		imp.spt = spt;//(Spatial)obj;
+		imp.rbc = imp.spt.getControl(RigidBodyControl.class);
 		imp.ps=ps;
 		
 		synchronized (arbcQueue) {
@@ -476,8 +471,15 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	/**
 	 * THIS IS ANOTHER THREAD
 	 */
+	@NotMainThread
+	@Deprecated
 	@Override
 	public void prePhysicsTick(PhysicsSpace ps, float tpf) {
+//		if(DetailedException.isExitRequested())return;
+		try{threadPhysicsDoPrePhysicsTick(ps,tpf);}catch(Exception ex){DetailedException.forceExitTrapIrrevocablySuspendCurrentThread(ex);}
+	}
+	@NotMainThread
+	public void threadPhysicsDoPrePhysicsTick(PhysicsSpace ps, float tpf) {
 		synchronized(arbcQueue){
 			for(Impulse imp:arbcQueue){
 				assert imp.ps==ps;
@@ -490,21 +492,21 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 					}
 				}
 				
-				if(imp.fImpulse!=null){
+				if(imp.fImpulseAtSelfDirection!=null){
 					imp.rbc.applyImpulse(
-						imp.rbc.getPhysicsRotation().getRotationColumn(2).mult(imp.fImpulse), 
+						imp.rbc.getPhysicsRotation().getRotationColumn(2).mult(imp.fImpulseAtSelfDirection), 
 						Vector3f.ZERO
 					);
 				}
 				
-				if(imp.v3fImpulse!=null && imp.v3fRelPos!=null)
-					imp.rbc.applyImpulse(imp.v3fImpulse, imp.v3fRelPos);
+				if(imp.v3fImpulse!=null)
+					imp.rbc.applyImpulse(imp.v3fImpulse, imp.v3fImpulseRelPos);
 				
 				if(imp.v3fTorque!=null)
 					imp.rbc.applyTorque(imp.v3fTorque);
 				
 				if(imp.v3fTorqueImpulse!=null)
-					imp.rbc.applyTorque(imp.v3fTorqueImpulse);
+					imp.rbc.applyTorqueImpulse(imp.v3fTorqueImpulse);
 				
 			}
 			
@@ -517,10 +519,20 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	
 	/**
 	 * THIS IS ANOTHER THREAD
-	 * TODO write current forces to spatials for easy access?
 	 */
+	@NotMainThread
+	@Deprecated
 	@Override
 	public void physicsTick(PhysicsSpace ps, float tpf) {
+//		if(DetailedException.isExitRequested())return;
+		try{threadPhysicsDoPhysicsTick(ps,tpf);}catch(Exception ex){DetailedException.forceExitTrapIrrevocablySuspendCurrentThread(ex);}
+	}
+	/** 
+	 * just for naming clarity 
+	 * TODO write current forces to spatials for easy access?
+	 */
+	@NotMainThread
+	public void threadPhysicsDoPhysicsTick(PhysicsSpace ps, float tpf) {
 		lTickCount++;
 		for(PhysicsRigidBody prb:ps.getRigidBodyList()){
 			PhysicsData pd = getPhysicsDataFrom(prb);
@@ -552,8 +564,6 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 	}
 	
-	
-	
 	public void resetForces(PhysicsData pd){
 		pd.getRBC().setAngularVelocity(Vector3f.ZERO);
 		pd.getRBC().setLinearVelocity(Vector3f.ZERO);
@@ -570,34 +580,22 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		
 		int iSize=50;
 		Geometry geomFloor=null;
-//		if(false){
-//		MBox mb = new MBox(iSize, 0.1f, iSize, iSize, 1, iSize);
-//		geomFloor = GeometryI.i().create(mb, ColorI.i().colorChangeCopy(ColorRGBA.Green,-0.5f,1f));
-//		}else{
-//		if(bTestBuggyFloor){
-//			geomFloor = GeometryI.i().create(MeshI.i().box(0.5f), ColorI.i().colorChangeCopy(ColorRGBA.Brown,0.25f,1f));
-//			geomFloor.scale(iSize, 0.1f, iSize); //b4 imbue
-//		}else{
-//		geomFloor = GeometryI.i().create(new Box(iSize,0.1f,iSize), ColorI.i().colorChangeCopy(ColorRGBA.Green,-0.5f,1f));
-			geomFloor = GeometryI.i().create(new Box(iSize,0.1f,iSize), ColorI.i().colorChangeCopy(ColorRGBA.Brown,0.20f,1f));
-//		}
+		geomFloor = GeometryI.i().create(new Box(iSize,0.1f,iSize), ColorI.i().colorChangeCopy(ColorRGBA.Brown,0.20f,1f));
 		geomFloor.move(0,-7f,0);
+		geomFloor.setName("Box-floor");
 		PhysicsI.i().imbueFromWBounds(geomFloor).setTerrain(true)
 			.getRBC().setMass(0f);
 		AppI.i().getRootNode().attachChild(geomFloor);
 		
 		{
 		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), ColorRGBA.Red);
-		imbueFromWBounds(geom,3f);
-		AppI.i().getRootNode().attachChild(geom);
+		imbueFromWBounds(geom,3f);AppI.i().getRootNode().attachChild(geom);geom.setName("Box-X-Red");
 		}{
 		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), ColorRGBA.Green);
-		imbueFromWBounds(geom,2f);
-		AppI.i().getRootNode().attachChild(geom);
+		imbueFromWBounds(geom,2f);AppI.i().getRootNode().attachChild(geom);geom.setName("Box-Y-Green");
 		}{
 		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), ColorRGBA.Blue);
-		imbueFromWBounds(geom,1f);
-		AppI.i().getRootNode().attachChild(geom);
+		imbueFromWBounds(geom,1f);AppI.i().getRootNode().attachChild(geom);geom.setName("Box-Z-Blue");
 		}
 		
     KeyBindCommandManagerI.i().putBindCommandsLater("Space",new CallBoundKeyCmd(){
@@ -642,7 +640,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		if(pd!=null && pd.fMass<0.01f && fImpulseAtDirection>300){
 			MessagesI.i().warnMsg(this, "this looks like a bullet, avoid using this method!", spt, pd, fImpulseAtDirection);
 		}
-		PhysicsI.i().enqueue(spt, new Impulse().setImpulseAtDir(fImpulseAtDirection));
+		PhysicsI.i().applyImpulseLater(spt, new Impulse().setImpulseAtSelfDir(fImpulseAtDirection));
 	}
 	
 	public Object debugTest(Object... aobj){
@@ -666,32 +664,56 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 
 	@Override
 	public void collision(PhysicsCollisionEvent event) {
-//		checkAndSaveSafeSpot(
-//			event.getNodeA(),
-//			event.getPositionWorldOnA(),
-//			null, //TODO request them creating event.getRotationWorldOnA() if possible?
-//			event.getNodeB(),
-//			event.getPositionWorldOnB(),
-//			null //TODO request them creating event.getRotationWorldOnB() if possible?
-//		);
+		syso(":collision():"+event.getNodeA().getName()+" <-> "+event.getNodeB().getName());
 	}
 	
 	/**
 	 * this is for collision groups {@link PhysicsCollisionGroupListener}
 	 */
+	@NotMainThread
+	@Deprecated //in favor or naming clarity
 	@Override
 	public boolean collide(PhysicsCollisionObject nodeA,PhysicsCollisionObject nodeB) {
-		//TODO can be used here for fast access to PhysicsData: hmDisintegratables
-//		checkAndSaveSafeSpot(
-//			(Spatial)nodeA.getUserObject(),
-//			null,
-//			null,
-//			(Spatial)nodeB.getUserObject(),
-//			null,
-//			null
-//		);
+//		if(DetailedException.isExitRequested())return false; //may prevent further errors elsewhere by preventing all collisions?
+		try{return threadPhysicsDoCollideWithGroup(nodeA,nodeB);}catch(Exception ex){DetailedException.forceExitTrapIrrevocablySuspendCurrentThread(ex);}
+		return false; //dummy, never reached...
+	}
+	/** name just for clarity */
+	@NotMainThread
+	protected boolean threadPhysicsDoCollideWithGroup(PhysicsCollisionObject nodeA,PhysicsCollisionObject nodeB) {
+		PhysicsData pdA = getPhysicsDataFrom(nodeA);
+		PhysicsData pdB = getPhysicsDataFrom(nodeB);
+		if(pdA==null){
+			syso("put break point here");
+		}
+		if(pdB==null){
+			syso("put break point here");
+		}
+		
+		assert pdA!=null && pdB!=null;
+		
+		syso(":[byGroup]collide():"
+			+pdA.sptLink.getName()
+			+" <-> "+pdB.sptLink.getName());
 		
 		return true; //allow all collisions
+	}
+	
+	public CollisionResult applyImpulseHitTargetAtCamDirection(float fImpulse){
+		ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+		if(acr.size()>0){
+			CollisionResult cr = acr.get(0);
+			applyImpulseLater(
+				cr.getGeometry(),
+				new Impulse().setImpulse(AppI.i().getCamLookingAtDir(), cr.getContactPoint())
+			);
+			return cr;
+		}
+		return null;
+	}
+	
+	public void syso(String str){
+		System.out.println(TimeFormatI.i().getRealTimeFormatted()+":"+Thread.currentThread().getName()+str);
 	}
 	
 	public boolean isResting(PhysicsRigidBody prb){

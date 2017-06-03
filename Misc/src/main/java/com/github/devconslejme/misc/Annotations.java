@@ -190,5 +190,11 @@ public class Annotations{
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = {ElementType.METHOD})
 	public @interface SimpleVarReadOnly {}
-
+	
+	/**
+	 * use this to indicate the method will not (or must not) be called on the main thread.
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.METHOD})
+	public @interface NotMainThread{}
 }
