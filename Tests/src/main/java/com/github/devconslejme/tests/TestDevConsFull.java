@@ -363,7 +363,7 @@ public class TestDevConsFull extends SimpleApplication implements IEnvironmentLi
 	@Workaround
 	private void raiseAppWindowAtLinux() {
 		GlobalManagerI.i().get(OSCmd.class).runLinuxCmd(
-			"xdotool windowactivate $(xdotool search --name \"^"+settings.getTitle()+"$\")");
+			"xdotool windowactivate $(xdotool search --sync --name \"^"+settings.getTitle()+"$\")");
 	}
 
 	/**

@@ -223,7 +223,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			public Boolean call() {
 				updateInfo();
 				
-				updateGlue(); //b4 disintegration!!! (so it may even just disintegrate safely)
+//				updateGlue(); //b4 disintegration!!! (so it may even just disintegrate safely)
 				updateDisintegration();
 				
 				return true;
@@ -239,13 +239,16 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			}
 		}
 		
-		for(PhysicsData pd:apdDisintegrate){
-			erasePhysicsFrom(pd.sptLink);
-			boolean b=(pd.sptLink.getParent() == sbnBatchTestProjectiles);
-			pd.sptLink.removeFromParent();
-			if(b)sbnBatchTestProjectiles.batch();
-		}
+		for(PhysicsData pd:apdDisintegrate)disintegrate(pd);
 		apdDisintegrate.clear();
+	}
+	
+	protected void disintegrate(PhysicsData pd){
+		erasePhysicsFrom(pd.sptLink);
+		boolean b=(pd.sptLink.getParent() == sbnBatchTestProjectiles);
+		pd.sptLink.removeFromParent();
+		if(b)sbnBatchTestProjectiles.batch();
+		pd.bDisintegrated=true;
 	}
 
 	public void updateInfo(){
@@ -293,6 +296,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		return imbueFromWBounds(spt,null);
 	}
 	public static class PhysicsData{
+		public boolean	bDisintegrated;
 		float fMass;
 		Quaternion	quaWRotBkp;
 		BoundingVolume	bv;
@@ -312,8 +316,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		private boolean	bResting;
 		private Impulse	imp;
 		private long	lMaterializedSTime;
-		private Vector3f	v3fGlueAt;
+		private Vector3f	v3fGlueSpot;
 		private PhysicsData	pdGlueWhere;
+//		private boolean	bApplyGluedMode;
+		public boolean	bGlueApplied;
 		
 		public PhysicsData(Spatial spt) {
 			this.sptLink = spt;
@@ -400,24 +406,19 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			return bAllowDisintegration && pdWhere.bAllowDisintegration;
 		}
 
+//		public void setGlueWhere(PhysicsData pdWhere) {
+//			this.v3fGlueAt = rbc.getPhysicsLocation();
+//			this.pdGlueWhere = pdWhere;
+//			if(!PhysicsI.i().apdGlue.contains(this))PhysicsI.i().apdGlue.add(this);
+//		}
+
 		public void setGlueWhere(PhysicsData pdWhere) {
-			this.v3fGlueAt = rbc.getPhysicsLocation();
-			this.pdGlueWhere = pdWhere;
-			if(!PhysicsI.i().apdGlue.contains(this))PhysicsI.i().apdGlue.add(this);
+			this.pdGlueWhere=pdWhere;
 		}
 	}
 	
-	public void updateGlue(){
-		for(PhysicsData pdWhat:apdGlue){
-			if(pdWhat.pdGlueWhere.sptLink instanceof Node){ //will move around with the target
-				Vector3f v3f = pdWhat.pdGlueWhere.sptLink.worldToLocal(pdWhat.v3fGlueAt,null);
-				((Node)pdWhat.pdGlueWhere.sptLink).attachChild(pdWhat.sptLink);
-				pdWhat.sptLink.setLocalTranslation(v3f);
-			}
-		}
-	}
 	
-	ArrayList<PhysicsData> apdGlue = new ArrayList<PhysicsData>();
+//	ArrayList<PhysicsData> apdGlue = new ArrayList<PhysicsData>();
 	
 	synchronized public void requestDisintegration(PhysicsData pd){
 		if(!apdDisintegrate.contains(pd))apdDisintegrate.add(pd);
@@ -557,6 +558,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 	
 	public void applyImpulseLater(Spatial spt, Impulse imp){
+		assert getPhysicsDataFrom(spt)!=null;
 //		ps.enqueue(callable)
 		
 		imp.spt = spt;//(Spatial)obj;
@@ -850,10 +852,93 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		rbc.setPhysicsRotation(spt.getWorldRotation());
 	}
 
+	//private void threadPhysicsGlue(PhysicsCollisionObject pcoWhat, PhysicsCollisionObject pcoWhere) {
+	//PhysicsData pdWhat = getPhysicsDataFrom(pcoWhat);
+	//PhysicsData pdWhere = getPhysicsDataFrom(pcoWhere);
+//	private void applyGluedMode(Spatial sptWhat, Spatial sptWhere) {
+//		PhysicsData pdWhat = getPhysicsDataFrom(sptWhat);
+//		PhysicsData pdWhere = getPhysicsDataFrom(sptWhere);
+//		
+//		if(pdWhat.isExplodeIfHit(pdWhere)){
+//			requestDisintegration(pdWhat);
+//			requestDisintegration(pdWhere);
+//			//TODO explode effect
+//			return;
+//		}
+//		
+//		pdWhat.setGlueWhere(pdWhere);
+//		
+//		//ps.remove(pdWhat.getRBC()); //remove physics control to stop moving NOW, to "stay" where it is
+//	}
+//	public void updateGlue(){
+////		applyGluedMode(event.getNodeA(),event.getNodeB());
+//		
+//		for(PhysicsData pdWhat:apdGlue){
+//			if(pdWhat.pdGlueWhere.sptLink instanceof Node){ //will move around with the target
+//				Vector3f v3f = pdWhat.pdGlueWhere.sptLink.worldToLocal(pdWhat.v3fGlueAt,null);
+//				((Node)pdWhat.pdGlueWhere.sptLink).attachChild(pdWhat.sptLink);
+//				pdWhat.sptLink.setLocalTranslation(v3f);
+//			}
+//		}
+//	}
+	public void applyGluedMode(PhysicsData pdWhat){
+//		if(pdWhat.isExplodeIfHit(pdWhat.pdGlueWhere)){
+//			disintegrate(pdWhat);
+//			disintegrate(pdWhat.pdGlueWhere);
+////			requestDisintegration(pdWhat);
+////			requestDisintegration(pdWhat.pdGlueWhere);
+//			//TODO explode effect
+//			return;
+//		}
+		
+//		for(PhysicsData pdWhat:apdGlue){
+		removeFromPhysicsSpace(pdWhat.sptLink);
+		Vector3f v3f = pdWhat.v3fGlueSpot;
+			if(pdWhat.pdGlueWhere.sptLink instanceof Node){ //will move around with the target
+				v3f = pdWhat.pdGlueWhere.sptLink.worldToLocal(pdWhat.v3fGlueSpot,null);
+				((Node)pdWhat.pdGlueWhere.sptLink).attachChild(pdWhat.sptLink);
+//				pdWhat.sptLink.setLocalTranslation(v3f);
+//			}else{
+//				pdWhat.sptLink.setLocalTranslation(pdWhat.v3fGlueSpot);
+			}
+//		}
+			
+			pdWhat.sptLink.setLocalTranslation(v3f);
+			
+			pdWhat.bGlueApplied=true;
+			
+	}
 	@Override
 	public void collision(PhysicsCollisionEvent event) {
 		if(event.getNodeB()==null || event.getNodeA()==null)return;
 		if(false)syso(":collision():"+event.getNodeA().getName()+" <-> "+event.getNodeB().getName());
+		
+		// glued mode
+		boolean bGlued=false;
+		PhysicsData pdA = getPhysicsDataFrom(event.getNodeA());
+		PhysicsData pdB = getPhysicsDataFrom(event.getNodeB());
+		if(pdA==null || pdB==null)return;
+		if(pdA.bDisintegrated || pdB.bDisintegrated)return;
+		if(pdA.bGlueApplied || pdA.bGlueApplied)return; //only the 1st time matters
+//		if(pdA.bApplyGluedMode){
+		if(pdA.pdGlueWhere==pdB){
+//		if(event.getNodeA() instanceof GeometryTestProjectile){
+//			applyGluedMode(event.getNodeA(),event.getNodeB());
+			pdA.v3fGlueSpot = event.getPositionWorldOnB().clone();
+			applyGluedMode(pdA);
+//			if(!PhysicsI.i().apdGlue.contains(this))PhysicsI.i().apdGlue.add(this);
+			bGlued=true;
+		}
+		if(pdB.pdGlueWhere==pdA){
+//		if(event.getNodeB() instanceof GeometryTestProjectile){
+//			applyGluedMode(event.getNodeB(),event.getNodeA());
+			pdB.v3fGlueSpot = event.getPositionWorldOnA().clone();
+			applyGluedMode(pdB);
+			             
+			bGlued=true;
+		}
+		if(bGlued)return;
+		
 	}
 	
 	/**
@@ -864,70 +949,97 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	@Override
 	public boolean collide(PhysicsCollisionObject nodeA,PhysicsCollisionObject nodeB) {
 //		if(DetailedException.isExitRequested())return false; //may prevent further errors elsewhere by preventing all collisions?
-		try{return threadPhysicsDoAboutToCollideWithGroup(nodeA,nodeB);}catch(Exception ex){DetailedException.forceExitTrapIrrevocablySuspendCurrentThread(ex);}
+		try{return threadPhysicsDoAboutToCollideWithGroupChkAllowed(nodeA,nodeB);}catch(Exception ex){DetailedException.forceExitTrapIrrevocablySuspendCurrentThread(ex);}
 		return false; //dummy, never reached...
 	}
 	/** name just for clarity */
 	@NotMainThread
-	protected boolean threadPhysicsDoAboutToCollideWithGroup(PhysicsCollisionObject nodeA,PhysicsCollisionObject nodeB) {
+	protected boolean threadPhysicsDoAboutToCollideWithGroupChkAllowed(PhysicsCollisionObject nodeA,PhysicsCollisionObject nodeB) {
 		if(CharacterI.i().isCharacter(nodeA))return true;
 		if(CharacterI.i().isCharacter(nodeB))return true;
 		
-		boolean bGlued=false;
-		if(nodeA.getUserObject() instanceof GeometryTestProjectile){
-			threadPhysicsGlue(nodeA,nodeB);
-			bGlued=true;
-		}
-		if(nodeB.getUserObject() instanceof GeometryTestProjectile){
-			threadPhysicsGlue(nodeB,nodeA);
-			bGlued=true;
-		}
-		if(bGlued)return false;
-		
-		PhysicsData pdA = getPhysicsDataFrom(nodeA);
-		PhysicsData pdB = getPhysicsDataFrom(nodeB);
-		if(pdA==null){
-			syso("put break point here");
-		}
-		if(pdB==null){
-			syso("put break point here");
+		if(nodeA.getUserObject() instanceof GeometryTestProjectile && nodeB.getUserObject() instanceof GeometryTestProjectile){
+			return false;
 		}
 		
-		assert pdA!=null && pdB!=null;
+//		boolean bGlued=
+//			( nodeA.getUserObject() instanceof GeometryTestProjectile) && !(nodeB.getUserObject() instanceof GeometryTestProjectile)
+//			||
+//			!(nodeA.getUserObject() instanceof GeometryTestProjectile) &&  (nodeB.getUserObject() instanceof GeometryTestProjectile)
+//		;
+		boolean bGlued=(nodeA.getUserObject() instanceof GeometryTestProjectile || nodeB.getUserObject() instanceof GeometryTestProjectile);
+		if(bGlued){
+			PhysicsData pdA = getPhysicsDataFrom(nodeA);
+			PhysicsData pdB = getPhysicsDataFrom(nodeB);
+			boolean bSkip=false;
+			if(pdA.bDisintegrated || pdA.pdGlueWhere!=null){
+//				resetForces(pdA);
+//				pdA.rbc.setEnabled(false);
+				bSkip=true;
+			}
+			if(pdB.bDisintegrated || pdB.pdGlueWhere!=null){
+//				resetForces(pdB);
+//				pdB.rbc.setEnabled(false);
+				bSkip=true;
+			}
+			if(bSkip)return false; //only the 1st matters
+			
+//			if(false){
+			if(nodeA.getUserObject() instanceof GeometryTestProjectile){
+//				ps.remove(nodeA); //remove physics control to stop moving NOW, to "stay" where it is
+				pdA.setGlueWhere(pdB);
+			}
+			
+			if(nodeB.getUserObject() instanceof GeometryTestProjectile){
+//				ps.remove(nodeB); //remove physics control to stop moving NOW, to "stay" where it is
+				pdB.setGlueWhere(pdA);
+			}
+//			}
 		
-		syso(":[byGroup]collide():"
-			+pdA.sptLink.getName()
-			+" <-> "+pdB.sptLink.getName());
+			return true; //true to generate the collision event with the applied force, hit spot etc
+		}
+		
+//		PhysicsData pdA = getPhysicsDataFrom(nodeA);
+//		PhysicsData pdB = getPhysicsDataFrom(nodeB);
+//		if(pdA==null){
+//			syso("put break point here");
+//		}
+//		if(pdB==null){
+//			syso("put break point here");
+//		}
+//		
+//		assert pdA!=null && pdB!=null;
+		
+//		if(false)syso(":[byGroup]collide():"
+//			+pdA.sptLink.getName()
+//			+" <-> "+pdB.sptLink.getName());
 		
 		return true; //allow all collisions
 	}
 	
-	private void threadPhysicsGlue(PhysicsCollisionObject pcoWhat, PhysicsCollisionObject pcoWhere) {
-		PhysicsData pdWhat = getPhysicsDataFrom(pcoWhat);
-		PhysicsData pdWhere = getPhysicsDataFrom(pcoWhere);
-		
-		if(pdWhat.isExplodeIfHit(pdWhere)){
-			requestDisintegration(pdWhat);
-			requestDisintegration(pdWhere);
-			//TODO explode effect
-			return;
-		}
-		
-		pdWhat.setGlueWhere(pdWhere);
-		
-		ps.remove(pdWhat.getRBC()); //remove physics control to stop moving NOW, to "stay" where it is
-	}
-
 	public CollisionResult applyImpulseHitTargetAtCamDirection(float fImpulse){
-		ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
-		if(acr.size()>0){
-			CollisionResult cr = acr.get(0);
+		for(CollisionResult cr:WorldPickingI.i().raycastPiercingAtCenter(null)){
+			if(getPhysicsDataFrom(cr.getGeometry())==null)continue;
+			
 			applyImpulseLater(
 				cr.getGeometry(),
-				new Impulse().setImpulse(AppI.i().getCamLookingAtDir(), cr.getContactPoint())
+				new Impulse().setImpulse(AppI.i().getCamLookingAtDir(), cr.getGeometry().worldToLocal(cr.getContactPoint(),null))
 			);
+			
 			return cr;
 		}
+//		ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+//		if(acr.size()>0){
+//			CollisionResult cr = acr.get(0);
+//			if(getPhysicsDataFrom(cr.getGeometry())==null)return null;
+//			
+//			applyImpulseLater(
+//				cr.getGeometry(),
+//				new Impulse().setImpulse(AppI.i().getCamLookingAtDir(), cr.getGeometry().worldToLocal(cr.getContactPoint(),null))
+//			);
+//			
+//			return cr;
+//		}
 		return null;
 	}
 	
