@@ -27,14 +27,12 @@
 package com.github.devconslejme.tests;
 
 import com.github.devconslejme.game.CharacterI;
-import com.github.devconslejme.misc.KeyBindCommandManagerI;
-import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
+import com.github.devconslejme.misc.MatterI.Matter;
 import com.github.devconslejme.misc.jme.AppI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.GeometryI;
 import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.PhysicsI;
-import com.github.devconslejme.misc.jme.PhysicsProjectileI;
 import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -95,7 +93,7 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 	protected void initTestBox(ColorRGBA color, float fDensity, String str){
 		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), color);
 		Node node = new Node();node.attachChild(geom);
-		PhysicsI.i().imbueFromWBounds(node,fDensity);AppI.i().getRootNode().attachChild(node);geom.setName("Box"+str);
+		PhysicsI.i().imbueFromWBounds(node,new Matter("Test"+str,fDensity));AppI.i().getRootNode().attachChild(node);geom.setName("Box"+str);
 	}
 	
 	public void initTestWall(int iSize,String str, Boolean bXP, float fY, Boolean bZP){

@@ -28,8 +28,10 @@ package com.github.devconslejme.misc.jme;
 
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
-import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
+import com.github.devconslejme.misc.MatterI.EMatter;
+import com.github.devconslejme.misc.MatterI.Matter;
+import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI.EColor;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
@@ -57,11 +59,12 @@ public class PhysicsProjectileI {
 	private Geometry	geomTestProjectileFactory;
 	
 	public void configure(){
-		setTestProjectilesPerSecond(50);
+		setTestProjectilesPerSecond(10); //10 seems the default of many guns
 		
     KeyBindCommandManagerI.i().putBindCommandsLater("Space",new CallBoundKeyCmd(){
   		@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
-  			PhysicsProjectileI.i().throwProjectileFromCamera(250,0.1f,6f);
+//  			PhysicsProjectileI.i().throwProjectileFromCamera(250,0.1f,6f);
+  			PhysicsProjectileI.i().throwProjectileFromCamera(250,0.1f,EMatter.Lead.get());
   			setDelaySeconds(1f/iProjectilesPerSecond); //dynamicly changeable
   			return true;
   		}}.setName("ShootProjectile").holdKeyPressedForContinuousCmd().setDelaySeconds(1f/iProjectilesPerSecond)
@@ -78,7 +81,7 @@ public class PhysicsProjectileI {
 		return this; 
 	}
 
-	public PhysicsData throwProjectileFromCamera(float fDesiredSpeed, float fRadius, float fDensity){
+	public PhysicsData throwProjectileFromCamera(float fDesiredSpeed, float fRadius, Matter mt){
 		if(sbnBatchTestProjectiles==null){
 			sbnBatchTestProjectiles = new SimpleBatchNode("BatchNode");
 			AppI.i().getRootNode().attachChild(sbnBatchTestProjectiles);
@@ -98,7 +101,7 @@ public class PhysicsProjectileI {
 		sbnBatchTestProjectiles.batch();
 		
 //		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,fDensity,geomTestProjectileFactory.getLocalScale());
-		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,fDensity);
+		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,mt);
 		//TODO scale
 //		ps.remove(pd.rbc);
 //		pd.rbc.getCollisionShape().setScale(geomTestProjectileFactory.getLocalScale());

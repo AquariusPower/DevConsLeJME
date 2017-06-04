@@ -31,7 +31,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -388,7 +390,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		bndJSE = jse.createBindings();
 		
 		/**
-		 * add all existing
+		 * add all existing globals and enums
 		 */
 		for(Object obj:GlobalManagerI.i().getListCopy()){
 			String strKey = genKeyFor(obj);
@@ -403,6 +405,9 @@ public class JavaScriptI implements IGlobalAddListener {
 					MessagesI.i().warnUniqueMsg(this, "key already used", strKey, objExisting, obj);
 				}
 			}
+		}
+		for(Entry<Class<Enum>,Enum[]> entry:GlobalManagerI.i().getGlobalEnumsListCopy().entrySet()){
+			globalEnumAddedEvent(entry.getKey(),entry.getValue());
 		}
 		
 		setJSBindingCanReplace("New", new New());
@@ -473,7 +478,7 @@ public class JavaScriptI implements IGlobalAddListener {
 			
 			if(clEnum!=null){
 				try {
-					objBindValue = jse.eval("Java.type('"+clEnum.getName()+"');"); //prepares a static class access
+					objBindValue = evalJS("Java.type('"+clEnum.getName()+"');"); //prepares a static class access
 				} catch (ScriptException e) {
 					throw new DetailedException(e, strBindId, objBindValue);
 				}
@@ -484,6 +489,9 @@ public class JavaScriptI implements IGlobalAddListener {
 		
 //		setJSBindingForEnumsOf(objBindValue.getClass());
 	}
+	
+	protected Object evalJS(Reader r) 		throws ScriptException{return jse.eval(r		,bndJSE);}
+	protected Object evalJS(String strJS) throws ScriptException{return jse.eval(strJS,bndJSE);}
 	
 	private void setJSBindingCanReplace(String strBindId,Object objBindValue){
 		if(isAccessForbidden(objBindValue)){ //restrictions still apply
@@ -728,11 +736,9 @@ public class JavaScriptI implements IGlobalAddListener {
 	private boolean execFile(File flJS){
 		try {
 			SelfScriptFile flsc = new SelfScriptFile(flJS.toURI());
-//			bndJSE.remove(EJSObjectBind.selfScript.s());
-			bndJSE.remove(genKeyFor(flsc));
-//			setJSBinding(EJSObjectBind.selfScript.s(), flJS);
+			bndJSE.remove(genKeyFor(flsc)); //to refresh it
 			setJSBinding(flsc);
-			objRetValFile = jse.eval(new FileReader(flJS),bndJSE);
+			objRetValFile = evalJS(new FileReader(flJS));
 			return true;
 		} catch (ScriptException | IOException e) {
 //			LoggingI.i().logExceptionEntry(e, hmFileReaderExecJS.inverse().get(rd));
@@ -745,14 +751,16 @@ public class JavaScriptI implements IGlobalAddListener {
 	public boolean execScript(String strJS,boolean bShowRetVal){
 		DetailedException.assertNotEmpty("Javascript", strJS, bShowRetVal);
 		try {
-			objExecScriptRetVal=jse.eval(strJS,bndJSE);
+			objExecScriptRetVal=evalJS(strJS);
 			if(objExecScriptRetVal!=null)setJSBindingCanReplace(strLastRetValId, objExecScriptRetVal);
 			if(bShowRetVal)showValue(objExecScriptRetVal);
 			return true;
 		} catch (ScriptException e) {
 			LoggingI.i().logExceptionEntry(e, strJS);
-		} catch (Exception e){
+			LoggingI.i().logWarn("May lead to inconsistency/instability.");
+		} catch (Exception e){ //yes, catch it all as is a user command, may leave inconsistencies tho
 			LoggingI.i().logExceptionEntry(e, strJS);
+			LoggingI.i().logWarn("May lead to inconsistency/instability.");
 		}
 		
 		return false;
@@ -1073,13 +1081,29 @@ public class JavaScriptI implements IGlobalAddListener {
 	@Override
 	public void globalEnumAddedEvent(Class<Enum> cle, Enum[] ae) {
 		if(ae==null){ //will help the globals manager providing the values
-			try {
-				ae = (Enum[])jse.eval("Java.type('"+cle.getName()+"').values();");
-				GlobalManagerI.i().putEnumClass(cle, ae);
-				setJSBinding(cle);
-			} catch (ScriptException ex) {
-				throw new DetailedException(ex, cle, ae);
-			}
+			QueueI.i().enqueue(new CallableXAnon() {
+				@Override
+				public Boolean call() {
+					Enum[] aeRet=null;
+					try {
+						if(Modifier.isPublic(cle.getModifiers())){
+							setJSBinding(cle); //1st make it available in JS
+							aeRet = (Enum[])evalJS("Java.type('"+cle.getName()+"').values();");
+							GlobalManagerI.i().putEnumClass(cle, aeRet);
+						}
+					} catch (ScriptException ex) {
+//						if( 
+//							ex.getMessage().equals("TypeError: Java.type(\""+cle.getName()+"\").values "
+//								+"is not a function in <eval> at line number 1")
+//						){
+//							return false; //retry
+//						}else{
+							throw new DetailedException(ex, cle, ae, aeRet);
+//						}
+					}
+					return true;
+				}
+			}).setName("FillGlobalEnumValues:"+cle.getName());
 		}
 	}
 	@Override

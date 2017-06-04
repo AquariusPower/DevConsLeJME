@@ -165,6 +165,12 @@ public class SpatialHierarchyI {
 		);
 	}
 	
+	/**
+	 * see {@link #getAllChildrenRecursiveFrom(Node, Integer, Function)}
+	 * @param nodeParentestToChk
+	 * @param funcMatcher
+	 * @return
+	 */
 	public <T extends Spatial> T getChildRecursiveExactMatch(Node nodeParentestToChk, Function<Spatial,Boolean> funcMatcher){
 		ArrayList<T> asptList = getAllChildrenRecursiveFrom(nodeParentestToChk, null, funcMatcher);
 		if(asptList.isEmpty() || asptList.size()>1)throw new DetailedException("not exact match",nodeParentestToChk,funcMatcher,asptList);
@@ -187,10 +193,10 @@ public class SpatialHierarchyI {
 	}
 	/**
 	 * 
-	 * @param sptParentestToChk
+	 * @param nodeParentestToChk
 	 * @param iDepth initial/max recursion depth, can be null (unlimited) 
-	 * @param callMatcher can be null, or can retrieve key: Spatial.class.getName()
-	 * @return
+	 * @param funcMatcher can be null, or can retrieve key: Spatial.class.getName(), matches if return true
+	 * @return the matched spatials
 	 */
 	@SuppressWarnings("unchecked")
 	public <T extends Spatial> ArrayList<T> getAllChildrenRecursiveFrom(Node nodeParentestToChk, Integer iDepth, Function<Spatial,Boolean> funcMatcher) {
@@ -271,10 +277,10 @@ public class SpatialHierarchyI {
 	/**
 	 * 
 	 * @param node
-	 * @param funcDo
+	 * @param funcDo if return true, will add the spatial to the store var to be returned
 	 * @param iCurrentDepth can be 0
 	 * @param hmStore will be created if null
-	 * @return
+	 * @return the list of successful doings
 	 */
 	public LinkedHashMap<Spatial,SpatialInfo> doSomethingRecursively(
 		Node node, 
@@ -312,4 +318,55 @@ public class SpatialHierarchyI {
 		return false;
 	}
 	
+	public void debugHelperAutoGiveNames(Spatial... aspt){
+		Function<SpatialInfo, Boolean> func = new Function<SpatialInfo, Boolean>() {
+			@Override
+			public Boolean apply(SpatialInfo si) {
+				if(si.getSpatial().getName()==null){
+					Spatial spt=null;
+					String str=null;
+					for(Node node:getAllParents(si.getSpatial(), false)){
+						if(node.getName()!=null){
+							str="ChldOf:";
+							spt=node;
+							break;
+//							si.getSpatial().setName("ChldOf:"+node.getName());
+//							return true;
+						}
+					}
+					
+					if(spt==null && si.getSpatial() instanceof Node){
+						ArrayList<Spatial> aspt = getAllChildrenRecursiveFrom((Node)si.getSpatial(), 0, new Function<Spatial,Boolean>(){
+							@Override
+							public Boolean apply(Spatial spt) {
+								if(spt.getName()!=null)return true;
+								return false;
+							}
+						});
+						
+						if(aspt.size()>0){
+							str="PrntOf(depth?):";
+							spt=aspt.get(0);
+						}
+					}
+					
+					if(spt!=null){
+						si.getSpatial().setName(str+spt.getName());
+						return true;
+					}
+				}
+				
+				return false;
+			}
+		};
+		
+		if(aspt.length==0){
+			doSomethingRecursively(AppI.i().getRootNode(), func, 0, null);
+			doSomethingRecursively(AppI.i().getGuiNode(), func, 0, null);
+		}else{
+			for(Spatial spt:aspt){
+				func.apply(new SpatialInfo().setSpatial(spt));
+			}
+		}
+	}
 }

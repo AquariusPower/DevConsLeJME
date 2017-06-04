@@ -176,7 +176,8 @@ public class Annotations{
 	}
 	
 	/**
-	 *	to indicate it is a getter or a setter of a bean 
+	 *	to indicate it is a getter or a setter of a bean
+	 *	see {@link SimpleVarReadOnly} for alternative
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = {ElementType.METHOD})

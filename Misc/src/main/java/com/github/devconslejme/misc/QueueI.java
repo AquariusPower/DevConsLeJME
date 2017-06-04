@@ -29,10 +29,9 @@ package com.github.devconslejme.misc;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.concurrent.Callable;
 
-import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.Annotations.SimpleVarReadOnly;
 
 /**
  * Queue is mainly usefull for lazy initializations that require pre-conditions.
@@ -118,7 +117,9 @@ public class QueueI {
 		private long	lRunTryCount=0;
 		private long	lFailCount=0;
 
-		public boolean	bForceRemoveFromQueueRequest;
+		private boolean	bForceRemoveFromQueueRequest;
+
+		private long	lFailLimitToWarn=1000;
 		
 		
 		private static String strLastUId="0";
@@ -280,6 +281,10 @@ public class QueueI {
 			
 			sb.append("uid="+getUId()+strSeparator);
 			
+			if(lFailCount>0){
+				sb.append("fails="+lFailCount+"/"+lFailLimitToWarn+strSeparator);
+			}
+			
 			return sb.toString();
 		}
 		
@@ -397,12 +402,20 @@ public class QueueI {
 		
 		public void callAfterRemovedFromQueue() {}
 		
+		@SimpleVarReadOnly
 		public long getFailCount() {
 			return lFailCount;
 		}
-		private SELF setFailCount(long lFailCount) {
-			this.lFailCount = lFailCount;
-			return getThis();
+//		private SELF setFailCount(long lFailCount) {
+//			this.lFailCount = lFailCount;
+//			return getThis();
+//		}
+		public long getFailLimitToWarnAtRemoval() {
+			return lFailLimitToWarn;
+		}
+		public SELF setFailLimitToWarnAtRemoval(long lFailLimit) {
+			this.lFailLimitToWarn = lFailLimit;
+			return getThis(); 
 		}
 		
 	}
@@ -522,6 +535,9 @@ public class QueueI {
 					acxList.remove(cx);
 					cx.callAfterRemovedFromQueue();
 					cx.bLoopModeJustRemoveFromQueueOnceRequest=false; //so it can be cleanly re-added to the queue and work correctly
+					if(cx.lFailCount>cx.getFailLimitToWarnAtRemoval()){
+						MessagesI.i().warnMsg(this, "queue had a lot of fails, could be a problem?", cx.lFailCount, cx.strName, cx);
+					}
 				}
 			}
 			

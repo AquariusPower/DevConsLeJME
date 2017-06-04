@@ -62,7 +62,8 @@ public class MessagesI {
 		bLog=true;
 	}
 	
-	public void warnUniqueMsg(Object objSource, String strMsg, Object... aobjMoreInfo){
+	@SuppressWarnings("unchecked")
+	public <T extends Object> void warnUniqueMsg(Object objSource, String strMsg, T... aobjMoreInfo){
 //		new Runnable(){@Override public void run() {warnMsg(objSource,strMsg,aobj);}}.run();
 		putReviewableMsg(warnMsgWork(objSource,strMsg,aobjMoreInfo),true);
 //		warnMsg(objSource,strMsg,aobj);
@@ -73,7 +74,8 @@ public class MessagesI {
 	 * @param strMsg
 	 * @param aobjMoreInfo
 	 */
-	public void warnMsg(Object objSource, String strMsg, Object... aobjMoreInfo){
+	@SuppressWarnings("unchecked")
+	public <T extends Object> void warnMsg(Object objSource, String strMsg, T... aobjMoreInfo){
 		putReviewableMsg(warnMsgWork(objSource,strMsg,aobjMoreInfo),false);
 	}
 	protected String warnMsgWork(Object objSource, String strMsg, Object... aobjMoreInfo){
@@ -93,7 +95,8 @@ public class MessagesI {
 	 * @param strMsg
 	 * @param aobj
 	 */
-	public void debugInfo(Object objSource, String strMsg, Object... aobj) {
+	@SuppressWarnings("unchecked")
+	public <T extends Object> void debugInfo(Object objSource, String strMsg, T... aobj) {
 //		output(false,ReportI.i().joinMessageWithObjects("DevInfo["+objSource.getClass().getSimpleName()+"]: "+strMsg, aobj));
 		output(System.out,"DebugInfo",objSource,strMsg,aobj,Thread.currentThread().getStackTrace());
 	}
@@ -114,7 +117,8 @@ public class MessagesI {
 	 * @param strMsg
 	 * @param aobj
 	 */
-	public String output(PrintStream ps,String strMsgType, Object objSource, String strMsg, Object... aobj){
+	@SuppressWarnings("unchecked")
+	public <T extends Object> String output(PrintStream ps,String strMsgType, Object objSource, String strMsg, T... aobj){
 		//TODO log4j?
 		Class cl = Class.class.isInstance(objSource)?(Class)objSource:objSource.getClass(); //can be from a static method
 		String strOutput = ReportI.i().prepareReport(

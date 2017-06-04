@@ -191,7 +191,7 @@ public class AbsorbClickCommandsI extends CursorListenerX{
 	 * @param btn
 	 * @param acmd
 	 */
-	public void addClickCommands(Button btn, Command<? super Button>... acmd) {
+	public <T extends Button> void addClickCommands(T btn, Command<? super Button>... acmd) {
 		btn.addClickCommands(acmd);
 		absorbClickCommands(btn);
 	}

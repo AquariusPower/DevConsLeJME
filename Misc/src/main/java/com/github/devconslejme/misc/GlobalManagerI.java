@@ -27,6 +27,7 @@
 
 package com.github.devconslejme.misc;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -203,7 +204,9 @@ public class GlobalManagerI {
 	protected void callListeners(Class cl,Object obj) {
     for(IGlobalAddListener igal:aigalList){
 			if(Enum.class.isAssignableFrom(cl)){
-				igal.globalEnumAddedEvent((Class<Enum>)cl,(Enum[])obj);
+				if(Modifier.isPublic(cl.getModifiers())){
+					igal.globalEnumAddedEvent((Class<Enum>)cl,(Enum[])obj);
+				}
 			}else{
 				igal.globalInstanceAddedEvent(cl,obj);
 			}

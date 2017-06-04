@@ -158,10 +158,12 @@ public class MiscJmeI {
 		addToName( spt,  str,  bPrepend , false);
 	}
 	public void addToName(Spatial spt, String str, boolean bPrepend, boolean bRecursive){
+		String strExistingName=(spt.getName()==null)?"":spt.getName();
+		
 		if(bPrepend){
-			spt.setName(str+"/"+spt.getName());
+			spt.setName(str+(strExistingName.isEmpty()?"":"/")+strExistingName);
 		}else{
-			spt.setName(spt.getName()+"/"+str);
+			spt.setName(strExistingName+(strExistingName.isEmpty()?"":"/")+str);
 		}
 		
 		if (spt instanceof Node) {

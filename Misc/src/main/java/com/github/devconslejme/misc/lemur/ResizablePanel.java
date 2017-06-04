@@ -37,6 +37,7 @@ import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
+import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.StringTextJmeI;
 import com.github.devconslejme.misc.lemur.SizeAndLocationI.EResizeApplyMode;
@@ -443,56 +444,11 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 		pnlParentest.setPreferredSizeWH(v3f);
 	}
 	
-//	private String strUDKeySafeSizeLast=ResizablePanel.class.getName()+"/SafeSize";
-//	private String strUDKeySafeSizeDefault=ResizablePanel.class.getName()+"/SafeSizeDefault";
-	
-//	public static enum EReSizeApplyMode{
-//		Save,
-//		Restore,
-//		RestoreDefault,
-//		UpdateDefaultToCurrent,
-//		;
-//		public String s(){return toString();}
-//	}
-	
 	public void applyCurrentSafeSizeAsDefault(){
 		if(isUpdateLogicalStateSuccess()){
 			SizeAndLocationI.i().safeSizeRecursively(EResizeApplyMode.UpdateDefaultToCurrent, this);
 		}
 	}
-	
-//	@CouldBeAGenericUtilMisc
-//	private void safeSizeRecursively(EReSizeApplyMode eapply, Panel pnl) {
-////		if(
-////				eapply.equals(EReSizeApplyMode.UpdateDefaultToCurrent) || 
-////				pnl.getUserData(strUDKeySafeSizeDefault)==null //initial will be first default
-////		){ 
-////			pnl.setUserData(strUDKeySafeSizeDefault, pnl.getPreferredSize());
-////		}
-//		
-//		switch(eapply){
-//			case Restore:{
-//				Vector3f v3fSafeSize = (Vector3f)pnl.getUserData(strUDKeySafeSizeLast);
-//				if(v3fSafeSize!=null)pnl.setPreferredSize(v3fSafeSize);
-//			}break;
-//			case RestoreDefault:{
-//				Vector3f v3fSafeSize = (Vector3f)pnl.getUserData(strUDKeySafeSizeDefault);
-//				if(v3fSafeSize!=null)pnl.setPreferredSize(v3fSafeSize);
-//			}break;
-//			case Save:{
-//				pnl.setUserData(strUDKeySafeSizeLast,pnl.getPreferredSize());
-//			}break;
-//			case UpdateDefaultToCurrent:{
-//				pnl.setUserData(strUDKeySafeSizeDefault, pnl.getPreferredSize());
-//			}break;
-//		}
-//		
-//		for(Spatial sptChild:pnl.getChildren()){
-//			if (sptChild instanceof Panel) {
-//				safeSizeRecursively(eapply,(Panel)sptChild);
-//			}
-//		}
-//	}
 	
 	@Override
 	public void updateLogicalState(float tpf) {
@@ -500,16 +456,6 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 			moveToScreenCenterLater();
 			bMoveToCenterOnce=false;
 		}
-		
-//		if(true){updateLogicalState(tpf);return;}
-		
-//		if(getSize().length()>0 && getLocalTranslation().length()==0){
-//			/**
-//			 * if it's contents are ready (size),
-//			 * and it's location was not set (ZERO), also means is outside the screen..
-//			 */
-//			MiscLemurI.i().moveToScreenCenterXY(this);
-//		}
 		
 		if(bApplyBoundingBoxSize)applyBoundingBoxSizeAfterResizing();
 		
@@ -528,14 +474,6 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 						bFirstSuccessOnChange=true;
 					}
 				}
-//				if(rzpParentest.v3fLastSucessSize==null){
-//					rzpParentest.v3fLastSucessSize=getSize().clone();
-//				}else{
-//					if(!rzpParentest.v3fLastSucessSize.equals(getSize())){
-//						rzpParentest.v3fLastSucessSize.set(getSize());
-//						bFirstSuccessOnChange=true;
-//					}
-//				}
 				
 				bUpdateLogicalStateSuccess=true;
 				break;
@@ -607,7 +545,8 @@ public class ResizablePanel extends PanelBase<ResizablePanel> {
 	public ResizablePanel(String strStyle) {
     super(false, new ElementId(ELEMENT_ID), strStyle);
     
-   	setName(getName()+"/"+ResizablePanel.class.getSimpleName());
+    MiscJmeI.i().addToName(this, ResizablePanel.class.getSimpleName(), false);
+//   	setName(getName()+"/"+ResizablePanel.class.getSimpleName());
     
     initEdges();
     

@@ -775,12 +775,12 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	}
 	
 	private static class CellParts{
-		Button btnNesting;
+		ButtonCell btnTreeNesting;
 		ButtonCell btnItemText;
 		Panel pnlCfg;
 	}
 	
-	private static class ButtonCell extends Button{
+	public static class ButtonCell extends Button{
 		public ToolAction	ta;
 		public OptionData	od;
 		public ButtonCell(String s, ElementId elementId, String style) {
@@ -815,6 +815,10 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 			};
 		};
 		
+  	Command<? super Button> cmdToggleSectionExpanded = new Command<Button>() {@Override	public void execute(Button btn) {
+  		((ButtonCell)btn).od.toggleExpanded();
+		}};
+  	
 		crVisibleText = new DefaultCellRenderer<IVisibleText>(getDialog().getStyle()){
 			@SuppressWarnings("unchecked")
 			private Panel getView(OptionData od, boolean selected, Panel existing) {
@@ -823,35 +827,46 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 //        	cntr=new ContainerCell(new BorderLayout(), getDialog().getStyle());
 					cntr=new ContainerCell();
 					cntr.cp = new CellParts();
-        	cntr.cp.btnItemText = new ButtonCell("", getElement(), getStyle());
-  				CursorEventControl.addListenersToSpatial(cntr.cp.btnItemText, curlisExtraClickCmd);
-        	
-        	cntr.cp.btnNesting = new Button("", getDialog().getStyle());
-					cntr.addChild(cntr.cp.btnNesting, Position.West);
 					
-        	AbsorbClickCommandsI.i().addClickCommands(cntr.cp.btnItemText,cmdOption);
+        	cntr.cp.btnTreeNesting = new ButtonCell("", getElement(), getDialog().getStyle());
+					cntr.addChild(cntr.cp.btnTreeNesting, Position.West);
+					
+        	cntr.cp.btnItemText = new ButtonCell("", getElement(), getStyle());
 					cntr.addChild(cntr.cp.btnItemText, Position.Center);
+        	AbsorbClickCommandsI.i().addClickCommands(cntr.cp.btnItemText,cmdOption);
+  				CursorEventControl.addListenersToSpatial(cntr.cp.btnItemText, curlisExtraClickCmd);
 	      } else {
 	      	cntr = (ContainerCell)existing;
 	      }
         
         // ALWAYS update the value!
 				cntr.cp.btnItemText.od=od;
+				cntr.cp.btnTreeNesting.od=od;
 				
 				// update the nesting visuals
-				String strNesting = "["+(cntr.cp.btnItemText.od.isExpanded()?"-":"+")+"]";
-				if(cntr.cp.btnItemText.od.hmNestedChildrenSubOptions.size()==0)strNesting=" ";
-				cntr.cp.btnNesting.setText(strNesting);
-				cntr.cp.btnNesting.setInsets(new Insets3f(0, 
-					getNestingStepDistance()*cntr.cp.btnItemText.od.getNestingDepth(), 
+				String strNesting = "["+(od.isExpanded()?"-":"+")+"]";
+				if(od.hmNestedChildrenSubOptions.size()==0){
+					strNesting=" ";
+				}else{
+					AbsorbClickCommandsI.i().addClickCommands(cntr.cp.btnTreeNesting,cmdToggleSectionExpanded);
+				}
+				cntr.cp.btnTreeNesting.setText(strNesting);
+				cntr.cp.btnTreeNesting.setInsets(new Insets3f(0, 
+					getNestingStepDistance()*od.getNestingDepth(), 
 					0, 0));
 				
 				// update the text based on the value using a transformation
 				cntr.cp.btnItemText.setText(valueToString(od));
+				if(od.hmNestedChildrenSubOptions.size()==0){
+					PopupHintHelpListenerI.i().setPopupHintHelp(cntr.cp.btnItemText, 
+						cntr.cp.btnItemText.getText()+"\n"+od.getStoredValue().getClass().getSimpleName()
+//						+":"+od.getStoredValue().toString()
+					);
+				}
 				
 				// CONFIGURATOR: each item may have a different kind of configurator from button text to a different visual (like a slider etc)
 				if(isEnableItemConfigurator()){ 
-					cntr.cp.pnlCfg = createConfigurator(cntr.cp.btnItemText.od, cntr.cp.pnlCfg); 
+					cntr.cp.pnlCfg = createConfigurator(od, cntr.cp.pnlCfg); 
 					cntr.addChild(cntr.cp.pnlCfg, Position.East);
 				}
 				
@@ -977,13 +992,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		ContainerEdit ce = new ContainerEdit();
 		ESimpleType etypeGetterRet=ESimpleType.forClass(mGetter.getReturnType(),false);
 		boolean bIsBeanGetter=JavaLangI.i().isBeanGetter(mGetter); 
-//		mGetter.getAnnotations()
 		boolean bIsSimpleGetter=mGetter.getAnnotation(SimpleVarReadOnly.class)!=null;
-//		boolean bAllowUnsafeCall = 
-//			isMethodCallUnsafely() && 
-//			JavaLangI.i().isGetterName(mGetter) &&
-//			mGetter.getParameterTypes().length==0;
-//		if( (bIsBeanGetter || bIsSimpleGetter || bAllowUnsafeCall) && etypeGetterRet!=null ) {
 		if( (bIsBeanGetter || bIsSimpleGetter) && etypeGetterRet!=null ) {
 			String strButtonHintHelp=null;
 			try {

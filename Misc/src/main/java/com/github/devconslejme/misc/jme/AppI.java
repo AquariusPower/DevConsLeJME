@@ -135,6 +135,7 @@ public class AppI {
 	}
 	
 	public Node getRootNode() {
+		if(sappOpt==null)return null;
 		return sappOpt.getRootNode();
 	}
 
@@ -149,6 +150,11 @@ public class AppI {
 	public AppI setCamFollow(Spatial spt) {
 		this.sptCamFollowMove=spt;
 		return this;
+	}
+
+	public Node getGuiNode() {
+		if(sappOpt==null)return null;
+		return sappOpt.getGuiNode();
 	}
 	
 }

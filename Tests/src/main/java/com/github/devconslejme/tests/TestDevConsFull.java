@@ -55,6 +55,7 @@ import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI.IEnvironmentListener;
 import com.github.devconslejme.misc.jme.MiscJmeI;
+import com.github.devconslejme.misc.jme.NodeX;
 import com.github.devconslejme.misc.jme.OriginDevice;
 import com.github.devconslejme.misc.jme.SimpleAppState;
 import com.github.devconslejme.misc.jme.StringTextJmeI;
@@ -87,6 +88,7 @@ import com.simsilica.lemur.Command;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class TestDevConsFull extends SimpleApplication implements IEnvironmentListener, IPickListener, IHandleExitListener{
+
 	public static void main(String[] args) {
 		if(bEnableOpt)opt_initSingleAppInstanceAtMain();
 		
@@ -151,7 +153,14 @@ public class TestDevConsFull extends SimpleApplication implements IEnvironmentLi
 		return flycamx;
 	}
 	
-	public TestDevConsFull() {super();}
+	@Override
+	public void initialize(){
+		super.rootNode=new NodeX();
+		super.guiNode=new NodeX();
+		
+		super.initialize();
+	}
+	public TestDevConsFull(){super();}
 	public TestDevConsFull(AppState... initialStates) {super(initialStates);}
 
 	private void opt_initAppBasics() {
