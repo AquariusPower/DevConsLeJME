@@ -37,6 +37,7 @@ import java.util.Set;
 
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.ESimpleType;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.MessagesI;
 import com.jme3.export.InputCapsule;
@@ -51,8 +52,7 @@ import com.jme3.export.Savable;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class SavableHelperI {
-	private static SavableHelperI instance = new SavableHelperI();
-	public static SavableHelperI i(){return instance;}
+	public static SavableHelperI i(){return GlobalManagerI.i().get(SavableHelperI.class);}
 	
 	public static @interface AutoSavable{
 		//TODO use on getters and setters related to save/load, or use on fields that have such getters and setters

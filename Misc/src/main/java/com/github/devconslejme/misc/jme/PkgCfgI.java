@@ -101,6 +101,7 @@ public class PkgCfgI extends PkgCfgAbs{
 		HighlighterI.i().configure(flycam);
 		PhysicsI.i().configure();
 		ManipulatorI.i().configure();
+		PhysicsProjectileI.i().configure();
 		
 		// non standard cfgs
 //		WorldPickingI.i().addSkipType(DebugVisualsI.GeometryBVolDbg.class);

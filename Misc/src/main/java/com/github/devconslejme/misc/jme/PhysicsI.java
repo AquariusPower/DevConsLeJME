@@ -35,8 +35,6 @@ import com.github.devconslejme.misc.Annotations.NotMainThread;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.InfoI.Info;
-import com.github.devconslejme.misc.KeyBindCommandManagerI;
-import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
@@ -44,7 +42,6 @@ import com.github.devconslejme.misc.SimulationTimeI;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.TimeFormatI;
 import com.github.devconslejme.misc.TimedDelay;
-import com.github.devconslejme.misc.jme.ColorI.EColor;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
@@ -58,22 +55,18 @@ import com.jme3.bullet.collision.PhysicsCollisionListener;
 import com.jme3.bullet.collision.PhysicsCollisionObject;
 import com.jme3.bullet.collision.PhysicsRayTestResult;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
-import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.collision.CollisionResult;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.BatchNode;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
-import com.jme3.scene.SimpleBatchNode;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.shape.Box;
-import com.jme3.scene.shape.Sphere;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -91,15 +84,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	private TimedDelay tdDisintegrate = new TimedDelay(10f).setActive(true);
 	private TimedDelay tdSaveSafeSpotRot = new TimedDelay(3f).setActive(true);
 	private PhysicsData	pdLastThrownFromCam;
-	private GeometryTestProjectile	geomTestProjectileFactory;
 	private int	iThreadPhysTPS;
 	private int	iThreadPhysTickSum;
 	private long	lThreadPhysLastCalcTPS;
 	private float	fThreadPhysTPF;
-	private SimpleBatchNode	sbnBatchTestProjectiles;
 	private ArrayList<Impulse> arbcThreadPhysicsPreTickQueue = new ArrayList();
-	private int	iTestProjectilesPerSecond;
-	private long	lTestProjectilesMaxLifeTime;// = TimeConvertI.i().secondsToNano(5);
 	
 	public static class Impulse{
 		private Spatial	spt;
@@ -186,9 +175,6 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 
 	public void configure(){
-		setTestProjectilesMaxLifeTime(2);
-		setTestProjectilesPerSecond(50);
-		
 		bullet = new BulletAppState();
 		bullet.setThreadingType(ThreadingType.PARALLEL);
 		AppI.i().attatchAppState(bullet);
@@ -237,7 +223,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	protected void updateDisintegration() {
 		long lSTime = SimulationTimeI.i().getNanoTime();
 		for(PhysicsData pd:hmDisintegratables.values()){
-			if((lSTime - pd.lMaterializedSTime) > (lTestProjectilesMaxLifeTime*(pd.bGlueApplied?10:1)) ){
+			if((lSTime - pd.lMaterializedSTime) > (pd.lProjectileMaxLifeTime *(pd.bGlueApplied?10:1)) ){
 				if(!apdDisintegrate.contains(pd))apdDisintegrate.add(pd);
 			}
 		}
@@ -249,10 +235,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	protected void disintegrate(PhysicsData pd){
 		erasePhysicsFrom(pd.sptLink);
 		
-		reattachProjectile(null,pd.sptLink);
-//		boolean b=(pd.sptLink.getParent() == sbnBatchTestProjectiles);
-//		pd.sptLink.removeFromParent();
-//		if(b)sbnBatchTestProjectiles.batch();
+		Node nodeParent = pd.sptLink.getParent();
+		pd.sptLink.removeFromParent();
+		if(nodeParent instanceof BatchNode)((BatchNode)nodeParent).batch();  
 		
 		pd.bDisintegrated=true;
 	}
@@ -302,7 +287,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		return imbueFromWBounds(spt,null);
 	}
 	public static class PhysicsData{
-		public boolean	bDisintegrated;
+		long lProjectileMaxLifeTime;
+		boolean	bDisintegrated;
 		float fMass;
 		Quaternion	quaWRotBkp;
 		BoundingVolume	bv;
@@ -319,20 +305,31 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		Quaternion	quaLastSafeRot;
 		boolean	bTerrain;
 		long	lRestingAtTickCount;
-		private boolean	bResting;
-		private Impulse	imp;
-		private long	lMaterializedSTime;
-		private Vector3f	v3fWorldGlueSpot;
-		private PhysicsData	pdGlueWhere;
+		boolean	bResting;
+		Impulse	imp;
+		long	lMaterializedSTime;
+		Vector3f	v3fWorldGlueSpot;
+		PhysicsData	pdGlueWhere;
 //		private boolean	bApplyGluedMode;
-		public boolean	bGlueApplied;
-		private boolean	bProjectile;
-		public Vector3f	v3fEventCollOtherLocalPos;
-		public Vector3f	v3fLocalGlueSpot;
-		public Quaternion	quaLocalGlueRot;
+		boolean	bGlueApplied;
+		boolean	bProjectile;
+		Vector3f	v3fEventCollOtherLocalPos;
+		Vector3f	v3fLocalGlueSpot;
+		Quaternion	quaLocalGlueRot;
+		
+		public long getProjectileMaxLifeTime() {
+			return lProjectileMaxLifeTime;
+		}
+
+		public PhysicsData setProjectileMaxLifeTime(float fSeconds) {
+			this.lProjectileMaxLifeTime = TimeConvertI.i().secondsToNano(fSeconds);
+			return this; 
+		}
 		
 		public PhysicsData(Spatial spt) {
 			this.sptLink = spt;
+			
+			setProjectileMaxLifeTime(2);
 		}
 
 		public PhysicsRigidBody getRBC() {
@@ -675,12 +672,14 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		lTickCount++;
 		for(PhysicsRigidBody prb:ps.getRigidBodyList()){
 			if(CharacterI.i().isCharacter(prb))continue;
-			if(prb.getUserObject() instanceof GeometryTestProjectile)continue;
+//			if(prb.getUserObject() instanceof GeometryTestProjectile)continue;
 			
 			PhysicsData pd = getPhysicsDataFrom(prb);
 			if(pd==null){
 				syso("breakpoint here");
 			}
+			
+			if(pd.isProjectile())continue;
 			
 			if(isResting(prb)){
 //				if(!pd.isWasSafePosRotSavedAtPreviousTickAndUpdate(lTickCount)){
@@ -722,72 +721,6 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	public void resetForces(PhysicsData pd){
 		pd.getRBC().setAngularVelocity(Vector3f.ZERO);
 		pd.getRBC().setLinearVelocity(Vector3f.ZERO);
-	}
-	
-//	protected void restoreLocationToLastSafeSpotLater(PhysicsData pd) {
-//		pd.
-//	}
-	
-	public void initTestWall(int iSize,String str, Boolean bXP, float fY, Boolean bZP){
-		Geometry geomWall=GeometryI.i().create(new Box(iSize,2f,2f), ColorRGBA.Gray);
-		int i = iSize;///2;
-		Vector3f v3f = new Vector3f();
-		if(bXP!=null){
-			v3f.x=bXP?i:-i;
-			geomWall.rotate(0, 90*FastMath.DEG_TO_RAD, 0);
-		}
-		if(bZP!=null)v3f.z=bZP?i:-i;
-		v3f.y=fY;
-		geomWall.move(v3f);
-		geomWall.setName("BoxWall"+str);
-		PhysicsI.i().imbueFromWBounds(geomWall).setTerrain(true)
-			.getRBC().setMass(0f);
-		AppI.i().getRootNode().attachChild(geomWall);
-	}
-	
-	//	public void initTest(boolean bTestBuggyFloor){
-	public void initTest(){
-		CharacterI.i().create(Vector3f.ZERO);
-		
-		setDebugEnabled(true);
-//		SubdivisionSurfaceModifier s = new SubdivisionSurfaceModifier(modifierStructure, blenderContext);
-		
-		int iSize=50;
-		Geometry geomFloor=GeometryI.i().create(new Box(iSize,0.1f,iSize), ColorI.i().colorChangeCopy(ColorRGBA.Brown,0.20f,1f));
-		geomFloor.move(0,-7f,0);
-		geomFloor.setName("Box-floor");
-		PhysicsI.i().imbueFromWBounds(geomFloor).setTerrain(true)
-			.getRBC().setMass(0f);
-		AppI.i().getRootNode().attachChild(geomFloor);
-		
-		initTestWall(iSize,"XP",true,geomFloor.getLocalTranslation().y,null);
-		initTestWall(iSize,"XN",false,geomFloor.getLocalTranslation().y,null);
-		initTestWall(iSize,"ZP",null,geomFloor.getLocalTranslation().y,true);
-		initTestWall(iSize,"ZN",null,geomFloor.getLocalTranslation().y,false);
-		
-		initBox(ColorRGBA.Red,3f,"X-Red");
-		initBox(ColorRGBA.Green,2f,"Y-Green");
-		initBox(ColorRGBA.Blue,1f,"X-Blue");
-//		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), ColorRGBA.Green);
-//		imbueFromWBounds(geom,2f);AppI.i().getRootNode().attachChild(geom);geom.setName("Box-Y-Green");
-//		}{
-//		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), ColorRGBA.Blue);
-//		imbueFromWBounds(geom,1f);AppI.i().getRootNode().attachChild(geom);geom.setName("Box-Z-Blue");
-//		}
-		
-    KeyBindCommandManagerI.i().putBindCommandsLater("Space",new CallBoundKeyCmd(){
-  		@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
-  			testCamProjectile(250,0.1f,6f);
-  			setDelaySeconds(1f/iTestProjectilesPerSecond); //dynamicly changeable
-  			return true;
-  		}}.setName("TestShootProjectile").holdKeyPressedForContinuousCmd().setDelaySeconds(1f/iTestProjectilesPerSecond)
-		);
-	}
-	
-	protected void initBox(ColorRGBA color, float fDensity, String str){
-		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), color);
-		Node node = new Node();node.attachChild(geom);
-		imbueFromWBounds(node,fDensity);AppI.i().getRootNode().attachChild(node);geom.setName("Box"+str);
 	}
 	
 	public void setEnabled(boolean enabled) {
@@ -835,24 +768,6 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	public Object debugTest(Object... aobj){
 		return null; //keep even if emtpy
 	}
-//	public void testCamProjectile(float fDesiredSpeed, float fRadius, float fDensity){
-//		Geometry geom = GeometryI.i().create(MeshI.i().sphere(fRadius), ColorRGBA.Yellow);
-//		AppI.i().placeAtCamWPos(geom, 1f, true);
-//		AppI.i().getRootNode().attachChild(geom);
-//		
-//		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geom,fDensity);
-//		pd.setAllowDisintegration(true);
-//		PhysicsI.i().throwAtSelfDirImpulse(geom, fDesiredSpeed*pd.fMass); //the final speed depends on the mass
-//	}
-	public static class GeometryTestProjectile extends Geometry{
-		@Override	public GeometryTestProjectile clone() {return (GeometryTestProjectile)super.clone();}
-		
-//		public GeometryTestProjectile placeAtWorld(Vector3f v3f){
-//			setLocalTranslation(v3f);
-//			return this;
-//		}
-
-	}
 	
 	public void testDebugCreateMarker(ColorRGBA color, Vector3f v3f) {
 		Geometry geom = GeometryI.i().create(MeshI.i().sphere(0.05f),color);
@@ -860,39 +775,6 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		AppI.i().getRootNode().attachChild(geom);
 	}
 	
-	public PhysicsData testCamProjectile(float fDesiredSpeed, float fRadius, float fDensity){
-		if(sbnBatchTestProjectiles==null){
-			sbnBatchTestProjectiles = new SimpleBatchNode("BatchNode");
-			AppI.i().getRootNode().attachChild(sbnBatchTestProjectiles);
-		}
-		
-//		Vector3f v3fScale = new Vector3f(0.25f,0.25f,1f);
-		if(geomTestProjectileFactory==null){
-			geomTestProjectileFactory = GeometryI.i().create(new Sphere(3,4,fRadius), ColorRGBA.Cyan, false, new GeometryTestProjectile());
-//			geomTestProjectileFactory = GeometryI.i().create(MeshI.i().sphere(fRadius), ColorRGBA.Cyan, false, new GeometryTestProjectile());
-//			geomTestProjectileFactory = GeometryI.i().create(MeshI.i().box(fRadius), ColorRGBA.Cyan, false, new GeometryTestProjectile());
-			geomTestProjectileFactory.scale(0.25f,0.25f,1f);
-			geomTestProjectileFactory.getMaterial().setColor(EColor.GlowColor.s(), ColorRGBA.Blue.mult(10)); //requires the bloom post processor with glow objects mode
-		}
-		
-		GeometryTestProjectile geomClone = geomTestProjectileFactory.clone();
-		sbnBatchTestProjectiles.attachChild(geomClone); //AppI.i().getRootNode().attachChild(geomClone);
-		sbnBatchTestProjectiles.batch();
-		
-//		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,fDensity,geomTestProjectileFactory.getLocalScale());
-		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,fDensity);
-		//TODO scale
-//		ps.remove(pd.rbc);
-//		pd.rbc.getCollisionShape().setScale(geomTestProjectileFactory.getLocalScale());
-//		ps.add(pd.rbc);
-		pd.setAllowDisintegration(true);
-		pd.bProjectile=(true);
-		pd.getRBC().setGravity(ps.getGravity(new Vector3f()).mult(0.25f));
-		
-		throwFromCam(pd,fDesiredSpeed);
-		
-		return pd;
-	}
 	public Impulse throwFromCam(PhysicsData pd,float fDesiredSpeed){
 		AppI.i().placeAtCamWPos(pd.sptLink, 1f, true); //orientated z
 		syncPhysTransfFromSpt(pd.sptLink);
@@ -907,90 +789,6 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		rbc.setPhysicsRotation(spt.getWorldRotation());
 	}
 	
-	public void reattachProjectile(Node nodeNewParent, Spatial sptProjectile){
-		assert nodeNewParent!=sbnBatchTestProjectiles;
-		
-		boolean b=sptProjectile.getParent()==sbnBatchTestProjectiles;
-		
-		if(nodeNewParent!=null){
-			nodeNewParent.attachChild(sptProjectile);
-		}else{
-			sptProjectile.removeFromParent();
-		}
-		
-		if(b)sbnBatchTestProjectiles.batch();
-	}
-	
-	public void applyGluedMode(PhysicsData pdWhat){
-		assert pdWhat.isProjectile();
-		
-		Node nodeParentest = SpatialHierarchyI.i().getParentestOrSelf(
-			pdWhat.pdGlueWhere.sptLink, Node.class, true, false);
-		
-		if(nodeParentest!=null){ //will glue at dynamic parent surface
-			reattachProjectile(nodeParentest,pdWhat.sptLink);
-			
-			// prevent disintegration if glued on dynamic //TODO just increase the timeout or limit the amount per dynamic parent 
-			hmDisintegratables.remove(pdWhat.rbc);
-			apdDisintegrate.remove(pdWhat);
-		}
-		
-		QueueI.i().enqueue(new CallableXAnon() {
-			@Override
-			public Boolean call() {
-				Vector3f v3fChk=null;
-				
-				if(nodeParentest!=null){ //will glue at dynamic parent surface
-					
-					boolean bUseRayTestPos=true;
-					if(bUseRayTestPos){
-						boolean bRayTestLocalPos=true;
-						if(bRayTestLocalPos){
-							v3fChk = pdWhat.v3fLocalGlueSpot;
-							attachChildRotated(nodeParentest,pdWhat);
-//							// rot 
-//							Node node = new Node();
-//							node.attachChild(pdWhat.sptLink);
-//							node.setLocalRotation(pdWhat.quaLocalGlueRot);
-//							nodeParentest.attachChild(node);
-						}else{ 
-							/**
-							 * for dynamic parents this is bad as they may have moved after the
-							 * pos being set at the phys thread...
-							 */
-							v3fChk = nodeParentest.worldToLocal(pdWhat.v3fWorldGlueSpot,null);
-						}
-					}else{ //event local pos
-						v3fChk = pdWhat.v3fEventCollOtherLocalPos;
-						attachChildRotated(nodeParentest,pdWhat);
-					}
-					
-				}else{
-					//simple at world on some static surface
-					v3fChk = pdWhat.v3fWorldGlueSpot;
-//					pdWhat.sptLink.setLocalTranslation(pdWhat.v3fWorldGlueSpot); 
-				}
-				
-				if(pdWhat.sptLink.getLocalTranslation().distance(v3fChk)>0f){
-					pdWhat.sptLink.setLocalTranslation(v3fChk);
-					return false; //to re-check
-				}
-				
-				return true;
-			}
-		});
-	
-		removeFromPhysicsSpace(pdWhat.sptLink); //this prevents further updates from physics space
-		
-		pdWhat.bGlueApplied=true;
-	}
-	
-	protected void attachChildRotated(Node nodeParentest, PhysicsData pdWhat){
-		Node node = new Node();
-		node.attachChild(pdWhat.sptLink);
-		node.setLocalRotation(pdWhat.quaLocalGlueRot);
-		nodeParentest.attachChild(node);
-	}
 	
 	@Override
 	public void collision(PhysicsCollisionEvent event) {
@@ -1001,23 +799,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		PhysicsData pdB = getPhysicsDataFrom(event.getNodeB());
 		if(pdA==null || pdB==null)return;
 		
-//		glueProjectileCheckApply(pdA,pdB,event.getPositionWorldOnB());
-//		glueProjectileCheckApply(pdB,pdA,event.getPositionWorldOnA());
-		glueProjectileCheckApply(pdA,pdB,event.getLocalPointB());
-		glueProjectileCheckApply(pdB,pdA,event.getLocalPointA());
-	}
-	
-	protected void glueProjectileCheckApply(PhysicsData pd, PhysicsData pdWhere, Vector3f v3fEventCollPos){
-		if(
-			pd.isProjectile() && 
-			!pdWhere.isProjectile() && 
-			!pd.bDisintegrated && 
-			!pd.bGlueApplied && 
-			pd.pdGlueWhere==pdWhere
-		){
-			pd.v3fEventCollOtherLocalPos=v3fEventCollPos.clone();
-			applyGluedMode(pd);
-		}
+		PhysicsProjectileI.i().glueProjectileCheckApply(pdA,pdB,event.getLocalPointB());
+		PhysicsProjectileI.i().glueProjectileCheckApply(pdB,pdA,event.getLocalPointA());
 	}
 	
 	/**
@@ -1048,17 +831,18 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		if(pdA.isProjectile() && pdB.isProjectile())return false;//prevent prjctle vs prjctle
 		
 		Boolean b=null;
-		b=threadPhysicsChkProjectileMovingTowards(nodeA,pdA);
+		b=threadPhysicsChkProjectileMovingTowards(pdA);
 		if(b!=null)return b;
 		
-		b=threadPhysicsChkProjectileMovingTowards(nodeB,pdB);
+		b=threadPhysicsChkProjectileMovingTowards(pdB);
 		if(b!=null)return b;
 		
 		return true; //allow all other collisions
 	}
 	
-	protected Boolean threadPhysicsChkProjectileMovingTowards(PhysicsCollisionObject node, PhysicsData pd){
-		if(node.getUserObject() instanceof GeometryTestProjectile){
+//	protected Boolean threadPhysicsChkProjectileMovingTowards(PhysicsCollisionObject node, PhysicsData pd){
+	protected Boolean threadPhysicsChkProjectileMovingTowards(PhysicsData pd){
+//		if(node.getUserObject() instanceof GeometryTestProjectile){
 //			PhysicsData pd = getPhysicsDataFrom((Spatial)node.getUserObject());
 			if(!pd.isProjectile())return null; //skip
 			
@@ -1109,9 +893,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				}
 			}
 			
-		}
+//		}
 		
-		return null; //skip
+		return null; //to skip
 	}
 //		if(nodeA.getUserObject() instanceof GeometryTestProjectile && nodeB.getUserObject() instanceof GeometryTestProjectile){
 //			return false;
@@ -1233,21 +1017,14 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		pd.rbc.activate();
 	}
 
-	public int getTestProjectilesPerSecond() {
-		return iTestProjectilesPerSecond;
+	public void cancelDisintegration(PhysicsData pdWhat) {
+		// prevent disintegration if glued on dynamic //TODO just increase the timeout or limit the amount per dynamic parent 
+		hmDisintegratables.remove(pdWhat.rbc);
+		apdDisintegrate.remove(pdWhat);
 	}
 
-	public PhysicsI setTestProjectilesPerSecond(int iTestProjectilesPerSecond) {
-		this.iTestProjectilesPerSecond = iTestProjectilesPerSecond;
-		return this; 
+	public Vector3f getGravity() {
+		return ps.getGravity(new Vector3f());
 	}
 
-	public long getTestProjectilesMaxLifeTime() {
-		return lTestProjectilesMaxLifeTime;
-	}
-
-	public PhysicsI setTestProjectilesMaxLifeTime(float fSeconds) {
-		this.lTestProjectilesMaxLifeTime = TimeConvertI.i().secondsToNano(fSeconds);
-		return this; 
-	}
 }

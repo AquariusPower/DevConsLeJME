@@ -337,6 +337,8 @@ public class TestDevConsFull extends SimpleApplication implements IEnvironmentLi
 		addTest(TestResizablePanel.class);
 		addTest(TestOriginDeviceGame.class);
 		addTest(TestZoomDistances.class);
+		addTest(TestProjectiles.class);
+		
 	}
 	
 	@Override
