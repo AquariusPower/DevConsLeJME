@@ -60,6 +60,7 @@ public class HighlighterI {
 			geomHighlight = GeometryI.i().create(new Sphere(),new ColorRGBA(1,1,1,0.5f)); 
 			geomHighlight.getMaterial().setColor(EColor.Color.s(),HighlighterI.i().colorHighlight); //only a copy of that color will be there, we need to apply the glowing one
 			geomHighlight.setName("HighLight");
+			this.setName(geomHighlight.getName());
 			
 			// this way more things can be added to the node
 			attachChild(geomHighlight);

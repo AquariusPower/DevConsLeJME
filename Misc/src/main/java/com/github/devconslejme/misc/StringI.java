@@ -283,7 +283,7 @@ public class StringI {
 //		return sbFloatArray.toString();
 		return astr;
 	}
-	public String fmtFloat(float fValue, int iScale) {
+	public String fmtFloat(double fValue, int iScale) {
 		return String.format("%."+iScale+"f", fValue);
 	}
 	

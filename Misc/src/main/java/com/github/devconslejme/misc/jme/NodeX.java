@@ -34,6 +34,10 @@ import com.jme3.scene.Spatial;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class NodeX extends Node {
+	public NodeX(String name) {
+		super(name);
+	}
+
 	@Override
 	public int attachChild(Spatial child) {
 		if(child.getName()==null){

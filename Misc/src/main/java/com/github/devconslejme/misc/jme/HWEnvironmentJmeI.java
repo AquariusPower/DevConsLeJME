@@ -319,7 +319,9 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 		
 		/////////////////// prepare  the bitmap text //////////////////////
 		btInfo.setBox(null); //to recalculate the height properly
-		btInfo.setText(sb.toString().trim()); //trim to remove last NL
+//		btInfo.setText(sb.toString().trim()); //trim to remove last NL
+		sb.append("\n");
+		btInfo.setText(sb.toString()); // it requies the last NL to work properly
 		//btInfo.setText("");btInfo.updateLogicalState()
 //		btInfo.setColor("(?m)^(?=[^=]*)=",ColorRGBA.Yellow); //(?m) multiline mode
 		btInfo.setColor("(?m)^[^=]*=",ColorRGBA.Cyan); //(?m) multiline mode
@@ -333,6 +335,7 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 		if(v3f==null){
 			v3f=new Vector3f(0,0,MiscJmeI.i().getZAboveAllAtGuiNode());
 			v3f.y=btInfo.getHeight();
+//			v3f.y+=10;
 		}
 		nodeInfo.setLocalTranslation(v3f);
 		

@@ -46,7 +46,18 @@ import com.jme3.scene.shape.Sphere;
 public class GeometryI {
 	public static GeometryI i(){return GlobalManagerI.i().get(GeometryI.class);}
 
-	public Geometry create(Mesh mesh, ColorRGBA color) {
+	public static class GeometryX extends Geometry{
+		public GeometryX(String name, Mesh mesh) {
+			super(name, mesh);
+		}
+		
+		public GeometryX setNameX(String name) {
+			super.setName(name);
+			return this;
+		}
+	}
+	
+	public <T extends Geometry> T create(Mesh mesh, ColorRGBA color) {
 		return create(mesh,color,null,null);
 	}
 	
@@ -62,9 +73,7 @@ public class GeometryI {
 	public <T extends Geometry> T create(Mesh mesh, ColorRGBA color, Boolean bTransparent, T geomStore) {
 		if(bTransparent==null)bTransparent = color.a<1f;
 //		GeometryX geom = new GeometryX(mesh.getClass().getSimpleName());
-		if(geomStore==null)geomStore = (T)new Geometry();
-		geomStore.setName(mesh.getClass().getSimpleName());
-		geomStore.setMesh(mesh);
+		if(geomStore==null)geomStore = (T)new GeometryX(mesh.getClass().getSimpleName(),mesh);
 		if(mesh instanceof Sphere){
 			Sphere s = ((Sphere)mesh);
 			geomStore.setModelBound(new BoundingSphere(s.getRadius(),Vector3f.ZERO));

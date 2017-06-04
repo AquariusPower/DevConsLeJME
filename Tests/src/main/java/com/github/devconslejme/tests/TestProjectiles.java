@@ -27,18 +27,19 @@
 package com.github.devconslejme.tests;
 
 import com.github.devconslejme.game.CharacterI;
-import com.github.devconslejme.misc.MatterI.Matter;
 import com.github.devconslejme.misc.jme.AppI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.GeometryI;
-import com.github.devconslejme.misc.jme.MeshI;
+import com.github.devconslejme.misc.jme.ColorI.EColor;
+import com.github.devconslejme.misc.jme.GeometryI.GeometryX;
 import com.github.devconslejme.misc.jme.PhysicsI;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
-import com.jme3.scene.Node;
 import com.jme3.scene.shape.Box;
 
 /**
@@ -71,45 +72,62 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 		PhysicsI.i().setDebugEnabled(true);
 //		SubdivisionSurfaceModifier s = new SubdivisionSurfaceModifier(modifierStructure, blenderContext);
 		
-		int iSize=50;
-		Geometry geomFloor=GeometryI.i().create(new Box(iSize,0.1f,iSize), ColorI.i().colorChangeCopy(ColorRGBA.Brown,0.20f,1f));
-		geomFloor.move(0,-7f,0);
-		geomFloor.setName("Box-floor");
-		PhysicsI.i().imbueFromWBounds(geomFloor).setTerrain(true)
-			.getRBC().setMass(0f);
-		AppI.i().getRootNode().attachChild(geomFloor);
+		float fSize=100;
+		float fYFloor=-7;
+		PhysicsData pdFloor = PhysicsI.i().spawnOrthoWall(0, fSize, fSize, null, new Vector3f(0,fYFloor,0));
+		pdFloor.getGeometry().getMaterial().setColor(EColor.Color.s(), ColorI.i().colorChangeCopy(ColorRGBA.Brown,0.20f,1f));
+//		Geometry geomFloor=GeometryI.i().create(new Box(iSize,0.1f,iSize), ColorI.i().colorChangeCopy(ColorRGBA.Brown,0.20f,1f));
+//		geomFloor.move(0,-7f,0);
+//		geomFloor.setName("floor");
+//		PhysicsI.i().imbueFromWBounds(geomFloor).setTerrain(true)
+//			.getRBC().setMass(0f);
+//		AppI.i().getRootNode().attachChild(geomFloor);
 		
-		initTestWall(iSize,"XP",true,geomFloor.getLocalTranslation().y,null);
-		initTestWall(iSize,"XN",false,geomFloor.getLocalTranslation().y,null);
-		initTestWall(iSize,"ZP",null,geomFloor.getLocalTranslation().y,true);
-		initTestWall(iSize,"ZN",null,geomFloor.getLocalTranslation().y,false);
+		float fYWalls=fYFloor+1; //walls
+		PhysicsI.i().spawnOrthoWall(1, fSize, 2f, null, new Vector3f(0,fYWalls, fSize/2f));
+		PhysicsI.i().spawnOrthoWall(1, fSize, 2f, null, new Vector3f(0,fYWalls,-fSize/2f));
+		PhysicsI.i().spawnOrthoWall(1, fSize, 2f, null, new Vector3f( fSize/2f,fYWalls,0))
+			.rotate(0, 90*FastMath.DEG_TO_RAD, 0);
+//			.getRBC().getPhysicsRotation().mult(new Quaternion().fromAxes(0, 90*FastMath.DEG_TO_RAD, 0));
+//			.getRBC().setPhysicsRotation(new Quaternion().rot);
+//			.rotate(0, 90*FastMath.DEG_TO_RAD, 0);
+		PhysicsI.i().spawnOrthoWall(1, fSize, 2f, null, new Vector3f(-fSize/2f,fYWalls,0))
+			.rotate(0, 90*FastMath.DEG_TO_RAD, 0);
 		
-		initTestBox(ColorRGBA.Red,3f,"X-Red");
-		initTestBox(ColorRGBA.Green,2f,"Y-Green");
-		initTestBox(ColorRGBA.Blue,1f,"X-Blue");
+		//ramp
+		PhysicsI.i().spawnOrthoWall(2, fSize/4f, 1f, null, new Vector3f(0,fYFloor,(fSize/2f)*0.75f))
+			.rotate(70*FastMath.DEG_TO_RAD,0,0);
+//		initTestWall(iSize,"XP",true,geomFloor.getLocalTranslation().y,null);
+//		initTestWall(iSize,"XN",false,geomFloor.getLocalTranslation().y,null);
+//		initTestWall(iSize,"ZP",null,geomFloor.getLocalTranslation().y,true);
+//		initTestWall(iSize,"ZN",null,geomFloor.getLocalTranslation().y,false);
+		
+		PhysicsI.i().spawnVolumeBox(ColorRGBA.Red,3f,"X-Red",new Vector3f(1,0,0).mult(5));
+		PhysicsI.i().spawnVolumeBox(ColorRGBA.Green,2f,"Y-Green",new Vector3f(0,1,0).mult(5));
+		PhysicsI.i().spawnVolumeBox(ColorRGBA.Blue,1f,"Z-Blue",new Vector3f(0,0,1).mult(5));
 		
 	}
 	
-	protected void initTestBox(ColorRGBA color, float fDensity, String str){
-		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), color);
-		Node node = new Node();node.attachChild(geom);
-		PhysicsI.i().imbueFromWBounds(node,new Matter("Test"+str,fDensity));AppI.i().getRootNode().attachChild(node);geom.setName("Box"+str);
-	}
+//	protected void initTestBox(ColorRGBA color, float fVolume, String str){
+//		Geometry geom = GeometryI.i().create(MeshI.i().box((float) (Math.cbrt(fVolume)/2f)), color);
+//		Node node = new Node("TestBox"+str);node.attachChild(geom);
+//		PhysicsI.i().imbueFromWBounds(node,EMatter.Custom1KgPerM3.get());AppI.i().getRootNode().attachChild(node);geom.setName("Box"+str);
+//	}
 	
-	public void initTestWall(int iSize,String str, Boolean bXP, float fY, Boolean bZP){
-		Geometry geomWall=GeometryI.i().create(new Box(iSize,2f,2f), ColorRGBA.Gray);
-		int i = iSize;///2;
-		Vector3f v3f = new Vector3f();
-		if(bXP!=null){
-			v3f.x=bXP?i:-i;
-			geomWall.rotate(0, 90*FastMath.DEG_TO_RAD, 0);
-		}
-		if(bZP!=null)v3f.z=bZP?i:-i;
-		v3f.y=fY;
-		geomWall.move(v3f);
-		geomWall.setName("BoxWall"+str);
-		PhysicsI.i().imbueFromWBounds(geomWall).setTerrain(true)
-			.getRBC().setMass(0f);
-		AppI.i().getRootNode().attachChild(geomWall);
-	}
+//	public void initTestWall(int iSize,String str, Boolean bXP, float fY, Boolean bZP){
+//		Geometry geomWall=GeometryI.i().create(new Box(iSize,2f,2f), ColorRGBA.Gray);
+////		int i = iSize;///2;
+//		Vector3f v3f = new Vector3f();
+//		if(bXP!=null){
+//			v3f.x=bXP?iSize:-iSize;
+//			geomWall.rotate(0, 90*FastMath.DEG_TO_RAD, 0);
+//		}
+//		if(bZP!=null)v3f.z=bZP?iSize:-iSize;
+//		v3f.y=fY;
+//		geomWall.move(v3f);
+//		geomWall.setName("BoxWall"+str);
+//		PhysicsI.i().imbueFromWBounds(geomWall).setTerrain(true)
+//			.getRBC().setMass(0f);
+//		AppI.i().getRootNode().attachChild(geomWall);
+//	}
 }

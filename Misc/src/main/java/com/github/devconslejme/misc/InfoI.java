@@ -70,7 +70,7 @@ public class InfoI {
 			this.objValue = objValue;
 			assert this.objValue!=null;
 		}
-		public Info(String strKey, float f, int iFloatScale) {
+		public Info(String strKey, double f, int iFloatScale) {
 			this(strKey,f);
 			this.iFloatScale=iFloatScale;
 		}
@@ -90,9 +90,9 @@ public class InfoI {
 	}
 	
 	public String fmtInfoValue(Info inf){
-		if(Float.class.isInstance(inf.objValue)){
+		if(Double.class.isInstance(inf.objValue) || Float.class.isInstance(inf.objValue)){
 			return StringI.i().fmtFloat(
-				(float)inf.objValue, 
+				(double)inf.objValue, 
 				inf.iFloatScale==null ? iInfoValueFloatScale : inf.iFloatScale
 			);
 		}else
@@ -146,9 +146,12 @@ public class InfoI {
 	 * @param f if null removes the key too
 	 * @param iFloatScale
 	 */
-	public void putAt(HashMap<String,Info> hm, String strKey, Float f, int iFloatScale) {
+	public void putAt(HashMap<String,Info> hm, String strKey, Double f, int iFloatScale) {
 		if(chkRemove(hm,strKey,f))return;
 		hm.put(strKey, new Info(strKey,f,iFloatScale));
+	}
+	public void putAt(HashMap<String,Info> hm, String strKey, Float f, int iFloatScale) {
+		putAt(hm, strKey, f.doubleValue(), iFloatScale);
 	}
 	public void putAt(HashMap<String, Info> hm, String strKey, Object objValue) {
 		if(chkRemove(hm,strKey,objValue))return; // hm.get(strKey)

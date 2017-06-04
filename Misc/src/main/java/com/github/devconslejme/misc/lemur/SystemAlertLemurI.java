@@ -184,6 +184,7 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 		if(pnlBlocker==null){
 			// old trick to prevent access to other gui elements easily! :D
 			pnlBlocker = new Button(""); //TODO must be button?
+			pnlBlocker.setName("AlertGuiBlocker");
 			colorBlockerBkg = ColorRGBA.Red.clone(); //new ColorRGBA(1f,0,0,1);//0.25f);
 			pnlBlocker.setBackground(new QuadBackgroundComponent(colorBlockerBkg));
 			tdBlockerGlow.setActive(true);
@@ -200,6 +201,7 @@ public class SystemAlertLemurI extends SystemAlertJmeI {
 		QuadBackgroundComponent qbc;
 		
 		cntrAlert = new Container(new BorderLayout(),getStyle());
+		cntrAlert.setName("AlertContainer");
 		setAlertSpatial(cntrAlert);
 		
 		EEffChannel.ChnGrowShrink.applyEffectsAt(cntrAlert);

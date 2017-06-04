@@ -110,7 +110,11 @@ public class CharacterI {
 
 	private FlyByCameraX	flycamx;
 	
-	public static class NodeBody extends Node{}
+	public static class NodeBody extends Node{
+		public NodeBody(String name) {
+			super(name);
+		}
+	}
 	
 	public BetterCharacterControlX create(Vector3f v3f){
 		if(v3f==null){
@@ -126,7 +130,7 @@ public class CharacterI {
 		float fHeight=1.7f;
 		BetterCharacterControlX bcc = new BetterCharacterControlX(0.25f, fHeight, 70f);
 		
-		NodeBody nodeBody = new NodeBody();
+		NodeBody nodeBody = new NodeBody("CharacterBody");
 		
 		Geometry geomBody = GeometryI.i().create(new Box(0.25f,fHeight/2f,0.25f), ColorRGBA.Orange);
 		geomBody.setLocalTranslation(0, fHeight/2f, 0);

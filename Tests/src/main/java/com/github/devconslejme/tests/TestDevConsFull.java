@@ -155,8 +155,8 @@ public class TestDevConsFull extends SimpleApplication implements IEnvironmentLi
 	
 	@Override
 	public void initialize(){
-		super.rootNode=new NodeX();
-		super.guiNode=new NodeX();
+		super.rootNode=new NodeX(super.rootNode.getName());
+		super.guiNode=new NodeX(super.guiNode.getName());
 		
 		super.initialize();
 	}

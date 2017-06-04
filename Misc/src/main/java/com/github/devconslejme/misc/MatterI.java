@@ -29,6 +29,8 @@ package com.github.devconslejme.misc;
 
 import java.util.HashMap;
 
+import com.jme3.math.Vector3f;
+
 
 /**
  * TODO add melting, boiling, freezing temperatures etc
@@ -78,6 +80,7 @@ public class MatterI {
 		private Matter mt;
 		private double fVolumeCm3;
 		private double	dMass;
+		private double	fVolumeM3;
 		
 		public MatterStatus(Matter mt){
 			this.mt=mt;
@@ -89,6 +92,7 @@ public class MatterI {
 
 		public MatterStatus setVolumeCm3(double fVolumeCm3) {
 			this.fVolumeCm3 = fVolumeCm3;
+			this.fVolumeM3 = fVolumeCm3/fM3toCm3;
 			this.dMass = mt.getDensityGramsPerCm3() * fVolumeCm3;
 			return this; 
 		}
@@ -104,6 +108,10 @@ public class MatterI {
 		
 		public Matter getMatter() {
 			return mt;
+		}
+
+		public double getVolumeM3() {
+			return fVolumeM3;
 		}
 
 		
