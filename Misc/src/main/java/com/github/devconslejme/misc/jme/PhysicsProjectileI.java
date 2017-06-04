@@ -35,6 +35,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI.EColor;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
+import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
@@ -101,7 +102,7 @@ public class PhysicsProjectileI {
 		sbnBatchTestProjectiles.batch();
 		
 //		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,fDensity,geomTestProjectileFactory.getLocalScale());
-		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,mt);
+		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,mt,false);
 		//TODO scale
 //		ps.remove(pd.rbc);
 //		pd.rbc.getCollisionShape().setScale(geomTestProjectileFactory.getLocalScale());
@@ -133,10 +134,10 @@ public class PhysicsProjectileI {
 		assert pdWhat.isProjectile();
 		
 		Node nodeParentest = SpatialHierarchyI.i().getParentestOrSelf(
-			pdWhat.pdGlueWhere.sptLink, Node.class, true, false);
+			pdWhat.pdGlueWhere.getSpatialWithPhysics(), Node.class, true, false);
 		
 		if(nodeParentest!=null){ //will glue at dynamic parent surface
-			reparentProjectile(nodeParentest,pdWhat.sptLink);
+			reparentProjectile(nodeParentest,pdWhat.getSpatialWithPhysics());
 			
 			PhysicsI.i().cancelDisintegration(pdWhat);
 		}
@@ -177,8 +178,12 @@ public class PhysicsProjectileI {
 //					pdWhat.sptLink.setLocalTranslation(pdWhat.v3fWorldGlueSpot); 
 				}
 				
-				if(pdWhat.sptLink.getLocalTranslation().distance(v3fChk)>0f){
-					pdWhat.sptLink.setLocalTranslation(v3fChk);
+				if(pdWhat.getSpatialWithPhysics().getLocalTranslation().distance(v3fChk)>0f){
+					/**
+					 * shall have no physics anymore at this point
+					 */
+					assert pdWhat.getSpatialWithPhysics().getControl(RigidBodyControl.class).getPhysicsSpace()==null;
+					pdWhat.getSpatialWithPhysics().setLocalTranslation(v3fChk);
 					return false; //to re-check
 				}
 				
@@ -186,14 +191,14 @@ public class PhysicsProjectileI {
 			}
 		});
 	
-		PhysicsI.i().removeFromPhysicsSpace(pdWhat.sptLink); //this prevents further updates from physics space
+		PhysicsI.i().removeFromPhysicsSpace(pdWhat.getSpatialWithPhysics()); //this prevents further updates from physics space
 		
 		pdWhat.bGlueApplied=true;
 	}
 	
 	protected void attachChildRotated(Node nodeParentest, PhysicsData pdWhat){
-		Node node = new Node();
-		node.attachChild(pdWhat.sptLink);
+		Node node = new NodeX("RotatedBaseForProjectile");
+		node.attachChild(pdWhat.getSpatialWithPhysics());
 		node.setLocalRotation(pdWhat.quaLocalGlueRot);
 		nodeParentest.attachChild(node);
 	}

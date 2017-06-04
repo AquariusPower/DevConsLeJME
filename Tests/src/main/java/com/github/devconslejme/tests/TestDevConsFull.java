@@ -33,7 +33,9 @@ import java.util.function.Function;
 import com.github.devconslejme.debug.DebugTrackProblemsJME;
 import com.github.devconslejme.debug.UnsafeDebugHacksI;
 import com.github.devconslejme.devcons.DevConsPluginStateI;
+import com.github.devconslejme.devcons.JavaScriptI;
 import com.github.devconslejme.devcons.LoggingI;
+import com.github.devconslejme.devcons.JavaScriptI.EBaseCommand;
 import com.github.devconslejme.extras.DynamicFPSLimiter;
 import com.github.devconslejme.extras.OSCmd;
 import com.github.devconslejme.extras.SingleAppInstance;
@@ -269,6 +271,16 @@ public class TestDevConsFull extends SimpleApplication implements IEnvironmentLi
 				GlobalManagerI.i().get(DynamicFPSLimiter.class).update(tpf);
 			}
 		});
+		
+		//// Queue manager dialog
+		DevConsPluginStateI.i().putButtonLater("MsgReport", "list all reviewable messages", 
+			new Command<Button>() {@Override public void execute(Button source) {
+//				MessagesI.i().getMessagesUId();JavaScriptI.i().
+				JavaScriptI.i().showMsgReport(null);
+//				for(String str:MessagesI.i().getMessagesReport(null)){
+//					LoggingI.i().logSubEntry(JavaScriptI.i().prepareCmd(EBaseCommand.msgRep,str));
+//				}
+			}}, null);
 		
 		//// Queue manager dialog
 		QueueManagerDialogI.i().configure();

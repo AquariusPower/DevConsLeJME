@@ -66,6 +66,7 @@ import com.jme3.collision.CollisionResult;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
+import com.jme3.math.Transform;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.BatchNode;
 import com.jme3.scene.Geometry;
@@ -238,10 +239,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 	
 	protected void disintegrate(PhysicsData pd){
-		erasePhysicsFrom(pd.sptLink);
+		erasePhysicsFrom(pd.getSpatialWithPhysics());
 		
-		Node nodeParent = pd.sptLink.getParent();
-		pd.sptLink.removeFromParent();
+		Node nodeParent = pd.getSpatialWithPhysics().getParent();
+		pd.getSpatialWithPhysics().removeFromParent();
 		if(nodeParent instanceof BatchNode)((BatchNode)nodeParent).batch();  
 		
 		pd.bDisintegrated=true;
@@ -292,7 +293,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		protected CollisionShape	cs;
 		protected BoundingSphere	bs;
 		protected RigidBodyControl	rbc;
-		protected Spatial	sptLink;
+//		protected Spatial	sptLink;
 		protected boolean	bAllowDisintegration=false;
 		protected Vector3f	v3fLastSafeSpot;
 		protected Quaternion	quaLastSafeRot;
@@ -311,6 +312,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		protected Vector3f	v3fPosAtPreviousTick;
 		protected Matter	mt;
 		protected MatterStatus	mts;
+		protected Geometry	geomLink;
+		protected NodeX	nodexLink;
 		
 		/**
 		 * 
@@ -335,8 +338,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			return this; 
 		}
 		
-		public PhysicsData(Spatial spt) {
-			this.sptLink = spt;
+		public PhysicsData(NodeX nodex, Geometry geom) {
+			this.nodexLink=nodex;
+			this.geomLink=geom;
+//			if(spt instanceof NodeX)nodexLink=(NodeX)spt;
+//			this.sptLink = spt;
 			
 			setProjectileMaxLifeTime(2);
 		}
@@ -375,7 +381,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 		
 		public void saveSafePosRotFromSpatialLink() {
-			saveSafePosRot(sptLink.getWorldTranslation(), sptLink.getWorldRotation());
+			saveSafePosRot(getSpatialWithPhysics().getWorldTranslation(), getSpatialWithPhysics().getWorldRotation());
 		}
 
 		public void restoreSafeSpotRot() {
@@ -438,19 +444,24 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		
 		@Override
 		public String toString() {
-			return sptLink.getName();
+			return getSpatialWithPhysics().getName();
 		}
 
 		public String getInfo() {
-			return sptLink.getName()+","+sptLink.getClass().getSimpleName()+","+rbc.getClass().getSimpleName();
+			return getSpatialWithPhysics().getName()+","+getSpatialWithPhysics().getClass().getSimpleName()+","+rbc.getClass().getSimpleName();
 		}
-
-		public Spatial getSpatial() {
-			return sptLink;
+		
+		public Spatial getSpatialWithPhysics(){
+			if(nodexLink!=null)return nodexLink;
+			return geomLink;
+		}
+		
+		public NodeX getEnclosingNode() {
+			return nodexLink;
 		}
 
 		public Geometry getGeometry() {
-			return (Geometry)sptLink;
+			return geomLink;
 		}
 	}
 	
@@ -466,19 +477,35 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	 * @param spt
 	 * @return dynamic: mass 1f
 	 */
-	public PhysicsData imbueFromWBounds(Spatial spt){
-		return imbueFromWBounds(spt,null);
+	public PhysicsData imbueFromWBounds(Geometry geom){
+		return imbueFromWBounds(geom,null,true);
 	}
 	/**
 	 * TODO create a compound if it is a node with more than one geometry.
-	 * @param spt
+	 * @param geom
 	 * @param mt
 	 * @return
 	 */
-	public PhysicsData imbueFromWBounds(Spatial spt, Matter mt){//, Vector3f v3fForceScaleCS){
-		assert !UserDataI.i().contains(spt, PhysicsData.class);
+	public PhysicsData imbueFromWBounds(Geometry geom, Matter mt, boolean bEncloseInNode){//, Vector3f v3fForceScaleCS){
+		assert !UserDataI.i().contains(geom, PhysicsData.class);
 		
-		PhysicsData pd = new PhysicsData(spt);
+//		Spatial spt = geom;
+		NodeX nodex=null;
+		if(bEncloseInNode){
+			/** to be on a node is important to let other things be attached to it like stuck projectiles */
+			nodex = new NodeX("PhysImbued:"+geom.getName());
+			
+			Transform trf = geom.getWorldTransform();
+			geom.setLocalTransform(new Transform());
+			nodex.setLocalTransform(trf);
+			
+			Node nodeParent = geom.getParent();
+			nodex.attachChild(geom);
+			if(nodeParent!=null)nodeParent.attachChild(nodex);
+		}
+		
+		PhysicsData pd = new PhysicsData(nodex,geom);
+//		pd.nodexLink=spt;
 		pd.saveSafePosRotFromSpatialLink();
 		if(mt!=null){
 			pd.mts=new MatterStatus(mt);
@@ -486,20 +513,25 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			pd.mts=new MatterStatus(EMatter.Custom1KgPerM3.get());
 		}
 		
+		/*****************************************
+		 * retrieve correct bounding
+		 */
 		//bkp rot
-		pd.quaWRotBkp = spt.getWorldRotation().clone();
+		pd.quaWRotBkp = geom.getWorldRotation().clone();
 		// reset rot: look at z+1 from where it is, and up to y=1
-		spt.lookAt(spt.getWorldTranslation().add(0,0,1), Vector3f.UNIT_Y);
+		geom.lookAt(geom.getWorldTranslation().add(0,0,1), Vector3f.UNIT_Y);
 		
 		/**
 		 * get the bound related to an unmodified rotation 
 		 */
-		pd.bv = spt.getWorldBound().clone(); //the world bound will already be a scaled result...
+		pd.bv = geom.getWorldBound().clone(); //the world bound will already be a scaled result...
 		
 		//restore rot
-		spt.lookAt(spt.getWorldTranslation().add(pd.quaWRotBkp.getRotationColumn(2)), pd.quaWRotBkp.getRotationColumn(1));
+		geom.lookAt(geom.getWorldTranslation().add(pd.quaWRotBkp.getRotationColumn(2)), pd.quaWRotBkp.getRotationColumn(1));
 		
-		// create collision shape from bounds
+		/***********************************************
+		 *  create collision shape from bounds
+		 */
 		float fPseudoDiameter = 0f;
 		if (pd.bv instanceof BoundingBox) {
 			pd.bb = (BoundingBox) pd.bv.clone();
@@ -516,7 +548,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //			}
 			fPseudoDiameter=2f*pd.bs.getRadius();
 		}else{
-			throw new DetailedException("unsupported "+pd.bv.getClass(),spt);
+			throw new DetailedException("unsupported "+pd.bv.getClass(),geom);
 		}
 		
 		pd.mts.setVolumeM3(pd.bv.getVolume());
@@ -543,13 +575,32 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		 */
 		pd.rbc.setCcdSweptSphereRadius(fPseudoDiameter/2f);
 		
-		spt.addControl(pd.rbc); //this will put the rbc at spatial's W/L location/rotation
-		pd.v3fPosAtPreviousTick=pd.sptLink.getLocalTranslation().clone();
+//		Spatial spt=nodex;
+//		if(spt==null)spt=geom;
+//		if(bEncloseInNode){
+		pd.getSpatialWithPhysics().addControl(pd.rbc); //this will put the rbc at spatial's W/L location/rotation
+//		}else{
+//			geom.addControl(pd.rbc); //this will put the rbc at spatial's W/L location/rotation
+//		}
+//		if(bEncloseInNode){
+//			/** to be on a node is important to let other things be attached to it like stuck projectiles */
+//			Node nodeParent = geom.getParent();
+//			Transform trf = geom.getWorldTransform();
+//			NodeX nodex = new NodeX("PhysImbued:"+geom.getName());
+//			nodex.attachChild(geom);
+//			nodex.setLocalTransform(trf);
+//			if(nodeParent!=null)nodeParent.attachChild(nodex);
+//			nodex.addControl(pd.rbc); //this will put the rbc at spatial's W/L location/rotation
+//		}else{
+//			geom.addControl(pd.rbc); //this will put the rbc at spatial's W/L location/rotation
+//		}
+		
+		pd.v3fPosAtPreviousTick=pd.getSpatialWithPhysics().getLocalTranslation().clone();
 		
 		pd.updateMaterializedAtTime();
 		
-		UserDataI.i().putSafelyMustNotExist(spt, pd); //BEFORE adding to phys space as its thread will be trying to retrieve it!
-		ps.add(spt); //LAST THING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		UserDataI.i().putSafelyMustNotExist(pd.getSpatialWithPhysics(), pd); //BEFORE adding to phys space as its thread will be trying to retrieve it!
+		ps.add(pd.getSpatialWithPhysics()); //LAST THING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		
 		return pd;
 	}
@@ -568,10 +619,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			 */
 			for(Node node:SpatialHierarchyI.i().getAllParents(spt,true)){
 				pd = UserDataI.i().getMustExistOrNull(node, PhysicsData.class);
-				if(pd!=null)return pd;
+//				if(pd!=null)return pd;
+				break;
 			}
 		}
-		return null;
+		return pd;
 	}
 	
 	public void putPhysicsData(Spatial sptSourceRetrieveFrom, HashMap<String,Info> hmStore){
@@ -832,9 +884,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 	
 	public Impulse throwFromCam(PhysicsData pd,float fDesiredSpeed){
-		AppI.i().placeAtCamWPos(pd.sptLink, 1f, true); //orientated z
-		syncPhysTransfFromSpt(pd.sptLink);
-		Impulse imp = throwAtSelfDirImpulse(pd.sptLink, (float) (fDesiredSpeed*pd.mts.getMass())); //the final speed depends on the mass
+		AppI.i().placeAtCamWPos(pd.getSpatialWithPhysics(), 1f, true); //orientated z
+		syncPhysTransfFromSpt(pd.getSpatialWithPhysics());
+		Impulse imp = throwAtSelfDirImpulse(pd.getSpatialWithPhysics(), (float) (fDesiredSpeed*pd.mts.getMass())); //the final speed depends on the mass
 		pdLastThrownFromCam=pd;
 		return imp;
 	}
@@ -1055,14 +1107,14 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		Geometry geom = GeometryI.i().create(MeshI.i().box((float) (Math.cbrt(fVolume)/2f)), color);
 		geom.setName("Box"+str);
 		
-		/** to be on a node is important to let other things be attached to it like stuck projectiles */
-		Node node = new Node("TestBox"+str);
-		node.attachChild(geom);
+//		/** to be on a node is important to let other things be attached to it like stuck projectiles */
+//		Node node = new Node("TestBox"+str);
+//		node.attachChild(geom);
 		
-		if(v3fPos!=null)node.move(v3fPos); //b4 physics
-		PhysicsData pd = PhysicsI.i().imbueFromWBounds(node,EMatter.Custom1KgPerM3.get());
+		if(v3fPos!=null)geom.move(v3fPos); //b4 physics
+		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geom,EMatter.Custom1KgPerM3.get(),true);
 		
-		AppI.i().getRootNode().attachChild(node);
+		AppI.i().getRootNode().attachChild(pd.getSpatialWithPhysics());
 		
 		return pd;
 	}
@@ -1081,7 +1133,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		
 		GeometryX geomWall=GeometryI.i().create(new Box(fWidth/2f,fHeight/2f,fThickness/2f), ColorRGBA.Gray);
 		geomWall.setName("OrthoWall");
-		Spatial sptAtRoot = geomWall;
+		AppI.i().getRootNode().attachChild(geomWall);
+//		Spatial sptAtRoot = geomWall;
 		
 		switch(iPlane){
 			case 0:
@@ -1091,18 +1144,18 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			case 1:break; //default wall
 			case 2:
 				geomWall.rotate(0, 0, 90*FastMath.DEG_TO_RAD);
-				NodeX nodexParent = new NodeX(geomWall.getName()+":Ramp");
-				nodexParent.attachChild(geomWall);
+//				NodeX nodexParent = new NodeX(geomWall.getName()+":Ramp");
+//				nodexParent.attachChild(geomWall);
 				geomWall.move(0,fWidth/2f,0);
-				sptAtRoot=nodexParent;
+//				sptAtRoot=nodexParent;
 				break;
 		}
 		
-		if(v3fPos!=null)sptAtRoot.move(v3fPos); //b4 physics
-		PhysicsData pd = PhysicsI.i().imbueFromWBounds(sptAtRoot).setTerrain(true);
+		if(v3fPos!=null)geomWall.move(v3fPos); //b4 physics
+		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomWall).setTerrain(true);
 		pd.getRBC().setMass(0f); //rbc
 		
-		AppI.i().getRootNode().attachChild(sptAtRoot);
+//		AppI.i().getRootNode().attachChild(sptAtRoot);
 		
 		return pd;
 	}

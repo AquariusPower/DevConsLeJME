@@ -125,7 +125,7 @@ public class JavaScriptI implements IGlobalAddListener {
 //		public String s(){return toString();}
 //	}
 	
-	enum EBaseCommand{
+	public static enum EBaseCommand{
 		clear("clears the console log (not the log file)"),
 		echo("print some text on the console log"),
 		exec("[file] runs a script file, mainly at "+FileI.i().getStorageFolder()+". Extra JSBind:"+SelfScriptFile.class.getSimpleName()),
@@ -138,7 +138,8 @@ public class JavaScriptI implements IGlobalAddListener {
 		quit,
 		set("<JSBindId> <CommandReturningNonVoid>"),
 		showIni,
-		bind("<KeyCfg> <[<HardCmdId>|<CustomJS>]> Extra JSBind: "+strSelfCallEnqueuedId),
+		bind("<KeyCfg> <[<HardCmdId>|<CustomJS>]> Extra JSBind: "+strSelfCallEnqueuedId), 
+		msgRep("[msgUId] show reviewable messages"),
 		;
 		
 		EBaseCommand(){}
@@ -244,6 +245,9 @@ public class JavaScriptI implements IGlobalAddListener {
 			case bind:
 				KeyBindCommandManagerI.i().loadConfig(strParams,true,true);
 				return true;
+			case msgRep:
+				showMsgReport(strParams);
+				return true;
 			default:
 //				throw new UnsupportedOperationException("not implemented yet "+ebc);
 				LoggingI.i().logWarn("not implemented yet "+ebc);
@@ -252,6 +256,22 @@ public class JavaScriptI implements IGlobalAddListener {
 		return false;
 	}
 	
+	public void showMsgReport(String strParams) {
+		String strFilter="";
+		if(strParams!=null){
+			strFilter = StringI.i().extractPart(strParams,";",0);
+			if(strFilter.isEmpty())strFilter = StringI.i().extractPart(strParams," ",0);
+		}
+		LoggingI.i().logMarker("Messages Report: "+strFilter);
+		for(String str:MessagesI.i().getMessagesReport(strFilter)){
+//			str=str.replace("\n"," ");
+			if(strFilter.isEmpty()){
+				str=(JavaScriptI.i().prepareCmd(EBaseCommand.msgRep,str));
+			}
+			LoggingI.i().logSubEntry(str);
+		}
+	}
+
 	/**
 	 * 
 	 * @param strParams "<[$]customJSVarBindId> <JSCmdToCaptureReturnValueFrom>"
@@ -927,7 +947,7 @@ public class JavaScriptI implements IGlobalAddListener {
 //					astrUserInit.clear();
 					
 //					if(!bFail)
-					LoggingI.i().logMarker("UserInit:End");
+					LoggingI.i().logMarker("UserInit:CompletedSuccessfully");
 					
 					return true; //success, end queue
 				}
@@ -1124,7 +1144,11 @@ public class JavaScriptI implements IGlobalAddListener {
 		}
 	}
 
-	public String getBindCmdUId() {
-		return strBaseCmdToken+EBaseCommand.bind.toString();
+//	public String getBindCmdUId() {
+//		return strBaseCmdToken+EBaseCommand.bind.toString();
+//	}
+	
+	public String prepareCmd(EBaseCommand e, String strParams){
+		return strBaseCmdToken+e+" "+strParams;
 	}
 }

@@ -183,6 +183,8 @@ public class MessagesI {
 		return mdRet;
 	}
 	
+	private String strUIdHelpPrefix="UId=";
+	
 	private static class ReviewableMsg implements IReport{
 		private static String strUIdLast = "0";
 		
@@ -216,22 +218,27 @@ public class MessagesI {
 		public String getReport(boolean bFull) {
 			StringBuilder sb = new StringBuilder();
 			
-			sb.append("UId="+strUId);
-			sb.append(bFull?"\n":";");
+			String strSep=";"; //bFull?"\n":";"
+			
+			sb.append(MessagesI.i().strUIdHelpPrefix+strUId);
+			sb.append(strSep);
 			
 			sb.append("time="+TimeFormatI.i().getRealTimeFormatted(lRealTimeMilis,null));
-			sb.append(bFull?"\n":";");
+			sb.append(strSep);
 			
 			sb.append("hc="+iHitCount);
-			sb.append(bFull?"\n":";");
+			sb.append(strSep);
 			
 			sb.append("mc="+iMsgChangedCount);
-			sb.append(bFull?"\n":";");
+			sb.append(strSep);
 			
 			sb.append("msg="+strFullMessage+"");
-			sb.append(bFull?"\n":";");
+			sb.append(strSep);
 			
 			if(bFull){
+				for(String str:strKey.split("[;]")){
+					sb.append(" "+str+"\n");
+				}
 				return sb.toString();
 			}else{
 				return StringI.i().truncAndGrantOneLine(sb.toString(),MessagesI.i().getSummaryReportLineLength(),"...");
@@ -250,13 +257,14 @@ public class MessagesI {
 	
 	/**
 	 * 
-	 * @param strUId can be null to show all as summary, or set to show one in detail
+	 * @param strUId can be null or empty to show all as summary, or set to show one in detail
 	 * @return
 	 */
 	public ArrayList<String> getMessagesReport(String strUId){
 		ArrayList<String> astr = new ArrayList<String>();
+		if(strUId!=null && strUId.isEmpty())strUId=null;
 		for(ReviewableMsg md:hmMsgs.values()){
-			if(strUId==null || strUId.equalsIgnoreCase(md.strUId)){
+			if(strUId==null || strUId.equalsIgnoreCase(md.strUId) || strUId.equalsIgnoreCase(strUIdHelpPrefix+md.strUId)){
 				astr.add(md.getReport(strUId!=null));
 			}
 		}

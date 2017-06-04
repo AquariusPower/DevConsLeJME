@@ -92,7 +92,8 @@ public class InfoI {
 	public String fmtInfoValue(Info inf){
 		if(Double.class.isInstance(inf.objValue) || Float.class.isInstance(inf.objValue)){
 			return StringI.i().fmtFloat(
-				(double)inf.objValue, 
+//				(double)inf.objValue, 
+				(inf.objValue instanceof Double)?(double)inf.objValue:(float)inf.objValue,
 				inf.iFloatScale==null ? iInfoValueFloatScale : inf.iFloatScale
 			);
 		}else

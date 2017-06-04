@@ -398,7 +398,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		/**
 		 * clone node axis intersection arrow tip
 		 */
-		Node nodePet=new Node();
+		Node nodePet=new NodeX("Pet");
 		NodeAxis nodeCopyFrom = getAxisInfo(ea).getTorusTip();
 		nodePet.setLocalTransform(nodeCopyFrom.getLocalTransform());
 //		nodePet.setLocalTranslation(

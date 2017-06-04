@@ -293,8 +293,8 @@ public class StringI {
 		return String.format(dfLong.format(l));
 	}
 
-	public String extractPart(String strText, String strSeparator, int iStartIndexInclusive) {
-		return extractPart(strText, strSeparator, iStartIndexInclusive, iStartIndexInclusive+1);
+	public String extractPart(String strText, String strSeparator, int iIndex) {
+		return extractPart(strText, strSeparator, iIndex, iIndex+1);
 	}
 	/**
 	 * 
