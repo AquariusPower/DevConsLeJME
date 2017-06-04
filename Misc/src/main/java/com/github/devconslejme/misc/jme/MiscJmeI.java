@@ -41,6 +41,7 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.collision.CollisionResults;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Ray;
@@ -85,12 +86,24 @@ public class MiscJmeI {
 			setNodeVirtualWorld(sappOptional.getRootNode());
 		}
 		
+		AssertionsI.i().putAssertRemainUnmodified(Vector3f.NEGATIVE_INFINITY, Vector3f.NEGATIVE_INFINITY.clone());
+		AssertionsI.i().putAssertRemainUnmodified(Vector3f.POSITIVE_INFINITY, Vector3f.POSITIVE_INFINITY.clone());
+		AssertionsI.i().putAssertRemainUnmodified(Vector3f.ZERO, Vector3f.ZERO.clone());
 		AssertionsI.i().putAssertRemainUnmodified(Vector3f.UNIT_XYZ, Vector3f.UNIT_XYZ.clone());
 		AssertionsI.i().putAssertRemainUnmodified(Vector3f.UNIT_X, Vector3f.UNIT_X.clone());
 		AssertionsI.i().putAssertRemainUnmodified(Vector3f.UNIT_Y, Vector3f.UNIT_Y.clone());
 		AssertionsI.i().putAssertRemainUnmodified(Vector3f.UNIT_Z, Vector3f.UNIT_Z.clone());
 		AssertionsI.i().putAssertRemainUnmodified(Vector3f.NAN, Vector3f.NAN.clone());
+		
 		//TODO colors too, and other things..
+		AssertionsI.i().putAssertRemainUnmodified(ColorRGBA.Red, ColorRGBA.Red.clone());
+		AssertionsI.i().putAssertRemainUnmodified(ColorRGBA.Green, ColorRGBA.Green.clone());
+		AssertionsI.i().putAssertRemainUnmodified(ColorRGBA.Blue, ColorRGBA.Blue.clone());
+		AssertionsI.i().putAssertRemainUnmodified(ColorRGBA.Cyan, ColorRGBA.Cyan.clone());
+		AssertionsI.i().putAssertRemainUnmodified(ColorRGBA.Magenta, ColorRGBA.Magenta.clone());
+		AssertionsI.i().putAssertRemainUnmodified(ColorRGBA.Yellow, ColorRGBA.Yellow.clone());
+		AssertionsI.i().putAssertRemainUnmodified(ColorRGBA.Black, ColorRGBA.Black.clone());
+		AssertionsI.i().putAssertRemainUnmodified(ColorRGBA.White, ColorRGBA.White.clone());
 	}
 	
 	public boolean isInside(Spatial sptWorldBoundLimits, Vector3f v3fChkPos){

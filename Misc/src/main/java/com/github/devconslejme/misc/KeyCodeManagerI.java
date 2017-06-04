@@ -340,10 +340,24 @@ public class KeyCodeManagerI {
 	public Key createSpecialExternalContextKey(ICompositeRestrictedAccessControl ccContextRestrictedAccess,String strKeyId){
 		Key key = createSpecialSimpleKey(strKeyId);
 		key.setSpecialExternalContextKeyMode(ccContextRestrictedAccess);
+		
+		assert !akeyContextsList.contains(key);
+		akeyContextsList.add(key);
+		
 		return key;
 	}
 	public Key createSpecialSimpleKey(String strId){
 		return addKeyWorkFull(strId, iSpecialCodeStart--);
+	}
+	
+	ArrayList<Key> akeyContextsList = new ArrayList<Key>();
+	
+	public String getContextsStatusReport() {
+		StringBuilder sb = new StringBuilder();
+		for(Key key:akeyContextsList){
+			if(key.isPressed())sb.append(key.getFullId()+" && ");
+		}
+		return sb.toString();
 	}
 	
 //	public Key getMouseButtonKey(int iButtonIndex){

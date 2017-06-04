@@ -112,12 +112,15 @@ public class CharacterI {
 	
 	public static class NodeBody extends Node{}
 	
-	public BetterCharacterControlX create(){
-		ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
-		if(acr.size()==0)return null;
-		CollisionResult cr = acr.get(0);
-		PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(cr.getGeometry());
-		if(!pd.isTerrain())return null;
+	public BetterCharacterControlX create(Vector3f v3f){
+		if(v3f==null){
+			ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+			if(acr.size()==0)return null;
+			CollisionResult cr = acr.get(0);
+			PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(cr.getGeometry());
+			if(!pd.isTerrain())return null;
+			v3f = cr.getContactPoint();
+		}
 		
 //		PhysicsCharacter pc = new PhysicsCharacter(new CapsuleCollisionShape(), 2f);
 		float fHeight=1.7f;
@@ -141,7 +144,7 @@ public class CharacterI {
 		
 		PhysicsI.i().add(nodeBody);
 		
-		bcc.setPhysicsLocation(cr.getContactPoint().add(0,0.25f,0));
+		bcc.setPhysicsLocation(v3f.add(0,0.25f,0)); //a bit above
 		
 		bccLast = bcc;
 		
@@ -210,6 +213,7 @@ public class CharacterI {
 	
 	public BetterCharacterControlX getBCCFrom(Spatial spt){
 		NodeBody nb = getBodyFrom(spt);
+		if(nb==null)return null;
 		BetterCharacterControlX bcc = nb.getControl(BetterCharacterControlX.class);
 		return bcc;
 	}

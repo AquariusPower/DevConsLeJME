@@ -145,18 +145,25 @@ public class KeyCodeConfigureForJme {//implements AnalogListener,ActionListener{
 			}
 		}
 		
-		QueueI.i().enqueue(new CallableXAnon() {
-			@Override
-			public Boolean call() {
-				pseudoReleaseAxisKey();
-				return true;
-			}
-		}).enableLoopMode().setName("PseudoAxisKeyAutoRelease");
+		initUpdateLoop();
 		
 		// TODO joystick
 	}
 	
-//	@Workaround
+	protected void initUpdateLoop() {
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				simulateAxisKeyReleased();
+				
+				HWEnvironmentJmeI.i().putCustomInfo("ActiveContext(s)", KeyCodeManagerI.i().getContextsStatusReport());
+				
+				return true;
+			}
+		}).enableLoopMode();
+	}
+
+	//	@Workaround
 //	private void pseudoAxisKeyUpdatePressed(String strKeyId,boolean bPressed){
 //		if(!bPressed)return;
 //		
@@ -173,7 +180,7 @@ public class KeyCodeConfigureForJme {//implements AnalogListener,ActionListener{
 	 * @param strKeyId
 	 */
 	@Workaround
-	private void pseudoReleaseAxisKey(){
+	private void simulateAxisKeyReleased(){
 //		if(true)return;//TODO revieweing
 		for(Key key:akAxis){
 //			kax.getLastPressedFrameId()=EnvironmentJmeI.i().getCurrentFrameId();

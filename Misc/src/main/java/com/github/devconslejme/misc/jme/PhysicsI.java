@@ -28,6 +28,7 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import com.github.devconslejme.game.CharacterI;
 import com.github.devconslejme.misc.Annotations.NotMainThread;
@@ -55,7 +56,9 @@ import com.jme3.bullet.collision.PhysicsCollisionEvent;
 import com.jme3.bullet.collision.PhysicsCollisionGroupListener;
 import com.jme3.bullet.collision.PhysicsCollisionListener;
 import com.jme3.bullet.collision.PhysicsCollisionObject;
+import com.jme3.bullet.collision.PhysicsRayTestResult;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
+import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
@@ -234,7 +237,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	protected void updateDisintegration() {
 		long lSTime = SimulationTimeI.i().getNanoTime();
 		for(PhysicsData pd:hmDisintegratables.values()){
-			if((lSTime - pd.lMaterializedSTime) > lTestProjectilesMaxLifeTime ){
+			if((lSTime - pd.lMaterializedSTime) > (lTestProjectilesMaxLifeTime*(pd.bGlueApplied?10:1)) ){
 				if(!apdDisintegrate.contains(pd))apdDisintegrate.add(pd);
 			}
 		}
@@ -245,9 +248,12 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	
 	protected void disintegrate(PhysicsData pd){
 		erasePhysicsFrom(pd.sptLink);
-		boolean b=(pd.sptLink.getParent() == sbnBatchTestProjectiles);
-		pd.sptLink.removeFromParent();
-		if(b)sbnBatchTestProjectiles.batch();
+		
+		reattachProjectile(null,pd.sptLink);
+//		boolean b=(pd.sptLink.getParent() == sbnBatchTestProjectiles);
+//		pd.sptLink.removeFromParent();
+//		if(b)sbnBatchTestProjectiles.batch();
+		
 		pd.bDisintegrated=true;
 	}
 
@@ -316,11 +322,14 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		private boolean	bResting;
 		private Impulse	imp;
 		private long	lMaterializedSTime;
-		private Vector3f	v3fGlueSpot;
+		private Vector3f	v3fWorldGlueSpot;
 		private PhysicsData	pdGlueWhere;
 //		private boolean	bApplyGluedMode;
 		public boolean	bGlueApplied;
 		private boolean	bProjectile;
+		public Vector3f	v3fEventCollOtherLocalPos;
+		public Vector3f	v3fLocalGlueSpot;
+		public Quaternion	quaLocalGlueRot;
 		
 		public PhysicsData(Spatial spt) {
 			this.sptLink = spt;
@@ -399,7 +408,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			this.imp = imp;
 		}
 
-		public void updateMaterializedAt() {
+		public void updateMaterializedAtTime() {
 			this.lMaterializedSTime=SimulationTimeI.i().getNanoTime();
 		}
 
@@ -420,6 +429,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		public boolean isProjectile() {
 			return bProjectile;
 		}
+		
+		@Override
+		public String toString() {
+			return sptLink.getName();
+		}
 	}
 	
 	
@@ -429,7 +443,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		if(!apdDisintegrate.contains(pd))apdDisintegrate.add(pd);
 	}
 	
-	public PhysicsData imbueFromWBounds(Spatial spt, Float fDensityAutoMassFromVolume){
+	public PhysicsData imbueFromWBounds(Spatial spt, Float fDensityAutoMassFromVolume){//, Vector3f v3fForceScaleCS){
 		assert !UserDataI.i().contains(spt, PhysicsData.class);
 		
 		PhysicsData pd = new PhysicsData(spt);
@@ -455,11 +469,20 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}else
 		if (pd.bv instanceof BoundingSphere) {
 			pd.bs = (BoundingSphere) pd.bv.clone();
-			pd.cs = new SphereCollisionShape(pd.bs.getRadius());
+//			assert v3fForceScaleCS==null;
+//			if(v3fForceScaleCS==null){
+				pd.cs = new SphereCollisionShape(pd.bs.getRadius());
+//			}else{
+//				pd.cs = new CapsuleCollisionShape(pd.bs.getRadius());
+//			}
 			fPseudoDiameter=2f*pd.bs.getRadius();
 		}else{
 			throw new DetailedException("unsupported "+pd.bv.getClass(),spt);
 		}
+		
+//		if(v3fForceScaleCS!=null){
+//			pd.cs.setScale(v3fForceScaleCS);
+//		}
 		
 //		if(false)assert spt.getWorldScale().lengthSquared()==3f : "scaled collision shape may cause imprecision and even ccd will fail";
 //		if(spt.getWorldScale().lengthSquared()!=3f){ //TODO enable this one day?
@@ -496,7 +519,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		
 		spt.addControl(pd.rbc); //this will put the rbc at spatial's W/L location/rotation
 		
-		pd.updateMaterializedAt();
+		pd.updateMaterializedAtTime();
 		
 		UserDataI.i().putSafelyMustNotExist(spt, pd); //BEFORE adding to phys space as its thread will be trying to retrieve it!
 		ps.add(spt); //LAST THING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -724,6 +747,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	
 	//	public void initTest(boolean bTestBuggyFloor){
 	public void initTest(){
+		CharacterI.i().create(Vector3f.ZERO);
+		
 		setDebugEnabled(true);
 //		SubdivisionSurfaceModifier s = new SubdivisionSurfaceModifier(modifierStructure, blenderContext);
 		
@@ -740,16 +765,15 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		initTestWall(iSize,"ZP",null,geomFloor.getLocalTranslation().y,true);
 		initTestWall(iSize,"ZN",null,geomFloor.getLocalTranslation().y,false);
 		
-		{
-		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), ColorRGBA.Red);
-		imbueFromWBounds(geom,3f);AppI.i().getRootNode().attachChild(geom);geom.setName("Box-X-Red");
-		}{
-		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), ColorRGBA.Green);
-		imbueFromWBounds(geom,2f);AppI.i().getRootNode().attachChild(geom);geom.setName("Box-Y-Green");
-		}{
-		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), ColorRGBA.Blue);
-		imbueFromWBounds(geom,1f);AppI.i().getRootNode().attachChild(geom);geom.setName("Box-Z-Blue");
-		}
+		initBox(ColorRGBA.Red,3f,"X-Red");
+		initBox(ColorRGBA.Green,2f,"Y-Green");
+		initBox(ColorRGBA.Blue,1f,"X-Blue");
+//		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), ColorRGBA.Green);
+//		imbueFromWBounds(geom,2f);AppI.i().getRootNode().attachChild(geom);geom.setName("Box-Y-Green");
+//		}{
+//		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), ColorRGBA.Blue);
+//		imbueFromWBounds(geom,1f);AppI.i().getRootNode().attachChild(geom);geom.setName("Box-Z-Blue");
+//		}
 		
     KeyBindCommandManagerI.i().putBindCommandsLater("Space",new CallBoundKeyCmd(){
   		@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
@@ -758,6 +782,12 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
   			return true;
   		}}.setName("TestShootProjectile").holdKeyPressedForContinuousCmd().setDelaySeconds(1f/iTestProjectilesPerSecond)
 		);
+	}
+	
+	protected void initBox(ColorRGBA color, float fDensity, String str){
+		Geometry geom = GeometryI.i().create(MeshI.i().box(0.5f), color);
+		Node node = new Node();node.attachChild(geom);
+		imbueFromWBounds(node,fDensity);AppI.i().getRootNode().attachChild(node);geom.setName("Box"+str);
 	}
 	
 	public void setEnabled(boolean enabled) {
@@ -816,13 +846,27 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //	}
 	public static class GeometryTestProjectile extends Geometry{
 		@Override	public GeometryTestProjectile clone() {return (GeometryTestProjectile)super.clone();}
+		
+//		public GeometryTestProjectile placeAtWorld(Vector3f v3f){
+//			setLocalTranslation(v3f);
+//			return this;
+//		}
+
 	}
+	
+	public void testDebugCreateMarker(ColorRGBA color, Vector3f v3f) {
+		Geometry geom = GeometryI.i().create(MeshI.i().sphere(0.05f),color);
+		geom.setLocalTranslation(v3f);
+		AppI.i().getRootNode().attachChild(geom);
+	}
+	
 	public PhysicsData testCamProjectile(float fDesiredSpeed, float fRadius, float fDensity){
 		if(sbnBatchTestProjectiles==null){
 			sbnBatchTestProjectiles = new SimpleBatchNode("BatchNode");
 			AppI.i().getRootNode().attachChild(sbnBatchTestProjectiles);
 		}
 		
+//		Vector3f v3fScale = new Vector3f(0.25f,0.25f,1f);
 		if(geomTestProjectileFactory==null){
 			geomTestProjectileFactory = GeometryI.i().create(new Sphere(3,4,fRadius), ColorRGBA.Cyan, false, new GeometryTestProjectile());
 //			geomTestProjectileFactory = GeometryI.i().create(MeshI.i().sphere(fRadius), ColorRGBA.Cyan, false, new GeometryTestProjectile());
@@ -835,7 +879,12 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		sbnBatchTestProjectiles.attachChild(geomClone); //AppI.i().getRootNode().attachChild(geomClone);
 		sbnBatchTestProjectiles.batch();
 		
+//		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,fDensity,geomTestProjectileFactory.getLocalScale());
 		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,fDensity);
+		//TODO scale
+//		ps.remove(pd.rbc);
+//		pd.rbc.getCollisionShape().setScale(geomTestProjectileFactory.getLocalScale());
+//		ps.add(pd.rbc);
 		pd.setAllowDisintegration(true);
 		pd.bProjectile=(true);
 		pd.getRBC().setGravity(ps.getGravity(new Vector3f()).mult(0.25f));
@@ -857,63 +906,92 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		rbc.setPhysicsLocation(spt.getWorldTranslation());
 		rbc.setPhysicsRotation(spt.getWorldRotation());
 	}
-
-	//private void threadPhysicsGlue(PhysicsCollisionObject pcoWhat, PhysicsCollisionObject pcoWhere) {
-	//PhysicsData pdWhat = getPhysicsDataFrom(pcoWhat);
-	//PhysicsData pdWhere = getPhysicsDataFrom(pcoWhere);
-//	private void applyGluedMode(Spatial sptWhat, Spatial sptWhere) {
-//		PhysicsData pdWhat = getPhysicsDataFrom(sptWhat);
-//		PhysicsData pdWhere = getPhysicsDataFrom(sptWhere);
-//		
-//		if(pdWhat.isExplodeIfHit(pdWhere)){
-//			requestDisintegration(pdWhat);
-//			requestDisintegration(pdWhere);
-//			//TODO explode effect
-//			return;
-//		}
-//		
-//		pdWhat.setGlueWhere(pdWhere);
-//		
-//		//ps.remove(pdWhat.getRBC()); //remove physics control to stop moving NOW, to "stay" where it is
-//	}
-//	public void updateGlue(){
-////		applyGluedMode(event.getNodeA(),event.getNodeB());
-//		
-//		for(PhysicsData pdWhat:apdGlue){
-//			if(pdWhat.pdGlueWhere.sptLink instanceof Node){ //will move around with the target
-//				Vector3f v3f = pdWhat.pdGlueWhere.sptLink.worldToLocal(pdWhat.v3fGlueAt,null);
-//				((Node)pdWhat.pdGlueWhere.sptLink).attachChild(pdWhat.sptLink);
-//				pdWhat.sptLink.setLocalTranslation(v3f);
-//			}
-//		}
-//	}
-	public void applyGluedMode(PhysicsData pdWhat){
-//		if(pdWhat.isExplodeIfHit(pdWhat.pdGlueWhere)){
-//			disintegrate(pdWhat);
-//			disintegrate(pdWhat.pdGlueWhere);
-////			requestDisintegration(pdWhat);
-////			requestDisintegration(pdWhat.pdGlueWhere);
-//			//TODO explode effect
-//			return;
-//		}
+	
+	public void reattachProjectile(Node nodeNewParent, Spatial sptProjectile){
+		assert nodeNewParent!=sbnBatchTestProjectiles;
 		
-//		for(PhysicsData pdWhat:apdGlue){
-		removeFromPhysicsSpace(pdWhat.sptLink);
-		Vector3f v3f = pdWhat.v3fGlueSpot;
-			if(pdWhat.pdGlueWhere.sptLink instanceof Node){ //will move around with the target
-				v3f = pdWhat.pdGlueWhere.sptLink.worldToLocal(pdWhat.v3fGlueSpot,null);
-				((Node)pdWhat.pdGlueWhere.sptLink).attachChild(pdWhat.sptLink);
-//				pdWhat.sptLink.setLocalTranslation(v3f);
-//			}else{
-//				pdWhat.sptLink.setLocalTranslation(pdWhat.v3fGlueSpot);
-			}
-//		}
-			
-			pdWhat.sptLink.setLocalTranslation(v3f);
-			
-			pdWhat.bGlueApplied=true;
-			
+		boolean b=sptProjectile.getParent()==sbnBatchTestProjectiles;
+		
+		if(nodeNewParent!=null){
+			nodeNewParent.attachChild(sptProjectile);
+		}else{
+			sptProjectile.removeFromParent();
+		}
+		
+		if(b)sbnBatchTestProjectiles.batch();
 	}
+	
+	public void applyGluedMode(PhysicsData pdWhat){
+		assert pdWhat.isProjectile();
+		
+		Node nodeParentest = SpatialHierarchyI.i().getParentestOrSelf(
+			pdWhat.pdGlueWhere.sptLink, Node.class, true, false);
+		
+		if(nodeParentest!=null){ //will glue at dynamic parent surface
+			reattachProjectile(nodeParentest,pdWhat.sptLink);
+			
+			// prevent disintegration if glued on dynamic //TODO just increase the timeout or limit the amount per dynamic parent 
+			hmDisintegratables.remove(pdWhat.rbc);
+			apdDisintegrate.remove(pdWhat);
+		}
+		
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				Vector3f v3fChk=null;
+				
+				if(nodeParentest!=null){ //will glue at dynamic parent surface
+					
+					boolean bUseRayTestPos=true;
+					if(bUseRayTestPos){
+						boolean bRayTestLocalPos=true;
+						if(bRayTestLocalPos){
+							v3fChk = pdWhat.v3fLocalGlueSpot;
+							attachChildRotated(nodeParentest,pdWhat);
+//							// rot 
+//							Node node = new Node();
+//							node.attachChild(pdWhat.sptLink);
+//							node.setLocalRotation(pdWhat.quaLocalGlueRot);
+//							nodeParentest.attachChild(node);
+						}else{ 
+							/**
+							 * for dynamic parents this is bad as they may have moved after the
+							 * pos being set at the phys thread...
+							 */
+							v3fChk = nodeParentest.worldToLocal(pdWhat.v3fWorldGlueSpot,null);
+						}
+					}else{ //event local pos
+						v3fChk = pdWhat.v3fEventCollOtherLocalPos;
+						attachChildRotated(nodeParentest,pdWhat);
+					}
+					
+				}else{
+					//simple at world on some static surface
+					v3fChk = pdWhat.v3fWorldGlueSpot;
+//					pdWhat.sptLink.setLocalTranslation(pdWhat.v3fWorldGlueSpot); 
+				}
+				
+				if(pdWhat.sptLink.getLocalTranslation().distance(v3fChk)>0f){
+					pdWhat.sptLink.setLocalTranslation(v3fChk);
+					return false; //to re-check
+				}
+				
+				return true;
+			}
+		});
+	
+		removeFromPhysicsSpace(pdWhat.sptLink); //this prevents further updates from physics space
+		
+		pdWhat.bGlueApplied=true;
+	}
+	
+	protected void attachChildRotated(Node nodeParentest, PhysicsData pdWhat){
+		Node node = new Node();
+		node.attachChild(pdWhat.sptLink);
+		node.setLocalRotation(pdWhat.quaLocalGlueRot);
+		nodeParentest.attachChild(node);
+	}
+	
 	@Override
 	public void collision(PhysicsCollisionEvent event) {
 		if(event.getNodeB()==null || event.getNodeA()==null)return;
@@ -923,31 +1001,23 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		PhysicsData pdB = getPhysicsDataFrom(event.getNodeB());
 		if(pdA==null || pdB==null)return;
 		
-		// glued mode
-//		if(pdA.isProjectile() || pdB.isProjectile()){
-//			boolean bGlued=false;
-//			if(pdA.bDisintegrated || pdB.bDisintegrated)return;
-//			if(pdA.bGlueApplied || pdA.bGlueApplied)return; //only the 1st collision matters
-			
-		syso(pdA.sptLink.getName()+","+pdB.sptLink.getName());
-		
-			if(pdA.isProjectile() && pdA.pdGlueWhere==null && !pdA.bDisintegrated && !pdA.bGlueApplied){
-				pdA.pdGlueWhere=pdB;
-				pdA.v3fGlueSpot = event.getPositionWorldOnB().clone();
-				applyGluedMode(pdA);
-//				bGlued=true;
-			}
-			if(pdB.isProjectile() && pdB.pdGlueWhere==null && !pdB.bDisintegrated && !pdB.bGlueApplied){
-				pdB.pdGlueWhere=pdA;
-				pdB.v3fGlueSpot = event.getPositionWorldOnA().clone();
-				applyGluedMode(pdB);
-				             
-//				bGlued=true;
-			}
-//			if(bGlued)return; //skip remaining checks
-			
-//		}
-		
+//		glueProjectileCheckApply(pdA,pdB,event.getPositionWorldOnB());
+//		glueProjectileCheckApply(pdB,pdA,event.getPositionWorldOnA());
+		glueProjectileCheckApply(pdA,pdB,event.getLocalPointB());
+		glueProjectileCheckApply(pdB,pdA,event.getLocalPointA());
+	}
+	
+	protected void glueProjectileCheckApply(PhysicsData pd, PhysicsData pdWhere, Vector3f v3fEventCollPos){
+		if(
+			pd.isProjectile() && 
+			!pdWhere.isProjectile() && 
+			!pd.bDisintegrated && 
+			!pd.bGlueApplied && 
+			pd.pdGlueWhere==pdWhere
+		){
+			pd.v3fEventCollOtherLocalPos=v3fEventCollPos.clone();
+			applyGluedMode(pd);
+		}
 	}
 	
 	/**
@@ -972,6 +1042,77 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		if(CharacterI.i().isCharacter(nodeA))return true;
 		if(CharacterI.i().isCharacter(nodeB))return true;
 		
+		PhysicsData pdA = getPhysicsDataFrom((Spatial)nodeA.getUserObject());
+		PhysicsData pdB = getPhysicsDataFrom((Spatial)nodeB.getUserObject());
+		
+		if(pdA.isProjectile() && pdB.isProjectile())return false;//prevent prjctle vs prjctle
+		
+		Boolean b=null;
+		b=threadPhysicsChkProjectileMovingTowards(nodeA,pdA);
+		if(b!=null)return b;
+		
+		b=threadPhysicsChkProjectileMovingTowards(nodeB,pdB);
+		if(b!=null)return b;
+		
+		return true; //allow all other collisions
+	}
+	
+	protected Boolean threadPhysicsChkProjectileMovingTowards(PhysicsCollisionObject node, PhysicsData pd){
+		if(node.getUserObject() instanceof GeometryTestProjectile){
+//			PhysicsData pd = getPhysicsDataFrom((Spatial)node.getUserObject());
+			if(!pd.isProjectile())return null; //skip
+			
+			if(pd.pdGlueWhere!=null)return false;//1st hit only
+//			RigidBodyControl rbc = (RigidBodyControl)node;
+			
+			Vector3f v3fFrom = pd.rbc.getPhysicsLocation();
+			Vector3f v3fTo = pd.rbc.getPhysicsLocation().add(pd.rbc.getLinearVelocity().normalize().mult(10)); //mult 10 is a guess for high speed, TODO confirm this
+//			Vector3f v3fTo = pd.rbc.getPhysicsLocation().add(pd.rbc.getLinearVelocity());
+			@SuppressWarnings("unchecked")List<PhysicsRayTestResult> rayTest = ps.rayTest(v3fFrom,v3fTo);
+			
+			Vector3f v3fWrldHitNearest = null;
+			RigidBodyControl pcoNearest = null;
+			PhysicsData pdNearest=null;
+			for(PhysicsRayTestResult prtr:rayTest){
+//				if(prtr.getCollisionObject() instanceof RigidBodyControl){
+//					RigidBodyControl rbcMovingTowards = (RigidBodyControl)prtr.getCollisionObject();
+//				}
+				PhysicsCollisionObject pco = prtr.getCollisionObject();
+				PhysicsData pdChk = getPhysicsDataFrom(prtr.getCollisionObject());
+				if(pdChk!=null){ //1st
+					if(pdChk.isProjectile())continue; //to skip/ignore projectile vs projectile
+//					if(pdChk.isProjectile())return false; //prevent each other
+					
+					Vector3f v3fWrldHitChk = v3fFrom.clone().interpolateLocal(v3fTo,prtr.getHitFraction());
+					if(v3fWrldHitNearest==null || v3fFrom.distance(v3fWrldHitChk)<v3fFrom.distance(v3fWrldHitNearest)){
+						v3fWrldHitNearest=v3fWrldHitChk;
+						pcoNearest = (RigidBodyControl)pco;
+						pdNearest=pdChk;
+					}
+				}
+			}
+			
+//			if(v3fWHitNearest!=null && pcoNearest!=null){
+			if(pdNearest!=null){
+//				if(pdNearest.isProjectile())return false; //prevent each other
+				
+				pd.pdGlueWhere=(pdNearest);
+				pd.v3fWorldGlueSpot=v3fWrldHitNearest;
+				pd.v3fLocalGlueSpot=v3fWrldHitNearest.subtract(pcoNearest.getPhysicsLocation());
+				pd.quaLocalGlueRot=pcoNearest.getPhysicsRotation();
+				
+				if(pdNearest.isTerrain()){
+//					resetForces(pd); //prevents delayed ricochet
+//					pd.rbc.setGravity(Vector3f.ZERO);//prevent falling
+					pd.rbc.setMass(0f);
+					return true; //to generate the collision event
+				}
+			}
+			
+		}
+		
+		return null; //skip
+	}
 //		if(nodeA.getUserObject() instanceof GeometryTestProjectile && nodeB.getUserObject() instanceof GeometryTestProjectile){
 //			return false;
 //		}
@@ -1029,8 +1170,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //			+pdA.sptLink.getName()
 //			+" <-> "+pdB.sptLink.getName());
 		
-		return true; //allow all collisions
-	}
+//		return true; //allow all collisions
+//	}
 	
 	/**
 	 * ex.: use this for insta bullet shots or pushing things 

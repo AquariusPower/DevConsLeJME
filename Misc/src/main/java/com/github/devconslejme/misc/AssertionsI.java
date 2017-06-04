@@ -62,7 +62,7 @@ public class AssertionsI {
 	private CallableXAnon	cx;
 	public void configure(){
 		cx=(new CallableXAnon() {
-			private Iterator<Entry<Object, Object>>	it;
+			private Iterator<Entry<Object, Asserter>>	it;
 
 			@Override
 			public Boolean call() {
@@ -87,28 +87,36 @@ public class AssertionsI {
 		cx.setDelaySeconds(f);
 	}
 	
-	private HashMap<Object,Object> hmAssert = new HashMap<Object,Object>();
+	public static class Asserter{
+		Object objOriginalClone;
+		StackTraceElement[] asteConfiguredAt;
+	}
+	
+	private HashMap<Object,Asserter> hmAssert = new HashMap<Object,Asserter>();
 	public <T> void putAssertRemainUnmodified(T objThatShouldNotChangeItsFieldValues, T objCopyOrCloneWithCurrentFieldsValues){
 		assert(hmAssert.get(objThatShouldNotChangeItsFieldValues)==null);
-		hmAssert.put(objThatShouldNotChangeItsFieldValues, objCopyOrCloneWithCurrentFieldsValues);
-		assertObjects(objThatShouldNotChangeItsFieldValues, objCopyOrCloneWithCurrentFieldsValues);
+		Asserter ass = new Asserter();
+		ass.asteConfiguredAt=Thread.currentThread().getStackTrace();
+		ass.objOriginalClone=objCopyOrCloneWithCurrentFieldsValues;
+		hmAssert.put(objThatShouldNotChangeItsFieldValues,ass);
+		assertObjects(objThatShouldNotChangeItsFieldValues, ass);//objCopyOrCloneWithCurrentFieldsValues
 	}
-	private void assertObjects(Object obj, Object objClone){
-		if(!obj.equals(objClone)){
-			throw new DetailedException("object changed", obj, objClone);
+	private void assertObjects(Object obj, Asserter ass){
+		if(!obj.equals(ass.objOriginalClone)){
+			throw new DetailedException("object changed somewhere...", obj, ass.objOriginalClone, "Configured At:", ass.asteConfiguredAt);
 		}
 	}
-	private void assertEntry(Entry<Object, Object> entry){
+	private void assertEntry(Entry<Object, Asserter> entry){
 		assertObjects(entry.getKey(), entry.getValue());
 //		if(!entry.getKey().equals(entry.getValue())){
 //			throw new DetailedException("object changed", entry.getKey(), entry.getValue());
 //		}
 	}
 	public void assertAllRemainUnmodified(boolean bLogAllOk){
-		for(Entry<Object, Object> entry:hmAssert.entrySet()){
+		for(Entry<Object, Asserter> entry:hmAssert.entrySet()){
 			if(bLogAllOk){
 				MessagesI.i().output(System.out, "Assert", this, 
-					entry.getKey().getClass().getSimpleName()+": Original="+entry.getValue()+", Current="+entry.getKey());
+					entry.getKey().getClass().getSimpleName()+": Original="+entry.getValue().objOriginalClone+", Current="+entry.getKey());
 			}
 			
 			assertEntry(entry);
