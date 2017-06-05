@@ -1,16 +1,17 @@
 package com.github.devconslejme.tests.temp;
 
+import java.util.HashMap;
+
 import com.github.devconslejme.misc.CommandLineParser;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.JavaLangI;
-import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.TimedDelay;
 
 public class TestSimpleThings {
 	public static void main(String[] args) {
-		tst7();
+		tst8();
+//		tst7();
 //		tst6();
 //		tst5();
 //		tst4();
@@ -19,6 +20,11 @@ public class TestSimpleThings {
 //		tst1();
 	}
 	
+	static HashMap<String,HashMap<String,Integer>> hhm=new HashMap<String,HashMap<String,Integer>>();
+	private static void function(HashMap<String,Integer>... array){System.out.println(array);}
+	private static void tst8() {
+		function( hhm.values().toArray((HashMap<String,Integer>[]) new HashMap<?,?>[0]) );
+	}
 	private static void tst7() {
 		TimedDelay td = new TimedDelay(1f).setUseRealTime(true).setActive(true)
 				.setOscilateMode(true)

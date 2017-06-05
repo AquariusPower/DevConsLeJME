@@ -28,6 +28,7 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import com.github.devconslejme.misc.Annotations.NotMainThread;
@@ -40,11 +41,11 @@ import com.github.devconslejme.misc.MatterI.MatterStatus;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
-import com.github.devconslejme.misc.jme.GeometryI.GeometryX;
 import com.github.devconslejme.misc.SimulationTimeI;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.TimeFormatI;
 import com.github.devconslejme.misc.TimedDelay;
+import com.github.devconslejme.misc.jme.GeometryI.GeometryX;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
@@ -86,7 +87,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	private BulletAppState	bullet;
 	private PhysicsSpace	ps;
 	private BoundingBox	bbSpace;
-	private HashMap<String, Info>	hmInfo;
+	private LinkedHashMap<String, Info>	hmInfo;
 	private TimedDelay tdDisintegrate = new TimedDelay(10f).setActive(true);
 	private TimedDelay tdSaveSafeSpotRot = new TimedDelay(3f).setActive(true);
 	private PhysicsData	pdLastThrownFromCam;
@@ -95,6 +96,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	private long	lThreadPhysLastCalcTPS;
 	private float	fThreadPhysTPF;
 	private ArrayList<Impulse> arbcThreadPhysicsPreTickQueue = new ArrayList();
+	private boolean	bGlueAllowed=true;
+	private float	fDefaultProjectileMaxLife=2;
 	
 	public static class Impulse{
 		private Spatial	spt;
@@ -211,7 +214,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 	
 	private void initMaintenanceUpdateLoop() {
-		hmInfo = new HashMap<String,Info>();
+		hmInfo = new LinkedHashMap<String,Info>();
 		
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
@@ -249,18 +252,18 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 
 	public void updateInfo(){
+		InfoJmeI.i().putAt(hmInfo,"TPS",iThreadPhysTPS);
+		InfoJmeI.i().putAt(hmInfo,"PhysTPF",fThreadPhysTPF,3);
 		InfoJmeI.i().putAt(hmInfo,"Disintegratables",hmDisintegratables.size());
+		InfoJmeI.i().putAt(hmInfo,"TotRBCs",ps.getRigidBodyList().size());
 		InfoJmeI.i().putAt(hmInfo,"Spd",bullet.getSpeed(),2);
 		InfoJmeI.i().putAt(hmInfo,"Grav",ps.getGravity(new Vector3f()),1);
 		InfoJmeI.i().putAt(hmInfo,"Min",ps.getWorldMin(),0);
 		InfoJmeI.i().putAt(hmInfo,"Max",ps.getWorldMax(),0);
 		InfoJmeI.i().putAt(hmInfo,"TotChars",ps.getCharacterList().size());
 		InfoJmeI.i().putAt(hmInfo,"TotGhosts",ps.getGhostObjectList().size());
-		InfoJmeI.i().putAt(hmInfo,"TotRBCs",ps.getRigidBodyList().size());
 		InfoJmeI.i().putAt(hmInfo,"TotVehicles",ps.getVehicleList().size());
 		InfoJmeI.i().putAt(hmInfo,"TotJoints",ps.getJointList().size());
-		InfoJmeI.i().putAt(hmInfo,"TPS",iThreadPhysTPS);
-		InfoJmeI.i().putAt(hmInfo,"PhysTPF",fThreadPhysTPF,3);
 		
 		if(pdLastThrownFromCam!=null){
 			InfoJmeI.i().putAt(hmInfo,"LtTrwSpd",pdLastThrownFromCam.imp.fImpulseAtSelfDirection);
@@ -344,7 +347,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //			if(spt instanceof NodeX)nodexLink=(NodeX)spt;
 //			this.sptLink = spt;
 			
-			setProjectileMaxLifeTime(2);
+			setProjectileMaxLifeTime(PhysicsI.i().getDefaultProjectileMaxLife());
 		}
 
 		public PhysicsRigidBody getRBC() {
@@ -780,6 +783,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //			if(CharacterI.i().isCharacter(prb))continue;
 //			if(prb.getUserObject() instanceof GeometryTestProjectile)continue;
 			
+			if(EDebug.TestDynamicPhysicsWithoutSpatialAndData.b() && prb.getUserObject()==null)continue;
 			PhysicsData pd = getPhysicsDataFrom(prb);
 			if(pd==null)continue; //other stuff
 //			if(pd==null){
@@ -806,6 +810,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //					if(CharacterI.i().isCharacter(prb))continue;
 //					if(prb.getUserObject() instanceof GeometryTestProjectile)continue;
 					
+					if(EDebug.TestDynamicPhysicsWithoutSpatialAndData.b() && prb.getUserObject()==null)continue;
 					PhysicsData pd = getPhysicsDataFrom(prb);
 					if(pd==null)continue;//other stuff
 //					if(pd==null){
@@ -838,12 +843,17 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	public boolean isEnabled() {
 		return bullet.isEnabled();
 	}
-
-	public void setDebugEnabled(boolean debugEnabled) {
+	
+	public boolean toggleEnabled(){
+		setEnabled(!isEnabled());
+		return isEnabled();
+	}
+	
+	public void setBulletDebugVisualsEnabled(boolean debugEnabled) {
 		bullet.setDebugEnabled(debugEnabled);
 	}
 
-	public boolean isDebugEnabled() {
+	public boolean isBulletDebugVisualsEnabled() {
 		return bullet.isDebugEnabled();
 	}
 
@@ -940,19 +950,35 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //		if(CharacterI.i().isCharacter(nodeA))return true;
 //		if(CharacterI.i().isCharacter(nodeB))return true;
 		
+		if(EDebug.TestDynamicPhysicsWithoutSpatialAndData.b()){
+			if(nodeA.getUserObject()==null || nodeB.getUserObject()==null){
+				return true;
+			}
+		}
+		
 		PhysicsData pdA = getPhysicsDataFrom((Spatial)nodeA.getUserObject());
 		PhysicsData pdB = getPhysicsDataFrom((Spatial)nodeB.getUserObject());
 		
-		if(pdA==null || pdB==null)return true; //other stuff
+		if(pdA==null || pdB==null){
+			return true; //other stuff
+		}
 		
-		if(pdA.isProjectile() && pdB.isProjectile())return false;//prevent prjctle vs prjctle
+		if(pdA.isProjectile() && pdB.isProjectile()){
+			return false;//prevent prjctle vs prjctle
+		}
 		
-		Boolean b=null;
-		b=threadPhysicsChkProjectileMovingTowards(pdA);
-		if(b!=null)return b;
-		
-		b=threadPhysicsChkProjectileMovingTowards(pdB);
-		if(b!=null)return b;
+		if(bGlueAllowed){
+			Boolean b=null;
+			b=threadPhysicsGlueDetectProjectileNextHit(pdA);
+			if(b!=null){
+				return b;
+			}
+			
+			b=threadPhysicsGlueDetectProjectileNextHit(pdB);
+			if(b!=null){
+				return b;
+			}
+		}
 		
 		return true; //allow all other collisions
 	}
@@ -961,6 +987,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		AllowLog(true),
 		LogDisplacementPerTick,
 		LogCollisions, 
+		TestDynamicPhysicsWithoutSpatialAndData, 
 		;
 		EDebug(){}
 		EDebug(boolean b){this.b=b;}
@@ -972,7 +999,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 	
 //	protected Boolean threadPhysicsChkProjectileMovingTowards(PhysicsCollisionObject node, PhysicsData pd){
-	protected Boolean threadPhysicsChkProjectileMovingTowards(PhysicsData pd){
+	protected Boolean threadPhysicsGlueDetectProjectileNextHit(PhysicsData pd){
 //		if(node.getUserObject() instanceof GeometryTestProjectile){
 //			PhysicsData pd = getPhysicsDataFrom((Spatial)node.getUserObject());
 		if(!pd.isProjectile())return null; //skip
@@ -1019,7 +1046,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			if(pdNearest.isTerrain()){
 //					resetForces(pd); //prevents delayed ricochet
 //					pd.rbc.setGravity(Vector3f.ZERO);//prevent falling
-				pd.rbc.setMass(0f);
+				pd.rbc.setMass(0f); //no need to nested spatial glue on static terrain TODO instead check if nearest has mass=0? but it may be temporary and be glued would work better...
+				pd.rbc.setPhysicsLocation(pd.v3fWorldGlueSpot);
 				return true; //to generate the collision event
 			}
 		}
@@ -1158,5 +1186,23 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //		AppI.i().getRootNode().attachChild(sptAtRoot);
 		
 		return pd;
+	}
+
+	public boolean isGlueAllowed() {
+		return bGlueAllowed;
+	}
+
+	public PhysicsI setGlueAllowed(boolean bGlueAllowed) {
+		this.bGlueAllowed = bGlueAllowed;
+		return this; 
+	}
+
+	public float getDefaultProjectileMaxLife() {
+		return fDefaultProjectileMaxLife;
+	}
+
+	public PhysicsI setDefaultProjectileMaxLife(float fDefaultProjectileMaxLife) {
+		this.fDefaultProjectileMaxLife = fDefaultProjectileMaxLife;
+		return this; 
 	}
 }

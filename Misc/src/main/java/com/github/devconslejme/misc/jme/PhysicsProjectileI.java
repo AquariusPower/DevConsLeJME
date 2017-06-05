@@ -34,6 +34,7 @@ import com.github.devconslejme.misc.MatterI.Matter;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI.EColor;
+import com.github.devconslejme.misc.jme.PhysicsI.EDebug;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.math.ColorRGBA;
@@ -214,5 +215,16 @@ public class PhysicsProjectileI {
 			pd.v3fEventCollOtherLocalPos=v3fEventCollPos.clone();
 			applyGluedMode(pd);
 		}
+	}
+	
+	public Object debugTest(Object... aobj){//keep even if empty
+		EDebug.TestDynamicPhysicsWithoutSpatialAndData.set(true);
+		sbnBatchTestProjectiles.removeFromParent();
+		for (Spatial spt : sbnBatchTestProjectiles.getChildren()) {
+			spt.removeControl(RigidBodyControl.class);
+		}
+		sbnBatchTestProjectiles.detachAllChildren();
+		sbnBatchTestProjectiles.batch();
+		return null;
 	}
 }

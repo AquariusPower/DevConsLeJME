@@ -69,7 +69,7 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 	public void initTest() {
 		CharacterI.i().create(Vector3f.ZERO);
 		
-		PhysicsI.i().setDebugEnabled(true);
+		PhysicsI.i().setBulletDebugVisualsEnabled(true);
 //		SubdivisionSurfaceModifier s = new SubdivisionSurfaceModifier(modifierStructure, blenderContext);
 		
 		float fSize=100;
