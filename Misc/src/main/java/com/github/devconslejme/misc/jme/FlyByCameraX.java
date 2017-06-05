@@ -43,6 +43,7 @@ import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.TimedDelay;
 import com.jme3.app.Application;
+import com.jme3.collision.CollisionResult;
 import com.jme3.collision.MotionAllowedListener;
 import com.jme3.input.CameraInput;
 import com.jme3.input.FlyByCamera;
@@ -543,6 +544,7 @@ public class FlyByCameraX extends FlyByCamera {
 	}; private CompositeControl cc;
 	
 	private String	strAllZoomSteps;
+	private ArrayList<CollisionResult>	acrLast;
 	
 	public void update(float fTPF){
 		if(tdMouseGrab.isReady(true)){
@@ -577,6 +579,9 @@ public class FlyByCameraX extends FlyByCamera {
 			fZoomedRotationSpeed=getFOV()/fMaxFOVdeg;
 		}
 		
+		acrLast = WorldPickingI.i().raycastPiercingAtCenter(null);
+		if(acrLast.size()>0)HWEnvironmentJmeI.i().putCustomInfo("CamLastHitSpot", ""+acrLast.get(0).getContactPoint());
+		
 		if(tdMouseInfo.isReady(true)){
 			String strFOV="{ ";
 			String strCurrent=StringI.i().fmtFloat(afFOVDegList.get(iCurrentFOVDegStepIndex),2);
@@ -604,6 +609,11 @@ public class FlyByCameraX extends FlyByCamera {
 				if(sptReticle.getParent()!=null)sptReticle.removeFromParent();
 			}
 		}
+		
+	}
+	
+	public ArrayList<CollisionResult> getLastWorldPickRayCastPiercingAtCamCenter(){
+		return acrLast;
 	}
 	
 //	public String getBkpZoomFOVinfo(){

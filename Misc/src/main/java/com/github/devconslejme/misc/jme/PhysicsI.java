@@ -237,11 +237,17 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			}
 		}
 		
-		for(PhysicsData pd:apdDisintegrate)disintegrate(pd);
+		for(PhysicsData pd:apdDisintegrate){
+			disintegrate(pd);
+		}
 		apdDisintegrate.clear();
 	}
 	
 	protected void disintegrate(PhysicsData pd){
+		if(EDebug.Temp9.b()){
+			syso("Disintegrating:"+pd.getInfo()+",");
+		}
+		
 		erasePhysicsFrom(pd.getSpatialWithPhysics());
 		
 		Node nodeParent = pd.getSpatialWithPhysics().getParent();
@@ -818,6 +824,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //					}
 					
 					if(pd.isAllowDisintegration()){
+						if(EDebug.LogDisintegrationByOutOfWorldBoundaries.b())syso(pd.getInfo()+","+prb.getPhysicsLocation());
 						requestDisintegration(pd);
 					}else{
 						if(pd.getLastSafeSpot()!=null){
@@ -985,9 +992,15 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	
 	public static enum EDebug{
 		AllowLog(true),
+		
+		/** use the temps to avoid having to restart the application, can even just rename them later! */
+		Temp0,		Temp1,		Temp2,		Temp3,		Temp4,		Temp5,		Temp6,		Temp7,		Temp8,		
+		Temp9, //TODO rename LogDisintegrations
+		
 		LogDisplacementPerTick,
 		LogCollisions, 
 		TestDynamicPhysicsWithoutSpatialAndData, 
+		LogDisintegrationByOutOfWorldBoundaries, 
 		;
 		EDebug(){}
 		EDebug(boolean b){this.b=b;}

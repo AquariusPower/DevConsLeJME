@@ -99,6 +99,7 @@ public class PhysicsProjectileI {
 		}
 		
 		Geometry geomClone = geomTestProjectileFactory.clone();
+		geomClone.setName("Projectile");
 		sbnBatchTestProjectiles.attachChild(geomClone); //AppI.i().getRootNode().attachChild(geomClone);
 		sbnBatchTestProjectiles.batch();
 		
