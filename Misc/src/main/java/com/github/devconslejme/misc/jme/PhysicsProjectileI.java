@@ -26,8 +26,6 @@
 */
 package com.github.devconslejme.misc.jme;
 
-import javax.vecmath.Quat4d;
-
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
@@ -36,11 +34,11 @@ import com.github.devconslejme.misc.MatterI.Matter;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI.EColor;
-import com.github.devconslejme.misc.jme.PhysicsI.EDebug;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Quaternion;
+import com.jme3.math.Transform;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
@@ -211,18 +209,23 @@ public class PhysicsProjectileI {
 			nodeParentest.attachChild(pdWhat.sbnGluedProjectiles);
 		}
 		
+//		Transform trf = new Transform(pdWhat.v3fGlueWherePhysLocalPos, pdWhat.quaGlueWherePhysWRotAtImpact);
+//		trf.
+//		
+		Quaternion quaDiff = pdWhat.sbnGluedProjectiles.getWorldRotation().subtract(pdWhat.quaGlueWherePhysWRotAtImpact);
+		
 		pdWhat.getSpatialWithPhysics().setLocalTranslation(pdWhat.v3fGlueWherePhysLocalPos);
 		Node nodeGlueWherePhysRotAtImpact = new Node();
-		Quaternion quaNeg = pdWhat.quaGlueWherePhysRotAtImpact.clone();
-		quaNeg.negate();
-		nodeGlueWherePhysRotAtImpact.setLocalRotation(quaNeg);
+//		Quaternion quaNeg = pdWhat.quaGlueWherePhysWRotAtImpact.clone();
+//		quaNeg.negate();
+		nodeGlueWherePhysRotAtImpact.setLocalRotation(quaDiff);
 		nodeGlueWherePhysRotAtImpact.attachChild(pdWhat.getSpatialWithPhysics());
-		Vector3f v3f=pdWhat.getSpatialWithPhysics().getWorldTranslation();
-		Quaternion qua=pdWhat.getSpatialWithPhysics().getWorldRotation();
+		Vector3f v3fSimulatedPos=pdWhat.getSpatialWithPhysics().getWorldTranslation();
+		Quaternion quaSimulatedRot=pdWhat.getSpatialWithPhysics().getWorldRotation();
 		
 		pdWhat.sbnGluedProjectiles.attachChild(pdWhat.getSpatialWithPhysics());
-		pdWhat.getSpatialWithPhysics().setLocalRotation(qua);
-		pdWhat.getSpatialWithPhysics().setLocalTranslation(v3f);
+		pdWhat.getSpatialWithPhysics().setLocalRotation(quaSimulatedRot);
+		pdWhat.getSpatialWithPhysics().setLocalTranslation(v3fSimulatedPos);
 		pdWhat.sbnGluedProjectiles.batch();
 	}
 

@@ -73,7 +73,9 @@ public class GeometryI {
 	public <T extends Geometry> T create(Mesh mesh, ColorRGBA color, Boolean bTransparent, T geomStore) {
 		if(bTransparent==null)bTransparent = color.a<1f;
 //		GeometryX geom = new GeometryX(mesh.getClass().getSimpleName());
-		if(geomStore==null)geomStore = (T)new GeometryX(mesh.getClass().getSimpleName(),mesh);
+//		if(geomStore==null)geomStore = (T)new GeometryX(mesh.getClass().getSimpleName(),mesh);
+		if(geomStore==null)geomStore = (T)new GeometryX(mesh.getClass().getSimpleName(),null);
+		geomStore.setMesh(mesh);
 		if(mesh instanceof Sphere){
 			Sphere s = ((Sphere)mesh);
 			geomStore.setModelBound(new BoundingSphere(s.getRadius(),Vector3f.ZERO));

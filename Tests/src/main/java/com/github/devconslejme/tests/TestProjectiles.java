@@ -102,9 +102,13 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 //		initTestWall(iSize,"ZP",null,geomFloor.getLocalTranslation().y,true);
 //		initTestWall(iSize,"ZN",null,geomFloor.getLocalTranslation().y,false);
 		
-		PhysicsI.i().spawnVolumeBox(ColorRGBA.Red,3f,"X-Red",new Vector3f(1,0,0).mult(5));
-		PhysicsI.i().spawnVolumeBox(ColorRGBA.Green,2f,"Y-Green",new Vector3f(0,1,0).mult(5));
-		PhysicsI.i().spawnVolumeBox(ColorRGBA.Blue,1f,"Z-Blue",new Vector3f(0,0,1).mult(5));
+		// some boxes representing the axes (not needed tho)
+		PhysicsI.i().spawnVolumeBox(ColorI.i().colorChangeCopy(ColorRGBA.Red,0,0.5f),
+			3f,"X-Red"	,new Vector3f(1,0,0).mult(5));
+		PhysicsI.i().spawnVolumeBox(ColorI.i().colorChangeCopy(ColorRGBA.Green,0,0.5f),
+			2f,"Y-Green",new Vector3f(0,1,0).mult(5));
+		PhysicsI.i().spawnVolumeBox(ColorI.i().colorChangeCopy(ColorRGBA.Blue,0,0.5f),
+			1f,"Z-Blue"	,new Vector3f(0,0,1).mult(5));
 		
 	}
 	

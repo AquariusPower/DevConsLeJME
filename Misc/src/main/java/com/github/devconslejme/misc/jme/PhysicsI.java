@@ -323,7 +323,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		protected boolean	bProjectile;
 		protected Vector3f	v3fEventCollOtherLocalPos;
 		protected Vector3f	v3fGlueWherePhysLocalPos;
-		protected Quaternion	quaGlueWherePhysRotAtImpact;
+		protected Quaternion	quaGlueWherePhysWRotAtImpact;
 		protected Vector3f	v3fPosAtPreviousTick;
 //		protected Matter	mt;
 		protected MatterStatus	mts;
@@ -1044,7 +1044,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			pd.pdGlueWhere=(pdNearest);
 			pd.v3fWorldGlueSpot=v3fWrldHitNearest;
 			pd.v3fGlueWherePhysLocalPos=v3fWrldHitNearest.subtract(pcoNearest.getPhysicsLocation());
-			pd.quaGlueWherePhysRotAtImpact=pcoNearest.getPhysicsRotation();
+			pd.quaGlueWherePhysWRotAtImpact=pcoNearest.getPhysicsRotation();
 			
 			if(pdNearest.isTerrain()){
 //					resetForces(pd); //prevents delayed ricochet

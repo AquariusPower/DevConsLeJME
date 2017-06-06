@@ -41,6 +41,8 @@ import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.collision.CollisionResult;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Matrix4f;
+import com.jme3.math.Quaternion;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -351,11 +353,14 @@ public class DebugVisualsI {
 		if(geomBoundNew!=null){
 			geomBoundNew.getMaterial().getAdditionalRenderState().setWireframe(true);
 			if(nd.geombv!=null)nd.geombv.removeFromParent();
+			nd.attachChild(geomBoundNew);
+			
+			//compensate the rotation
+			Quaternion qua = nd.getWorldRotation().clone();
+			qua.negate();
+			geomBoundNew.setLocalRotation(qua);
+			
 			nd.geombv=geomBoundNew;
-//		}
-//		
-//		if(bCreating){
-			nd.attachChild(nd.geombv);
 		}
 		
 		if(nd.axes==null){
