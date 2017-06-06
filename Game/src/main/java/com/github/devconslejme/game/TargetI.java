@@ -152,10 +152,6 @@ public class TargetI {
 		return tgt;
 	}
 	
-//	public void setAppendedSingleTargetInfo(String str){
-//		this.strSgTgtInfo=str;
-//	}
-	
 	protected void update(float tpf) {
 		if(tgtLastSingleTarget!=null && tgtLastSingleTarget.getRootSpatial().getParent()==null){
 			tgtLastSingleTarget=null;
@@ -187,7 +183,7 @@ public class TargetI {
 				tgtLastSingleTarget.getGeometryHit().getWorldRotation(),2)+")");
 			sb.append(strSep);
 			
-			PhysicsI.i().putPhysicsData(
+			PhysicsI.i().putPhysicsDataInfo(
 				tgtLastSingleTarget.getGeometryHit(), 
 				tgtLastSingleTarget.getOrCreateSubInfo("Phys")
 			);

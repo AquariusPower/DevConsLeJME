@@ -117,6 +117,7 @@ public class DebugVisualsI {
 		}
 		
 		public NodeDbg(Spatial spt) {
+			setName(DebugVisualsI.class.getSimpleName()+":Node");
 			this.sptTarget = spt;
 		}
 		
@@ -209,8 +210,9 @@ public class DebugVisualsI {
 ////	return bShowWorldBound;
 ////}
 
-		public GeometryBVolDbg(Spatial spt) {
-			this.sptTarget = spt;
+		public GeometryBVolDbg(Spatial sptTargetToShowBoundingVolume) {
+			this.sptTarget = sptTargetToShowBoundingVolume;
+			this.setMesh(new Box(0.01f,0.01f,0.01f)); //placeholder (that will be modified) to avoid raycast collision missing mesh problem, this is just a debug thing anyaway...
 		}
 
 		public BoundingBox getTargetBB() {

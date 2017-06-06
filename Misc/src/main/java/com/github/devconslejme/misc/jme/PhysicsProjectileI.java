@@ -26,6 +26,8 @@
 */
 package com.github.devconslejme.misc.jme;
 
+import javax.vecmath.Quat4d;
+
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
@@ -38,6 +40,7 @@ import com.github.devconslejme.misc.jme.PhysicsI.EDebug;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
@@ -158,7 +161,7 @@ public class PhysicsProjectileI {
 					if(bUseRayTestPos){
 						boolean bRayTestLocalPos=true;
 						if(bRayTestLocalPos){
-							v3fChk = pdWhat.v3fLocalGlueSpot;
+							v3fChk = pdWhat.v3fGlueWherePhysLocalPos;
 							attachChildRotated(nodeParentest,pdWhat);
 //							// rot 
 //							Node node = new Node();
@@ -183,14 +186,14 @@ public class PhysicsProjectileI {
 //					pdWhat.sptLink.setLocalTranslation(pdWhat.v3fWorldGlueSpot); 
 				}
 				
-				if(pdWhat.getSpatialWithPhysics().getLocalTranslation().distance(v3fChk)>0f){
+//				if(pdWhat.getSpatialWithPhysics().getLocalTranslation().distance(v3fChk)>0f){
 					/**
 					 * shall have no physics anymore at this point
 					 */
 					assert pdWhat.getSpatialWithPhysics().getControl(RigidBodyControl.class).getPhysicsSpace()==null;
 					pdWhat.getSpatialWithPhysics().setLocalTranslation(v3fChk);
-					return false; //to re-check
-				}
+//					return false; //to re-check
+//				}
 				
 				return true;
 			}
@@ -201,11 +204,26 @@ public class PhysicsProjectileI {
 		pdWhat.bGlueApplied=true;
 	}
 	
+	String strSBNKey=SimpleBatchNode.class.getName()+":LocalGluedProjectiles";
 	protected void attachChildRotated(Node nodeParentest, PhysicsData pdWhat){
-		Node node = new NodeX("RotatedBaseForProjectile");
-		node.attachChild(pdWhat.getSpatialWithPhysics());
-		node.setLocalRotation(pdWhat.quaLocalGlueRot);
-		nodeParentest.attachChild(node);
+		if(pdWhat.sbnGluedProjectiles==null){
+			pdWhat.sbnGluedProjectiles = new SimpleBatchNode(strSBNKey);
+			nodeParentest.attachChild(pdWhat.sbnGluedProjectiles);
+		}
+		
+		pdWhat.getSpatialWithPhysics().setLocalTranslation(pdWhat.v3fGlueWherePhysLocalPos);
+		Node nodeGlueWherePhysRotAtImpact = new Node();
+		Quaternion quaNeg = pdWhat.quaGlueWherePhysRotAtImpact.clone();
+		quaNeg.negate();
+		nodeGlueWherePhysRotAtImpact.setLocalRotation(quaNeg);
+		nodeGlueWherePhysRotAtImpact.attachChild(pdWhat.getSpatialWithPhysics());
+		Vector3f v3f=pdWhat.getSpatialWithPhysics().getWorldTranslation();
+		Quaternion qua=pdWhat.getSpatialWithPhysics().getWorldRotation();
+		
+		pdWhat.sbnGluedProjectiles.attachChild(pdWhat.getSpatialWithPhysics());
+		pdWhat.getSpatialWithPhysics().setLocalRotation(qua);
+		pdWhat.getSpatialWithPhysics().setLocalTranslation(v3f);
+		pdWhat.sbnGluedProjectiles.batch();
 	}
 
 	protected void glueProjectileCheckApply(PhysicsData pd, PhysicsData pdWhere, Vector3f v3fEventCollPos){

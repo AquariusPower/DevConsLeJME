@@ -72,6 +72,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.BatchNode;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
+import com.jme3.scene.SimpleBatchNode;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 
@@ -298,6 +299,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 	
 	public static class PhysicsData{
+		protected SimpleBatchNode	sbnGluedProjectiles;
 		protected long lProjectileMaxLifeTime;
 		protected boolean	bDisintegrated;
 		protected Quaternion	quaWRotBkp;
@@ -320,8 +322,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		protected boolean	bGlueApplied;
 		protected boolean	bProjectile;
 		protected Vector3f	v3fEventCollOtherLocalPos;
-		protected Vector3f	v3fLocalGlueSpot;
-		protected Quaternion	quaLocalGlueRot;
+		protected Vector3f	v3fGlueWherePhysLocalPos;
+		protected Quaternion	quaGlueWherePhysRotAtImpact;
 		protected Vector3f	v3fPosAtPreviousTick;
 //		protected Matter	mt;
 		protected MatterStatus	mts;
@@ -622,7 +624,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		return pd;
 	}
 	
-	public void putPhysicsData(Spatial sptSourceRetrieveFrom, HashMap<String,Info> hmStore){
+	public void putPhysicsDataInfo(Spatial sptSourceRetrieveFrom, HashMap<String,Info> hmStore){
 		PhysicsData pd = getPhysicsDataFrom(sptSourceRetrieveFrom);
 		if(pd!=null){
 			InfoJmeI.i().putAt(hmStore,"mass",pd.mts.getMassKg(),3);
@@ -631,6 +633,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			InfoJmeI.i().putAt(hmStore,"angv",pd.rbc.getAngularVelocity(),1);
 			InfoJmeI.i().putAt(hmStore,"grav",pd.rbc.getGravity(),1);
 			InfoJmeI.i().putAt(hmStore,"rest",pd.isResting());
+			InfoJmeI.i().putAt(hmStore,"GluePrjc",pd.sbnGluedProjectiles.getChildren().size());
 //			InfoJmeI.i().putAt(hmStore,"LtTrwSpd",pd.imp.fImpulseAtSelfDirection);
 		}
 	}
@@ -1040,8 +1043,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			
 			pd.pdGlueWhere=(pdNearest);
 			pd.v3fWorldGlueSpot=v3fWrldHitNearest;
-			pd.v3fLocalGlueSpot=v3fWrldHitNearest.subtract(pcoNearest.getPhysicsLocation());
-			pd.quaLocalGlueRot=pcoNearest.getPhysicsRotation();
+			pd.v3fGlueWherePhysLocalPos=v3fWrldHitNearest.subtract(pcoNearest.getPhysicsLocation());
+			pd.quaGlueWherePhysRotAtImpact=pcoNearest.getPhysicsRotation();
 			
 			if(pdNearest.isTerrain()){
 //					resetForces(pd); //prevents delayed ricochet
