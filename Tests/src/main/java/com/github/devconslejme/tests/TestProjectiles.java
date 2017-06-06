@@ -27,20 +27,16 @@
 package com.github.devconslejme.tests;
 
 import com.github.devconslejme.game.CharacterI;
-import com.github.devconslejme.misc.jme.AppI;
 import com.github.devconslejme.misc.jme.ColorI;
-import com.github.devconslejme.misc.jme.GeometryI;
 import com.github.devconslejme.misc.jme.ColorI.EColor;
-import com.github.devconslejme.misc.jme.GeometryI.GeometryX;
 import com.github.devconslejme.misc.jme.PhysicsI;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
-import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
-import com.jme3.scene.shape.Box;
+import com.jme3.scene.Node;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -75,7 +71,8 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 		float fSize=100;
 		float fYFloor=-7;
 		PhysicsData pdFloor = PhysicsI.i().spawnOrthoWall(0, fSize, fSize, null, new Vector3f(0,fYFloor,0));
-		pdFloor.getGeometry().getMaterial().setColor(EColor.Color.s(), ColorI.i().colorChangeCopy(ColorRGBA.Brown,0.20f,1f));
+		pdFloor.getInitialOriginalGeometry().getMaterial().setColor(EColor.Color.s(), 
+			ColorI.i().colorChangeCopy(ColorRGBA.Brown,0.20f,1f));
 //		Geometry geomFloor=GeometryI.i().create(new Box(iSize,0.1f,iSize), ColorI.i().colorChangeCopy(ColorRGBA.Brown,0.20f,1f));
 //		geomFloor.move(0,-7f,0);
 //		geomFloor.setName("floor");
@@ -110,6 +107,11 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 		PhysicsI.i().spawnVolumeBox(ColorI.i().colorChangeCopy(ColorRGBA.Blue,0,0.5f),
 			1f,"Z-Blue"	,new Vector3f(0,0,1).mult(5));
 		
+	}
+	
+	public void spawnBox(){
+		PhysicsI.i().spawnVolumeBox(ColorI.i().colorChangeCopy(ColorRGBA.randomColor(),0,0.5f),
+			3f,"Random",new Vector3f(0,0,0));
 	}
 	
 //	protected void initTestBox(ColorRGBA color, float fVolume, String str){

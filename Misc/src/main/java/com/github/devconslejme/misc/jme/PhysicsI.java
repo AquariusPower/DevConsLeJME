@@ -316,6 +316,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		protected long	lRestingAtTickCount;
 		protected boolean	bResting;
 		protected Impulse	imp;
+		protected long	lLastPhysUpdateNano;
+		protected long	lLastRenderUpdateNano;
 		protected long	lMaterializedSTime;
 		protected Vector3f	v3fWorldGlueSpot;
 		protected PhysicsData	pdGlueWhere;
@@ -327,8 +329,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		protected Vector3f	v3fPosAtPreviousTick;
 //		protected Matter	mt;
 		protected MatterStatus	mts;
-		protected Geometry	geomLink;
+		protected Geometry	geomOriginalInitialLink;
 		protected NodeX	nodexLink;
+		public int	lForceAwakeCount;
 		
 		/**
 		 * 
@@ -355,7 +358,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		
 		public PhysicsData(NodeX nodex, Geometry geom) {
 			this.nodexLink=nodex;
-			this.geomLink=geom;
+			this.geomOriginalInitialLink=geom;
 //			if(spt instanceof NodeX)nodexLink=(NodeX)spt;
 //			this.sptLink = spt;
 			
@@ -466,18 +469,22 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			return getSpatialWithPhysics().getName()+","+getSpatialWithPhysics().getClass().getSimpleName()+","+rbc.getClass().getSimpleName();
 		}
 		
-		public Spatial getSpatialWithPhysics(){
-			if(nodexLink!=null)return nodexLink;
-			return geomLink;
+		public boolean isEnclosed() {
+			return nodexLink!=null;
 		}
 		
-		public NodeX getEnclosingNode() {
-			return nodexLink;
+		public Spatial getSpatialWithPhysics(){
+			if(isEnclosed())return nodexLink;
+			return geomOriginalInitialLink;
 		}
+		
+//		public NodeX getEnclosingNode() {
+//			return nodexLink;
+//		}
 
-		public Geometry getGeometry() {
-			return geomLink;
-		}
+//		public Geometry getGeometry() {
+//			return geomLink;
+//		}
 
 		public void setMatter(Matter mt) {
 			if(mt!=null){
@@ -488,6 +495,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			mts.setVolumeM3(bv.getVolume());
 			rbc.setMass((float)mts.getMassKg());
 		}
+
+		public Geometry getInitialOriginalGeometry() {
+			return geomOriginalInitialLink;
+		}
+
 	}
 	
 	
@@ -785,6 +797,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //			if(pd==null){
 //				syso("breakpoint here");
 //			}
+			pd.lLastPhysUpdateNano=System.nanoTime();
 			
 			if(pd.isProjectile())continue;
 			
@@ -922,6 +935,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		
 		PhysicsProjectileI.i().glueProjectileCheckApply(pdA,pdB,event.getLocalPointB());
 		PhysicsProjectileI.i().glueProjectileCheckApply(pdB,pdA,event.getLocalPointA());
+		
+		if(pdA.isProjectile() && !pdB.isProjectile())pdB.lForceAwakeCount=10; //more 10 ticks
+		if(pdB.isProjectile() && !pdA.isProjectile())pdA.lForceAwakeCount=10; //more 10 ticks
 	}
 	
 	/**
@@ -1002,16 +1018,17 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 	
 //	protected Boolean threadPhysicsChkProjectileMovingTowards(PhysicsCollisionObject node, PhysicsData pd){
-	protected Boolean threadPhysicsGlueDetectProjectileNextHit(PhysicsData pd){
+	protected Boolean threadPhysicsGlueDetectProjectileNextHit(PhysicsData pdProjectile){
 //		if(node.getUserObject() instanceof GeometryTestProjectile){
 //			PhysicsData pd = getPhysicsDataFrom((Spatial)node.getUserObject());
-		if(!pd.isProjectile())return null; //skip
+		if(!pdProjectile.isProjectile())return null; //skip
 		
-		if(pd.pdGlueWhere!=null)return false;//1st hit only
+		if(pdProjectile.pdGlueWhere!=null)return false;//1st hit only
 //			RigidBodyControl rbc = (RigidBodyControl)node;
 		
-		Vector3f v3fFrom = pd.rbc.getPhysicsLocation();
-		Vector3f v3fTo = pd.rbc.getPhysicsLocation().add(pd.rbc.getLinearVelocity().normalize().mult(10)); //mult 10 is a guess for high speed, TODO confirm this
+		Vector3f v3fFrom = pdProjectile.rbc.getPhysicsLocation();
+		Vector3f v3fTo = pdProjectile.rbc.getPhysicsLocation().add(
+			pdProjectile.rbc.getLinearVelocity().normalize().mult(10)); //mult 10 is a guess for high speed, TODO confirm this
 //			Vector3f v3fTo = pd.rbc.getPhysicsLocation().add(pd.rbc.getLinearVelocity());
 		@SuppressWarnings("unchecked")List<PhysicsRayTestResult> rayTest = ps.rayTest(v3fFrom,v3fTo);
 		
@@ -1041,17 +1058,23 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		if(pdNearest!=null){
 //				if(pdNearest.isProjectile())return false; //prevent each other
 			
-			pd.pdGlueWhere=(pdNearest);
-			pd.v3fWorldGlueSpot=v3fWrldHitNearest;
-			pd.v3fGlueWherePhysLocalPos=v3fWrldHitNearest.subtract(pcoNearest.getPhysicsLocation());
-			pd.quaGlueWherePhysWRotAtImpact=pcoNearest.getPhysicsRotation();
+			pdProjectile.pdGlueWhere=(pdNearest);
 			
+			pdProjectile.v3fWorldGlueSpot=v3fWrldHitNearest;
+			
+			pdProjectile.v3fGlueWherePhysLocalPos=v3fWrldHitNearest.subtract(pcoNearest.getPhysicsLocation());
+			pdProjectile.quaGlueWherePhysWRotAtImpact=pcoNearest.getPhysicsRotation();
+			
+			/**
+			 * while hitting dynamic objects, the mass must remain > 0f to let forces be applied
+			 */
 			if(pdNearest.isTerrain()){
-//					resetForces(pd); //prevents delayed ricochet
-//					pd.rbc.setGravity(Vector3f.ZERO);//prevent falling
-				pd.rbc.setMass(0f); //no need to nested spatial glue on static terrain TODO instead check if nearest has mass=0? but it may be temporary and be glued would work better...
-				pd.rbc.setPhysicsLocation(pd.v3fWorldGlueSpot);
-				pd.bGlueApplied=true;
+				/** will be removed from physics space later */
+				/**
+				 * "GLUE" ON TERRAIN HERE (not actually  glue, but terrain wont move anyway...)
+				 */
+				pdProjectile.rbc.setMass(0f); //no need to be nested on a spatial when glueing on static terrain TODO instead check if nearest has mass=0? but it may be temporary and be glued would work better...
+				pdProjectile.rbc.setPhysicsLocation(pdProjectile.v3fWorldGlueSpot); //this positioning works precisely if done here, np, is easier, keep it here...
 			}
 			
 			return true; //to generate the collision event
