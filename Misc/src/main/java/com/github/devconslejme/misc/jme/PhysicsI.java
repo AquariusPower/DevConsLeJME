@@ -1164,7 +1164,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	public PhysicsData spawnOrthoWall(int iPlane,float fWidth,float fHeight,Float fThickness, Vector3f v3fPos){
 		if(fThickness==null)fThickness=0.1f;
 		
-		GeometryX geomWall=GeometryI.i().create(new Box(fWidth/2f,fHeight/2f,fThickness/2f), ColorRGBA.Gray);
+		Geometry geomWall=GeometryI.i().create(new Box(fWidth/2f,fHeight/2f,fThickness/2f), ColorRGBA.Gray);
 		geomWall.setName("OrthoWall");
 		AppI.i().getRootNode().attachChild(geomWall);
 //		Spatial sptAtRoot = geomWall;

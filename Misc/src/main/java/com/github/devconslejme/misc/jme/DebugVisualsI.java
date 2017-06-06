@@ -159,7 +159,7 @@ public class DebugVisualsI {
 				axes.setLocalScale(geombv.bs.getRadius()*fMult);
 			}
 			
-			axes.setLocalRotation(sptTarget.getLocalRotation());
+			axes.setLocalRotation(sptTarget.getWorldRotation());
 		}
 //		protected void setShow(Spatial spt, boolean b) {
 //			if(b){
@@ -175,10 +175,12 @@ public class DebugVisualsI {
 			this.bShow=b;
 			
 			if(b){
-				Node parent = sptTarget.getParent();
-				if(parent!=null){
-					parent.attachChild(this);
-				}
+				sptTarget.hasAncestor(AppI.i().getRootNode());
+				AppI.i().getRootNode().attachChild(this);
+//				Node parent = sptTarget.getParent();
+//				if(parent!=null){
+//					parent.attachChild(this);
+//				}
 			}else{
 				removeFromParent();
 			}
@@ -310,7 +312,8 @@ public class DebugVisualsI {
 			
 			updateWorldBoundAndAxes(spt,nd);
 //			System.out.println("B:"+nd.getLocalTranslation());
-			nd.setLocalTranslation(spt.getLocalTranslation().clone());
+//			nd.setLocalTranslation(spt.getLocalTranslation().clone());
+			nd.setLocalTranslation(spt.getWorldTranslation().clone());
 //			System.out.println("A:"+nd.getLocalTranslation());
 		}
 	}
@@ -355,10 +358,10 @@ public class DebugVisualsI {
 			if(nd.geombv!=null)nd.geombv.removeFromParent();
 			nd.attachChild(geomBoundNew);
 			
-			//compensate the rotation
-			Quaternion qua = nd.getWorldRotation().clone();
-			qua.negate();
-			geomBoundNew.setLocalRotation(qua);
+//			//compensate the rotation
+//			Quaternion qua = nd.getWorldRotation().clone();
+//			qua.negate();
+//			geomBoundNew.setLocalRotation(qua);
 			
 			nd.geombv=geomBoundNew;
 		}

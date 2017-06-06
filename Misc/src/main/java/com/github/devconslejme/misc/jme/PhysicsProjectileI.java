@@ -209,15 +209,10 @@ public class PhysicsProjectileI {
 			nodeParentest.attachChild(pdWhat.sbnGluedProjectiles);
 		}
 		
-//		Transform trf = new Transform(pdWhat.v3fGlueWherePhysLocalPos, pdWhat.quaGlueWherePhysWRotAtImpact);
-//		trf.
-//		
 		Quaternion quaDiff = pdWhat.sbnGluedProjectiles.getWorldRotation().subtract(pdWhat.quaGlueWherePhysWRotAtImpact);
 		
 		pdWhat.getSpatialWithPhysics().setLocalTranslation(pdWhat.v3fGlueWherePhysLocalPos);
 		Node nodeGlueWherePhysRotAtImpact = new Node();
-//		Quaternion quaNeg = pdWhat.quaGlueWherePhysWRotAtImpact.clone();
-//		quaNeg.negate();
 		nodeGlueWherePhysRotAtImpact.setLocalRotation(quaDiff);
 		nodeGlueWherePhysRotAtImpact.attachChild(pdWhat.getSpatialWithPhysics());
 		Vector3f v3fSimulatedPos=pdWhat.getSpatialWithPhysics().getWorldTranslation();

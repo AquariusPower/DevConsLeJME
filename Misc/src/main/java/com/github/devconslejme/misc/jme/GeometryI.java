@@ -74,7 +74,7 @@ public class GeometryI {
 		if(bTransparent==null)bTransparent = color.a<1f;
 //		GeometryX geom = new GeometryX(mesh.getClass().getSimpleName());
 //		if(geomStore==null)geomStore = (T)new GeometryX(mesh.getClass().getSimpleName(),mesh);
-		if(geomStore==null)geomStore = (T)new GeometryX(mesh.getClass().getSimpleName(),null);
+		if(geomStore==null)geomStore = (T)new Geometry(mesh.getClass().getSimpleName());
 		geomStore.setMesh(mesh);
 		if(mesh instanceof Sphere){
 			Sphere s = ((Sphere)mesh);
