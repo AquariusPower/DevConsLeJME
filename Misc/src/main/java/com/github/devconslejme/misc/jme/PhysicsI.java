@@ -76,6 +76,10 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 
 /**
+ * http://physics.nist.gov/cuu/Units/units.html
+ * http://www.bulletphysics.org/mediawiki-1.5.8/index.php?title=Frequently_Asked_Questions
+ * so: length meter m, mass kilogram kg, time second s
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListener, PhysicsCollisionListener{
@@ -319,7 +323,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		protected Vector3f	v3fLocalGlueSpot;
 		protected Quaternion	quaLocalGlueRot;
 		protected Vector3f	v3fPosAtPreviousTick;
-		protected Matter	mt;
+//		protected Matter	mt;
 		protected MatterStatus	mts;
 		protected Geometry	geomLink;
 		protected NodeX	nodexLink;
@@ -472,6 +476,16 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		public Geometry getGeometry() {
 			return geomLink;
 		}
+
+		public void setMatter(Matter mt) {
+			if(mt!=null){
+				mts=new MatterStatus(mt);
+			}else{
+				mts=new MatterStatus(EMatter.Generic1KgPerM3.get());
+			}
+			mts.setVolumeM3(bv.getVolume());
+			rbc.setMass((float)mts.getMassKg());
+		}
 	}
 	
 	
@@ -516,14 +530,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		PhysicsData pd = new PhysicsData(nodex,geom);
 //		pd.nodexLink=spt;
 		pd.saveSafePosRotFromSpatialLink();
-		if(mt!=null){
-			pd.mts=new MatterStatus(mt);
-		}else{
-			pd.mts=new MatterStatus(EMatter.Custom1KgPerM3.get());
-		}
 		
 		/*****************************************
-		 * retrieve correct bounding
+		 * retrieve correct(default/Original/Aligned) bounding
 		 */
 		//bkp rot
 		pd.quaWRotBkp = geom.getWorldRotation().clone();
@@ -549,27 +558,23 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}else
 		if (pd.bv instanceof BoundingSphere) {
 			pd.bs = (BoundingSphere) pd.bv.clone();
-//			assert v3fForceScaleCS==null;
-//			if(v3fForceScaleCS==null){
-				pd.cs = new SphereCollisionShape(pd.bs.getRadius());
-//			}else{
-//				pd.cs = new CapsuleCollisionShape(pd.bs.getRadius());
-//			}
+			pd.cs = new SphereCollisionShape(pd.bs.getRadius());
 			fPseudoDiameter=2f*pd.bs.getRadius();
 		}else{
 			throw new DetailedException("unsupported "+pd.bv.getClass(),geom);
 		}
 		
-		pd.mts.setVolumeM3(pd.bv.getVolume());
-		
 		pd.rbc=new RigidBodyControl(pd.cs);
-//		pd.rbc.getCollideWithGroups();
-//		pd.rbc.getCollisionGroup();
 		
-		pd.rbc.setMass((float) pd.mts.getMass());
+		pd.setMatter(mt);
+//		if(mt!=null){
+//			pd.mts=new MatterStatus(mt);
+//		}else{
+//			pd.mts=new MatterStatus(EMatter.Generic1KgPerM3.get());
+//		}
+//		pd.mts.setVolumeM3(pd.bv.getVolume());
+//		pd.rbc.setMass((float) pd.mts.getMassKg());
 		
-//		float fCCdMotionThreshold = fPseudoDiameter;
-//		float fCCdMotionThreshold = fPseudoDiameter*0.75f;
 		float fCCdMotionThreshold = fPseudoDiameter/2f;
 		pd.rbc.setCcdMotionThreshold(fCCdMotionThreshold);
 		
@@ -584,25 +589,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		 */
 		pd.rbc.setCcdSweptSphereRadius(fPseudoDiameter/2f);
 		
-//		Spatial spt=nodex;
-//		if(spt==null)spt=geom;
-//		if(bEncloseInNode){
 		pd.getSpatialWithPhysics().addControl(pd.rbc); //this will put the rbc at spatial's W/L location/rotation
-//		}else{
-//			geom.addControl(pd.rbc); //this will put the rbc at spatial's W/L location/rotation
-//		}
-//		if(bEncloseInNode){
-//			/** to be on a node is important to let other things be attached to it like stuck projectiles */
-//			Node nodeParent = geom.getParent();
-//			Transform trf = geom.getWorldTransform();
-//			NodeX nodex = new NodeX("PhysImbued:"+geom.getName());
-//			nodex.attachChild(geom);
-//			nodex.setLocalTransform(trf);
-//			if(nodeParent!=null)nodeParent.attachChild(nodex);
-//			nodex.addControl(pd.rbc); //this will put the rbc at spatial's W/L location/rotation
-//		}else{
-//			geom.addControl(pd.rbc); //this will put the rbc at spatial's W/L location/rotation
-//		}
 		
 		pd.v3fPosAtPreviousTick=pd.getSpatialWithPhysics().getLocalTranslation().clone();
 		
@@ -638,7 +625,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	public void putPhysicsData(Spatial sptSourceRetrieveFrom, HashMap<String,Info> hmStore){
 		PhysicsData pd = getPhysicsDataFrom(sptSourceRetrieveFrom);
 		if(pd!=null){
-			InfoJmeI.i().putAt(hmStore,"mass",pd.mts.getMass(),3);
+			InfoJmeI.i().putAt(hmStore,"mass",pd.mts.getMassKg(),3);
 			InfoJmeI.i().putAt(hmStore,"vol",pd.mts.getVolumeM3(),3);
 			InfoJmeI.i().putAt(hmStore,"spd",pd.rbc.getLinearVelocity(),2);
 			InfoJmeI.i().putAt(hmStore,"angv",pd.rbc.getAngularVelocity(),1);
@@ -881,7 +868,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	 */
 	public Impulse throwAtSelfDirImpulse(Spatial spt, float fImpulseAtDirection){
 		PhysicsData pd = getPhysicsDataFrom(spt);
-		if(pd!=null && pd.mts.getMass()<0.01f && fImpulseAtDirection>300){
+		if(pd!=null && pd.mts.getMassGrams()<50f && fImpulseAtDirection>300){ //9mm bullet weights 124 grains = 8 grams of lead
 			MessagesI.i().warnMsg(this, "this looks like a bullet, avoid using this method!", spt, pd, fImpulseAtDirection);
 		}
 		Impulse imp = new Impulse().setImpulseAtSelfDir(fImpulseAtDirection);
@@ -903,7 +890,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	public Impulse throwFromCam(PhysicsData pd,float fDesiredSpeed){
 		AppI.i().placeAtCamWPos(pd.getSpatialWithPhysics(), 1f, true); //orientated z
 		syncPhysTransfFromSpt(pd.getSpatialWithPhysics());
-		Impulse imp = throwAtSelfDirImpulse(pd.getSpatialWithPhysics(), (float) (fDesiredSpeed*pd.mts.getMass())); //the final speed depends on the mass
+		Impulse imp = throwAtSelfDirImpulse(pd.getSpatialWithPhysics(), (float) (fDesiredSpeed*pd.mts.getMassKg())); //the final speed depends on the mass
 		pdLastThrownFromCam=pd;
 		return imp;
 	}
@@ -1061,8 +1048,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //					pd.rbc.setGravity(Vector3f.ZERO);//prevent falling
 				pd.rbc.setMass(0f); //no need to nested spatial glue on static terrain TODO instead check if nearest has mass=0? but it may be temporary and be glued would work better...
 				pd.rbc.setPhysicsLocation(pd.v3fWorldGlueSpot);
-				return true; //to generate the collision event
+				pd.bGlueApplied=true;
 			}
+			
+			return true; //to generate the collision event
 		}
 			
 		return null; //to skip
@@ -1153,7 +1142,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //		node.attachChild(geom);
 		
 		if(v3fPos!=null)geom.move(v3fPos); //b4 physics
-		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geom,EMatter.Custom1KgPerM3.get(),true);
+		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geom,EMatter.Generic1KgPerM3.get(),true);
 		
 		AppI.i().getRootNode().attachChild(pd.getSpatialWithPhysics());
 		

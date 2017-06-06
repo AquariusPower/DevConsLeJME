@@ -95,17 +95,17 @@ public class TargetI {
 		String strK=flycamx.getCfgAddFlyCamMod(KeyCodeManagerI.i().getMouseTriggerKey(1).getFullId());
 		KeyBindCommandManagerI.i().putBindCommandsLater("Shift+"+strK,new CallBoundKeyCmd(){
 			@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
-				TargetGeom tgt = acquireNewTarget(v3fRayCastFromXY);
+				TargetGeom tgt = acquireNewTarget(getRayCastFromXY());
 				if(tgt!=null)addOrRemoveAtMultiTargetList(tgt); //toggles
 				return true;
 			}
 		}.setName("AddTargetMulti"));
     KeyBindCommandManagerI.i().putBindCommandsLater(strK,new CallBoundKeyCmd(){
     	@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
-				TargetGeom tgt = acquireNewTarget(v3fRayCastFromXY); //can be the same, wont toggle
+				TargetGeom tgt = acquireNewTarget(getRayCastFromXY()); //can be the same, wont toggle
 				if(tgt!=null){
 					clearLastSingleTarget();
-					tgtLastSingleTarget=acquireNewTarget(v3fRayCastFromXY); //can be the same, wont toggle
+					tgtLastSingleTarget=acquireNewTarget(getRayCastFromXY()); //can be the same, wont toggle
 				}
 				return true;
 			}
@@ -296,7 +296,7 @@ public class TargetI {
 	}
 
 	public Vector3f getRayCastFromXY() {
-		return v3fRayCastFromXY;
+		return v3fRayCastFromXY!=null?v3fRayCastFromXY:HWEnvironmentJmeI.i().getDisplay().getCenter(0f);
 	}
 
 	public TargetI setRayCastFromXY(Vector3f v3fRayCastFromXY) {

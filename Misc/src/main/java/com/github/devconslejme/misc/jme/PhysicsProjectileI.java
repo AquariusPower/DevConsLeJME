@@ -57,8 +57,9 @@ public class PhysicsProjectileI {
 	
 	private int	iProjectilesPerSecond;
 	private long	lTestProjectilesMaxLifeTime;// = TimeConvertI.i().secondsToNano(5);
-	private SimpleBatchNode	sbnBatchTestProjectiles;
+	private SimpleBatchNode	sbnProjectilesAtWorld;
 	private Geometry	geomTestProjectileFactory;
+	private Matter mtProjectile = EMatter.Generic100KgPerM3.get();//EMatter.Lead.get();
 	
 	public void configure(){
 		setTestProjectilesPerSecond(10); //10 seems the default of many guns
@@ -66,7 +67,7 @@ public class PhysicsProjectileI {
     KeyBindCommandManagerI.i().putBindCommandsLater("Space",new CallBoundKeyCmd(){
   		@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 //  			PhysicsProjectileI.i().throwProjectileFromCamera(250,0.1f,6f);
-  			PhysicsProjectileI.i().throwProjectileFromCamera(250,0.1f,EMatter.Lead.get());
+  			PhysicsProjectileI.i().throwProjectileFromCamera(250,0.1f,mtProjectile);
   			setDelaySeconds(1f/iProjectilesPerSecond); //dynamicly changeable
   			return true;
   		}}.setName("ShootProjectile").holdKeyPressedForContinuousCmd().setDelaySeconds(1f/iProjectilesPerSecond)
@@ -84,9 +85,9 @@ public class PhysicsProjectileI {
 	}
 
 	public PhysicsData throwProjectileFromCamera(float fDesiredSpeed, float fRadius, Matter mt){
-		if(sbnBatchTestProjectiles==null){
-			sbnBatchTestProjectiles = new SimpleBatchNode("BatchNode");
-			AppI.i().getRootNode().attachChild(sbnBatchTestProjectiles);
+		if(sbnProjectilesAtWorld==null){
+			sbnProjectilesAtWorld = new SimpleBatchNode("BatchNode");
+			AppI.i().getRootNode().attachChild(sbnProjectilesAtWorld);
 		}
 		
 //		Vector3f v3fScale = new Vector3f(0.25f,0.25f,1f);
@@ -95,16 +96,18 @@ public class PhysicsProjectileI {
 //			geomTestProjectileFactory = GeometryI.i().create(MeshI.i().sphere(fRadius), ColorRGBA.Cyan, false, new GeometryTestProjectile());
 //			geomTestProjectileFactory = GeometryI.i().create(MeshI.i().box(fRadius), ColorRGBA.Cyan, false, new GeometryTestProjectile());
 			geomTestProjectileFactory.scale(0.25f,0.25f,1f);
+			geomTestProjectileFactory.scale(1f/4f); // to lower the automatic mass
 			geomTestProjectileFactory.getMaterial().setColor(EColor.GlowColor.s(), ColorRGBA.Blue.mult(10)); //requires the bloom post processor with glow objects mode
 		}
 		
 		Geometry geomClone = geomTestProjectileFactory.clone();
 		geomClone.setName("Projectile");
-		sbnBatchTestProjectiles.attachChild(geomClone); //AppI.i().getRootNode().attachChild(geomClone);
-		sbnBatchTestProjectiles.batch();
+		sbnProjectilesAtWorld.attachChild(geomClone); //AppI.i().getRootNode().attachChild(geomClone);
+		sbnProjectilesAtWorld.batch();
 		
 //		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,fDensity,geomTestProjectileFactory.getLocalScale());
 		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,mt,false);
+		geomClone.scale(4f); //to restore the good looking size
 		//TODO scale
 //		ps.remove(pd.rbc);
 //		pd.rbc.getCollisionShape().setScale(geomTestProjectileFactory.getLocalScale());
@@ -119,9 +122,9 @@ public class PhysicsProjectileI {
 	}
 
 	public void reparentProjectile(Node nodeNewParent, Spatial sptProjectile){
-		assert nodeNewParent!=sbnBatchTestProjectiles;
+		assert nodeNewParent!=sbnProjectilesAtWorld;
 		
-		boolean b=sptProjectile.getParent()==sbnBatchTestProjectiles;
+		boolean b=sptProjectile.getParent()==sbnProjectilesAtWorld;
 		
 		if(nodeNewParent!=null){
 			nodeNewParent.attachChild(sptProjectile);
@@ -129,7 +132,7 @@ public class PhysicsProjectileI {
 			sptProjectile.removeFromParent();
 		}
 		
-		if(b)sbnBatchTestProjectiles.batch();
+		if(b)sbnProjectilesAtWorld.batch();
 	}
 
 	public void applyGluedMode(PhysicsData pdWhat){
@@ -219,13 +222,13 @@ public class PhysicsProjectileI {
 	}
 	
 	public Object debugTest(Object... aobj){//keep even if empty
-		EDebug.TestDynamicPhysicsWithoutSpatialAndData.set(true);
-		sbnBatchTestProjectiles.removeFromParent();
-		for (Spatial spt : sbnBatchTestProjectiles.getChildren()) {
-			spt.removeControl(RigidBodyControl.class);
-		}
-		sbnBatchTestProjectiles.detachAllChildren();
-		sbnBatchTestProjectiles.batch();
-		return null;
+//		EDebug.TestDynamicPhysicsWithoutSpatialAndData.set(true);
+//		sbnBatchTestProjectiles.removeFromParent();
+//		for (Spatial spt : sbnBatchTestProjectiles.getChildren()) {
+//			spt.removeControl(RigidBodyControl.class);
+//		}
+//		sbnBatchTestProjectiles.detachAllChildren();
+//		sbnBatchTestProjectiles.batch();
+		return sbnProjectilesAtWorld.getChildren().size();
 	}
 }

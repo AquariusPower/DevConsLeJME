@@ -44,13 +44,26 @@ public class MatterI {
 	private static double fM3toCm3=1000000;
 	
 	public static enum EMatter{
-		/** a generic placeholder, so 1 cubic meter will have a mass of 1.0 */
-		Custom1KgPerM3(1/fM3toCm3),
+					/** a generic placeholder, so 1 cubic meter will have a mass of 1.0kg (a cardboard empty box) */
+		      Generic1KgPerM3(1000f/fM3toCm3),
+		     Generic10KgPerM3(10000f/fM3toCm3),
+		    Generic100KgPerM3(100000f/fM3toCm3),
+		   /** like water density */
+		   Generic1000KgPerM3(1000000f/fM3toCm3),
+		  /** around the densest metals in the world */
+		  Generic10000KgPerM3(10000000f/fM3toCm3),
+		 /** earch core? */
+		 Generic100000KgPerM3(100000000f/fM3toCm3),
+		/** black holes? */
+		Generic1000000KgPerM3(1000000000f/fM3toCm3),
 		
+		Aluminum(2.7),
+		Copper(9.0),
+		Gold(19.3),
 		Lead(11.34f),
-		
-		Water(1f),
-		
+		Osmium(22.6f),
+		Tungsten(19.25),
+		Water(1.0),
 		;
 		EMatter(double fDensityGramsPerCm3){
 			hm.put(this.toString(),new Matter(this.toString(),fDensityGramsPerCm3));
@@ -79,7 +92,7 @@ public class MatterI {
 	public static class MatterStatus{
 		private Matter mt;
 		private double fVolumeCm3;
-		private double	dMass;
+		private double	dMassGrams;
 		private double	fVolumeM3;
 		
 		public MatterStatus(Matter mt){
@@ -93,12 +106,16 @@ public class MatterI {
 		public MatterStatus setVolumeCm3(double fVolumeCm3) {
 			this.fVolumeCm3 = fVolumeCm3;
 			this.fVolumeM3 = fVolumeCm3/fM3toCm3;
-			this.dMass = mt.getDensityGramsPerCm3() * fVolumeCm3;
+			this.dMassGrams = mt.getDensityGramsPerCm3() * fVolumeCm3;
 			return this; 
 		}
 		
-		public double getMass(){
-			return dMass;
+		public double getMassGrams(){
+			return dMassGrams;
+		}
+		
+		public double getMassKg(){
+			return dMassGrams/1000.0;
 		}
 		
 		public MatterStatus setVolumeM3(double fVolumeM3) {
