@@ -142,85 +142,46 @@ public class PhysicsProjectileI {
 		Node nodeParentest = SpatialHierarchyI.i().getParentestOrSelf(
 			pdWhat.pdGlueWhere.getSpatialWithPhysics(), Node.class, true, false);
 		
+		PhysicsI.i().removeFromPhysicsSpace(pdWhat.getSpatialWithPhysics()); //this prevents further updates from physics space
+		
 		if(nodeParentest!=null){ //will glue at dynamic parent surface
 			reparentProjectile(nodeParentest,pdWhat.getSpatialWithPhysics());
 			
 			PhysicsI.i().cancelDisintegration(pdWhat);
+			
+//			QueueI.i().enqueue(new CallableXAnon() {@Override public Boolean call() {
+				glueAsChildWithPosRotOfImpact(nodeParentest,pdWhat);
+				
+//				/**
+//				 * shall have no physics anymore at this point
+//				 */
+//				assert pdWhat.getSpatialWithPhysics().getControl(RigidBodyControl.class).getPhysicsSpace()==null;
+				
+//				return true;
+//			}});
 		}
-		
-		QueueI.i().enqueue(new CallableXAnon() {
-			@Override
-			public Boolean call() {
-				Vector3f v3fChk=null;
-				
-				if(nodeParentest!=null){ //will glue at dynamic parent surface
-					
-					boolean bUseRayTestPos=true;
-					if(bUseRayTestPos){
-						boolean bRayTestLocalPos=true;
-						if(bRayTestLocalPos){
-							v3fChk = pdWhat.v3fGlueWherePhysLocalPos;
-							attachChildRotated(nodeParentest,pdWhat);
-//							// rot 
-//							Node node = new Node();
-//							node.attachChild(pdWhat.sptLink);
-//							node.setLocalRotation(pdWhat.quaLocalGlueRot);
-//							nodeParentest.attachChild(node);
-						}else{ 
-							/**
-							 * for dynamic parents this is bad as they may have moved after the
-							 * pos being set at the phys thread...
-							 */
-							v3fChk = nodeParentest.worldToLocal(pdWhat.v3fWorldGlueSpot,null);
-						}
-					}else{ //event local pos
-						v3fChk = pdWhat.v3fEventCollOtherLocalPos;
-						attachChildRotated(nodeParentest,pdWhat);
-					}
-					
-				}else{
-					//simple at world on some static surface
-					v3fChk = pdWhat.v3fWorldGlueSpot;
-//					pdWhat.sptLink.setLocalTranslation(pdWhat.v3fWorldGlueSpot); 
-				}
-				
-//				if(pdWhat.getSpatialWithPhysics().getLocalTranslation().distance(v3fChk)>0f){
-					/**
-					 * shall have no physics anymore at this point
-					 */
-					assert pdWhat.getSpatialWithPhysics().getControl(RigidBodyControl.class).getPhysicsSpace()==null;
-					pdWhat.getSpatialWithPhysics().setLocalTranslation(v3fChk);
-//					return false; //to re-check
-//				}
-				
-				return true;
-			}
-		});
 	
-		PhysicsI.i().removeFromPhysicsSpace(pdWhat.getSpatialWithPhysics()); //this prevents further updates from physics space
-		
 		pdWhat.bGlueApplied=true;
 	}
 	
 	String strSBNKey=SimpleBatchNode.class.getName()+":LocalGluedProjectiles";
-	protected void attachChildRotated(Node nodeParentest, PhysicsData pdWhat){
-		if(pdWhat.sbnGluedProjectiles==null){
-			pdWhat.sbnGluedProjectiles = new SimpleBatchNode(strSBNKey);
-			nodeParentest.attachChild(pdWhat.sbnGluedProjectiles);
+	protected void glueAsChildWithPosRotOfImpact(Node nodeParentest, PhysicsData pdWhat){
+		if(pdWhat.pdGlueWhere.sbnGluedProjectiles==null){
+			pdWhat.pdGlueWhere.sbnGluedProjectiles = new SimpleBatchNode(strSBNKey);
+			nodeParentest.attachChild(pdWhat.pdGlueWhere.sbnGluedProjectiles);
 		}
 		
-		Quaternion quaDiff = pdWhat.sbnGluedProjectiles.getWorldRotation().subtract(pdWhat.quaGlueWherePhysWRotAtImpact);
-		
-		pdWhat.getSpatialWithPhysics().setLocalTranslation(pdWhat.v3fGlueWherePhysLocalPos);
-		Node nodeGlueWherePhysRotAtImpact = new Node();
-		nodeGlueWherePhysRotAtImpact.setLocalRotation(quaDiff);
-		nodeGlueWherePhysRotAtImpact.attachChild(pdWhat.getSpatialWithPhysics());
-		Vector3f v3fSimulatedPos=pdWhat.getSpatialWithPhysics().getWorldTranslation();
-		Quaternion quaSimulatedRot=pdWhat.getSpatialWithPhysics().getWorldRotation();
+//		Node nodeGlueWherePhysRotAtImpact = new Node();
+//		nodeGlueWherePhysRotAtImpact.attachChild(pdWhat.getSpatialWithPhysics());
+//		pdWhat.getSpatialWithPhysics().setLocalTranslation(pdWhat.v3fGlueWherePhysLocalPos);
+//		Vector3f v3fSimulatedPos=pdWhat.getSpatialWithPhysics().getWorldTranslation();
+//		Quaternion quaSimulatedRot=pdWhat.getSpatialWithPhysics().getWorldRotation();
 		
 		pdWhat.sbnGluedProjectiles.attachChild(pdWhat.getSpatialWithPhysics());
-		pdWhat.getSpatialWithPhysics().setLocalRotation(quaSimulatedRot);
-		pdWhat.getSpatialWithPhysics().setLocalTranslation(v3fSimulatedPos);
+//		pdWhat.getSpatialWithPhysics().setLocalRotation(quaSimulatedRot);
+//		pdWhat.getSpatialWithPhysics().setLocalTranslation(v3fSimulatedPos);
+//		pdWhat.getSpatialWithPhysics().setLocalRotation(pdWhat.quaGlueWherePhysWRotAtImpact);
+		pdWhat.getSpatialWithPhysics().setLocalTranslation(pdWhat.v3fGlueWherePhysLocalPos);
 		pdWhat.sbnGluedProjectiles.batch();
 	}
 

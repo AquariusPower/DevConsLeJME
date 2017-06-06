@@ -633,7 +633,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			InfoJmeI.i().putAt(hmStore,"angv",pd.rbc.getAngularVelocity(),1);
 			InfoJmeI.i().putAt(hmStore,"grav",pd.rbc.getGravity(),1);
 			InfoJmeI.i().putAt(hmStore,"rest",pd.isResting());
-			InfoJmeI.i().putAt(hmStore,"GluePrjc",pd.sbnGluedProjectiles.getChildren().size());
+			if(pd.sbnGluedProjectiles!=null)InfoJmeI.i().putAt(hmStore,"GluePrjc",pd.sbnGluedProjectiles.getChildren().size());
 //			InfoJmeI.i().putAt(hmStore,"LtTrwSpd",pd.imp.fImpulseAtSelfDirection);
 		}
 	}
