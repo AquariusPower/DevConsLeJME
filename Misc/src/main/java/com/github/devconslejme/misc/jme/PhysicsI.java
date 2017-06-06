@@ -86,6 +86,7 @@ import com.jme3.scene.shape.Box;
 public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListener, PhysicsCollisionListener{
 	public static PhysicsI i(){return GlobalManagerI.i().get(PhysicsI.class);}
 	
+	private ArrayList<PhysicsData> apdRmDisintegr = new ArrayList<PhysicsData>();
 	private ArrayList<PhysicsData> apdDisintegrate = new ArrayList<PhysicsData>();
 	private long	lTickCount=0;
 	private HashMap<PhysicsRigidBody,PhysicsData> hmDisintegratables=new HashMap<PhysicsRigidBody,PhysicsData>(); 
@@ -227,19 +228,39 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				updateInfo();
 				
 //				updateGlue(); //b4 disintegration!!! (so it may even just disintegrate safely)
-				updateDisintegration();
+				updateDisintegratables();
 				
 				return true;
 			}
 		}).enableLoopMode().setDelaySeconds(0.5f);
 	}
 	
-	protected void updateDisintegration() {
+	/**
+	 * some group collide() (phys thread) will not generate collisions() (main thread)
+	 * when looks the projectile is being auto-deflected...
+	 */
+	protected void updateIgnoredCollisions(PhysicsData pd) {
+		PhysicsProjectileI.i().glueProjectileCheckApply(pd,pd.pdGlueWhere,null);
+//		if(pd.pdGlueWhere!=null && !pd.bGlueApplied){
+//			PhysicsProjectileI.i().applyGluedMode(pd);
+//		}
+	}
+
+	protected void updateDisintegratables() {
 		long lSTime = SimulationTimeI.i().getNanoTime();
 		for(PhysicsData pd:hmDisintegratables.values()){
+			if(!pd.bAllowDisintegration)apdRmDisintegr.add(pd);
+			
 			if((lSTime - pd.lMaterializedSTime) > (pd.lProjectileMaxLifeTime *(pd.bGlueApplied?10:1)) ){
 				if(!apdDisintegrate.contains(pd))apdDisintegrate.add(pd);
+			}else{
+				updateIgnoredCollisions(pd);
 			}
+		}
+		
+		for(PhysicsData pd:apdRmDisintegr){
+			hmDisintegratables.remove(pd.rbc);
+			apdDisintegrate.remove(pd);
 		}
 		
 		for(PhysicsData pd:apdDisintegrate){
@@ -331,7 +352,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		protected MatterStatus	mts;
 		protected Geometry	geomOriginalInitialLink;
 		protected NodeX	nodexLink;
-		public int	lForceAwakeCount;
+		protected int	iForceAwakePhysTickCount;
+		public int	iForceStaticPhysTickCount=1;
 		
 		/**
 		 * 
@@ -498,6 +520,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 
 		public Geometry getInitialOriginalGeometry() {
 			return geomOriginalInitialLink;
+		}
+
+		public void forceAwakeSomeTicks() {
+			iForceAwakePhysTickCount=10;
 		}
 
 	}
@@ -743,6 +769,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			
 			arbcThreadPhysicsPreTickQueue.clear();
 		}
+		
+//		for(PhysicsRigidBody prb:ps.getRigidBodyList()){
+//			PhysicsData pd = getPhysicsDataFrom(prb);
+//			if(pd!=null && pd.pdGlueWhere!=null)pd.rbc.setMass(0);
+//		}
 	}
 	
 	/**
@@ -799,7 +830,18 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //			}
 			pd.lLastPhysUpdateNano=System.nanoTime();
 			
-			if(pd.isProjectile())continue;
+			if((pd.iForceAwakePhysTickCount--)>0)prb.activate();
+			
+			if(pd.isProjectile()){
+				if(pd.pdGlueWhere!=null){
+					if((pd.iForceStaticPhysTickCount--)<=0){ //not imediate to let the collision impulse/force be applied on what was hit
+						pd.rbc.setMass(0f);
+					}else{
+						pd.pdGlueWhere.forceAwakeSomeTicks();
+					}
+				}
+				continue;
+			}
 			
 			if(isResting(prb)){
 //				if(!pd.isWasSafePosRotSavedAtPreviousTickAndUpdate(lTickCount)){
@@ -936,8 +978,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		PhysicsProjectileI.i().glueProjectileCheckApply(pdA,pdB,event.getLocalPointB());
 		PhysicsProjectileI.i().glueProjectileCheckApply(pdB,pdA,event.getLocalPointA());
 		
-		if(pdA.isProjectile() && !pdB.isProjectile())pdB.lForceAwakeCount=10; //more 10 ticks
-		if(pdB.isProjectile() && !pdA.isProjectile())pdA.lForceAwakeCount=10; //more 10 ticks
+		if(pdA.isProjectile() && !pdB.isProjectile())pdB.forceAwakeSomeTicks();
+		if(pdB.isProjectile() && !pdA.isProjectile())pdA.forceAwakeSomeTicks();
 	}
 	
 	/**
@@ -973,8 +1015,12 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		PhysicsData pdB = getPhysicsDataFrom((Spatial)nodeB.getUserObject());
 		
 		if(pdA==null || pdB==null){
-			return true; //other stuff
+			return true; //allow other stuff
 		}
+		
+//		/** these two may not be working because the order of the collision may not be the expected, and the glue where would be set after other collisions on the same tick */
+//		if(pdA.pdGlueWhere!=null)return pdA.pdGlueWhere==pdB; //TODO this seems useless
+//		if(pdB.pdGlueWhere!=null)return pdB.pdGlueWhere==pdA; //TODO this seems useless
 		
 		if(pdA.isProjectile() && pdB.isProjectile()){
 			return false;//prevent prjctle vs prjctle
@@ -1140,9 +1186,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 
 	public void cancelDisintegration(PhysicsData pdWhat) {
-		// prevent disintegration if glued on dynamic //TODO just increase the timeout or limit the amount per dynamic parent 
-		hmDisintegratables.remove(pdWhat.rbc);
-		apdDisintegrate.remove(pdWhat);
+		// prevent disintegration if glued on dynamic //TODO just increase the timeout or limit the amount per dynamic parent
+		pdWhat.bAllowDisintegration=false;
+//		hmDisintegratables.remove(pdWhat.rbc);
+//		apdDisintegrate.remove(pdWhat);
 	}
 
 	public Vector3f getGravity() {

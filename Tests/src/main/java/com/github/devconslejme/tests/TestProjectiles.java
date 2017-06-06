@@ -80,10 +80,10 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 //			.getRBC().setMass(0f);
 //		AppI.i().getRootNode().attachChild(geomFloor);
 		
-		float fYWalls=fYFloor+1; //walls
-		PhysicsI.i().spawnOrthoWall(1, fSize, 2f, null, new Vector3f(0,fYWalls, fSize/2f));
-		PhysicsI.i().spawnOrthoWall(1, fSize, 2f, null, new Vector3f(0,fYWalls,-fSize/2f));
-		PhysicsI.i().spawnOrthoWall(1, fSize, 2f, null, new Vector3f( fSize/2f,fYWalls,0))
+		float fYWalls=fYFloor+1-0.1f; //walls
+		PhysicsI.i().spawnOrthoWall(1, fSize, 2.1f, null, new Vector3f(0,fYWalls, fSize/2f));
+		PhysicsI.i().spawnOrthoWall(1, fSize, 2.1f, null, new Vector3f(0,fYWalls,-fSize/2f));
+		PhysicsI.i().spawnOrthoWall(1, fSize, 2.1f, null, new Vector3f( fSize/2f,fYWalls,0))
 			.rotate(0, 90*FastMath.DEG_TO_RAD, 0);
 //			.getRBC().getPhysicsRotation().mult(new Quaternion().fromAxes(0, 90*FastMath.DEG_TO_RAD, 0));
 //			.getRBC().setPhysicsRotation(new Quaternion().rot);

@@ -158,6 +158,11 @@ public class PhysicsProjectileI {
 				long lLastGlueSetPosNano=-1; //1st time will always try
 				@Override
 				public Boolean call() {
+//					/**
+//					 * this can be inside a loop over the disintegratables
+//					 */
+//					if(pdWhat.bAllowDisintegration)PhysicsI.i().cancelDisintegration(pdWhat);
+					
 //					if(pdWhat.getSpatialWithPhysics().getControl(RigidBodyControl.class).getPhysicsSpace()!=null){
 //						return false;
 //					}
@@ -195,13 +200,14 @@ public class PhysicsProjectileI {
 	
 	protected void glueProjectileCheckApply(PhysicsData pd, PhysicsData pdWhere, Vector3f v3fEventCollPos){
 		if(
-			pd.isProjectile() && 
+			pd.isProjectile() &&
+			pdWhere!=null &&
 			!pdWhere.isProjectile() && 
 			!pd.bDisintegrated && 
 			!pd.bGlueApplied && 
 			pd.pdGlueWhere==pdWhere
 		){
-			pd.v3fEventCollOtherLocalPos=v3fEventCollPos.clone();
+			if(v3fEventCollPos!=null)pd.v3fEventCollOtherLocalPos=v3fEventCollPos.clone();
 			applyGluedMode(pd);
 		}
 	}
