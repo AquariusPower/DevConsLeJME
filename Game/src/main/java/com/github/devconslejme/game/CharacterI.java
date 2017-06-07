@@ -116,14 +116,17 @@ public class CharacterI {
 		}
 	}
 	
-	public BetterCharacterControlX create(Vector3f v3f){
-		if(v3f==null){
+	public BetterCharacterControlX create(Vector3f v3fSpawnAt){
+		if(v3fSpawnAt==null){
+			/**
+			 * user target spot
+			 */
 			ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
 			if(acr.size()==0)return null;
 			CollisionResult cr = acr.get(0);
 			PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(cr.getGeometry());
 			if(!pd.isTerrain())return null;
-			v3f = cr.getContactPoint();
+			v3fSpawnAt = cr.getContactPoint();
 		}
 		
 //		PhysicsCharacter pc = new PhysicsCharacter(new CapsuleCollisionShape(), 2f);
@@ -148,7 +151,7 @@ public class CharacterI {
 		
 		PhysicsI.i().add(nodeBody);
 		
-		bcc.setPhysicsLocation(v3f.add(0,0.25f,0)); //a bit above
+		bcc.setPhysicsLocation(v3fSpawnAt.add(0,0.25f,0)); //a bit above
 		
 		bccLast = bcc;
 		

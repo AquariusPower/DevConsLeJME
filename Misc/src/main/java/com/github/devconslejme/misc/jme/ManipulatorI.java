@@ -40,6 +40,7 @@ import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.jme3.collision.CollisionResult;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Spatial;
 
 /**
  * TODO after picking, using the mouse, move and rotate using wheel and moving the mouse, aligned with whatever is just below it
@@ -54,6 +55,13 @@ public class ManipulatorI {
 		
 	private CollisionResult	crManipulating;
 	private Key	keyContext;
+
+	protected PhysicsData pdManipulating;
+	private boolean bAllowManipulationWithoutPhysics=false;
+	private boolean bAllowManipulationOfTerrain=false;
+	private boolean bAllowManipulationOfStatics=false;
+
+	private float fRotateSpeedDegAngle=10f;
 	
 	public void configure(){
 		keyContext = KeyCodeManagerI.i().createSpecialExternalContextKey(cc, "ContextManipulatorGrab");
@@ -61,13 +69,29 @@ public class ManipulatorI {
 		KeyBindCommandManagerI.i().putBindCommandsLater("Ctrl+G", new CallBoundKeyCmd(){
 			@Override
 			public Boolean callOnKeyReleased(int iClickCountIndex) {
-				if(crManipulating!=null){
-					PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(crManipulating.getGeometry());
-					if(pd!=null)PhysicsI.i().wakeUp(pd);
+				if(crManipulating!=null){ //drop
+					if(pdManipulating!=null)PhysicsI.i().wakeUp(pdManipulating);
 					crManipulating=null;
 				}else{
 					ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
-					if(acr.size()>0)crManipulating=acr.get(0);
+					if(acr.size()>0) {
+//						crManipulating=acr.get(0);
+//						pdManipulating = PhysicsI.i().getPhysicsDataFrom(crManipulating.getGeometry());
+						CollisionResult cr = acr.get(0);
+						PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(cr.getGeometry());
+						boolean bOk=true;
+						if(pd!=null) {
+							if(!bAllowManipulationOfTerrain && pd.isTerrain())bOk=false;
+							if(!bAllowManipulationOfStatics && pd.isStatic())bOk=false;
+						}else {
+							if(!bAllowManipulationWithoutPhysics)bOk=false;
+						}
+						
+						if(bOk) {
+							crManipulating=cr;
+							pdManipulating=pd;
+						}
+					}
 				}
 				return true;
 			};
@@ -88,10 +112,11 @@ public class ManipulatorI {
 	}
 	
 	protected void rotateManipulated(boolean bCW){
-		crManipulating.getGeometry().rotate(0, (bCW?1:-1)*10*FastMath.DEG_TO_RAD, 0);
-		
-		PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(crManipulating.getGeometry());
-		if(pd!=null)PhysicsI.i().syncPhysTransfFromSpt(crManipulating.getGeometry());
+		float fRotYRad=(bCW?1:-1)*fRotateSpeedDegAngle*FastMath.DEG_TO_RAD;
+		Spatial spt= pdManipulating!=null ? pdManipulating.getSpatialWithPhysics() : crManipulating.getGeometry();
+		spt.rotate(0,fRotYRad,0);
+		if(pdManipulating!=null)PhysicsI.i().syncPhysTransfFromSpt(pdManipulating);
+//		if(pdManipulating!=null)PhysicsI.i().syncPhysTransfFromSpt(pdManipulating.getSpatialWithPhysics());
 	}
 
 	protected void initUpdateManipulated() {
@@ -107,16 +132,53 @@ public class ManipulatorI {
 	}
 	
 	protected void updateManipulated(float tpf) {
-		AppI.i().placeAtCamWPos(crManipulating.getGeometry(), crManipulating.getDistance()+1f, false);
-		crManipulating.getGeometry().rotateUpTo(Vector3f.UNIT_Y);
+		Spatial spt= pdManipulating!=null ? pdManipulating.getSpatialWithPhysics() : crManipulating.getGeometry();
+		AppI.i().placeAtCamWPos(spt, crManipulating.getDistance()+1f, false);
+		spt.rotateUpTo(Vector3f.UNIT_Y);
 		
-		PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(crManipulating.getGeometry());
-		if(pd!=null){
-			PhysicsI.i().syncPhysTransfFromSpt(crManipulating.getGeometry());
-			PhysicsI.i().resetForces(pd);
+		if(pdManipulating!=null){
+			PhysicsI.i().syncPhysTransfFromSpt(pdManipulating);
+			PhysicsI.i().resetForces(pdManipulating); //prevent falling
 		}
 		
 		HWEnvironmentJmeI.i().putCustomInfo("Grabbed", crManipulating.toString());
+	}
+
+	public boolean isAllowManipulationWithoutPhysics() {
+		return bAllowManipulationWithoutPhysics;
+	}
+
+	public ManipulatorI setAllowManipulationWithoutPhysics(
+		boolean bAllowManipulationWithoutPhysics) {
+		this.bAllowManipulationWithoutPhysics = bAllowManipulationWithoutPhysics;
+		return this; 
+	}
+
+	public boolean isAllowManipulationOfTerrain() {
+		return bAllowManipulationOfTerrain;
+	}
+
+	public ManipulatorI setAllowManipulationOfTerrain(boolean bAllowManipulationOfTerrain) {
+		this.bAllowManipulationOfTerrain = bAllowManipulationOfTerrain;
+		return this; 
+	}
+
+	public boolean isAllowManipulationOfStatics() {
+		return bAllowManipulationOfStatics;
+	}
+
+	public ManipulatorI setAllowManipulationOfStatics(boolean bAllowManipulationOfStatics) {
+		this.bAllowManipulationOfStatics = bAllowManipulationOfStatics;
+		return this; 
+	}
+
+	public float getRotateSpeedDegAngle() {
+		return fRotateSpeedDegAngle;
+	}
+
+	public ManipulatorI setRotateSpeedDegAngle(float fRotateSpeedDegAngle) {
+		this.fRotateSpeedDegAngle = fRotateSpeedDegAngle;
+		return this; 
 	}
 	
 	

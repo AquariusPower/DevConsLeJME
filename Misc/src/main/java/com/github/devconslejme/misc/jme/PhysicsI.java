@@ -526,6 +526,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			iForceAwakePhysTickCount=10;
 		}
 
+		public boolean isStatic() {
+			return rbc.getMass()==0;
+		}
+
 	}
 	
 	
@@ -947,16 +951,22 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	
 	public Impulse throwFromCam(PhysicsData pd,float fDesiredSpeed){
 		AppI.i().placeAtCamWPos(pd.getSpatialWithPhysics(), 1f, true); //orientated z
-		syncPhysTransfFromSpt(pd.getSpatialWithPhysics());
+		syncPhysTransfFromSpt(pd);
 		Impulse imp = throwAtSelfDirImpulse(pd.getSpatialWithPhysics(), (float) (fDesiredSpeed*pd.mts.getMassKg())); //the final speed depends on the mass
 		pdLastThrownFromCam=pd;
 		return imp;
 	}
 	
+	public void syncPhysTransfFromSpt(PhysicsData pd) {
+		syncPhysTransfFromSpt(pd.getSpatialWithPhysics(), pd.getRBC());
+	}
+	public void syncPhysTransfFromSpt(Spatial spt,PhysicsRigidBody prb) {
+		prb.setPhysicsLocation(spt.getWorldTranslation());
+		prb.setPhysicsRotation(spt.getWorldRotation());
+	}
 	public void syncPhysTransfFromSpt(Spatial spt) {
 		RigidBodyControl rbc = spt.getControl(RigidBodyControl.class);
-		rbc.setPhysicsLocation(spt.getWorldTranslation());
-		rbc.setPhysicsRotation(spt.getWorldRotation());
+		syncPhysTransfFromSpt(spt, rbc);
 	}
 	
 	/**
@@ -1280,4 +1290,5 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		this.fDefaultProjectileMaxLife = fDefaultProjectileMaxLife;
 		return this; 
 	}
+
 }
