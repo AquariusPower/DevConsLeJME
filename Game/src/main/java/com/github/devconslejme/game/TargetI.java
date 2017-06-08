@@ -88,7 +88,14 @@ public class TargetI {
 					}
 					return true;
 				}
-			}.setName("Activate")
+				@Override
+				public Boolean callOnKeyReleased(int iClickCountIndex) {
+					for(TargetGeom t:TargetI.i().getAllTargetsListCopy()){
+						t.deactivateIfPossible();
+					}
+					return true;
+				};
+			}.setName("Activate").holdKeyPressedForContinuousCmd()
 		);
 		
 		String strK=flycamx.getCfgAddFlyCamMod(KeyCodeManagerI.i().getMouseTriggerKey(1).getFullId());
@@ -327,19 +334,10 @@ public class TargetI {
 		}
 
 		public void activateIfPossible() {
-			ActivatorI.i().activateIfPossible(geomTarget); //sptRoot will also be considered
-//			for (Node node : SpatialHierarchyI.i().getAllParents(geomTarget,false)) {
-////				if(sptRoot!=node)ActivatorI.i().activateIfPossible(node);
-//				ActivatorI.i().activateIfPossible(node); //sptRoot will also be considered
-//			}
-//			if(sptRoot!=geomTarget)ActivatorI.i().activateIfPossible(sptRoot);
-			
-//			IActivetableListener ial = UserDataI.i().getMustExistOrNull(geomTarget,IActivetableListener.class);
-//			if(ial!=null)ial.activateEvent();
-//			if(sptRoot!=geomTarget){
-//				IActivetableListener ialRoot = UserDataI.i().getMustExistOrNull(sptRoot,IActivetableListener.class);
-//				if(ialRoot!=null)ialRoot.activateEvent();
-//			}
+			ActivatorI.i().activateIfPossible(geomTarget); //parentest spt will also be considered (least Root Node)
+		}
+		public void deactivateIfPossible() {
+			ActivatorI.i().deactivateIfPossible(geomTarget); //parentest spt will also be considered (least Root Node)
 		}
 
 		public boolean isAllowReset() {

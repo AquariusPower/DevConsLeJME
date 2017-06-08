@@ -332,7 +332,7 @@ public class KeyBindCommandManagerI {
 		public Boolean callOnKeyReleased(int iClickCountIndex){return null;}
 		
 		/**
-		 * use this one or the other two (pressed/released) not both kinds!
+		 * use this one or the other two (pressed/released) not both kinds, this will be the ignored one!
 		 * @param bPressed
 		 * @return
 		 */

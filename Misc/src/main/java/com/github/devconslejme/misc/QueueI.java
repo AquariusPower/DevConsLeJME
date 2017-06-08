@@ -450,7 +450,7 @@ public class QueueI {
 	 * @return 
 	 */
 	public CallableXAnon enqueue(CallableXAnon cx){
-		enqueue((CallableX)cx);
+		enqueue((CallableX<?>)cx);
 		return cx;
 	}
 	
@@ -462,16 +462,19 @@ public class QueueI {
 		return lCurrentTime + (long)(fDelaySeconds * lTimeResolution);
 	}
 	
-	public void forceRemoveFromQueue(CallableX cx) {
+	/**
+	 * this allows to remove even a non-loop mode failing queued callable.
+	 */
+	public void forceRemoveFromQueue(CallableX<?> cx) {
 		cx.bForceRemoveFromQueueRequest=true;
 	}
-	public void removeLoopFromQueue(CallableX cx){
+	/**
+	 * only remove if already on queue, to avoid next enqueue with an insta-remove problem 
+	 */
+	public void removeLoopFromQueue(CallableX<?> cx){
 		assert cx.isLoopMode() : "is not in loop mode";
 		
 		if(acxList.contains(cx)){
-			/**
-			 * only requests if on queue, to avoid next enqueue with a problematic state 
-			 */
 			cx.bLoopModeJustRemoveFromQueueOnceRequest=true;
 		}
 	}
@@ -523,9 +526,6 @@ public class QueueI {
 			}
 			
 			if(cx.bForceRemoveFromQueueRequest){
-				/**
-				 * this allows to remove even a non-loop mode failing queued callable.
-				 */
 				bRemove=true;
 				cx.bForceRemoveFromQueueRequest=false; //cleanly reset request
 			}

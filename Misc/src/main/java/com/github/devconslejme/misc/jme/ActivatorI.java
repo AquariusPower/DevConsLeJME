@@ -69,14 +69,17 @@ public class ActivatorI {
 		 * @param sptSource
 		 * @return if consumed (true) will prevent further parent's hierarchy activation
 		 */
-		public abstract boolean activateEvent(Spatial sptSource); 
+		public abstract boolean activateEvent(Spatial sptSource);
+		/** see {@link #activateEvent(Spatial)} */
+		public boolean deactivateEvent(Spatial sptSource){return true;} 
+//		public abstract boolean deactivateEvent(Spatial sptSource); 
 	}
 	
-	protected boolean activateIfPossibleRaw(ArrayList<Spatial> aspt,Spatial spt){
+	protected boolean workIfPossibleRaw(ArrayList<Spatial> aspt,Spatial spt,boolean bActivate){
 		ActivetableListenerAbs ial = UserDataI.i().getMustExistOrNull(spt,ActivetableListenerAbs.class);
 		if(ial!=null){
-			aspt.add(spt);
-			if(ial.activateEvent(spt)){
+			aspt.add(spt); //fill all that can work (even if they dont)
+			if(bActivate?ial.activateEvent(spt):ial.deactivateEvent(spt)){
 				return true;
 			}
 		}
@@ -84,10 +87,16 @@ public class ActivatorI {
 	}
 	
 	public ArrayList<Spatial> activateIfPossible(Spatial spt) {
+		return workIfPossible(spt,true);
+	}
+	public ArrayList<Spatial> deactivateIfPossible(Spatial spt) {
+		return workIfPossible(spt,false);
+	}
+	protected ArrayList<Spatial> workIfPossible(Spatial spt,boolean bActivate) {
 		ArrayList<Spatial> aspt=new ArrayList<Spatial>();
-		if(!activateIfPossibleRaw(aspt,spt)){
+		if(!workIfPossibleRaw(aspt,spt,bActivate)){
 			for (Node node : SpatialHierarchyI.i().getAllParents(spt,false)) {
-				if(activateIfPossibleRaw(aspt,node)){
+				if(workIfPossibleRaw(aspt,node,bActivate)){
 					break;
 				}
 			}

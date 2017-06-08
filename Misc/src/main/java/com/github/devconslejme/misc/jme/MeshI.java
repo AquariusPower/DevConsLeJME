@@ -233,7 +233,7 @@ public class MeshI {
 	}
 
 	public Cylinder cylinder(float fHeight, float fRadius) {
-		return new Cylinder(3,9,fRadius,fHeight);
+		return new Cylinder(3,9,fRadius,fHeight,true);
 	}
 
 }

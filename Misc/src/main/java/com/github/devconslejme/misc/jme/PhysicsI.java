@@ -535,6 +535,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			return rbc.getMass()==0;
 		}
 
+		public boolean isActivatable() {
+			return ActivatorI.i().isa(spt);
+		}
+
 	}
 	
 	

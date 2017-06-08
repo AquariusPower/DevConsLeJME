@@ -66,6 +66,7 @@ public class PhysicsProjectileI {
 		private float fRadius;
 		private float	fPhysBoundsScaleDiv;
 		private float	fGravityDiv;
+//		protected boolean	bFiring;
 		
 		@Override
 		public PhysicsThrowProjectiles clone(){
@@ -131,12 +132,26 @@ public class PhysicsProjectileI {
 		AppI.i().getRootNode().attachChild(geom);
 		pg.pd=PhysicsI.i().imbueFromWBounds(geom,	EMatter.Generic10KgPerM3.get(),	true);
 		
-		ActivatorI.i().applyActivetableListener(geom, new ActivetableListenerAbs() {
+		CallableXAnon cx = new CallableXAnon() {
 			@Override
-			public boolean activateEvent(Spatial sptSource) {
+			public Boolean call() {
 				throwProjectile(pg);
 				return true;
 			}
+		}.setDelaySeconds(1f/pg.pp.iProjectilesPerSecond).enableLoopMode();
+		
+		ActivatorI.i().applyActivetableListener(geom, new ActivetableListenerAbs() {
+			@Override public boolean activateEvent	(Spatial sptSource) {
+				QueueI.i().enqueue(cx);
+				return true;
+			}
+			@Override public boolean deactivateEvent(Spatial sptSource) {
+				QueueI.i().removeLoopFromQueue(cx);
+				return true;
+			}
+//				throwProjectile(pg);
+//				return true;
+//			}
 		});
 		
 		return pg;

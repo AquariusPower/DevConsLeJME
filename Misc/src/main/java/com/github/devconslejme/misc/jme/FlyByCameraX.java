@@ -177,24 +177,24 @@ public class FlyByCameraX extends FlyByCamera {
     // movement, each key requires an independent queue object instance as they can be combined
 		putFlyCamBindCmdLater("A",CameraInput.FLYCAM_STRAFELEFT ,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			moveCamera( getTPF(),true );accMvTrsTm(this);return true;}
-			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.holdKeyPressedForContinuousCmd());
+			@Override	public void callAfterRemovedFromQueue(){resetMvTm(this);}}.holdKeyPressedForContinuousCmd());
 		putFlyCamBindCmdLater("D",CameraInput.FLYCAM_STRAFERIGHT,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			moveCamera(-getTPF(),true );accMvTrsTm(this);return true;}
-			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.holdKeyPressedForContinuousCmd());
+			@Override	public void callAfterRemovedFromQueue(){resetMvTm(this);}}.holdKeyPressedForContinuousCmd());
 		
 		putFlyCamBindCmdLater("W",CameraInput.FLYCAM_FORWARD    ,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			moveCamera( getTPF(),false);accMvTrsTm(this);return true;}
-			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.holdKeyPressedForContinuousCmd());
+			@Override	public void callAfterRemovedFromQueue(){resetMvTm(this);}}.holdKeyPressedForContinuousCmd());
 		putFlyCamBindCmdLater("S",CameraInput.FLYCAM_BACKWARD   ,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			moveCamera(-getTPF(),false);accMvTrsTm(this);return true;}
-			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.holdKeyPressedForContinuousCmd());
+			@Override	public void callAfterRemovedFromQueue(){resetMvTm(this);}}.holdKeyPressedForContinuousCmd());
 		
 		putFlyCamBindCmdLater("Q",CameraInput.FLYCAM_RISE       ,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			riseCamera( getTPF()      );accMvTrsTm(this);return true;}
-			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.holdKeyPressedForContinuousCmd());
+			@Override	public void callAfterRemovedFromQueue(){resetMvTm(this);}}.holdKeyPressedForContinuousCmd());
 		putFlyCamBindCmdLater("Z",CameraInput.FLYCAM_LOWER      ,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			riseCamera(-getTPF()      );accMvTrsTm(this);return true;}
-			@Override	public void callAfterRemovedFromQueue() {resetMvTm(this);}}.holdKeyPressedForContinuousCmd());
+			@Override	public void callAfterRemovedFromQueue(){resetMvTm(this);}}.holdKeyPressedForContinuousCmd());
 		
 		return true;
 	}

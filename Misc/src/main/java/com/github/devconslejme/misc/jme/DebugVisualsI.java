@@ -64,7 +64,7 @@ public class DebugVisualsI {
 	private Node	axesRef;
 	private Vector3f	v3fAxesDisplaceCam;
 	
-	public void configure(){
+	public void configure(){ //just to let the global be promptly instantiated
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
@@ -87,7 +87,33 @@ public class DebugVisualsI {
 		axesRef.setLocalScale(fScale);
 		v3fAxesDisplaceCam=new Vector3f(0f,0f,1f+fScale);
 		AppI.i().getRootNode().attachChild(axesRef);
-	} //just to let the global be promptly instantiated
+		
+		Runnable r = new Runnable() {
+//			private long lPrevious=0;
+//			private long	lNew;
+			@Override
+			public void run() {
+				while(true){
+					if(HWEnvironmentJmeI.i().getMouse()!=null){
+						if(System.currentTimeMillis()-HWEnvironmentJmeI.i().getLastFrameMilis() > 500){ //wait half a second
+							HWEnvironmentJmeI.i().getMouse().forceUngrab();
+						}
+					}
+					
+					//TODO? if(AppI.i().isExiting())break;
+					
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					} 
+				}
+			}
+		};
+		Thread t = new Thread(r);
+		t.setName("UngrabMouseOnFreezeOrDebugBreakPoint");
+		t.start();
+	} 
 	
 	protected void update(float tpf) {
 //		if(bShowWorldBound)
@@ -158,10 +184,10 @@ public class DebugVisualsI {
 		
 		public void updateAxes() {
 //			float fMult=2f*1.1f;//10% beyond limits to be surely visible
-			float fMult=1.25f;//10% beyond limits to be surely visible
+			float fMult=1.5f;//10% beyond limits to be surely visible
 			if(geombv.bb!=null){
 				Vector3f v3fE = geombv.bb.getExtent(null);
-				axes.setLocalScale(Math.max(v3fE.x,Math.max(v3fE.z,v3fE.y))*fMult);
+				axes.setLocalScale(Math.max(v3fE.x,Math.max(v3fE.y,v3fE.z))*fMult);
 //				axes.setLocalScale(geombv.bb.getExtent(null).mult(fMult));
 			}else
 			if(geombv.bs!=null){

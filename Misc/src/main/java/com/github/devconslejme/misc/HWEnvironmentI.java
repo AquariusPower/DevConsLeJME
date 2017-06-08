@@ -44,6 +44,7 @@ public class HWEnvironmentI {
 	private int	iFPSFrameCount;
 	private int	iFPS;
 	protected LinkedHashMap<String,String> hmCustomInfo = new LinkedHashMap<String,String>();
+	private long	lLastFrameMilis;
 	
 	
 	/**
@@ -66,6 +67,12 @@ public class HWEnvironmentI {
 		lTotalFrameCount++; //TODO can this overflow!? :O
 		
 		calcFPS();
+		
+		lLastFrameMilis=System.currentTimeMillis();
+	}
+	
+	public long getLastFrameMilis() {
+		return lLastFrameMilis;
 	}
 
 	private void calcFPS() {

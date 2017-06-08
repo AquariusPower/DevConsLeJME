@@ -133,7 +133,8 @@ public class ManipulatorI {
 	
 	protected void updateManipulated(float tpf) {
 		Spatial spt= pdManipulating!=null ? pdManipulating.getSpatialWithPhysics() : crManipulating.getGeometry();
-		AppI.i().placeAtCamWPos(spt, crManipulating.getDistance()+1f, false);
+		boolean bLookAtDir = pdManipulating==null ? false : pdManipulating.isActivatable();
+		AppI.i().placeAtCamWPos(spt, crManipulating.getDistance()+1f, bLookAtDir);
 		spt.rotateUpTo(Vector3f.UNIT_Y);
 		
 		if(pdManipulating!=null){
