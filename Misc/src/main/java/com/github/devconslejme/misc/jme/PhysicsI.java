@@ -359,6 +359,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		protected NodeX	nodexLink;
 		protected int	iForceAwakePhysTickCount;
 		public int	iForceStaticPhysTickCount=1;
+		private float	fGrabDist;
 		
 		/**
 		 * 
@@ -536,9 +537,18 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 
 		public boolean isActivatable() {
-			return ActivatorI.i().isa(spt);
+			return ActivatorI.i().isActivetable(getInitialOriginalGeometry());
 		}
 
+		public PhysicsData setGrabDist(float fGrabDist) {
+			this.fGrabDist = fGrabDist;
+			return this;
+		}
+		
+		public float getGrabDist(){
+			return fGrabDist;
+		}
+		
 	}
 	
 	

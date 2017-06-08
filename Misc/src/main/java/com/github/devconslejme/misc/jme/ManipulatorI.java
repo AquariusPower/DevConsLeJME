@@ -62,6 +62,12 @@ public class ManipulatorI {
 	private boolean bAllowManipulationOfStatics=false;
 
 	private float fRotateSpeedDegAngle=10f;
+
+	private boolean	bPullGrabbed=true;
+
+	private float	fPullSpeed=3f;
+
+	private Float	fMaxGrabDist=null;
 	
 	public void configure(){
 		keyContext = KeyCodeManagerI.i().createSpecialExternalContextKey(cc, "ContextManipulatorGrab");
@@ -86,10 +92,14 @@ public class ManipulatorI {
 						}else {
 							if(!bAllowManipulationWithoutPhysics)bOk=false;
 						}
+						if(getMaxGrabDist()!=null && cr.getDistance()>getMaxGrabDist()){
+							bOk=false;
+						}
 						
 						if(bOk) {
 							crManipulating=cr;
 							pdManipulating=pd;
+							pdManipulating.setGrabDist(cr.getDistance());
 						}
 					}
 				}
@@ -134,7 +144,15 @@ public class ManipulatorI {
 	protected void updateManipulated(float tpf) {
 		Spatial spt= pdManipulating!=null ? pdManipulating.getSpatialWithPhysics() : crManipulating.getGeometry();
 		boolean bLookAtDir = pdManipulating==null ? false : pdManipulating.isActivatable();
-		AppI.i().placeAtCamWPos(spt, crManipulating.getDistance()+1f, bLookAtDir);
+//		float fDist = crManipulating.getDistance();
+		
+		float fDist = pdManipulating.getGrabDist();
+		if(isPullGrabbed())fDist-=fPullSpeed*tpf;
+		float fMinDist = 2f;
+		if(fDist<fMinDist)fDist=fMinDist;
+		pdManipulating.setGrabDist(fDist);
+		
+		AppI.i().placeAtCamWPos(spt, fDist, bLookAtDir);
 		spt.rotateUpTo(Vector3f.UNIT_Y);
 		
 		if(pdManipulating!=null){
@@ -179,6 +197,29 @@ public class ManipulatorI {
 
 	public ManipulatorI setRotateSpeedDegAngle(float fRotateSpeedDegAngle) {
 		this.fRotateSpeedDegAngle = fRotateSpeedDegAngle;
+		return this; 
+	}
+
+	public boolean isPullGrabbed() {
+		return bPullGrabbed;
+	}
+
+	public ManipulatorI setPullGrabbed(boolean bPullGrabbed) {
+		this.bPullGrabbed = bPullGrabbed;
+		return this; 
+	}
+
+	public Float getMaxGrabDist() {
+		return fMaxGrabDist;
+	}
+	
+	/**
+	 * 
+	 * @param fMaxGrabDist null is unlimited
+	 * @return
+	 */
+	public ManipulatorI setMaxGrabDist(Float fMaxGrabDist) {
+		this.fMaxGrabDist = fMaxGrabDist;
 		return this; 
 	}
 	

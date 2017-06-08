@@ -75,10 +75,14 @@ public class ActivatorI {
 //		public abstract boolean deactivateEvent(Spatial sptSource); 
 	}
 	
-	protected boolean workIfPossibleRaw(ArrayList<Spatial> aspt,Spatial spt,boolean bActivate){
-		ActivetableListenerAbs ial = UserDataI.i().getMustExistOrNull(spt,ActivetableListenerAbs.class);
+	public boolean isActivetable(Spatial spt){
+		return getActivatableListener(spt)!=null;
+	}
+	
+	protected boolean workIfPossibleRaw(ArrayList<Spatial> asptActivateables,Spatial spt,boolean bActivate){
+		ActivetableListenerAbs ial = getActivatableListener(spt);
 		if(ial!=null){
-			aspt.add(spt); //fill all that can work (even if they dont)
+			asptActivateables.add(spt); //fill all that can work (even if they dont)
 			if(bActivate?ial.activateEvent(spt):ial.deactivateEvent(spt)){
 				return true;
 			}
@@ -86,6 +90,10 @@ public class ActivatorI {
 		return false;
 	}
 	
+	protected ActivetableListenerAbs getActivatableListener(Spatial spt) {
+		return UserDataI.i().getMustExistOrNull(spt,ActivetableListenerAbs.class);
+	}
+
 	public ArrayList<Spatial> activateIfPossible(Spatial spt) {
 		return workIfPossible(spt,true);
 	}
@@ -93,15 +101,15 @@ public class ActivatorI {
 		return workIfPossible(spt,false);
 	}
 	protected ArrayList<Spatial> workIfPossible(Spatial spt,boolean bActivate) {
-		ArrayList<Spatial> aspt=new ArrayList<Spatial>();
-		if(!workIfPossibleRaw(aspt,spt,bActivate)){
+		ArrayList<Spatial> asptActivatablesFound=new ArrayList<Spatial>();
+		if(!workIfPossibleRaw(asptActivatablesFound,spt,bActivate)){
 			for (Node node : SpatialHierarchyI.i().getAllParents(spt,false)) {
-				if(workIfPossibleRaw(aspt,node,bActivate)){
+				if(workIfPossibleRaw(asptActivatablesFound,node,bActivate)){
 					break;
 				}
 			}
 		}
 		
-		return aspt;
+		return asptActivatablesFound;
 	}
 }
