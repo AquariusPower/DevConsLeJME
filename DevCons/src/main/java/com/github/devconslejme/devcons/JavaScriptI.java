@@ -648,7 +648,21 @@ public class JavaScriptI implements IGlobalAddListener {
 			if(!ar.isPartGotImproved()){ 
 				astr.addAll(getJSClassBindListFilteredHelp());
 				
-				ar = AutoCompleteI.i().autoComplete(strFilter, astr, true, false);
+				ar = AutoCompleteI.i().autoComplete(strFilter, astr, false, false);
+				
+				if(!ar.isPartGotImproved()) {
+					/**
+					 * if nothing is found, try anywhere on the strings: contains, if nothing matches,try fuzzy
+					 */
+					ar = AutoCompleteI.i().autoComplete(strFilter, astr, true, true);
+					
+//					if(!ar.isPartGotImproved()) {
+//						/**
+//						 * if nothing is found, try fuzzy
+//						 */
+//						ar = AutoCompleteI.i().autoComplete(strFilter, astr, true, false);
+//					}
+				}
 			}
 		}
 		

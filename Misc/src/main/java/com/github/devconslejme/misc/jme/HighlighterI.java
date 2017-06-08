@@ -57,7 +57,6 @@ public class HighlighterI {
 			/**
 			 * alpha = 0.5f, just to let it be auto-configured as transparent bucket below
 			 */
-//			geomHighlight = GeometryI.i().create(new Sphere(),new ColorRGBA(1,1,1,0.5f));
 			geomHighlight = GeometryI.i().create(new Sphere(),new ColorRGBA(1,1,1,0.5f)); 
 			geomHighlight.getMaterial().setColor(EColor.Color.s(),HighlighterI.i().colorHighlight); //only a copy of that color will be there, we need to apply the glowing one
 			geomHighlight.setName("HighLight");
