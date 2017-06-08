@@ -27,6 +27,7 @@
 package com.github.devconslejme.misc;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 import com.github.devconslejme.misc.Annotations.SimpleVarReadOnly;
 
@@ -42,6 +43,8 @@ public class HWEnvironmentI {
 	private float	fSumTPF;
 	private int	iFPSFrameCount;
 	private int	iFPS;
+	protected LinkedHashMap<String,String> hmCustomInfo = new LinkedHashMap<String,String>();
+	
 	
 	/**
 	 * just for clarity
@@ -84,4 +87,18 @@ public class HWEnvironmentI {
 	public float getFPS() {
 		return iFPS;
 	}
+	
+	/**
+	 * 
+	 * @param strKey
+	 * @param strValue if null will remove the key
+	 */
+	public void putCustomInfo(String strKey,String strValue){
+		if(strValue==null){
+			hmCustomInfo.remove(strKey);
+		}else{
+			hmCustomInfo.put(strKey, strValue);
+		}
+	}
+
 }

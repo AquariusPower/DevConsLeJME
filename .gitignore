@@ -17,6 +17,7 @@ Console-*
 *.secrfbkp
 *.bkp
 *.old
+*.so
 /bin/
 /javadoc/
 /.tmp/

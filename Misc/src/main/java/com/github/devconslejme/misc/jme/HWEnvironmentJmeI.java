@@ -80,7 +80,6 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 	private Application	app;
 	private InputManager	inputman;
 	private Camera	cam;
-	private LinkedHashMap<String,String> hmCustomInfo = new LinkedHashMap<String,String>();
 	private boolean	bShowMouseCursorPos;
 	private SimpleApplication	sappOpt;
 	
@@ -265,18 +264,6 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 //		this.bShowFPS = bShowFPS;
 //	}
 	
-	/**
-	 * 
-	 * @param strKey
-	 * @param strValue if null will remove the key
-	 */
-	public void putCustomInfo(String strKey,String strValue){
-		if(strValue==null){
-			hmCustomInfo.remove(strKey);
-		}else{
-			hmCustomInfo.put(strKey, strValue);
-		}
-	}
 	
 	protected void updateInfo(){
 		if(

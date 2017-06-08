@@ -750,6 +750,8 @@ public class KeyBindCommandManagerI {
 		if(updateCaptureKey())return;
 		if(SystemAlertI.i().isShowingAlert())return;
 		
+		HWEnvironmentI.i().putCustomInfo("Keys",KeyCodeManagerI.i().getAllPressedKeysSimpleReport());
+		
 		runActiveBinds();
 	}
 	
