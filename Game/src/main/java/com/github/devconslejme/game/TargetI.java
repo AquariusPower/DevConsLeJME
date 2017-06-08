@@ -56,7 +56,7 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 
 /**
- * Targets (and/or their root) can carry an {@link IActivetableListener}, that will be triggered when
+ * Targets (and/or their root) can carry an {@link ActivetableListenerAbs}, that will be triggered when
  * they are selected.
  * 
  * TODO show target indicator on the gui layer (ray cast?)

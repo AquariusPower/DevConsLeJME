@@ -27,7 +27,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.github.devconslejme.gendiag;
 
 import com.github.devconslejme.gendiag.DialogHierarchyStateI.DialogVisuals;
-import com.github.devconslejme.gendiag.DialogHierarchyStateI.IUserInteraction;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.IGUIUserInteraction;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.jme3.app.SimpleApplication;
@@ -37,7 +37,7 @@ import com.jme3.scene.Spatial;
 /**
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
-public class SpatialsManagerDialogI implements IUserInteraction{
+public class SpatialsManagerDialogI implements IGUIUserInteraction{
 	public static SpatialsManagerDialogI i(){return GlobalManagerI.i().get(SpatialsManagerDialogI.class);}
 	
 	private SimpleMaintenanceGenericDialog	diagMaint;

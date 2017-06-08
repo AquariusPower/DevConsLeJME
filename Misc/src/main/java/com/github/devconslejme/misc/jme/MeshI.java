@@ -232,4 +232,8 @@ public class MeshI {
 		return this; //for beans setter
 	}
 
+	public Cylinder cylinder(float fHeight, float fRadius) {
+		return new Cylinder(3,9,fRadius,fHeight);
+	}
+
 }

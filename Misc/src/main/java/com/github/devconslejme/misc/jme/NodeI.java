@@ -39,7 +39,8 @@ public class NodeI {
 	
 	@SuppressWarnings("unchecked")
 	public <T extends Node> T createRotationAxes(T store){
-		Node node = store!=null ? store : new Node();
+		if(store!=null && store.getName()==null)store.setName("RotationAxes");
+		Node node = store!=null ? store : new Node("RotationAxes");
 		node.attachChild(GeometryI.i()
 			.createArrow(ColorRGBA.Red).setFromTo(Vector3f.ZERO, Vector3f.UNIT_X));
 		node.attachChild(GeometryI.i()

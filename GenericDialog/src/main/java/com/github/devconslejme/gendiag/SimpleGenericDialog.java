@@ -43,7 +43,7 @@ import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu;
 import com.github.devconslejme.gendiag.ContextMenuI.ContextMenu.ApplyContextChoiceCmd;
 import com.github.devconslejme.gendiag.ContextMenuI.HintUpdaterPerCtxtBtn;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI.DialogVisuals;
-import com.github.devconslejme.gendiag.DialogHierarchyStateI.IUserInteraction;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.IGUIUserInteraction;
 import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.SimpleVarReadOnly;
 import com.github.devconslejme.misc.Annotations.Workaround;
@@ -1143,8 +1143,8 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		return ta;
 	}
 	
-	private ArrayList<IUserInteraction> auiLitenersList = new  ArrayList<IUserInteraction> ();
-	public void addListOptionsUserInteractionListener(IUserInteraction listener){
+	private ArrayList<IGUIUserInteraction> auiLitenersList = new  ArrayList<IGUIUserInteraction> ();
+	public void addListOptionsUserInteractionListener(IGUIUserInteraction listener){
 		if(!auiLitenersList.contains(listener))auiLitenersList.add(listener);
 	}
 	
@@ -1539,7 +1539,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 		
 		if(bRequestUserSubmitedInputValueApply){
 			vhInputTextSubmitted.setObject(getInputText());
-			for(IUserInteraction l:auiLitenersList){
+			for(IGUIUserInteraction l:auiLitenersList){
 				l.receiveSubmitedUserInputTextEvent(getDialogVisuals(),getInputText());
 			}
 			bRequestUserSubmitedInputValueApply=false;
@@ -1720,7 +1720,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 
 	public SimpleGenericDialog setLastSelectedOptionStoredValue(Object objLastSelectedOptionStoredValue) {
 		this.objLastSelectedOptionStoredValue = objLastSelectedOptionStoredValue;
-		for(IUserInteraction l:auiLitenersList){
+		for(IGUIUserInteraction l:auiLitenersList){
 			l.receiveLastClickedItemStoredValueEvent(getDialogVisuals(),objLastSelectedOptionStoredValue);
 		}
 		return this; 

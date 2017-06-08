@@ -27,10 +27,13 @@
 package com.github.devconslejme.tests;
 
 import com.github.devconslejme.game.CharacterI;
+import com.github.devconslejme.misc.jme.AppI;
 import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.jme.PhysicsProjectileI;
 import com.github.devconslejme.misc.jme.ColorI.EColor;
 import com.github.devconslejme.misc.jme.PhysicsI;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
+import com.github.devconslejme.misc.jme.PhysicsProjectileI.PhysicsGun;
 import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -49,7 +52,7 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 
 	@Override
 	public void simpleInitApp() {
-		//TODO com.github.devconslejme.misc.TODO.PkgCfgI.i().configure();
+		com.github.devconslejme.game.PkgCfgI.i().configure();
 		initTest();
 	}
 	
@@ -67,6 +70,9 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 		
 		PhysicsI.i().setBulletDebugVisualsEnabled(true);
 //		SubdivisionSurfaceModifier s = new SubdivisionSurfaceModifier(modifierStructure, blenderContext);
+		
+		PhysicsProjectileI.i().setProjectileFromCamToDevTestDbg();
+		PhysicsGun pg = PhysicsProjectileI.i().createGun(PhysicsProjectileI.i().getProjectileThrowerDevTestDbgCopy());
 		
 		float fSize=100;
 		float fYFloor=-7;

@@ -33,14 +33,17 @@ import com.github.devconslejme.misc.MatterI.EMatter;
 import com.github.devconslejme.misc.MatterI.Matter;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.jme.ActivatorI.ActivetableListenerAbs;
 import com.github.devconslejme.misc.jme.ColorI.EColor;
+import com.github.devconslejme.misc.jme.PhysicsI.Impulse;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
-import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.SimpleBatchNode;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Sphere;
 
 /**
@@ -49,72 +52,133 @@ import com.jme3.scene.shape.Sphere;
 public class PhysicsProjectileI {
 	public static PhysicsProjectileI i(){return GlobalManagerI.i().get(PhysicsProjectileI.class);}
 	
-//	public static class GeometryTestProjectile extends Geometry{
-//		@Override	public GeometryTestProjectile clone() {return (GeometryTestProjectile)super.clone();}
-//	}
-	
-	private int	iProjectilesPerSecond;
-	private long	lTestProjectilesMaxLifeTime;// = TimeConvertI.i().secondsToNano(5);
 	private SimpleBatchNode	sbnProjectilesAtWorld;
-	private Geometry	geomTestProjectileFactory;
-	private Matter mtProjectile = EMatter.Generic100KgPerM3.get();//EMatter.Lead.get();
+	private float	fDefaultProjectileMaxLife=2;
+	private int iProjectileMaxLifeTimeMultiplier=100;
+	private PhysicsThrowProjectiles ppCamDevDbgTst;
+	private PhysicsThrowProjectiles ppFromCamCurrent;
+	
+	public static class PhysicsThrowProjectiles{
+		private int	iProjectilesPerSecond = (10); //10 seems the default of many guns
+		private Geometry	geomProjectileFactory;
+		private Matter mt;
+		private float fDesiredSpeed;
+		private float fRadius;
+		private float	fPhysBoundsScaleDiv;
+		private float	fGravityDiv;
+		
+		@Override
+		public PhysicsThrowProjectiles clone(){
+			return new PhysicsThrowProjectiles(geomProjectileFactory, fDesiredSpeed, fRadius, fPhysBoundsScaleDiv, fGravityDiv, mt);
+		}
+		
+		/**
+		 * 
+		 * @param geomProjectileFactory
+		 * @param fDesiredSpeed
+		 * @param fRadius
+		 * @param fPhysBoundsScaleDiv (can be null) to initially lower the mass and collision shape size, but will be restored just after to show the geometry properly, it will just have a smaller collider than what it looks
+		 * @param fGravityDiv (can be null) this trick simulates/helps requiring less speed for a good flying/drop curve w/o stressing the phys engine
+		 * @param mt
+		 */
+		public PhysicsThrowProjectiles(Geometry geomProjectileFactory, float fDesiredSpeed, float fRadius, Float fPhysBoundsScaleDiv, Float fGravityDiv, Matter mt) {
+			this.fDesiredSpeed = fDesiredSpeed;
+			this.fRadius = fRadius;
+			this.mt = mt;
+			this.fGravityDiv=fGravityDiv==null?1f:fGravityDiv;
+			this.fPhysBoundsScaleDiv=fPhysBoundsScaleDiv==null?1f:fPhysBoundsScaleDiv;
+			
+			if(geomProjectileFactory==null){
+				geomProjectileFactory = GeometryI.i().create(new Sphere(3,4,fRadius), ColorRGBA.Cyan);
+				geomProjectileFactory.scale(0.25f,0.25f,1f);
+				geomProjectileFactory.scale(1f/fPhysBoundsScaleDiv);
+				geomProjectileFactory.getMaterial().setColor(EColor.GlowColor.s(), ColorRGBA.Blue.mult(10)); //requires the bloom post processor with glow objects mode
+			}
+			this.geomProjectileFactory=geomProjectileFactory;
+		}
+		
+		public int getProjectilesPerSecond() {
+			return iProjectilesPerSecond;
+		}
+
+		public PhysicsThrowProjectiles setProjectilesPerSecond(int iTestProjectilesPerSecond) {
+			this.iProjectilesPerSecond = iTestProjectilesPerSecond;
+			return this; 
+		}
+	}
 	
 	public void configure(){
-		setTestProjectilesPerSecond(10); //10 seems the default of many guns
+		sbnProjectilesAtWorld = new SimpleBatchNode("BatchNode");
+		AppI.i().getRootNode().attachChild(sbnProjectilesAtWorld);
+		
+		ppCamDevDbgTst = new PhysicsThrowProjectiles(null,250,0.1f,4f,4f,EMatter.Generic100KgPerM3.get());
 		
     KeyBindCommandManagerI.i().putBindCommandsLater("Space",new CallBoundKeyCmd(){
   		@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
-//  			PhysicsProjectileI.i().throwProjectileFromCamera(250,0.1f,6f);
-  			PhysicsProjectileI.i().throwProjectileFromCamera(250,0.1f,mtProjectile);
-  			setDelaySeconds(1f/iProjectilesPerSecond); //dynamicly changeable
+  			PhysicsProjectileI.i().throwProjectileFromCamera(ppFromCamCurrent);
+  			setDelaySeconds(1f/ppCamDevDbgTst.iProjectilesPerSecond); //so it becomes dynamicly changeable
   			return true;
-  		}}.setName("ShootProjectile").holdKeyPressedForContinuousCmd().setDelaySeconds(1f/iProjectilesPerSecond)
+  		}}.setName("ShootProjectile").holdKeyPressedForContinuousCmd().setDelaySeconds(1f/ppCamDevDbgTst.iProjectilesPerSecond)
 		);
 	}
 	
-
-	public int getTestProjectilesPerSecond() {
-		return iProjectilesPerSecond;
-	}
-
-	public PhysicsProjectileI setTestProjectilesPerSecond(int iTestProjectilesPerSecond) {
-		this.iProjectilesPerSecond = iTestProjectilesPerSecond;
-		return this; 
-	}
-
-	public PhysicsData throwProjectileFromCamera(float fDesiredSpeed, float fRadius, Matter mt){
-		if(sbnProjectilesAtWorld==null){
-			sbnProjectilesAtWorld = new SimpleBatchNode("BatchNode");
-			AppI.i().getRootNode().attachChild(sbnProjectilesAtWorld);
-		}
+	public PhysicsGun createGun(PhysicsThrowProjectiles pp){
+		PhysicsGun pg = new PhysicsGun();
+		pg.pp=pp;
 		
-//		Vector3f v3fScale = new Vector3f(0.25f,0.25f,1f);
-		if(geomTestProjectileFactory==null){
-			geomTestProjectileFactory = GeometryI.i().create(new Sphere(3,4,fRadius), ColorRGBA.Cyan);
-//			geomTestProjectileFactory = GeometryI.i().create(MeshI.i().sphere(fRadius), ColorRGBA.Cyan, false, new GeometryTestProjectile());
-//			geomTestProjectileFactory = GeometryI.i().create(MeshI.i().box(fRadius), ColorRGBA.Cyan, false, new GeometryTestProjectile());
-			geomTestProjectileFactory.scale(0.25f,0.25f,1f);
-			geomTestProjectileFactory.scale(1f/4f); // to lower the automatic mass
-			geomTestProjectileFactory.getMaterial().setColor(EColor.GlowColor.s(), ColorRGBA.Blue.mult(10)); //requires the bloom post processor with glow objects mode
-		}
+		Geometry geom = GeometryI.i().create(MeshI.i().cylinder(1f,0.05f), ColorRGBA.Yellow);
+		geom.setName("PhysicsGun");
+		AppI.i().getRootNode().attachChild(geom);
+		pg.pd=PhysicsI.i().imbueFromWBounds(geom,	EMatter.Generic10KgPerM3.get(),	true);
 		
-		Geometry geomClone = geomTestProjectileFactory.clone();
+		ActivatorI.i().applyActivetableListener(geom, new ActivetableListenerAbs() {
+			@Override
+			public boolean activateEvent(Spatial sptSource) {
+				throwProjectile(pg);
+				return true;
+			}
+		});
+		
+		return pg;
+	}
+	
+	public static class PhysicsGun {
+		PhysicsData pd;
+		PhysicsThrowProjectiles pp;
+	}
+	
+	public PhysicsData throwProjectile(PhysicsGun gun){
+		PhysicsData pdPjtl = prepareProjectile(gun.pp);
+		
+		pdPjtl.getRBC().setPhysicsLocation(gun.pd.getRBC().getPhysicsLocation());
+		pdPjtl.getRBC().setPhysicsRotation(gun.pd.getRBC().getPhysicsRotation());
+		
+		Impulse impPjtl = PhysicsI.i().throwAtSelfDirImpulse(pdPjtl, gun.pp.fDesiredSpeed);
+		
+		float fMassRatio = pdPjtl.getRBC().getMass()/gun.pd.getRBC().getMass();
+//		float fImpulseRecoil = -1f * impPjtl.getImpulseAtSelfDir().mult(fMassRatio).length();
+		float fImpulseRecoil = -1f * impPjtl.getImpulseAtSelfDir()*fMassRatio;
+		Impulse impRecoil = new Impulse().setImpulseAtSelfDir(fImpulseRecoil);
+		PhysicsI.i().applyImpulseLater(gun.pd, impRecoil);
+		
+		return pdPjtl;
+	}
+	public PhysicsData throwProjectileFromCamera(PhysicsThrowProjectiles pp){
+		PhysicsData pd = prepareProjectile(pp);
+		PhysicsI.i().throwFromCam(pd,pp.fDesiredSpeed);
+		return pd;
+	}
+	public PhysicsData prepareProjectile(PhysicsThrowProjectiles pp){
+		Geometry geomClone = pp.geomProjectileFactory.clone();
 		geomClone.setName("Projectile");
 		sbnProjectilesAtWorld.attachChild(geomClone); //AppI.i().getRootNode().attachChild(geomClone);
 		sbnProjectilesAtWorld.batch();
 		
-//		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,fDensity,geomTestProjectileFactory.getLocalScale());
-		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,mt,false);
-		geomClone.scale(4f); //to restore the good looking size
-		//TODO scale
-//		ps.remove(pd.rbc);
-//		pd.rbc.getCollisionShape().setScale(geomTestProjectileFactory.getLocalScale());
-//		ps.add(pd.rbc);
+		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,pp.mt,false);
+		geomClone.scale(pp.fPhysBoundsScaleDiv); //to restore the good looking size
 		pd.setAllowDisintegration(true);
 		pd.bProjectile=(true);
-		pd.getRBC().setGravity(PhysicsI.i().getGravity().mult(0.25f));
-		
-		PhysicsI.i().throwFromCam(pd,fDesiredSpeed);
+		pd.getRBC().setGravity(PhysicsI.i().getGravity().divide(pp.fGravityDiv));
 		
 		return pd;
 	}
@@ -142,7 +206,9 @@ public class PhysicsProjectileI {
 		
 		PhysicsData pdGlueWhere = pdWhat.pdGlueWhere;
 		
-		PhysicsI.i().removeFromPhysicsSpace(pdWhat.getSpatialWithPhysics()); //this prevents further updates from physics space
+		Geometry geomWhat = pdWhat.getInitialOriginalGeometry();
+		
+		PhysicsI.i().removeFromPhysicsSpace(geomWhat); //this prevents further updates from physics space
 		
 		if(pdGlueWhere.isEnclosed() && !pdGlueWhere.isTerrain()){ //will glue at dynamic parent surface
 			if(pdGlueWhere.sbnGluedProjectiles==null){
@@ -150,6 +216,7 @@ public class PhysicsProjectileI {
 				((Node)pdGlueWhere.getSpatialWithPhysics()).attachChild(pdGlueWhere.sbnGluedProjectiles);
 			}
 			
+			Quaternion quaWhatWRotBkp = geomWhat.getWorldRotation().clone();
 			reparentProjectile(pdGlueWhere.sbnGluedProjectiles, pdWhat.getInitialOriginalGeometry());
 			
 			PhysicsI.i().cancelDisintegration(pdWhat);
@@ -163,7 +230,7 @@ public class PhysicsProjectileI {
 //					 */
 //					if(pdWhat.bAllowDisintegration)PhysicsI.i().cancelDisintegration(pdWhat);
 					
-//					if(pdWhat.getSpatialWithPhysics().getControl(RigidBodyControl.class).getPhysicsSpace()!=null){
+//					if(geomWhat.getControl(RigidBodyControl.class).getPhysicsSpace()!=null){
 //						return false;
 //					}
 					boolean bTryAgain=false;
@@ -171,16 +238,27 @@ public class PhysicsProjectileI {
 						bTryAgain=true;
 					}
 					
-//					if(pdWhat.getSpatialWithPhysics().getLocalTranslation().distance(pdWhat.v3fGlueWherePhysLocalPos)>0){
+//					if(geomWhat.getLocalTranslation().distance(pdWhat.v3fGlueWherePhysLocalPos)>0){
 //						bTryAgain=true;
 //					}
 					
 					if(bTryAgain){
+//						Quaternion quaBkp = geomWhat.getWorldRotation().clone();
+						
+						/**
+						 *  restores the location, based on the target rotation at the physics impact moment
+						 */
 						Node node = new Node();
 						node.setLocalRotation(pdWhat.quaGlueWherePhysWRotAtImpact);
-						pdWhat.getSpatialWithPhysics().setLocalTranslation(
-//							node.localToWorld(pdWhat.v3fGlueWherePhysLocalPos,null));
+						geomWhat.setLocalTranslation(
 							node.worldToLocal(pdWhat.v3fGlueWherePhysLocalPos,null));
+						
+						/**
+						 * applies the world rotation at the impact moment
+						 */
+						geomWhat.setLocalRotation(
+							geomWhat.getParent().getWorldRotation().inverse().mult(
+								quaWhatWRotBkp));
 						
 						lLastGlueSetPosNano=System.nanoTime();
 						return false; // to make it sure the physics have not changed it after that 
@@ -192,7 +270,7 @@ public class PhysicsProjectileI {
 //		}else{
 //			pdWhat.rbc.setPhysicsLocation(pdWhat.v3fWorldGlueSpot);
 //		}else{
-//			pdWhat.getSpatialWithPhysics().setLocalTranslation(pdWhat.v3fWorldGlueSpot);
+//			geomWhat.setLocalTranslation(pdWhat.v3fWorldGlueSpot);
 		}
 	
 		pdWhat.bGlueApplied=true;
@@ -221,5 +299,46 @@ public class PhysicsProjectileI {
 //		sbnBatchTestProjectiles.detachAllChildren();
 //		sbnBatchTestProjectiles.batch();
 		return sbnProjectilesAtWorld.getChildren().size();
+	}
+	public float getDefaultProjectileMaxLife() {
+		return fDefaultProjectileMaxLife;
+	}
+
+	public PhysicsProjectileI setDefaultProjectileMaxLife(float fDefaultProjectileMaxLife) {
+		this.fDefaultProjectileMaxLife = fDefaultProjectileMaxLife;
+		return this; 
+	}
+
+
+	public int getProjectileMaxLifeTimeMultiplier() {
+		return iProjectileMaxLifeTimeMultiplier;
+	}
+
+	/**
+	 * when glued/stuck on terrain
+	 * @param iProjectileMaxLifeTimeMultiplier
+	 * @return
+	 */
+	public PhysicsProjectileI setProjectileMaxLifeTimeMultiplier(		int iProjectileMaxLifeTimeMultiplier) {
+		this.iProjectileMaxLifeTimeMultiplier = iProjectileMaxLifeTimeMultiplier;
+		return this; 
+	}
+
+	public PhysicsThrowProjectiles getProjectileFromCamCurrent() {
+		return ppFromCamCurrent;
+	}
+
+	public PhysicsProjectileI setProjectileFromCamCurrent(PhysicsThrowProjectiles ppFromCamCurrent) {
+		this.ppFromCamCurrent = ppFromCamCurrent;
+		return this; 
+	}
+	
+	public PhysicsProjectileI setProjectileFromCamToDevTestDbg() {
+		this.ppFromCamCurrent = ppCamDevDbgTst;
+		return this; 
+	}
+	
+	public PhysicsThrowProjectiles getProjectileThrowerDevTestDbgCopy(){
+		return ppCamDevDbgTst.clone();
 	}
 }

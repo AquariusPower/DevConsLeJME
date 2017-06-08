@@ -41,8 +41,8 @@ import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.collision.CollisionResult;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.Matrix4f;
-import com.jme3.math.Quaternion;
+import com.jme3.math.FastMath;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -60,7 +60,9 @@ public class DebugVisualsI {
 	private boolean bVisualsEnabled=false;
 	private boolean bShowWorldBound=false;
 	private float fUpdateDelay=1f;
-	HashMap<Spatial,NodeDbg> ahmShowWorldBound = new HashMap<Spatial,NodeDbg>();
+	private HashMap<Spatial,NodeDbg> ahmShowWorldBound = new HashMap<Spatial,NodeDbg>();
+	private Node	axesRef;
+	private Vector3f	v3fAxesDisplaceCam;
 	
 	public void configure(){
 		QueueI.i().enqueue(new CallableXAnon() {
@@ -80,11 +82,18 @@ public class DebugVisualsI {
 			}
 		}.setName("ToggleDebugVisualsAt"));
 		
+		axesRef = NodeI.i().createRotationAxes(null);
+		float fScale=0.1f;
+		axesRef.setLocalScale(fScale);
+		v3fAxesDisplaceCam=new Vector3f(0f,0f,1f+fScale);
+		AppI.i().getRootNode().attachChild(axesRef);
 	} //just to let the global be promptly instantiated
 	
 	protected void update(float tpf) {
 //		if(bShowWorldBound)
 		updateShowWorldBound(tpf);
+		
+		AppI.i().placeAtCamWPos(axesRef, v3fAxesDisplaceCam, false); //being at world, must be in the center TODO put at gui node?
 	}
 	
 	public static class NodeAxesDbg extends Node implements IDbg{
@@ -93,9 +102,6 @@ public class DebugVisualsI {
 		public NodeAxesDbg(Spatial spt) {
 			this.sptTarget=spt;
 		}
-//		public void setShow(boolean b) {
-//			DebugVisualsI.i().setShow(this,b);
-//		}
 		@Override
 		public void setTarget(Spatial spt) {
 			this.sptTarget=spt;
@@ -151,9 +157,12 @@ public class DebugVisualsI {
 //		}
 		
 		public void updateAxes() {
-			float fMult=2f*1.1f;//10% beyond limits to be surely visible
+//			float fMult=2f*1.1f;//10% beyond limits to be surely visible
+			float fMult=1.25f;//10% beyond limits to be surely visible
 			if(geombv.bb!=null){
-				axes.setLocalScale(geombv.bb.getExtent(null).mult(fMult));
+				Vector3f v3fE = geombv.bb.getExtent(null);
+				axes.setLocalScale(Math.max(v3fE.x,Math.max(v3fE.z,v3fE.y))*fMult);
+//				axes.setLocalScale(geombv.bb.getExtent(null).mult(fMult));
 			}else
 			if(geombv.bs!=null){
 				axes.setLocalScale(geombv.bs.getRadius()*fMult);
@@ -161,16 +170,7 @@ public class DebugVisualsI {
 			
 			axes.setLocalRotation(sptTarget.getWorldRotation());
 		}
-//		protected void setShow(Spatial spt, boolean b) {
-//			if(b){
-//				Node parent = ((IDbg)spt).getTarget().getParent();
-//				if(parent!=null){
-//					parent.attachChild(spt);
-//				}
-//			}else{
-//				spt.removeFromParent();
-//			}
-//		}
+		
 		public NodeDbg setShow(boolean b) {
 			this.bShow=b;
 			

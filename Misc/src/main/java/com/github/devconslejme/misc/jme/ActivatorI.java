@@ -44,7 +44,7 @@ public class ActivatorI {
 	 * @param spt
 	 * @param ial
 	 */
-	public void appllyActivetableListener(Spatial spt, Activetable ial){
+	public void applyActivetableListener(Spatial spt, ActivetableListenerAbs ial){
 		UserDataI.i().putSafelyMustNotExist(spt, ial);
 	}
 	
@@ -59,7 +59,11 @@ public class ActivatorI {
 //		}.setName("Activate"));
 	}
 	
-	public static abstract class Activetable{
+	/**
+	 * @DevSelfNote must not be interface, to work as auto-key userdata
+	 */
+	public static abstract class ActivetableListenerAbs{
+		@SuppressWarnings("unused")private boolean bDevSelfNote_KeepAsAbstract_IMeanIt;//KEEP THIS HERE
 		/**
 		 * 
 		 * @param sptSource
@@ -69,7 +73,7 @@ public class ActivatorI {
 	}
 	
 	protected boolean activateIfPossibleRaw(ArrayList<Spatial> aspt,Spatial spt){
-		Activetable ial = UserDataI.i().getMustExistOrNull(spt,Activetable.class);
+		ActivetableListenerAbs ial = UserDataI.i().getMustExistOrNull(spt,ActivetableListenerAbs.class);
 		if(ial!=null){
 			aspt.add(spt);
 			if(ial.activateEvent(spt)){

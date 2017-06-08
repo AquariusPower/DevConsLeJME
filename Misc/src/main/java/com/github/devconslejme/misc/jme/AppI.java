@@ -102,6 +102,13 @@ public class AppI {
 		return app.getCamera().getWorldCoordinates(new Vector2f(v3fScreenPos.x,v3fScreenPos.y), v3fScreenPos.z);
 	}
 	
+	public Vector3f getCamWPos(Vector3f v3fDisplacementInFront){
+		return app.getCamera().getLocation()
+			.add(app.getCamera().getDirection().mult(v3fDisplacementInFront.z))
+			.add(app.getCamera().getLeft().mult(v3fDisplacementInFront.x))
+			.add(app.getCamera().getUp().mult(v3fDisplacementInFront.y))
+		;
+	}
 	public Vector3f getCamWPos(float fInFrontDistZ){
 		return app.getCamera().getLocation().add(app.getCamera().getDirection().mult(fInFrontDistZ));
 	}
@@ -121,6 +128,13 @@ public class AppI {
 		spt.setLocalTranslation(getCamWPos(fInFrontDistZ));
 		if(bLookAtDir){
 			spt.lookAt(getCamWPos(fInFrontDistZ*2f),Vector3f.UNIT_Y); //if z dist is negative will work too
+		}
+		return spt.getWorldTranslation();
+	}
+	public Vector3f placeAtCamWPos(Spatial spt,Vector3f v3fDisplacementInFront,boolean bLookAtDir) {
+		spt.setLocalTranslation(getCamWPos(v3fDisplacementInFront));
+		if(bLookAtDir){
+			spt.lookAt(getCamWPos(v3fDisplacementInFront.z*2f),Vector3f.UNIT_Y); //if z dist is negative will work too
 		}
 		return spt.getWorldTranslation();
 	}

@@ -30,7 +30,7 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import com.github.devconslejme.gendiag.DialogHierarchyStateI.DialogVisuals;
-import com.github.devconslejme.gendiag.DialogHierarchyStateI.IUserInteraction;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.IGUIUserInteraction;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.ToolAction.CmdBtnTA;
@@ -42,7 +42,7 @@ import com.simsilica.lemur.Button;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class GlobalsManagerDialogI implements IUserInteraction{
+public class GlobalsManagerDialogI implements IGUIUserInteraction{
 	public static GlobalsManagerDialogI i(){return GlobalManagerI.i().get(GlobalsManagerDialogI.class);}
 
 	private TreeMap<String,Object> hmSortedGlobals = new TreeMap<String,Object>(String.CASE_INSENSITIVE_ORDER);

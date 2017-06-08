@@ -28,7 +28,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.github.devconslejme.gendiag;
 
 import com.github.devconslejme.gendiag.DialogHierarchyStateI.DialogVisuals;
-import com.github.devconslejme.gendiag.DialogHierarchyStateI.IUserInteraction;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.IGUIUserInteraction;
 import com.github.devconslejme.gendiag.SimpleGenericDialog.OptionData;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI;
@@ -41,7 +41,7 @@ import com.simsilica.lemur.core.VersionedReference;
 /**
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class QueueManagerDialogI implements IUserInteraction{
+public class QueueManagerDialogI implements IGUIUserInteraction{
 	public static QueueManagerDialogI i(){return GlobalManagerI.i().get(QueueManagerDialogI.class);}
 	
 	private SimpleMaintenanceGenericDialog	diagMaint;

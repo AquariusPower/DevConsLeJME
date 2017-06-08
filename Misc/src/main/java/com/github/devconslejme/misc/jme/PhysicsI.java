@@ -103,11 +103,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	private float	fThreadPhysTPF;
 	private ArrayList<Impulse> arbcThreadPhysicsPreTickQueue = new ArrayList();
 	private boolean	bGlueAllowed=true;
-	private float	fDefaultProjectileMaxLife=2;
+//	private float	fDefaultProjectileMaxLife=2;
 	
 	public static class Impulse{
-		private Spatial	spt;
-		private RigidBodyControl	rbc;
+//		private Spatial	spt;
+//		private RigidBodyControl	rbc;
 		/** @DefSelfNote dont expose it, this class is a simplifier */
 		private PhysicsSpace	ps;
 		
@@ -118,21 +118,23 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		private Vector3f	v3fTorque;
 		private Vector3f	v3fTorqueImpulse;
 		private Float	fImpulseAtSelfDirection;
+
+		public PhysicsData	pd;
 		
-		public Spatial getSpt() {
-			return spt;
-		}
-		public Impulse setSpt(Spatial spt) {
-			this.spt = spt;
-			return this;
-		}
-		public RigidBodyControl getRBC() {
-			return rbc;
-		}
-		public Impulse setRBC(RigidBodyControl rbc) {
-			this.rbc = rbc;
-			return this;
-		}
+//		public Spatial getSpt() {
+//			return spt;
+//		}
+//		public Impulse setSpt(Spatial spt) {
+//			this.spt = spt;
+//			return this;
+//		}
+//		public RigidBodyControl getRBC() {
+//			return rbc;
+//		}
+//		public Impulse setRBC(RigidBodyControl rbc) {
+//			this.rbc = rbc;
+//			return this;
+//		}
 		
 		public PhysicsSpace getPs() {
 			return ps;
@@ -154,6 +156,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 		public Vector3f getImpulse() {
 			return v3fImpulse;
+		}
+		public float getImpulseAtSelfDir() {
+			return fImpulseAtSelfDirection;
 		}
 		public Impulse setImpulseAtSelfDir(float fImpulse) {
 			assert v3fImpulse==null;
@@ -251,7 +256,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		for(PhysicsData pd:hmDisintegratables.values()){
 			if(!pd.bAllowDisintegration)apdRmDisintegr.add(pd);
 			
-			if((lSTime - pd.lMaterializedSTime) > (pd.lProjectileMaxLifeTime *(pd.bGlueApplied?10:1)) ){
+			if((lSTime - pd.lMaterializedSTime) > (pd.lProjectileMaxLifeTime *(pd.bGlueApplied?PhysicsProjectileI.i().getProjectileMaxLifeTimeMultiplier():1)) ){
 				if(!apdDisintegrate.contains(pd))apdDisintegrate.add(pd);
 			}else{
 				updateIgnoredCollisions(pd);
@@ -384,7 +389,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //			if(spt instanceof NodeX)nodexLink=(NodeX)spt;
 //			this.sptLink = spt;
 			
-			setProjectileMaxLifeTime(PhysicsI.i().getDefaultProjectileMaxLife());
+			setProjectileMaxLifeTime(PhysicsProjectileI.i().getDefaultProjectileMaxLife());
 		}
 
 		public PhysicsRigidBody getRBC() {
@@ -716,12 +721,25 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		ps.add(spt);
 	}
 	
-	public void applyImpulseLater(Spatial spt, Impulse imp){
-		assert getPhysicsDataFrom(spt)!=null;
+//	public void applyImpulseLater(Spatial spt, Impulse imp){
+//		assert getPhysicsDataFrom(spt)!=null;
+////		ps.enqueue(callable)
+//		
+//		imp.spt = spt;//(Spatial)obj;
+//		imp.rbc = imp.spt.getControl(RigidBodyControl.class);
+//		imp.ps=ps;
+//		
+//		synchronized (arbcThreadPhysicsPreTickQueue) {
+//			arbcThreadPhysicsPreTickQueue.add(imp);
+//		}
+//	}
+	public void applyImpulseLater(PhysicsData pd, Impulse imp){
+//		assert getPhysicsDataFrom(spt)!=null;
 //		ps.enqueue(callable)
 		
-		imp.spt = spt;//(Spatial)obj;
-		imp.rbc = imp.spt.getControl(RigidBodyControl.class);
+//		imp.spt = spt;//(Spatial)obj;
+//		imp.rbc = imp.spt.getControl(RigidBodyControl.class);
+		imp.pd=pd;
 		imp.ps=ps;
 		
 		synchronized (arbcThreadPhysicsPreTickQueue) {
@@ -747,27 +765,27 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				
 				if(imp.v3fForce!=null){
 					if(imp.v3fForceLocation==null){
-						imp.rbc.applyCentralForce(imp.v3fForce);
+						imp.pd.rbc.applyCentralForce(imp.v3fForce);
 					}else{
-						imp.rbc.applyForce(imp.v3fForce, imp.v3fForceLocation);
+						imp.pd.rbc.applyForce(imp.v3fForce, imp.v3fForceLocation);
 					}
 				}
 				
 				if(imp.fImpulseAtSelfDirection!=null){
-					imp.rbc.applyImpulse(
-						imp.rbc.getPhysicsRotation().getRotationColumn(2).mult(imp.fImpulseAtSelfDirection), 
+					imp.pd.rbc.applyImpulse(
+						imp.pd.rbc.getPhysicsRotation().getRotationColumn(2).mult(imp.fImpulseAtSelfDirection), 
 						Vector3f.ZERO
 					);
 				}
 				
 				if(imp.v3fImpulse!=null)
-					imp.rbc.applyImpulse(imp.v3fImpulse, imp.v3fImpulseRelPos);
+					imp.pd.rbc.applyImpulse(imp.v3fImpulse, imp.v3fImpulseRelPos);
 				
 				if(imp.v3fTorque!=null)
-					imp.rbc.applyTorque(imp.v3fTorque);
+					imp.pd.rbc.applyTorque(imp.v3fTorque);
 				
 				if(imp.v3fTorqueImpulse!=null)
-					imp.rbc.applyTorqueImpulse(imp.v3fTorqueImpulse);
+					imp.pd.rbc.applyTorqueImpulse(imp.v3fTorqueImpulse);
 				
 			}
 			
@@ -921,6 +939,12 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		bullet.setSpeed(speed);
 	}
 	
+//	public Impulse throwAtSelfDirImpulse(PhysicsData pd, float fDesiredSpeed){
+//		return throwAtSelfDirImpulse(
+//			pd.getSpatialWithPhysics(), 
+//			(float) (fDesiredSpeed*pd.mts.getMassKg()) //the final speed depends on the mass
+//		); 
+//	}
 	/**
 	 * Do not use with bullets, they are too tiny, too little mass, too fast...
 	 * For such bullets use raycast and apply forces on the hit target.
@@ -928,13 +952,14 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	 * @param fImpulseAtDirection
 	 * @return 
 	 */
-	public Impulse throwAtSelfDirImpulse(Spatial spt, float fImpulseAtDirection){
-		PhysicsData pd = getPhysicsDataFrom(spt);
+	public Impulse throwAtSelfDirImpulse(PhysicsData pd, float fDesiredSpeed){
+		float fImpulseAtDirection=(float) (fDesiredSpeed*pd.mts.getMassKg()); //the final speed depends on the mass
+//		PhysicsData pd = getPhysicsDataFrom(spt);
 		if(pd!=null && pd.mts.getMassGrams()<50f && fImpulseAtDirection>300){ //9mm bullet weights 124 grains = 8 grams of lead
-			MessagesI.i().warnMsg(this, "this looks like a bullet, avoid using this method!", spt, pd, fImpulseAtDirection);
+			MessagesI.i().warnMsg(this, "this looks like a bullet, avoid using this method!", pd, fImpulseAtDirection);
 		}
 		Impulse imp = new Impulse().setImpulseAtSelfDir(fImpulseAtDirection);
-		PhysicsI.i().applyImpulseLater(spt, imp);
+		PhysicsI.i().applyImpulseLater(pd, imp);
 		pd.setLastImpuse(imp);
 		return imp;
 	}
@@ -950,10 +975,18 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 	
 	public Impulse throwFromCam(PhysicsData pd,float fDesiredSpeed){
+		// in front of cam pos
 		AppI.i().placeAtCamWPos(pd.getSpatialWithPhysics(), 1f, true); //orientated z
 		syncPhysTransfFromSpt(pd);
-		Impulse imp = throwAtSelfDirImpulse(pd.getSpatialWithPhysics(), (float) (fDesiredSpeed*pd.mts.getMassKg())); //the final speed depends on the mass
+		
+		Impulse imp = throwAtSelfDirImpulse(pd,fDesiredSpeed);
+//		Impulse imp = throwAtSelfDirImpulse(
+//			pd.getSpatialWithPhysics(), 
+//			(float) (fDesiredSpeed*pd.mts.getMassKg()) //the final speed depends on the mass
+//		); 
+		
 		pdLastThrownFromCam=pd;
+		
 		return imp;
 	}
 	
@@ -1149,7 +1182,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			if(getPhysicsDataFrom(cr.getGeometry())==null)continue;
 			
 			applyImpulseLater(
-				cr.getGeometry(),
+				getPhysicsDataFrom(cr.getGeometry()),
 				new Impulse().setImpulse(AppI.i().getCamLookingAtDir(), cr.getGeometry().worldToLocal(cr.getContactPoint(),null))
 			);
 			
@@ -1282,13 +1315,5 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		return this; 
 	}
 
-	public float getDefaultProjectileMaxLife() {
-		return fDefaultProjectileMaxLife;
-	}
-
-	public PhysicsI setDefaultProjectileMaxLife(float fDefaultProjectileMaxLife) {
-		this.fDefaultProjectileMaxLife = fDefaultProjectileMaxLife;
-		return this; 
-	}
 
 }

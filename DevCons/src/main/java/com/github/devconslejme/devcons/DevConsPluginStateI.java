@@ -46,7 +46,7 @@ import com.github.devconslejme.gendiag.ContextMenuI.HintUpdaterPerCtxtBtn;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI.IDialogHierarchyListener;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI;
 import com.github.devconslejme.gendiag.DialogHierarchyStateI.DialogVisuals;
-import com.github.devconslejme.gendiag.DialogHierarchyStateI.IUserInteraction;
+import com.github.devconslejme.gendiag.DialogHierarchyStateI.IGUIUserInteraction;
 import com.github.devconslejme.gendiag.ManagerHelperI;
 import com.github.devconslejme.gendiag.ManagerHelperI.RetVal;
 import com.github.devconslejme.misc.Annotations.Workaround;
@@ -113,7 +113,7 @@ import com.simsilica.lemur.text.DocumentModel;
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class DevConsPluginStateI extends SimpleAppState implements IDialogHierarchyListener, IUserInteraction {
+public class DevConsPluginStateI extends SimpleAppState implements IDialogHierarchyListener, IGUIUserInteraction {
 	public static DevConsPluginStateI i(){return GlobalManagerI.i().get(DevConsPluginStateI.class);}
 	
 //	private Vector3f	v3fApplicationWindowSize;

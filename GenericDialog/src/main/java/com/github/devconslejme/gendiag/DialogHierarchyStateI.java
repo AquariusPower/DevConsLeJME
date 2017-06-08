@@ -85,23 +85,23 @@ import com.simsilica.lemur.focus.FocusManagerState;
 public class DialogHierarchyStateI extends SimpleAppState implements IResizableListener{
 	public static DialogHierarchyStateI i(){return GlobalManagerI.i().get(DialogHierarchyStateI.class);}
 	
-	public static interface IUserInteraction{
+	public static interface IGUIUserInteraction{
 		void receiveSubmitedUserInputTextEvent(DialogVisuals vs, String str);
 		void receiveLastClickedItemStoredValueEvent(DialogVisuals vs, Object obj);
 	}
-	private ArrayList<IUserInteraction> auiLitenersList = new  ArrayList<IUserInteraction> ();
-	public void addGlobalListOptionsUserInteractionListener(IUserInteraction listener){
+	private ArrayList<IGUIUserInteraction> auiLitenersList = new  ArrayList<IGUIUserInteraction> ();
+	public void addGlobalListOptionsUserInteractionListener(IGUIUserInteraction listener){
 		if(!auiLitenersList.contains(listener))auiLitenersList.add(listener);
 	}
-	IUserInteraction iuiGlobalUserInteractionListener = new IUserInteraction() {
+	IGUIUserInteraction iuiGlobalUserInteractionListener = new IGUIUserInteraction() {
 		@Override
 		public void receiveSubmitedUserInputTextEvent(DialogVisuals vs, String str) {
-			for(IUserInteraction iui:auiLitenersList)iui.receiveSubmitedUserInputTextEvent(vs,str);
+			for(IGUIUserInteraction iui:auiLitenersList)iui.receiveSubmitedUserInputTextEvent(vs,str);
 		}
 		
 		@Override
 		public void receiveLastClickedItemStoredValueEvent(DialogVisuals vs, Object obj) {
-			for(IUserInteraction iui:auiLitenersList)iui.receiveLastClickedItemStoredValueEvent(vs,obj);
+			for(IGUIUserInteraction iui:auiLitenersList)iui.receiveLastClickedItemStoredValueEvent(vs,obj);
 		}
 	};
 
@@ -839,7 +839,7 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 		return this;
 	}
 
-	public IUserInteraction getGlobalUserInteractionListener() {
+	public IGUIUserInteraction getGlobalUserInteractionListener() {
 		return iuiGlobalUserInteractionListener;
 	}
 

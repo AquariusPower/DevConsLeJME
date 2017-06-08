@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.MultiClickI.CallMultiClickUpdate;
 import com.github.devconslejme.misc.MultiClickI.MultiClick;
-import com.github.devconslejme.misc.jme.ActivatorI.Activetable;
+import com.github.devconslejme.misc.jme.ActivatorI.ActivetableListenerAbs;
 import com.github.devconslejme.misc.jme.MeshI.Cone;
 import com.github.devconslejme.misc.jme.OriginDevice.NodeAxis;
 import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
@@ -234,12 +234,12 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		// picking 
     WorldPickingI.i().addListener(this);
     
-    ActivatorI.i().appllyActivetableListener(getAxisInfo(EAxis.X).getRepresentationShape(), ial);
-    ActivatorI.i().appllyActivetableListener(getAxisInfo(EAxis.Y).getRepresentationShape(), ial);
-    ActivatorI.i().appllyActivetableListener(getAxisInfo(EAxis.Z).getRepresentationShape(), ial);
+    ActivatorI.i().applyActivetableListener(getAxisInfo(EAxis.X).getRepresentationShape(), ial);
+    ActivatorI.i().applyActivetableListener(getAxisInfo(EAxis.Y).getRepresentationShape(), ial);
+    ActivatorI.i().applyActivetableListener(getAxisInfo(EAxis.Z).getRepresentationShape(), ial);
 	}
 	
-	Activetable ial = new Activetable() {
+	ActivetableListenerAbs ial = new ActivetableListenerAbs() {
 		@Override
 		public boolean activateEvent(Spatial sptSource) {
 			NodeAxis na = (NodeAxis)sptSource;

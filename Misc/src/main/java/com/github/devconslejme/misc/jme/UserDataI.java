@@ -27,6 +27,8 @@
 
 package com.github.devconslejme.misc.jme;
 
+import java.util.ArrayList;
+
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.JavaLangI;
@@ -63,9 +65,19 @@ public class UserDataI {
 		 * same interface would conflict/overwrite the previous ones.
 		 * An abstract composite should suffice.
 		 */
-		for(Class<?> cl:JavaLangI.i().getSuperClassesOf(obj,true)){
+		ArrayList<Class<?>> acl = JavaLangI.i().getSuperClassesOf(obj,true);
+		boolean bHasNamedNonAnonymousClass=false;
+		for(Class<?> cl:acl){
+			if(cl.isAnonymousClass())continue;
+			bHasNamedNonAnonymousClass=true;
+			break;
+		}
+		assert bHasNamedNonAnonymousClass : "must have be least one non anonymous class";
+		
+		for(Class<?> cl:acl){
 			b=setUserDataPSHSafely(spt, cl.getName(), obj);
 		}
+		
 		return b;
 	}
 	/**
@@ -82,7 +94,7 @@ public class UserDataI {
 			public Boolean call() {
 				try{
 					spt.setUserData(strKey, obj);
-				}catch(IllegalArgumentException ex){
+				}catch(IllegalArgumentException ex){ //if it is not a savable alrady, enclose on one
 					spt.setUserData(strKey, new PseudoSavableHolder(obj));
 				}
 				return true;
