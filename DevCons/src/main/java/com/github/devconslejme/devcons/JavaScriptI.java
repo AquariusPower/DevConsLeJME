@@ -644,10 +644,11 @@ public class JavaScriptI implements IGlobalAddListener {
 		if(!strFilter.isEmpty()){
 			ar = AutoCompleteI.i().autoComplete(strFilter, astr, false, false);
 			
-			if(ar.getResultList().size()==1){
+//			if(ar.getResultList().size()==1){ 
+			if(!ar.isPartGotImproved()){ 
 				astr.addAll(getJSClassBindListFilteredHelp());
 				
-				ar = AutoCompleteI.i().autoComplete(strFilter, astr, false, false);
+				ar = AutoCompleteI.i().autoComplete(strFilter, astr, true, false);
 			}
 		}
 		

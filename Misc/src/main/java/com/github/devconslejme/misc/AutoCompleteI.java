@@ -83,7 +83,7 @@ public class AutoCompleteI {
 			return astrResultList;
 		}
 
-		public boolean isbUsingFuzzy() {
+		public boolean isUsingFuzzy() {
 			return bUsingFuzzy;
 		}
 

@@ -155,10 +155,8 @@ public class FlyByCameraX extends FlyByCamera {
 			zoomCamera( getAnalogValue());return true;}});
 		putFlyCamBindCmdLater(strMouseWheelDown,CameraInput.FLYCAM_ZOOMOUT,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			zoomCamera(-getAnalogValue());return true;}});
-		putFlyCamBindCmdLater(
-			KeyCodeManagerI.i().getMouseTriggerKey(2).getFullId(),
-			"toggleZoom",
-			new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){toggleZoom();return true;}});
+		putFlyCamBindCmdLater(KeyCodeManagerI.i().getMouseTriggerKey(2).getFullId(),"toggleZoom",new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
+			if(isAllowZooming())toggleZoom();return true;}});
 		
     // rotation
 		putFlyCamBindCmdLater("Left",CameraInput.FLYCAM_LEFT,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){

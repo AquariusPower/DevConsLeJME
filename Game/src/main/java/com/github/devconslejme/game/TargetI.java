@@ -43,12 +43,11 @@ import com.github.devconslejme.misc.jme.ActivatorI;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.HighlighterI;
-import com.github.devconslejme.misc.jme.InfoJmeI;
 import com.github.devconslejme.misc.jme.PhysicsI;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.StringTextJmeI;
 import com.github.devconslejme.misc.jme.WorldPickingI;
-import com.github.devconslejme.misc.jme.InfoJmeI.InfoJme;
 import com.jme3.app.Application;
 import com.jme3.collision.CollisionResult;
 import com.jme3.math.Vector3f;
@@ -135,8 +134,11 @@ public class TargetI {
 //			}
 			
 			if(tgt==null){ //new one
-				tgt = new TargetGeom(geom);
-				tgt.geomTarget=(geom);
+				PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(geom);
+				if(pd!=null && !pd.isTerrain()) {
+					tgt = new TargetGeom(geom);
+					tgt.geomTarget=(geom);
+				}
 			}
 		}
 		
