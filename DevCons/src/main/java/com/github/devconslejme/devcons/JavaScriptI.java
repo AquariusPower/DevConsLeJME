@@ -629,6 +629,7 @@ public class JavaScriptI implements IGlobalAddListener {
 	 * @return
 	 */
 	public AutoCompleteResult showHelp(String strFilter) {
+		strFilter=strFilter.trim();
 		LoggingI.i().logMarker("Help for: "+strFilter);
 		
 		ArrayList<String> astr = new ArrayList<String>();
@@ -642,10 +643,11 @@ public class JavaScriptI implements IGlobalAddListener {
 		AutoCompleteResult ar=new AutoCompleteResult(
 			strFilter, strImprovedPart, new ArrayList<String>(astr), false, false);
 		if(!strFilter.isEmpty()){
-			ar = AutoCompleteI.i().autoComplete(strFilter, astr, false, false);
+			ar = AutoCompleteI.i().autoComplete(strFilter, astr, false, false); //base ones 1st
 			
 //			if(ar.getResultList().size()==1){ 
-			if(!ar.isPartGotImproved()){ 
+//			if(!isBaseCommand(strFilter) && !ar.isPartGotImproved()){ 
+			if(!strFilter.startsWith(strBaseCmdToken) && !ar.isPartGotImproved()){ 
 				astr.addAll(getJSClassBindListFilteredHelp());
 				
 				ar = AutoCompleteI.i().autoComplete(strFilter, astr, false, false);
