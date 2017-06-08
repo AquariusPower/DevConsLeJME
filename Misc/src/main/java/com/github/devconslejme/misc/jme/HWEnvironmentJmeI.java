@@ -27,16 +27,17 @@
 package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 
 import com.github.devconslejme.misc.Annotations.SimpleVarReadOnly;
-import com.github.devconslejme.misc.HWEnvironmentI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
+import com.github.devconslejme.misc.HWEnvironmentI;
+import com.github.devconslejme.misc.KeyBindCommandManagerI;
+import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.font.BitmapText;
@@ -44,7 +45,6 @@ import com.jme3.font.LineWrapMode;
 import com.jme3.font.Rectangle;
 import com.jme3.input.InputManager;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
@@ -82,6 +82,8 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 	private Camera	cam;
 	private boolean	bShowMouseCursorPos;
 	private SimpleApplication	sappOpt;
+	private boolean bShowCustomInfo;
+	private boolean bShowInfoOverride;
 	
 	public void configure(Node nodeGui){
 //		GlobalManagerI.i().putGlobal(EnvironmentI.class, this);
@@ -108,6 +110,14 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 		nodeInfo.attachChild(btInfo);
 		nodeInfo.attachChild(geomInfoBkg);
 		nodeInfo.setName(HWEnvironmentJmeI.class.getSimpleName()+":info");
+		
+		KeyBindCommandManagerI.i().putBindCommandsLater("F6",new CallBoundKeyCmd() {
+			@Override
+			public Boolean callOnKeyReleased(int iClickCountIndex) {
+				toggleShowInfoOverride();
+				return true;
+			}
+		}.setName("ToggleShowDeveloperInfo"));
 	}
 	
 	public class EnvState extends SimpleAppState{
@@ -266,12 +276,14 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 	
 	
 	protected void updateInfo(){
-		if(
-				!bShowFPS &&
-				!bShowCamPos &&
-				!bShowCamRot
-		){
-			btInfo.removeFromParent();
+		boolean bShow=false;
+		if(bShowFPS)bShow=true;
+		if(bShowCamPos)bShow=true;
+		if(bShowCamRot)bShow=true;
+		if(bShowCustomInfo)bShow=true;
+		if(!bShowInfoOverride)bShow=false;
+		if(!bShow){
+			nodeInfo.removeFromParent();
 			return;
 		}
 		
@@ -395,6 +407,28 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 
 	public long getFrameId(int iAddOrSub) {
 		return getTotalFrameCount()-iAddOrSub;
+	}
+
+	public boolean isShowCustomInfo() {
+		return bShowCustomInfo;
+	}
+
+	public HWEnvironmentJmeI setShowCustomInfo(boolean bShowCustomInfo) {
+		this.bShowCustomInfo = bShowCustomInfo;
+		return this; 
+	}
+
+	public boolean isShowInfoOverride() {
+		return bShowInfoOverride;
+	}
+
+	public boolean toggleShowInfoOverride() {
+		bShowInfoOverride=!bShowInfoOverride;
+		return bShowInfoOverride;
+	}
+	public HWEnvironmentJmeI setShowInfoOverride(boolean bShowInfoOverride) {
+		this.bShowInfoOverride = bShowInfoOverride;
+		return this; 
 	}
 
 }

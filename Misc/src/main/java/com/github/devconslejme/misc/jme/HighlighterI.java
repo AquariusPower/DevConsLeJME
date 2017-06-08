@@ -34,6 +34,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI.ColorGlow;
 import com.github.devconslejme.misc.jme.ColorI.EColor;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.jme3.app.SimpleApplication;
 import com.jme3.collision.CollisionResult;
 import com.jme3.input.FlyByCamera;
@@ -147,8 +148,13 @@ public class HighlighterI {
 			}
 			if(geomTargetNew!=null && ahlnList.get(geomTargetNew)==null){
 				if(nhMouseCursorOver.geomTarget!=geomTargetNew){
-					nhMouseCursorOver.geomTarget = geomTargetNew;
-					update(nhMouseCursorOver,tpf);
+					PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(geomTargetNew);
+					if(pd!=null && pd.isTerrain()) {
+						reset(nhMouseCursorOver);
+					}else {
+						nhMouseCursorOver.geomTarget = geomTargetNew;
+						update(nhMouseCursorOver,tpf);
+					}
 				}
 			}else{
 				reset(nhMouseCursorOver);
