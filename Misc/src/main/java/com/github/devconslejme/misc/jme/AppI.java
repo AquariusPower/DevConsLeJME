@@ -29,6 +29,7 @@ package com.github.devconslejme.misc.jme;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AppState;
@@ -113,6 +114,11 @@ public class AppI {
 		return app.getCamera().getLocation().add(app.getCamera().getDirection().mult(fInFrontDistZ));
 	}
 	
+	public Vector3f placeAtCamWPos(PhysicsData pd,float fInFrontDistZ,boolean bLookAtDir) {
+		Vector3f v3f = placeAtCamWPos(pd.getSpatialWithPhysics(), fInFrontDistZ,bLookAtDir);
+		PhysicsI.i().syncPhysTransfFromSpt(pd, true, true);
+		return v3f;
+	}
 //	public Vector3f placeAtWCoordCamDirCenter(Spatial spt,float fDistCamZ,boolean bLookAtDir) {
 //		return placeAtWCoordCamDirXY(spt, HWEnvironmentJmeI.i().getDisplay().getCenter(fDistCamZ), bLookAtDir);
 //	}

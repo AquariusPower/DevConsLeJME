@@ -552,19 +552,27 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			return fGrabDist;
 		}
 
-		public PhysicsData setTempGravityTowards(Vector3f v3f) {
+		public PhysicsData setTempGravityTowards(Vector3f v3f, Float fAcceleration) {
+			if(v3fGravityBkp==null && rbc.getGravity().length()>0)v3fGravityBkp = rbc.getGravity(); //will be a copy
+			
 			if(v3f==null) {
+				assert v3fGravityBkp!=null && v3fGravityBkp.length()>0;
 				rbc.setGravity(v3fGravityBkp);
 			}else {
-				Vector3f v3fNewGravity = v3f.subtract(rbc.getPhysicsLocation()).normalize().mult(v3fGravityBkp.length());
+				Vector3f v3fNewGravity = v3f.subtract(rbc.getPhysicsLocation()).normalize();
+//				v3fNewGravity.multLocal(v3fGravityBkp.length());
+//				v3fNewGravity.multLocal(100f);
+				v3fNewGravity.multLocal(fAcceleration!=null?fAcceleration:v3fGravityBkp.length());
 				rbc.setGravity(v3fNewGravity);
 			}
+			
+			rbc.activate();
+			
 			return this;
 		}
 
 		public void setRBC(RigidBodyControl rigidBodyControl) {
 			this.rbc=rigidBodyControl;
-			v3fGravityBkp = rbc.getGravity();
 		}
 		
 	}
@@ -1008,8 +1016,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	
 	public Impulse throwFromCam(PhysicsData pd,float fDesiredSpeed){
 		// in front of cam pos
-		AppI.i().placeAtCamWPos(pd.getSpatialWithPhysics(), 1f, true); //orientated z
-		syncPhysTransfFromSpt(pd);
+//		AppI.i().placeAtCamWPos(pd.getSpatialWithPhysics(), 1f, true); //orientated z
+		AppI.i().placeAtCamWPos(pd, 1f, true); //orientated z
+//		syncPhysTransfFromSpt(pd,true,true);
 		
 		Impulse imp = throwAtSelfDirImpulse(pd,fDesiredSpeed);
 //		Impulse imp = throwAtSelfDirImpulse(
@@ -1022,16 +1031,16 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		return imp;
 	}
 	
-	public void syncPhysTransfFromSpt(PhysicsData pd) {
-		syncPhysTransfFromSpt(pd.getSpatialWithPhysics(), pd.getRBC());
+	public void syncPhysTransfFromSpt(PhysicsData pd,boolean bLocation,boolean bRotation) {
+		syncPhysTransfFromSpt(pd.getSpatialWithPhysics(), pd.getRBC(), bLocation, bRotation);
 	}
-	public void syncPhysTransfFromSpt(Spatial spt,PhysicsRigidBody prb) {
-		prb.setPhysicsLocation(spt.getWorldTranslation());
-		prb.setPhysicsRotation(spt.getWorldRotation());
+	public void syncPhysTransfFromSpt(Spatial spt,PhysicsRigidBody prb, boolean bLocation, boolean bRotation) {
+		if(bLocation)prb.setPhysicsLocation(spt.getWorldTranslation());
+		if(bRotation)prb.setPhysicsRotation(spt.getWorldRotation());
 	}
 	public void syncPhysTransfFromSpt(Spatial spt) {
 		RigidBodyControl rbc = spt.getControl(RigidBodyControl.class);
-		syncPhysTransfFromSpt(spt, rbc);
+		syncPhysTransfFromSpt(spt, rbc, true, true);
 	}
 	
 	/**

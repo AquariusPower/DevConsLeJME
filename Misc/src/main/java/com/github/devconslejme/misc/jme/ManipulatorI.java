@@ -38,6 +38,7 @@ import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.KeyCodeManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.jme3.collision.CollisionResult;
 import com.jme3.math.FastMath;
@@ -83,7 +84,7 @@ public class ManipulatorI {
 	public boolean drop() {
 		boolean bIsGrabbing=pdManipulating!=null;
 		if(bIsGrabbing) {PhysicsI.i().wakeUp(pdManipulating);
-			if(!bGrabForcePlacement)pdManipulating.setTempGravityTowards(null);
+			if(!bGrabForcePlacement)pdManipulating.setTempGravityTowards(null,null);
 		}
 		pdManipulating=null;
 		return bIsGrabbing;
@@ -178,7 +179,7 @@ public class ManipulatorI {
 //		Spatial spt= pdManipulating!=null ? pdManipulating.getSpatialWithPhysics() : crManipulating.getGeometry();
 		Spatial spt= pdManipulating.getSpatialWithPhysics();
 		spt.rotate(0,fRotYRad,0);
-		if(pdManipulating!=null)PhysicsI.i().syncPhysTransfFromSpt(pdManipulating);
+		if(pdManipulating!=null)PhysicsI.i().syncPhysTransfFromSpt(pdManipulating,false,true);
 //		if(pdManipulating!=null)PhysicsI.i().syncPhysTransfFromSpt(pdManipulating.getSpatialWithPhysics());
 	}
 
@@ -194,13 +195,14 @@ public class ManipulatorI {
 		}).enableLoopMode();
 	}
 	
+	private TimedDelay tdResetForce = new TimedDelay(1f).setActive(true);
 	protected void updateManipulated(float tpf) {
-//		Spatial spt= pdManipulating!=null ? pdManipulating.getSpatialWithPhysics() : crManipulating.getGeometry();
 		Spatial spt= pdManipulating.getSpatialWithPhysics();
 		
 		if(bGrabForcePlacement) {
 			float fDist = pdManipulating.getGrabDist();
 			fCurrentSpeed+=getPullSpeed()*tpf;
+//			fCurrentSpeed=getPullSpeed()*tpf;
 			if(isPullGrabbed())fDist-=fCurrentSpeed;
 			
 			if(fDist<fMinDist) {
@@ -209,29 +211,26 @@ public class ManipulatorI {
 			}
 			pdManipulating.setGrabDist(fDist);
 			
-			AppI.i().placeAtCamWPos(spt, fDist, pdManipulating.isActivatable());
+			spt.rotateUpTo(Vector3f.UNIT_Y);
+			AppI.i().placeAtCamWPos(pdManipulating, fDist, pdManipulating.isActivatable());
+			
+			PhysicsI.i().resetForces(pdManipulating); //prevent falling flickering glitch
 		}else {
-			Vector3f v3fCamPos = AppI.i().getCamWPos(fMinDist);
-			float fDist = v3fCamPos.distance(pdManipulating.getRBC().getPhysicsLocation());
-			if(fDist>fMinDist) {
-				pdManipulating.setTempGravityTowards(v3fCamPos);
-			}else {
-				pdManipulating.setTempGravityTowards(new Vector3f());
-				PhysicsI.i().resetForces(pdManipulating);
-			}
+			Vector3f v3fInfrontCamPos = AppI.i().getCamWPos(fMinDist);
+			float fDistRest=0.25f;
+			float fDist = v3fInfrontCamPos.distance(pdManipulating.getRBC().getPhysicsLocation());
+//			float fDist = pdManipulating.getGrabDist();
+//			pdManipulating.setTempGravityTowards(v3fCamPos,fDist);
+			pdManipulating.setTempGravityTowards(v3fInfrontCamPos,fDist>fDistRest ? 100f : 0f);
+			if(fDist<fDistRest || tdResetForce.isReady(true))PhysicsI.i().resetForces(pdManipulating);
+//			tdResetForce.resetAndChangeDelayTo(1f).setActive(true);
 		}
 		
 		if(pdManipulating.isActivatable()) {
-			spt.rotateUpTo(Vector3f.UNIT_Y);
 			spt.lookAt(spt.getLocalTranslation().add(AppI.i().getCamLookingAtDir()), Vector3f.UNIT_Y);
+			PhysicsI.i().syncPhysTransfFromSpt(pdManipulating,false,true);
 		}
 		
-		if(pdManipulating!=null){
-			PhysicsI.i().syncPhysTransfFromSpt(pdManipulating);
-			PhysicsI.i().resetForces(pdManipulating); //prevent falling
-		}
-		
-//		HWEnvironmentJmeI.i().putCustomInfo("Grabbed", crManipulating.toString());
 		HWEnvironmentJmeI.i().putCustomInfo("Grabbed", pdManipulating.getInfo());
 	}
 
