@@ -28,6 +28,7 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 
+import com.github.devconslejme.game.CharacterI;
 import com.github.devconslejme.game.TargetI;
 import com.github.devconslejme.game.TargetI.TargetGeom;
 import com.github.devconslejme.misc.GlobalManagerI;
@@ -83,8 +84,10 @@ public class ManipulatorI {
 	 */
 	public boolean drop() {
 		boolean bIsGrabbing=pdManipulating!=null;
-		if(bIsGrabbing) {PhysicsI.i().wakeUp(pdManipulating);
+		if(bIsGrabbing) {
+			PhysicsI.i().wakeUp(pdManipulating);
 			if(!bGrabForcePlacement)pdManipulating.setTempGravityTowards(null,null);
+			pdManipulating.setGrabbedBy(null);
 		}
 		pdManipulating=null;
 		return bIsGrabbing;
@@ -106,6 +109,7 @@ public class ManipulatorI {
 			pdManipulating=pd;
 			pdManipulating.setGrabDist(fCurrentDistance);
 			fCurrentSpeed=0f;
+			pdManipulating.setGrabbedBy(CharacterI.i().getPossessed());
 		}
 	}
 	
@@ -195,7 +199,7 @@ public class ManipulatorI {
 		}).enableLoopMode();
 	}
 	
-	private TimedDelay tdResetForce = new TimedDelay(1f).setActive(true);
+	private TimedDelay tdResetForce = new TimedDelay(0.1f).setActive(true);
 	protected void updateManipulated(float tpf) {
 		Spatial spt= pdManipulating.getSpatialWithPhysics();
 		
@@ -217,13 +221,24 @@ public class ManipulatorI {
 			PhysicsI.i().resetForces(pdManipulating); //prevent falling flickering glitch
 		}else {
 			Vector3f v3fInfrontCamPos = AppI.i().getCamWPos(fMinDist);
-			float fDistRest=0.25f;
+			float fDistRest=0.01f;
 			float fDist = v3fInfrontCamPos.distance(pdManipulating.getRBC().getPhysicsLocation());
 //			float fDist = pdManipulating.getGrabDist();
 //			pdManipulating.setTempGravityTowards(v3fCamPos,fDist);
-			pdManipulating.setTempGravityTowards(v3fInfrontCamPos,fDist>fDistRest ? 100f : 0f);
-			if(fDist<fDistRest || tdResetForce.isReady(true))PhysicsI.i().resetForces(pdManipulating);
-//			tdResetForce.resetAndChangeDelayTo(1f).setActive(true);
+			float fAcceleration = 200f;
+			if(fDist < 0.10f)fAcceleration/=10f;
+			else
+			if(fDist < 0.25f)fAcceleration/=5f;
+			else
+			if(fDist < 0.50f)fAcceleration/=2f;
+			pdManipulating.setTempGravityTowards(v3fInfrontCamPos, fDist>fDistRest ? fAcceleration : 0f);
+			
+			boolean bResetF=false;
+			if(fDist<fDistRest)bResetF=true;
+			if(fDist<10f && tdResetForce.isReady(true))bResetF=true;
+			if(bResetF)PhysicsI.i().resetForces(pdManipulating);
+//			if(fDist<fDistRest || (fDist>10f && tdResetForce.isReady(true)))PhysicsI.i().resetForces(pdManipulating);
+//			tdResetForce.resetAndChangeDelayTo(0.1f).setActive(true);
 		}
 		
 		if(pdManipulating.isActivatable()) {

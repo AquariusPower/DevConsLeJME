@@ -27,6 +27,7 @@
 package com.github.devconslejme.tests;
 
 import com.github.devconslejme.game.CharacterI;
+import com.github.devconslejme.misc.MatterI.EMatter;
 import com.github.devconslejme.misc.jme.AppI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.PhysicsProjectileI;
@@ -72,7 +73,10 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 //		SubdivisionSurfaceModifier s = new SubdivisionSurfaceModifier(modifierStructure, blenderContext);
 		
 		PhysicsProjectileI.i().setProjectileFromCamToDevTestDbg();
-		PhysicsGun pg = PhysicsProjectileI.i().createGun(PhysicsProjectileI.i().getProjectileThrowerDevTestDbgCopy());
+		PhysicsGun pg = PhysicsProjectileI.i().createGun(
+			PhysicsProjectileI.i().getProjectileThrowerDevTestDbgCopy(),
+			EMatter.Generic20KgPerM3.get()
+		);
 		
 		float fSize=100;
 		float fYFloor=-7;

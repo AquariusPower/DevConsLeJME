@@ -47,6 +47,8 @@ public class MatterI {
 					/** a generic placeholder, so 1 cubic meter will have a mass of 1.0kg (a cardboard empty box) */
 		      Generic1KgPerM3(1000f/fM3toCm3),
 		     Generic10KgPerM3(10000f/fM3toCm3),
+		     Generic20KgPerM3(20000f/fM3toCm3),
+		     Generic50KgPerM3(50000f/fM3toCm3),
 		    Generic100KgPerM3(100000f/fM3toCm3),
 		   /** like water density */
 		   Generic1000KgPerM3(1000000f/fM3toCm3),
@@ -58,12 +60,15 @@ public class MatterI {
 		Generic1000000KgPerM3(1000000000f/fM3toCm3),
 		
 		Aluminum(2.7),
-		Copper(9.0),
+		Copper(8.96),
 		Gold(19.3),
+		Iron(7.87),
 		Lead(11.34f),
 		Osmium(22.6f),
+		Steel(8.05),
 		Tungsten(19.25),
 		Water(1.0),
+		Zing(7.13),
 		;
 		EMatter(double fDensityGramsPerCm3){
 			hm.put(this.toString(),new Matter(this.toString(),fDensityGramsPerCm3));

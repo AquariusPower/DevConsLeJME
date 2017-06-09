@@ -28,6 +28,8 @@ package com.github.devconslejme.misc.jme;
 
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.SimulationTimeI;
+import com.github.devconslejme.misc.TimeFormatI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.jme3.app.Application;
@@ -78,10 +80,19 @@ public class AppI {
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
+				updateInfo(getTPF());
 				updateCamera(getTPF());
 				return true;
 			}
 		}).enableLoopMode();
+	}
+
+	protected void updateInfo(float tpf) {
+		HWEnvironmentJmeI.i().putCustomInfo("Times", 
+			"Real:"+TimeFormatI.i().getRealTimeFormatted()
+			+",AppElps:"+TimeFormatI.i().formatElapsed(app.getTimer().getResolution(), app.getTimer().getTime())
+			+",SmltElps:"+TimeFormatI.i().formatElapsed(1000, SimulationTimeI.i().getMillis())
+		);
 	}
 
 	protected void updateCamera(float tpf) {

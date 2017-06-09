@@ -123,14 +123,16 @@ public class PhysicsProjectileI {
 		);
 	}
 	
-	public PhysicsGun createGun(PhysicsThrowProjectiles pp){
+//	public PhysicsGun createGun(PhysicsThrowProjectiles pp,float fOverallGunDensity){
+	public PhysicsGun createGun(PhysicsThrowProjectiles pp,Matter mtGunRelativeOverallMatter){
 		PhysicsGun pg = new PhysicsGun();
 		pg.pp=pp;
 		
 		Geometry geom = GeometryI.i().create(MeshI.i().cylinder(1f,0.05f), ColorRGBA.Yellow);
 		geom.setName("PhysicsGun");
 		AppI.i().getRootNode().attachChild(geom);
-		pg.pd=PhysicsI.i().imbueFromWBounds(geom,	EMatter.Generic10KgPerM3.get(),	true);
+		pg.pd=PhysicsI.i().imbueFromWBounds(geom,	mtGunRelativeOverallMatter,	true);
+//		pg.pd=PhysicsI.i().imbueFromWBounds(geom,	new Matter("Density="+fOverallGunDensity, fOverallGunDensity),	true);
 		
 		CallableXAnon cx = new CallableXAnon() {
 			@Override
@@ -174,8 +176,15 @@ public class PhysicsProjectileI {
 		float fMassRatio = pdPjtl.getRBC().getMass()/gun.pd.getRBC().getMass();
 //		float fImpulseRecoil = -1f * impPjtl.getImpulseAtSelfDir().mult(fMassRatio).length();
 		float fImpulseRecoil = -1f * impPjtl.getImpulseAtSelfDir()*fMassRatio;
-		Impulse impRecoil = new Impulse().setImpulseAtSelfDir(fImpulseRecoil)
-//			.setTorqueImpulse(new Vector3f(0,0,1))
+//		float fTorque = 0.01f;
+		float fY = 2f;
+//		if(gun.pd.f)
+//		if(gun.pd.isGrabbed())fTorque*=1000f;
+//		if(gun.pd.isGrabbed())fY*=100000f;
+		Impulse impRecoil = new Impulse()
+//			.setim
+			.setImpulseAtSelfDir(fImpulseRecoil,fY)
+//			.setTorqueImpulse(new Vector3f(fTorque,0,0))
 			;
 		PhysicsI.i().applyImpulseLater(gun.pd, impRecoil);
 		

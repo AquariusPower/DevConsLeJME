@@ -280,5 +280,9 @@ public class CharacterI {
 	public boolean isCharacterForSure(PhysicsCollisionObject pco) {
 		return ((Spatial)pco.getUserObject()).getControl(BetterCharacterControlX.class)!=null;
 	}
+
+	public BetterCharacterControlX getPossessed() {
+		return bccLast;
+	}
 	
 }

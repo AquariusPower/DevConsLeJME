@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import com.github.devconslejme.game.CharacterI.BetterCharacterControlX;
 import com.github.devconslejme.misc.Annotations.NotMainThread;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
@@ -118,8 +119,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		private Vector3f	v3fTorque;
 		private Vector3f	v3fTorqueImpulse;
 		private Float	fImpulseAtSelfDirection;
-
-		public PhysicsData	pd;
+		private PhysicsData	pd;
+		private  Float fImpulseAtSelfDirectionDisplacement;
 		
 //		public Spatial getSpt() {
 //			return spt;
@@ -160,9 +161,16 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		public float getImpulseAtSelfDir() {
 			return fImpulseAtSelfDirection;
 		}
-		public Impulse setImpulseAtSelfDir(float fImpulse) {
+		/**
+		 * 
+		 * @param fImpulse
+		 * @param fImpulseAtSelfDirectionDisplacement can be null
+		 * @return
+		 */
+		public Impulse setImpulseAtSelfDir(float fImpulse, Float fImpulseAtSelfDirectionDisplacement) {
 			assert v3fImpulse==null;
 			this.fImpulseAtSelfDirection=fImpulse;
+			this.fImpulseAtSelfDirectionDisplacement=fImpulseAtSelfDirectionDisplacement;
 			return this;
 		}
 		/**
@@ -187,6 +195,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		public Vector3f getTorqueImpulse() {
 			return v3fTorqueImpulse;
 		}
+		/**
+		 * THIS IS NOT RELATIVE TO THE CURRENT ORIENTATION!!! this is a global orientation thing :/
+		 * @param v3fTorqueImpulse
+		 * @return
+		 */
 		public Impulse setTorqueImpulse(Vector3f v3fTorqueImpulse) {
 			this.v3fTorqueImpulse = v3fTorqueImpulse;
 			return this;
@@ -363,6 +376,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		private float	fGrabDist;
 		protected CollisionResult cr;
 		private Vector3f v3fGravityBkp;
+		private BetterCharacterControlX bccxGrabber;
 		
 		/**
 		 * 
@@ -574,7 +588,15 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		public void setRBC(RigidBodyControl rigidBodyControl) {
 			this.rbc=rigidBodyControl;
 		}
+
+		public PhysicsData setGrabbedBy(BetterCharacterControlX bccxGrabber) {
+			this.bccxGrabber = bccxGrabber;
+			return this;
+		}
 		
+		public boolean isGrabbed() {
+			return bccxGrabber!=null;
+		}
 	}
 	
 	
@@ -812,9 +834,15 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				}
 				
 				if(imp.fImpulseAtSelfDirection!=null){
+					Vector3f v3fDispl = Vector3f.ZERO;
+					
+					if(imp.fImpulseAtSelfDirectionDisplacement!=null) {
+						v3fDispl = imp.pd.rbc.getPhysicsRotation().getRotationColumn(1).mult(imp.fImpulseAtSelfDirectionDisplacement);
+					}
+					
 					imp.pd.rbc.applyImpulse(
 						imp.pd.rbc.getPhysicsRotation().getRotationColumn(2).mult(imp.fImpulseAtSelfDirection), 
-						Vector3f.ZERO
+						v3fDispl
 					);
 				}
 				
@@ -998,7 +1026,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		if(pd!=null && pd.mts.getMassGrams()<50f && fImpulseAtDirection>300){ //9mm bullet weights 124 grains = 8 grams of lead
 			MessagesI.i().warnMsg(this, "this looks like a bullet, avoid using this method!", pd, fImpulseAtDirection);
 		}
-		Impulse imp = new Impulse().setImpulseAtSelfDir(fImpulseAtDirection);
+		Impulse imp = new Impulse().setImpulseAtSelfDir(fImpulseAtDirection,null);
 		PhysicsI.i().applyImpulseLater(pd, imp);
 		pd.setLastImpuse(imp);
 		return imp;
