@@ -145,6 +145,7 @@ public class TargetI {
 				if(pd!=null && !pd.isTerrain()) {
 					tgt = new TargetGeom(geom);
 					tgt.geomTarget=(geom);
+					tgt.setPhysicsData(pd);
 				}
 			}
 		}
@@ -310,7 +311,8 @@ public class TargetI {
 	}
 
 	public class TargetGeom {
-		protected Float fTargetDist;
+		private PhysicsData pd;
+		private Float fTargetDist;
 		private Geometry	geomTarget;
 		private boolean bEnemy=false;
 		private Spatial	sptAtRoot;
@@ -371,6 +373,15 @@ public class TargetI {
 
 		public TargetGeom setAllowReset(boolean bAllowReset) {
 			this.bAllowReset = bAllowReset;
+			return this; 
+		}
+
+		public PhysicsData getPhysicsData() {
+			return pd;
+		}
+
+		public TargetGeom setPhysicsData(PhysicsData pd) {
+			this.pd = pd;
 			return this; 
 		}
 

@@ -28,6 +28,8 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 
+import com.github.devconslejme.game.TargetI;
+import com.github.devconslejme.game.TargetI.TargetGeom;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.ICompositeRestrictedAccessControl;
 import com.github.devconslejme.misc.Key;
@@ -69,43 +71,61 @@ public class ManipulatorI {
 
 	private Float	fMaxGrabDist=null;
 	
+	public void drop() {
+		if(crManipulating!=null){ //drop
+			if(pdManipulating!=null)PhysicsI.i().wakeUp(pdManipulating);
+			crManipulating=null;
+			pdManipulating=null;
+		}
+	}
+	
+	public void grab(PhysicsData pd, float fCurrentDistance) {
+		boolean bOk=true;
+		if(pd!=null) {
+			if(!bAllowManipulationOfTerrain && pd.isTerrain())bOk=false;
+			if(!bAllowManipulationOfStatics && pd.isStatic ())bOk=false;
+		}else {
+			if(!bAllowManipulationWithoutPhysics)bOk=false;
+		}
+		if(getMaxGrabDist()!=null && fCurrentDistance>getMaxGrabDist()){
+			bOk=false;
+		}
+		
+		if(bOk) {
+			pdManipulating=pd;
+			pdManipulating.setGrabDist(fCurrentDistance);
+		}
+	}
+	
 	public void configure(){
 		keyContext = KeyCodeManagerI.i().createSpecialExternalContextKey(cc, "ContextManipulatorGrab");
 		
 		KeyBindCommandManagerI.i().putBindCommandsLater("Ctrl+G", new CallBoundKeyCmd(){
 			@Override
 			public Boolean callOnKeyReleased(int iClickCountIndex) {
-				if(crManipulating!=null){ //drop
-					if(pdManipulating!=null)PhysicsI.i().wakeUp(pdManipulating);
-					crManipulating=null;
-				}else{
-					ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
-					if(acr.size()>0) {
-//						crManipulating=acr.get(0);
-//						pdManipulating = PhysicsI.i().getPhysicsDataFrom(crManipulating.getGeometry());
-						CollisionResult cr = acr.get(0);
-						PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(cr.getGeometry());
-						boolean bOk=true;
-						if(pd!=null) {
-							if(!bAllowManipulationOfTerrain && pd.isTerrain())bOk=false;
-							if(!bAllowManipulationOfStatics && pd.isStatic())bOk=false;
-						}else {
-							if(!bAllowManipulationWithoutPhysics)bOk=false;
-						}
-						if(getMaxGrabDist()!=null && cr.getDistance()>getMaxGrabDist()){
-							bOk=false;
-						}
-						
-						if(bOk) {
-							crManipulating=cr;
-							pdManipulating=pd;
-							pdManipulating.setGrabDist(cr.getDistance());
-						}
-					}
+				drop();
+				ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+				if(acr.size()>0) {
+					CollisionResult cr = acr.get(0);
+					PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(cr.getGeometry());
+					grab(pd,cr.getDistance());
+					crManipulating=cr;
 				}
 				return true;
 			};
-		}.setName("ManipulatorGrab"));
+		}.setName("ManipulatorGrabAimed"));
+		
+		KeyBindCommandManagerI.i().putBindCommandsLater("Shift+Ctrl+G", new CallBoundKeyCmd(){
+			@Override
+			public Boolean callOnKeyReleased(int iClickCountIndex) {
+				drop();
+				TargetGeom tg = TargetI.i().getLastSingleTarget();
+				if(tg!=null) {
+					grab(tg.getPhysicsData(), AppI.i().getCamWPos(0f).distance(tg.getPhysicsData().getRBC().getPhysicsLocation()));
+				}
+				return true;
+			};
+		}.setName("ManipulatorGrabSelectedSingleTarget"));
 		
 		KeyBindCommandManagerI.i().putBindCommandsLater(
 			KeyCodeManagerI.i().getMouseAxisKey(2,true).composeCfgPrependModifiers(keyContext),
@@ -116,6 +136,21 @@ public class ManipulatorI {
 			KeyCodeManagerI.i().getMouseAxisKey(2,false).composeCfgPrependModifiers(keyContext),
 			new CallBoundKeyCmd(){@Override	public Boolean callOnKeyReleased(int iClickCountIndex) {
 				rotateManipulated(false); return true;};}.setName("ManipGrabRotCCW")
+		);
+		
+		KeyBindCommandManagerI.i().putBindCommandsLater(
+			KeyCodeManagerI.i().getKeyForId("Space").composeCfgPrependModifiers(keyContext),
+			new CallBoundKeyCmd(){
+				@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
+					ActivatorI.i().activateIfPossible(crManipulating.getGeometry()); //parentest spt will also be considered (least Root Node)
+					return true;
+				}
+				@Override
+				public Boolean callOnKeyReleased(int iClickCountIndex) {
+					ActivatorI.i().deactivateIfPossible(crManipulating.getGeometry()); //parentest spt will also be considered (least Root Node)
+					return true;
+				};
+			}.setName("ActivateGrabbed").holdKeyPressedForContinuousCmd()
 		);
 		
 		initUpdateManipulated();

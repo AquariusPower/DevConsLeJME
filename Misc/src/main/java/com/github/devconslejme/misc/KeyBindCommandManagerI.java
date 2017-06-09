@@ -304,7 +304,7 @@ public class KeyBindCommandManagerI {
 		public CallBoundKeyCmd setName(String strName) {
 //			if(strName.contains("*"))throw new DetailedException("'*' is restricted use/indicator of multiclick mode",strName,this);
 //			return setNameRestricted(KeyBindCommandManagerI.i().validateHardCommandUId(strName));
-			return super.setName(KeyBindCommandManagerI.i().validateHardCommandUId(strName));
+			return super.setName(StringI.i().validateUId(strName));
 		}
 		
 		@Deprecated
@@ -596,32 +596,32 @@ public class KeyBindCommandManagerI {
 	
 	public String[] validateHardCommandUId(String[] astrUId) throws IllegalArgumentException{
 		for(String str:astrUId){
-			validateHardCommandUId(str);
+			StringI.i().validateUId(str);
 		}
 		return astrUId;
 	}
-	/**
-	 * Allows a lot of flexibility and readability.
-	 * But also helps to forbid characters that could be on a javascript code ex.: "." "(" ";"
-	 * making it easier to distinguish.
-	 * btw, "*" char is restricted use/indicator.
-	 */
-	public String validateHardCommandUId(String strUId) throws IllegalArgumentException{
-		if(strUId.trim().isEmpty()){
-			throw new DetailedException("empty id "+strUId); //to prevent messy ids
-		}
-		
-		if(strUId.trim().length()!=strUId.length()){
-			throw new DetailedException("is not trimmed "+strUId); //to prevent messy ids
-		}
-		
-//		if(!strUId.matches("[0-9A-Za-z_ *+-]*")){ //regex: "-" must be the last thing within []
-		if(!strUId.matches("[0-9A-Za-z_ +-]*")){ //regex: "-" must be the last thing within []
-			throw new DetailedException("invalid hard command unique id "+strUId);
-		}
-		
-		return strUId;
-	}
+//	/**
+//	 * Allows a lot of flexibility and readability.
+//	 * But also helps to forbid characters that could be identified as a javascript code ex.: "." "(" ";"
+//	 * making it easier to distinguish.
+//	 * btw, "*" char is restricted use/indicator.
+//	 */
+//	public String validateHardCommandUId(String strUId) throws IllegalArgumentException{
+//		if(strUId.trim().isEmpty()){
+//			throw new DetailedException("empty id "+strUId); //to prevent messy ids
+//		}
+//		
+//		if(strUId.trim().length()!=strUId.length()){
+//			throw new DetailedException("is not trimmed "+strUId); //to prevent messy ids outside here
+//		}
+//		
+////		if(!strUId.matches("[0-9A-Za-z_ *+-]*")){ //regex: "-" must be the last thing within []
+//		if(!strUId.matches("[0-9A-Za-z_ +-]*")){ //regex: "-" must be the last thing within []
+//			throw new DetailedException("invalid unique id characters "+strUId);
+//		}
+//		
+//		return strUId;
+//	}
 	
 	public ArrayList<String> getHardCommandsIdListCopy(){
 		return new ArrayList<String>(tmCmdIdVsCmd.keySet());

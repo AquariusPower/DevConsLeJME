@@ -347,4 +347,37 @@ public class StringI {
 		
 		return strRet;
 	}
+	
+	private String strValidateUIdRegex="[0-9A-Za-z_ +-]*"; //regex: "-" must be the last thing within []
+	
+	/**
+	 * Allows a lot of flexibility and readability.
+	 * But also helps to forbid characters that could be identified as a javascript code ex.: "." "(" ";"
+	 * making it easier to distinguish.
+	 * btw, "*" char is restricted use/indicator.
+	 */
+	public String validateUId(String strUId) throws IllegalArgumentException{
+		if(strUId.trim().isEmpty()){
+			throw new DetailedException("empty id "+strUId); //to prevent messy ids
+		}
+		
+		if(strUId.trim().length()!=strUId.length()){
+			throw new DetailedException("is not trimmed "+strUId); //to prevent messy ids outside here
+		}
+		
+		if(!strUId.matches(strValidateUIdRegex)){ 
+			throw new DetailedException("invalid unique id characters "+strUId);
+		}
+		
+		return strUId;
+	}
+
+	public String getValidateUIdRegex() {
+		return strValidateUIdRegex;
+	}
+
+	public StringI setValidateUIdRegex(String strValidateUIdRegex) {
+		this.strValidateUIdRegex = strValidateUIdRegex;
+		return this; 
+	}
 }

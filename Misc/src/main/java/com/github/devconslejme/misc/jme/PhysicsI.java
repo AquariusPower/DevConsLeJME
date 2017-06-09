@@ -347,6 +347,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		protected long	lMaterializedSTime;
 		protected Vector3f	v3fWorldGlueSpot;
 		protected PhysicsData	pdGlueWhere;
+		protected PhysicsData	pdSpawnedFrom;
 		protected boolean	bGlueApplied;
 		protected boolean	bProjectile;
 		protected Vector3f	v3fEventCollOtherLocalPos;
@@ -1072,8 +1073,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		PhysicsData pdB = getPhysicsDataFrom((Spatial)nodeB.getUserObject());
 		
 		if(pdA==null || pdB==null){
-			return true; //allow other stuff
+			return true; //allow other stuff TODO this happens? what would it be (for)?
 		}
+		
+		if(pdA.pdSpawnedFrom==pdB)return false;
+		if(pdB.pdSpawnedFrom==pdA)return false;
 		
 //		/** these two may not be working because the order of the collision may not be the expected, and the glue where would be set after other collisions on the same tick */
 //		if(pdA.pdGlueWhere!=null)return pdA.pdGlueWhere==pdB; //TODO this seems useless

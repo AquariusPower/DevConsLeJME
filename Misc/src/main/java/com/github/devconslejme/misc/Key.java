@@ -85,15 +85,10 @@ public class Key{
 	}
 	
 	private Key(String strId){
-		DetailedException.assertNotEmpty("id", strId, this);
+		StringI.i().validateUId(strId);
 		
 		this.strFullId=strId;
 		this.strSimpleId=this.strFullId;
-//		prepareSimpleId(null);
-		
-		//will now be uniquely prefixed
-//			this.strFullId=GlobalOSAppI.i().getCmdConsLibFullId()+"_"+ManageKeyCode.class.getSimpleName()+"_"+this.strFullId;
-//			this.strFullId=GlobalManageKeyCodeI.i().prepareFullKeyId(this.strFullId);
 	}
 	
 	public ArrayList<Key> getKeysToMonitorCopy(){
