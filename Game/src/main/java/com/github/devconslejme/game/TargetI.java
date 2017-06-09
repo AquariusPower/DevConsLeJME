@@ -95,7 +95,7 @@ public class TargetI {
 					}
 					return true;
 				};
-			}.setName("Activate").holdKeyPressedForContinuousCmd()
+			}.setName("ActivateTarget").holdKeyPressedForContinuousCmd()
 		);
 		
 		String strK=flycamx.getCfgAddFlyCamMod(KeyCodeManagerI.i().getMouseTriggerKey(1).getFullId());

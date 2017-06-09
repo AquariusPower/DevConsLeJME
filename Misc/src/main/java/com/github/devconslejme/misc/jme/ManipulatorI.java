@@ -65,7 +65,7 @@ public class ManipulatorI {
 
 	private boolean	bPullGrabbed=true;
 
-	private float	fPullSpeed=3f;
+	private float	fPullSpeed=20f;
 
 	private Float	fMaxGrabDist=null;
 	
@@ -147,7 +147,7 @@ public class ManipulatorI {
 //		float fDist = crManipulating.getDistance();
 		
 		float fDist = pdManipulating.getGrabDist();
-		if(isPullGrabbed())fDist-=fPullSpeed*tpf;
+		if(isPullGrabbed())fDist-=getPullSpeed()*tpf;
 		float fMinDist = 2f;
 		if(fDist<fMinDist)fDist=fMinDist;
 		pdManipulating.setGrabDist(fDist);
@@ -220,6 +220,15 @@ public class ManipulatorI {
 	 */
 	public ManipulatorI setMaxGrabDist(Float fMaxGrabDist) {
 		this.fMaxGrabDist = fMaxGrabDist;
+		return this; 
+	}
+
+	public float getPullSpeed() {
+		return fPullSpeed;
+	}
+
+	public ManipulatorI setPullSpeed(float fPullSpeed) {
+		this.fPullSpeed = fPullSpeed;
 		return this; 
 	}
 	
