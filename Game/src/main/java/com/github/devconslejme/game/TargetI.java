@@ -336,10 +336,12 @@ public class TargetI {
 		}
 
 		public void activateIfPossible() {
-			ActivatorI.i().activateIfPossible(geomTarget); //parentest spt will also be considered (least Root Node)
+//			ActivatorI.i().activateIfPossible(geomTarget); //parentest spt will also be considered (least Root Node)
+			ActivatorI.i().activateIfPossible(pd); //parentest spt will also be considered (least Root Node)
 		}
 		public void deactivateIfPossible() {
-			ActivatorI.i().deactivateIfPossible(geomTarget); //parentest spt will also be considered (least Root Node)
+//			ActivatorI.i().deactivateIfPossible(geomTarget); //parentest spt will also be considered (least Root Node)
+			ActivatorI.i().deactivateIfPossible(pd); //parentest spt will also be considered (least Root Node)
 		}
 
 		public boolean isAllowReset() {

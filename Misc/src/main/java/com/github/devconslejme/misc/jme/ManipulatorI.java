@@ -55,7 +55,7 @@ public class ManipulatorI {
 	public static class CompositeControl implements ICompositeRestrictedAccessControl{private CompositeControl(){};};
 	private ICompositeRestrictedAccessControl	cc=new CompositeControl();
 		
-	private CollisionResult	crManipulating;
+//	private CollisionResult	crManipulating;
 	private Key	keyContext;
 
 	protected PhysicsData pdManipulating;
@@ -68,15 +68,25 @@ public class ManipulatorI {
 	private boolean	bPullGrabbed=true;
 
 	private float	fPullSpeed=20f;
+	private float	fCurrentSpeed;
 
 	private Float	fMaxGrabDist=null;
+
+	private float fMinDist=2f;
+
+	private boolean bGrabForcePlacement;
 	
-	public void drop() {
-		if(crManipulating!=null){ //drop
-			if(pdManipulating!=null)PhysicsI.i().wakeUp(pdManipulating);
-			crManipulating=null;
-			pdManipulating=null;
+	/**
+	 * 
+	 * @return if did dropped something
+	 */
+	public boolean drop() {
+		boolean bIsGrabbing=pdManipulating!=null;
+		if(bIsGrabbing) {PhysicsI.i().wakeUp(pdManipulating);
+			if(!bGrabForcePlacement)pdManipulating.setTempGravityTowards(null);
 		}
+		pdManipulating=null;
+		return bIsGrabbing;
 	}
 	
 	public void grab(PhysicsData pd, float fCurrentDistance) {
@@ -94,6 +104,7 @@ public class ManipulatorI {
 		if(bOk) {
 			pdManipulating=pd;
 			pdManipulating.setGrabDist(fCurrentDistance);
+			fCurrentSpeed=0f;
 		}
 	}
 	
@@ -103,13 +114,17 @@ public class ManipulatorI {
 		KeyBindCommandManagerI.i().putBindCommandsLater("Ctrl+G", new CallBoundKeyCmd(){
 			@Override
 			public Boolean callOnKeyReleased(int iClickCountIndex) {
-				drop();
-				ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
-				if(acr.size()>0) {
-					CollisionResult cr = acr.get(0);
-					PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(cr.getGeometry());
-					grab(pd,cr.getDistance());
-					crManipulating=cr;
+				if(!drop()) {
+					ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+					if(acr.size()>0) {
+						CollisionResult cr = acr.get(0);
+						PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(cr.getGeometry());
+						if(pd!=null) {
+							pd.cr=cr;
+							grab(pd,cr.getDistance());
+						}
+	//					crManipulating=cr;
+					}
 				}
 				return true;
 			};
@@ -118,10 +133,11 @@ public class ManipulatorI {
 		KeyBindCommandManagerI.i().putBindCommandsLater("Shift+Ctrl+G", new CallBoundKeyCmd(){
 			@Override
 			public Boolean callOnKeyReleased(int iClickCountIndex) {
-				drop();
-				TargetGeom tg = TargetI.i().getLastSingleTarget();
-				if(tg!=null) {
-					grab(tg.getPhysicsData(), AppI.i().getCamWPos(0f).distance(tg.getPhysicsData().getRBC().getPhysicsLocation()));
+				if(!drop()) {
+					TargetGeom tg = TargetI.i().getLastSingleTarget();
+					if(tg!=null) {
+						grab(tg.getPhysicsData(), AppI.i().getCamWPos(0f).distance(tg.getPhysicsData().getRBC().getPhysicsLocation()));
+					}
 				}
 				return true;
 			};
@@ -142,12 +158,13 @@ public class ManipulatorI {
 			KeyCodeManagerI.i().getKeyForId("Space").composeCfgPrependModifiers(keyContext),
 			new CallBoundKeyCmd(){
 				@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
-					ActivatorI.i().activateIfPossible(crManipulating.getGeometry()); //parentest spt will also be considered (least Root Node)
+//					ActivatorI.i().activateIfPossible(crManipulating.getGeometry()); //parentest spt will also be considered (least Root Node)
+					ActivatorI.i().activateIfPossible(pdManipulating); //parentest spt will also be considered (least Root Node)
 					return true;
 				}
 				@Override
 				public Boolean callOnKeyReleased(int iClickCountIndex) {
-					ActivatorI.i().deactivateIfPossible(crManipulating.getGeometry()); //parentest spt will also be considered (least Root Node)
+					ActivatorI.i().deactivateIfPossible(pdManipulating); //parentest spt will also be considered (least Root Node)
 					return true;
 				};
 			}.setName("ActivateGrabbed").holdKeyPressedForContinuousCmd()
@@ -158,7 +175,8 @@ public class ManipulatorI {
 	
 	protected void rotateManipulated(boolean bCW){
 		float fRotYRad=(bCW?1:-1)*fRotateSpeedDegAngle*FastMath.DEG_TO_RAD;
-		Spatial spt= pdManipulating!=null ? pdManipulating.getSpatialWithPhysics() : crManipulating.getGeometry();
+//		Spatial spt= pdManipulating!=null ? pdManipulating.getSpatialWithPhysics() : crManipulating.getGeometry();
+		Spatial spt= pdManipulating.getSpatialWithPhysics();
 		spt.rotate(0,fRotYRad,0);
 		if(pdManipulating!=null)PhysicsI.i().syncPhysTransfFromSpt(pdManipulating);
 //		if(pdManipulating!=null)PhysicsI.i().syncPhysTransfFromSpt(pdManipulating.getSpatialWithPhysics());
@@ -168,7 +186,7 @@ public class ManipulatorI {
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
-				keyContext.setPressedSpecialExternalContextKeyMode(cc, crManipulating!=null);
+				keyContext.setPressedSpecialExternalContextKeyMode(cc, pdManipulating!=null);
 				if(!keyContext.isPressed())return true;//skip
 				updateManipulated(getTPF());
 				return true;
@@ -177,25 +195,44 @@ public class ManipulatorI {
 	}
 	
 	protected void updateManipulated(float tpf) {
-		Spatial spt= pdManipulating!=null ? pdManipulating.getSpatialWithPhysics() : crManipulating.getGeometry();
-		boolean bLookAtDir = pdManipulating==null ? false : pdManipulating.isActivatable();
-//		float fDist = crManipulating.getDistance();
+//		Spatial spt= pdManipulating!=null ? pdManipulating.getSpatialWithPhysics() : crManipulating.getGeometry();
+		Spatial spt= pdManipulating.getSpatialWithPhysics();
 		
-		float fDist = pdManipulating.getGrabDist();
-		if(isPullGrabbed())fDist-=getPullSpeed()*tpf;
-		float fMinDist = 2f;
-		if(fDist<fMinDist)fDist=fMinDist;
-		pdManipulating.setGrabDist(fDist);
+		if(bGrabForcePlacement) {
+			float fDist = pdManipulating.getGrabDist();
+			fCurrentSpeed+=getPullSpeed()*tpf;
+			if(isPullGrabbed())fDist-=fCurrentSpeed;
+			
+			if(fDist<fMinDist) {
+				fDist=fMinDist;
+				fCurrentSpeed=0f;
+			}
+			pdManipulating.setGrabDist(fDist);
+			
+			AppI.i().placeAtCamWPos(spt, fDist, pdManipulating.isActivatable());
+		}else {
+			Vector3f v3fCamPos = AppI.i().getCamWPos(fMinDist);
+			float fDist = v3fCamPos.distance(pdManipulating.getRBC().getPhysicsLocation());
+			if(fDist>fMinDist) {
+				pdManipulating.setTempGravityTowards(v3fCamPos);
+			}else {
+				pdManipulating.setTempGravityTowards(new Vector3f());
+				PhysicsI.i().resetForces(pdManipulating);
+			}
+		}
 		
-		AppI.i().placeAtCamWPos(spt, fDist, bLookAtDir);
-		spt.rotateUpTo(Vector3f.UNIT_Y);
+		if(pdManipulating.isActivatable()) {
+			spt.rotateUpTo(Vector3f.UNIT_Y);
+			spt.lookAt(spt.getLocalTranslation().add(AppI.i().getCamLookingAtDir()), Vector3f.UNIT_Y);
+		}
 		
 		if(pdManipulating!=null){
 			PhysicsI.i().syncPhysTransfFromSpt(pdManipulating);
 			PhysicsI.i().resetForces(pdManipulating); //prevent falling
 		}
 		
-		HWEnvironmentJmeI.i().putCustomInfo("Grabbed", crManipulating.toString());
+//		HWEnvironmentJmeI.i().putCustomInfo("Grabbed", crManipulating.toString());
+		HWEnvironmentJmeI.i().putCustomInfo("Grabbed", pdManipulating.getInfo());
 	}
 
 	public boolean isAllowManipulationWithoutPhysics() {
@@ -264,6 +301,24 @@ public class ManipulatorI {
 
 	public ManipulatorI setPullSpeed(float fPullSpeed) {
 		this.fPullSpeed = fPullSpeed;
+		return this; 
+	}
+
+	public float getMinDist() {
+		return fMinDist;
+	}
+
+	public ManipulatorI setMinDist(float fMinDist) {
+		this.fMinDist = fMinDist;
+		return this; 
+	}
+
+	public boolean isGrabForcePlacement() {
+		return bGrabForcePlacement;
+	}
+
+	public ManipulatorI setGrabForcePlacement(boolean bGrabForcePlacement) {
+		this.bGrabForcePlacement = bGrabForcePlacement;
 		return this; 
 	}
 	

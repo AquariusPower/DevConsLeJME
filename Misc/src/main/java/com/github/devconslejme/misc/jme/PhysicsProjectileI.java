@@ -174,7 +174,9 @@ public class PhysicsProjectileI {
 		float fMassRatio = pdPjtl.getRBC().getMass()/gun.pd.getRBC().getMass();
 //		float fImpulseRecoil = -1f * impPjtl.getImpulseAtSelfDir().mult(fMassRatio).length();
 		float fImpulseRecoil = -1f * impPjtl.getImpulseAtSelfDir()*fMassRatio;
-		Impulse impRecoil = new Impulse().setImpulseAtSelfDir(fImpulseRecoil).setTorqueImpulse(new Vector3f(0,0,1));
+		Impulse impRecoil = new Impulse().setImpulseAtSelfDir(fImpulseRecoil)
+//			.setTorqueImpulse(new Vector3f(0,0,1))
+			;
 		PhysicsI.i().applyImpulseLater(gun.pd, impRecoil);
 		
 		return pdPjtl;

@@ -361,6 +361,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		protected int	iForceAwakePhysTickCount;
 		public int	iForceStaticPhysTickCount=1;
 		private float	fGrabDist;
+		protected CollisionResult cr;
+		private Vector3f v3fGravityBkp;
 		
 		/**
 		 * 
@@ -549,6 +551,21 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		public float getGrabDist(){
 			return fGrabDist;
 		}
+
+		public PhysicsData setTempGravityTowards(Vector3f v3f) {
+			if(v3f==null) {
+				rbc.setGravity(v3fGravityBkp);
+			}else {
+				Vector3f v3fNewGravity = v3f.subtract(rbc.getPhysicsLocation()).normalize().mult(v3fGravityBkp.length());
+				rbc.setGravity(v3fNewGravity);
+			}
+			return this;
+		}
+
+		public void setRBC(RigidBodyControl rigidBodyControl) {
+			this.rbc=rigidBodyControl;
+			v3fGravityBkp = rbc.getGravity();
+		}
 		
 	}
 	
@@ -628,7 +645,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			throw new DetailedException("unsupported "+pd.bv.getClass(),geom);
 		}
 		
-		pd.rbc=new RigidBodyControl(pd.cs);
+		pd.setRBC(new RigidBodyControl(pd.cs));
 		
 		pd.setMatter(mt);
 //		if(mt!=null){

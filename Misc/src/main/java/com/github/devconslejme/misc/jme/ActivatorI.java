@@ -29,6 +29,7 @@ package com.github.devconslejme.misc.jme;
 import java.util.ArrayList;
 
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 
@@ -94,8 +95,14 @@ public class ActivatorI {
 		return UserDataI.i().getMustExistOrNull(spt,ActivetableListenerAbs.class);
 	}
 
+	public ArrayList<Spatial> activateIfPossible(PhysicsData pd) {
+		return workIfPossible(pd.getInitialOriginalGeometry(),true);
+	}
 	public ArrayList<Spatial> activateIfPossible(Spatial spt) {
 		return workIfPossible(spt,true);
+	}
+	public ArrayList<Spatial> deactivateIfPossible(PhysicsData pd) {
+		return workIfPossible(pd.getInitialOriginalGeometry(),false);
 	}
 	public ArrayList<Spatial> deactivateIfPossible(Spatial spt) {
 		return workIfPossible(spt,false);
