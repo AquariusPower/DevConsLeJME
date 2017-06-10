@@ -12,6 +12,10 @@ import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Vector3f;
 
+/**
+ * 
+ * for collision groups work, ccd has to be disabled :(
+ */
 public class TestSkipGroupCollide extends SimpleApplication implements PhysicsTickListener, PhysicsCollisionGroupListener {
 	public static void main(String[] args) {
 		TestSkipGroupCollide test = new TestSkipGroupCollide();

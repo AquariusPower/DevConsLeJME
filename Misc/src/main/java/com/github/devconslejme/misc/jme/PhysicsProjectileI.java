@@ -243,7 +243,7 @@ public class PhysicsProjectileI {
 	public void applyGluedMode(PhysicsData pdWhat){
 		assert pdWhat.isProjectile();
 		
-		PhysicsData pdGlueWhere = pdWhat.getPdGlueWhere();
+		PhysicsData pdGlueWhere = pdWhat.getGlueWhere();
 		
 		Geometry geomWhat = pdWhat.getInitialOriginalGeometry();
 		
@@ -322,7 +322,7 @@ public class PhysicsProjectileI {
 			!pdWhere.isProjectile() && 
 			!pd.isDisintegrated() && 
 			!pd.isbGlueApplied() && 
-			pd.getPdGlueWhere()==pdWhere
+			pd.getGlueWhere()==pdWhere
 		){
 			if(v3fEventCollPos!=null)pd.setV3fEventCollOtherLocalPos(v3fEventCollPos.clone());
 			applyGluedMode(pd);

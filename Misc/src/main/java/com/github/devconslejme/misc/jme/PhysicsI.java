@@ -372,11 +372,12 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		private Geometry	geomOriginalInitialLink;
 		private Node	nodexLink;
 		private int	iForceAwakePhysTickCount;
-		private int	iForceStaticPhysTickCount=1;
+		private int	iForceStaticPhysTickCount=1;//1;
 		private float	fGrabDist;
 		private CollisionResult cr;
 		private Vector3f v3fGravityBkp;
 		private BetterCharacterControlX bccxGrabber;
+		private Float fLevitationHeight=null;
 		
 		/**
 		 * 
@@ -497,6 +498,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //			if(!PhysicsI.i().apdGlue.contains(this))PhysicsI.i().apdGlue.add(this);
 //		}
 
+		public PhysicsData getGlueWhere() {
+			return pdGlueWhere;
+		}
 		public void setGlueWhere(PhysicsData pdWhere) {
 			this.pdGlueWhere=pdWhere;
 		}
@@ -783,15 +787,6 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			return this;
 		}
 
-		public PhysicsData getPdGlueWhere() {
-			return pdGlueWhere;
-		}
-
-		public PhysicsData setPdGlueWhere(PhysicsData pdGlueWhere) {
-			this.pdGlueWhere = pdGlueWhere;
-			return this;
-		}
-
 		public PhysicsData getPdSpawnedFrom() {
 			return pdSpawnedFrom;
 		}
@@ -901,40 +896,24 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			return this;
 		}
 
-		public float getfGrabDist() {
-			return fGrabDist;
-		}
-
-		public PhysicsData setfGrabDist(float fGrabDist) {
-			this.fGrabDist = fGrabDist;
-			return this;
-		}
-
-		public CollisionResult getCr() {
-			return cr;
-		}
-
-		public PhysicsData setCr(CollisionResult cr) {
-			this.cr = cr;
-			return this;
-		}
-
 		public Vector3f getV3fGravityBkp() {
 			return v3fGravityBkp;
-		}
-
-		public PhysicsData setV3fGravityBkp(Vector3f v3fGravityBkp) {
-			this.v3fGravityBkp = v3fGravityBkp;
-			return this;
 		}
 
 		public BetterCharacterControlX getBccxGrabber() {
 			return bccxGrabber;
 		}
 
-		public PhysicsData setBccxGrabber(BetterCharacterControlX bccxGrabber) {
-			this.bccxGrabber = bccxGrabber;
-			return this;
+		public boolean isLevitating() {
+			return fLevitationHeight!=null;
+		}
+		public Float getLevitationHeight() {
+			return fLevitationHeight;
+		}
+
+		public PhysicsData setLevitationHeight(Float fLevitationHeight) {
+			this.fLevitationHeight = fLevitationHeight;
+			return this; 
 		}
 	}
 	
