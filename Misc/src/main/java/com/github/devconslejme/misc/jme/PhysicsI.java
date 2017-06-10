@@ -378,6 +378,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		private Vector3f v3fGravityBkp;
 		private BetterCharacterControlX bccxGrabber;
 		private Float fLevitationHeight=null;
+		private float fCCdMotionThreshold;
 		
 		/**
 		 * 
@@ -915,6 +916,13 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			this.fLevitationHeight = fLevitationHeight;
 			return this; 
 		}
+
+		public void setCcdMotionThresholdBkp(float fCCdMotionThreshold) {
+			this.fCCdMotionThreshold=fCCdMotionThreshold;
+		}
+		public float getCCdMotionThresholdBkp() {
+			return fCCdMotionThreshold;
+		}
 	}
 	
 	
@@ -1005,8 +1013,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //		pd.rbc.setMass((float) pd.mts.getMassKg());
 		
 		float fCCdMotionThreshold = fPseudoDiameter/2f;
+		pd.setCcdMotionThresholdBkp(fCCdMotionThreshold);
 		pd.prb.setCcdMotionThreshold(fCCdMotionThreshold);
-		if(bDisableCcdToLetCollisionGroupsWork) {
+		if(isDisableCcdToLetCollisionGroupsWork()) {
 			disableCcdToLetCollisionGroupsWork(pd);
 		}
 		
@@ -1254,7 +1263,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			
 			if(pd.isProjectile()){
 				if(pd.pdGlueWhere!=null){
-					if((pd.iForceStaticPhysTickCount--)<=0){ //not imediate to let the collision impulse/force be applied on what was hit
+//					if((pd.iForceStaticPhysTickCount--)<=0){ //not imediate to let the collision impulse/force be applied on what was hit
+					if(pd.bGlueApplied){ //not imediate to let the collision impulse/force be applied on what was hit
 						pd.prb.setMass(0f);
 					}else{
 						pd.pdGlueWhere.forceAwakeSomeTicks();
@@ -1422,8 +1432,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		PhysicsProjectileI.i().glueProjectileCheckApply(pdA,pdB,event.getLocalPointB());
 		PhysicsProjectileI.i().glueProjectileCheckApply(pdB,pdA,event.getLocalPointA());
 		
+		/**
+		 * to let it continuously receive impact impulses, as it sleeps too fast
+		 */
 		if(pdA.isProjectile() && !pdB.isProjectile()) {
-			pdB.forceAwakeSomeTicks();
+			pdB.forceAwakeSomeTicks(); //
 		}
 		if(pdB.isProjectile() && !pdA.isProjectile()) {
 			pdA.forceAwakeSomeTicks();
@@ -1586,6 +1599,13 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				pdProjectile.prb.setPhysicsLocation(pdProjectile.v3fWorldGlueSpot); //this positioning works precisely if done here, np, is easier, keep it here...
 			}
 			
+			/**
+			 * to collision groups work, Ccd must be disabled, but..
+			 * to let impact impulses be applied, the projectile must not fail hitting the dynamic objects.
+			 * the only way is to re-enable Ccd just before it is glued and removed from physics space!
+			 */
+			pdProjectile.prb.setCcdMotionThreshold(pdProjectile.getCCdMotionThresholdBkp());
+			
 			return true; //to generate the collision event
 		}
 			
@@ -1732,6 +1752,15 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 
 	public PhysicsI setGlueAllowed(boolean bGlueAllowed) {
 		this.bGlueAllowed = bGlueAllowed;
+		return this; 
+	}
+
+	public boolean isDisableCcdToLetCollisionGroupsWork() {
+		return bDisableCcdToLetCollisionGroupsWork;
+	}
+
+	public PhysicsI setDisableCcdToLetCollisionGroupsWork(		boolean bDisableCcdToLetCollisionGroupsWork) {
+		this.bDisableCcdToLetCollisionGroupsWork = bDisableCcdToLetCollisionGroupsWork;
 		return this; 
 	}
 

@@ -303,6 +303,8 @@ public class PhysicsProjectileI {
 						return false; // to make it sure the physics have not changed it after that 
 					}
 					
+//					pdWhat.setbGlueApplied(true);
+					
 					return true;
 				}
 			});
