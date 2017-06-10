@@ -141,7 +141,7 @@ public class ManipulatorI {
 				if(!drop()) {
 					TargetGeom tg = TargetI.i().getLastSingleTarget();
 					if(tg!=null) {
-						grab(tg.getPhysicsData(), AppI.i().getCamWPos(0f).distance(tg.getPhysicsData().getRBC().getPhysicsLocation()));
+						grab(tg.getPhysicsData(), AppI.i().getCamWPos(0f).distance(tg.getPhysicsData().getPRB().getPhysicsLocation()));
 					}
 				}
 				return true;
@@ -222,7 +222,7 @@ public class ManipulatorI {
 		}else {
 			Vector3f v3fInfrontCamPos = AppI.i().getCamWPos(fMinDist);
 			float fDistRest=0.01f;
-			float fDist = v3fInfrontCamPos.distance(pdManipulating.getRBC().getPhysicsLocation());
+			float fDist = v3fInfrontCamPos.distance(pdManipulating.getPRB().getPhysicsLocation());
 //			float fDist = pdManipulating.getGrabDist();
 //			pdManipulating.setTempGravityTowards(v3fCamPos,fDist);
 			float fAcceleration = 200f;

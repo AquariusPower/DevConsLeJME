@@ -40,13 +40,15 @@ import com.github.devconslejme.misc.jme.AppI;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.GeometryI;
 import com.github.devconslejme.misc.jme.MeshI;
-import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.PhysicsI;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
+import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.jme.WorldPickingI;
 import com.jme3.bullet.collision.PhysicsCollisionObject;
 import com.jme3.bullet.control.BetterCharacterControl;
+import com.jme3.bullet.control.RigidBodyControl;
+import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.collision.CollisionResult;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
@@ -66,6 +68,7 @@ public class CharacterI {
 	 */
 	public static class BetterCharacterControlX extends BetterCharacterControl{
 		private Spatial	nodeHead;
+		public NodeBody nodeBody;
 
 		/**
 		 * see {@link BetterCharacterControl#BetterCharacterControl(float, float, float)}
@@ -96,6 +99,10 @@ public class CharacterI {
 		@Override
 		protected void setPhysicsLocation(Vector3f vec) {
 			super.setPhysicsLocation(vec);
+		}
+
+		public PhysicsRigidBody getPRB() {
+			return rigidBody;
 		}
 	}
 
@@ -133,23 +140,25 @@ public class CharacterI {
 		float fHeight=1.7f;
 		BetterCharacterControlX bcc = new BetterCharacterControlX(0.25f, fHeight, 70f);
 		
-		NodeBody nodeBody = new NodeBody("CharacterBody");
+		bcc.nodeBody = new NodeBody("CharacterBody");
 		
 		Geometry geomBody = GeometryI.i().create(new Box(0.25f,fHeight/2f,0.25f), ColorRGBA.Orange);
 		geomBody.setLocalTranslation(0, fHeight/2f, 0);
-		nodeBody.attachChild(geomBody);
+		bcc.nodeBody.attachChild(geomBody);
 		
-		Geometry nodeHead=GeometryI.i().create(MeshI.i().sphere(0.15f), ColorRGBA.Yellow);
-		nodeHead.setLocalTranslation(0, fHeight, 0);
-		nodeBody.attachChild(nodeHead);
+		float fHeadRadius=0.15f;
+		bcc.nodeHead=GeometryI.i().create(MeshI.i().sphere(fHeadRadius), ColorRGBA.Yellow);
+		bcc.nodeHead.setLocalTranslation(0, fHeight+fHeadRadius, 0);
+		bcc.nodeBody.attachChild(bcc.nodeHead);
 		
-		bcc.setHead(nodeHead);
+		bcc.nodeBody.addControl(bcc);
 		
-		nodeBody.addControl(bcc);
+		AppI.i().getRootNode().attachChild(bcc.nodeBody);
 		
-		AppI.i().getRootNode().attachChild(nodeBody);
-		
-		PhysicsI.i().add(nodeBody);
+		PhysicsData pd = new PhysicsData(bcc.nodeBody, geomBody);
+		pd.setPRB(bcc.getPRB());
+		UserDataI.i().putSafelyMustNotExist(pd.getSpatialWithPhysics(), pd); //BEFORE adding to phys space as its thread will be trying to retrieve it!
+		PhysicsI.i().add(bcc.nodeBody);
 		
 		bcc.setPhysicsLocation(v3fSpawnAt.add(0,0.25f,0)); //a bit above
 		

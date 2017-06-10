@@ -46,7 +46,6 @@ import com.github.devconslejme.misc.SimulationTimeI;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.TimeFormatI;
 import com.github.devconslejme.misc.TimedDelay;
-import com.github.devconslejme.misc.jme.GeometryI.GeometryX;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
@@ -277,7 +276,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 		
 		for(PhysicsData pd:apdRmDisintegr){
-			hmDisintegratables.remove(pd.rbc);
+			hmDisintegratables.remove(pd.prb);
 			apdDisintegrate.remove(pd);
 		}
 		
@@ -288,7 +287,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 	
 	protected void disintegrate(PhysicsData pd){
-		if(EDebug.Temp9.b()){
+		if(EDebug.LogDisintegrations.b()){
 			syso("Disintegrating:"+pd.getInfo()+",");
 		}
 		
@@ -346,7 +345,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		protected BoundingBox	bb;
 		protected CollisionShape	cs;
 		protected BoundingSphere	bs;
-		protected RigidBodyControl	rbc;
+		protected PhysicsRigidBody	prb;
 //		protected Spatial	sptLink;
 		protected boolean	bAllowDisintegration=false;
 		protected Vector3f	v3fLastSafeSpot;
@@ -370,7 +369,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //		protected Matter	mt;
 		protected MatterStatus	mts;
 		protected Geometry	geomOriginalInitialLink;
-		protected NodeX	nodexLink;
+		protected Node	nodexLink;
 		protected int	iForceAwakePhysTickCount;
 		public int	iForceStaticPhysTickCount=1;
 		private float	fGrabDist;
@@ -388,8 +387,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		public Quaternion rotate(float fX,float fY,float fZ){
 			Quaternion qua = new Quaternion();
 			qua.fromAngles(fX,fY,fZ);
-			getRBC().setPhysicsRotation(getRBC().getPhysicsRotation().mult(qua));
-			return getRBC().getPhysicsRotation();
+			getPRB().setPhysicsRotation(getPRB().getPhysicsRotation().mult(qua));
+			return getPRB().getPhysicsRotation();
 		}
 		
 		public long getProjectileMaxLifeTime() {
@@ -401,7 +400,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			return this; 
 		}
 		
-		public PhysicsData(NodeX nodex, Geometry geom) {
+		public PhysicsData(Node nodex, Geometry geom) {
 			this.nodexLink=nodex;
 			this.geomOriginalInitialLink=geom;
 //			if(spt instanceof NodeX)nodexLink=(NodeX)spt;
@@ -410,8 +409,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			setProjectileMaxLifeTime(PhysicsProjectileI.i().getDefaultProjectileMaxLife());
 		}
 
-		public PhysicsRigidBody getRBC() {
-			return rbc;
+		public PhysicsRigidBody getPRB() {
+			return prb;
 		}
 
 		public boolean isAllowDisintegration() {
@@ -420,7 +419,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 
 		public PhysicsData setAllowDisintegration(boolean bAllowDisintegration) {
 			this.bAllowDisintegration = bAllowDisintegration;
-			PhysicsI.i().hmDisintegratables.put(rbc, this);
+			PhysicsI.i().hmDisintegratables.put(prb, this);
 			return this; 
 		}
 
@@ -448,8 +447,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 
 		public void restoreSafeSpotRot() {
-			rbc.setPhysicsLocation(v3fLastSafeSpot);
-			rbc.setPhysicsRotation(quaLastSafeRot);
+			prb.setPhysicsLocation(v3fLastSafeSpot);
+			prb.setPhysicsRotation(quaLastSafeRot);
 		}
 		
 		public boolean isWasSafePosRotSavedAtPreviousTickAndUpdate(long lTickCount){
@@ -511,7 +510,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 
 		public String getInfo() {
-			return getSpatialWithPhysics().getName()+","+getSpatialWithPhysics().getClass().getSimpleName()+","+rbc.getClass().getSimpleName();
+			return getSpatialWithPhysics().getName()+","+getSpatialWithPhysics().getClass().getSimpleName()+","+prb.getClass().getSimpleName();
 		}
 		
 		public boolean isEnclosed() {
@@ -538,7 +537,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				mts=new MatterStatus(EMatter.Generic1KgPerM3.get());
 			}
 			mts.setVolumeM3(bv.getVolume());
-			rbc.setMass((float)mts.getMassKg());
+			prb.setMass((float)mts.getMassKg());
 		}
 
 		public Geometry getInitialOriginalGeometry() {
@@ -550,7 +549,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 
 		public boolean isStatic() {
-			return rbc.getMass()==0;
+			return prb.getMass()==0;
 		}
 
 		public boolean isActivatable() {
@@ -567,26 +566,26 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 
 		public PhysicsData setTempGravityTowards(Vector3f v3f, Float fAcceleration) {
-			if(v3fGravityBkp==null && rbc.getGravity().length()>0)v3fGravityBkp = rbc.getGravity(); //will be a copy
+			if(v3fGravityBkp==null && prb.getGravity().length()>0)v3fGravityBkp = prb.getGravity(); //will be a copy
 			
 			if(v3f==null) {
 				assert v3fGravityBkp!=null && v3fGravityBkp.length()>0;
-				rbc.setGravity(v3fGravityBkp);
+				prb.setGravity(v3fGravityBkp);
 			}else {
-				Vector3f v3fNewGravity = v3f.subtract(rbc.getPhysicsLocation()).normalize();
+				Vector3f v3fNewGravity = v3f.subtract(prb.getPhysicsLocation()).normalize();
 //				v3fNewGravity.multLocal(v3fGravityBkp.length());
 //				v3fNewGravity.multLocal(100f);
 				v3fNewGravity.multLocal(fAcceleration!=null?fAcceleration:v3fGravityBkp.length());
-				rbc.setGravity(v3fNewGravity);
+				prb.setGravity(v3fNewGravity);
 			}
 			
-			rbc.activate();
+			prb.activate();
 			
 			return this;
 		}
 
-		public void setRBC(RigidBodyControl rigidBodyControl) {
-			this.rbc=rigidBodyControl;
+		public void setPRB(PhysicsRigidBody prb) {
+			this.prb=prb;
 		}
 
 		public PhysicsData setGrabbedBy(BetterCharacterControlX bccxGrabber) {
@@ -675,7 +674,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			throw new DetailedException("unsupported "+pd.bv.getClass(),geom);
 		}
 		
-		pd.setRBC(new RigidBodyControl(pd.cs));
+		pd.setPRB(new RigidBodyControl(pd.cs));
 		
 		pd.setMatter(mt);
 //		if(mt!=null){
@@ -687,7 +686,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //		pd.rbc.setMass((float) pd.mts.getMassKg());
 		
 		float fCCdMotionThreshold = fPseudoDiameter/2f;
-		pd.rbc.setCcdMotionThreshold(fCCdMotionThreshold);
+		pd.prb.setCcdMotionThreshold(fCCdMotionThreshold);
 		
 		/**
 		 * "Each time the object moves more than (motionThreshold) within one frame a sphere of radius 
@@ -698,9 +697,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		 * "The radius is just the radius of the sphere that is swept to do this check, so make it so 
 		 * large that it resembles your object." - https://hub.jmonkeyengine.org/t/ccd-usage/24655/2
 		 */
-		pd.rbc.setCcdSweptSphereRadius(fPseudoDiameter/2f);
+		pd.prb.setCcdSweptSphereRadius(fPseudoDiameter/2f);
 		
-		pd.getSpatialWithPhysics().addControl(pd.rbc); //this will put the rbc at spatial's W/L location/rotation
+		pd.getSpatialWithPhysics().addControl((RigidBodyControl)pd.prb); //this will put the rbc at spatial's W/L location/rotation
 		
 		pd.v3fPosAtPreviousTick=pd.getSpatialWithPhysics().getLocalTranslation().clone();
 		
@@ -738,9 +737,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		if(pd!=null){
 			InfoJmeI.i().putAt(hmStore,"mass",pd.mts.getMassKg(),3);
 			InfoJmeI.i().putAt(hmStore,"vol",pd.mts.getVolumeM3(),3);
-			InfoJmeI.i().putAt(hmStore,"spd",pd.rbc.getLinearVelocity(),2);
-			InfoJmeI.i().putAt(hmStore,"angv",pd.rbc.getAngularVelocity(),1);
-			InfoJmeI.i().putAt(hmStore,"grav",pd.rbc.getGravity(),1);
+			InfoJmeI.i().putAt(hmStore,"spd",pd.prb.getLinearVelocity(),2);
+			InfoJmeI.i().putAt(hmStore,"angv",pd.prb.getAngularVelocity(),1);
+			InfoJmeI.i().putAt(hmStore,"grav",pd.prb.getGravity(),1);
 			InfoJmeI.i().putAt(hmStore,"rest",pd.isResting());
 			if(pd.sbnGluedProjectiles!=null)InfoJmeI.i().putAt(hmStore,"GluePrjc",pd.sbnGluedProjectiles.getChildren().size());
 //			InfoJmeI.i().putAt(hmStore,"LtTrwSpd",pd.imp.fImpulseAtSelfDirection);
@@ -827,9 +826,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				
 				if(imp.v3fForce!=null){
 					if(imp.v3fForceLocation==null){
-						imp.pd.rbc.applyCentralForce(imp.v3fForce);
+						imp.pd.prb.applyCentralForce(imp.v3fForce);
 					}else{
-						imp.pd.rbc.applyForce(imp.v3fForce, imp.v3fForceLocation);
+						imp.pd.prb.applyForce(imp.v3fForce, imp.v3fForceLocation);
 					}
 				}
 				
@@ -837,23 +836,23 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 					Vector3f v3fDispl = Vector3f.ZERO;
 					
 					if(imp.fImpulseAtSelfDirectionDisplacement!=null) {
-						v3fDispl = imp.pd.rbc.getPhysicsRotation().getRotationColumn(1).mult(imp.fImpulseAtSelfDirectionDisplacement);
+						v3fDispl = imp.pd.prb.getPhysicsRotation().getRotationColumn(1).mult(imp.fImpulseAtSelfDirectionDisplacement);
 					}
 					
-					imp.pd.rbc.applyImpulse(
-						imp.pd.rbc.getPhysicsRotation().getRotationColumn(2).mult(imp.fImpulseAtSelfDirection), 
+					imp.pd.prb.applyImpulse(
+						imp.pd.prb.getPhysicsRotation().getRotationColumn(2).mult(imp.fImpulseAtSelfDirection), 
 						v3fDispl
 					);
 				}
 				
 				if(imp.v3fImpulse!=null)
-					imp.pd.rbc.applyImpulse(imp.v3fImpulse, imp.v3fImpulseRelPos);
+					imp.pd.prb.applyImpulse(imp.v3fImpulse, imp.v3fImpulseRelPos);
 				
 				if(imp.v3fTorque!=null)
-					imp.pd.rbc.applyTorque(imp.v3fTorque);
+					imp.pd.prb.applyTorque(imp.v3fTorque);
 				
 				if(imp.v3fTorqueImpulse!=null)
-					imp.pd.rbc.applyTorqueImpulse(imp.v3fTorqueImpulse);
+					imp.pd.prb.applyTorqueImpulse(imp.v3fTorqueImpulse);
 				
 			}
 			
@@ -925,7 +924,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			if(pd.isProjectile()){
 				if(pd.pdGlueWhere!=null){
 					if((pd.iForceStaticPhysTickCount--)<=0){ //not imediate to let the collision impulse/force be applied on what was hit
-						pd.rbc.setMass(0f);
+						pd.prb.setMass(0f);
 					}else{
 						pd.pdGlueWhere.forceAwakeSomeTicks();
 					}
@@ -974,8 +973,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 	
 	public void resetForces(PhysicsData pd){
-		pd.getRBC().setAngularVelocity(Vector3f.ZERO);
-		pd.getRBC().setLinearVelocity(Vector3f.ZERO);
+		pd.getPRB().setAngularVelocity(Vector3f.ZERO);
+		pd.getPRB().setLinearVelocity(Vector3f.ZERO);
 	}
 	
 	public void setEnabled(boolean enabled) {
@@ -1060,7 +1059,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 	
 	public void syncPhysTransfFromSpt(PhysicsData pd,boolean bLocation,boolean bRotation) {
-		syncPhysTransfFromSpt(pd.getSpatialWithPhysics(), pd.getRBC(), bLocation, bRotation);
+		syncPhysTransfFromSpt(pd.getSpatialWithPhysics(), pd.getPRB(), bLocation, bRotation);
 	}
 	public void syncPhysTransfFromSpt(Spatial spt,PhysicsRigidBody prb, boolean bLocation, boolean bRotation) {
 		if(bLocation)prb.setPhysicsLocation(spt.getWorldTranslation());
@@ -1085,13 +1084,19 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 
 		PhysicsData pdA = getPhysicsDataFrom(event.getNodeA());
 		PhysicsData pdB = getPhysicsDataFrom(event.getNodeB());
-		if(pdA==null || pdB==null)return;
+		if(pdA==null || pdB==null) {
+			return; //ignore non supported stuff
+		}
 		
 		PhysicsProjectileI.i().glueProjectileCheckApply(pdA,pdB,event.getLocalPointB());
 		PhysicsProjectileI.i().glueProjectileCheckApply(pdB,pdA,event.getLocalPointA());
 		
-		if(pdA.isProjectile() && !pdB.isProjectile())pdB.forceAwakeSomeTicks();
-		if(pdB.isProjectile() && !pdA.isProjectile())pdA.forceAwakeSomeTicks();
+		if(pdA.isProjectile() && !pdB.isProjectile()) {
+			pdB.forceAwakeSomeTicks();
+		}
+		if(pdB.isProjectile() && !pdA.isProjectile()) {
+			pdA.forceAwakeSomeTicks();
+		}
 	}
 	
 	/**
@@ -1127,9 +1132,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		PhysicsData pdB = getPhysicsDataFrom((Spatial)nodeB.getUserObject());
 		
 		if(pdA==null || pdB==null){
-			return true; //allow other stuff TODO this happens? what would it be (for)?
+			return false; //deny unsupported stuff TODO but... despite not generating collision events, it is colliding... :(
 		}
 		
+		// spawned ignores its spawn source
 		if(pdA.pdSpawnedFrom==pdB)return false;
 		if(pdB.pdSpawnedFrom==pdA)return false;
 		
@@ -1138,10 +1144,12 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //		if(pdB.pdGlueWhere!=null)return pdB.pdGlueWhere==pdA; //TODO this seems useless
 		
 		if(pdA.isProjectile() && pdB.isProjectile()){
-			return false;//prevent prjctle vs prjctle
+			return false;//prevent prjctle vs prjctle TODO allow if spawn source differs, allow also if already collided once with something else and is on a ricochet
 		}
 		
 		if(bGlueAllowed){
+//			if(true)return false;
+			
 			Boolean b=null;
 			b=threadPhysicsGlueDetectProjectileNextHit(pdA);
 			if(b!=null){
@@ -1152,17 +1160,26 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			if(b!=null){
 				return b;
 			}
+			
+			// skip if projectile didnt glue //TODO make it cause a scractch at least
+			if(pdA.isProjectile() && !pdB.isProjectile()) {
+				return false;
+			}
+			if(!pdA.isProjectile() && pdB.isProjectile()) {
+				return false;
+			}
 		}
 		
-		return true; //allow all other collisions
+		return true; //allow all other collisions of PhysicsData
 	}
 	
 	public static enum EDebug{
 		AllowLog(true),
 		
 		/** use the temps to avoid having to restart the application, can even just rename them later! */
-		Temp0,		Temp1,		Temp2,		Temp3,		Temp4,		Temp5,		Temp6,		Temp7,		Temp8,		
-		Temp9, //TODO rename LogDisintegrations
+		Temp0,		Temp1,		Temp2,		Temp3,		Temp4,		Temp5,		Temp6,		Temp7,		Temp8, Temp9,
+		
+		LogDisintegrations, 
 		
 		LogDisplacementPerTick,
 		LogCollisions, 
@@ -1187,14 +1204,14 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		if(pdProjectile.pdGlueWhere!=null)return false;//1st hit only
 //			RigidBodyControl rbc = (RigidBodyControl)node;
 		
-		Vector3f v3fFrom = pdProjectile.rbc.getPhysicsLocation();
-		Vector3f v3fTo = pdProjectile.rbc.getPhysicsLocation().add(
-			pdProjectile.rbc.getLinearVelocity().normalize().mult(10)); //mult 10 is a guess for high speed, TODO confirm this
+		Vector3f v3fFrom = pdProjectile.prb.getPhysicsLocation();
+		Vector3f v3fTo = pdProjectile.prb.getPhysicsLocation().add(
+			pdProjectile.prb.getLinearVelocity().normalize().mult(10)); //mult 10 is a guess for high speed, TODO confirm this
 //			Vector3f v3fTo = pd.rbc.getPhysicsLocation().add(pd.rbc.getLinearVelocity());
 		@SuppressWarnings("unchecked")List<PhysicsRayTestResult> rayTest = ps.rayTest(v3fFrom,v3fTo);
 		
 		Vector3f v3fWrldHitNearest = null;
-		RigidBodyControl pcoNearest = null;
+		PhysicsRigidBody pcoNearest = null;
 		PhysicsData pdNearest=null;
 		for(PhysicsRayTestResult prtr:rayTest){
 //				if(prtr.getCollisionObject() instanceof RigidBodyControl){
@@ -1209,7 +1226,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				Vector3f v3fWrldHitChk = v3fFrom.clone().interpolateLocal(v3fTo,prtr.getHitFraction());
 				if(v3fWrldHitNearest==null || v3fFrom.distance(v3fWrldHitChk)<v3fFrom.distance(v3fWrldHitNearest)){
 					v3fWrldHitNearest=v3fWrldHitChk;
-					pcoNearest = (RigidBodyControl)pco;
+					pcoNearest = (PhysicsRigidBody)pco;
 					pdNearest=pdChk;
 				}
 			}
@@ -1234,8 +1251,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				/**
 				 * "GLUE" ON TERRAIN HERE (not actually  glue, but terrain wont move anyway...)
 				 */
-				pdProjectile.rbc.setMass(0f); //no need to be nested on a spatial when glueing on static terrain TODO instead check if nearest has mass=0? but it may be temporary and be glued would work better...
-				pdProjectile.rbc.setPhysicsLocation(pdProjectile.v3fWorldGlueSpot); //this positioning works precisely if done here, np, is easier, keep it here...
+				pdProjectile.prb.setMass(0f); //no need to be nested on a spatial when glueing on static terrain TODO instead check if nearest has mass=0? but it may be temporary and be glued would work better...
+				pdProjectile.prb.setPhysicsLocation(pdProjectile.v3fWorldGlueSpot); //this positioning works precisely if done here, np, is easier, keep it here...
 			}
 			
 			return true; //to generate the collision event
@@ -1297,7 +1314,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 
 	public void wakeUp(PhysicsData pd) {
-		pd.rbc.activate();
+		pd.prb.activate();
 	}
 
 	public void cancelDisintegration(PhysicsData pdWhat) {
@@ -1371,7 +1388,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		
 		if(v3fPos!=null)geomWall.move(v3fPos); //b4 physics
 		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomWall).setTerrain(true);
-		pd.getRBC().setMass(0f); //rbc
+		pd.getPRB().setMass(0f); //rbc
 		
 //		AppI.i().getRootNode().attachChild(sptAtRoot);
 		

@@ -168,12 +168,12 @@ public class PhysicsProjectileI {
 		PhysicsData pdPjtl = prepareProjectile(gun.pp);
 		pdPjtl.pdSpawnedFrom=gun.pd;
 		
-		pdPjtl.getRBC().setPhysicsLocation(gun.pd.getRBC().getPhysicsLocation());
-		pdPjtl.getRBC().setPhysicsRotation(gun.pd.getRBC().getPhysicsRotation());
+		pdPjtl.getPRB().setPhysicsLocation(gun.pd.getPRB().getPhysicsLocation());
+		pdPjtl.getPRB().setPhysicsRotation(gun.pd.getPRB().getPhysicsRotation());
 		
 		Impulse impPjtl = PhysicsI.i().throwAtSelfDirImpulse(pdPjtl, gun.pp.fDesiredSpeed);
 		
-		float fMassRatio = pdPjtl.getRBC().getMass()/gun.pd.getRBC().getMass();
+		float fMassRatio = pdPjtl.getPRB().getMass()/gun.pd.getPRB().getMass();
 //		float fImpulseRecoil = -1f * impPjtl.getImpulseAtSelfDir().mult(fMassRatio).length();
 		float fImpulseRecoil = -1f * impPjtl.getImpulseAtSelfDir()*fMassRatio;
 //		float fTorque = 0.01f;
@@ -205,7 +205,7 @@ public class PhysicsProjectileI {
 		geomClone.scale(pp.fPhysBoundsScaleDiv); //to restore the good looking size
 		pd.setAllowDisintegration(true);
 		pd.bProjectile=(true);
-		pd.getRBC().setGravity(PhysicsI.i().getGravity().divide(pp.fGravityDiv));
+		pd.getPRB().setGravity(PhysicsI.i().getGravity().divide(pp.fGravityDiv));
 		
 		return pd;
 	}
