@@ -64,6 +64,8 @@ public class CrossHairI {
 	private ColorRGBA	colorTarget;
 	private float	fTgtColorAlpha=0.25f;
 	private Material	matTarget;
+	private Vector3f v3fTgtScreenPos=new Vector3f();
+	private Vector3f v3fTgtScreenPosRaw=new Vector3f();
 	
 	public void configure(Node nodeToAttach){
 //		sappOpt=G.i(SimpleApplication.class);
@@ -99,8 +101,10 @@ public class CrossHairI {
 			}else{
 				if(nodeTarget.getParent()==null)nodeToAttach.attachChild(nodeTarget);
 				
-				Vector3f v3f = AppI.i().getScreenCoordinates(tgt.getGeometryHit().getWorldTranslation());
-				nodeTarget.setLocalTranslation(v3f);
+				v3fTgtScreenPosRaw.set(AppI.i().getScreenCoordinatesRaw(tgt.getGeometryHit().getWorldTranslation()));
+				v3fTgtScreenPos.set(AppI.i().getScreenCoordinates(tgt.getGeometryHit().getWorldTranslation()));
+//				System.out.println(v3f);
+				nodeTarget.setLocalTranslation(v3fTgtScreenPos);
 				colorTarget.a=1f;
 				matTarget.getAdditionalRenderState().setLineWidth(3);
 				
@@ -120,7 +124,14 @@ public class CrossHairI {
 			}
 		}
 	}
-
+	
+	public Vector3f getTargetPosOnScreenCopy() {
+		return v3fTgtScreenPos.clone();
+	}
+	public Vector3f getTargetPosOnScreenRawCopy() {
+		return v3fTgtScreenPosRaw.clone();
+	}
+	
 	public Spatial reinitialize(){
 		if(nodeTarget!=null && nodeTarget.getParent()!=null)nodeTarget.removeFromParent();
 		if(nodeDot!=null && nodeDot.getParent()!=null)nodeDot.removeFromParent();

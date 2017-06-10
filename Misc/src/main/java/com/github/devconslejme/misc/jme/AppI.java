@@ -35,6 +35,7 @@ import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AppState;
+import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
@@ -102,6 +103,19 @@ public class AppI {
 	}
 
 	public Vector3f getScreenCoordinates(Vector3f worldPos){
+		Vector3f v3f = getScreenCoordinatesRaw(worldPos);
+		if(v3f.z<1f) {
+			v3f.x=FastMath.clamp(v3f.x, 0, HWEnvironmentJmeI.i().getDisplay().getWidth());
+			v3f.y=FastMath.clamp(v3f.y, 0, HWEnvironmentJmeI.i().getDisplay().getHeight());
+		}else {
+			v3f.x=FastMath.clamp(v3f.x, 0, HWEnvironmentJmeI.i().getDisplay().getWidth());
+			v3f.y=FastMath.clamp(v3f.y, 0, HWEnvironmentJmeI.i().getDisplay().getHeight());
+			v3f.x=HWEnvironmentJmeI.i().getDisplay().getWidth()-v3f.x;
+			v3f.y=(app.getCamera().getLocation().y > worldPos.y ? 0 : HWEnvironmentJmeI.i().getDisplay().getHeight());
+		}
+		return v3f;
+	}
+	public Vector3f getScreenCoordinatesRaw(Vector3f worldPos){
 		return app.getCamera().getScreenCoordinates(worldPos);
 	}
 	

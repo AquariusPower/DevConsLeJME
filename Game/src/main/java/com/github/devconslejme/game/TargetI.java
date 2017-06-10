@@ -202,6 +202,12 @@ public class TargetI {
 					InfoI.i().prepareFullInfoRecursive(tgtLastSingleTarget.hmSubInfos)
 				);
 			}
+			sb.append(strSep);
+			
+			sb.append("ScrPos="+StringTextJmeI.i().fmtVector3f(CrossHairI.i().getTargetPosOnScreenCopy(),2));
+			sb.append(strSep);
+
+			sb.append("ScrPosRaw="+StringTextJmeI.i().fmtVector3f(CrossHairI.i().getTargetPosOnScreenRawCopy(),2));
 		}
 		HWEnvironmentJmeI.i().putCustomInfo("SgTgt:", tgtLastSingleTarget==null ? null : sb.toString());
 		

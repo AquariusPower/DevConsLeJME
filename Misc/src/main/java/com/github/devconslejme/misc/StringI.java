@@ -30,6 +30,7 @@ package com.github.devconslejme.misc;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import com.google.common.base.Strings;
 
@@ -284,13 +285,13 @@ public class StringI {
 		return astr;
 	}
 	public String fmtFloat(double fValue, int iScale) {
-		return String.format("%."+iScale+"f", fValue);
+		return String.format(Locale.ENGLISH,"%."+iScale+"f", fValue);
 	}
 	
 //	DecimalFormat df = new DecimalFormat("##,##,##,##,##,##,##0.00");
 	DecimalFormat dfLong = new DecimalFormat("##,##,##,##,##,##,##0");
 	public String fmtLong(long l){
-		return String.format(dfLong.format(l));
+		return String.format(Locale.ENGLISH,dfLong.format(l));
 	}
 
 	public String extractPart(String strText, String strSeparator, int iIndex) {
