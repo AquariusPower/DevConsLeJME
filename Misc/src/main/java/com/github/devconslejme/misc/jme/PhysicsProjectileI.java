@@ -32,6 +32,7 @@ import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.MatterI.EMatter;
 import com.github.devconslejme.misc.MatterI.Matter;
 import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ActivatorI.ActivetableListenerAbs;
 import com.github.devconslejme.misc.jme.ColorI.EColor;
@@ -166,7 +167,7 @@ public class PhysicsProjectileI {
 	
 	public PhysicsData throwProjectileFrom(PhysicsGun gun){
 		PhysicsData pdPjtl = prepareProjectile(gun.pp);
-		pdPjtl.pdSpawnedFrom=gun.pd;
+		pdPjtl.setPdSpawnedFrom(gun.pd);
 		
 		pdPjtl.getPRB().setPhysicsLocation(gun.pd.getPRB().getPhysicsLocation());
 		pdPjtl.getPRB().setPhysicsRotation(gun.pd.getPRB().getPhysicsRotation());
@@ -204,11 +205,22 @@ public class PhysicsProjectileI {
 		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,pp.mt,false);
 		geomClone.scale(pp.fPhysBoundsScaleDiv); //to restore the good looking size
 		pd.setAllowDisintegration(true);
-		pd.bProjectile=(true);
+		pd.setbProjectile(true);
 		pd.getPRB().setGravity(PhysicsI.i().getGravity().divide(pp.fGravityDiv));
+		
+//		disableCcdToLetCollisionGroupsWork(pd);
 		
 		return pd;
 	}
+	
+//	/**
+//	 * collision groups skippers will not work without this... :(
+//	 * @param pd
+//	 */
+//	@Workaround
+//	private void disableCcdToLetCollisionGroupsWork(PhysicsData pd) {
+//		pd.getPRB().setCcdMotionThreshold(0);
+//	}
 
 	protected void reparentProjectile(Node nodeNewParent, Geometry sptProjectile){
 //		assert nodeNewParent!=sbnProjectilesAtWorld;
@@ -231,20 +243,20 @@ public class PhysicsProjectileI {
 	public void applyGluedMode(PhysicsData pdWhat){
 		assert pdWhat.isProjectile();
 		
-		PhysicsData pdGlueWhere = pdWhat.pdGlueWhere;
+		PhysicsData pdGlueWhere = pdWhat.getPdGlueWhere();
 		
 		Geometry geomWhat = pdWhat.getInitialOriginalGeometry();
 		
 		PhysicsI.i().removeFromPhysicsSpace(geomWhat); //this prevents further updates from physics space
 		
 		if(pdGlueWhere.isEnclosed() && !pdGlueWhere.isTerrain()){ //will glue at dynamic parent surface
-			if(pdGlueWhere.sbnGluedProjectiles==null){
-				pdGlueWhere.sbnGluedProjectiles = new SimpleBatchNode(SimpleBatchNode.class.getName()+":LocalGluedProjectiles");
-				((Node)pdGlueWhere.getSpatialWithPhysics()).attachChild(pdGlueWhere.sbnGluedProjectiles);
+			if(pdGlueWhere.getSBNodeGluedProjectiles()==null){
+				pdGlueWhere.setSBNodeGluedProjectiles(new SimpleBatchNode(SimpleBatchNode.class.getName()+":LocalGluedProjectiles"));
+				((Node)pdGlueWhere.getSpatialWithPhysics()).attachChild(pdGlueWhere.getSBNodeGluedProjectiles());
 			}
 			
 			Quaternion quaWhatWRotBkp = geomWhat.getWorldRotation().clone();
-			reparentProjectile(pdGlueWhere.sbnGluedProjectiles, pdWhat.getInitialOriginalGeometry());
+			reparentProjectile(pdGlueWhere.getSBNodeGluedProjectiles(), pdWhat.getInitialOriginalGeometry());
 			
 			PhysicsI.i().cancelDisintegration(pdWhat);
 			
@@ -261,7 +273,7 @@ public class PhysicsProjectileI {
 //						return false;
 //					}
 					boolean bTryAgain=false;
-					if(pdWhat.lLastPhysUpdateNano>lLastGlueSetPosNano){
+					if(pdWhat.getlLastPhysUpdateNano()>lLastGlueSetPosNano){
 						bTryAgain=true;
 					}
 					
@@ -276,9 +288,9 @@ public class PhysicsProjectileI {
 						 *  restores the location, based on the target rotation at the physics impact moment
 						 */
 						Node node = new Node();
-						node.setLocalRotation(pdWhat.quaGlueWherePhysWRotAtImpact);
+						node.setLocalRotation(pdWhat.getQuaGlueWherePhysWRotAtImpact());
 						geomWhat.setLocalTranslation(
-							node.worldToLocal(pdWhat.v3fGlueWherePhysLocalPos,null));
+							node.worldToLocal(pdWhat.getV3fGlueWherePhysLocalPos(),null));
 						
 						/**
 						 * applies the world rotation at the impact moment
@@ -300,7 +312,7 @@ public class PhysicsProjectileI {
 //			geomWhat.setLocalTranslation(pdWhat.v3fWorldGlueSpot);
 		}
 	
-		pdWhat.bGlueApplied=true;
+		pdWhat.setbGlueApplied(true);
 	}
 	
 	protected void glueProjectileCheckApply(PhysicsData pd, PhysicsData pdWhere, Vector3f v3fEventCollPos){
@@ -308,11 +320,11 @@ public class PhysicsProjectileI {
 			pd.isProjectile() &&
 			pdWhere!=null &&
 			!pdWhere.isProjectile() && 
-			!pd.bDisintegrated && 
-			!pd.bGlueApplied && 
-			pd.pdGlueWhere==pdWhere
+			!pd.isDisintegrated() && 
+			!pd.isbGlueApplied() && 
+			pd.getPdGlueWhere()==pdWhere
 		){
-			if(v3fEventCollPos!=null)pd.v3fEventCollOtherLocalPos=v3fEventCollPos.clone();
+			if(v3fEventCollPos!=null)pd.setV3fEventCollOtherLocalPos(v3fEventCollPos.clone());
 			applyGluedMode(pd);
 		}
 	}

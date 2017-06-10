@@ -125,7 +125,7 @@ public class ManipulatorI {
 						CollisionResult cr = acr.get(0);
 						PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(cr.getGeometry());
 						if(pd!=null) {
-							pd.cr=cr;
+							pd.setCollisionResult(cr);
 							grab(pd,cr.getDistance());
 						}
 	//					crManipulating=cr;

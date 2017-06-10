@@ -33,6 +33,7 @@ import java.util.List;
 
 import com.github.devconslejme.game.CharacterI.BetterCharacterControlX;
 import com.github.devconslejme.misc.Annotations.NotMainThread;
+import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.InfoI.Info;
@@ -42,6 +43,7 @@ import com.github.devconslejme.misc.MatterI.MatterStatus;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.github.devconslejme.misc.SimulationTimeI;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.TimeFormatI;
@@ -104,6 +106,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	private ArrayList<Impulse> arbcThreadPhysicsPreTickQueue = new ArrayList();
 	private boolean	bGlueAllowed=true;
 //	private float	fDefaultProjectileMaxLife=2;
+	private boolean bDisableCcdToLetCollisionGroupsWork=true;
 	
 	public static class Impulse{
 //		private Spatial	spt;
@@ -268,7 +271,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		for(PhysicsData pd:hmDisintegratables.values()){
 			if(!pd.bAllowDisintegration)apdRmDisintegr.add(pd);
 			
-			if((lSTime - pd.lMaterializedSTime) > (pd.lProjectileMaxLifeTime *(pd.bGlueApplied?PhysicsProjectileI.i().getProjectileMaxLifeTimeMultiplier():1)) ){
+			if((lSTime - pd.lMaterializedSTime) > (pd.getProjectileMaxLifeTime() *(pd.bGlueApplied?PhysicsProjectileI.i().getProjectileMaxLifeTimeMultiplier():1)) ){
 				if(!apdDisintegrate.contains(pd))apdDisintegrate.add(pd);
 			}else{
 				updateIgnoredCollisions(pd);
@@ -337,43 +340,41 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 	
 	public static class PhysicsData{
-		protected SimpleBatchNode	sbnGluedProjectiles;
-		protected long lProjectileMaxLifeTime;
-		protected boolean	bDisintegrated;
-		protected Quaternion	quaWRotBkp;
-		protected BoundingVolume	bv;
-		protected BoundingBox	bb;
-		protected CollisionShape	cs;
-		protected BoundingSphere	bs;
-		protected PhysicsRigidBody	prb;
-//		protected Spatial	sptLink;
-		protected boolean	bAllowDisintegration=false;
-		protected Vector3f	v3fLastSafeSpot;
-		protected Quaternion	quaLastSafeRot;
-		protected boolean	bTerrain;
-		protected long	lRestingAtTickCount;
-		protected boolean	bResting;
-		protected Impulse	imp;
-		protected long	lLastPhysUpdateNano;
-		protected long	lLastRenderUpdateNano;
-		protected long	lMaterializedSTime;
-		protected Vector3f	v3fWorldGlueSpot;
-		protected PhysicsData	pdGlueWhere;
-		protected PhysicsData	pdSpawnedFrom;
-		protected boolean	bGlueApplied;
-		protected boolean	bProjectile;
-		protected Vector3f	v3fEventCollOtherLocalPos;
-		protected Vector3f	v3fGlueWherePhysLocalPos;
-		protected Quaternion	quaGlueWherePhysWRotAtImpact;
-		protected Vector3f	v3fPosAtPreviousTick;
-//		protected Matter	mt;
-		protected MatterStatus	mts;
-		protected Geometry	geomOriginalInitialLink;
-		protected Node	nodexLink;
-		protected int	iForceAwakePhysTickCount;
-		public int	iForceStaticPhysTickCount=1;
+		private SimpleBatchNode	sbnGluedProjectiles;
+		private long lProjectileMaxLifeTime;
+		private boolean	bDisintegrated;
+		private Quaternion	quaWRotBkp;
+		private BoundingVolume	bv;
+		private BoundingBox	bb;
+		private CollisionShape	cs;
+		private BoundingSphere	bs;
+		private PhysicsRigidBody	prb;
+		private boolean	bAllowDisintegration=false;
+		private Vector3f	v3fLastSafeSpot;
+		private Quaternion	quaLastSafeRot;
+		private boolean	bTerrain;
+		private long	lRestingAtTickCount;
+		private boolean	bResting;
+		private Impulse	imp;
+		private long	lLastPhysUpdateNano;
+		private long	lLastRenderUpdateNano;
+		private long	lMaterializedSTime;
+		private Vector3f	v3fWorldGlueSpot;
+		private PhysicsData	pdGlueWhere;
+		private PhysicsData	pdSpawnedFrom;
+		private boolean	bGlueApplied;
+		private boolean	bProjectile;
+		private Vector3f	v3fEventCollOtherLocalPos;
+		private Vector3f	v3fGlueWherePhysLocalPos;
+		private Quaternion	quaGlueWherePhysWRotAtImpact;
+		private Vector3f	v3fPosAtPreviousTick;
+		private MatterStatus	mts;
+		private Geometry	geomOriginalInitialLink;
+		private Node	nodexLink;
+		private int	iForceAwakePhysTickCount;
+		private int	iForceStaticPhysTickCount=1;
 		private float	fGrabDist;
-		protected CollisionResult cr;
+		private CollisionResult cr;
 		private Vector3f v3fGravityBkp;
 		private BetterCharacterControlX bccxGrabber;
 		
@@ -596,6 +597,345 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		public boolean isGrabbed() {
 			return bccxGrabber!=null;
 		}
+
+		public CollisionResult getCollisionResult() {
+			return cr;
+		}
+
+		public PhysicsData setCollisionResult(CollisionResult cr) {
+			this.cr = cr;
+			return this; 
+		}
+
+		public SimpleBatchNode getSBNodeGluedProjectiles() {
+			return sbnGluedProjectiles;
+		}
+
+		public PhysicsData setSBNodeGluedProjectiles(SimpleBatchNode sbnGluedProjectiles) {
+			this.sbnGluedProjectiles = sbnGluedProjectiles;
+			return this; 
+		}
+
+		public PhysicsData setProjectileMaxLifeTime(long lProjectileMaxLifeTime) {
+			this.lProjectileMaxLifeTime = lProjectileMaxLifeTime;
+			return this; 
+		}
+
+		public boolean isDisintegrated() {
+			return bDisintegrated;
+		}
+
+		public PhysicsData setDisintegrated(boolean bDisintegrated) {
+			this.bDisintegrated = bDisintegrated;
+			return this;
+		}
+
+		public Quaternion getWRotBkp() {
+			return quaWRotBkp;
+		}
+
+		public PhysicsData setWRotBkp(Quaternion quaWRotBkp) {
+			this.quaWRotBkp = quaWRotBkp;
+			return this;
+		}
+
+		public BoundingVolume getBoundingVolume() {
+			return bv;
+		}
+
+		public PhysicsData setBoundingVolume(BoundingVolume bv) {
+			this.bv = bv;
+			return this;
+		}
+
+		public BoundingBox getBoundingBox() {
+			return bb;
+		}
+
+		public PhysicsData setBoundingBox(BoundingBox bb) {
+			this.bb = bb;
+			return this;
+		}
+
+		public CollisionShape getCollisionShape() {
+			return cs;
+		}
+
+		public PhysicsData setCollisionShape(CollisionShape cs) {
+			this.cs = cs;
+			return this;
+		}
+
+		public BoundingSphere getBoundingSphere() {
+			return bs;
+		}
+
+		public PhysicsData setBoundingSphere(BoundingSphere bs) {
+			this.bs = bs;
+			return this;
+		}
+
+		public PhysicsRigidBody getPrb() {
+			return prb;
+		}
+
+		public PhysicsData setPrb(PhysicsRigidBody prb) {
+			this.prb = prb;
+			return this;
+		}
+
+		public boolean isbAllowDisintegration() {
+			return bAllowDisintegration;
+		}
+
+		public PhysicsData setbAllowDisintegration(boolean bAllowDisintegration) {
+			this.bAllowDisintegration = bAllowDisintegration;
+			return this;
+		}
+
+		public Vector3f getV3fLastSafeSpot() {
+			return v3fLastSafeSpot;
+		}
+
+		public PhysicsData setV3fLastSafeSpot(Vector3f v3fLastSafeSpot) {
+			this.v3fLastSafeSpot = v3fLastSafeSpot;
+			return this;
+		}
+
+		public Quaternion getQuaLastSafeRot() {
+			return quaLastSafeRot;
+		}
+
+		public PhysicsData setQuaLastSafeRot(Quaternion quaLastSafeRot) {
+			this.quaLastSafeRot = quaLastSafeRot;
+			return this;
+		}
+
+		public boolean isbTerrain() {
+			return bTerrain;
+		}
+
+		public PhysicsData setbTerrain(boolean bTerrain) {
+			this.bTerrain = bTerrain;
+			return this;
+		}
+
+		public long getlRestingAtTickCount() {
+			return lRestingAtTickCount;
+		}
+
+		public PhysicsData setlRestingAtTickCount(long lRestingAtTickCount) {
+			this.lRestingAtTickCount = lRestingAtTickCount;
+			return this;
+		}
+
+		public boolean isbResting() {
+			return bResting;
+		}
+
+		public PhysicsData setbResting(boolean bResting) {
+			this.bResting = bResting;
+			return this;
+		}
+
+		public Impulse getImp() {
+			return imp;
+		}
+
+		public PhysicsData setImp(Impulse imp) {
+			this.imp = imp;
+			return this;
+		}
+
+		public long getlLastPhysUpdateNano() {
+			return lLastPhysUpdateNano;
+		}
+
+		public PhysicsData setlLastPhysUpdateNano(long lLastPhysUpdateNano) {
+			this.lLastPhysUpdateNano = lLastPhysUpdateNano;
+			return this;
+		}
+
+		public long getlLastRenderUpdateNano() {
+			return lLastRenderUpdateNano;
+		}
+
+		public PhysicsData setlLastRenderUpdateNano(long lLastRenderUpdateNano) {
+			this.lLastRenderUpdateNano = lLastRenderUpdateNano;
+			return this;
+		}
+
+		public long getlMaterializedSTime() {
+			return lMaterializedSTime;
+		}
+
+		public PhysicsData setlMaterializedSTime(long lMaterializedSTime) {
+			this.lMaterializedSTime = lMaterializedSTime;
+			return this;
+		}
+
+		public Vector3f getV3fWorldGlueSpot() {
+			return v3fWorldGlueSpot;
+		}
+
+		public PhysicsData setV3fWorldGlueSpot(Vector3f v3fWorldGlueSpot) {
+			this.v3fWorldGlueSpot = v3fWorldGlueSpot;
+			return this;
+		}
+
+		public PhysicsData getPdGlueWhere() {
+			return pdGlueWhere;
+		}
+
+		public PhysicsData setPdGlueWhere(PhysicsData pdGlueWhere) {
+			this.pdGlueWhere = pdGlueWhere;
+			return this;
+		}
+
+		public PhysicsData getPdSpawnedFrom() {
+			return pdSpawnedFrom;
+		}
+
+		public PhysicsData setPdSpawnedFrom(PhysicsData pdSpawnedFrom) {
+			this.pdSpawnedFrom = pdSpawnedFrom;
+			return this;
+		}
+
+		public boolean isbGlueApplied() {
+			return bGlueApplied;
+		}
+
+		public PhysicsData setbGlueApplied(boolean bGlueApplied) {
+			this.bGlueApplied = bGlueApplied;
+			return this;
+		}
+
+		public boolean isbProjectile() {
+			return bProjectile;
+		}
+
+		public PhysicsData setbProjectile(boolean bProjectile) {
+			this.bProjectile = bProjectile;
+			return this;
+		}
+
+		public Vector3f getV3fEventCollOtherLocalPos() {
+			return v3fEventCollOtherLocalPos;
+		}
+
+		public PhysicsData setV3fEventCollOtherLocalPos(Vector3f v3fEventCollOtherLocalPos) {
+			this.v3fEventCollOtherLocalPos = v3fEventCollOtherLocalPos;
+			return this;
+		}
+
+		public Vector3f getV3fGlueWherePhysLocalPos() {
+			return v3fGlueWherePhysLocalPos;
+		}
+
+		public PhysicsData setV3fGlueWherePhysLocalPos(Vector3f v3fGlueWherePhysLocalPos) {
+			this.v3fGlueWherePhysLocalPos = v3fGlueWherePhysLocalPos;
+			return this;
+		}
+
+		public Quaternion getQuaGlueWherePhysWRotAtImpact() {
+			return quaGlueWherePhysWRotAtImpact;
+		}
+
+		public PhysicsData setQuaGlueWherePhysWRotAtImpact(
+			Quaternion quaGlueWherePhysWRotAtImpact) {
+			this.quaGlueWherePhysWRotAtImpact = quaGlueWherePhysWRotAtImpact;
+			return this;
+		}
+
+		public Vector3f getV3fPosAtPreviousTick() {
+			return v3fPosAtPreviousTick;
+		}
+
+		public PhysicsData setV3fPosAtPreviousTick(Vector3f v3fPosAtPreviousTick) {
+			this.v3fPosAtPreviousTick = v3fPosAtPreviousTick;
+			return this;
+		}
+
+		public MatterStatus getMts() {
+			return mts;
+		}
+
+		public PhysicsData setMts(MatterStatus mts) {
+			this.mts = mts;
+			return this;
+		}
+
+		public Geometry getGeomOriginalInitialLink() {
+			return geomOriginalInitialLink;
+		}
+
+		public PhysicsData setGeomOriginalInitialLink(Geometry geomOriginalInitialLink) {
+			this.geomOriginalInitialLink = geomOriginalInitialLink;
+			return this;
+		}
+
+		public Node getNodexLink() {
+			return nodexLink;
+		}
+
+		public PhysicsData setNodexLink(Node nodexLink) {
+			this.nodexLink = nodexLink;
+			return this;
+		}
+
+		public int getiForceAwakePhysTickCount() {
+			return iForceAwakePhysTickCount;
+		}
+
+		public PhysicsData setiForceAwakePhysTickCount(int iForceAwakePhysTickCount) {
+			this.iForceAwakePhysTickCount = iForceAwakePhysTickCount;
+			return this;
+		}
+
+		public int getiForceStaticPhysTickCount() {
+			return iForceStaticPhysTickCount;
+		}
+
+		public PhysicsData setiForceStaticPhysTickCount(int iForceStaticPhysTickCount) {
+			this.iForceStaticPhysTickCount = iForceStaticPhysTickCount;
+			return this;
+		}
+
+		public float getfGrabDist() {
+			return fGrabDist;
+		}
+
+		public PhysicsData setfGrabDist(float fGrabDist) {
+			this.fGrabDist = fGrabDist;
+			return this;
+		}
+
+		public CollisionResult getCr() {
+			return cr;
+		}
+
+		public PhysicsData setCr(CollisionResult cr) {
+			this.cr = cr;
+			return this;
+		}
+
+		public Vector3f getV3fGravityBkp() {
+			return v3fGravityBkp;
+		}
+
+		public PhysicsData setV3fGravityBkp(Vector3f v3fGravityBkp) {
+			this.v3fGravityBkp = v3fGravityBkp;
+			return this;
+		}
+
+		public BetterCharacterControlX getBccxGrabber() {
+			return bccxGrabber;
+		}
+
+		public PhysicsData setBccxGrabber(BetterCharacterControlX bccxGrabber) {
+			this.bccxGrabber = bccxGrabber;
+			return this;
+		}
 	}
 	
 	
@@ -687,6 +1027,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		
 		float fCCdMotionThreshold = fPseudoDiameter/2f;
 		pd.prb.setCcdMotionThreshold(fCCdMotionThreshold);
+		if(bDisableCcdToLetCollisionGroupsWork) {
+			disableCcdToLetCollisionGroupsWork(pd);
+		}
 		
 		/**
 		 * "Each time the object moves more than (motionThreshold) within one frame a sphere of radius 
@@ -709,6 +1052,15 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		ps.add(pd.getSpatialWithPhysics()); //LAST THING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		
 		return pd;
+	}
+	
+	/**
+	 * collision groups skippers/ignorers/collisioDeniers will not work without this... :(
+	 * @param pd
+	 */
+	@Workaround
+	public void disableCcdToLetCollisionGroupsWork(PhysicsData pd) {
+		pd.getPRB().setCcdMotionThreshold(0);
 	}
 	
 	public PhysicsData getPhysicsDataFrom(PhysicsCollisionObject pco){
@@ -741,7 +1093,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			InfoJmeI.i().putAt(hmStore,"angv",pd.prb.getAngularVelocity(),1);
 			InfoJmeI.i().putAt(hmStore,"grav",pd.prb.getGravity(),1);
 			InfoJmeI.i().putAt(hmStore,"rest",pd.isResting());
-			if(pd.sbnGluedProjectiles!=null)InfoJmeI.i().putAt(hmStore,"GluePrjc",pd.sbnGluedProjectiles.getChildren().size());
+			if(pd.getSBNodeGluedProjectiles()!=null)InfoJmeI.i().putAt(hmStore,"GluePrjc",pd.getSBNodeGluedProjectiles().getChildren().size());
 //			InfoJmeI.i().putAt(hmStore,"LtTrwSpd",pd.imp.fImpulseAtSelfDirection);
 		}
 	}
