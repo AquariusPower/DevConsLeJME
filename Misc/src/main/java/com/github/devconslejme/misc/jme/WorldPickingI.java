@@ -64,9 +64,6 @@ public class WorldPickingI {
 	public static interface IPickListener{
 		/**
 		 * 
-		 * @param cr
-		 * @param geom
-		 * @param sptParentest
 		 * @return true if consumed TODO prioritize listeners?
 		 */
 		boolean updatePickingEvent(int iButtonIndex, ArrayList<CollisionResult> acrList, Geometry geom, Spatial sptParentest);

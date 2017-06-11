@@ -36,7 +36,7 @@ import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ActivatorI.ActivetableListenerAbs;
 import com.github.devconslejme.misc.jme.ColorI.EColor;
-import com.github.devconslejme.misc.jme.PhysicsI.Impulse;
+import com.github.devconslejme.misc.jme.PhysicsI.ImpTorForce;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Quaternion;
@@ -172,7 +172,7 @@ public class PhysicsProjectileI {
 		pdPjtl.getPRB().setPhysicsLocation(gun.pd.getPRB().getPhysicsLocation());
 		pdPjtl.getPRB().setPhysicsRotation(gun.pd.getPRB().getPhysicsRotation());
 		
-		Impulse impPjtl = PhysicsI.i().throwAtSelfDirImpulse(pdPjtl, gun.pp.fDesiredSpeed);
+		ImpTorForce impPjtl = PhysicsI.i().throwAtSelfDirImpulse(pdPjtl, gun.pp.fDesiredSpeed);
 		
 		float fMassRatio = pdPjtl.getPRB().getMass()/gun.pd.getPRB().getMass();
 //		float fImpulseRecoil = -1f * impPjtl.getImpulseAtSelfDir().mult(fMassRatio).length();
@@ -182,7 +182,7 @@ public class PhysicsProjectileI {
 //		if(gun.pd.f)
 //		if(gun.pd.isGrabbed())fTorque*=1000f;
 //		if(gun.pd.isGrabbed())fY*=100000f;
-		Impulse impRecoil = new Impulse()
+		ImpTorForce impRecoil = new ImpTorForce()
 //			.setim
 			.setImpulseAtSelfDir(fImpulseRecoil,fY)
 //			.setTorqueImpulse(new Vector3f(fTorque,0,0))
