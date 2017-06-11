@@ -96,6 +96,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	private ArrayList<PhysicsData> apdDisintegrateAtMainThreadQueue = new ArrayList<PhysicsData>();
 	private long	lTickCount=0;
 	private HashMap<PhysicsRigidBody,PhysicsData> hmDisintegratables=new HashMap<PhysicsRigidBody,PhysicsData>(); 
+	private HashMap<PhysicsRigidBody,PhysicsData> hmProjectiles=new HashMap<PhysicsRigidBody,PhysicsData>(); 
 	private BulletAppState	bullet;
 	private PhysicsSpace	pspace;
 	private BoundingBox	bbSpace;
@@ -103,6 +104,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	private TimedDelay tdCheckOutOfSpaceBoundsDisintegrationAllowed = new TimedDelay(10f).setActive(true);
 	private TimedDelay tdSaveSafeSpotRot = new TimedDelay(3f).setActive(true);
 	private TimedDelay tdInfo = new TimedDelay(1f).setActive(true);
+	private TimedDelay tdDisintegrate = new TimedDelay(10f).setActive(true);
 	private PhysicsData	pdLastThrownFromCam;
 	private int	iThreadPhysTPS;
 	private int	iThreadPhysTickSum;
@@ -268,8 +270,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			public Boolean call() {
 				if(tdInfo.isReady(true))updateInfo();
 				
-//				updateGlue(); //b4 disintegration!!! (so it may even just disintegrate safely)
-				updateDisintegratablesAndItsQueue();
+				updateProjectiles();  //b4 disintegration!!! (so it may even just disintegrate safely)
+				if(tdDisintegrate.isReady(true))updateDisintegratablesAndItsQueue();
 				
 				updateLevitators(pspace,getTPF());
 				
@@ -306,21 +308,23 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //			PhysicsProjectileI.i().applyGluedMode(pd);
 //		}
 	}
-
+	
+	protected void updateProjectiles() {
+		for(PhysicsData pd:hmProjectiles.values()){
+			updateIgnoredProjectileCollisions(pd);
+		}
+	}
+	
 	protected void updateDisintegratablesAndItsQueue() {
-//		long lSTime = SimulationTimeI.i().getNanoTime();
 		for(PhysicsData pd:hmDisintegratables.values()){
 			if(!pd.bAllowDisintegration)apdPreventDisintegr.add(pd);
 			
-//			long lAgeLimitNano = pd.getProjectileMaxLifeTime();
-//			if(pd.bGlueApplied)lAgeLimitNano*=PhysicsProjectileI.i().getGluedProjectileMaxLifeTimeMultiplier();
-//			if((lSTime - pd.lMaterializedSTime) > l ){
-//			if(pd.getAgeNano() > lAgeLimitNano ){
 			if(pd.getAgeNano() > pd.getProjectileMaxLifeTime() ){
 				if(!apdDisintegrateAtMainThreadQueue.contains(pd))apdDisintegrateAtMainThreadQueue.add(pd);
-			}else{
-				updateIgnoredProjectileCollisions(pd);
 			}
+//			else{
+//				updateIgnoredProjectileCollisions(pd);
+//			}
 		}
 		
 		for(PhysicsData pd:apdPreventDisintegr){
@@ -477,7 +481,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 
 		public PhysicsData setAllowDisintegration(boolean bAllowDisintegration) {
 			this.bAllowDisintegration = bAllowDisintegration;
-			PhysicsI.i().hmDisintegratables.put(prb, this);
+			if(bAllowDisintegration) {
+				PhysicsI.i().hmDisintegratables.put(prb, this);
+			}else {
+				PhysicsI.i().hmDisintegratables.remove(prb);
+			}
 			return this; 
 		}
 
@@ -889,8 +897,13 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			return bProjectile;
 		}
 
-		public PhysicsData setbProjectile(boolean bProjectile) {
+		public PhysicsData setProjectile(boolean bProjectile) {
 			this.bProjectile = bProjectile;
+			if(bProjectile) {
+				PhysicsI.i().hmProjectiles.put(prb, this);
+			}else {
+				PhysicsI.i().hmProjectiles.remove(prb);
+			}
 			return this;
 		}
 
@@ -1197,6 +1210,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		
 		if(hmDisintegratables.containsKey(rbc)){
 			hmDisintegratables.remove(rbc);
+		}
+		
+		if(hmProjectiles.containsKey(rbc)){
+			hmProjectiles.remove(rbc);
 		}
 		
 		removeFromPhysicsSpace(spt);

@@ -205,7 +205,7 @@ public class PhysicsProjectileI {
 		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,pp.mt,false);
 		geomClone.scale(pp.fPhysBoundsScaleDiv); //to restore the good looking size
 		pd.setAllowDisintegration(true);
-		pd.setbProjectile(true);
+		pd.setProjectile(true);
 		pd.getPRB().setGravity(PhysicsI.i().getGravityCopy().divide(pp.fGravityDiv));
 		
 //		disableCcdToLetCollisionGroupsWork(pd);
