@@ -206,7 +206,7 @@ public class PhysicsProjectileI {
 		geomClone.scale(pp.fPhysBoundsScaleDiv); //to restore the good looking size
 		pd.setAllowDisintegration(true);
 		pd.setbProjectile(true);
-		pd.getPRB().setGravity(PhysicsI.i().getGravity().divide(pp.fGravityDiv));
+		pd.getPRB().setGravity(PhysicsI.i().getGravityCopy().divide(pp.fGravityDiv));
 		
 //		disableCcdToLetCollisionGroupsWork(pd);
 		
