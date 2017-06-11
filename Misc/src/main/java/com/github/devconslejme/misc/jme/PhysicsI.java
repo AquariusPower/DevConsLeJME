@@ -100,8 +100,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	private PhysicsSpace	pspace;
 	private BoundingBox	bbSpace;
 	private LinkedHashMap<String, Info>	hmInfo;
-	private TimedDelay tdDisintegrate = new TimedDelay(10f).setActive(true);
+	private TimedDelay tdCheckOutOfSpaceBoundsDisintegrationAllowed = new TimedDelay(10f).setActive(true);
 	private TimedDelay tdSaveSafeSpotRot = new TimedDelay(3f).setActive(true);
+	private TimedDelay tdInfo = new TimedDelay(1f).setActive(true);
 	private PhysicsData	pdLastThrownFromCam;
 	private int	iThreadPhysTPS;
 	private int	iThreadPhysTickSum;
@@ -265,10 +266,12 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
-				updateInfo();
+				if(tdInfo.isReady(true))updateInfo();
 				
 //				updateGlue(); //b4 disintegration!!! (so it may even just disintegrate safely)
 				updateDisintegratablesAndItsQueue();
+				
+				updateLevitators(pspace,getTPF());
 				
 				updateNewGravityQueue();
 				
@@ -276,7 +279,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				
 				return true;
 			}
-		}).enableLoopMode().setDelaySeconds(0.5f);
+		}).enableLoopMode();
 	}
 	
 	protected void updateNewLocationQueue() {
@@ -297,7 +300,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	 * some group collide() (phys thread) will not generate collisions() (main thread)
 	 * when looks the projectile is being auto-deflected...
 	 */
-	protected void updateIgnoredCollisions(PhysicsData pd) {
+	protected void updateIgnoredProjectileCollisions(PhysicsData pd) {
 		PhysicsProjectileI.i().glueProjectileCheckApply(pd,pd.pdGlueWhere,null);
 //		if(pd.pdGlueWhere!=null && !pd.bGlueApplied){
 //			PhysicsProjectileI.i().applyGluedMode(pd);
@@ -305,14 +308,18 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 
 	protected void updateDisintegratablesAndItsQueue() {
-		long lSTime = SimulationTimeI.i().getNanoTime();
+//		long lSTime = SimulationTimeI.i().getNanoTime();
 		for(PhysicsData pd:hmDisintegratables.values()){
 			if(!pd.bAllowDisintegration)apdPreventDisintegr.add(pd);
 			
-			if((lSTime - pd.lMaterializedSTime) > (pd.getProjectileMaxLifeTime() *(pd.bGlueApplied?PhysicsProjectileI.i().getProjectileMaxLifeTimeMultiplier():1)) ){
+//			long lAgeLimitNano = pd.getProjectileMaxLifeTime();
+//			if(pd.bGlueApplied)lAgeLimitNano*=PhysicsProjectileI.i().getGluedProjectileMaxLifeTimeMultiplier();
+//			if((lSTime - pd.lMaterializedSTime) > l ){
+//			if(pd.getAgeNano() > lAgeLimitNano ){
+			if(pd.getAgeNano() > pd.getProjectileMaxLifeTime() ){
 				if(!apdDisintegrateAtMainThreadQueue.contains(pd))apdDisintegrateAtMainThreadQueue.add(pd);
 			}else{
-				updateIgnoredCollisions(pd);
+				updateIgnoredProjectileCollisions(pd);
 			}
 		}
 		
@@ -397,7 +404,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		private ImpTorForce	imp;
 		private long	lLastPhysUpdateNano;
 		private long	lLastRenderUpdateNano;
-		private long	lMaterializedSTime;
+		private long	lMaterializedSimulTimeNano;
 		private Vector3f	v3fWorldGlueSpot;
 		private PhysicsData	pdGlueWhere;
 		private PhysicsData	pdSpawnedFrom;
@@ -436,7 +443,12 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			return getPRB().getPhysicsRotation();
 		}
 		
+		public long getAgeNano() {
+			return (SimulationTimeI.i().getNanoTime() - lMaterializedSimulTimeNano);
+		}
+
 		public long getProjectileMaxLifeTime() {
+			if(bGlueApplied)return lProjectileMaxLifeTime*PhysicsProjectileI.i().getGluedProjectileMaxLifeTimeMultiplier();
 			return lProjectileMaxLifeTime;
 		}
 
@@ -529,7 +541,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 
 		public void updateMaterializedAtTime() {
-			this.lMaterializedSTime=SimulationTimeI.i().getNanoTime();
+			this.lMaterializedSimulTimeNano=SimulationTimeI.i().getNanoTime();
 		}
 
 		public boolean isExplodeIfHit(PhysicsData pdWhere) {
@@ -838,11 +850,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 
 		public long getlMaterializedSTime() {
-			return lMaterializedSTime;
+			return lMaterializedSimulTimeNano;
 		}
 
 		public PhysicsData setlMaterializedSTime(long lMaterializedSTime) {
-			this.lMaterializedSTime = lMaterializedSTime;
+			this.lMaterializedSimulTimeNano = lMaterializedSTime;
 			return this;
 		}
 
@@ -1310,10 +1322,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		threadPhysicsTickDebugLogDisplacementPerTick(ps,tpf);
 		threadPhysicsTickSaveSafeSpot(ps,tpf);
 		threadPhysicsTickDisintegrateAtWBoundsOrRestoreToSafeSpot(ps,tpf);
-		threadPhysicsTickLevitators(ps,tpf);
+//		threadPhysicsTickLevitators(ps,tpf);
 	}
 	
-	private void threadPhysicsTickLevitators(PhysicsSpace ps, float tpf) {
+//	private void threadPhysicsTickLevitators(PhysicsSpace ps, float tpf) {
+	protected void updateLevitators(PhysicsSpace ps, float tpf) {
 		for(PhysicsRigidBody prb:ps.getRigidBodyList()){
 			PhysicsData pdLevi = getPhysicsDataFrom(prb);
 			if(!pdLevi.isLevitating())continue;
@@ -1338,10 +1351,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				float fDistRemainingToReach = pdLevi.getLevitationHeight()-fDistCurrent;
 				float fNearMargin = (pdLevi.getLevitationHeight()*0.05f);
 				if(fDistRemainingToReach > fNearMargin) {
-					float fForceFastSmoothMoveUp = fDistCurrent+fDistRemainingToReach/2f;
-					if(fDistRemainingToReach < fNearMargin*2f) {
-						fForceFastSmoothMoveUp = pdLevi.getLevitationHeight()-fNearMargin;
-					}
+//					float fForceFastSmoothMoveUp = fDistCurrent+fDistRemainingToReach/2f;
+//					if(fDistRemainingToReach < fNearMargin*2f) {
+					float fForceFastSmoothMoveUp = pdLevi.getLevitationHeight()-fNearMargin;
+//					}
 					
 					pdLevi.setPhysicsLocationAtMainThread(pdrtrHitBelow.getV3fWrldHit().add(0,fForceFastSmoothMoveUp,0));
 //					prb.setPhysicsLocation(pdrtrHitBelow.getV3fWrldHit().add(0,fForceFastSmoothMoveUp,0));
@@ -1370,7 +1383,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	
 	private void threadPhysicsTickDisintegrateAtWBoundsOrRestoreToSafeSpot(PhysicsSpace ps, float tpf) {
 		// auto disintegrate at world bounds or restore last safe spot TODO do one check per frame instead of all at a delayed time?
-		if(tdDisintegrate.isReady(true)){
+		if(tdCheckOutOfSpaceBoundsDisintegrationAllowed.isReady(true)){
 			for(PhysicsRigidBody prb:ps.getRigidBodyList()){
 				if(!bbSpace.contains(prb.getPhysicsLocation())){
 //					if(CharacterI.i().isCharacter(prb))continue;

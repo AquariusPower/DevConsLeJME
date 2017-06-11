@@ -351,7 +351,7 @@ public class PhysicsProjectileI {
 	}
 
 
-	public int getProjectileMaxLifeTimeMultiplier() {
+	public int getGluedProjectileMaxLifeTimeMultiplier() {
 		return iProjectileMaxLifeTimeMultiplier;
 	}
 
