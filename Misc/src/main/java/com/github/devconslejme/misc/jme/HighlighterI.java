@@ -65,7 +65,7 @@ public class HighlighterI {
 			// this way more things can be added to the node
 			attachChild(geomHighlight);
 			
-			WorldPickingI.i().addSkip(geomHighlight);
+			WorldGeomPickingI.i().addSkip(geomHighlight);
 		}
 		
 		@Override
@@ -141,7 +141,7 @@ public class HighlighterI {
 			reset(nhMouseCursorOver);
 		}else{
 			Geometry geomTargetNew=null;
-			for(CollisionResult cr:WorldPickingI.i().raycastPiercingAtCursor(null)){
+			for(CollisionResult cr:WorldGeomPickingI.i().raycastPiercingAtCursor(null)){
 				geomTargetNew=cr.getGeometry();
 				break; //1st only
 			}

@@ -97,7 +97,7 @@ public class PkgCfgI extends PkgCfgAbs{
 		AssertionsI.i().configure();
 		IndicatorI.i().configure(nodeGui);
 		HWEnvironmentJmeI.i().configure(nodeGui);
-		WorldPickingI.i().configure(flycam);
+		WorldGeomPickingI.i().configure(flycam);
 		HighlighterI.i().configure(flycam);
 		PhysicsI.i().configure();
 		ManipulatorI.i().configure();

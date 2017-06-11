@@ -76,7 +76,7 @@ public class DebugVisualsI {
 		KeyBindCommandManagerI.i().putBindCommandsLater("Ctrl+D",new CallBoundKeyCmd(){
 			@Override
 			public Boolean callOnKeyReleased(int iClickCountIndex) {
-				ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+				ArrayList<CollisionResult> acr = WorldGeomPickingI.i().raycastPiercingAtCenter(null);
 				if(acr.size()>0)toggleWorldBoundAndRotAxes(acr.get(0).getGeometry());
 				return true;
 			}
@@ -405,7 +405,7 @@ public class DebugVisualsI {
 
 	protected GeometryBVolDbg createGeomBVolDbg(Spatial spt) {
 		GeometryBVolDbg geom = new GeometryBVolDbg(spt);
-		WorldPickingI.i().addSkip(geom);
+		WorldGeomPickingI.i().addSkip(geom);
 		return geom;
 	}
 	

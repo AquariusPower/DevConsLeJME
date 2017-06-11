@@ -1739,6 +1739,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //	}
 	public static class PhysicsDataRayTestResult{
 		private PhysicsRayTestResult prtr;
+		
 		private PhysicsData pd;
 		private Vector3f v3fWrldHit;
 		private PhysicsRigidBody prb;

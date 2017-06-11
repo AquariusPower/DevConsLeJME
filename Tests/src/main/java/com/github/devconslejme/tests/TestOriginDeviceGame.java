@@ -52,7 +52,7 @@ import com.github.devconslejme.misc.jme.RotateI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.StringTextJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
-import com.github.devconslejme.misc.jme.WorldPickingI;
+import com.github.devconslejme.misc.jme.WorldGeomPickingI;
 import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
@@ -155,7 +155,7 @@ public class TestOriginDeviceGame extends SimpleApplicationAndStateAbs {
 				geomVolume.getMaterial().getAdditionalRenderState().setWireframe(true);
 				geomVolume.setLocalTranslation(v3fWorld);
 				getRootNode().attachChild(geomVolume);
-		    WorldPickingI.i().addSkip(geomVolume);
+		    WorldGeomPickingI.i().addSkip(geomVolume);
 			}
 		    
 			DebugVisualsI.i().showWorldBoundAndRotAxes(geom);

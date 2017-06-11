@@ -123,7 +123,7 @@ public class ManipulatorI {
 			@Override
 			public Boolean callOnKeyReleased(int iClickCountIndex) {
 				if(!drop()) {
-					ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+					ArrayList<CollisionResult> acr = WorldGeomPickingI.i().raycastPiercingAtCenter(null);
 					if(acr.size()>0) {
 						CollisionResult cr = acr.get(0);
 						PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(cr.getGeometry());

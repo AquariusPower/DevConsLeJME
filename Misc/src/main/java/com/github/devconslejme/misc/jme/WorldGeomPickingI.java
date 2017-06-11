@@ -51,8 +51,8 @@ import com.jme3.scene.shape.Quad;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class WorldPickingI {
-	public static WorldPickingI i(){return GlobalManagerI.i().get(WorldPickingI.class);}
+public class WorldGeomPickingI {
+	public static WorldGeomPickingI i(){return GlobalManagerI.i().get(WorldGeomPickingI.class);}
 	
 	private ArrayList<CollisionResult>	acrLastPickList = new ArrayList<CollisionResult>();
 	private Ray	rayLastCast;
@@ -81,7 +81,7 @@ public class WorldPickingI {
 				KeyCodeManagerI.i().getMouseTriggerKey(i).getFullId(), 
 				new CallBoundKeyCmd(){@Override public Boolean callOnKeyPressed(int iClickCountIndex) {
 					if(flycam!=null && flycam.isEnabled())return true; //to ignore picking
-					WorldPickingI.i().pickWorldPiercingAtCursor(iButtonIndex); //will call the world pick listeners
+					WorldGeomPickingI.i().pickWorldPiercingAtCursor(iButtonIndex); //will call the world pick listeners
 					return true;
 				}}.setName(strPck+"MouseButton"+i)
 			);
@@ -240,7 +240,7 @@ public class WorldPickingI {
 		return bAllowConsume;
 	}
 
-	public WorldPickingI setAllowConsume(boolean bAllowConsume) {
+	public WorldGeomPickingI setAllowConsume(boolean bAllowConsume) {
 		this.bAllowConsume = bAllowConsume;
 		return this; //for beans setter
 	}

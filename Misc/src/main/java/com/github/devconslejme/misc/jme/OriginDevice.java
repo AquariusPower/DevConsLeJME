@@ -34,7 +34,7 @@ import com.github.devconslejme.misc.MultiClickI.MultiClick;
 import com.github.devconslejme.misc.jme.ActivatorI.ActivetableListenerAbs;
 import com.github.devconslejme.misc.jme.MeshI.Cone;
 import com.github.devconslejme.misc.jme.OriginDevice.NodeAxis;
-import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
+import com.github.devconslejme.misc.jme.WorldGeomPickingI.IPickListener;
 import com.jme3.collision.CollisionResult;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -232,7 +232,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		getAxisInfo(EAxis.Z).getRotatingTorus().applyInitialRotation();
 		
 		// picking 
-    WorldPickingI.i().addListener(this);
+    WorldGeomPickingI.i().addListener(this);
     
     ActivatorI.i().applyActivetableListener(getAxisInfo(EAxis.X).getRepresentationShape(), ial);
     ActivatorI.i().applyActivetableListener(getAxisInfo(EAxis.Y).getRepresentationShape(), ial);

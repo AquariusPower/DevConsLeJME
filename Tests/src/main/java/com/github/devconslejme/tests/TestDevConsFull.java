@@ -61,7 +61,7 @@ import com.github.devconslejme.misc.jme.NodeX;
 import com.github.devconslejme.misc.jme.OriginDevice;
 import com.github.devconslejme.misc.jme.SimpleAppState;
 import com.github.devconslejme.misc.jme.StringTextJmeI;
-import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
+import com.github.devconslejme.misc.jme.WorldGeomPickingI.IPickListener;
 import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;

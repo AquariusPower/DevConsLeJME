@@ -577,7 +577,7 @@ public class FlyByCameraX extends FlyByCamera {
 			fZoomedRotationSpeed=getFOV()/fMaxFOVdeg;
 		}
 		
-		acrLast = WorldPickingI.i().raycastPiercingAtCenter(null);
+		acrLast = WorldGeomPickingI.i().raycastPiercingAtCenter(null);
 		if(acrLast.size()>0)HWEnvironmentJmeI.i().putCustomInfo("CamLastHitSpot", ""+acrLast.get(0).getContactPoint());
 		
 		if(tdMouseInfo.isReady(true)){

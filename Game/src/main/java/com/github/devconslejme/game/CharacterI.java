@@ -44,7 +44,7 @@ import com.github.devconslejme.misc.jme.PhysicsI;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.UserDataI;
-import com.github.devconslejme.misc.jme.WorldPickingI;
+import com.github.devconslejme.misc.jme.WorldGeomPickingI;
 import com.jme3.bullet.collision.PhysicsCollisionObject;
 import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.bullet.control.RigidBodyControl;
@@ -67,7 +67,7 @@ public class CharacterI {
 	 * see  {@link BetterCharacterControl}
 	 */
 	public static class BetterCharacterControlX extends BetterCharacterControl{
-		private Spatial	nodeHead;
+		private Spatial	sptHead;
 		public NodeBody nodeBody;
 
 		/**
@@ -93,7 +93,7 @@ public class CharacterI {
 		}
 
 		public void setHead(Spatial nodeHead) {
-			this.nodeHead = nodeHead;
+			this.sptHead = nodeHead;
 		}
 
 		@Override
@@ -123,12 +123,17 @@ public class CharacterI {
 		}
 	}
 	
-	public BetterCharacterControlX create(Vector3f v3fSpawnAt){
+	public static class LeviCharacter{}
+	
+	public LeviCharacter create(Vector3f v3fSpawnAt){
+		return null;
+	}
+	public BetterCharacterControlX createBCCX(Vector3f v3fSpawnAt){
 		if(v3fSpawnAt==null){
 			/**
 			 * user target spot
 			 */
-			ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+			ArrayList<CollisionResult> acr = WorldGeomPickingI.i().raycastPiercingAtCenter(null);
 			if(acr.size()==0)return null;
 			CollisionResult cr = acr.get(0);
 			PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(cr.getGeometry());
@@ -147,9 +152,9 @@ public class CharacterI {
 		bcc.nodeBody.attachChild(geomBody);
 		
 		float fHeadRadius=0.15f;
-		bcc.nodeHead=GeometryI.i().create(MeshI.i().sphere(fHeadRadius), ColorRGBA.Yellow);
-		bcc.nodeHead.setLocalTranslation(0, fHeight+fHeadRadius, 0);
-		bcc.nodeBody.attachChild(bcc.nodeHead);
+		bcc.sptHead=GeometryI.i().create(MeshI.i().sphere(fHeadRadius), ColorRGBA.Yellow);
+		bcc.sptHead.setLocalTranslation(0, fHeight+fHeadRadius, 0);
+		bcc.nodeBody.attachChild(bcc.sptHead);
 		
 		bcc.nodeBody.addControl(bcc);
 		
@@ -192,7 +197,7 @@ public class CharacterI {
 			bccLast.setWalkDirection(v3fMove);
 		}
 			
-		AppI.i().setCamFollow(keyContext.isPressed() ? bccLast.nodeHead : null);
+		AppI.i().setCamFollow(keyContext.isPressed() ? bccLast.sptHead : null);
 		flycamx.setAllowMove(!keyContext.isPressed());
 	}
 	
@@ -207,7 +212,7 @@ public class CharacterI {
 					if(bccLast!=null){
 						bccLast=null;
 					}else{
-						ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+						ArrayList<CollisionResult> acr = WorldGeomPickingI.i().raycastPiercingAtCenter(null);
 						if(acr.size()>0){
 							Geometry geom = acr.get(0).getGeometry();
 							BetterCharacterControlX bcc = getBCCFrom(geom);

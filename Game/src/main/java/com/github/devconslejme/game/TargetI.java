@@ -49,7 +49,7 @@ import com.github.devconslejme.misc.jme.PhysicsI;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.StringTextJmeI;
-import com.github.devconslejme.misc.jme.WorldPickingI;
+import com.github.devconslejme.misc.jme.WorldGeomPickingI;
 import com.jme3.app.Application;
 import com.jme3.collision.CollisionResult;
 import com.jme3.math.Vector3f;
@@ -131,7 +131,7 @@ public class TargetI {
 	protected TargetGeom acquireNewTarget(Vector3f v3f){
 		TargetGeom tgt=null;
 		
-		ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingDisplFromCenter(
+		ArrayList<CollisionResult> acr = WorldGeomPickingI.i().raycastPiercingDisplFromCenter(
 			null, v3f); //rnLastConfigured.v3fMarkersCenter
 		if(acr.size()>0){
 			Geometry geom = acr.get(0).getGeometry();

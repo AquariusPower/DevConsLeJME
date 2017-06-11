@@ -48,7 +48,7 @@ import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.RotateI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.StringTextJmeI;
-import com.github.devconslejme.misc.jme.WorldPickingI;
+import com.github.devconslejme.misc.jme.WorldGeomPickingI;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.bounding.BoundingBox;
@@ -519,7 +519,7 @@ public class ReticleI {
 							v3fAppWSize.set(v3fAppWSizeCurrent);
 //							QueueI.i().removeLoopFromQueue(this); //a new one will be created
 						}else{
-							ArrayList<CollisionResult> acr = WorldPickingI.i().raycastPiercingDisplFromCenter(null, rnLastConfigured.v3fMarkersCenter);
+							ArrayList<CollisionResult> acr = WorldGeomPickingI.i().raycastPiercingDisplFromCenter(null, rnLastConfigured.v3fMarkersCenter);
 							Float fDist=null;
 //							Float fTargetDist=null;
 							if(acr.size()>0)fDist=(acr.get(0).getDistance());

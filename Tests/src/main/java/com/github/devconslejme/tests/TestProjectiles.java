@@ -67,6 +67,7 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 	 */
 	@Override
 	public void initTest() {
+		CharacterI.i().createBCCX(Vector3f.ZERO);
 		CharacterI.i().create(Vector3f.ZERO);
 		
 		PhysicsI.i().setBulletDebugVisualsEnabled(true);
