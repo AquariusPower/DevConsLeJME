@@ -324,7 +324,8 @@ public class PhysicsProjectileI {
 			!pdWhere.isProjectile() && 
 			!pd.isDisintegrated() && 
 			!pd.isbGlueApplied() && 
-			pd.getGlueWhere()==pdWhere
+			pd.getGlueWhere()==pdWhere &&
+			pd.isReadyToGlue()
 		){
 			if(v3fEventCollPos!=null)pd.setV3fEventCollOtherLocalPos(v3fEventCollPos.clone());
 			applyGluedMode(pd);

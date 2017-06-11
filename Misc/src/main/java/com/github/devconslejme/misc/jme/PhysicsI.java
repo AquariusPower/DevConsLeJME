@@ -422,7 +422,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		private Geometry	geomOriginalInitialLink;
 		private Node	nodexLink;
 		private int	iForceAwakePhysTickCount;
-		private int	iForceStaticPhysTickCount=1;//1;
+		private int	iWaitPhysTicksB4Glueing=1;//1;
 		private float	fGrabDist;
 //		private CollisionResult cr;
 //		private Vector3f v3fGravityBkp;
@@ -432,6 +432,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		private Vector3f v3fNewGravity=null;
 		private boolean bSuspendLevitation;
 		private Vector3f v3fNewPhysLocation;
+		public boolean bReadyToGlue;
 		
 		/**
 		 * 
@@ -981,11 +982,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 
 		public int getiForceStaticPhysTickCount() {
-			return iForceStaticPhysTickCount;
+			return iWaitPhysTicksB4Glueing;
 		}
 
 		public PhysicsData setiForceStaticPhysTickCount(int iForceStaticPhysTickCount) {
-			this.iForceStaticPhysTickCount = iForceStaticPhysTickCount;
+			this.iWaitPhysTicksB4Glueing = iForceStaticPhysTickCount;
 			return this;
 		}
 
@@ -1024,6 +1025,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 
 		public void resumeLevitationIfItWas() {
 			bSuspendLevitation=false;
+		}
+
+		public boolean isReadyToGlue() {
+			return bReadyToGlue;
 		}
 
 
@@ -1443,7 +1448,14 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			
 			if(pd.isProjectile()){
 				if(pd.pdGlueWhere!=null){
-////					if((pd.iForceStaticPhysTickCount--)<=0){ //not imediate to let the collision impulse/force be applied on what was hit
+					/**
+					 * not imediate to let the collision impulse/force be applied on what was hit
+					 */
+					if(pd.iWaitPhysTicksB4Glueing<=0){
+						pd.bReadyToGlue=true;
+					}
+					pd.iWaitPhysTicksB4Glueing--; //after the check
+					
 //					if(pd.bGlueApplied){ //not imediate to let the collision impulse/force be applied on what was hit
 //						pd.prb.setMass(0f);
 //					}else{
@@ -1804,7 +1816,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //				}
 //			}
 //		}
-		@SuppressWarnings("unchecked")ArrayList<PhysicsDataRayTestResult> apdrtrList = rayCastSortNearest(
+		ArrayList<PhysicsDataRayTestResult> apdrtrList = rayCastSortNearest(
 			v3fFrom,v3fTo,true,true,pdProjectile);
 		if(apdrtrList.size()>0) {
 			PhysicsDataRayTestResult pdrtr = apdrtrList.get(0);
