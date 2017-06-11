@@ -1354,7 +1354,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			if(!pdLevi.isLevitating())continue;
 //			if(pdLevi.isGrabbed())continue;
 			
-			ArrayList<PhysicsDataRayTestResult> apdrtrList = rayCastSortNearest(
+			ArrayList<PhysicsDataRayCastResultX> apdrtrList = rayCastSortNearest(
 				prb.getPhysicsLocation(), 
 				prb.getPhysicsLocation().add(0,-pdLevi.getLevitationHeight(),0), 
 				true, true, pdLevi
@@ -1368,7 +1368,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //			}
 			
 			if(apdrtrList.size()>0) {
-				PhysicsDataRayTestResult pdrtrHitBelow = apdrtrList.get(0);
+				PhysicsDataRayCastResultX pdrtrHitBelow = apdrtrList.get(0);
 				float fDistCurrent = prb.getPhysicsLocation().subtract(pdrtrHitBelow.getV3fWrldHit()).length();
 				float fDistRemainingToReach = pdLevi.getLevitationHeight()-fDistCurrent;
 				float fNearMargin = (pdLevi.getLevitationHeight()*0.05f);
@@ -1391,8 +1391,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 	}
 	
-	public PhysicsDataRayTestResult applyLevitationAtCamTarget(Float fHeight) {
-		PhysicsDataRayTestResult pdrtr = getPhysicsDataAtCamDir(false, true);
+	public PhysicsDataRayCastResultX applyLevitationAtCamTarget(Float fHeight) {
+		PhysicsDataRayCastResultX pdrtr = getPhysicsDataAtCamDir(false, true);
 		if(pdrtr!=null && !pdrtr.pd.isTerrain() && pdrtr.pd.getPRB().getMass()>0) {
 			pdrtr.pd.setLevitationHeight(fHeight);
 		}
@@ -1737,15 +1737,20 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //		Collections.sort(aprtrList, cmpRayNearest);
 //		return aprtrList;
 //	}
-	public static class PhysicsDataRayTestResult{
-		private PhysicsRayTestResult prtr;
+	public static class PhysicsDataRayCastResultX{
+		private PhysicsRayTestResult result;
 		
 		private PhysicsData pd;
 		private Vector3f v3fWrldHit;
-		private PhysicsRigidBody prb;
+
+		public Vector3f v3fNormal;
+
+		private float fDistance;
+		
+//		private PhysicsRigidBody prb;
 		
 		public PhysicsRayTestResult getPrtr() {
-			return prtr;
+			return result;
 		}
 		public PhysicsData getPd() {
 			return pd;
@@ -1753,37 +1758,45 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		public Vector3f getV3fWrldHit() {
 			return v3fWrldHit;
 		}
-		public PhysicsRigidBody getPrb() {
-			return prb;
-		}
+//		public PhysicsRigidBody getPrb() {
+//			return prb;
+//		}
 		
 		@Override
 		public String toString() {
 			return pd.toString();
 		}
+		public float getDistance() {
+			return fDistance;
+		}
 	}
 	@SuppressWarnings("unchecked")
-	public ArrayList<PhysicsDataRayTestResult> rayCastSortNearest(Vector3f v3fFrom, Vector3f v3fTo, boolean bIgnoreProjectiles, boolean bFirstOnly, PhysicsData... apdSkip) {
-		ArrayList<PhysicsDataRayTestResult> apdrtrList = new ArrayList<PhysicsDataRayTestResult>();
+	public ArrayList<PhysicsDataRayCastResultX> rayCastSortNearest(Vector3f v3fFrom, Vector3f v3fTo, boolean bIgnoreProjectiles, boolean bFirstOnly, PhysicsData... apdSkip) {
+		ArrayList<PhysicsDataRayCastResultX> apdrtrList = new ArrayList<PhysicsDataRayCastResultX>();
 		List<PhysicsRayTestResult> aprtrList = pspace.rayTest(v3fFrom,v3fTo);
 		Collections.sort(aprtrList, cmpRayNearest);
-		labelResults:for(PhysicsRayTestResult prtr:aprtrList){
-			PhysicsData pdChk = getPhysicsDataFrom(prtr.getCollisionObject());
+		
+		labelResults:for(PhysicsRayTestResult result:aprtrList){
+			PhysicsData pdChk = getPhysicsDataFrom(result.getCollisionObject());
 			if(pdChk!=null){ 
 				if(bIgnoreProjectiles && pdChk.isProjectile())continue; //to skip/ignore projectile vs projectile
 				for(PhysicsData pdSkip:apdSkip) {
 					if(pdSkip==pdChk)continue labelResults;
 				}
 				
-				PhysicsDataRayTestResult pdrtr = new PhysicsDataRayTestResult();
-				pdrtr.v3fWrldHit = v3fFrom.clone().interpolateLocal(v3fTo,prtr.getHitFraction());
-				pdrtr.pd=pdChk;
-				pdrtr.prtr=prtr;
-				pdrtr.prb=(PhysicsRigidBody)prtr.getCollisionObject();
-				apdrtrList.add(pdrtr);
+				PhysicsDataRayCastResultX resultx = new PhysicsDataRayCastResultX();
+				resultx.pd=pdChk;
+				resultx.v3fWrldHit = v3fFrom.clone().interpolateLocal(v3fTo,result.getHitFraction());
+				resultx.v3fNormal = result.getHitNormalLocal().clone();
+				resultx.fDistance=v3fFrom.distance(resultx.v3fWrldHit);
+				assert resultx.pd.getPRB()==result.getCollisionObject();
+				resultx.result=result;
+//				pdrtr.prb=(PhysicsRigidBody)prtr.getCollisionObject();
+				apdrtrList.add(resultx);
 				if(bFirstOnly)break;
-			}			
+			}
 		}
+		
 		return apdrtrList;
 	}
 	
@@ -1795,38 +1808,18 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		Vector3f v3fFrom = pdProjectile.prb.getPhysicsLocation();
 		Vector3f v3fTo = pdProjectile.prb.getPhysicsLocation().add(
 			pdProjectile.prb.getLinearVelocity().normalize().mult(10)); //mult 10 is a guess for high speed, TODO confirm this
-//		Vector3f v3fWrldHitNearest = null;
-//		PhysicsRigidBody pcoNearest = null;
-//		PhysicsData pdNearest=null;
-//		@SuppressWarnings("unchecked")List<PhysicsRayTestResult> rayTest = pspace.rayTest(v3fFrom,v3fTo);
-//		Vector3f v3fWrldHitNearest = null;
-//		PhysicsRigidBody pcoNearest = null;
-//		PhysicsData pdNearest=null;
-//		for(PhysicsRayTestResult prtr:rayTest){
-//			PhysicsCollisionObject pco = prtr.getCollisionObject();
-//			PhysicsData pdChk = getPhysicsDataFrom(prtr.getCollisionObject());
-//			if(pdChk!=null){ //1st
-//				if(pdChk==pdProjectile)continue; //skip self
-//				if(pdChk.isProjectile())continue; //to skip/ignore projectile vs projectile
-//				
-//				Vector3f v3fWrldHitChk = v3fFrom.clone().interpolateLocal(v3fTo,prtr.getHitFraction());
-//				if(v3fWrldHitNearest==null || v3fFrom.distance(v3fWrldHitChk)<v3fFrom.distance(v3fWrldHitNearest)){
-//					v3fWrldHitNearest=v3fWrldHitChk;
-//					pcoNearest = (PhysicsRigidBody)pco;
-//					pdNearest=pdChk;
-//				}
-//			}
-//		}
-		ArrayList<PhysicsDataRayTestResult> apdrtrList = rayCastSortNearest(
+		ArrayList<PhysicsDataRayCastResultX> apdrtrList = rayCastSortNearest(
 			v3fFrom,v3fTo,true,true,pdProjectile);
 		if(apdrtrList.size()>0) {
-			PhysicsDataRayTestResult pdrtr = apdrtrList.get(0);
+			PhysicsDataRayCastResultX pdrtr = apdrtrList.get(0);
 			pdProjectile.pdGlueWhere=(pdrtr.pd);
 			
 			pdProjectile.v3fWorldGlueSpot=pdrtr.v3fWrldHit;
 			
-			pdProjectile.v3fGlueWherePhysLocalPos=pdrtr.v3fWrldHit.subtract(pdrtr.prb.getPhysicsLocation());
-			pdProjectile.quaGlueWherePhysWRotAtImpact=pdrtr.prb.getPhysicsRotation();
+//			pdProjectile.v3fGlueWherePhysLocalPos=pdrtr.v3fWrldHit.subtract(pdrtr.prb.getPhysicsLocation());
+//			pdProjectile.quaGlueWherePhysWRotAtImpact=pdrtr.prb.getPhysicsRotation();
+			pdProjectile.v3fGlueWherePhysLocalPos=pdrtr.v3fWrldHit.subtract(pdrtr.pd.prb.getPhysicsLocation());
+			pdProjectile.quaGlueWherePhysWRotAtImpact=pdrtr.pd.prb.getPhysicsRotation();
 			
 			/**
 			 * while hitting dynamic objects, the mass must remain > 0f to let forces be applied
@@ -1858,8 +1851,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	 * @param fImpulse
 	 * @return
 	 */
-	public PhysicsDataRayTestResult applyImpulseHitTargetAtCamDirection(float fImpulse){
-		PhysicsDataRayTestResult pdrtr = getPhysicsDataAtCamDir(false, true);
+	public PhysicsDataRayCastResultX applyImpulseHitTargetAtCamDirection(float fImpulse){
+		PhysicsDataRayCastResultX pdrtr = getPhysicsDataAtCamDir(false, true);
 		if(pdrtr!=null){
 			applyImpulseLater(pdrtr.pd,
 				new ImpTorForce()
@@ -1874,13 +1867,13 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		
 		return null;
 	}
-	public PhysicsDataRayTestResult getPhysicsDataAtCamDir(boolean bIgnoreProjectiles, boolean bFirstOnly, PhysicsData... apdSkip){
+	public PhysicsDataRayCastResultX getPhysicsDataAtCamDir(boolean bIgnoreProjectiles, boolean bFirstOnly, PhysicsData... apdSkip){
 //		for(CollisionResult cr:WorldPickingI.i().raycastPiercingAtCenter(null)){
 //			PhysicsData pd = getPhysicsDataFrom(cr.getGeometry());
 //			if(pd==null)continue;
 //			return pd;
 //		}
-		ArrayList<PhysicsDataRayTestResult> a = rayCastSortNearest(
+		ArrayList<PhysicsDataRayCastResultX> a = rayCastSortNearest(
 			AppI.i().getCamWPos(0f), 
 			AppI.i().getCamWPos(0f).add(AppI.i().getCamLookingAtDir().mult(getPhysicsRayCastRange())), 
 			bIgnoreProjectiles, bFirstOnly, apdSkip);
