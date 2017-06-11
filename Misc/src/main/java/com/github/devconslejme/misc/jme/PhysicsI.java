@@ -40,6 +40,7 @@ import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.InfoI.Info;
+import com.github.devconslejme.misc.MainThreadI;
 import com.github.devconslejme.misc.MatterI.EMatter;
 import com.github.devconslejme.misc.MatterI.Matter;
 import com.github.devconslejme.misc.MatterI.MatterStatus;
@@ -240,6 +241,21 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		bbSpace = new BoundingBox(pspace.getWorldMin(), pspace.getWorldMax());
 		
 		initMaintenanceUpdateLoop();
+		initUpdateGravity();
+	}
+	private ArrayList<PhysicsData> apdListGravityUpdtMainThreadQueue = new ArrayList<>();
+	
+	private void initUpdateGravity() {
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				for(PhysicsData pd:apdListGravityUpdtMainThreadQueue) {
+					pd.applyNewGravityAtMainThread();
+				}
+				apdListGravityUpdtMainThreadQueue.clear();
+				return true;
+			}
+		}).enableLoopMode();
 	}
 	
 	private void initMaintenanceUpdateLoop() {
@@ -382,6 +398,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		private BetterCharacterControlX bccxGrabber;
 		private Float fLevitationHeight=null;
 		private float fCCdMotionThreshold;
+		private Vector3f v3fNewGravity=null;
 		
 		/**
 		 * 
@@ -409,6 +426,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		public PhysicsData(Node nodex, Geometry geom) {
 			this.nodexLink=nodex;
 			this.geomOriginalInitialLink=geom;
+			this.v3fGravityBkp = new Vector3f(PhysicsI.i().getGravity());
 //			if(spt instanceof NodeX)nodexLink=(NodeX)spt;
 //			this.sptLink = spt;
 			
@@ -573,21 +591,36 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		public float getGrabDist(){
 			return fGrabDist;
 		}
-
-		public PhysicsData setTempGravityTowards(Vector3f v3f, Float fAcceleration) {
-			if(v3fGravityBkp==null && prb.getGravity().length()>0)v3fGravityBkp = prb.getGravity(); //will be a copy
+		
+		public void applyNewGravityAtMainThread() {
+			MainThreadI.i().assertEqualsCurrentThread();
+			this.prb.setGravity(v3fNewGravity);
+		}
+		/**
+		 * bullet native crashes otherwise..
+		 * @param v3f null to restore bkp
+		 */
+		public void setNewGravityAtMainThread(Vector3f v3f) {
+			if(v3f==null)v3f = v3fGravityBkp.clone(); //restore the bkp
+			if(v3fNewGravity==null || !v3fNewGravity.equals(v3f)) {
+				v3fNewGravity = v3f.clone();
+				PhysicsI.i().apdListGravityUpdtMainThreadQueue.add(this);
+			}
+		}
+		public PhysicsData setTempGravityTowards(Vector3f v3fGravityTargetSpot, Float fAcceleration) {
+//			if(v3fGravityBkp==null && prb.getGravity().length()>0)v3fGravityBkp = prb.getGravity(); //will be a copy
 			
-			if(v3f==null) {
-				assert v3fGravityBkp!=null && v3fGravityBkp.length()>0;
-				prb.setGravity(v3fGravityBkp);
+			Vector3f v3fNewGravity=null;
+			if(v3fGravityTargetSpot==null) {
+//				assert v3fGravityBkp!=null && v3fGravityBkp.length()>0;
+				assert v3fGravityBkp.length()>0;
+				v3fNewGravity=(v3fGravityBkp);
 			}else {
-				Vector3f v3fNewGravity = v3f.subtract(prb.getPhysicsLocation()).normalize();
-//				v3fNewGravity.multLocal(v3fGravityBkp.length());
-//				v3fNewGravity.multLocal(100f);
+				v3fNewGravity = v3fGravityTargetSpot.subtract(prb.getPhysicsLocation()).normalize();
 				v3fNewGravity.multLocal(fAcceleration!=null?fAcceleration:v3fGravityBkp.length());
-				prb.setGravity(v3fNewGravity);
 			}
 			
+			setNewGravityAtMainThread(v3fNewGravity);
 			prb.activate();
 			
 			return this;
@@ -680,15 +713,6 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 
 		public PhysicsData setBoundingSphere(BoundingSphere bs) {
 			this.bs = bs;
-			return this;
-		}
-
-		public PhysicsRigidBody getPrb() {
-			return prb;
-		}
-
-		public PhysicsData setPrb(PhysicsRigidBody prb) {
-			this.prb = prb;
 			return this;
 		}
 
@@ -926,6 +950,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		public float getCCdMotionThresholdBkp() {
 			return fCCdMotionThreshold;
 		}
+
+
 	}
 	
 	
@@ -1236,13 +1262,13 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	
 	private void threadPhysicsTickLevitators(PhysicsSpace ps, float tpf) {
 		for(PhysicsRigidBody prb:ps.getRigidBodyList()){
-			PhysicsData pd = getPhysicsDataFrom(prb);
-			if(!pd.isLevitating())continue;
+			PhysicsData pdLevi = getPhysicsDataFrom(prb);
+			if(!pdLevi.isLevitating())continue;
 			
 			ArrayList<PhysicsDataRayTestResult> apdrtrList = rayCastSortNearest(
 				prb.getPhysicsLocation(), 
-				prb.getPhysicsLocation().add(0,-pd.getLevitationHeight(),0), 
-				true, true, pd
+				prb.getPhysicsLocation().add(0,-pdLevi.getLevitationHeight(),0), 
+				true, true, pdLevi
 			);
 //			@SuppressWarnings("unchecked")List<PhysicsRayTestResult> aprtrList = ps.rayTest(
 //				prb.getPhysicsLocation(), prb.getPhysicsLocation().add(0,-pd.getLevitationHeight(),0) );
@@ -1253,18 +1279,37 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //			}
 			
 			if(apdrtrList.size()>0) {
-				PhysicsDataRayTestResult pdrtr = apdrtrList.get(0);
-				prb.setPhysicsLocation(pdrtr.getV3fWrldHit().add(0,pd.getLevitationHeight(),0));
-				Vector3f v3f = prb.getLinearVelocity();
-				v3f.y=0;
-				prb.setLinearVelocity(v3f);
+				PhysicsDataRayTestResult pdrtrHitBelow = apdrtrList.get(0);
+//				if(!pdrtr.pd.isTerrain() && pdrtr.pd.getPRB().getMass()>0) {
+					float fDist = prb.getPhysicsLocation().subtract(pdrtrHitBelow.getV3fWrldHit()).length();
+//					if(fDist<pd.getLevitationHeight()) {
+						float fDiff = pdLevi.getLevitationHeight()-fDist;
+						float fForceSmoothMoveUp = fDist+fDiff/2f;
+						
+//						prb.setPhysicsLocation(pdrtr.getV3fWrldHit().add(0,pd.getLevitationHeight(),0));
+						prb.setPhysicsLocation(pdrtrHitBelow.getV3fWrldHit().add(0,fForceSmoothMoveUp,0));
+						
+						pdLevi.setNewGravityAtMainThread(Vector3f.ZERO);
+//						prb.setGravity(Vector3f.ZERO);
+//						Vector3f v3f = prb.getLinearVelocity();
+//						v3f.y=0;
+//						prb.setLinearVelocity(v3f);
+//					}else {
+//						prb.setGravity(pdrtr.pd.getV3fGravityBkp());
+//					}
+//				}
+			}else {
+				pdLevi.setNewGravityAtMainThread(null);
+//				prb.setGravity(pdLevi.getV3fGravityBkp());
 			}
 		}
 	}
 	
 	public PhysicsDataRayTestResult applyLevitationAtCamTarget(Float fHeight) {
 		PhysicsDataRayTestResult pdrtr = getPhysicsDataAtCamDir(false, true);
-		if(pdrtr!=null)pdrtr.pd.setLevitationHeight(fHeight);
+		if(pdrtr!=null && !pdrtr.pd.isTerrain() && pdrtr.pd.getPRB().getMass()>0) {
+			pdrtr.pd.setLevitationHeight(fHeight);
+		}
 		return pdrtr;
 	}
 	

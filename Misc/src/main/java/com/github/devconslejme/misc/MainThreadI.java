@@ -54,9 +54,9 @@ public class MainThreadI {
 		return threadMain.equals(Thread.currentThread());
 	}
 	
-//	public void assertEqualsCurrentThread(){
-//		if(!isCurrentMainThread()){
-//			throw new DetailedException("should be the main thread!!!", i(), Thread.currentThread());
-//		}
-//	}
+	public void assertEqualsCurrentThread(){
+		if(!isCurrentMainThread()){
+			throw new DetailedException("should be the main thread!!!", i(), Thread.currentThread());
+		}
+	}
 }
