@@ -28,6 +28,7 @@ package com.github.devconslejme.game;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
@@ -40,6 +41,7 @@ import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ActivatorI;
+import com.github.devconslejme.misc.jme.ActivatorI.ActivetableListenerAbs;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.HighlighterI;
@@ -324,12 +326,12 @@ public class TargetI {
 		private Spatial	sptAtRoot;
 		private boolean	bAllowReset=true; //can be disabled outside here to stop glowing for ex 
 //		private HashMap<String,HashMap<String,Info>> hmSubInfos = new HashMap<String,HashMap<String,Info>>();
-		private HashMap<String,Info> hmSubInfos = new HashMap<String,Info>();
+		private LinkedHashMap<String,Info> hmSubInfos = new LinkedHashMap<String,Info>();
 		
-		public HashMap<String,Info> getOrCreateSubInfo(String strSubInfoKey){
+		public LinkedHashMap<String,Info> getOrCreateSubInfo(String strSubInfoKey){
 			Info inf = hmSubInfos.get(strSubInfoKey);
 			if(inf==null){
-				HashMap<String, Info> hm=new HashMap<String, Info>();
+				LinkedHashMap<String, Info> hm=new LinkedHashMap<String, Info>(); //the linked keep the initial order!
 				hmSubInfos.put(strSubInfoKey, new Info(strSubInfoKey,hm));
 				return hm;
 			}

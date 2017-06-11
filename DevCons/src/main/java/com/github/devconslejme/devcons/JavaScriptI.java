@@ -302,7 +302,7 @@ public class JavaScriptI implements IGlobalAddListener {
 		MethodX mh = retrieveMethodHelp(strFullMethodHelp);
 		if(mh!=null){
 			LoggingI.i().logEntry("Externally browsing javadoc for: "+mh.getFullHelp(false,false));
-			JavadocI.i().browseJavadoc(mh);
+			LoggingI.i().logEntry(JavadocI.i().browseJavadoc(mh).toString());
 		}
 	}
 	

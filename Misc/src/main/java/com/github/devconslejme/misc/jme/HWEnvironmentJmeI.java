@@ -38,6 +38,7 @@ import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.HWEnvironmentI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
+import com.github.devconslejme.misc.TimedDelay;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.font.BitmapText;
@@ -164,7 +165,11 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 			return Display.isResizable();
 		}
 		
-		public boolean wasResized(){
+		/**
+		 * this must be called from a single place!
+		 * @return
+		 */
+		protected boolean wasResized(){
 			return Display.wasResized();
 		}
 
@@ -274,8 +279,10 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 //		this.bShowFPS = bShowFPS;
 //	}
 	
-	
+	private TimedDelay tdInfo = new TimedDelay(1f).setActive(true);
 	protected void updateInfo(){
+		if(!tdInfo.isReady(true))return;
+		
 		boolean bShow=false;
 		if(bShowFPS)bShow=true;
 		if(bShowCamPos)bShow=true;

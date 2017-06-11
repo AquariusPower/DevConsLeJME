@@ -241,22 +241,22 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		bbSpace = new BoundingBox(pspace.getWorldMin(), pspace.getWorldMax());
 		
 		initMaintenanceUpdateLoop();
-		initUpdateGravity();
+//		initUpdateGravity();
 	}
 	private ArrayList<PhysicsData> apdListGravityUpdtMainThreadQueue = new ArrayList<>();
 	
-	private void initUpdateGravity() {
-		QueueI.i().enqueue(new CallableXAnon() {
-			@Override
-			public Boolean call() {
-				for(PhysicsData pd:apdListGravityUpdtMainThreadQueue) {
-					pd.applyNewGravityAtMainThread();
-				}
-				apdListGravityUpdtMainThreadQueue.clear();
-				return true;
-			}
-		}).enableLoopMode();
-	}
+//	private void initUpdateGravity() {
+//		QueueI.i().enqueue(new CallableXAnon() {
+//			@Override
+//			public Boolean call() {
+//				for(PhysicsData pd:apdListGravityUpdtMainThreadQueue) {
+//					pd.applyNewGravityAtMainThread();
+//				}
+//				apdListGravityUpdtMainThreadQueue.clear();
+//				return true;
+//			}
+//		}).enableLoopMode();
+//	}
 	
 	private void initMaintenanceUpdateLoop() {
 		hmInfo = new LinkedHashMap<String,Info>();
@@ -269,11 +269,21 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //				updateGlue(); //b4 disintegration!!! (so it may even just disintegrate safely)
 				updateDisintegratables();
 				
+				updateGravity();
+				
 				return true;
 			}
 		}).enableLoopMode().setDelaySeconds(0.5f);
 	}
 	
+	protected void updateGravity() {
+		for(PhysicsData pd:apdListGravityUpdtMainThreadQueue) {
+			pd.applyNewGravityAtMainThread();
+		}
+		apdListGravityUpdtMainThreadQueue.clear();
+		
+	}
+
 	/**
 	 * some group collide() (phys thread) will not generate collisions() (main thread)
 	 * when looks the projectile is being auto-deflected...
@@ -399,6 +409,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		private Float fLevitationHeight=null;
 		private float fCCdMotionThreshold;
 		private Vector3f v3fNewGravity=null;
+		private boolean bSuspendLevitation;
 		
 		/**
 		 * 
@@ -592,19 +603,25 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			return fGrabDist;
 		}
 		
+		/**
+		 * bullet native crashes otherwise..
+		 */
 		public void applyNewGravityAtMainThread() {
 			MainThreadI.i().assertEqualsCurrentThread();
 			this.prb.setGravity(v3fNewGravity);
 		}
 		/**
-		 * bullet native crashes otherwise..
 		 * @param v3f null to restore bkp
 		 */
 		public void setNewGravityAtMainThread(Vector3f v3f) {
 			if(v3f==null)v3f = v3fGravityBkp.clone(); //restore the bkp
 			if(v3fNewGravity==null || !v3fNewGravity.equals(v3f)) {
 				v3fNewGravity = v3f.clone();
-				PhysicsI.i().apdListGravityUpdtMainThreadQueue.add(this);
+				if(MainThreadI.i().isCurrentMainThread()) {
+					applyNewGravityAtMainThread();
+				}else {
+					PhysicsI.i().apdListGravityUpdtMainThreadQueue.add(this);
+				}
 			}
 		}
 		public PhysicsData setTempGravityTowards(Vector3f v3fGravityTargetSpot, Float fAcceleration) {
@@ -933,6 +950,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 
 		public boolean isLevitating() {
+			if(bSuspendLevitation)return false;
 			return fLevitationHeight!=null;
 		}
 		public Float getLevitationHeight() {
@@ -949,6 +967,14 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 		public float getCCdMotionThresholdBkp() {
 			return fCCdMotionThreshold;
+		}
+
+		public void suspendLevitationIfItIs() {
+			bSuspendLevitation=true;
+		}
+
+		public void resumeLevitationIfItWas() {
+			bSuspendLevitation=false;
 		}
 
 
@@ -1106,11 +1132,13 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		if(pd!=null){
 			InfoJmeI.i().putAt(hmStore,"mass",pd.mts.getMassKg(),3);
 			InfoJmeI.i().putAt(hmStore,"vol",pd.mts.getVolumeM3(),3);
-			InfoJmeI.i().putAt(hmStore,"spd",pd.prb.getLinearVelocity(),2);
-			InfoJmeI.i().putAt(hmStore,"angv",pd.prb.getAngularVelocity(),1);
 			InfoJmeI.i().putAt(hmStore,"grav",pd.prb.getGravity(),1);
 			InfoJmeI.i().putAt(hmStore,"rest",pd.isResting());
 			if(pd.getSBNodeGluedProjectiles()!=null)InfoJmeI.i().putAt(hmStore,"GluePrjc",pd.getSBNodeGluedProjectiles().getChildren().size());
+			
+			// last as may change too much
+			InfoJmeI.i().putAt(hmStore,"spd",pd.prb.getLinearVelocity(),2);
+			InfoJmeI.i().putAt(hmStore,"angv",pd.prb.getAngularVelocity(),1);
 //			InfoJmeI.i().putAt(hmStore,"LtTrwSpd",pd.imp.fImpulseAtSelfDirection);
 		}
 	}
@@ -1264,6 +1292,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		for(PhysicsRigidBody prb:ps.getRigidBodyList()){
 			PhysicsData pdLevi = getPhysicsDataFrom(prb);
 			if(!pdLevi.isLevitating())continue;
+//			if(pdLevi.isGrabbed())continue;
 			
 			ArrayList<PhysicsDataRayTestResult> apdrtrList = rayCastSortNearest(
 				prb.getPhysicsLocation(), 
@@ -1280,27 +1309,28 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			
 			if(apdrtrList.size()>0) {
 				PhysicsDataRayTestResult pdrtrHitBelow = apdrtrList.get(0);
-//				if(!pdrtr.pd.isTerrain() && pdrtr.pd.getPRB().getMass()>0) {
-					float fDist = prb.getPhysicsLocation().subtract(pdrtrHitBelow.getV3fWrldHit()).length();
-//					if(fDist<pd.getLevitationHeight()) {
-						float fDiff = pdLevi.getLevitationHeight()-fDist;
-						float fForceSmoothMoveUp = fDist+fDiff/2f;
+				float fDistCurrent = prb.getPhysicsLocation().subtract(pdrtrHitBelow.getV3fWrldHit()).length();
+				float fDistRemainingToReach = pdLevi.getLevitationHeight()-fDistCurrent;
+				float fNearMargin = (pdLevi.getLevitationHeight()*0.05f);
+				if(fDistRemainingToReach > fNearMargin) {
+					float fForceFastSmoothMoveUp = fDistCurrent+fDistRemainingToReach/2f;
+					if(fDistRemainingToReach < fNearMargin*2f) {
+						fForceFastSmoothMoveUp = pdLevi.getLevitationHeight()-fNearMargin;
+					}
+					
+					
+					/**
+					 * if called every frame, will glitch impulses applied to it, making them inverted in rotation/torque! 
+					 * quite weird!!
+					 */
+					prb.setPhysicsLocation(pdrtrHitBelow.getV3fWrldHit().add(0,fForceFastSmoothMoveUp,0));
+				}
 						
-//						prb.setPhysicsLocation(pdrtr.getV3fWrldHit().add(0,pd.getLevitationHeight(),0));
-						prb.setPhysicsLocation(pdrtrHitBelow.getV3fWrldHit().add(0,fForceSmoothMoveUp,0));
-						
-						pdLevi.setNewGravityAtMainThread(Vector3f.ZERO);
-//						prb.setGravity(Vector3f.ZERO);
-//						Vector3f v3f = prb.getLinearVelocity();
-//						v3f.y=0;
-//						prb.setLinearVelocity(v3f);
-//					}else {
-//						prb.setGravity(pdrtr.pd.getV3fGravityBkp());
-//					}
-//				}
+				if(prb.getGravity().length()>0) {
+					pdLevi.setNewGravityAtMainThread(Vector3f.ZERO);
+				}
 			}else {
 				pdLevi.setNewGravityAtMainThread(null);
-//				prb.setGravity(pdLevi.getV3fGravityBkp());
 			}
 		}
 	}
@@ -1350,25 +1380,23 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		// save safe spot
 		lTickCount++;
 		for(PhysicsRigidBody prb:ps.getRigidBodyList()){
-//			if(CharacterI.i().isCharacter(prb))continue;
-//			if(prb.getUserObject() instanceof GeometryTestProjectile)continue;
-			
 			if(EDebug.TestDynamicPhysicsWithoutSpatialAndData.b() && prb.getUserObject()==null)continue;
 			PhysicsData pd = getPhysicsDataFrom(prb);
 			if(pd==null)continue; //other stuff
-//			if(pd==null){
-//				syso("breakpoint here");
-//			}
+			
 			pd.lLastPhysUpdateNano=System.nanoTime();
 			
+//			if(pd.getPRB().getGravity().length()==0)prb.activate();
+			if(prb.getGravity().length()==0)prb.activate(); //no gravity, never rests
 			if((pd.iForceAwakePhysTickCount--)>0)prb.activate();
 			
 			if(pd.isProjectile()){
 				if(pd.pdGlueWhere!=null){
-//					if((pd.iForceStaticPhysTickCount--)<=0){ //not imediate to let the collision impulse/force be applied on what was hit
-					if(pd.bGlueApplied){ //not imediate to let the collision impulse/force be applied on what was hit
-						pd.prb.setMass(0f);
-					}else{
+////					if((pd.iForceStaticPhysTickCount--)<=0){ //not imediate to let the collision impulse/force be applied on what was hit
+//					if(pd.bGlueApplied){ //not imediate to let the collision impulse/force be applied on what was hit
+//						pd.prb.setMass(0f);
+//					}else{
+					if(!pd.bGlueApplied){ 
 						pd.pdGlueWhere.forceAwakeSomeTicks();
 					}
 				}

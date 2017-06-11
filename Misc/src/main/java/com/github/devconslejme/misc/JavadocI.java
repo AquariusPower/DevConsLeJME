@@ -43,7 +43,7 @@ public class JavadocI {
 	
 	private String	strJavadocFolder = "javadoc/";
 	
-	public void browseJavadoc(MethodX mh) {
+	public URI browseJavadoc(MethodX mh) {
 		URI uri = mh.getAsJavadocURI();
 		try {
 			// external web browser 
@@ -51,6 +51,7 @@ public class JavadocI {
 		} catch (IOException e) {
 			MessagesI.i().warnMsg(this, e.getMessage(), e, mh, uri);
 		}
+		return uri;
 	}
 
 	public ArrayList<MethodX> prepareAllMethodsHelp(Object obj){

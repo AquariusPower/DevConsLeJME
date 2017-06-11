@@ -88,6 +88,8 @@ public class ManipulatorI {
 			PhysicsI.i().wakeUp(pdManipulating);
 			if(!bGrabForcePlacement)pdManipulating.setTempGravityTowards(null,null);
 			pdManipulating.setGrabbedBy(null);
+			
+			pdManipulating.resumeLevitationIfItWas();
 		}
 		pdManipulating=null;
 		return bIsGrabbing;
@@ -107,6 +109,7 @@ public class ManipulatorI {
 		
 		if(bOk) {
 			pdManipulating=pd;
+			pdManipulating.suspendLevitationIfItIs();
 			pdManipulating.setGrabDist(fCurrentDistance);
 			fCurrentSpeed=0f;
 			pdManipulating.setGrabbedBy(CharacterI.i().getPossessed());
