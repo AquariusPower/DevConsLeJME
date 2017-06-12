@@ -167,14 +167,20 @@ public class ManipulatorI {
 		KeyBindCommandManagerI.i().putBindCommandsLater(
 			KeyCodeManagerI.i().getKeyForId("Space").composeCfgPrependModifiers(keyContext),
 			new CallBoundKeyCmd(){
+				private PhysicsData pdTryActivate;
 				@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 //					ActivatorI.i().activateIfPossible(crManipulating.getGeometry()); //parentest spt will also be considered (least Root Node)
-					ActivatorI.i().activateIfPossible(pdManipulating); //parentest spt will also be considered (least Root Node)
+					pdTryActivate=null;//pre-reset
+					if(pdManipulating!=null) {
+						pdTryActivate=pdManipulating;
+						ActivatorI.i().activateIfPossible(pdTryActivate); //parentest spt will also be considered (least Root Node)
+					}
 					return true;
 				}
 				@Override
 				public Boolean callOnKeyReleased(int iClickCountIndex) {
-					ActivatorI.i().deactivateIfPossible(pdManipulating); //parentest spt will also be considered (least Root Node)
+					if(pdTryActivate!=null)ActivatorI.i().deactivateIfPossible(pdTryActivate); //parentest spt will also be considered (least Root Node)
+					pdTryActivate=null; //just to be sure...
 					return true;
 				};
 			}.setName("ActivateGrabbed").holdKeyPressedForContinuousCmd()

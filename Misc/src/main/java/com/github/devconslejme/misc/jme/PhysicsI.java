@@ -93,10 +93,12 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	public static PhysicsI i(){return GlobalManagerI.i().get(PhysicsI.class);}
 	
 	private ArrayList<PhysicsData> apdPreventDisintegr = new ArrayList<PhysicsData>();
+	
 	private ArrayList<PhysicsData> apdDisintegrateAtMainThreadQueue = new ArrayList<PhysicsData>();
-	private ArrayList<PhysicsData> apdListGravityUpdtMainThreadQueue = new ArrayList<>();
-	private ArrayList<PhysicsData> apdListLocationUpdtMainThreadQueue = new ArrayList<>();
-	private ArrayList<PhysicsData> apdListSafeSpotRestoreMainThreadQueue = new ArrayList<>();
+	private ArrayList<PhysicsData> apdGravityUpdtMainThreadQueue = new ArrayList<>();
+	private ArrayList<PhysicsData> apdLocationUpdtMainThreadQueue = new ArrayList<>();
+	private ArrayList<PhysicsData> apdSafeSpotRestoreMainThreadQueue = new ArrayList<>();
+	
 	private long	lTickCount=0;
 	private HashMap<PhysicsRigidBody,PhysicsData> hmDisintegratables=new HashMap<PhysicsRigidBody,PhysicsData>(); 
 	private HashMap<PhysicsRigidBody,PhysicsData> hmProjectiles=new HashMap<PhysicsRigidBody,PhysicsData>(); 
@@ -272,56 +274,38 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			public Boolean call() {
 				if(tdInfo.isReady(true))updateInfo();
 				
-				updateProjectiles();  //b4 disintegration!!! (so it may even just disintegrate safely)
-				if(tdDisintegrate.isReady(true))updateDisintegratablesAndItsQueue();
-				
 				updateLevitators(pspace,getTPF());
 				
-				updateNewGravityQueue();
+				/**
+				 * these queues may be harder to maintain than a single one, 
+				 * but may help on debugging and to grant their execution order
+				 * without having to filter a single list for the right order
+				 * 
+				 * TODO make such single list auto sorted in the right order?
+				 * The ones with timed delay, would then be checked individually, instead of a single td chk 
+				 */
+				for(PhysicsData pd:apdGravityUpdtMainThreadQueue)pd.applyNewGravityAtMainThread();
+				apdGravityUpdtMainThreadQueue.clear();
+				for(PhysicsData pd:apdSafeSpotRestoreMainThreadQueue)pd.applyRestoreSafeSpotRotAtMainThread();
+				apdSafeSpotRestoreMainThreadQueue.clear();
+				for(PhysicsData pd:apdLocationUpdtMainThreadQueue)pd.applyNewPhysLocationAtMainThread();
+				apdLocationUpdtMainThreadQueue.clear();
 				
-				updateRestoreSafeSpotRot();
-				
-				updateNewLocationQueue();
+				updateProjectiles();  //b4 disintegration!!! (so it may even just disintegrate safely)
+				if(tdDisintegrate.isReady(true))updateDisintegratablesAndItsQueue(); //LAST THING
 				
 				return true;
 			}
 		}).enableLoopMode();
 	}
 	
-	protected void updateRestoreSafeSpotRot() {
-		for(PhysicsData pd:apdListSafeSpotRestoreMainThreadQueue) {
-			pd.applyRestoreSafeSpotRotAtMainThread();
-		}
-		apdListSafeSpotRestoreMainThreadQueue.clear();
-	}
-	protected void updateNewLocationQueue() {
-		for(PhysicsData pd:apdListLocationUpdtMainThreadQueue) {
-			pd.applyNewPhysLocationAtMainThread();
-		}
-		apdListLocationUpdtMainThreadQueue.clear();
-	}
-
-	protected void updateNewGravityQueue() {
-		for(PhysicsData pd:apdListGravityUpdtMainThreadQueue) {
-			pd.applyNewGravityAtMainThread();
-		}
-		apdListGravityUpdtMainThreadQueue.clear();
-	}
-
-	/**
-	 * some group collide() (phys thread) will not generate collisions() (main thread)
-	 * when looks the projectile is being auto-deflected...
-	 */
-	protected void updateIgnoredProjectileCollisions(PhysicsData pd) {
-		PhysicsProjectileI.i().glueProjectileCheckApply(pd,pd.pdGlueWhere,null);
-//		if(pd.pdGlueWhere!=null && !pd.bGlueApplied){
-//			PhysicsProjectileI.i().applyGluedMode(pd);
-//		}
-	}
-	
 	protected void updateProjectiles() {
 		for(PhysicsData pd:hmProjectiles.values()){
-			updateIgnoredProjectileCollisions(pd);
+			/**
+			 * some group collide() (phys thread) will not generate collisions() (main thread)
+			 * when looks the projectile is being auto-deflected...
+			 */
+			PhysicsProjectileI.i().glueProjectileCheckApply(pd,pd.pdGlueWhere,null);
 		}
 	}
 	
@@ -645,7 +629,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			if(MainThreadI.i().isCurrentMainThread()) {
 				applyRestoreSafeSpotRotAtMainThread();
 			}else {
-				PhysicsI.i().apdListSafeSpotRestoreMainThreadQueue.add(this);
+				PhysicsI.i().apdSafeSpotRestoreMainThreadQueue.add(this);
 			}
 		}
 		public void applyRestoreSafeSpotRotAtMainThread() {
@@ -671,7 +655,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				if(MainThreadI.i().isCurrentMainThread()) {
 					applyNewGravityAtMainThread();
 				}else {
-					PhysicsI.i().apdListGravityUpdtMainThreadQueue.add(this);
+					PhysicsI.i().apdGravityUpdtMainThreadQueue.add(this);
 				}
 			}
 		}
@@ -697,7 +681,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			if(MainThreadI.i().isCurrentMainThread()) {
 				applyNewPhysLocationAtMainThread();
 			}else {
-				PhysicsI.i().apdListLocationUpdtMainThreadQueue.add(this);
+				PhysicsI.i().apdLocationUpdtMainThreadQueue.add(this);
 			}
 		}
 
