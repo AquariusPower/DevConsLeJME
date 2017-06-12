@@ -31,6 +31,7 @@ import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.MatterI.EMatter;
 import com.github.devconslejme.misc.MatterI.Matter;
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
@@ -38,6 +39,7 @@ import com.github.devconslejme.misc.jme.ActivatorI.ActivetableListenerAbs;
 import com.github.devconslejme.misc.jme.ColorI.EColor;
 import com.github.devconslejme.misc.jme.PhysicsI.ImpTorForce;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
+import com.jme3.bounding.BoundingVolume;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
@@ -58,6 +60,8 @@ public class PhysicsProjectileI {
 	private int iProjectileMaxLifeTimeMultiplier=100;
 	private PhysicsThrowProjectiles ppCamDevDbgTst;
 	private PhysicsThrowProjectiles ppFromCamCurrent;
+	
+//	public static class SimpleBatchNode
 	
 	public static class PhysicsThrowProjectiles{
 		private int	iProjectilesPerSecond = (10); //10 seems the default of many guns
@@ -213,32 +217,33 @@ public class PhysicsProjectileI {
 		return pd;
 	}
 	
-//	/**
-//	 * collision groups skippers will not work without this... :(
-//	 * @param pd
-//	 */
-//	@Workaround
-//	private void disableCcdToLetCollisionGroupsWork(PhysicsData pd) {
-//		pd.getPRB().setCcdMotionThreshold(0);
-//	}
-
-	protected void reparentProjectile(Node nodeNewParent, Geometry sptProjectile){
-//		assert nodeNewParent!=sbnProjectilesAtWorld;
-		
-		boolean b = sptProjectile.getParent() instanceof SimpleBatchNode;
+	protected void reparentProjectile(SimpleBatchNode nodeNewParent, Geometry sptProjectile){
+		SimpleBatchNode previousParent = (SimpleBatchNode)sptProjectile.getParent();
 		
 		if(nodeNewParent!=null){
 			nodeNewParent.attachChild(sptProjectile);
-			if(nodeNewParent instanceof SimpleBatchNode){
-				((SimpleBatchNode)nodeNewParent).batch();
-			}
-		}else{
+			nodeNewParent.batch();
+		}else {
 			sptProjectile.removeFromParent();
 		}
 		
-		if(b)sbnProjectilesAtWorld.batch();
-		
+		if(previousParent!=null)previousParent.batch();
 	}
+//	protected void reparentProjectile(Node nodeNewParent, Geometry sptProjectile){
+//		boolean b = sptProjectile.getParent() instanceof SimpleBatchNode;
+//		
+//		if(nodeNewParent!=null){
+//			nodeNewParent.attachChild(sptProjectile);
+//			if(nodeNewParent instanceof SimpleBatchNode){
+//				((SimpleBatchNode)nodeNewParent).batch();
+//			}
+//		}else{
+//			sptProjectile.removeFromParent();
+//		}
+//		
+//		if(b)sbnProjectilesAtWorld.batch();
+//		
+//	}
 
 	public void applyGluedMode(PhysicsData pdWhat){
 		assert pdWhat.isProjectile();
@@ -273,7 +278,7 @@ public class PhysicsProjectileI {
 //						return false;
 //					}
 					boolean bTryAgain=false;
-					if(pdWhat.getlLastPhysUpdateNano()>lLastGlueSetPosNano){
+					if(pdWhat.getLastPhysUpdateNano()>lLastGlueSetPosNano){
 						bTryAgain=true;
 					}
 					
@@ -304,6 +309,7 @@ public class PhysicsProjectileI {
 					}
 					
 //					pdWhat.setbGlueApplied(true);
+					checkBuggyMissPlacedFew(pdWhat);
 					
 					return true;
 				}
@@ -317,6 +323,16 @@ public class PhysicsProjectileI {
 		pdWhat.setbGlueApplied(true);
 	}
 	
+	protected void checkBuggyMissPlacedFew(PhysicsData pdWhat) {
+		BoundingVolume bvWhat = pdWhat.getGeomOriginalInitialLink().getWorldBound();
+		BoundingVolume bvWhere = pdWhat.getGlueWhere().getGeomOriginalInitialLink().getWorldBound();
+//		if(!pdWhat.getBoundingVolume().intersects(pdWhat.getGlueWhere().getBoundingVolume())){
+		if(!bvWhat.intersects(bvWhere)){
+			reparentProjectile(null, pdWhat.getGeomOriginalInitialLink());
+			MessagesI.i().warnMsg(this, "purging still bugly placed projectile, TODO improve this..", bvWhat, bvWhere, bvWhat.getCenter().distance(bvWhere.getCenter()));
+		}
+	}
+
 	protected void glueProjectileCheckApply(PhysicsData pd, PhysicsData pdWhere, Vector3f v3fEventCollPos){
 		if(
 			pd.isProjectile() &&

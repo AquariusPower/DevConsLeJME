@@ -79,8 +79,8 @@ public class MessagesI {
 		putReviewableMsg(warnMsgWork(objSource,strMsg,aobjMoreInfo),false);
 	}
 	protected String warnMsgWork(Object objSource, String strMsg, Object... aobjMoreInfo){
-		Object[] aobjMoreInfoSte = Arrays.copyOf(aobjMoreInfo, aobjMoreInfo.length+1);//add one slot on the array
-		aobjMoreInfoSte[aobjMoreInfoSte.length-1]=Thread.currentThread().getStackTrace()[3];
+		Object[] aobjMoreInfoSte = Arrays.copyOf(aobjMoreInfo, aobjMoreInfo.length+1, (new Object[0]).getClass());//add one slot on the array
+		aobjMoreInfoSte[aobjMoreInfoSte.length-1]=Thread.currentThread().getStackTrace()[3]; // 3 is the outside caller calling the public warn one here
 		return output(System.err,"WARN",objSource,strMsg,aobjMoreInfoSte);
 	}
 	

@@ -94,6 +94,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	
 	private ArrayList<PhysicsData> apdPreventDisintegr = new ArrayList<PhysicsData>();
 	private ArrayList<PhysicsData> apdDisintegrateAtMainThreadQueue = new ArrayList<PhysicsData>();
+	private ArrayList<PhysicsData> apdListGravityUpdtMainThreadQueue = new ArrayList<>();
+	private ArrayList<PhysicsData> apdListLocationUpdtMainThreadQueue = new ArrayList<>();
 	private long	lTickCount=0;
 	private HashMap<PhysicsRigidBody,PhysicsData> hmDisintegratables=new HashMap<PhysicsRigidBody,PhysicsData>(); 
 	private HashMap<PhysicsRigidBody,PhysicsData> hmProjectiles=new HashMap<PhysicsRigidBody,PhysicsData>(); 
@@ -114,6 +116,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	private boolean	bGlueAllowed=true;
 //	private float	fDefaultProjectileMaxLife=2;
 	private boolean bDisableCcdToLetCollisionGroupsWork=true;
+
 	
 	public static class ImpTorForce{
 //		private Spatial	spt;
@@ -246,8 +249,6 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		initMaintenanceUpdateLoop();
 //		initUpdateGravity();
 	}
-	private ArrayList<PhysicsData> apdListGravityUpdtMainThreadQueue = new ArrayList<>();
-	private ArrayList<PhysicsData> apdListLocationUpdtMainThreadQueue = new ArrayList<>();
 	
 //	private void initUpdateGravity() {
 //		QueueI.i().enqueue(new CallableXAnon() {
@@ -513,11 +514,6 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			saveSafePosRot(getSpatialWithPhysics().getWorldTranslation(), getSpatialWithPhysics().getWorldRotation());
 		}
 
-		public void restoreSafeSpotRot() {
-			prb.setPhysicsLocation(v3fLastSafeSpot);
-			prb.setPhysicsRotation(quaLastSafeRot);
-		}
-		
 		public boolean isWasSafePosRotSavedAtPreviousTickAndUpdate(long lTickCount){
 			boolean b = lTickCount-1 == this.lRestingAtTickCount;
 			if(b)this.lRestingAtTickCount=lTickCount;
@@ -635,6 +631,19 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			return fGrabDist;
 		}
 		
+		public void restoreSafeSpotRotAtMainThread() {
+			if(MainThreadI.i().isCurrentMainThread()) {
+				applyRestoreSafeSpotRotAtMainThread();
+			}else {
+				PhysicsI.i().apdListSafeSpotRestoreMainThreadQueue.add(this);
+			}
+		}
+		public void applyRestoreSafeSpotRotAtMainThread() {
+			MainThreadI.i().assertEqualsCurrentThread();
+			PhysicsI.i().resetForces(this);
+			prb.setPhysicsLocation(v3fLastSafeSpot);
+			prb.setPhysicsRotation(quaLastSafeRot);
+		}
 		/**
 		 * bullet native crashes otherwise..
 		 */
@@ -840,7 +849,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			return this;
 		}
 
-		public long getlLastPhysUpdateNano() {
+		public long getLastPhysUpdateNano() {
 			return lLastPhysUpdateNano;
 		}
 
@@ -1030,8 +1039,6 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		public boolean isReadyToGlue() {
 			return bReadyToGlue;
 		}
-
-
 
 	}
 	
@@ -1424,8 +1431,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 						requestDisintegration(pd);
 					}else{
 						if(pd.getLastSafeSpot()!=null){
-							resetForces(pd);
-							pd.restoreSafeSpotRot();
+//							resetForces(pd);
+//							pd.restoreSafeSpotRot();
+							pd.restoreSafeSpotRotAtMainThread();
 						}
 					}
 				}
