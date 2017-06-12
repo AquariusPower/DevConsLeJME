@@ -48,16 +48,17 @@ import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.OriginDevice;
 import com.github.devconslejme.misc.jme.OriginDevice.NodeAxis;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsDataRayCastResultX;
 import com.github.devconslejme.misc.jme.RotateI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.StringTextJmeI;
 import com.github.devconslejme.misc.jme.UserDataI;
-import com.github.devconslejme.misc.jme.WorldGeomPickingI;
+import com.github.devconslejme.misc.jme.WorldPickingI;
 import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
-import com.jme3.collision.CollisionResult;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Matrix3f;
@@ -155,7 +156,7 @@ public class TestOriginDeviceGame extends SimpleApplicationAndStateAbs {
 				geomVolume.getMaterial().getAdditionalRenderState().setWireframe(true);
 				geomVolume.setLocalTranslation(v3fWorld);
 				getRootNode().attachChild(geomVolume);
-		    WorldGeomPickingI.i().addSkip(geomVolume);
+		    WorldPickingI.i().addSkip(geomVolume);
 			}
 		    
 			DebugVisualsI.i().showWorldBoundAndRotAxes(geom);
@@ -250,7 +251,7 @@ public class TestOriginDeviceGame extends SimpleApplicationAndStateAbs {
 		@Deprecated @Override	public void rotateUpTo(Vector3f newUp) {		throw new UnsupportedOperationException(strMsgError);	}
 		
 		@Override
-		public boolean updatePickingEvent(int iButtonIndex, ArrayList<CollisionResult> acrList, Geometry geom, Spatial sptParentest) {
+		public boolean updatePickingEvent(int iButtonIndex, ArrayList<PhysicsDataRayCastResultX> acrList, PhysicsData pd, Geometry geom, Spatial sptParentest) {
 			if(geom!=null){
 				LoggingI.i().logMarker(""+geom);
 				LoggingI.i().logEntry(""+geom.getWorldBound());

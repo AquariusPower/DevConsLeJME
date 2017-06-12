@@ -36,12 +36,11 @@ import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsDataRayCastResultX;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
-import com.jme3.collision.CollisionResult;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
@@ -76,8 +75,8 @@ public class DebugVisualsI {
 		KeyBindCommandManagerI.i().putBindCommandsLater("Ctrl+D",new CallBoundKeyCmd(){
 			@Override
 			public Boolean callOnKeyReleased(int iClickCountIndex) {
-				ArrayList<CollisionResult> acr = WorldGeomPickingI.i().raycastPiercingAtCenter(null);
-				if(acr.size()>0)toggleWorldBoundAndRotAxes(acr.get(0).getGeometry());
+				ArrayList<PhysicsDataRayCastResultX> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+				if(acr.size()>0)toggleWorldBoundAndRotAxes(acr.get(0).getGeom());
 				return true;
 			}
 		}.setName("ToggleDebugVisualsAt"));
@@ -405,7 +404,7 @@ public class DebugVisualsI {
 
 	protected GeometryBVolDbg createGeomBVolDbg(Spatial spt) {
 		GeometryBVolDbg geom = new GeometryBVolDbg(spt);
-		WorldGeomPickingI.i().addSkip(geom);
+		WorldPickingI.i().addSkip(geom);
 		return geom;
 	}
 	

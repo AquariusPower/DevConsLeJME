@@ -27,36 +27,29 @@
 package com.github.devconslejme.game;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import com.github.devconslejme.game.TargetI.TargetGeom;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.KeyBindCommandManagerI;
-import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
-import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.jme.ArrowGeometry;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.GeometryI;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
-import com.github.devconslejme.misc.jme.HighlighterI;
 import com.github.devconslejme.misc.jme.MeshI;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsDataRayCastResultX;
 import com.github.devconslejme.misc.jme.RotateI;
-import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.StringTextJmeI;
-import com.github.devconslejme.misc.jme.WorldGeomPickingI;
+import com.github.devconslejme.misc.jme.WorldPickingI;
 import com.jme3.app.Application;
-import com.jme3.app.SimpleApplication;
 import com.jme3.bounding.BoundingBox;
-import com.jme3.collision.CollisionResult;
 import com.jme3.font.BitmapFont.Align;
 import com.jme3.font.BitmapText;
 import com.jme3.font.Rectangle;
-import com.jme3.input.FlyByCamera;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
@@ -64,7 +57,6 @@ import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Torus;
 
 /**
@@ -519,7 +511,7 @@ public class ReticleI {
 							v3fAppWSize.set(v3fAppWSizeCurrent);
 //							QueueI.i().removeLoopFromQueue(this); //a new one will be created
 						}else{
-							ArrayList<CollisionResult> acr = WorldGeomPickingI.i().raycastPiercingDisplFromCenter(null, rnLastConfigured.v3fMarkersCenter);
+							ArrayList<PhysicsDataRayCastResultX> acr = WorldPickingI.i().raycastPiercingDisplFromCenter(null, rnLastConfigured.v3fMarkersCenter);
 							Float fDist=null;
 //							Float fTargetDist=null;
 							if(acr.size()>0)fDist=(acr.get(0).getDistance());

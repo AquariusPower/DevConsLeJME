@@ -41,6 +41,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsDataRayCastResultX;
 import com.jme3.collision.CollisionResult;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
@@ -123,13 +124,14 @@ public class ManipulatorI {
 			@Override
 			public Boolean callOnKeyReleased(int iClickCountIndex) {
 				if(!drop()) {
-					ArrayList<CollisionResult> acr = WorldGeomPickingI.i().raycastPiercingAtCenter(null);
+					ArrayList<PhysicsDataRayCastResultX> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
 					if(acr.size()>0) {
-						CollisionResult cr = acr.get(0);
-						PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(cr.getGeometry());
+//						CollisionResult cr = acr.get(0);
+//						PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(cr.getGeometry());
+						PhysicsData pd = acr.get(0).getPd();
 						if(pd!=null) {
 //							pd.setCollisionResult(cr);
-							grab(pd,cr.getDistance());
+							grab(pd,acr.get(0).getDistance());
 						}
 	//					crManipulating=cr;
 					}

@@ -42,12 +42,12 @@ import com.github.devconslejme.misc.jme.GeometryI;
 import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.PhysicsI;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsDataRayCastResultX;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.UserDataI;
-import com.github.devconslejme.misc.jme.WorldGeomPickingI;
+import com.github.devconslejme.misc.jme.WorldPickingI;
 import com.jme3.bullet.collision.PhysicsCollisionObject;
 import com.jme3.bullet.control.BetterCharacterControl;
-import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.collision.CollisionResult;
 import com.jme3.math.ColorRGBA;
@@ -133,12 +133,12 @@ public class CharacterI {
 			/**
 			 * user target spot
 			 */
-			ArrayList<CollisionResult> acr = WorldGeomPickingI.i().raycastPiercingAtCenter(null);
+			ArrayList<PhysicsDataRayCastResultX> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
 			if(acr.size()==0)return null;
-			CollisionResult cr = acr.get(0);
-			PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(cr.getGeometry());
-			if(!pd.isTerrain())return null;
-			v3fSpawnAt = cr.getContactPoint();
+			PhysicsDataRayCastResultX cr = acr.get(0);
+//			PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(cr.getGeometry());
+			if(!cr.getPd().isTerrain())return null;
+			v3fSpawnAt = cr.getV3fWrldHit();
 		}
 		
 //		PhysicsCharacter pc = new PhysicsCharacter(new CapsuleCollisionShape(), 2f);
@@ -212,9 +212,9 @@ public class CharacterI {
 					if(bccLast!=null){
 						bccLast=null;
 					}else{
-						ArrayList<CollisionResult> acr = WorldGeomPickingI.i().raycastPiercingAtCenter(null);
+						ArrayList<PhysicsDataRayCastResultX> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
 						if(acr.size()>0){
-							Geometry geom = acr.get(0).getGeometry();
+							Geometry geom = acr.get(0).getPd().getGeomOriginalInitialLink();
 							BetterCharacterControlX bcc = getBCCFrom(geom);
 							if(bcc!=null)bccLast=bcc;
 						}

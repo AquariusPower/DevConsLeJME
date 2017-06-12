@@ -34,8 +34,9 @@ import com.github.devconslejme.misc.MultiClickI.MultiClick;
 import com.github.devconslejme.misc.jme.ActivatorI.ActivetableListenerAbs;
 import com.github.devconslejme.misc.jme.MeshI.Cone;
 import com.github.devconslejme.misc.jme.OriginDevice.NodeAxis;
-import com.github.devconslejme.misc.jme.WorldGeomPickingI.IPickListener;
-import com.jme3.collision.CollisionResult;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsDataRayCastResultX;
+import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Matrix3f;
@@ -232,7 +233,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		getAxisInfo(EAxis.Z).getRotatingTorus().applyInitialRotation();
 		
 		// picking 
-    WorldGeomPickingI.i().addListener(this);
+    WorldPickingI.i().addListener(this);
     
     ActivatorI.i().applyActivetableListener(getAxisInfo(EAxis.X).getRepresentationShape(), ial);
     ActivatorI.i().applyActivetableListener(getAxisInfo(EAxis.Y).getRepresentationShape(), ial);
@@ -623,29 +624,8 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		return null;
 	}
 	
-//	private void updateMultiClickMainShapeMB0(){
-////		if(mcMainShapeMB0.geomClicked==null)return;
-//		if(!mcMainShapeMB0.isReady())return;
-//		
-////		if(mcMainShapeMB0.updateIncClicks(2)){
-//			switch(mcMainShapeMB0.getTotalClicks()){
-//				case 1:
-//					if(eaExclusiveRotations==mcMainShapeMB0.ea){
-//						eaExclusiveRotations=null;
-//					}else{
-//						eaExclusiveRotations=mcMainShapeMB0.ea;
-//					}
-//					break;
-//				case 2:
-//					mcMainShapeMB0.axi.getRotatingTorus().toggleInvertRotation();
-//					break;
-//			}
-//			mcMainShapeMB0.reset();
-////		}
-//	}
-	
 	@Override
-	public boolean updatePickingEvent(int iButtonIndex, ArrayList<CollisionResult> acrList,			Geometry geom, Spatial sptParentest) {
+	public boolean updatePickingEvent(int iButtonIndex, ArrayList<PhysicsDataRayCastResultX> acrList, PhysicsData pd, Geometry geom, Spatial sptParentest) {
 		for(EAxis ea:EAxis.values()){
 			AxisInfo axi = getAxisInfo(ea);
 			NODEXS node = axi.getRepresentationShape();

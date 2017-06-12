@@ -35,7 +35,6 @@ import com.github.devconslejme.debug.UnsafeDebugHacksI;
 import com.github.devconslejme.devcons.DevConsPluginStateI;
 import com.github.devconslejme.devcons.JavaScriptI;
 import com.github.devconslejme.devcons.LoggingI;
-import com.github.devconslejme.devcons.JavaScriptI.EBaseCommand;
 import com.github.devconslejme.extras.DynamicFPSLimiter;
 import com.github.devconslejme.extras.OSCmd;
 import com.github.devconslejme.extras.SingleAppInstance;
@@ -59,15 +58,16 @@ import com.github.devconslejme.misc.jme.HWEnvironmentJmeI.IEnvironmentListener;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.NodeX;
 import com.github.devconslejme.misc.jme.OriginDevice;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsDataRayCastResultX;
 import com.github.devconslejme.misc.jme.SimpleAppState;
 import com.github.devconslejme.misc.jme.StringTextJmeI;
-import com.github.devconslejme.misc.jme.WorldGeomPickingI.IPickListener;
+import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
 import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AppState;
 import com.jme3.audio.AudioListenerState;
-import com.jme3.collision.CollisionResult;
 import com.jme3.font.BitmapText;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Quaternion;
@@ -220,7 +220,7 @@ public class TestDevConsFull extends SimpleApplication implements IEnvironmentLi
 	}
 	
 	@Override
-	public boolean updatePickingEvent(int iButtonIndex, ArrayList<CollisionResult> acrList, Geometry geom, Spatial sptParentest) {
+	public boolean updatePickingEvent(int iButtonIndex, ArrayList<PhysicsDataRayCastResultX> acrList, PhysicsData pd, Geometry geom, Spatial sptParentest) {
 		return false;
 	}
 	

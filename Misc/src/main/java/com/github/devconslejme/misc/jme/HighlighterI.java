@@ -26,6 +26,7 @@
 */
 package com.github.devconslejme.misc.jme;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.github.devconslejme.misc.GlobalManagerI;
@@ -35,6 +36,7 @@ import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI.ColorGlow;
 import com.github.devconslejme.misc.jme.ColorI.EColor;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsDataRayCastResultX;
 import com.jme3.app.SimpleApplication;
 import com.jme3.collision.CollisionResult;
 import com.jme3.input.FlyByCamera;
@@ -65,7 +67,7 @@ public class HighlighterI {
 			// this way more things can be added to the node
 			attachChild(geomHighlight);
 			
-			WorldGeomPickingI.i().addSkip(geomHighlight);
+			WorldPickingI.i().addSkip(geomHighlight);
 		}
 		
 		@Override
@@ -140,11 +142,12 @@ public class HighlighterI {
 		if(flycam.isEnabled()){
 			reset(nhMouseCursorOver);
 		}else{
-			Geometry geomTargetNew=null;
-			for(CollisionResult cr:WorldGeomPickingI.i().raycastPiercingAtCursor(null)){
-				geomTargetNew=cr.getGeometry();
-				break; //1st only
-			}
+			ArrayList<PhysicsDataRayCastResultX> ares = WorldPickingI.i().raycastPiercingAtCursor(null);
+			Geometry geomTargetNew = ares.size()>0 ? ares.get(0).getGeom() : null;
+//			for(CollisionResult cr:WorldPickingI.i().raycastPiercingAtCursor(null)){
+//				geomTargetNew=cr.getGeometry();
+//				break; //1st only
+//			}
 			if(geomTargetNew!=null && ahlnList.get(geomTargetNew)==null){
 				if(nhMouseCursorOver.geomTarget!=geomTargetNew){
 					PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(geomTargetNew);

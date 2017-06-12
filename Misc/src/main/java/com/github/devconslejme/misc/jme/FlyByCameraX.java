@@ -42,6 +42,7 @@ import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.TimedDelay;
+import com.github.devconslejme.misc.jme.PhysicsI.PhysicsDataRayCastResultX;
 import com.jme3.app.Application;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.MotionAllowedListener;
@@ -51,10 +52,7 @@ import com.jme3.input.InputManager;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.math.FastMath;
-import com.jme3.math.Spline;
-import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
-import com.jme3.math.Spline.SplineType;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -542,7 +540,7 @@ public class FlyByCameraX extends FlyByCamera {
 	}; private CompositeControl cc;
 	
 	private String	strAllZoomSteps;
-	private ArrayList<CollisionResult>	acrLast;
+	private ArrayList<PhysicsDataRayCastResultX>	acrLast;
 	
 	public void update(float fTPF){
 		if(tdMouseGrab.isReady(true)){
@@ -577,8 +575,8 @@ public class FlyByCameraX extends FlyByCamera {
 			fZoomedRotationSpeed=getFOV()/fMaxFOVdeg;
 		}
 		
-		acrLast = WorldGeomPickingI.i().raycastPiercingAtCenter(null);
-		if(acrLast.size()>0)HWEnvironmentJmeI.i().putCustomInfo("CamLastHitSpot", ""+acrLast.get(0).getContactPoint());
+		acrLast = WorldPickingI.i().raycastPiercingAtCenter(null);
+		if(acrLast.size()>0)HWEnvironmentJmeI.i().putCustomInfo("CamLastHitSpot", ""+acrLast.get(0).getV3fWrldHit());
 		
 		if(tdMouseInfo.isReady(true)){
 			String strFOV="{ ";
@@ -610,8 +608,8 @@ public class FlyByCameraX extends FlyByCamera {
 		
 	}
 	
-	public ArrayList<CollisionResult> getLastWorldPickRayCastPiercingAtCamCenter(){
-		return acrLast;
+	public ArrayList<PhysicsDataRayCastResultX> getLastWorldPickRayCastPiercingAtCamCenter(){
+		return new ArrayList<PhysicsDataRayCastResultX>(acrLast);
 	}
 	
 //	public String getBkpZoomFOVinfo(){
