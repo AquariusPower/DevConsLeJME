@@ -96,6 +96,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	private ArrayList<PhysicsData> apdDisintegrateAtMainThreadQueue = new ArrayList<PhysicsData>();
 	private ArrayList<PhysicsData> apdListGravityUpdtMainThreadQueue = new ArrayList<>();
 	private ArrayList<PhysicsData> apdListLocationUpdtMainThreadQueue = new ArrayList<>();
+	private ArrayList<PhysicsData> apdListSafeSpotRestoreMainThreadQueue = new ArrayList<>();
 	private long	lTickCount=0;
 	private HashMap<PhysicsRigidBody,PhysicsData> hmDisintegratables=new HashMap<PhysicsRigidBody,PhysicsData>(); 
 	private HashMap<PhysicsRigidBody,PhysicsData> hmProjectiles=new HashMap<PhysicsRigidBody,PhysicsData>(); 
@@ -278,6 +279,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				
 				updateNewGravityQueue();
 				
+				updateRestoreSafeSpotRot();
+				
 				updateNewLocationQueue();
 				
 				return true;
@@ -285,6 +288,12 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}).enableLoopMode();
 	}
 	
+	protected void updateRestoreSafeSpotRot() {
+		for(PhysicsData pd:apdListSafeSpotRestoreMainThreadQueue) {
+			pd.applyRestoreSafeSpotRotAtMainThread();
+		}
+		apdListSafeSpotRestoreMainThreadQueue.clear();
+	}
 	protected void updateNewLocationQueue() {
 		for(PhysicsData pd:apdListLocationUpdtMainThreadQueue) {
 			pd.applyNewPhysLocationAtMainThread();
@@ -318,10 +327,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	
 	protected void updateDisintegratablesAndItsQueue() {
 		for(PhysicsData pd:hmDisintegratables.values()){
-			if(!pd.bAllowDisintegration)apdPreventDisintegr.add(pd);
+			if(!pd.bAllowDisintegration)apdPreventDisintegr.add(pd); //as the disintegration request may happen outside here too
 			
 			if(pd.getAgeNano() > pd.getProjectileMaxLifeTime() ){
-				if(!apdDisintegrateAtMainThreadQueue.contains(pd))apdDisintegrateAtMainThreadQueue.add(pd);
+				requestDisintegration(pd);
+//				if(!apdDisintegrateAtMainThreadQueue.contains(pd))apdDisintegrateAtMainThreadQueue.add(pd);
 			}
 //			else{
 //				updateIgnoredProjectileCollisions(pd);
