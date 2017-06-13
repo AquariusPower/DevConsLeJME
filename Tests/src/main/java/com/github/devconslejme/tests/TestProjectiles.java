@@ -79,38 +79,47 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 			EMatter.Generic20KgPerM3.get()
 		);
 		
-		float fSize=100;
+		float fFullLength=100;
 		float fYFloor=-7;
-		PhysicsData pdFloor = PhysicsI.i().spawnOrthoWall(0, fSize, fSize, null, new Vector3f(0,fYFloor,0));
-		pdFloor.getInitialOriginalGeometry().getMaterial().setColor(EColor.Color.s(), 
-			ColorI.i().colorChangeCopy(ColorRGBA.Brown,0.20f,1f));
-//		Geometry geomFloor=GeometryI.i().create(new Box(iSize,0.1f,iSize), ColorI.i().colorChangeCopy(ColorRGBA.Brown,0.20f,1f));
-//		geomFloor.move(0,-7f,0);
-//		geomFloor.setName("floor");
-//		PhysicsI.i().imbueFromWBounds(geomFloor).setTerrain(true)
-//			.getRBC().setMass(0f);
-//		AppI.i().getRootNode().attachChild(geomFloor);
+		float fFloorThickness=0.5f;
+		PhysicsData pdFloor = PhysicsI.i().spawnWall(
+			new Vector3f( fFullLength/2f,fYFloor,0),
+			new Vector3f(-fFullLength/2f,fYFloor,0),
+			true,fFullLength,0.5f,ColorI.i().colorChangeCopy(ColorRGBA.Brown,0.20f,1f));
+//		PhysicsData pdFloor = PhysicsI.i().spawnWall(0, fFullLength, fFullLength, 0f, null, new Vector3f(0,fYFloor,0));
+//		pdFloor.getInitialOriginalGeometry().getMaterial().setColor(EColor.Color.s(), 
+//			ColorI.i().colorChangeCopy(ColorRGBA.Brown,0.20f,1f));
 		
-		float fYWalls=fYFloor+1-0.1f; //walls
-		PhysicsI.i().spawnOrthoWall(1, fSize, 2.1f, null, new Vector3f(0,fYWalls, fSize/2f));
-		PhysicsI.i().spawnOrthoWall(1, fSize, 2.1f, null, new Vector3f(0,fYWalls,-fSize/2f));
-		PhysicsI.i().spawnOrthoWall(1, fSize, 2.1f, null, new Vector3f( fSize/2f,fYWalls,0))
-			.rotate(0, 90*FastMath.DEG_TO_RAD, 0);
-//			.getRBC().getPhysicsRotation().mult(new Quaternion().fromAxes(0, 90*FastMath.DEG_TO_RAD, 0));
-//			.getRBC().setPhysicsRotation(new Quaternion().rot);
-//			.rotate(0, 90*FastMath.DEG_TO_RAD, 0);
-		PhysicsI.i().spawnOrthoWall(1, fSize, 2f, null, new Vector3f(-fSize/2f,fYWalls,0))
-			.rotate(0, 90*FastMath.DEG_TO_RAD, 0);
+		float fWallStuckOnFloorDepth=fFloorThickness;
+		float fWallHeight=2f+fWallStuckOnFloorDepth;
+//		float fYWalls=fYFloor+fWallHeight/2f-fWallStuckOnFloorDepth; //walls
+		float fYWalls=fYFloor+fFloorThickness/2f-fWallStuckOnFloorDepth; //walls
+		PhysicsI.i().spawnWall( //north
+			new Vector3f( fFullLength/2f,fYWalls, fFullLength/2f),
+			new Vector3f(-fFullLength/2f,fYWalls, fFullLength/2f));
+		PhysicsI.i().spawnWall( //south
+			new Vector3f( fFullLength/2f,fYWalls,-fFullLength/2f),
+			new Vector3f(-fFullLength/2f,fYWalls,-fFullLength/2f));
+		PhysicsI.i().spawnWall( //west
+			new Vector3f( fFullLength/2f,fYWalls, fFullLength/2f),
+			new Vector3f( fFullLength/2f,fYWalls,-fFullLength/2f));
+		PhysicsI.i().spawnWall( //east
+			new Vector3f(-fFullLength/2f,fYWalls, fFullLength/2f),
+			new Vector3f(-fFullLength/2f,fYWalls,-fFullLength/2f));
+		
+//		PhysicsI.i().spawnWall(1, fFullLength, fWallHeight, 0f, null, new Vector3f(0,fYWalls, fFullLength/2f));
+//		PhysicsI.i().spawnWall(1, fFullLength, fWallHeight, 0f, null, new Vector3f(0,fYWalls,-fFullLength/2f));
+//		PhysicsI.i().spawnWall(1, fFullLength, fWallHeight, 90*FastMath.DEG_TO_RAD, null, new Vector3f( fFullLength/2f,fYWalls,0));
+//		PhysicsI.i().spawnWall(1, fFullLength, fWallHeight, 90*FastMath.DEG_TO_RAD, null, new Vector3f(-fFullLength/2f,fYWalls,0));
 		
 		//ramp
-		PhysicsI.i().spawnOrthoWall(2, fSize/4f, 1f, null, new Vector3f(0,fYFloor,(fSize/2f)*0.75f))
-			.rotate(70*FastMath.DEG_TO_RAD,0,0);
-//		initTestWall(iSize,"XP",true,geomFloor.getLocalTranslation().y,null);
-//		initTestWall(iSize,"XN",false,geomFloor.getLocalTranslation().y,null);
-//		initTestWall(iSize,"ZP",null,geomFloor.getLocalTranslation().y,true);
-//		initTestWall(iSize,"ZN",null,geomFloor.getLocalTranslation().y,false);
+//		PhysicsI.i().spawnWall(2, fFullLength/4f, 1f, -15*FastMath.DEG_TO_RAD, null, new Vector3f(0,fYFloor,(fFullLength/2f)*0.75f));
+		PhysicsI.i().spawnWall(
+			new Vector3f(0, fYFloor+fFloorThickness/2f,  (fFullLength/2f)*0.75f),
+			new Vector3f(0, fYFloor+fWallHeight-fWallStuckOnFloorDepth, (fFullLength/2f)),
+			true,null,null,null);
 		
-		// some boxes representing the axes (not needed tho)
+		// some boxes representing the axes (just some non-sense lol)
 		PhysicsI.i().spawnVolumeBox(ColorI.i().colorChangeCopy(ColorRGBA.Red,0,0.5f),
 			3f,"X-Red"	,new Vector3f(1,0,0).mult(5));
 		PhysicsI.i().spawnVolumeBox(ColorI.i().colorChangeCopy(ColorRGBA.Green,0,0.5f),

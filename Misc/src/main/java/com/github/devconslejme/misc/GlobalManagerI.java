@@ -41,7 +41,7 @@ import java.util.HashMap;
  * 
  * Obs.: The classes tha have globals may also have alternative instances for specific usages.
  * 
- * TODO does not depend everything on this class.. use G.i(TheType.class).someMethod() instead everywhere.
+ * TODO does not depend everything on this class? use G.i(TheType.class).someMethod() instead everywhere?
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */

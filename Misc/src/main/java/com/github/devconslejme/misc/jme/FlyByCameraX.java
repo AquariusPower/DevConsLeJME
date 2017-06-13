@@ -301,6 +301,8 @@ public class FlyByCameraX extends FlyByCamera {
 //		setZoomLimits(false, getFOV()/2f, getFOV(), 2); // default 2 steps: min and max
 		setZoomLimits(true, 1, getFOV(), 4);
 //		setZoomLimits(true, 1, 75, 6);
+		
+		setRotationSpeed(2f);
 	}
 	
 	@Override

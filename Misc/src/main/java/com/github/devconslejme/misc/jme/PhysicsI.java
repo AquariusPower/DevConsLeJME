@@ -83,6 +83,8 @@ import com.jme3.scene.SimpleBatchNode;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 
+import de.jarnbjo.flac.FlacStream;
+
 /**
  * http://physics.nist.gov/cuu/Units/units.html
  * http://www.bulletphysics.org/mediawiki-1.5.8/index.php?title=Frequently_Asked_Questions
@@ -432,13 +434,13 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		private PhysicsData pdLevitationFollow;
 		
 		/**
-		 * 
+		 * radians
 		 * @param fX
 		 * @param fY
 		 * @param fZ
 		 * @return new final rotation
 		 */
-		public Quaternion rotate(float fX,float fY,float fZ){
+		public Quaternion addRotation(float fX,float fY,float fZ){
 			Quaternion qua = new Quaternion();
 			qua.fromAngles(fX,fY,fZ);
 			getPRB().setPhysicsRotation(getPRB().getPhysicsRotation().mult(qua));
@@ -2033,17 +2035,58 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		
 		return pd;
 	}
-
+	
+	public PhysicsData spawnWall(Vector3f v3fFrom, Vector3f v3fTo) {
+		return spawnWall(v3fFrom, v3fTo, false, null,null,null);
+	}
+	/**
+	 * this is easy to use with terrain editors
+	 * @param v3fFrom
+	 * @param v3fTo
+	 * @param bFloorRamp true for ramps/floors, will be rotated in z 90deg. false for walls, will be moved upwards by half height (so its bottom is on the target spots)
+	 * @return
+	 */
+	public PhysicsData spawnWall(Vector3f v3fFrom, Vector3f v3fTo, boolean bFloorRamp, Float fHeightOrWidth, Float fThickness, ColorRGBA color) {
+		if(fThickness==null)fThickness=0.25f; //a common brick wall
+		if(fHeightOrWidth==null)fHeightOrWidth=2f; // a simple common wall
+		if(color==null)color=ColorRGBA.Gray;//concrete looks
+		
+		float fLength = v3fTo.distance(v3fFrom);
+		Vector3f v3fDir = v3fTo.subtract(v3fFrom);
+		
+		Geometry geomWall=GeometryI.i().create(new Box(fThickness/2f, fHeightOrWidth/2f, fLength/2f), color);
+		geomWall.setName("OrthoWall");
+		AppI.i().getRootNode().attachChild(geomWall);
+		
+		geomWall.setLocalTranslation(v3fFrom);
+		geomWall.lookAt(v3fTo, Vector3f.UNIT_Y);
+		
+		geomWall.move(geomWall.getLocalRotation().getRotationColumn(2).mult(fLength/2f));
+		
+		if(bFloorRamp) {
+			geomWall.rotate(0, 0, 90*FastMath.DEG_TO_RAD);
+		}else {
+			//wall bottom
+			geomWall.move(geomWall.getLocalRotation().getRotationColumn(1).mult(fHeightOrWidth/2f));
+		}
+		
+		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomWall).setTerrain(true);
+		pd.getPRB().setMass(0f); //rbc
+		
+		return pd;
+	}
+	
 	/**
 	 * 
-	 * @param iPlane 0=x floor/ceiling, 1=y walls, 2=z easyRampsOriginOnBase will have a node parent 
+	 * @param iPlane 0=x floor/ceiling, 1=y walls, 2=z easyRampsOriginOnBase 
 	 * @param fWidth
 	 * @param fHeight
 	 * @param fThickness can be null, will be default
 	 * @param v3fPos
 	 * @return
 	 */
-	public PhysicsData spawnOrthoWall(int iPlane,float fWidth,float fHeight,Float fThickness, Vector3f v3fPos){
+	@Deprecated //too messy..
+	public PhysicsData spawnWall(int iPlane,float fWidth,float fHeight,float fRadRotation,Float fThickness, Vector3f v3fPos){
 		if(fThickness==null)fThickness=0.1f;
 		
 		Geometry geomWall=GeometryI.i().create(new Box(fWidth/2f,fHeight/2f,fThickness/2f), ColorRGBA.Gray);
@@ -2055,14 +2098,22 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			case 0:
 				MiscJmeI.i().addToName(geomWall, "floor", false);
 				geomWall.rotate(90*FastMath.DEG_TO_RAD, 0, 0); //floors/ceilings
+				geomWall.rotate(0, fRadRotation, 0); //floors/ceilings
 				break;
-			case 1:break; //default wall
+			case 1:
+				geomWall.rotate(0, fRadRotation, 0);
+				break; //default walls
 			case 2:
 				geomWall.rotate(0, 0, 90*FastMath.DEG_TO_RAD);
-//				NodeX nodexParent = new NodeX(geomWall.getName()+":Ramp");
-//				nodexParent.attachChild(geomWall);
-				geomWall.move(0,fWidth/2f,0);
-//				sptAtRoot=nodexParent;
+				geomWall.setLocalTranslation(0,fWidth/2f,0);
+				
+				Node nodePivot = new Node("tmpPivotRot");
+				nodePivot.setLocalRotation(geomWall.getLocalRotation());
+				geomWall.getParent().attachChild(nodePivot);
+				RotateI.i().rotateAroundPivot(geomWall, nodePivot, fRadRotation, true);
+				nodePivot.removeFromParent();
+				
+//				geomWall.rotate(0, 0, 90*FastMath.DEG_TO_RAD);
 				break;
 		}
 		

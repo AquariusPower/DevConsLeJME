@@ -117,7 +117,7 @@ public class CharacterI {
 	private Key	keyContext;
 	private Boolean	bStrafeLeft;
 	private Boolean	bForward;
-	private float	fSpeed=100f;
+	private float	fSpeed=400f;
 
 	private FlyByCameraX	flycamx;
 
@@ -361,17 +361,17 @@ public class CharacterI {
 		if(!isPossessing())return;
 		
 		if(bForward!=null){
-			Vector3f v3f=AppI.i().getCamLookingAtDir().normalize();
+			Vector3f v3f=AppI.i().getCamLookingAtDir();
 			v3f.y=0;
-			v3f.multLocal(getSpeed());
+			v3f.normalizeLocal().multLocal(getSpeed());
 			if(!bForward)v3f.negateLocal();
 			v3fMove.addLocal(v3f);
 		}
 		
 		if(bStrafeLeft!=null){
-			Vector3f v3f=AppI.i().getCamLeftDir().normalize();
+			Vector3f v3f=AppI.i().getCamLeftDir();
 			v3f.y=0;
-			v3f.multLocal(getSpeed());
+			v3f.normalizeLocal().multLocal(getSpeed());
 			if(!bStrafeLeft)v3f.negateLocal();
 			v3fMove.addLocal(v3f);
 		}

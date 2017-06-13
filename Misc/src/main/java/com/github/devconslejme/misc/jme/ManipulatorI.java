@@ -230,25 +230,32 @@ public class ManipulatorI {
 			
 			PhysicsI.i().resetForces(pdManipulating); //prevent falling flickering glitch
 		}else {
+			Vector3f v3fFrom = pdManipulating.getPRB().getPhysicsLocation();
 			Vector3f v3fInfrontCamPos = AppI.i().getCamWPos(fMinDist);
-			float fDistRest=0.01f;
-			float fDist = v3fInfrontCamPos.distance(pdManipulating.getPRB().getPhysicsLocation());
-//			float fDist = pdManipulating.getGrabDist();
-//			pdManipulating.setTempGravityTowards(v3fCamPos,fDist);
-			float fAcceleration = 200f;
-			if(fDist < 0.10f)fAcceleration/=10f;
-			else
-			if(fDist < 0.25f)fAcceleration/=5f;
-			else
-			if(fDist < 0.50f)fAcceleration/=2f;
-			pdManipulating.setTempGravityTowards(v3fInfrontCamPos, fDist>fDistRest ? fAcceleration : 0f);
-			
-			boolean bResetF=false;
-			if(fDist<fDistRest)bResetF=true;
-			if(fDist<10f && tdResetForce.isReady(true))bResetF=true;
-			if(bResetF)PhysicsI.i().resetForces(pdManipulating);
-//			if(fDist<fDistRest || (fDist>10f && tdResetForce.isReady(true)))PhysicsI.i().resetForces(pdManipulating);
-//			tdResetForce.resetAndChangeDelayTo(0.1f).setActive(true);
+			ArrayList<RayCastResultX> aresx = PhysicsI.i().rayCastSortNearest(v3fFrom, v3fInfrontCamPos, false, true, true, pdManipulating);//TODO possessed pds
+			if(aresx.size()==0) { //must have a clean line of sight!
+				float fDistRest=0.01f;
+				float fDist = v3fInfrontCamPos.distance(v3fFrom);
+	//			float fDist = pdManipulating.getGrabDist();
+	//			pdManipulating.setTempGravityTowards(v3fCamPos,fDist);
+				float fAcceleration = 200f;
+				if(fDist < 0.10f)fAcceleration/=10f;
+				else
+				if(fDist < 0.25f)fAcceleration/=5f;
+				else
+				if(fDist < 0.50f)fAcceleration/=2f;
+				pdManipulating.setTempGravityTowards(v3fInfrontCamPos, fDist>fDistRest ? fAcceleration : 0f);
+				
+				boolean bResetF=false;
+				if(fDist<fDistRest)bResetF=true;
+				if(fDist<10f && tdResetForce.isReady(true))bResetF=true;
+	//			if(tdResetForce.isReady(true))bResetF=true;
+				if(bResetF) {
+					PhysicsI.i().resetForces(pdManipulating);
+				}
+	//			if(fDist<fDistRest || (fDist>10f && tdResetForce.isReady(true)))PhysicsI.i().resetForces(pdManipulating);
+	//			tdResetForce.resetAndChangeDelayTo(0.1f).setActive(true);
+			}
 		}
 		
 		if(pdManipulating.isActivatable()) {
