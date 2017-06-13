@@ -1408,7 +1408,13 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				true, true, pdLevi
 			);
 			
-			RayCastResultX resHitBelow = (resultsx.size()>0) ? resultsx.get(0) : null;
+//			RayCastResultX resHitBelow = (resultsx.size()>0) ? resultsx.get(0) : null;
+			RayCastResultX resHitBelow = null;
+			for(RayCastResultX r:resultsx) { 
+				if(r.getPd().getLeviFollow()==pdLevi)continue; //ignore the followers
+				resHitBelow=r;
+				break;
+			}
 			
 			if((pdLevi.getLeviFollow()!=null || resHitBelow!=null) && prb.getGravity().length()>0) {
 				pdLevi.setNewGravityAtMainThread(Vector3f.ZERO);
