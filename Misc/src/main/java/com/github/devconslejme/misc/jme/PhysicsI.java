@@ -27,14 +27,12 @@
 package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import com.github.devconslejme.game.CharacterI.BetterCharacterControlX;
 import com.github.devconslejme.game.CharacterI.LeviCharacter;
 import com.github.devconslejme.misc.Annotations.NotMainThread;
 import com.github.devconslejme.misc.Annotations.Workaround;
@@ -48,7 +46,6 @@ import com.github.devconslejme.misc.MatterI.MatterStatus;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
-import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.github.devconslejme.misc.SimulationTimeI;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.TimeFormatI;
@@ -82,8 +79,6 @@ import com.jme3.scene.Node;
 import com.jme3.scene.SimpleBatchNode;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
-
-import de.jarnbjo.flac.FlacStream;
 
 /**
  * http://physics.nist.gov/cuu/Units/units.html
@@ -959,7 +954,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			return mts;
 		}
 
-		public PhysicsData setMts(MatterStatus mts) {
+		public PhysicsData setMatterStatus(MatterStatus mts) {
 			this.mts = mts;
 			return this;
 		}
@@ -1212,6 +1207,16 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			}
 		}
 		return pd;
+	}
+	
+	public void changeMatter(PhysicsData pd, Matter mt, Float fForceMassGramsIgnoringModelBoundVolume) {
+		MatterStatus mtsNew = new MatterStatus(mt);
+		mtsNew.setVolumeCm3(pd.getMts().getVolumeCm3());
+		if(fForceMassGramsIgnoringModelBoundVolume!=null) {
+			mtsNew.setMassGrams(fForceMassGramsIgnoringModelBoundVolume);
+		}
+		pd.setMatterStatus(mtsNew);
+		pd.getPRB().setMass((float) mtsNew.getMassKg());
 	}
 	
 	public void putPhysicsDataInfo(Spatial sptSourceRetrieveFrom, HashMap<String,Info> hmStore){

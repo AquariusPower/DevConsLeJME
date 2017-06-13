@@ -206,7 +206,7 @@ public class PhysicsProjectileI {
 		sbnProjectilesAtWorld.attachChild(geomClone); //AppI.i().getRootNode().attachChild(geomClone);
 		sbnProjectilesAtWorld.batch();
 		
-		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,pp.mt,null);
+		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone, pp.mt, null);
 		geomClone.scale(pp.fPhysBoundsScaleDiv); //to restore the good looking size
 		pd.setAllowDisintegration(true);
 		pd.setProjectile(true);

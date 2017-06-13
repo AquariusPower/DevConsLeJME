@@ -76,6 +76,7 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 		PhysicsProjectileI.i().setProjectileFromCamToDevTestDbg();
 		PhysicsGun pg = PhysicsProjectileI.i().createGun(
 			PhysicsProjectileI.i().getProjectileThrowerDevTestDbgCopy(),
+//			EMatter.Iron.get()
 			EMatter.Generic20KgPerM3.get()
 		);
 		
