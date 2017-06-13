@@ -28,19 +28,17 @@ package com.github.devconslejme.tests;
 
 import com.github.devconslejme.game.CharacterI;
 import com.github.devconslejme.misc.MatterI.EMatter;
-import com.github.devconslejme.misc.jme.AppI;
+import com.github.devconslejme.misc.MatterI.EMatterStatus;
+import com.github.devconslejme.misc.MatterI.MatterStatus;
 import com.github.devconslejme.misc.jme.ColorI;
-import com.github.devconslejme.misc.jme.PhysicsProjectileI;
-import com.github.devconslejme.misc.jme.ColorI.EColor;
 import com.github.devconslejme.misc.jme.PhysicsI;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
+import com.github.devconslejme.misc.jme.PhysicsProjectileI;
 import com.github.devconslejme.misc.jme.PhysicsProjectileI.PhysicsGun;
+import com.github.devconslejme.misc.jme.PhysicsProjectileI.PhysicsThrowProjectiles;
 import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.Geometry;
-import com.jme3.scene.Node;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
@@ -73,12 +71,23 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 		PhysicsI.i().setBulletDebugVisualsEnabled(true);
 //		SubdivisionSurfaceModifier s = new SubdivisionSurfaceModifier(modifierStructure, blenderContext);
 		
-		PhysicsProjectileI.i().setProjectileFromCamToDevTestDbg();
-		PhysicsGun pg = PhysicsProjectileI.i().createGun(
-			PhysicsProjectileI.i().getProjectileThrowerDevTestDbgCopy(),
-//			EMatter.Iron.get()
-			EMatter.Generic20KgPerM3.get()
-		);
+		// to have fun on flycam mode
+		PhysicsProjectileI.i().setProjectileFromCamCurrent(PhysicsProjectileI.i().getProjectileThrowerDevTestDbgCopy());
+		
+//		boolean bOld=true;
+//		if(bOld) {
+//			// projectile mass is 0.0065
+//			PhysicsThrowProjectiles pp = PhysicsProjectileI.i().getProjectileThrowerDevTestDbgCopy();
+//			PhysicsGun pg = PhysicsProjectileI.i().createGun(pp,
+//				EMatter.Generic20KgPerM3.get()
+//			);
+//		}else {
+			PhysicsGun pg = PhysicsProjectileI.i().createGun(
+				new PhysicsThrowProjectiles(EMatterStatus.Bullet9mm.get()),
+				EMatter.Iron.get()
+//				EMatterStatus.GunAK47.get()
+			);
+//		}
 		
 		float fFullLength=100;
 		float fYFloor=-7;
@@ -122,9 +131,9 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 		
 		// some boxes representing the axes (just some non-sense lol)
 		PhysicsI.i().spawnVolumeBox(ColorI.i().colorChangeCopy(ColorRGBA.Red,0,0.5f),
-			3f,"X-Red"	,new Vector3f(1,0,0).mult(5));
+			5f,"X-Red"	,new Vector3f(1,0,0).mult(5));
 		PhysicsI.i().spawnVolumeBox(ColorI.i().colorChangeCopy(ColorRGBA.Green,0,0.5f),
-			2f,"Y-Green",new Vector3f(0,1,0).mult(5));
+			3f,"Y-Green",new Vector3f(0,1,0).mult(5));
 		PhysicsI.i().spawnVolumeBox(ColorI.i().colorChangeCopy(ColorRGBA.Blue,0,0.5f),
 			1f,"Z-Blue"	,new Vector3f(0,0,1).mult(5));
 		

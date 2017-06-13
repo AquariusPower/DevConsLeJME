@@ -29,16 +29,17 @@ package com.github.devconslejme.misc.jme;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
-import com.github.devconslejme.misc.MatterI.EMatter;
+import com.github.devconslejme.misc.MatterI.EMatterStatus;
 import com.github.devconslejme.misc.MatterI.Matter;
+import com.github.devconslejme.misc.MatterI.MatterStatus;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ActivatorI.ActivetableListenerAbs;
 import com.github.devconslejme.misc.jme.ColorI.EColor;
 import com.github.devconslejme.misc.jme.PhysicsI.ImpTorForce;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
+import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Quaternion;
@@ -60,22 +61,25 @@ public class PhysicsProjectileI {
 	private int iProjectileMaxLifeTimeMultiplier=100;
 	private PhysicsThrowProjectiles ppCamDevDbgTst;
 	private PhysicsThrowProjectiles ppFromCamCurrent;
+	private Geometry geomProjectileFactory;
 	
 //	public static class SimpleBatchNode
 	
 	public static class PhysicsThrowProjectiles{
 		private int	iProjectilesPerSecond = (10); //10 seems the default of many guns
 		private Geometry	geomProjectileFactory;
-		private Matter mt;
+//		private Matter mt;
 		private float fDesiredSpeed;
-		private float fRadius;
-		private float	fPhysBoundsScaleDiv;
-		private float	fGravityDiv;
+//		private float fRadius;
+//		private float	fPhysBoundsScaleDiv;
+		private float	fGravityDivTrick;
 //		protected boolean	bFiring;
+		private MatterStatus mts;
 		
 		@Override
 		public PhysicsThrowProjectiles clone(){
-			return new PhysicsThrowProjectiles(geomProjectileFactory, fDesiredSpeed, fRadius, fPhysBoundsScaleDiv, fGravityDiv, mt);
+			return new PhysicsThrowProjectiles(mts);
+//			return new PhysicsThrowProjectiles(geomProjectileFactory, fDesiredSpeed, fGravityDivTrick, mt);
 		}
 		
 		/**
@@ -87,22 +91,31 @@ public class PhysicsProjectileI {
 		 * @param fGravityDiv (can be null) this trick simulates/helps requiring less speed for a good flying/drop curve w/o stressing the phys engine
 		 * @param mt
 		 */
-		public PhysicsThrowProjectiles(Geometry geomProjectileFactory, float fDesiredSpeed, float fRadius, Float fPhysBoundsScaleDiv, Float fGravityDiv, Matter mt) {
+		public PhysicsThrowProjectiles(Geometry geomProjectileFactory, float fDesiredSpeed, Float fGravityDiv) {
 			this.fDesiredSpeed = fDesiredSpeed;
-			this.fRadius = fRadius;
-			this.mt = mt;
-			this.fGravityDiv=fGravityDiv==null?1f:fGravityDiv;
-			this.fPhysBoundsScaleDiv=fPhysBoundsScaleDiv==null?1f:fPhysBoundsScaleDiv;
+//			this.fRadius = fRadius;
+//			this.mt = mt;
+			this.fGravityDivTrick  = fGravityDiv==null ? 1f : fGravityDiv;
+//			this.fPhysBoundsScaleDiv=fPhysBoundsScaleDiv==null?1f:fPhysBoundsScaleDiv;
 			
 			if(geomProjectileFactory==null){
-				geomProjectileFactory = GeometryI.i().create(new Sphere(3,4,fRadius), ColorRGBA.Cyan);
-				geomProjectileFactory.scale(0.25f,0.25f,1f);
-				geomProjectileFactory.scale(1f/fPhysBoundsScaleDiv);
-				geomProjectileFactory.getMaterial().setColor(EColor.GlowColor.s(), ColorRGBA.Blue.mult(10)); //requires the bloom post processor with glow objects mode
+				geomProjectileFactory=PhysicsProjectileI.i().getDefaultProjectileFactory();
+//				geomProjectileFactory = GeometryI.i().create(new Sphere(3,4,fRadius), ColorRGBA.Cyan);
+//				geomProjectileFactory.scale(0.25f,0.25f,1f);
+//				geomProjectileFactory.scale(1f/fPhysBoundsScaleDiv);
+//				geomProjectileFactory.getMaterial().setColor(EColor.GlowColor.s(), ColorRGBA.Blue.mult(10)); //requires the bloom post processor with glow objects mode
 			}
 			this.geomProjectileFactory=geomProjectileFactory;
 		}
 		
+		public PhysicsThrowProjectiles(MatterStatus mts) {
+			this.fDesiredSpeed = 250f;
+//			this.fRadius = 0.1f;
+			this.mts=mts;
+			this.fGravityDivTrick=4f; //TODO if the velocity becomes too low, like a shot straight up that begins to fall, or after hitting something, it's gravity should be restored to normal gravity to not look weird like anything else falling faster than a bullet...
+			this.geomProjectileFactory=PhysicsProjectileI.i().getDefaultProjectileFactory();
+		}
+
 		public int getProjectilesPerSecond() {
 			return iProjectilesPerSecond;
 		}
@@ -117,7 +130,9 @@ public class PhysicsProjectileI {
 		sbnProjectilesAtWorld = new SimpleBatchNode("BatchNode");
 		AppI.i().getRootNode().attachChild(sbnProjectilesAtWorld);
 		
-		ppCamDevDbgTst = new PhysicsThrowProjectiles(null,250,0.1f,4f,4f,EMatter.Generic100KgPerM3.get());
+//		ppCamDevDbgTst = new PhysicsThrowProjectiles(null,250,0.1f,4f,4f,EMatter.Generic100KgPerM3.get());
+//		ppCamDevDbgTst = new PhysicsThrowProjectiles(EMatterStatus.BulletForTestOfGeneric100KgPerM3.get());
+		ppCamDevDbgTst = new PhysicsThrowProjectiles(EMatterStatus.Bullet9mm.get());
 		
     KeyBindCommandManagerI.i().putBindCommandsLater("Space",new CallBoundKeyCmd(){
   		@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
@@ -128,15 +143,34 @@ public class PhysicsProjectileI {
 		);
 	}
 	
-//	public PhysicsGun createGun(PhysicsThrowProjectiles pp,float fOverallGunDensity){
+	public Geometry getDefaultProjectileFactory() {
+		if(this.geomProjectileFactory==null) {
+			float fRadius=0.1f;
+//			float fPhysBoundsScaleDiv=4f;
+			
+			float fScaleXY=0.25f;
+			geomProjectileFactory = GeometryI.i().create(new Sphere(3,4,fRadius), ColorRGBA.Cyan);
+			geomProjectileFactory.scale(fScaleXY,fScaleXY,1f); //this wont affect the bounding sphere
+//			geomProjectileFactory.setModelBound(new BoundingSphere(0.025f,new Vector3f())); //this will become a tiny collider
+			geomProjectileFactory.setModelBound(new BoundingSphere(fRadius*fScaleXY,new Vector3f())); //this will become a tiny collider
+//			geomProjectileFactory.getWorldBound();
+//			geomProjectileFactory.scale(1f/fPhysBoundsScaleDiv);
+			geomProjectileFactory.getMaterial().setColor(EColor.GlowColor.s(), ColorRGBA.Blue.mult(10)); //requires the bloom post processor with glow objects mode
+		}
+		
+		return geomProjectileFactory;
+	}
+
+	//	public PhysicsGun createGun(PhysicsThrowProjectiles pp,float fOverallGunDensity){
 	public PhysicsGun createGun(PhysicsThrowProjectiles pp,Matter mtGunRelativeOverallMatter){
 		PhysicsGun pg = new PhysicsGun();
 		pg.pp=pp;
 		
 		Geometry geom = GeometryI.i().create(MeshI.i().cylinder(1f,0.05f), ColorRGBA.Yellow);
+		geom.scale(0.25f,0.5f,1f);
 		geom.setName("PhysicsGun");
 		AppI.i().getRootNode().attachChild(geom);
-		pg.pd=PhysicsI.i().imbueFromWBounds(geom,	mtGunRelativeOverallMatter,	new Node());
+		pg.pd=PhysicsI.i().imbueFromWBounds(geom,	new MatterStatus(mtGunRelativeOverallMatter),	new Node());
 //		pg.pd=PhysicsI.i().imbueFromWBounds(geom,	new Matter("Density="+fOverallGunDensity, fOverallGunDensity),	true);
 		
 		CallableXAnon cx = new CallableXAnon() {
@@ -178,17 +212,19 @@ public class PhysicsProjectileI {
 		
 		ImpTorForce impPjtl = PhysicsI.i().throwAtSelfDirImpulse(pdPjtl, gun.pp.fDesiredSpeed);
 		
-		float fMassRatio = pdPjtl.getPRB().getMass()/gun.pd.getPRB().getMass();
+		// gun recoil
+		float fMassRatio = pdPjtl.getPRB().getMass()/(gun.pd.getPRB().getMass());
 //		float fImpulseRecoil = -1f * impPjtl.getImpulseAtSelfDir().mult(fMassRatio).length();
-		float fImpulseRecoil = -1f * impPjtl.getImpulseAtSelfDir()*fMassRatio;
+		float fImpulseRecoil = impPjtl.getImpulseAtSelfDir()*fMassRatio;
+//		fImpulseRecoil*=100f;
 //		float fTorque = 0.01f;
-		float fY = 2f;
+		float fRecoilEffectForceY = 1000f; //TODO this should be a result of the projectile powder/mass force VS gun mass, and be configurable outside here to make it sure it is working.
 //		if(gun.pd.f)
 //		if(gun.pd.isGrabbed())fTorque*=1000f;
 //		if(gun.pd.isGrabbed())fY*=100000f;
 		ImpTorForce impRecoil = new ImpTorForce()
 //			.setim
-			.setImpulseAtSelfDir(fImpulseRecoil,fY)
+			.setImpulseAtSelfDir(-fImpulseRecoil,fRecoilEffectForceY)
 //			.setTorqueImpulse(new Vector3f(fTorque,0,0))
 			;
 		PhysicsI.i().applyImpulseLater(gun.pd, impRecoil);
@@ -206,11 +242,13 @@ public class PhysicsProjectileI {
 		sbnProjectilesAtWorld.attachChild(geomClone); //AppI.i().getRootNode().attachChild(geomClone);
 		sbnProjectilesAtWorld.batch();
 		
-		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone, pp.mt, null);
-		geomClone.scale(pp.fPhysBoundsScaleDiv); //to restore the good looking size
+		assert geomClone.getWorldBound() instanceof BoundingSphere : "the fastest collider calculus if for spheres, so projectiles must use it";
+		
+		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone, pp.mts, null);
+//		geomClone.scale(pp.fPhysBoundsScaleDiv); //to restore the good looking size
 		pd.setAllowDisintegration(true);
 		pd.setProjectile(true);
-		pd.getPRB().setGravity(PhysicsI.i().getGravityCopy().divide(pp.fGravityDiv));
+		pd.getPRB().setGravity(PhysicsI.i().getGravityCopy().divide(pp.fGravityDivTrick));
 		
 //		disableCcdToLetCollisionGroupsWork(pd);
 		
@@ -391,10 +429,10 @@ public class PhysicsProjectileI {
 		return this; 
 	}
 	
-	public PhysicsProjectileI setProjectileFromCamToDevTestDbg() {
-		this.ppFromCamCurrent = ppCamDevDbgTst;
-		return this; 
-	}
+//	public PhysicsProjectileI setProjectileFromCam(PhysicsThrowProjectiles pp) {
+//		this.ppFromCamCurrent = pp;
+//		return this; 
+//	}
 	
 	public PhysicsThrowProjectiles getProjectileThrowerDevTestDbgCopy(){
 		return ppCamDevDbgTst.clone();

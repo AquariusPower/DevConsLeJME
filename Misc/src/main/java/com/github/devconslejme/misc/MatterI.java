@@ -40,7 +40,8 @@ import com.jme3.math.Vector3f;
 public class MatterI {
 	public static MatterI i(){return GlobalManagerI.i().get(MatterI.class);}
 	
-	private static HashMap<String,Matter> hm = new HashMap<String,Matter>();
+	private static HashMap<String,Matter> hmMatter = new HashMap<String,Matter>();
+	private static HashMap<String,MatterStatus> hmMatterStatus = new HashMap<String,MatterStatus>();
 	private static double fM3toCm3=1000000;
 	
 	public static enum EMatter{
@@ -70,11 +71,11 @@ public class MatterI {
 		Water(1.0),
 		Zing(7.13),
 		
-		OrganicBody(1.02),
+		OrganicBody(1.02), 
 		
 		;
 		EMatter(double fDensityGramsPerCm3){
-			hm.put(this.toString(),new Matter(this.toString(),fDensityGramsPerCm3));
+			hmMatter.put(this.toString(),new Matter(this.toString(),fDensityGramsPerCm3));
 		}
 		public Matter get(){
 			return MatterI.i().get(this.toString());
@@ -94,6 +95,19 @@ public class MatterI {
 		}
 		public String getId() {
 			return strId;
+		}
+	}
+	
+	public static enum EMatterStatus {
+		Bullet9mm(7.5), 
+		BulletForTestOfGeneric100KgPerM3(0.0065), 
+		GunAK47(4400), //TODO the problem would be the center of mass tho...
+		;
+		EMatterStatus(double dMassGrams){
+			hmMatterStatus.put(this.toString(), new MatterStatus(EMatter.Lead.get()).setMassGrams(dMassGrams));
+		}
+		public MatterStatus get() {
+			return MatterI.i().getStatus(this.toString());
 		}
 	}
 	
@@ -157,6 +171,10 @@ public class MatterI {
 	}
 	
 	public Matter get(String strId){
-		return hm.get(strId);
+		return hmMatter.get(strId);
+	}
+
+	public MatterStatus getStatus(String strId) {
+		return hmMatterStatus.get(strId);
 	}
 }

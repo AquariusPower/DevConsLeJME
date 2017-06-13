@@ -133,7 +133,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		private Vector3f	v3fTorqueImpulse;
 		private Float	fImpulseAtSelfDirection;
 		private PhysicsData	pd;
-		private  Float fImpulseAtSelfDirectionDisplacement;
+		private  Float fImpulseAtSelfDirectionUpwardsDisplacement;
 		
 //		public Spatial getSpt() {
 //			return spt;
@@ -177,13 +177,13 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		/**
 		 * 
 		 * @param fImpulse
-		 * @param fImpulseAtSelfDirectionDisplacement can be null
+		 * @param fUpwardsDisplacement can be null
 		 * @return
 		 */
-		public ImpTorForce setImpulseAtSelfDir(float fImpulse, Float fImpulseAtSelfDirectionDisplacement) {
+		public ImpTorForce setImpulseAtSelfDir(float fImpulse, Float fUpwardsDisplacement) {
 			assert v3fImpulse==null;
 			this.fImpulseAtSelfDirection=fImpulse;
-			this.fImpulseAtSelfDirectionDisplacement=fImpulseAtSelfDirectionDisplacement;
+			this.fImpulseAtSelfDirectionUpwardsDisplacement=fUpwardsDisplacement;
 			return this;
 		}
 		/**
@@ -589,14 +589,26 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //			return geomLink;
 //		}
 
-		public void setMatter(Matter mt) {
-			if(mt!=null){
-				mts=new MatterStatus(mt);
-			}else{
-				mts=new MatterStatus(EMatter.Generic1KgPerM3.get());
+		public void setMatterStatus(MatterStatus mts) {
+//			if(mt!=null){
+//				mts=new MatterStatus(mt);
+//			}else{
+//				mts=new MatterStatus(EMatter.Generic1KgPerM3.get());
+//			}
+			this.mts=mts;
+			if(this.mts.getMassGrams()==0) {
+				/**
+				 * only uses the volume if the mass is not set,
+				 * this way, a mass can override the volume,
+				 * making it not real tho.
+				 * 
+				 * good to prevent too tiny physics colliders, 
+				 * and to prevent physics engine problems derived of too discrepant masses (one too high and other too low)
+				 * TODO confirm, the good mass ratio for collisions should not exceed 20??? (like 1kg vs 20kg), or just check that and reduce applied forces while creating damaged spots on both colliders?
+				 */
+				this.mts.setVolumeM3(bv.getVolume());
 			}
-			mts.setVolumeM3(bv.getVolume());
-			prb.setMass((float)mts.getMassKg());
+			prb.setMass((float)this.mts.getMassKg());
 		}
 
 		public Geometry getInitialOriginalGeometry() {
@@ -954,10 +966,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			return mts;
 		}
 
-		public PhysicsData setMatterStatus(MatterStatus mts) {
-			this.mts = mts;
-			return this;
-		}
+//		public PhysicsData setMatterStatus(MatterStatus mts) {
+//			this.mts = mts;
+//			return this;
+//		}
 
 		public Geometry getGeomOriginalInitialLink() {
 			return geomOriginalInitialLink;
@@ -1071,21 +1083,21 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		if(!apdDisintegrateAtMainThreadQueue.contains(pd))apdDisintegrateAtMainThreadQueue.add(pd);
 	}
 	
-	/**
-	 * 
-	 * @param spt
-	 * @return dynamic: mass 1f
-	 */
-	public PhysicsData imbueFromWBounds(Geometry geom){
-		return imbueFromWBounds(geom,null,new Node());
-	}
+//	/**
+//	 * 
+//	 * @param spt
+//	 * @return dynamic: mass 1f
+//	 */
+//	public PhysicsData imbueFromWBounds(Geometry geom){
+//		return imbueFromWBounds(geom,null,new Node());
+//	}
 	/**
 	 * TODO create a compound if it is a node with more than one geometry.
 	 * @param geom
 	 * @param mt
 	 * @return
 	 */
-	public PhysicsData imbueFromWBounds(Geometry geom, Matter mt, Node nodeStore){//, Vector3f v3fForceScaleCS){
+	public PhysicsData imbueFromWBounds(Geometry geom, MatterStatus mts, Node nodeStore){//, Vector3f v3fForceScaleCS){
 		assert !UserDataI.i().contains(geom, PhysicsData.class);
 		
 		if(nodeStore!=null){
@@ -1140,7 +1152,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		
 		pd.setPRB(new RigidBodyControl(pd.cs));
 		
-		pd.setMatter(mt);
+		pd.setMatterStatus(mts);
 //		if(mt!=null){
 //			pd.mts=new MatterStatus(mt);
 //		}else{
@@ -1331,8 +1343,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				if(imp.fImpulseAtSelfDirection!=null){
 					Vector3f v3fDispl = Vector3f.ZERO;
 					
-					if(imp.fImpulseAtSelfDirectionDisplacement!=null) {
-						v3fDispl = imp.pd.prb.getPhysicsRotation().getRotationColumn(1).mult(imp.fImpulseAtSelfDirectionDisplacement);
+					if(imp.fImpulseAtSelfDirectionUpwardsDisplacement!=null) {
+						v3fDispl = imp.pd.prb.getPhysicsRotation().getRotationColumn(1).mult(imp.fImpulseAtSelfDirectionUpwardsDisplacement);
 					}
 					
 					imp.pd.prb.applyImpulse(
@@ -2034,7 +2046,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //		node.attachChild(geom);
 		
 		if(v3fPos!=null)geom.move(v3fPos); //b4 physics
-		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geom,EMatter.Generic1KgPerM3.get(),new Node());
+		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geom,new MatterStatus(EMatter.Generic1KgPerM3.get()),new Node());
 		
 		AppI.i().getRootNode().attachChild(pd.getSpatialWithPhysics());
 		
@@ -2075,61 +2087,61 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			geomWall.move(geomWall.getLocalRotation().getRotationColumn(1).mult(fHeightOrWidth/2f));
 		}
 		
-		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomWall).setTerrain(true);
+		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomWall,new MatterStatus(EMatter.Generic1KgPerM3.get()),null).setTerrain(true);
 		pd.getPRB().setMass(0f); //rbc
 		
 		return pd;
 	}
 	
-	/**
-	 * 
-	 * @param iPlane 0=x floor/ceiling, 1=y walls, 2=z easyRampsOriginOnBase 
-	 * @param fWidth
-	 * @param fHeight
-	 * @param fThickness can be null, will be default
-	 * @param v3fPos
-	 * @return
-	 */
-	@Deprecated //too messy..
-	public PhysicsData spawnWall(int iPlane,float fWidth,float fHeight,float fRadRotation,Float fThickness, Vector3f v3fPos){
-		if(fThickness==null)fThickness=0.1f;
-		
-		Geometry geomWall=GeometryI.i().create(new Box(fWidth/2f,fHeight/2f,fThickness/2f), ColorRGBA.Gray);
-		geomWall.setName("OrthoWall");
-		AppI.i().getRootNode().attachChild(geomWall);
-//		Spatial sptAtRoot = geomWall;
-		
-		switch(iPlane){
-			case 0:
-				MiscJmeI.i().addToName(geomWall, "floor", false);
-				geomWall.rotate(90*FastMath.DEG_TO_RAD, 0, 0); //floors/ceilings
-				geomWall.rotate(0, fRadRotation, 0); //floors/ceilings
-				break;
-			case 1:
-				geomWall.rotate(0, fRadRotation, 0);
-				break; //default walls
-			case 2:
-				geomWall.rotate(0, 0, 90*FastMath.DEG_TO_RAD);
-				geomWall.setLocalTranslation(0,fWidth/2f,0);
-				
-				Node nodePivot = new Node("tmpPivotRot");
-				nodePivot.setLocalRotation(geomWall.getLocalRotation());
-				geomWall.getParent().attachChild(nodePivot);
-				RotateI.i().rotateAroundPivot(geomWall, nodePivot, fRadRotation, true);
-				nodePivot.removeFromParent();
-				
+//	/**
+//	 * 
+//	 * @param iPlane 0=x floor/ceiling, 1=y walls, 2=z easyRampsOriginOnBase 
+//	 * @param fWidth
+//	 * @param fHeight
+//	 * @param fThickness can be null, will be default
+//	 * @param v3fPos
+//	 * @return
+//	 */
+//	@Deprecated //too messy..
+//	public PhysicsData spawnWall(int iPlane,float fWidth,float fHeight,float fRadRotation,Float fThickness, Vector3f v3fPos){
+//		if(fThickness==null)fThickness=0.1f;
+//		
+//		Geometry geomWall=GeometryI.i().create(new Box(fWidth/2f,fHeight/2f,fThickness/2f), ColorRGBA.Gray);
+//		geomWall.setName("OrthoWall");
+//		AppI.i().getRootNode().attachChild(geomWall);
+////		Spatial sptAtRoot = geomWall;
+//		
+//		switch(iPlane){
+//			case 0:
+//				MiscJmeI.i().addToName(geomWall, "floor", false);
+//				geomWall.rotate(90*FastMath.DEG_TO_RAD, 0, 0); //floors/ceilings
+//				geomWall.rotate(0, fRadRotation, 0); //floors/ceilings
+//				break;
+//			case 1:
+//				geomWall.rotate(0, fRadRotation, 0);
+//				break; //default walls
+//			case 2:
 //				geomWall.rotate(0, 0, 90*FastMath.DEG_TO_RAD);
-				break;
-		}
-		
-		if(v3fPos!=null)geomWall.move(v3fPos); //b4 physics
-		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomWall).setTerrain(true);
-		pd.getPRB().setMass(0f); //rbc
-		
-//		AppI.i().getRootNode().attachChild(sptAtRoot);
-		
-		return pd;
-	}
+//				geomWall.setLocalTranslation(0,fWidth/2f,0);
+//				
+//				Node nodePivot = new Node("tmpPivotRot");
+//				nodePivot.setLocalRotation(geomWall.getLocalRotation());
+//				geomWall.getParent().attachChild(nodePivot);
+//				RotateI.i().rotateAroundPivot(geomWall, nodePivot, fRadRotation, true);
+//				nodePivot.removeFromParent();
+//				
+////				geomWall.rotate(0, 0, 90*FastMath.DEG_TO_RAD);
+//				break;
+//		}
+//		
+//		if(v3fPos!=null)geomWall.move(v3fPos); //b4 physics
+//		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomWall).setTerrain(true);
+//		pd.getPRB().setMass(0f); //rbc
+//		
+////		AppI.i().getRootNode().attachChild(sptAtRoot);
+//		
+//		return pd;
+//	}
 
 	public boolean isGlueAllowed() {
 		return bGlueAllowed;

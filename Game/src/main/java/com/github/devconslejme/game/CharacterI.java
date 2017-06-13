@@ -35,6 +35,7 @@ import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.KeyCodeManagerI;
 import com.github.devconslejme.misc.MatterI.EMatter;
+import com.github.devconslejme.misc.MatterI.MatterStatus;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.TimedDelay;
@@ -177,14 +178,14 @@ public class CharacterI {
 		
 		Geometry geomBody = GeometryI.i().create(new Box(0.25f,lc.fTorsoHeight/2f,0.075f), ColorRGBA.Orange);
 		lc.nodeTorso = new NodeBodyPart(lc,"Torso");
-		lc.pdTorso = PhysicsI.i().imbueFromWBounds(geomBody,EMatter.OrganicBody.get(),lc.nodeTorso);
+		lc.pdTorso = PhysicsI.i().imbueFromWBounds(geomBody,new MatterStatus(EMatter.OrganicBody.get()),lc.nodeTorso);
 		lc.pdTorso.setLevitation(null,lc.fHeight-lc.fTorsoHeight/2f-lc.fHeadRadius*2f);
 //		lc.pdTorso.getPRB().setDamping(0.75f, 0.75f); //TODO understand and improve this..., lower damping when over slipping surfaces like ice
 		
 		Geometry geomHead=GeometryI.i().create(MeshI.i().sphere(lc.fHeadRadius), ColorRGBA.Yellow);
 		lc.nodeHead = new NodeBodyPart(lc,"Head");
 		lc.nodeHead.setLocalTranslation(0, lc.fHeight/4f+lc.fHeadRadius, 0);
-		lc.pdHead = PhysicsI.i().imbueFromWBounds(geomHead,EMatter.OrganicBody.get(),lc.nodeHead);
+		lc.pdHead = PhysicsI.i().imbueFromWBounds(geomHead,new MatterStatus(EMatter.OrganicBody.get()),lc.nodeHead);
 		lc.pdHead.setLevitation(lc.pdTorso, lc.fTorsoHeight/2f+lc.fHeadRadius+lc.fNeckHeight); //will be above the torso!
 		lc.pdHead.addPhysicsDataSkipCollisionGroup(lc.pdTorso);
 		//		PhysicsJoint pj = new PhysicsJoint() {		};
