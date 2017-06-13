@@ -102,6 +102,7 @@ public class MatterI {
 		Bullet9mm(EMatter.Lead,7.5), 
 		BulletForTestOfGeneric100KgPerM3(EMatter.Lead,0.0065), 
 		GunAK47(EMatter.Iron,4400), //TODO the matter for it should be a combination of iron+wood+otherStuff (like EMatter.GunAK47)... also, the problem would be the center of mass tho...
+		GunGlock17(EMatter.Iron,625),
 		Bullet762x39mm(EMatter.Lead,7.9), 
 		;
 		EMatterStatus(EMatter emt,double dMassGrams){

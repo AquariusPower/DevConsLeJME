@@ -169,28 +169,44 @@ public class PhysicsProjectileI {
 	}
 	
 	public static class Gun{
-		EMatterStatus eprojectile;
-		float fRealVelocityMetersPerSecond;
-		EMatterStatus egun;
-		public Gun(EMatterStatus egun, EMatterStatus eprojectile, float fRealVelocityMetersPerSecond) {
+		private EMatterStatus eprojectile;
+		private float fRealVelocityMetersPerSecond;
+		private float fEffectiveFireRange;
+		private EMatterStatus egun;
+		private float fLengthMeters;
+		
+		public Gun(EMatterStatus egun, EMatterStatus eprojectile, float fRealVelocityMetersPerSecond, float fEffectiveFireRange, float fLengthMeters) {
 			super();
 			this.eprojectile = eprojectile;
 			this.fRealVelocityMetersPerSecond = fRealVelocityMetersPerSecond;
 			this.egun = egun;
+			this.fEffectiveFireRange=fEffectiveFireRange;
+			this.fLengthMeters=fLengthMeters;
 		}
 		
 	}
 	
 	private static HashMap<String,Gun> hmGun = new HashMap<>();
 	public static enum EGun{
-		AK47(EMatterStatus.GunAK47, EMatterStatus.Bullet762x39mm, 710f),
+		AK47(new Gun(EMatterStatus.GunAK47, EMatterStatus.Bullet762x39mm, 710f, 350f, 0.875f)),
+		Glock17(new Gun(EMatterStatus.GunGlock17, EMatterStatus.Bullet9mm, 375f, 50f, 0.186f)),
 		;
-		EGun(EMatterStatus egun, EMatterStatus eproj, float fRealVelocityMetersPerSecond){
-			hmGun.put(this.toString(), new Gun(egun, eproj, fRealVelocityMetersPerSecond));
+//		EGun(EMatterStatus egun, EMatterStatus eproj, float fRealVelocityMetersPerSecond, float fEffectiveFireRange){
+		EGun(Gun gun){
+//			PhysicsProjectileI.i().putGun(this.toString(), new Gun(egun, eproj, fRealVelocityMetersPerSecond, fEffectiveFireRange));
+			PhysicsProjectileI.i().putGun(this.toString(), gun);
 		}
 		public Gun get() {
-			return hmGun.get(this.toString());
+//			return hmGun.get(this.toString());
+			return PhysicsProjectileI.i().getGun(this.toString());
 		}
+	}
+	
+	public void putGun(String strId, Gun gun) {
+		hmGun.put(strId, gun);
+	}
+	public Gun getGun(String strId) {
+		return hmGun.get(strId);
 	}
 	
 //	public PhysicsGun createGun(EGun egun){
@@ -198,15 +214,17 @@ public class PhysicsProjectileI {
 //		return createGun(gun);
 //	}
 	public PhysicsGun createGun(Gun gun){
-		return createGun(new PhysicsThrowProjectiles(gun.eprojectile.get(), gun.fRealVelocityMetersPerSecond),
-			gun.egun.get());
+		return createGun(
+			new PhysicsThrowProjectiles(gun.eprojectile.get(), gun.fRealVelocityMetersPerSecond),
+			gun.egun.get(),
+			gun.fLengthMeters);
 	}
 	//	public PhysicsGun createGun(PhysicsThrowProjectiles pp,float fOverallGunDensity){
-	protected PhysicsGun createGun(PhysicsThrowProjectiles pp,MatterStatus mts){
+	protected PhysicsGun createGun(PhysicsThrowProjectiles pp,MatterStatus mts, float fLengthMeters){
 		PhysicsGun pg = new PhysicsGun();
 		pg.pp=pp;
 		
-		Geometry geom = GeometryI.i().create(MeshI.i().cylinder(1f,0.05f), ColorRGBA.Yellow);
+		Geometry geom = GeometryI.i().create(MeshI.i().cylinder(fLengthMeters,0.15f), ColorRGBA.Yellow);
 		geom.scale(0.25f,0.5f,1f);
 		geom.setName("PhysicsGun");
 		AppI.i().getRootNode().attachChild(geom);
@@ -243,39 +261,59 @@ public class PhysicsProjectileI {
 		PhysicsThrowProjectiles pp;
 	}
 	
-	public PhysicsData throwProjectileFrom(PhysicsGun gun){
-		PhysicsData pdPjtl = prepareProjectile(gun.pp);
-		pdPjtl.addPhysicsDataSkipCollisionGroup(gun.pd);
-		
-		pdPjtl.getPRB().setPhysicsLocation(gun.pd.getPRB().getPhysicsLocation());
-		pdPjtl.getPRB().setPhysicsRotation(gun.pd.getPRB().getPhysicsRotation());
-		
-		ImpTorForce impPjtl = PhysicsI.i().throwAtSelfDirImpulse(pdPjtl, gun.pp.fDesiredSpeed);
-		
+	protected void applyRecoil(PhysicsGun gun) {
 		// gun recoil
-		float fMassRatio = pdPjtl.getPRB().getMass()/(gun.pd.getPRB().getMass());
+//		float fMassRatio = pdPjtl.getPRB().getMass()/(gun.pd.getPRB().getMass());
 		float fImpulseRecoil = 0f;
 		float fDisplacementUpwards = 1f; //TODO this should be a result of the projectile powder/mass force VS gun mass, and be configurable outside here to make it sure it is working.
-		int iTest=2;
+		int iTest=6; // best is 6 til now
 		switch(iTest){
-			case 0:
-				fImpulseRecoil = impPjtl.getImpulseAtSelfDir()*fMassRatio;
-				fDisplacementUpwards = 1000f; //TODO this should be a result of the projectile powder/mass force VS gun mass, and be configurable outside here to make it sure it is working.
-				break;
-			case 1:
+//			case 0:
+//				fImpulseRecoil = impPjtl.getImpulseAtSelfDir()*fMassRatio;
+//				fDisplacementUpwards = 1000f; //TODO this should be a result of the projectile powder/mass force VS gun mass, and be configurable outside here to make it sure it is working.
+//				break;
+//			case 2:
+//				/**
+//				 * Kinectic Energy = m/2 * v^2
+//				 * how much would be the velocity at the gun? thats the mass ratio used for.
+//				 * TODO confirm if this calc will be enough to be automatic for all guns
+//				 */
+//				fImpulseRecoil = FastMath.pow(gun.pp.fRealVelocityMetersPerSecond*fMassRatio,2f)*(gun.pd.getPRB().getMass()/2f);
+//				fDisplacementUpwards = 0.5f;
+//				break;
+			case 3:
 				/**
-				 * Kinectic Energy = m/2 * v^2
+				 * the good resulting values are similar to the gun mass!
+				 * so well, lets just use it!
 				 */
-//				fImpulseRecoil = FastMath.pow(gun.pp.fRealVelocityMetersPerSecond,2f)*(gun.pd.getPRB().getMass()/2f);
-//				fImpulseRecoil = FastMath.pow(gun.pp.fRealVelocityMetersPerSecond,2f)*(fMassRatio/2f);
-				fImpulseRecoil = FastMath.pow(gun.pp.fRealVelocityMetersPerSecond,2f)*FastMath.pow(fMassRatio,2f);
+				fImpulseRecoil = gun.pd.getPRB().getMass();
+				fDisplacementUpwards = 0.5f;
 				break;
-			case 2:
+			case 4:
 				/**
-				 * Kinectic Energy = m/2 * v^2
-				 * how much would be the velocity at the gun? thats the mass ratio used for.
+				 * the good resulting values are similar to the gun mass!
+				 * so well, lets just use it!
+				 * This effect looks excellent!!!
 				 */
-				fImpulseRecoil = FastMath.pow(gun.pp.fRealVelocityMetersPerSecond*fMassRatio,2f)*(gun.pd.getPRB().getMass()/2f);
+				fImpulseRecoil = gun.pd.getPRB().getMass()/2f;
+				fDisplacementUpwards = 0.25f;
+				break;
+			case 5:
+				/**
+				 * the good resulting values are similar to the gun mass!
+				 * so well, lets just use it!
+				 */
+				fImpulseRecoil = gun.pd.getPRB().getMass()/4f;
+				fDisplacementUpwards = 0.25f;
+				break;
+			case 6:
+				/**
+				 * the good resulting values are similar to the gun mass!
+				 * so well, lets just use it!
+				 * This effect looks excellent!!!
+				 */
+				fImpulseRecoil = gun.pd.getPRB().getMass()/2f;
+				gun.pd.getPRB().setFriction(1f); //TODO friction may require to be adjusted depending on the terrain?
 				fDisplacementUpwards = 0.5f;
 				break;
 		}
@@ -284,6 +322,18 @@ public class PhysicsProjectileI {
 			.setImpulseAtSelfDir(-fImpulseRecoil,fDisplacementUpwards)
 			;
 		PhysicsI.i().applyImpulseLater(gun.pd, impRecoil);
+	}
+	
+	public PhysicsData throwProjectileFrom(PhysicsGun pgun){
+		PhysicsData pdPjtl = prepareProjectile(pgun.pp);
+		pdPjtl.addPhysicsDataSkipCollisionGroup(pgun.pd);
+		
+		pdPjtl.getPRB().setPhysicsLocation(pgun.pd.getPRB().getPhysicsLocation());
+		pdPjtl.getPRB().setPhysicsRotation(pgun.pd.getPRB().getPhysicsRotation());
+		
+		ImpTorForce impPjtl = PhysicsI.i().throwAtSelfDirImpulse(pdPjtl, pgun.pp.fDesiredSpeed);
+		
+		applyRecoil(pgun);
 		
 		return pdPjtl;
 	}

@@ -84,7 +84,8 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 //				EMatterStatus.GunAK47.get()
 //			);
 //		}
-		PhysicsGun pg = PhysicsProjectileI.i().createGun(EGun.AK47.get());
+		PhysicsProjectileI.i().createGun(EGun.AK47.get());
+		PhysicsProjectileI.i().createGun(EGun.Glock17.get());
 		
 		float fFullLength=100;
 		float fYFloor=-7;
