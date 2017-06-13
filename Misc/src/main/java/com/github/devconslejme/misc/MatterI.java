@@ -69,6 +69,9 @@ public class MatterI {
 		Tungsten(19.25),
 		Water(1.0),
 		Zing(7.13),
+		
+		OrganicBody(1.02),
+		
 		;
 		EMatter(double fDensityGramsPerCm3){
 			hm.put(this.toString(),new Matter(this.toString(),fDensityGramsPerCm3));

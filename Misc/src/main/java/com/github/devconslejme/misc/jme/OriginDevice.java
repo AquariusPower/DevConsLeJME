@@ -35,7 +35,7 @@ import com.github.devconslejme.misc.jme.ActivatorI.ActivetableListenerAbs;
 import com.github.devconslejme.misc.jme.MeshI.Cone;
 import com.github.devconslejme.misc.jme.OriginDevice.NodeAxis;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
-import com.github.devconslejme.misc.jme.PhysicsI.PhysicsDataRayCastResultX;
+import com.github.devconslejme.misc.jme.PhysicsI.RayCastResultX;
 import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -625,7 +625,7 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 	}
 	
 	@Override
-	public boolean updatePickingEvent(int iButtonIndex, ArrayList<PhysicsDataRayCastResultX> acrList, PhysicsData pd, Geometry geom, Spatial sptParentest) {
+	public boolean updatePickingEvent(int iButtonIndex, ArrayList<RayCastResultX> acrList, PhysicsData pd, Geometry geom, Spatial sptParentest) {
 		for(EAxis ea:EAxis.values()){
 			AxisInfo axi = getAxisInfo(ea);
 			NODEXS node = axi.getRepresentationShape();

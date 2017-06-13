@@ -34,26 +34,28 @@ import com.github.devconslejme.misc.Key;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.KeyCodeManagerI;
+import com.github.devconslejme.misc.MatterI.EMatter;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.jme.AppI;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.GeometryI;
 import com.github.devconslejme.misc.jme.MeshI;
+import com.github.devconslejme.misc.jme.NodeX;
 import com.github.devconslejme.misc.jme.PhysicsI;
+import com.github.devconslejme.misc.jme.PhysicsI.ImpTorForce;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
-import com.github.devconslejme.misc.jme.PhysicsI.PhysicsDataRayCastResultX;
+import com.github.devconslejme.misc.jme.PhysicsI.RayCastResultX;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.jme.WorldPickingI;
 import com.jme3.bullet.collision.PhysicsCollisionObject;
 import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.bullet.objects.PhysicsRigidBody;
-import com.jme3.collision.CollisionResult;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
-import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 
@@ -68,7 +70,7 @@ public class CharacterI {
 	 */
 	public static class BetterCharacterControlX extends BetterCharacterControl{
 		private Spatial	sptHead;
-		public NodeBody nodeBody;
+		public NodeBodyPart nodeBody;
 
 		/**
 		 * see {@link BetterCharacterControl#BetterCharacterControl(float, float, float)}
@@ -109,34 +111,109 @@ public class CharacterI {
 	public static class CompositeControl implements ICompositeRestrictedAccessControl{private CompositeControl(){};};
 	private ICompositeRestrictedAccessControl	cc=new CompositeControl();
 	
-	private BetterCharacterControlX	bccLast;
+//	@Deprecated
+//	private BetterCharacterControlX	bccPossessed;
+	
 	private Key	keyContext;
 	private Boolean	bStrafeLeft;
 	private Boolean	bForward;
-	private float	fSpeed=5f;
+	private float	fSpeed=100f;
 
 	private FlyByCameraX	flycamx;
+
+	private LeviCharacter leviPossessed;
 	
-	public static class NodeBody extends Node{
-		public NodeBody(String name) {
+	public static class NodeBodyPart extends NodeX{
+		private LeviCharacter levi;
+
+		public NodeBodyPart(LeviCharacter lc, String name) {
 			super(name);
+			this.levi=lc;
+		}
+
+		public LeviCharacter getLevi() {
+			return levi;
 		}
 	}
 	
-	public static class LeviCharacter{}
+	public static class LeviCharacter{
+		float fHeight=1.7f;
+		float fHeadRadius=0.15f;
+		float fNeckHeight=0.10f;
+		float fTorsoHeight=fHeight/2f;
+		NodeBodyPart nodeTorso;
+		NodeBodyPart nodeHead;
+		public PhysicsData pdTorso;
+		public PhysicsData pdHead;
+		
+		public void update(float tpf) {
+			pdTorso.getSpatialWithPhysics().rotateUpTo(Vector3f.UNIT_Y);
+			PhysicsI.i().syncPhysTransfFromSpt(pdTorso,false,true);
+			
+			float fLinearDamp=0.85f;
+			if(pdTorso.getPRB().getGravity().length()>0) {
+				fLinearDamp=0f;
+			}
+			pdTorso.getPRB().setDamping(fLinearDamp, 0.75f); //TODO understand and improve this..., lower damping when over slipping surfaces like ice
+//			pdHead.getPRB().setPhysicsLocation(
+//				pdTorso.getPRB().getPhysicsLocation()
+//					.add(0,fTorsoHeight/2f+fNeckHeight+fHeadRadius,0));
+		}
+	}
 	
 	public LeviCharacter create(Vector3f v3fSpawnAt){
-		return null;
+		if(v3fSpawnAt==null){
+			/**
+			 * user target spot
+			 */
+			ArrayList<RayCastResultX> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+			if(acr.size()==0)return null;
+			RayCastResultX cr = acr.get(0);
+			if(!cr.getPd().isTerrain())return null;
+			v3fSpawnAt = cr.getV3fWrldHit();
+		}
+		
+		LeviCharacter lc = new LeviCharacter();
+		
+		Geometry geomBody = GeometryI.i().create(new Box(0.25f,lc.fTorsoHeight/2f,0.075f), ColorRGBA.Orange);
+		lc.nodeTorso = new NodeBodyPart(lc,"Torso");
+		lc.pdTorso = PhysicsI.i().imbueFromWBounds(geomBody,EMatter.OrganicBody.get(),lc.nodeTorso);
+		lc.pdTorso.setLevitation(null,lc.fHeight-lc.fTorsoHeight/2f-lc.fHeadRadius*2f);
+//		lc.pdTorso.getPRB().setDamping(0.75f, 0.75f); //TODO understand and improve this..., lower damping when over slipping surfaces like ice
+		
+		Geometry geomHead=GeometryI.i().create(MeshI.i().sphere(lc.fHeadRadius), ColorRGBA.Yellow);
+		lc.nodeHead = new NodeBodyPart(lc,"Head");
+		lc.nodeHead.setLocalTranslation(0, lc.fHeight/4f+lc.fHeadRadius, 0);
+		lc.pdHead = PhysicsI.i().imbueFromWBounds(geomHead,EMatter.OrganicBody.get(),lc.nodeHead);
+		lc.pdHead.setLevitation(lc.pdTorso, lc.fTorsoHeight/2f+lc.fHeadRadius+lc.fNeckHeight); //will be above the torso!
+		lc.pdHead.addPhysicsDataSkipCollisionGroup(lc.pdTorso);
+		//		PhysicsJoint pj = new PhysicsJoint() {		};
+		
+		lc.nodeTorso.attachChild(lc.nodeHead);
+
+		AppI.i().getRootNode().attachChild(lc.nodeTorso);
+		
+		lc.pdTorso.getPRB().setPhysicsLocation(v3fSpawnAt.add(0,0.25f,0)); //a bit above
+		
+		if(leviPossessed==null)leviPossessed = lc;
+		
+		alc.add(lc);
+		
+		return lc;
 	}
+	private ArrayList<LeviCharacter> alc = new ArrayList<>();
+
+	private Vector3f v3fMove = new Vector3f();
+	
+	@Deprecated
 	public BetterCharacterControlX createBCCX(Vector3f v3fSpawnAt){
 		if(v3fSpawnAt==null){
 			/**
 			 * user target spot
 			 */
-			ArrayList<PhysicsDataRayCastResultX> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+			ArrayList<RayCastResultX> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
 			if(acr.size()==0)return null;
-			PhysicsDataRayCastResultX cr = acr.get(0);
-//			PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(cr.getGeometry());
+			RayCastResultX cr = acr.get(0);
 			if(!cr.getPd().isTerrain())return null;
 			v3fSpawnAt = cr.getV3fWrldHit();
 		}
@@ -145,7 +222,7 @@ public class CharacterI {
 		float fHeight=1.7f;
 		BetterCharacterControlX bcc = new BetterCharacterControlX(0.25f, fHeight, 70f);
 		
-		bcc.nodeBody = new NodeBody("CharacterBody");
+		bcc.nodeBody = new NodeBodyPart(null,"CharacterBody");
 		
 		Geometry geomBody = GeometryI.i().create(new Box(0.25f,fHeight/2f,0.25f), ColorRGBA.Orange);
 		geomBody.setLocalTranslation(0, fHeight/2f, 0);
@@ -167,39 +244,40 @@ public class CharacterI {
 		
 		bcc.setPhysicsLocation(v3fSpawnAt.add(0,0.25f,0)); //a bit above
 		
-		bccLast = bcc;
+//		bccPossessed = bcc;
 		
 		return bcc;
 	}
 	
-	public void update(float fTPF){
-		keyContext.setPressedSpecialExternalContextKeyMode(cc, bccLast!=null);
-		
-		if(keyContext.isPressed()){
-			Vector3f v3fMove = new Vector3f();
-			
-			if(bForward!=null){
-				Vector3f v3f=AppI.i().getCamLookingAtDir();
-				v3f.multLocal(getSpeed());
-				v3f.y=0;
-				if(!bForward)v3f.negateLocal();
-				v3fMove.addLocal(v3f);
-			}
-			
-			if(bStrafeLeft!=null){
-				Vector3f v3f=AppI.i().getCamLeftDir();
-				v3f.multLocal(getSpeed());
-				v3f.y=0;
-				if(!bStrafeLeft)v3f.negateLocal();
-				v3fMove.addLocal(v3f);
-			}
-			
-			bccLast.setWalkDirection(v3fMove);
+	protected void updateAllLevis(float tpf) {
+		for(LeviCharacter lc : alc) {
+			lc.update(tpf);
 		}
-			
-		AppI.i().setCamFollow(keyContext.isPressed() ? bccLast.sptHead : null);
-		flycamx.setAllowMove(!keyContext.isPressed());
 	}
+//	@Deprecated
+//	public void updatePossessedBCC(float fTPF){
+//		//TODO if(bccPossessed==null)return;
+//		
+//		Vector3f v3fMove = new Vector3f();
+//		
+//		if(bForward!=null){
+//			Vector3f v3f=AppI.i().getCamLookingAtDir();
+//			v3f.multLocal(getSpeed());
+//			v3f.y=0;
+//			if(!bForward)v3f.negateLocal();
+//			v3fMove.addLocal(v3f);
+//		}
+//		
+//		if(bStrafeLeft!=null){
+//			Vector3f v3f=AppI.i().getCamLeftDir();
+//			v3f.multLocal(getSpeed());
+//			v3f.y=0;
+//			if(!bStrafeLeft)v3f.negateLocal();
+//			v3fMove.addLocal(v3f);
+//		}
+//		
+//		//TODO bccPossessed.setWalkDirection(v3fMove);
+//	}
 	
 	public void configure(FlyByCameraX flycamx){
 		this.flycamx = flycamx;
@@ -209,14 +287,14 @@ public class CharacterI {
 		KeyBindCommandManagerI.i().putBindCommandsLater("Ctrl+I",
 			new CallBoundKeyCmd(){
 				@Override public Boolean callOnKeyReleased(int iClickCountIndex) {
-					if(bccLast!=null){
-						bccLast=null;
+					if(isPossessing()){
+						releasePossessed();
 					}else{
-						ArrayList<PhysicsDataRayCastResultX> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
-						if(acr.size()>0){
-							Geometry geom = acr.get(0).getPd().getGeomOriginalInitialLink();
-							BetterCharacterControlX bcc = getBCCFrom(geom);
-							if(bcc!=null)bccLast=bcc;
+						ArrayList<RayCastResultX> ar = WorldPickingI.i().raycastPiercingAtCenter(null);
+						if(ar.size()>0){
+							Geometry geom = ar.get(0).getPd().getGeomOriginalInitialLink();
+							LeviCharacter levi = getLeviFrom(geom);
+							if(levi!=null)setPossessed(levi);
 						}
 					}
 					return true;
@@ -232,27 +310,87 @@ public class CharacterI {
 		initUpdateCharacterMovement();
 	}
 	
+	protected void setPossessed(LeviCharacter levi) {
+		this.leviPossessed=levi;
+	}
+
+	protected void releasePossessed() {
+		leviPossessed=null;
+	}
+
+	protected LeviCharacter getLeviFrom(Spatial spt) {
+		NodeBodyPart nb = getBodyFrom(spt);
+		if(nb==null)return null;
+		return nb.getLevi();
+	}
+
 	public BetterCharacterControlX getBCCFrom(Spatial spt){
-		NodeBody nb = getBodyFrom(spt);
+		NodeBodyPart nb = getBodyFrom(spt);
 		if(nb==null)return null;
 		BetterCharacterControlX bcc = nb.getControl(BetterCharacterControlX.class);
 		return bcc;
 	}
 	
-	public NodeBody getBodyFrom(Spatial spt){
-		return SpatialHierarchyI.i().getParentestOrSelf(spt, NodeBody.class, true, false);
+	public NodeBodyPart getBodyFrom(Spatial spt){
+		return SpatialHierarchyI.i().getParentestOrSelf(spt, NodeBodyPart.class, true, false);
 	}
+	
+	private TimedDelay tdMoveInterval = new TimedDelay(0.25f).setActive(true);
 	
 	private void initUpdateCharacterMovement() {
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
-				update(getTPF());
+				keyContext.setPressedSpecialExternalContextKeyMode(cc, isPossessing());
+				
+				updateAllLevis(getTPF());
+				
+				updatePossessed(getTPF());
+//				updatePossessedBCC(getTPF());
+				
+				AppI.i().setCamFollow(getPossessedHead());
+				flycamx.setAllowMove(!keyContext.isPressed());
+				
 				return true;
 			}
-		}).enableLoopMode().setDelaySeconds(0.1f);
+		}).enableLoopMode();//.setDelaySeconds(0.1f);
+	}
+	
+	protected void updatePossessed(float tpf) {
+		v3fMove.set(0,0,0);
+		if(!isPossessing())return;
+		
+		if(bForward!=null){
+			Vector3f v3f=AppI.i().getCamLookingAtDir().normalize();
+			v3f.y=0;
+			v3f.multLocal(getSpeed());
+			if(!bForward)v3f.negateLocal();
+			v3fMove.addLocal(v3f);
+		}
+		
+		if(bStrafeLeft!=null){
+			Vector3f v3f=AppI.i().getCamLeftDir().normalize();
+			v3f.y=0;
+			v3f.multLocal(getSpeed());
+			if(!bStrafeLeft)v3f.negateLocal();
+			v3fMove.addLocal(v3f);
+		}
+		
+		if(v3fMove.length()>0) {
+			if(tdMoveInterval.isReady(true)) {
+				PhysicsI.i().applyImpulseLater(leviPossessed.pdTorso,new ImpTorForce().setImpulse(v3fMove, null));
+			}
+		}
 	}
 
+	public boolean isPossessing() {
+		return leviPossessed!=null;
+	}
+	public Spatial getPossessedHead() {
+		if(!isPossessing())return null;
+		return leviPossessed.nodeHead;
+	}
+	
 	protected void bindLater(String strKey, boolean bStrafe, boolean bPositive){
 		KeyBindCommandManagerI.i().putBindCommandsLater(
 			KeyCodeManagerI.i().getKeyForId(strKey).composeCfgPrependModifiers(keyContext),
@@ -288,15 +426,18 @@ public class CharacterI {
 	
 	
 	public boolean isCharacter(PhysicsCollisionObject pco) {
-		return (pco.getUserObject() instanceof NodeBody);
+		return (pco.getUserObject() instanceof NodeBodyPart);
 	}
 	@Deprecated 
 	public boolean isCharacterForSure(PhysicsCollisionObject pco) {
 		return ((Spatial)pco.getUserObject()).getControl(BetterCharacterControlX.class)!=null;
 	}
 
-	public BetterCharacterControlX getPossessed() {
-		return bccLast;
+	public LeviCharacter getPossessed() {
+		return leviPossessed;
 	}
+//	public BetterCharacterControlX getPossessed() {
+//		return bccLast;
+//	}
 	
 }

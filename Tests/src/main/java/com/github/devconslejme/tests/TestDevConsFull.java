@@ -59,7 +59,7 @@ import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.NodeX;
 import com.github.devconslejme.misc.jme.OriginDevice;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
-import com.github.devconslejme.misc.jme.PhysicsI.PhysicsDataRayCastResultX;
+import com.github.devconslejme.misc.jme.PhysicsI.RayCastResultX;
 import com.github.devconslejme.misc.jme.SimpleAppState;
 import com.github.devconslejme.misc.jme.StringTextJmeI;
 import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
@@ -220,7 +220,7 @@ public class TestDevConsFull extends SimpleApplication implements IEnvironmentLi
 	}
 	
 	@Override
-	public boolean updatePickingEvent(int iButtonIndex, ArrayList<PhysicsDataRayCastResultX> acrList, PhysicsData pd, Geometry geom, Spatial sptParentest) {
+	public boolean updatePickingEvent(int iButtonIndex, ArrayList<RayCastResultX> acrList, PhysicsData pd, Geometry geom, Spatial sptParentest) {
 		return false;
 	}
 	

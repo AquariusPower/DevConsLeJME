@@ -36,7 +36,7 @@ import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ColorI.ColorGlow;
 import com.github.devconslejme.misc.jme.ColorI.EColor;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
-import com.github.devconslejme.misc.jme.PhysicsI.PhysicsDataRayCastResultX;
+import com.github.devconslejme.misc.jme.PhysicsI.RayCastResultX;
 import com.jme3.app.SimpleApplication;
 import com.jme3.collision.CollisionResult;
 import com.jme3.input.FlyByCamera;
@@ -142,7 +142,7 @@ public class HighlighterI {
 		if(flycam.isEnabled()){
 			reset(nhMouseCursorOver);
 		}else{
-			ArrayList<PhysicsDataRayCastResultX> ares = WorldPickingI.i().raycastPiercingAtCursor(null);
+			ArrayList<RayCastResultX> ares = WorldPickingI.i().raycastPiercingAtCursor(null);
 			Geometry geomTargetNew = ares.size()>0 ? ares.get(0).getGeom() : null;
 //			for(CollisionResult cr:WorldPickingI.i().raycastPiercingAtCursor(null)){
 //				geomTargetNew=cr.getGeometry();

@@ -136,7 +136,7 @@ public class PhysicsProjectileI {
 		Geometry geom = GeometryI.i().create(MeshI.i().cylinder(1f,0.05f), ColorRGBA.Yellow);
 		geom.setName("PhysicsGun");
 		AppI.i().getRootNode().attachChild(geom);
-		pg.pd=PhysicsI.i().imbueFromWBounds(geom,	mtGunRelativeOverallMatter,	true);
+		pg.pd=PhysicsI.i().imbueFromWBounds(geom,	mtGunRelativeOverallMatter,	new Node());
 //		pg.pd=PhysicsI.i().imbueFromWBounds(geom,	new Matter("Density="+fOverallGunDensity, fOverallGunDensity),	true);
 		
 		CallableXAnon cx = new CallableXAnon() {
@@ -171,7 +171,7 @@ public class PhysicsProjectileI {
 	
 	public PhysicsData throwProjectileFrom(PhysicsGun gun){
 		PhysicsData pdPjtl = prepareProjectile(gun.pp);
-		pdPjtl.setPdSpawnedFrom(gun.pd);
+		pdPjtl.addPhysicsDataSkipCollisionGroup(gun.pd);
 		
 		pdPjtl.getPRB().setPhysicsLocation(gun.pd.getPRB().getPhysicsLocation());
 		pdPjtl.getPRB().setPhysicsRotation(gun.pd.getPRB().getPhysicsRotation());
@@ -206,7 +206,7 @@ public class PhysicsProjectileI {
 		sbnProjectilesAtWorld.attachChild(geomClone); //AppI.i().getRootNode().attachChild(geomClone);
 		sbnProjectilesAtWorld.batch();
 		
-		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,pp.mt,false);
+		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone,pp.mt,null);
 		geomClone.scale(pp.fPhysBoundsScaleDiv); //to restore the good looking size
 		pd.setAllowDisintegration(true);
 		pd.setProjectile(true);

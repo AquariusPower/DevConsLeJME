@@ -41,7 +41,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
-import com.github.devconslejme.misc.jme.PhysicsI.PhysicsDataRayCastResultX;
+import com.github.devconslejme.misc.jme.PhysicsI.RayCastResultX;
 import com.jme3.collision.CollisionResult;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
@@ -91,6 +91,8 @@ public class ManipulatorI {
 			pdManipulating.setGrabbedBy(null);
 			
 			pdManipulating.resumeLevitationIfItWas();
+			
+//			pdManipulating.getPRB().setKinematic(false);
 		}
 		pdManipulating=null;
 		return bIsGrabbing;
@@ -114,6 +116,7 @@ public class ManipulatorI {
 			pdManipulating.setGrabDist(fCurrentDistance);
 			fCurrentSpeed=0f;
 			pdManipulating.setGrabbedBy(CharacterI.i().getPossessed());
+//			pdManipulating.getPRB().setKinematic(true);
 		}
 	}
 	
@@ -124,16 +127,12 @@ public class ManipulatorI {
 			@Override
 			public Boolean callOnKeyReleased(int iClickCountIndex) {
 				if(!drop()) {
-					ArrayList<PhysicsDataRayCastResultX> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+					ArrayList<RayCastResultX> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
 					if(acr.size()>0) {
-//						CollisionResult cr = acr.get(0);
-//						PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(cr.getGeometry());
 						PhysicsData pd = acr.get(0).getPd();
 						if(pd!=null) {
-//							pd.setCollisionResult(cr);
 							grab(pd,acr.get(0).getDistance());
 						}
-	//					crManipulating=cr;
 					}
 				}
 				return true;

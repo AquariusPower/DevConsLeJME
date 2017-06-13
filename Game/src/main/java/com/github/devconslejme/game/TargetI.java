@@ -47,7 +47,7 @@ import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.HighlighterI;
 import com.github.devconslejme.misc.jme.PhysicsI;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
-import com.github.devconslejme.misc.jme.PhysicsI.PhysicsDataRayCastResultX;
+import com.github.devconslejme.misc.jme.PhysicsI.RayCastResultX;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.StringTextJmeI;
 import com.github.devconslejme.misc.jme.WorldPickingI;
@@ -132,7 +132,7 @@ public class TargetI {
 	protected TargetGeom acquireNewTarget(Vector3f v3f){
 		TargetGeom tgt=null;
 		
-		ArrayList<PhysicsDataRayCastResultX> acr = WorldPickingI.i().raycastPiercingDisplFromCenter(null, v3f); //rnLastConfigured.v3fMarkersCenter
+		ArrayList<RayCastResultX> acr = WorldPickingI.i().raycastPiercingDisplFromCenter(null, v3f); //rnLastConfigured.v3fMarkersCenter
 		if(acr.size()>0){
 			Geometry geom = acr.get(0).getGeom();
 			

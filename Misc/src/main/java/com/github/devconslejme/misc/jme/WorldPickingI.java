@@ -34,7 +34,7 @@ import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.KeyCodeManagerI;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
-import com.github.devconslejme.misc.jme.PhysicsI.PhysicsDataRayCastResultX;
+import com.github.devconslejme.misc.jme.PhysicsI.RayCastResultX;
 import com.google.common.collect.Lists;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
@@ -51,7 +51,7 @@ import com.jme3.scene.Spatial;
 public class WorldPickingI {
 	public static WorldPickingI i(){return GlobalManagerI.i().get(WorldPickingI.class);}
 	
-	private ArrayList<PhysicsDataRayCastResultX>	acrLastPickList = new ArrayList<PhysicsDataRayCastResultX>();
+	private ArrayList<RayCastResultX>	acrLastPickList = new ArrayList<RayCastResultX>();
 	private Ray	rayLastCast;
 	private ArrayList<IPickListener> aplList = new ArrayList<IPickListener>();
 	private boolean	bAllowConsume=true;
@@ -63,7 +63,7 @@ public class WorldPickingI {
 		 * 
 		 * @return true if consumed TODO prioritize listeners?
 		 */
-		boolean updatePickingEvent(int iButtonIndex, ArrayList<PhysicsDataRayCastResultX> acrList, PhysicsData pdHit, Geometry geomHit, Spatial sptParentest);
+		boolean updatePickingEvent(int iButtonIndex, ArrayList<RayCastResultX> acrList, PhysicsData pdHit, Geometry geomHit, Spatial sptParentest);
 	}
 	
 	public  void addListener(IPickListener l){
@@ -95,15 +95,15 @@ public class WorldPickingI {
 		return UserDataI.i().contains(spt, Skip.class);
 	}
 	
-	public PhysicsDataRayCastResultX pickCollisionResultAtCursor(int iButtonIndex){
-		ArrayList<PhysicsDataRayCastResultX> crs = pickWorldPiercingAtCursor(iButtonIndex);
+	public RayCastResultX pickCollisionResultAtCursor(int iButtonIndex){
+		ArrayList<RayCastResultX> crs = pickWorldPiercingAtCursor(iButtonIndex);
 		if(crs==null)return null;
 		return crs.get(0);
 	}
-	public ArrayList<PhysicsDataRayCastResultX> pickWorldPiercingAtCursor(int iButtonIndex){
+	public ArrayList<RayCastResultX> pickWorldPiercingAtCursor(int iButtonIndex){
 		return pickWorldPiercingAtCursor(iButtonIndex,null);//MiscJmeI.i().getNodeVirtualWorld());
 	}
-	public ArrayList<PhysicsDataRayCastResultX> pickWorldPiercingAtCursor(int iButtonIndex,Node nodeVirtualWorld){
+	public ArrayList<RayCastResultX> pickWorldPiercingAtCursor(int iButtonIndex,Node nodeVirtualWorld){
 		acrLastPickList.clear();
 		acrLastPickList.addAll(raycastPiercingAtCursor(nodeVirtualWorld));
 		
@@ -112,7 +112,7 @@ public class WorldPickingI {
 		Spatial spt = null;
 		PhysicsData pd = null;
 		if(acrLastPickList.size()>0){
-			PhysicsDataRayCastResultX rx = acrLastPickList.get(0);
+			RayCastResultX rx = acrLastPickList.get(0);
 			geom = rx.getGeom();//getLastWorldPickGeometry(); 
 			spt = getLastWorldPickParentest(geom);
 			pd = rx.getPd();
@@ -144,7 +144,7 @@ public class WorldPickingI {
 	 * @param nodeVirtualWorld see {@link #raycastPiercingAtXY(Node, Vector3f)}
 	 * @return
 	 */
-	public ArrayList<PhysicsDataRayCastResultX> raycastPiercingAtCursor(Node nodeVirtualWorld){
+	public ArrayList<RayCastResultX> raycastPiercingAtCursor(Node nodeVirtualWorld){
 		return raycastPiercingAtXY(nodeVirtualWorld, HWEnvironmentJmeI.i().getMouse().getPos3D());
 	}
 	
@@ -153,7 +153,7 @@ public class WorldPickingI {
 	 * @param nodeVirtualWorld see {@link #raycastPiercingAtXY(Node, Vector3f)}
 	 * @return
 	 */
-	public ArrayList<PhysicsDataRayCastResultX> raycastPiercingAtCenter(Node nodeVirtualWorld){
+	public ArrayList<RayCastResultX> raycastPiercingAtCenter(Node nodeVirtualWorld){
 		return raycastPiercingAtXY(nodeVirtualWorld, HWEnvironmentJmeI.i().getDisplay().getCenter(0f)); //z will be ignored
 	}
 	/**
@@ -162,7 +162,7 @@ public class WorldPickingI {
 	 * @param v3fDisplaceFromCenterXY
 	 * @return
 	 */
-	public ArrayList<PhysicsDataRayCastResultX> raycastPiercingDisplFromCenter(Node nodeVirtualWorld, Vector3f v3fDisplaceFromCenterXY){
+	public ArrayList<RayCastResultX> raycastPiercingDisplFromCenter(Node nodeVirtualWorld, Vector3f v3fDisplaceFromCenterXY){
 		return raycastPiercingAtXY(nodeVirtualWorld, HWEnvironmentJmeI.i().getDisplay().getCenter(0f).add(v3fDisplaceFromCenterXY)); //z will be ignored
 	}
 	/**
@@ -171,7 +171,7 @@ public class WorldPickingI {
 	 * @param v3fGuiNodeXY
 	 * @return can be empty
 	 */
-	public ArrayList<PhysicsDataRayCastResultX> raycastPiercingAtXY(Node nodeVirtualWorld, Vector3f v3fGuiNodeXY){
+	public ArrayList<RayCastResultX> raycastPiercingAtXY(Node nodeVirtualWorld, Vector3f v3fGuiNodeXY){
 		if(nodeVirtualWorld==null)nodeVirtualWorld=MiscJmeI.i().getNodeVirtualWorld();
 		
 		CollisionResults crs = new CollisionResults();
@@ -186,7 +186,7 @@ public class WorldPickingI {
 		Vector3f v3fDirection = AppI.i().getScreenPosAtWorldCoordinatesForRayCasting(v3fGuiNodeXY);
 		v3fDirection.subtractLocal(v3fCursorAtVirtualWorld3D).normalizeLocal(); //norm just to grant it
 		
-		ArrayList<PhysicsDataRayCastResultX> acrList=PhysicsI.i().rayCastSortNearest(
+		ArrayList<RayCastResultX> acrList=PhysicsI.i().rayCastSortNearest(
 			v3fCursorAtVirtualWorld3D, v3fDirection, true, false, false);
 		if(acrList.size()>0) {
 			return acrList;
@@ -199,7 +199,7 @@ public class WorldPickingI {
 //		ArrayList<PhysicsDataRayCastResultX> acrList=new ArrayList<PhysicsDataRayCastResultX>();
 		if(crs.size()>0){
 			for(CollisionResult cr:Lists.newArrayList(crs.iterator())){
-				PhysicsDataRayCastResultX resultx = new PhysicsDataRayCastResultX(
+				RayCastResultX resultx = new RayCastResultX(
 					null, cr, PhysicsI.i().getPhysicsDataFrom(cr.getGeometry()), cr.getGeometry(), cr.getContactPoint(), cr.getContactNormal(), 
 					cr.getDistance());
 				if(!isSkip(cr.getGeometry()))acrList.add(resultx);
@@ -239,8 +239,8 @@ public class WorldPickingI {
 //		if(crLastPick.getClosestCollision()==null)return null;
 		return acrLastPickList.get(0).getGeom();
 	}
-	public ArrayList<PhysicsDataRayCastResultX> getLastWorldPiercingPickCopy(){
-		return new ArrayList<PhysicsDataRayCastResultX>(acrLastPickList);
+	public ArrayList<RayCastResultX> getLastWorldPiercingPickCopy(){
+		return new ArrayList<RayCastResultX>(acrLastPickList);
 	}
 //	public Ray getRayLastCast() {
 //		return rayLastCast;

@@ -67,7 +67,7 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 	 */
 	@Override
 	public void initTest() {
-		CharacterI.i().createBCCX(Vector3f.ZERO);
+//		CharacterI.i().createBCCX(Vector3f.ZERO);
 		CharacterI.i().create(Vector3f.ZERO);
 		
 		PhysicsI.i().setBulletDebugVisualsEnabled(true);
@@ -118,6 +118,11 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 		PhysicsI.i().spawnVolumeBox(ColorI.i().colorChangeCopy(ColorRGBA.Blue,0,0.5f),
 			1f,"Z-Blue"	,new Vector3f(0,0,1).mult(5));
 		
+		// some small boxes to play with
+		PhysicsI.i().spawnVolumeBox(ColorI.i().colorChangeCopy(ColorRGBA.randomColor(),0,0.5f),	0.750f,"SmallBoxV0750",new Vector3f(0,0,0));
+		PhysicsI.i().spawnVolumeBox(ColorI.i().colorChangeCopy(ColorRGBA.randomColor(),0,0.5f),	0.500f,"SmallBoxV0500",new Vector3f(0,0,0));
+		PhysicsI.i().spawnVolumeBox(ColorI.i().colorChangeCopy(ColorRGBA.randomColor(),0,0.5f),	0.250f,"SmallBoxV0250",new Vector3f(0,0,0));
+		PhysicsI.i().spawnVolumeBox(ColorI.i().colorChangeCopy(ColorRGBA.randomColor(),0,0.5f),	0.125f,"SmallBoxV0125",new Vector3f(0,0,0));
 	}
 	
 	public void spawnBox(){

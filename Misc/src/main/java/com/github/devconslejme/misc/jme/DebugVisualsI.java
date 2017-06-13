@@ -36,7 +36,7 @@ import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
-import com.github.devconslejme.misc.jme.PhysicsI.PhysicsDataRayCastResultX;
+import com.github.devconslejme.misc.jme.PhysicsI.RayCastResultX;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
@@ -75,7 +75,7 @@ public class DebugVisualsI {
 		KeyBindCommandManagerI.i().putBindCommandsLater("Ctrl+D",new CallBoundKeyCmd(){
 			@Override
 			public Boolean callOnKeyReleased(int iClickCountIndex) {
-				ArrayList<PhysicsDataRayCastResultX> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+				ArrayList<RayCastResultX> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
 				if(acr.size()>0)toggleWorldBoundAndRotAxes(acr.get(0).getGeom());
 				return true;
 			}

@@ -49,7 +49,7 @@ import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.OriginDevice;
 import com.github.devconslejme.misc.jme.OriginDevice.NodeAxis;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
-import com.github.devconslejme.misc.jme.PhysicsI.PhysicsDataRayCastResultX;
+import com.github.devconslejme.misc.jme.PhysicsI.RayCastResultX;
 import com.github.devconslejme.misc.jme.RotateI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.StringTextJmeI;
@@ -251,7 +251,7 @@ public class TestOriginDeviceGame extends SimpleApplicationAndStateAbs {
 		@Deprecated @Override	public void rotateUpTo(Vector3f newUp) {		throw new UnsupportedOperationException(strMsgError);	}
 		
 		@Override
-		public boolean updatePickingEvent(int iButtonIndex, ArrayList<PhysicsDataRayCastResultX> acrList, PhysicsData pd, Geometry geom, Spatial sptParentest) {
+		public boolean updatePickingEvent(int iButtonIndex, ArrayList<RayCastResultX> acrList, PhysicsData pd, Geometry geom, Spatial sptParentest) {
 			if(geom!=null){
 				LoggingI.i().logMarker(""+geom);
 				LoggingI.i().logEntry(""+geom.getWorldBound());

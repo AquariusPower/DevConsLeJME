@@ -42,7 +42,7 @@ import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.TimedDelay;
-import com.github.devconslejme.misc.jme.PhysicsI.PhysicsDataRayCastResultX;
+import com.github.devconslejme.misc.jme.PhysicsI.RayCastResultX;
 import com.jme3.app.Application;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.MotionAllowedListener;
@@ -540,7 +540,7 @@ public class FlyByCameraX extends FlyByCamera {
 	}; private CompositeControl cc;
 	
 	private String	strAllZoomSteps;
-	private ArrayList<PhysicsDataRayCastResultX>	acrLast;
+	private ArrayList<RayCastResultX>	acrLast;
 	
 	public void update(float fTPF){
 		if(tdMouseGrab.isReady(true)){
@@ -550,7 +550,7 @@ public class FlyByCameraX extends FlyByCamera {
 			}
 		}
 		
-		keyFlyCamMod.setPressedSpecialExternalContextKeyMode(cc,isEnabled());
+		keyFlyCamMod.setPressedSpecialExternalContextKeyMode(cc,isEnabled()&&isAllowMove());
 		
 		// fix/apply fov
 		boolean bTargetZoomReached=true;
@@ -608,8 +608,8 @@ public class FlyByCameraX extends FlyByCamera {
 		
 	}
 	
-	public ArrayList<PhysicsDataRayCastResultX> getLastWorldPickRayCastPiercingAtCamCenter(){
-		return new ArrayList<PhysicsDataRayCastResultX>(acrLast);
+	public ArrayList<RayCastResultX> getLastWorldPickRayCastPiercingAtCamCenter(){
+		return new ArrayList<RayCastResultX>(acrLast);
 	}
 	
 //	public String getBkpZoomFOVinfo(){
