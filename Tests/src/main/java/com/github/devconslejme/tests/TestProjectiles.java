@@ -27,15 +27,12 @@
 package com.github.devconslejme.tests;
 
 import com.github.devconslejme.game.CharacterI;
-import com.github.devconslejme.misc.MatterI.EMatter;
-import com.github.devconslejme.misc.MatterI.EMatterStatus;
-import com.github.devconslejme.misc.MatterI.MatterStatus;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.PhysicsI;
 import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.github.devconslejme.misc.jme.PhysicsProjectileI;
+import com.github.devconslejme.misc.jme.PhysicsProjectileI.EGun;
 import com.github.devconslejme.misc.jme.PhysicsProjectileI.PhysicsGun;
-import com.github.devconslejme.misc.jme.PhysicsProjectileI.PhysicsThrowProjectiles;
 import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
@@ -72,7 +69,7 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 //		SubdivisionSurfaceModifier s = new SubdivisionSurfaceModifier(modifierStructure, blenderContext);
 		
 		// to have fun on flycam mode
-		PhysicsProjectileI.i().setProjectileFromCamCurrent(PhysicsProjectileI.i().getProjectileThrowerDevTestDbgCopy());
+//		PhysicsProjectileI.i().setProjectileFromCamCurrent(PhysicsProjectileI.i().getProjectileThrowerDevTestDbgCopy());
 		
 //		boolean bOld=true;
 //		if(bOld) {
@@ -82,12 +79,12 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 //				EMatter.Generic20KgPerM3.get()
 //			);
 //		}else {
-			PhysicsGun pg = PhysicsProjectileI.i().createGun(
-				new PhysicsThrowProjectiles(EMatterStatus.Bullet9mm.get()),
-				EMatter.Iron.get()
+//			PhysicsGun pg = PhysicsProjectileI.i().createGun(
+//				new PhysicsThrowProjectiles(EMatterStatus.Bullet762x39mm.get(),710f),
 //				EMatterStatus.GunAK47.get()
-			);
+//			);
 //		}
+		PhysicsGun pg = PhysicsProjectileI.i().createGun(EGun.AK47.get());
 		
 		float fFullLength=100;
 		float fYFloor=-7;

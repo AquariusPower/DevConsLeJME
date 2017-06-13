@@ -26,11 +26,12 @@
 */
 package com.github.devconslejme.misc.jme;
 
+import java.util.HashMap;
+
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.MatterI.EMatterStatus;
-import com.github.devconslejme.misc.MatterI.Matter;
 import com.github.devconslejme.misc.MatterI.MatterStatus;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
@@ -42,6 +43,7 @@ import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
@@ -59,7 +61,7 @@ public class PhysicsProjectileI {
 	private SimpleBatchNode	sbnProjectilesAtWorld;
 	private float	fDefaultProjectileMaxLife=2;
 	private int iProjectileMaxLifeTimeMultiplier=100;
-	private PhysicsThrowProjectiles ppCamDevDbgTst;
+//	private PhysicsThrowProjectiles ppCamDevDbgTst;
 	private PhysicsThrowProjectiles ppFromCamCurrent;
 	private Geometry geomProjectileFactory;
 	
@@ -72,44 +74,49 @@ public class PhysicsProjectileI {
 		private float fDesiredSpeed;
 //		private float fRadius;
 //		private float	fPhysBoundsScaleDiv;
+		/**
+		 * this trick simulates/helps requiring less speed for a good flying/drop curve w/o stressing the phys engine too much
+		 */
 		private float	fGravityDivTrick;
 //		protected boolean	bFiring;
 		private MatterStatus mts;
+		private float fRealVelocityMetersPerSecond;
 		
 		@Override
 		public PhysicsThrowProjectiles clone(){
-			return new PhysicsThrowProjectiles(mts);
+			return new PhysicsThrowProjectiles(mts,fRealVelocityMetersPerSecond);
 //			return new PhysicsThrowProjectiles(geomProjectileFactory, fDesiredSpeed, fGravityDivTrick, mt);
 		}
 		
-		/**
-		 * 
-		 * @param geomProjectileFactory
-		 * @param fDesiredSpeed
-		 * @param fRadius
-		 * @param fPhysBoundsScaleDiv (can be null) to initially lower the mass and collision shape size, but will be restored just after to show the geometry properly, it will just have a smaller collider than what it looks
-		 * @param fGravityDiv (can be null) this trick simulates/helps requiring less speed for a good flying/drop curve w/o stressing the phys engine
-		 * @param mt
-		 */
-		public PhysicsThrowProjectiles(Geometry geomProjectileFactory, float fDesiredSpeed, Float fGravityDiv) {
-			this.fDesiredSpeed = fDesiredSpeed;
-//			this.fRadius = fRadius;
-//			this.mt = mt;
-			this.fGravityDivTrick  = fGravityDiv==null ? 1f : fGravityDiv;
-//			this.fPhysBoundsScaleDiv=fPhysBoundsScaleDiv==null?1f:fPhysBoundsScaleDiv;
-			
-			if(geomProjectileFactory==null){
-				geomProjectileFactory=PhysicsProjectileI.i().getDefaultProjectileFactory();
-//				geomProjectileFactory = GeometryI.i().create(new Sphere(3,4,fRadius), ColorRGBA.Cyan);
-//				geomProjectileFactory.scale(0.25f,0.25f,1f);
-//				geomProjectileFactory.scale(1f/fPhysBoundsScaleDiv);
-//				geomProjectileFactory.getMaterial().setColor(EColor.GlowColor.s(), ColorRGBA.Blue.mult(10)); //requires the bloom post processor with glow objects mode
-			}
-			this.geomProjectileFactory=geomProjectileFactory;
-		}
+//		/**
+//		 * 
+//		 * @param geomProjectileFactory
+//		 * @param fDesiredSpeed
+//		 * @param fRadius
+//		 * @param fPhysBoundsScaleDiv (can be null) to initially lower the mass and collision shape size, but will be restored just after to show the geometry properly, it will just have a smaller collider than what it looks
+//		 * @param fGravityDiv (can be null) this trick simulates/helps requiring less speed for a good flying/drop curve w/o stressing the phys engine
+//		 * @param mt
+//		 */
+//		public PhysicsThrowProjectiles(Geometry geomProjectileFactory, float fDesiredSpeed, Float fGravityDiv) {
+//			this.fDesiredSpeed = fDesiredSpeed;
+////			this.fRadius = fRadius;
+////			this.mt = mt;
+//			this.fGravityDivTrick  = fGravityDiv==null ? 1f : fGravityDiv;
+////			this.fPhysBoundsScaleDiv=fPhysBoundsScaleDiv==null?1f:fPhysBoundsScaleDiv;
+//			
+//			if(geomProjectileFactory==null){
+//				geomProjectileFactory=PhysicsProjectileI.i().getDefaultProjectileFactory();
+////				geomProjectileFactory = GeometryI.i().create(new Sphere(3,4,fRadius), ColorRGBA.Cyan);
+////				geomProjectileFactory.scale(0.25f,0.25f,1f);
+////				geomProjectileFactory.scale(1f/fPhysBoundsScaleDiv);
+////				geomProjectileFactory.getMaterial().setColor(EColor.GlowColor.s(), ColorRGBA.Blue.mult(10)); //requires the bloom post processor with glow objects mode
+//			}
+//			this.geomProjectileFactory=geomProjectileFactory;
+//		}
 		
-		public PhysicsThrowProjectiles(MatterStatus mts) {
-			this.fDesiredSpeed = 250f;
+		public PhysicsThrowProjectiles(MatterStatus mts, float fRealVelocityMetersPerSecond) {
+			this.fDesiredSpeed = 250f; //for the physics engine
+			this.fRealVelocityMetersPerSecond = fRealVelocityMetersPerSecond;
 //			this.fRadius = 0.1f;
 			this.mts=mts;
 			this.fGravityDivTrick=4f; //TODO if the velocity becomes too low, like a shot straight up that begins to fall, or after hitting something, it's gravity should be restored to normal gravity to not look weird like anything else falling faster than a bullet...
@@ -132,15 +139,15 @@ public class PhysicsProjectileI {
 		
 //		ppCamDevDbgTst = new PhysicsThrowProjectiles(null,250,0.1f,4f,4f,EMatter.Generic100KgPerM3.get());
 //		ppCamDevDbgTst = new PhysicsThrowProjectiles(EMatterStatus.BulletForTestOfGeneric100KgPerM3.get());
-		ppCamDevDbgTst = new PhysicsThrowProjectiles(EMatterStatus.Bullet9mm.get());
+//		ppCamDevDbgTst = new PhysicsThrowProjectiles(EMatterStatus.Bullet9mm.get());
 		
-    KeyBindCommandManagerI.i().putBindCommandsLater("Space",new CallBoundKeyCmd(){
-  		@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
-  			PhysicsProjectileI.i().throwProjectileFromCamera(ppFromCamCurrent);
-  			setDelaySeconds(1f/ppCamDevDbgTst.iProjectilesPerSecond); //so it becomes dynamicly changeable
-  			return true;
-  		}}.setName("ShootProjectile").holdKeyPressedForContinuousCmd().setDelaySeconds(1f/ppCamDevDbgTst.iProjectilesPerSecond)
-		);
+//    KeyBindCommandManagerI.i().putBindCommandsLater("Space",new CallBoundKeyCmd(){
+//  		@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
+//  			PhysicsProjectileI.i().throwProjectileFromCamera(ppFromCamCurrent);
+//  			setDelaySeconds(1f/ppCamDevDbgTst.iProjectilesPerSecond); //so it becomes dynamicly changeable
+//  			return true;
+//  		}}.setName("ShootProjectile").holdKeyPressedForContinuousCmd().setDelaySeconds(1f/ppCamDevDbgTst.iProjectilesPerSecond)
+//		);
 	}
 	
 	public Geometry getDefaultProjectileFactory() {
@@ -160,9 +167,42 @@ public class PhysicsProjectileI {
 		
 		return geomProjectileFactory;
 	}
-
+	
+	public static class Gun{
+		EMatterStatus eprojectile;
+		float fRealVelocityMetersPerSecond;
+		EMatterStatus egun;
+		public Gun(EMatterStatus egun, EMatterStatus eprojectile, float fRealVelocityMetersPerSecond) {
+			super();
+			this.eprojectile = eprojectile;
+			this.fRealVelocityMetersPerSecond = fRealVelocityMetersPerSecond;
+			this.egun = egun;
+		}
+		
+	}
+	
+	private static HashMap<String,Gun> hmGun = new HashMap<>();
+	public static enum EGun{
+		AK47(EMatterStatus.GunAK47, EMatterStatus.Bullet762x39mm, 710f),
+		;
+		EGun(EMatterStatus egun, EMatterStatus eproj, float fRealVelocityMetersPerSecond){
+			hmGun.put(this.toString(), new Gun(egun, eproj, fRealVelocityMetersPerSecond));
+		}
+		public Gun get() {
+			return hmGun.get(this.toString());
+		}
+	}
+	
+//	public PhysicsGun createGun(EGun egun){
+//		Gun gun = hmGun.get(egun.toString());
+//		return createGun(gun);
+//	}
+	public PhysicsGun createGun(Gun gun){
+		return createGun(new PhysicsThrowProjectiles(gun.eprojectile.get(), gun.fRealVelocityMetersPerSecond),
+			gun.egun.get());
+	}
 	//	public PhysicsGun createGun(PhysicsThrowProjectiles pp,float fOverallGunDensity){
-	public PhysicsGun createGun(PhysicsThrowProjectiles pp,Matter mtGunRelativeOverallMatter){
+	protected PhysicsGun createGun(PhysicsThrowProjectiles pp,MatterStatus mts){
 		PhysicsGun pg = new PhysicsGun();
 		pg.pp=pp;
 		
@@ -170,7 +210,7 @@ public class PhysicsProjectileI {
 		geom.scale(0.25f,0.5f,1f);
 		geom.setName("PhysicsGun");
 		AppI.i().getRootNode().attachChild(geom);
-		pg.pd=PhysicsI.i().imbueFromWBounds(geom,	new MatterStatus(mtGunRelativeOverallMatter),	new Node());
+		pg.pd=PhysicsI.i().imbueFromWBounds(geom,	mts, new Node());
 //		pg.pd=PhysicsI.i().imbueFromWBounds(geom,	new Matter("Density="+fOverallGunDensity, fOverallGunDensity),	true);
 		
 		CallableXAnon cx = new CallableXAnon() {
@@ -214,18 +254,34 @@ public class PhysicsProjectileI {
 		
 		// gun recoil
 		float fMassRatio = pdPjtl.getPRB().getMass()/(gun.pd.getPRB().getMass());
-//		float fImpulseRecoil = -1f * impPjtl.getImpulseAtSelfDir().mult(fMassRatio).length();
-		float fImpulseRecoil = impPjtl.getImpulseAtSelfDir()*fMassRatio;
-//		fImpulseRecoil*=100f;
-//		float fTorque = 0.01f;
-		float fRecoilEffectForceY = 1000f; //TODO this should be a result of the projectile powder/mass force VS gun mass, and be configurable outside here to make it sure it is working.
-//		if(gun.pd.f)
-//		if(gun.pd.isGrabbed())fTorque*=1000f;
-//		if(gun.pd.isGrabbed())fY*=100000f;
+		float fImpulseRecoil = 0f;
+		float fDisplacementUpwards = 1f; //TODO this should be a result of the projectile powder/mass force VS gun mass, and be configurable outside here to make it sure it is working.
+		int iTest=2;
+		switch(iTest){
+			case 0:
+				fImpulseRecoil = impPjtl.getImpulseAtSelfDir()*fMassRatio;
+				fDisplacementUpwards = 1000f; //TODO this should be a result of the projectile powder/mass force VS gun mass, and be configurable outside here to make it sure it is working.
+				break;
+			case 1:
+				/**
+				 * Kinectic Energy = m/2 * v^2
+				 */
+//				fImpulseRecoil = FastMath.pow(gun.pp.fRealVelocityMetersPerSecond,2f)*(gun.pd.getPRB().getMass()/2f);
+//				fImpulseRecoil = FastMath.pow(gun.pp.fRealVelocityMetersPerSecond,2f)*(fMassRatio/2f);
+				fImpulseRecoil = FastMath.pow(gun.pp.fRealVelocityMetersPerSecond,2f)*FastMath.pow(fMassRatio,2f);
+				break;
+			case 2:
+				/**
+				 * Kinectic Energy = m/2 * v^2
+				 * how much would be the velocity at the gun? thats the mass ratio used for.
+				 */
+				fImpulseRecoil = FastMath.pow(gun.pp.fRealVelocityMetersPerSecond*fMassRatio,2f)*(gun.pd.getPRB().getMass()/2f);
+				fDisplacementUpwards = 0.5f;
+				break;
+		}
+		
 		ImpTorForce impRecoil = new ImpTorForce()
-//			.setim
-			.setImpulseAtSelfDir(-fImpulseRecoil,fRecoilEffectForceY)
-//			.setTorqueImpulse(new Vector3f(fTorque,0,0))
+			.setImpulseAtSelfDir(-fImpulseRecoil,fDisplacementUpwards)
 			;
 		PhysicsI.i().applyImpulseLater(gun.pd, impRecoil);
 		
@@ -434,7 +490,7 @@ public class PhysicsProjectileI {
 //		return this; 
 //	}
 	
-	public PhysicsThrowProjectiles getProjectileThrowerDevTestDbgCopy(){
-		return ppCamDevDbgTst.clone();
-	}
+//	public PhysicsThrowProjectiles getProjectileThrowerDevTestDbgCopy(){
+//		return ppCamDevDbgTst.clone();
+//	}
 }

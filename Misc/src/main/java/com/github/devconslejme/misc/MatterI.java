@@ -99,12 +99,13 @@ public class MatterI {
 	}
 	
 	public static enum EMatterStatus {
-		Bullet9mm(7.5), 
-		BulletForTestOfGeneric100KgPerM3(0.0065), 
-		GunAK47(4400), //TODO the problem would be the center of mass tho...
+		Bullet9mm(EMatter.Lead,7.5), 
+		BulletForTestOfGeneric100KgPerM3(EMatter.Lead,0.0065), 
+		GunAK47(EMatter.Iron,4400), //TODO the matter for it should be a combination of iron+wood+otherStuff (like EMatter.GunAK47)... also, the problem would be the center of mass tho...
+		Bullet762x39mm(EMatter.Lead,7.9), 
 		;
-		EMatterStatus(double dMassGrams){
-			hmMatterStatus.put(this.toString(), new MatterStatus(EMatter.Lead.get()).setMassGrams(dMassGrams));
+		EMatterStatus(EMatter emt,double dMassGrams){
+			hmMatterStatus.put(this.toString(), new MatterStatus(emt.get()).setMassGrams(dMassGrams));
 		}
 		public MatterStatus get() {
 			return MatterI.i().getStatus(this.toString());

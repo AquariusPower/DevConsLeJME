@@ -246,7 +246,11 @@ public class ManipulatorI {
 				if(fDist < 0.50f)fAcceleration/=2f;
 				pdManipulating.setTempGravityTowards(v3fInfrontCamPos, fDist>fDistRest ? fAcceleration : 0f);
 				
+				Vector3f v3fStraightDir = v3fInfrontCamPos.subtract(v3fFrom).normalize();
+				Vector3f v3fMoveDir = pdManipulating.getPRB().getLinearVelocity().normalize();
+				
 				boolean bResetF=false;
+				if(v3fStraightDir.distance(v3fMoveDir)>0.1f)bResetF=true; /** if the direction is too way off, reset once */
 				if(fDist<fDistRest)bResetF=true;
 				if(fDist<10f && tdResetForce.isReady(true))bResetF=true;
 	//			if(tdResetForce.isReady(true))bResetF=true;
