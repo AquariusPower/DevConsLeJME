@@ -118,6 +118,20 @@ public class MatterI {
 			return this; 
 		}
 		
+		public MatterStatus setMassGrams(double fMassGrams) {
+			this.dMassGrams = fMassGrams;
+			this.fVolumeCm3 = dMassGrams / mt.getDensityGramsPerCm3();
+			this.fVolumeM3 = fVolumeCm3/fM3toCm3;
+			return this; 
+		}
+		
+		public MatterStatus setMassKg(double fMassKg) {
+			this.dMassGrams = fMassKg*1000.0;
+			this.fVolumeCm3 = dMassGrams / mt.getDensityGramsPerCm3();
+			this.fVolumeM3 = fVolumeCm3/fM3toCm3;
+			return this; 
+		}
+		
 		public double getMassGrams(){
 			return dMassGrams;
 		}
