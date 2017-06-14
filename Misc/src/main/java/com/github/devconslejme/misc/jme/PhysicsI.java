@@ -419,7 +419,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		private float	fGrabDist;
 //		private CollisionResult cr;
 //		private Vector3f v3fGravityBkp;
-		private LeviCharacter bccxGrabber;
+		private LeviCharacter lcGrabber;
 		private Vector3f v3fLevitationDisplacement=null;
 		private float fCCdMotionThreshold;
 		private Vector3f v3fNewGravity=null;
@@ -706,7 +706,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 
 		public PhysicsData setGrabbedBy(LeviCharacter bccxGrabber) {
-			this.bccxGrabber = bccxGrabber;
+			this.lcGrabber = bccxGrabber;
 			return this;
 		}
 //		public PhysicsData setGrabbedBy(BetterCharacterControlX bccxGrabber) {
@@ -715,7 +715,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //		}
 		
 		public boolean isGrabbed() {
-			return bccxGrabber!=null;
+			return lcGrabber!=null;
 		}
 
 //		public CollisionResult getCollisionResult() {
@@ -1011,8 +1011,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //			return v3fGravityBkp;
 //		}
 
-		public LeviCharacter getBccxGrabber() {
-			return bccxGrabber;
+		public LeviCharacter getGrabber() {
+			return lcGrabber;
 		}
 
 		public boolean isLevitating() {
@@ -1072,6 +1072,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 
 		public PhysicsData getLeviFollow() {
 			return pdLevitationFollow;
+		}
+
+		public boolean isGrabbedBy(PhysicsData pdLevi) {
+			return lcGrabber!=null && lcGrabber.pdTorso==pdLevi;
 		}
 
 	}
@@ -1412,6 +1416,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			RayCastResultX resHitBelow = null;
 			for(RayCastResultX r:resultsx) { 
 				if(r.getPd().getLeviFollow()==pdLevi)continue; //ignore the followers
+				if(r.getPd().isGrabbedBy(pdLevi))continue; //ignored grabbeds, prevents levitation trick/glitch TODO allow this optionally as a funny trick/magic
+//				if(r.getPd().isGrabbed())continue; //TODO allow this by applying a downwards force on the grabber
 				resHitBelow=r;
 				break;
 			}
@@ -1438,6 +1444,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				prb.setPhysicsLocation(v3fDisplOrientedFollowTo);
 			}else
 			if(resHitBelow!=null) {
+				// positioning above
 				float fDistCurrent = prb.getPhysicsLocation().subtract(resHitBelow.getV3fWrldHit()).length();
 				float fDistRemainingToReach = pdLevi.getLevitationHeight()-fDistCurrent;
 				float fNearMargin = (pdLevi.getLevitationHeight()*0.05f);
@@ -1445,6 +1452,15 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 					float fFinalHeight = pdLevi.getLevitationHeight()-fNearMargin;
 					pdLevi.setPhysicsLocationAtMainThread(resHitBelow.getV3fWrldHit().add(0,fFinalHeight,0));
 				}
+				
+				/**
+				 * TODO for pseudo levitators (beings with legs): 
+				 * use some trick to let the weight of the levitator be applied on below objects
+				 * may be an invisible sphere, with the same mass of the levitator and its followers, 
+				 * that keeps endless falling where the levitator is.  
+				 * 
+				 * ex.: if(resHitBelow.getPd().getApplyForceBelow()!=null) {applyImpulseLater(resHitBelow.getPd(), new ImpTorForce().setImpulse(v3fImpulse, v3fRelPos)
+				 */
 			}
 			
 		}

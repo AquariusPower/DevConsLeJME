@@ -120,6 +120,10 @@ public class ManipulatorI {
 		}
 	}
 	
+	public boolean isGrabbed(PhysicsData pd) {
+		return pdManipulating == pd;
+	}
+	
 	public void configure(){
 		keyContext = KeyCodeManagerI.i().createSpecialExternalContextKey(cc, "ContextManipulatorGrab");
 		

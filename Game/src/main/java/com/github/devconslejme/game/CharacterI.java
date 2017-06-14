@@ -61,6 +61,7 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.Spatial.CullHint;
 import com.jme3.scene.shape.Box;
 
 /**
@@ -149,8 +150,10 @@ public class CharacterI {
 		public PhysicsData pdHead;
 		
 		public void update(float tpf) {
-			pdTorso.getSpatialWithPhysics().rotateUpTo(Vector3f.UNIT_Y);
-			PhysicsI.i().syncPhysTransfFromSpt(pdTorso,false,true);
+			if(pdTorso.getPhysicsRotationCopy().getRotationColumn(1).distance(Vector3f.UNIT_Y)>0.1f) {
+				pdTorso.getSpatialWithPhysics().rotateUpTo(Vector3f.UNIT_Y);
+				PhysicsI.i().syncPhysTransfFromSpt(pdTorso,false,true);
+			}
 			
 			float fLinearDamp=0.85f;
 			if(pdTorso.getPRB().getGravity().length()>0) {
@@ -205,7 +208,7 @@ public class CharacterI {
 	}
 	private ArrayList<LeviCharacter> alc = new ArrayList<>();
 
-	private Vector3f v3fMove = new Vector3f();
+	private Vector3f v3fMoveDirection = new Vector3f();
 
 	protected Long lJumpStartSimulTimeMilis=null;
 
@@ -327,8 +330,8 @@ public class CharacterI {
 			}.setName("CharacterJump")
 		);
 
-		KeyBindCommandManagerI.i().putBindCommandsLater(
-			KeyCodeManagerI.i().getKeyForId("Shift").composeCfgPrependModifiers(keyContext),
+		KeyBindCommandManagerI.i().putBindCommandsLater( //TODO use Shift alone in some way? or keep it just as a modifier only key?
+			KeyCodeManagerI.i().getKeyForId("R").composeCfgPrependModifiers(keyContext),
 			new CallBoundKeyCmd(){
 				@Override public Boolean callOnKeyPressed(int iClickCountIndex) {
 					setRunning(true);
@@ -345,10 +348,17 @@ public class CharacterI {
 	}
 	
 	protected void setPossessed(LeviCharacter levi) {
+		releasePossessed();
 		this.leviPossessed=levi;
+		if(leviPossessed!=null) {
+			leviPossessed.nodeHead.setCullHint(CullHint.Always);
+		}
 	}
 
 	protected void releasePossessed() {
+		if(leviPossessed!=null) {
+			leviPossessed.nodeHead.setCullHint(CullHint.Inherit);
+		}
 		leviPossessed=null;
 	}
 
@@ -391,7 +401,7 @@ public class CharacterI {
 	}
 	
 	protected void updatePossessed(float tpf) {
-		v3fMove.set(0,0,0);
+		v3fMoveDirection.set(0,0,0);
 		if(!isPossessing())return;
 		
 		if(bForward!=null){
@@ -399,7 +409,7 @@ public class CharacterI {
 			v3f.y=0;
 			v3f.normalizeLocal();//.multLocal(getSpeed());
 			if(!bForward)v3f.negateLocal();
-			v3fMove.addLocal(v3f);
+			v3fMoveDirection.addLocal(v3f);
 		}
 		
 		if(bStrafeLeft!=null){
@@ -407,13 +417,25 @@ public class CharacterI {
 			v3f.y=0;
 			v3f.normalizeLocal();//.multLocal(getSpeed());
 			if(!bStrafeLeft)v3f.negateLocal();
-			v3fMove.addLocal(v3f);
+			v3fMoveDirection.addLocal(v3f);
 		}
 		
-		if(v3fMove.length()>0) {
+		if(v3fMoveDirection.length()>0) {
 			if(tdMoveInterval.isReady(true)) {
-				calcMoveImpulse();
-				PhysicsI.i().applyImpulseLater(leviPossessed.pdTorso,new ImpTorForce().setImpulse(v3fMove, null));
+//				Vector3f v3fTorqueImp = null;
+				Vector3f v3fDisplacement = v3fMoveDirection.subtract(leviPossessed.pdTorso.getPhysicsRotationCopy().getRotationColumn(2));
+//				if(leviPossessed.pdTorso.getPhysicsRotationCopy().getRotationColumn(2).distance(v3fMoveDirection) > 0.1f) {
+//					v3fTorqueImp = new Vector3f(0f,1f,0f); //TODO find if it is to turn to left or right relatively to move direction..
+//				}
+//				v3fDisplacement.multLocal(leviPossessed.pdTorso.getPRB().getMass()).negateLocal();
+				v3fDisplacement.multLocal(leviPossessed.pdTorso.getPRB().getMass()/1000f).negateLocal();
+//				System.out.println(v3fDisplacement);
+				PhysicsI.i().applyImpulseLater(leviPossessed.pdTorso,	new ImpTorForce()
+//					.setImpulse(calcMoveImpulse(v3fMoveDirection), null)
+					.setImpulse(calcMoveImpulse(v3fMoveDirection), v3fDisplacement)
+//					.setTorqueImpulse(v3fTorqueImp)
+//					.setTorque(v3fTorqueImp)
+				);
 			}
 		}
 		
@@ -426,10 +448,12 @@ public class CharacterI {
 		}
 	}
 	
-	private void calcMoveImpulse() {
-		v3fMove.normalizeLocal();
-		v3fMove.multLocal(leviPossessed.pdTorso.getPRB().getMass());
-		v3fMove.multLocal(getSpeed());
+	private Vector3f calcMoveImpulse(Vector3f v3fMoveDir) {
+		v3fMoveDir=v3fMoveDir.clone();
+		v3fMoveDir.normalizeLocal();
+		v3fMoveDir.multLocal(leviPossessed.pdTorso.getPRB().getMass());
+		v3fMoveDir.multLocal(getSpeed());
+		return v3fMoveDir;
 	}
 
 	/**

@@ -22,6 +22,7 @@ Console-*
 /javadoc/
 /.tmp/
 /.jme3
+*.cfg
 output.graphml
 
 !lib/**/*.jar
