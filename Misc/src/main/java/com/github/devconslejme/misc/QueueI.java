@@ -400,6 +400,10 @@ public class QueueI {
 			return getThis();
 		}
 		
+		/**
+		 * make it sure to reset/reinitialize specific caller variables here,
+		 * so the next enqueue will be robust/clean/safe.
+		 */
 		public void callAfterRemovedFromQueue() {}
 		
 		@SimpleVarReadOnly

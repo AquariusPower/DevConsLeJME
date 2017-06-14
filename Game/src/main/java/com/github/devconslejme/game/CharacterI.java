@@ -420,7 +420,7 @@ public class CharacterI {
 		if(lJumpEndSimulTimeMilis!=null) {
 			long lJumpDelayMilis = lJumpEndSimulTimeMilis-lJumpStartSimulTimeMilis;
 			PhysicsI.i().applyImpulseLater(leviPossessed.pdTorso,new ImpTorForce().setImpulse(new Vector3f(0,getJumpImpulse(lJumpDelayMilis),0), null));
-//			HWEnvironmentJmeI.i().putCustomInfo("CharLastJump", ""+lJumpEndSimulTimeMilis+","+lJumpStartSimulTimeMilis+","+lJumpDelayMilis+","+getJumpForce(lJumpDelayMilis));
+			HWEnvironmentJmeI.i().putCustomInfo("CharLastJump", ""+lJumpEndSimulTimeMilis+","+lJumpStartSimulTimeMilis+","+lJumpDelayMilis+","+getJumpImpulse(lJumpDelayMilis));
 			lJumpStartSimulTimeMilis=null;
 			lJumpEndSimulTimeMilis=null;
 		}

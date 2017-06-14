@@ -257,15 +257,22 @@ public class KeyBindCommandManagerI {
 	
 	public static abstract class CallBoundKeyCmd extends CallableX<CallBoundKeyCmd>{
 		public StackTraceElement[]	asteDbgConfiguredAt;
-//		private BindCommand	bc;
+		
 		private boolean	bExpectingKeyReleasedOverriden;
-//		private boolean	bIsPressed;
+		private Boolean bPressedReturnStatus=null;
 		private float	fAnalogValue;
 		private int iClickCountIndex=0;
 		
 		/** This callcmd can be simultaneously called by many different key bindings.  */
 		private ArrayList<KeyBind>	abcSimultaneouslyPressed = new ArrayList<>();
 		private int	iMultiClicksAccepted = 1; //min is 1 of course
+		
+		private void reset() {
+			bExpectingKeyReleasedOverriden=false;
+			bPressedReturnStatus=null;
+			fAnalogValue=0f;
+			iClickCountIndex=0;
+		}
 		
 		@Override
 		public String toString() {
@@ -311,11 +318,23 @@ public class KeyBindCommandManagerI {
 		@Override
 		public Boolean call() {
 			if(isPressed()){
-				Boolean bRet = callOnKeyPressed(iClickCountIndex);
-				if(bRet!=null)return bRet;
+				if(isLoopMode() && bPressedReturnStatus!=null)bPressedReturnStatus=null;
 				
-				bRet=callOnKeyStatus(true);
-				if(bRet!=null)return bRet;
+				/**
+				 * the loop mode must call pressed again
+				 */
+				if(bPressedReturnStatus==null)bPressedReturnStatus = callOnKeyPressed(iClickCountIndex);
+				
+				Boolean bRet = bPressedReturnStatus; //preference for the pressed method
+				if(bRet==null)bRet=callOnKeyStatus(true);
+				
+				if(bRet!=null) {
+					if(isLoopMode()) {
+						return true; // loop mode requires true to use the delay properly
+					}else {
+						return false; // this will keep the caller on the queue until the key is released
+					}
+				}
 				
 				bExpectingKeyReleasedOverriden=true;
 			}
@@ -341,12 +360,23 @@ public class KeyBindCommandManagerI {
 		@Deprecated
 		@Override
 		public void callAfterRemovedFromQueue() {
-			if(!isPressed()){
-				Boolean bRet = callOnKeyReleased(iClickCountIndex);
-				if(bRet!=null)return;
-				
-				bRet=callOnKeyStatus(false);
-				if(bRet!=null)return;
+			Boolean bRet=null;
+			
+			/**
+			 * released event only if pressed ignored or successful
+			 */
+			boolean bCallKeyReleased = !isPressed() && (bPressedReturnStatus==null || bPressedReturnStatus); 
+			
+			if(bCallKeyReleased){
+				bRet = callOnKeyReleased(iClickCountIndex);
+				if(bRet==null)bRet=callOnKeyStatus(false); //after the specific released method is ignored
+			}
+			
+			// reset internal stuff
+			reset(); //prepare this caller (that has just been removed) for next enqueue
+			
+			if(bCallKeyReleased){
+				if(bRet!=null)return; //ok if none of the possible released methods were ignored
 				
 				if(bExpectingKeyReleasedOverriden){
 //					throw new DetailedException("neither 'on key pressed' nor 'on key released' methods were overriden!",this,asteConfiguredAt,bc);
@@ -395,6 +425,10 @@ public class KeyBindCommandManagerI {
 //			return abcSimultaneouslyPressed.isEmpty();
 //		}
 		
+		/**
+		 * will determine if all keys bound to the same command are released before returning false
+		 * @return
+		 */
 		public boolean isPressed(){
 ////			return getBindCommand().getKeyBind().getActionKey().isPressed();
 //			/**
