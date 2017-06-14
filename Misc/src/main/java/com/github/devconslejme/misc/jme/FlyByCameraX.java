@@ -198,14 +198,14 @@ public class FlyByCameraX extends FlyByCamera {
 	}
 	
 	public void putFlyCamBindCmdLater(String strKeyCfg, String strName, CallBoundKeyCmd callcmd) {
-		KeyBindCommandManagerI.i().putBindCommandsLater(getCfgAddFlyCamMod(strKeyCfg), callcmd.setName(strName));
+		KeyBindCommandManagerI.i().putBindCommandsLater(prependFlyCamContextKeyMod(strKeyCfg), callcmd.setName(strName));
 	}
 
-	public String getCfgAddFlyCamMod(String strOtherModsAndActionKeyCfg){
-		return getKeyAddFlyCamMod(strOtherModsAndActionKeyCfg).getBindCfg();
-	}
-	public KeyBind getKeyAddFlyCamMod(String strOtherModsAndActionKeyCfg){
-		return new KeyBind().setFromKeyCfg(strOtherModsAndActionKeyCfg).addModifier(keyFlyCamMod);
+//	public String getCfgAddFlyCamMod(String strOtherModsAndActionKeyCfg){
+//		return prependFlyCamContextKeyMod(strOtherModsAndActionKeyCfg).getBindCfg();
+//	}
+	public String prependFlyCamContextKeyMod(String strOtherModsAndActionKeyCfg){
+		return new KeyBind().setFromKeyCfg(strOtherModsAndActionKeyCfg).addModifier(keyFlyCamMod).getBindCfg();
 	}
 	
 	protected void toggleZoom() {

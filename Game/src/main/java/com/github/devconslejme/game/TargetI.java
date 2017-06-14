@@ -83,7 +83,7 @@ public class TargetI {
 		this.nodeWorld=nodeWorld;
 		
 		KeyBindCommandManagerI.i().putBindCommandsLater(
-			flycamx.getCfgAddFlyCamMod(KeyCodeManagerI.i().getMouseTriggerKey(0).getFullId()),
+			flycamx.prependFlyCamContextKeyMod(KeyCodeManagerI.i().getMouseTriggerKey(0).getFullId()),
 			new CallBoundKeyCmd(){
 				@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 					for(TargetGeom t:TargetI.i().getAllTargetsListCopy()){
@@ -101,25 +101,36 @@ public class TargetI {
 			}.setName("ActivateTarget").holdKeyPressedForContinuousCmd()
 		);
 		
-		String strK=flycamx.getCfgAddFlyCamMod(KeyCodeManagerI.i().getMouseTriggerKey(1).getFullId());
-		KeyBindCommandManagerI.i().putBindCommandsLater("Shift+"+strK,new CallBoundKeyCmd(){
+		////////////// acquire target
+		String strK=KeyCodeManagerI.i().getMouseTriggerKey(1).getFullId();
+		String strFK=flycamx.prependFlyCamContextKeyMod(strK);
+		String strPK=CharacterI.i().prependPossessedContextKeyMod(strK);
+		//////// multi
+		CallBoundKeyCmd cmdAddTgtMulti = new CallBoundKeyCmd(){
 			@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 				TargetGeom tgt = acquireNewTarget(getRayCastFromXY());
 				if(tgt!=null)addOrRemoveAtMultiTargetList(tgt); //toggles
 				return true;
 			}
-		}.setName("AddTargetMulti"));
-    KeyBindCommandManagerI.i().putBindCommandsLater(strK,new CallBoundKeyCmd(){
+		}.setName("AddTargetMulti");
+		KeyBindCommandManagerI.i().putBindCommandsLater("Shift+"+strFK,cmdAddTgtMulti);
+		KeyBindCommandManagerI.i().putBindCommandsLater("Shift+"+strPK,cmdAddTgtMulti);
+		
+		/////////// single
+		CallBoundKeyCmd cmdSetTgtSg = new CallBoundKeyCmd(){
     	@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 				TargetGeom tgt = acquireNewTarget(getRayCastFromXY()); //can be the same, wont toggle
 				if(tgt!=null){
 					clearLastSingleTarget();
-					tgtLastSingleTarget=acquireNewTarget(getRayCastFromXY()); //can be the same, wont toggle
+					tgtLastSingleTarget=tgt;
 				}
 				return true;
 			}
-    }.setName("SetSingleTarget"));
+    }.setName("SetSingleTarget");
+    KeyBindCommandManagerI.i().putBindCommandsLater(strFK,cmdSetTgtSg);
+    KeyBindCommandManagerI.i().putBindCommandsLater(strPK,cmdSetTgtSg);
     
+    ///////// tgt updates
     QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {

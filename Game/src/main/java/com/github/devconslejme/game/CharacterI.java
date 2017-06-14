@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.ICompositeRestrictedAccessControl;
 import com.github.devconslejme.misc.Key;
+import com.github.devconslejme.misc.KeyBind;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.KeyCodeManagerI;
@@ -440,5 +441,9 @@ public class CharacterI {
 //	public BetterCharacterControlX getPossessed() {
 //		return bccLast;
 //	}
+
+	public String prependPossessedContextKeyMod(String strK) {
+		return new KeyBind().setFromKeyCfg(strK).addModifier(keyContext).getBindCfg();
+	}
 	
 }

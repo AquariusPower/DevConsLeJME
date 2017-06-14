@@ -479,6 +479,8 @@ public class KeyBindCommandManagerI {
 	
 	private void putBindCommandsLater(String strKeyBindCfg, boolean bOneCmdIsMultiClickMode, CallBoundKeyCmd... acx){
 		if(bOneCmdIsMultiClickMode){
+			CallBoundKeyCmd cx = acx[0];
+			for(CallBoundKeyCmd cxChk:acx)assert cx==cxChk;
 			putCommand(acx[0]); //put only the first that is equal to the others
 		}else{
 			putCommands(acx);
