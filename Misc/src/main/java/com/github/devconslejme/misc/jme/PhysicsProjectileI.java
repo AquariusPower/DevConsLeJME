@@ -141,13 +141,14 @@ public class PhysicsProjectileI {
 //		ppCamDevDbgTst = new PhysicsThrowProjectiles(EMatterStatus.BulletForTestOfGeneric100KgPerM3.get());
 //		ppCamDevDbgTst = new PhysicsThrowProjectiles(EMatterStatus.Bullet9mm.get());
 		
-//    KeyBindCommandManagerI.i().putBindCommandsLater("Space",new CallBoundKeyCmd(){
-//  		@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
+    KeyBindCommandManagerI.i().putBindCommandsLater("Space",new CallBoundKeyCmd(){
+  		@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
+  			PhysicsI.i().applyImpulseHitTargetAtCamDirection(null);
 //  			PhysicsProjectileI.i().throwProjectileFromCamera(ppFromCamCurrent);
 //  			setDelaySeconds(1f/ppCamDevDbgTst.iProjectilesPerSecond); //so it becomes dynamicly changeable
-//  			return true;
-//  		}}.setName("ShootProjectile").holdKeyPressedForContinuousCmd().setDelaySeconds(1f/ppCamDevDbgTst.iProjectilesPerSecond)
-//		);
+  			return true;
+  		}}.setName("CamPushDynamicForce").holdKeyPressedForContinuousCmd().setDelaySeconds(1f/3f)
+		);
 	}
 	
 	public Geometry getDefaultProjectileFactory() {

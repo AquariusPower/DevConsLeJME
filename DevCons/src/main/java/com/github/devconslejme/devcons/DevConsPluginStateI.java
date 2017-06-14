@@ -830,7 +830,7 @@ public class DevConsPluginStateI extends SimpleAppState implements IDialogHierar
 		
 //		DragParentestPanelListenerI.i().applyAt(tfInput);
 		
-		BindKeyI.i().prepareKeyMappings();
+		BindKeyLemurI.i().prepareKeyMappings();
 		
 		DialogHierarchyStateI.i().addRequestAutoFocus(tfInput);
 		

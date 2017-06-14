@@ -38,10 +38,13 @@ import com.simsilica.lemur.event.KeyActionListener;
 import com.simsilica.lemur.event.KeyModifiers;
 
 /**
+ * this is specific for devcons lemur
+ * TODO is it possible to unify with the global bind system and contexts?
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class BindKeyI {
-	public static BindKeyI i(){return GlobalManagerI.i().get(BindKeyI.class);}
+public class BindKeyLemurI {
+	public static BindKeyLemurI i(){return GlobalManagerI.i().get(BindKeyLemurI.class);}
 	
 	private ArrayList<BindKey> abkList = new ArrayList<BindKey>();
 	private KeyActionListener	kal;

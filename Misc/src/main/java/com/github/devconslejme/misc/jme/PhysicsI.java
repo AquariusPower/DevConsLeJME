@@ -1952,21 +1952,22 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	
 	/**
 	 * ex.: use this for insta bullet shots or pushing things 
-	 * @param fImpulse
+	 * @param fImpulse if null, the impulse will be based on the target's mass
 	 * @return
 	 */
-	public RayCastResultX applyImpulseHitTargetAtCamDirection(float fImpulse){
-		RayCastResultX pdrtr = getPhysicsDataAtCamDir(false, true);
-		if(pdrtr!=null){
-			applyImpulseLater(pdrtr.pd,
+	public RayCastResultX applyImpulseHitTargetAtCamDirection(Float fImpulse){
+		RayCastResultX res = getPhysicsDataAtCamDir(false, true);
+		if(res!=null){
+			if(fImpulse==null)fImpulse=res.pd.getPRB().getMass();
+			applyImpulseLater(res.pd,
 				new ImpTorForce()
 					.setImpulse(
-						AppI.i().getCamLookingAtDir(), 
-						pdrtr.pd.getGeomOriginalInitialLink().worldToLocal(pdrtr.getV3fWrldHit(),null)
+						AppI.i().getCamLookingAtDir().mult(fImpulse), 
+						res.pd.getGeomOriginalInitialLink().worldToLocal(res.getV3fWrldHit(),null)
 					)
 			);
 			
-			return pdrtr;
+			return res;
 		}
 		
 		return null;

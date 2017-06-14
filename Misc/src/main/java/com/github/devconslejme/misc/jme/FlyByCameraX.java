@@ -156,14 +156,14 @@ public class FlyByCameraX extends FlyByCamera {
 		putFlyCamBindCmdLater(KeyCodeManagerI.i().getMouseTriggerKey(2).getFullId(),"toggleZoom",new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			if(isAllowZooming())toggleZoom();return true;}});
 		
-    // rotation
-		putFlyCamBindCmdLater("Left",CameraInput.FLYCAM_LEFT,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
+    // rotation (not that useful, context+ctrl+shift just to not lose it)
+		putFlyCamBindCmdLater("Ctrl+Shift+Left",CameraInput.FLYCAM_LEFT,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			rotateCamera( getTPF(),initialUpVec);return true;}}.holdKeyPressedForContinuousCmd());
-		putFlyCamBindCmdLater("Right",CameraInput.FLYCAM_RIGHT,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
+		putFlyCamBindCmdLater("Ctrl+Shift+Right",CameraInput.FLYCAM_RIGHT,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			rotateCamera(-getTPF(),initialUpVec);return true;}}.holdKeyPressedForContinuousCmd());
-		putFlyCamBindCmdLater("Up",CameraInput.FLYCAM_UP,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
+		putFlyCamBindCmdLater("Ctrl+Shift+Up",CameraInput.FLYCAM_UP,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			rotateCamera(-getTPF() * (invertY ? -1 : 1), cam.getLeft());return true;}}.holdKeyPressedForContinuousCmd());
-		putFlyCamBindCmdLater("Down",CameraInput.FLYCAM_DOWN,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
+		putFlyCamBindCmdLater("Ctrl+Shift+Down",CameraInput.FLYCAM_DOWN,new CallBoundKeyCmd(){@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
 			rotateCamera( getTPF() * (invertY ? -1 : 1), cam.getLeft());return true;}}.holdKeyPressedForContinuousCmd());
 		
 		// re-add later the mouse rotation JME native mappings config TODO use the Key bind system (after axis are working perfectly)
