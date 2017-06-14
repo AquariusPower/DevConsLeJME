@@ -113,8 +113,7 @@ public class TargetI {
 				return true;
 			}
 		}.setName("AddTargetMulti");
-		KeyBindCommandManagerI.i().putBindCommandsLater("Shift+"+strFK,cmdAddTgtMulti);
-		KeyBindCommandManagerI.i().putBindCommandsLater("Shift+"+strPK,cmdAddTgtMulti);
+		KeyBindCommandManagerI.i().putBindCommandsLater("Shift+"+strFK+","+"Shift+"+strPK,cmdAddTgtMulti);
 		
 		/////////// single
 		CallBoundKeyCmd cmdSetTgtSg = new CallBoundKeyCmd(){
@@ -127,8 +126,7 @@ public class TargetI {
 				return true;
 			}
     }.setName("SetSingleTarget");
-    KeyBindCommandManagerI.i().putBindCommandsLater(strFK,cmdSetTgtSg);
-    KeyBindCommandManagerI.i().putBindCommandsLater(strPK,cmdSetTgtSg);
+    KeyBindCommandManagerI.i().putBindCommandsLater(strFK+","+strPK,cmdSetTgtSg);
     
     ///////// tgt updates
     QueueI.i().enqueue(new CallableXAnon() {

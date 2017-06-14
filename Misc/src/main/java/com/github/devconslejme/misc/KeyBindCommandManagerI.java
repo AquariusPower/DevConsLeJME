@@ -532,22 +532,19 @@ public class KeyBindCommandManagerI {
 	
 	/*********
 	 * The only unique thing (that must not conflict) is the key binding cfg.
-	 * Different key bindings can call/execute the same commands tho!
+	 * Different key bindings can call/execute the same command(s) tho!
 	 * 
-	 * @param strKeyBindCfg see {@link KeyBind#setFromKeyCfg(String)}
+	 * @param strKeyBindCfg can be multiple separated by commas, also see {@link KeyBind#setFromKeyCfg(String)}
 	 * @param callcmd
 	 * @return
 	 */
-//	public BindCommand putBindCommand(String strKeyBindCfg, String strName, CallBoundKeyCmd callcmd){
-//		BindCommand bc = new BindCommand()
-//			.setKeyBind(new KeyBind().setFromKeyCfg(strKeyBindCfg))
-//			.addHardCommand(callcmd.setName(strName));
-//		return putBindCommand(bc);
-//	}
-	public BindCommand putBindCommands(String strKeyBindCfg, String... astrNames){
-		BindCommand bc = new BindCommand().setKeyBind(new KeyBind().setFromKeyCfg(strKeyBindCfg));
-		for(String strName:astrNames)bc.addHardCommand(tmCmdIdVsCmd.get(strName));
-		return putBindCommand(bc);
+	public void putBindCommands(String strKeyBindCfg, String... astrNames){
+		String[] astr = strKeyBindCfg.split("[,]");
+		for(String str:astr) {
+			BindCommand bc = new BindCommand().setKeyBind(new KeyBind().setFromKeyCfg(str));
+			for(String strName:astrNames)bc.addHardCommand(tmCmdIdVsCmd.get(strName));
+			putBindCommand(bc);
+		}
 	}
 	
 	public CallBoundKeyCmd putCommand(CallBoundKeyCmd callcmd){
@@ -563,9 +560,8 @@ public class KeyBindCommandManagerI {
 	/**
 	 * 
 	 * @param bc
-	 * @return previously set one if any
 	 */
-	public BindCommand putBindCommand(BindCommand bc){
+	public void putBindCommand(BindCommand bc){
 		String strHashMapKeyAsBindCfg=bc.getKeyBind().getBindCfg(); //this bind cfg must be a uniquely granted recreation of the former setup
 		
 		BindCommand bcExisting = tmCfgVsBCmd.get(strHashMapKeyAsBindCfg);
@@ -593,7 +589,7 @@ public class KeyBindCommandManagerI {
 			throw new DetailedException("hardcmds or a user cmd must be set",bc);
 		}
 		
-		return tmCfgVsBCmd.put(strHashMapKeyAsBindCfg,bc);
+		tmCfgVsBCmd.put(strHashMapKeyAsBindCfg,bc);
 	}
 	
 	public String[] validateHardCommandUId(String[] astrUId) throws IllegalArgumentException{

@@ -39,10 +39,12 @@ import com.github.devconslejme.misc.MatterI.EMatter;
 import com.github.devconslejme.misc.MatterI.MatterStatus;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.SimulationTimeI;
 import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.jme.AppI;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.GeometryI;
+import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.NodeX;
 import com.github.devconslejme.misc.jme.PhysicsI;
@@ -67,6 +69,18 @@ import com.jme3.scene.shape.Box;
 public class CharacterI {
 	public static CharacterI i(){return GlobalManagerI.i().get(CharacterI.class);}
 	
+	public static class CompositeControl implements ICompositeRestrictedAccessControl{private CompositeControl(){};};
+	private ICompositeRestrictedAccessControl	cc=new CompositeControl();
+	
+	private Key	keyContext;
+	private Boolean	bStrafeLeft;
+	private Boolean	bForward;
+	private float	fSpeed=1f;
+	private float	fRunSpeedMult=6f;
+	private boolean bRunning=false;
+	private FlyByCameraX	flycamx;
+	private LeviCharacter leviPossessed;
+	
 	/**
 	 * see  {@link BetterCharacterControl}
 	 */
@@ -83,6 +97,7 @@ public class CharacterI {
 		
 		/**
 		 * restriction based on info at
+		 * see {@link BetterCharacterControl#BetterCharacterControl(float, float, float)}
 		 * see {@link BetterCharacterControl#BetterCharacterControl(float, float, float)}
 		 */
 		@Override
@@ -110,21 +125,6 @@ public class CharacterI {
 		}
 	}
 
-	public static class CompositeControl implements ICompositeRestrictedAccessControl{private CompositeControl(){};};
-	private ICompositeRestrictedAccessControl	cc=new CompositeControl();
-	
-//	@Deprecated
-//	private BetterCharacterControlX	bccPossessed;
-	
-	private Key	keyContext;
-	private Boolean	bStrafeLeft;
-	private Boolean	bForward;
-	private float	fSpeed=400f;
-
-	private FlyByCameraX	flycamx;
-
-	private LeviCharacter leviPossessed;
-	
 	public static class NodeBodyPart extends NodeX{
 		private LeviCharacter levi;
 
@@ -206,6 +206,10 @@ public class CharacterI {
 	private ArrayList<LeviCharacter> alc = new ArrayList<>();
 
 	private Vector3f v3fMove = new Vector3f();
+
+	protected Long lJumpStartSimulTimeMilis=null;
+
+	protected Long lJumpEndSimulTimeMilis=null;
 	
 	@Deprecated
 	public BetterCharacterControlX createBCCX(Vector3f v3fSpawnAt){
@@ -309,6 +313,34 @@ public class CharacterI {
 		bindLater("Up", false, true);
 		bindLater("Down", false, false);
 		
+		KeyBindCommandManagerI.i().putBindCommandsLater(
+			KeyCodeManagerI.i().getKeyForId("End").composeCfgPrependModifiers(keyContext),
+			new CallBoundKeyCmd(){
+				@Override public Boolean callOnKeyPressed(int iClickCountIndex) {
+					lJumpStartSimulTimeMilis=SimulationTimeI.i().getMillis();
+					return true;
+				}
+				@Override public Boolean callOnKeyReleased(int iClickCountIndex) {
+					lJumpEndSimulTimeMilis=SimulationTimeI.i().getMillis();
+					return true;
+				}
+			}.setName("CharacterJump")
+		);
+
+		KeyBindCommandManagerI.i().putBindCommandsLater(
+			KeyCodeManagerI.i().getKeyForId("Shift").composeCfgPrependModifiers(keyContext),
+			new CallBoundKeyCmd(){
+				@Override public Boolean callOnKeyPressed(int iClickCountIndex) {
+					setRunning(true);
+					return true;
+				}
+				@Override public Boolean callOnKeyReleased(int iClickCountIndex) {
+					setRunning(false);
+					return true;
+				}
+			}.setName("CharacterRun")
+		);
+		
 		initUpdateCharacterMovement();
 	}
 	
@@ -365,7 +397,7 @@ public class CharacterI {
 		if(bForward!=null){
 			Vector3f v3f=AppI.i().getCamLookingAtDir();
 			v3f.y=0;
-			v3f.normalizeLocal().multLocal(getSpeed());
+			v3f.normalizeLocal();//.multLocal(getSpeed());
 			if(!bForward)v3f.negateLocal();
 			v3fMove.addLocal(v3f);
 		}
@@ -373,16 +405,44 @@ public class CharacterI {
 		if(bStrafeLeft!=null){
 			Vector3f v3f=AppI.i().getCamLeftDir();
 			v3f.y=0;
-			v3f.normalizeLocal().multLocal(getSpeed());
+			v3f.normalizeLocal();//.multLocal(getSpeed());
 			if(!bStrafeLeft)v3f.negateLocal();
 			v3fMove.addLocal(v3f);
 		}
 		
 		if(v3fMove.length()>0) {
 			if(tdMoveInterval.isReady(true)) {
+				calcMoveImpulse();
 				PhysicsI.i().applyImpulseLater(leviPossessed.pdTorso,new ImpTorForce().setImpulse(v3fMove, null));
 			}
 		}
+		
+		if(lJumpEndSimulTimeMilis!=null) {
+			long lJumpDelayMilis = lJumpEndSimulTimeMilis-lJumpStartSimulTimeMilis;
+			PhysicsI.i().applyImpulseLater(leviPossessed.pdTorso,new ImpTorForce().setImpulse(new Vector3f(0,getJumpImpulse(lJumpDelayMilis),0), null));
+//			HWEnvironmentJmeI.i().putCustomInfo("CharLastJump", ""+lJumpEndSimulTimeMilis+","+lJumpStartSimulTimeMilis+","+lJumpDelayMilis+","+getJumpForce(lJumpDelayMilis));
+			lJumpStartSimulTimeMilis=null;
+			lJumpEndSimulTimeMilis=null;
+		}
+	}
+	
+	private void calcMoveImpulse() {
+		v3fMove.normalizeLocal();
+		v3fMove.multLocal(leviPossessed.pdTorso.getPRB().getMass());
+		v3fMove.multLocal(getSpeed());
+	}
+
+	/**
+	 * average final height shall be 45cm
+	 * @param lJumpDelayMilis max height will be reached for 1000ms
+	 * @return
+	 */
+	private float getJumpImpulse(long lJumpDelayMilis) {
+		float fImpulse=leviPossessed.pdTorso.getPRB().getMass();
+		if(lJumpDelayMilis>1000)lJumpDelayMilis=1000; //max
+		fImpulse*=(lJumpDelayMilis/(float)1000);
+		fImpulse*=5f;
+		return fImpulse;
 	}
 
 	public boolean isPossessing() {
@@ -416,9 +476,13 @@ public class CharacterI {
 			}.holdKeyPressedForContinuousCmd().setName("CharacterMove"+(bStrafe?"StrafeLeft":"Trust")+(bPositive?"":"Negate"))
 		);
 	}
+	
+	public boolean toggleRunning() {
+		return bRunning = !bRunning;
+	}
 
 	public float getSpeed() {
-		return fSpeed;
+		return isRunning() ? fSpeed*fRunSpeedMult : fSpeed;
 	}
 
 	public CharacterI setSpeed(float fSpeed) {
@@ -444,6 +508,15 @@ public class CharacterI {
 
 	public String prependPossessedContextKeyMod(String strK) {
 		return new KeyBind().setFromKeyCfg(strK).addModifier(keyContext).getBindCfg();
+	}
+
+	public boolean isRunning() {
+		return bRunning;
+	}
+
+	public CharacterI setRunning(boolean bRunning) {
+		this.bRunning = bRunning;
+		return this; 
 	}
 	
 }
