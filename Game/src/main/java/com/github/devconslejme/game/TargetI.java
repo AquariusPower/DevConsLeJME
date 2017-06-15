@@ -75,6 +75,7 @@ public class TargetI {
 	private Node	nodeWorld;
 	private Application	app;
 	private FlyByCameraX	flycamx;
+	private boolean bHighlightTargets;
 	
 	public void configure(Node nodeWorld, FlyByCameraX flycamx){
 		this.flycamx = flycamx;
@@ -277,13 +278,13 @@ public class TargetI {
 		tgt.fTargetDist=(app.getCamera().getLocation().distance(
 			tgt.getRootSpatial().getWorldTranslation()));
 		
-		HighlighterI.i().applyAt(tgt.getGeometryHit());
+		if(isHighlightTargets())HighlighterI.i().applyAt(tgt.getGeometryHit());
 //		}
 	}
 	
 	protected void resetTargetIndicators(TargetGeom tgt) {
 		if(!tgt.isAllowReset())return;
-		if(tgt.getGeometryHit()!=null)HighlighterI.i().removeFrom(tgt.getGeometryHit());
+		if(isHighlightTargets() && tgt.getGeometryHit()!=null)HighlighterI.i().removeFrom(tgt.getGeometryHit());
 	}
 	
 	public void clearLastSingleTarget(){
@@ -319,6 +320,15 @@ public class TargetI {
 
 	public TargetI setRayCastFromXY(Vector3f v3fRayCastFromXY) {
 		this.v3fRayCastFromXY = v3fRayCastFromXY;
+		return this; 
+	}
+
+	public boolean isHighlightTargets() {
+		return bHighlightTargets;
+	}
+
+	public TargetI setHighlightTargets(boolean bHighlightTargets) {
+		this.bHighlightTargets = bHighlightTargets;
 		return this; 
 	}
 

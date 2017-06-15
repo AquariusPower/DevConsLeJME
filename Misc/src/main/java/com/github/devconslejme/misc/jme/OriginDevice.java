@@ -28,9 +28,12 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.MultiClickI.CallMultiClickUpdate;
 import com.github.devconslejme.misc.MultiClickI.MultiClick;
+import com.github.devconslejme.misc.QueueI;
+import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ActivatorI.ActivetableListenerAbs;
 import com.github.devconslejme.misc.jme.MeshI.Cone;
 import com.github.devconslejme.misc.jme.OriginDevice.NodeAxis;
@@ -656,4 +659,15 @@ public class OriginDevice<SELF extends OriginDevice,NODEXS extends NodeAxis> ext
 		return false;
 	}
 	
+	public void test() {
+		AppI.i().getRootNode().attachChild(this);
+		
+		setEnabled(true);
+
+		QueueI.i().enqueue(new CallableXAnon() {@Override	public Boolean call() {
+			update(getTPF());
+			return true;
+		}	}).enableLoopMode();
+		
+	}
 }

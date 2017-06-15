@@ -133,12 +133,12 @@ public class TestDevConsFull extends SimpleApplication implements IEnvironmentLi
 	 ******************************************************************************************/
 	private static boolean	bEnableOpt = true;
 	private FlyByCameraX	flycamx;
-	private OriginDevice	orde;
+//	private OriginDevice	orde;
 	private float	fSpeedBkp;
 	
-	public OriginDevice getOriginDevice() {
-		return orde;
-	}
+//	public OriginDevice getOriginDevice() {
+//		return orde;
+//	}
 	
 	/**
 	 * To flycamX override work, at {@link #TestDevCons(AppState...)} the fly cam state must be NOT set.
@@ -170,9 +170,9 @@ public class TestDevConsFull extends SimpleApplication implements IEnvironmentLi
 	}
 	
 	private void opt_initAll() {
-		orde = new OriginDevice().setEnabled(true);
-		GlobalManagerI.i().putGlobal(OriginDevice.class,orde);
-		getRootNode().attachChild(orde);
+//		orde = new OriginDevice().setEnabled(true);
+		GlobalManagerI.i().putGlobal(OriginDevice.class,new OriginDevice());
+//		getRootNode().attachChild(orde);
 		// good position related to these objects
 		getCamera().setLocation(new Vector3f(9.787677f, 6.957723f, 11.003839f)); //taken from devcons
 		getCamera().setRotation(new Quaternion(-0.068618454f, 0.91919893f, -0.18511744f, -0.34072912f)); //taken from devcons
@@ -373,7 +373,7 @@ public class TestDevConsFull extends SimpleApplication implements IEnvironmentLi
 //				return; //suspend all processing
 //			}
 			
-			orde.update(fTPF);
+//			orde.update(fTPF);
 			
 			updateDebugTest(fTPF);
 		}

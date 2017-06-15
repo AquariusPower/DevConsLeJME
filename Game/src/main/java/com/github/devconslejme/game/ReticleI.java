@@ -78,6 +78,8 @@ public class ReticleI {
 	private TargetGeom	tgt;
 	private Node	nodeGui;
 	private FlyByCameraX	flycamx;
+	private float fDefaultDegAnglePerZoomStep=90f;
+	private boolean bShowRangeTgtInfo;
 	
 	public void configure(Node nodeGui, FlyByCameraX flycamx){
 		this.nodeGui = nodeGui;//keep even if empty to help init global
@@ -88,7 +90,7 @@ public class ReticleI {
 		// user configurable
 		private boolean	bBinoculars=false; //false=scope
 		private int	iZoomIndexLast=-1;
-		private float fDegAnglePerZoomStep=10f;
+		private float fDegAnglePerZoomStep=ReticleI.i().getDefaultDegAnglePerZoomStep();
 		private int	fBorderIR=5;
 		
 		// auto setup
@@ -352,7 +354,7 @@ public class ReticleI {
 //		bt.setLocalTranslation(300f,300f,300);
 //		rnStore.attachChild(bt);
 		rnStore.btInfo=bt;
-		rnStore.attachChild(bt);
+		if(isShowRangeTgtInfo())rnStore.attachChild(bt);
 		
 		//////////////////////////////// blocker
 		float fProportion = iDMin/(float)iDMax;
@@ -573,6 +575,20 @@ public class ReticleI {
 	}
 	public ReticleI setBorderRadiusMarginPerc(float fBorderRadiusMarginPerc) {
 		this.fBorderRadiusMarginPerc = fBorderRadiusMarginPerc;
+		return this; 
+	}
+	public float getDefaultDegAnglePerZoomStep() {
+		return fDefaultDegAnglePerZoomStep;
+	}
+	public ReticleI setDefaultDegAnglePerZoomStep(float fDefaultDegAnglePerZoomStep) {
+		this.fDefaultDegAnglePerZoomStep = fDefaultDegAnglePerZoomStep;
+		return this; 
+	}
+	public boolean isShowRangeTgtInfo() {
+		return bShowRangeTgtInfo;
+	}
+	public ReticleI setShowRangeTgtInfo(boolean bShowRangeTgtInfo) {
+		this.bShowRangeTgtInfo = bShowRangeTgtInfo;
 		return this; 
 	}
 
