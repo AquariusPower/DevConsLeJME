@@ -65,7 +65,7 @@ public class PhysicsProjectileI {
 	private PhysicsThrowProjectiles ppFromCamCurrent;
 	private Geometry geomProjectileFactory;
 	private float fDefaultGravityDivTrick=1f;
-	private float fDefaultDesiredSpeed=1000f;
+	private float fDefaultDesiredSpeed=10f;
 	private int iDefaultProjectilesPerSecond=1;
 	
 //	public static class SimpleBatchNode

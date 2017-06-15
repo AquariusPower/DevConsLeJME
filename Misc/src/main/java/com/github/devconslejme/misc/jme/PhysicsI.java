@@ -104,7 +104,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	private PhysicsSpace	pspace;
 	private BoundingBox	bbSpace;
 	private LinkedHashMap<String, Info>	hmInfo;
-	private TimedDelay tdCheckOutOfSpaceBoundsDisintegrationAllowed = new TimedDelay(10f).setActive(true);
+	private TimedDelay tdChkOutOfWorldBoundsDisintegrationAllowed = new TimedDelay(10f).setActive(true);
 	private TimedDelay tdSaveSafeSpotRot = new TimedDelay(3f).setActive(true);
 	private TimedDelay tdInfo = new TimedDelay(1f).setActive(true);
 	private TimedDelay tdDisintegrate = new TimedDelay(10f).setActive(true);
@@ -116,7 +116,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	private ArrayList<ImpTorForce> arbcThreadPhysicsPreTickQueue = new ArrayList();
 	private boolean	bGlueAllowed=true;
 //	private float	fDefaultProjectileMaxLife=2;
-	private boolean bDisableCcdToLetCollisionGroupsWork=true;
+	private boolean bDisableCcdToLetCollisionGroupsWork;
 
 	
 	public static class ImpTorForce{
@@ -1480,7 +1480,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	
 	private void threadPhysicsTickDisintegrateAtWBoundsOrRestoreToSafeSpot(PhysicsSpace ps, float tpf) {
 		// auto disintegrate at world bounds or restore last safe spot TODO do one check per frame instead of all at a delayed time?
-		if(tdCheckOutOfSpaceBoundsDisintegrationAllowed.isReady(true)){
+		if(tdChkOutOfWorldBoundsDisintegrationAllowed.isReady(true)){
 			for(PhysicsRigidBody prb:ps.getRigidBodyList()){
 				if(!bbSpace.contains(prb.getPhysicsLocation())){
 //					if(CharacterI.i().isCharacter(prb))continue;
@@ -2179,7 +2179,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		return bDisableCcdToLetCollisionGroupsWork;
 	}
 
-	public PhysicsI setDisableCcdToLetCollisionGroupsWork(		boolean bDisableCcdToLetCollisionGroupsWork) {
+	public PhysicsI setDisableCcdToLetCollisionGroupsWork(boolean bDisableCcdToLetCollisionGroupsWork) {
 		this.bDisableCcdToLetCollisionGroupsWork = bDisableCcdToLetCollisionGroupsWork;
 		return this; 
 	}
