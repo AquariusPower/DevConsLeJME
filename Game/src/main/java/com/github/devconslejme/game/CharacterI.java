@@ -185,8 +185,8 @@ public class CharacterI {
 			ArrayList<RayCastResultX> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
 			if(acr.size()==0)return null;
 			RayCastResultX cr = acr.get(0);
-			if(!cr.getPd().isTerrain())return null;
-			v3fSpawnAt = cr.getV3fWrldHit();
+			if(!cr.getPD().isTerrain())return null;
+			v3fSpawnAt = cr.getWHitPos();
 		}
 		
 		LeviCharacter lc = new LeviCharacter();
@@ -227,8 +227,8 @@ public class CharacterI {
 			ArrayList<RayCastResultX> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
 			if(acr.size()==0)return null;
 			RayCastResultX cr = acr.get(0);
-			if(!cr.getPd().isTerrain())return null;
-			v3fSpawnAt = cr.getV3fWrldHit();
+			if(!cr.getPD().isTerrain())return null;
+			v3fSpawnAt = cr.getWHitPos();
 		}
 		
 //		PhysicsCharacter pc = new PhysicsCharacter(new CapsuleCollisionShape(), 2f);
@@ -305,7 +305,7 @@ public class CharacterI {
 					}else{
 						ArrayList<RayCastResultX> ar = WorldPickingI.i().raycastPiercingAtCenter(null);
 						if(ar.size()>0){
-							Geometry geom = ar.get(0).getPd().getGeomOriginalInitialLink();
+							Geometry geom = ar.get(0).getPD().getGeomOriginalInitialLink();
 							LeviCharacter levi = getLeviFrom(geom);
 							if(levi!=null)setPossessed(levi);
 						}

@@ -133,7 +133,7 @@ public class ManipulatorI {
 				if(!drop()) {
 					ArrayList<RayCastResultX> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
 					if(acr.size()>0) {
-						PhysicsData pd = acr.get(0).getPd();
+						PhysicsData pd = acr.get(0).getPD();
 						if(pd!=null) {
 							grab(pd,acr.get(0).getDistance());
 						}

@@ -578,7 +578,7 @@ public class FlyByCameraX extends FlyByCamera {
 		}
 		
 		acrLast = WorldPickingI.i().raycastPiercingAtCenter(null);
-		if(acrLast.size()>0)HWEnvironmentJmeI.i().putCustomInfo("CamLastHitSpot", ""+acrLast.get(0).getV3fWrldHit());
+		if(acrLast.size()>0)HWEnvironmentJmeI.i().putCustomInfo("CamLastHitSpot", ""+acrLast.get(0).getWHitPos());
 		
 		if(tdMouseInfo.isReady(true)){
 			String strFOV="{ ";

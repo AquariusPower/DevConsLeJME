@@ -117,6 +117,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	private boolean	bGlueAllowed=true;
 //	private float	fDefaultProjectileMaxLife=2;
 	private boolean bDisableCcdToLetCollisionGroupsWork;
+	private float fDeflectionAngle=90f;
 
 	
 	public static class ImpTorForce{
@@ -304,6 +305,21 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			 * when looks the projectile is being auto-deflected...
 			 */
 			PhysicsProjectileI.i().glueProjectileCheckApply(pd,pd.pdGlueWhere,null);
+			
+			/**
+			 * fly direction apply, this cancels rotations, TODO bad for flying rotating knives btw
+			 */
+			if(pd.isAlignFlyDirection() && pd.pdGlueWhere==null) {
+				Vector3f v3fMvDir=pd.getPRB().getLinearVelocity().normalize();
+				float fAngleBetweenMoveAndCurrentDeg = pd.getPhysicsRotationCopy().getRotationColumn(2).angleBetween(v3fMvDir)*FastMath.RAD_TO_DEG;
+	//			System.out.println("deg="+fAngleBetweenMoveAndCurrentDeg);
+				if(fAngleBetweenMoveAndCurrentDeg>10) {
+					Spatial spt = pd.getSpatialWithPhysics();
+	//				if(spt.getLocalScale().length()<5)spt.setLocalScale(1,1,16);System.out.println("l="+spt.getLocalScale().length());
+					spt.lookAt(pd.getPRB().getPhysicsLocation().add(v3fMvDir), Vector3f.UNIT_Y);
+					this.syncPhysTransfFromSpt(pd, false, true);
+				}
+			}
 		}
 	}
 	
@@ -427,6 +443,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		private Vector3f v3fNewPhysLocation;
 		public boolean bReadyToGlue;
 		private PhysicsData pdLevitationFollow;
+		private RayCastResultX resxGlueTarget;
+		private boolean bGlueTargetDeflected;
+		private float fLastHitAngleAtGluableDeg;
+		private boolean bAlignFlyDirection=true;
 		
 		/**
 		 * radians
@@ -442,6 +462,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			return getPRB().getPhysicsRotation();
 		}
 		
+		public boolean isAlignFlyDirection() {
+			return bAlignFlyDirection;
+		}
+
 		public long getAgeNano() {
 			return (SimulationTimeI.i().getNanoTime() - lMaterializedSimulTimeNano);
 		}
@@ -1078,6 +1102,37 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			return lcGrabber!=null && lcGrabber.pdTorso==pdLevi;
 		}
 
+		public float getMass() {
+			return prb.getMass();
+		}
+
+		public boolean checkGluedAt(RayCastResultX resx) {
+			// TODO use info like target surface hardness, projectile piercability, projectile shape/pointyness, impact energy/velocity etc
+			Vector3f v3fHitDir = prb.getPhysicsRotation().getRotationColumn(2);
+			fLastHitAngleAtGluableDeg = resx.getNormal().angleBetween(v3fHitDir.negate()) * FastMath.RAD_TO_DEG;
+			fLastHitAngleAtGluableDeg = 90f-fLastHitAngleAtGluableDeg;
+			boolean bDeflected = fLastHitAngleAtGluableDeg < PhysicsI.i().getDefaultDeflectionAngle();
+			
+			if(!bDeflected) {
+				this.resxGlueTarget=resx;
+				
+				//easifiers
+				pdGlueWhere=(resx.pd);
+				
+				v3fWorldGlueSpot=resx.v3fWrldHit;
+				
+				v3fGlueWherePhysLocalPos=resx.v3fWrldHit.subtract(resx.pd.prb.getPhysicsLocation());
+				quaGlueWherePhysWRotAtImpact=resx.pd.prb.getPhysicsRotation();
+			}		
+			
+			return !bDeflected;
+		}
+		
+		@Deprecated
+		public boolean isHasGlueTargetDeflected() {
+			return bGlueTargetDeflected;
+		}
+
 	}
 	
 	
@@ -1415,9 +1470,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //			RayCastResultX resHitBelow = (resultsx.size()>0) ? resultsx.get(0) : null;
 			RayCastResultX resHitBelow = null;
 			for(RayCastResultX r:resultsx) { 
-				if(r.getPd().getLeviFollow()==pdLevi)continue; //ignore the followers
-				if(r.getPd().isGrabbedBy(pdLevi))continue; //ignored grabbeds, prevents levitation trick/glitch TODO allow this optionally as a funny trick/magic
-//				if(r.getPd().isGrabbed())continue; //TODO allow this by applying a downwards force on the grabber
+				if(r.getPD().getLeviFollow()==pdLevi)continue; //ignore the followers
+				if(r.getPD().isGrabbedBy(pdLevi))continue; //ignored grabbeds, prevents levitation trick/glitch TODO allow this optionally as a funny trick/magic
+//				if(r.getPd().isGrabbed())continue; //TODO allow this by applying a downwards force on the grabber?
 				resHitBelow=r;
 				break;
 			}
@@ -1445,22 +1500,23 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			}else
 			if(resHitBelow!=null) {
 				// positioning above
-				float fDistCurrent = prb.getPhysicsLocation().subtract(resHitBelow.getV3fWrldHit()).length();
+				float fDistCurrent = prb.getPhysicsLocation().subtract(resHitBelow.getWHitPos()).length();
 				float fDistRemainingToReach = pdLevi.getLevitationHeight()-fDistCurrent;
 				float fNearMargin = (pdLevi.getLevitationHeight()*0.05f);
 				if(fDistRemainingToReach > fNearMargin) {
 					float fFinalHeight = pdLevi.getLevitationHeight()-fNearMargin;
-					pdLevi.setPhysicsLocationAtMainThread(resHitBelow.getV3fWrldHit().add(0,fFinalHeight,0));
+					pdLevi.setPhysicsLocationAtMainThread(resHitBelow.getWHitPos().add(0,fFinalHeight,0));
 				}
 				
 				/**
-				 * TODO for pseudo levitators (beings with legs): 
+				 * for pseudo levitators (beings with legs): 
 				 * use some trick to let the weight of the levitator be applied on below objects
 				 * may be an invisible sphere, with the same mass of the levitator and its followers, 
-				 * that keeps endless falling where the levitator is.  
-				 * 
-				 * ex.: if(resHitBelow.getPd().getApplyForceBelow()!=null) {applyImpulseLater(resHitBelow.getPd(), new ImpTorForce().setImpulse(v3fImpulse, v3fRelPos)
+				 * that keeps endless falling where the levitator is?  
 				 */
+				applyImpulseLater(resHitBelow.getPD(), new ImpTorForce().setImpulse(
+					new Vector3f(0,-resHitBelow.getPD().getMass(),0), resHitBelow.getLocalHitPos()));
+				
 			}
 			
 		}
@@ -1825,6 +1881,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		private float fDistance;
 		private Geometry geom;
 		
+		private Vector3f v3fLocalHit;
+		
 		
 		
 //		private PhysicsRigidBody prb;
@@ -1841,6 +1899,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			this.v3fWrldHit = v3fWrldHit;
 			this.v3fNormal = v3fNormal;
 			this.fDistance = fDistance;
+			
+			//TODO could the geometry not be aligned with the current physics position/rotation
+			if(pd!=null)v3fLocalHit = pd.getGeomOriginalInitialLink().worldToLocal(getWHitPos(),null);
 		}
 		public CollisionResult getResGeom() {
 			return resGeom;
@@ -1848,10 +1909,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		public PhysicsRayTestResult getResPhys() {
 			return resPhys;
 		}
-		public PhysicsData getPd() {
+		public PhysicsData getPD() {
 			return pd;
 		}
-		public Vector3f getV3fWrldHit() {
+		public Vector3f getWHitPos() {
 			return v3fWrldHit;
 		}
 //		public PhysicsRigidBody getPrb() {
@@ -1870,6 +1931,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 		public Geometry getGeom() {
 			return geom;
+		}
+		public Vector3f getLocalHitPos() {
+			return v3fLocalHit;//pd.getGeomOriginalInitialLink().worldToLocal(getWHitPos(),null);
 		}
 	}
 	
@@ -1903,14 +1967,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				assert pdChk.getPRB()==result.getCollisionObject();
 				Vector3f v3fHit = v3fFrom.clone().interpolateLocal(v3fTo,result.getHitFraction());
 				RayCastResultX resultx = new RayCastResultX(
-					result, null, pdChk, pdChk.getGeomOriginalInitialLink(), v3fHit, result.getHitNormalLocal().clone(), v3fFrom.distance(v3fHit) );
-//				resultx.pd=pdChk;
-//				resultx.v3fWrldHit = v3fFrom.clone().interpolateLocal(v3fTo,result.getHitFraction());
-//				resultx.v3fNormal=(result.getHitNormalLocal().clone());
-//				resultx.fDistance=v3fFrom.distance(resultx.v3fWrldHit);
-//				assert resultx.pd.getPRB()==result.getCollisionObject();
-//				resultx.resPhys=result;
-//				pdrtr.prb=(PhysicsRigidBody)prtr.getCollisionObject();
+					result, null, pdChk, pdChk.getGeomOriginalInitialLink(), v3fHit, result.getHitNormalLocal().clone(), 
+					v3fFrom.distance(v3fHit) 
+				);
 				apdrtrList.add(resultx);
 				if(bFirstOnly)break;
 			}
@@ -1925,38 +1984,36 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		if(pdProjectile.pdGlueWhere!=null)return false;//1st hit only
 		
 		Vector3f v3fFrom = pdProjectile.prb.getPhysicsLocation();
-//		Vector3f v3fTo = pdProjectile.prb.getPhysicsLocation().add(
-//			pdProjectile.prb.getLinearVelocity().normalize().mult(10)); //mult 10 is a guess for high speed, TODO confirm this
-		ArrayList<RayCastResultX> apdrtrList = rayCastSortNearest( // TODO use shortest than max range?
+		ArrayList<RayCastResultX> aresxList = rayCastSortNearest( // TODO use shortest than max range?
 			v3fFrom,pdProjectile.prb.getLinearVelocity(),true,true,true,pdProjectile);
-//			v3fFrom,v3fTo,false,true,true,pdProjectile);
-		if(apdrtrList.size()>0) {
-			RayCastResultX pdrtr = apdrtrList.get(0);
-			pdProjectile.pdGlueWhere=(pdrtr.pd);
+		if(aresxList.size()>0) {
+			RayCastResultX resx = aresxList.get(0);
+			boolean bGlued = pdProjectile.checkGluedAt(resx);
 			
-			pdProjectile.v3fWorldGlueSpot=pdrtr.v3fWrldHit;
-			
-//			pdProjectile.v3fGlueWherePhysLocalPos=pdrtr.v3fWrldHit.subtract(pdrtr.prb.getPhysicsLocation());
-//			pdProjectile.quaGlueWherePhysWRotAtImpact=pdrtr.prb.getPhysicsRotation();
-			pdProjectile.v3fGlueWherePhysLocalPos=pdrtr.v3fWrldHit.subtract(pdrtr.pd.prb.getPhysicsLocation());
-			pdProjectile.quaGlueWherePhysWRotAtImpact=pdrtr.pd.prb.getPhysicsRotation();
+//			boolean bDeflected = pdProjectile.isHasGlueTargetDeflected();
 			
 			/**
 			 * while hitting dynamic objects, the mass must remain > 0f to let forces be applied
 			 */
-			if(pdrtr.pd.isTerrain()){
-				/** will be removed from physics space later */
+			if(resx.pd.isTerrain() && bGlued){
 				/**
+				 * will be removed from physics space later
 				 * "GLUE" ON TERRAIN HERE (not actually  glue, but terrain wont move anyway...)
+				 * TODO changing mass here seems safe right?
 				 */
 				pdProjectile.prb.setMass(0f); //no need to be nested on a spatial when glueing on static terrain TODO instead check if nearest has mass=0? but it may be temporary and be glued would work better...
-				pdProjectile.prb.setPhysicsLocation(pdProjectile.v3fWorldGlueSpot); //this positioning works precisely if done here, np, is easier, keep it here...
+				pdProjectile.setPhysicsLocationAtMainThread(pdProjectile.v3fWorldGlueSpot);
+//				pdProjectile.prb.setPhysicsLocation(pdProjectile.v3fWorldGlueSpot); //this positioning works precisely if done here, np, is easier, keep it here...
 			}
 			
 			/**
 			 * to collision groups work, Ccd must be disabled, but..
 			 * to let impact impulses be applied, the projectile must not fail hitting the dynamic objects.
 			 * the only way is to re-enable Ccd just before it is glued and removed from physics space!
+			 * 
+			 * TODO alternatively, apply impulse force and redirect projectile movement manually? this would allow ignoring Ccd and stil use collision groups! this would basically do bullet engine work manually...
+			 * 
+			 * TODO after the 1st glue attempt, Ccd will remain enabled auto hitting everything thru native bullet... find a workaround...
 			 */
 			pdProjectile.prb.setCcdMotionThreshold(pdProjectile.getCCdMotionThresholdBkp());
 			
@@ -1966,28 +2023,59 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		return null; //to skip
 	}
 	
+	public RayCastResultX applyImpulseHitTarget(Spatial sptRayCastFrom, Float fImpulse){
+		Vector3f v3fDir = sptRayCastFrom.getWorldRotation().getRotationColumn(2).clone();
+		Vector3f v3fPos = sptRayCastFrom.getWorldTranslation();
+		return applyImpulseHitTarget(v3fPos,v3fDir,fImpulse);
+	}
+	public RayCastResultX applyImpulseHitTarget(PhysicsData pdRayCastFrom, Float fImpulse){
+		Vector3f v3fDir = pdRayCastFrom.getPhysicsRotationCopy().getRotationColumn(2);
+		Vector3f v3fPos = pdRayCastFrom.getPRB().getPhysicsLocation();
+		return applyImpulseHitTarget(v3fPos,v3fDir,fImpulse);
+	}
+	public RayCastResultX applyImpulseHitTargetFromCam(Float fImpulse){
+		Vector3f v3fDir = AppI.i().getCamLookingAtDir();
+		Vector3f v3fPos = AppI.i().getCamWPos(0);
+		return applyImpulseHitTarget(v3fPos,v3fDir,fImpulse);
+	}
 	/**
 	 * ex.: use this for insta bullet shots or pushing things 
 	 * @param fImpulse if null, the impulse will be based on the target's mass
 	 * @return
 	 */
-	public RayCastResultX applyImpulseHitTargetAtCamDirection(Float fImpulse){
-		RayCastResultX res = getPhysicsDataAtCamDir(false, true);
-		if(res!=null){
+	public RayCastResultX applyImpulseHitTarget(Vector3f v3fPos, Vector3f v3fDir, Float fImpulse){
+		ArrayList<RayCastResultX> ares = rayCastSortNearest(v3fPos, v3fDir, true, false, true); 
+		if(ares.size()>0){
+			RayCastResultX res = ares.get(0);
 			if(fImpulse==null)fImpulse=res.pd.getPRB().getMass();
-			applyImpulseLater(res.pd,
-				new ImpTorForce()
-					.setImpulse(
-						AppI.i().getCamLookingAtDir().mult(fImpulse), 
-						res.pd.getGeomOriginalInitialLink().worldToLocal(res.getV3fWrldHit(),null)
-					)
-			);
-			
+			applyImpulseLater(res.pd,	new ImpTorForce().setImpulse(v3fDir,res.getLocalHitPos())	);
 			return res;
 		}
 		
 		return null;
 	}
+//	/**
+//	 * ex.: use this for insta bullet shots or pushing things 
+//	 * @param fImpulse if null, the impulse will be based on the target's mass
+//	 * @return
+//	 */
+//	public RayCastResultX applyImpulseHitTargetAtCamDirection(Float fImpulse){
+//		RayCastResultX res = getPhysicsDataAtCamDir(false, true);
+//		if(res!=null){
+//			if(fImpulse==null)fImpulse=res.pd.getPRB().getMass();
+//			applyImpulseLater(res.pd,
+//				new ImpTorForce()
+//					.setImpulse(
+//						AppI.i().getCamLookingAtDir().mult(fImpulse), 
+//						res.pd.getGeomOriginalInitialLink().worldToLocal(res.getV3fWrldHit(),null)
+//					)
+//			);
+//			
+//			return res;
+//		}
+//		
+//		return null;
+//	}
 	public RayCastResultX getPhysicsDataAtCamDir(boolean bIgnoreProjectiles, boolean bFirstOnly, PhysicsData... apdSkip){
 //		for(CollisionResult cr:WorldPickingI.i().raycastPiercingAtCenter(null)){
 //			PhysicsData pd = getPhysicsDataFrom(cr.getGeometry());
@@ -2190,6 +2278,15 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 
 	public PhysicsI setPhysicsRayCastRange(float fPhysicsRayCastRange) {
 		this.fPhysicsRayCastRange = fPhysicsRayCastRange;
+		return this; 
+	}
+
+	public float getDefaultDeflectionAngle() {
+		return fDeflectionAngle;
+	}
+
+	public PhysicsI setDeflectionAngle(float fDeflectionAngle) {
+		this.fDeflectionAngle = fDeflectionAngle;
 		return this; 
 	}
 

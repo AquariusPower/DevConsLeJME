@@ -147,7 +147,7 @@ public class TargetI {
 			Geometry geom = acr.get(0).getGeom();
 			
 			if(tgt==null){ //new one
-				PhysicsData pd = acr.get(0).getPd();
+				PhysicsData pd = acr.get(0).getPD();
 //				PhysicsData pd = PhysicsI.i().getPhysicsDataFrom(geom);
 				if(pd!=null && !pd.isTerrain()) {
 					tgt = new TargetGeom(geom);

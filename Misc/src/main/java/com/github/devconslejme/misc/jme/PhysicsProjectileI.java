@@ -114,15 +114,9 @@ public class PhysicsProjectileI {
 		sbnProjectilesAtWorld = new SimpleBatchNode("BatchNode");
 		AppI.i().getRootNode().attachChild(sbnProjectilesAtWorld);
 		
-//		ppCamDevDbgTst = new PhysicsThrowProjectiles(null,250,0.1f,4f,4f,EMatter.Generic100KgPerM3.get());
-//		ppCamDevDbgTst = new PhysicsThrowProjectiles(EMatterStatus.BulletForTestOfGeneric100KgPerM3.get());
-//		ppCamDevDbgTst = new PhysicsThrowProjectiles(EMatterStatus.Bullet9mm.get());
-		
     KeyBindCommandManagerI.i().putBindCommandsLater("Space",new CallBoundKeyCmd(){
   		@Override	public Boolean callOnKeyPressed(int iClickCountIndex){
-  			PhysicsI.i().applyImpulseHitTargetAtCamDirection(null);
-//  			PhysicsProjectileI.i().throwProjectileFromCamera(ppFromCamCurrent);
-//  			setDelaySeconds(1f/ppCamDevDbgTst.iProjectilesPerSecond); //so it becomes dynamicly changeable
+  			PhysicsI.i().applyImpulseHitTargetFromCam(null);
   			return true;
   		}}.setName("CamPushDynamicForce").holdKeyPressedForContinuousCmd().setDelaySeconds(1f/3f)
 		);
@@ -463,7 +457,8 @@ public class PhysicsProjectileI {
 			!pd.isDisintegrated() && 
 			!pd.isbGlueApplied() && 
 			pd.getGlueWhere()==pdWhere &&
-			pd.isReadyToGlue()
+			pd.isReadyToGlue() 
+//			&& !pd.isHasGlueTargetDeflected()
 		){
 			if(v3fEventCollPos!=null)pd.setV3fEventCollOtherLocalPos(v3fEventCollPos.clone());
 			applyGluedMode(pd);

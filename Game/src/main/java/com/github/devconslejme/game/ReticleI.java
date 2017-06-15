@@ -80,6 +80,7 @@ public class ReticleI {
 	private FlyByCameraX	flycamx;
 	private float fDefaultDegAnglePerZoomStep=90f;
 	private boolean bShowRangeTgtInfo;
+	private boolean bCreateMarkers;
 	
 	public void configure(Node nodeGui, FlyByCameraX flycamx){
 		this.nodeGui = nodeGui;//keep even if empty to help init global
@@ -101,7 +102,7 @@ public class ReticleI {
 		private BitmapText[]	abtDistMarksH;
 		private ArrayList<Geometry> ageomZoomMarkersList = new ArrayList<>();
 		private BitmapText	btInfo;
-		public Vector3f	v3fMarkersCenter;
+		public Vector3f	v3fMarkersCenter = new Vector3f();
 		public Node	nodeBorderAndZoomMarkers;
 		public Geometry	zoomMarkerCurrent;
 		public Node	nodeZoomMarkerCurrent;
@@ -371,31 +372,33 @@ public class ReticleI {
 		rnStore.attachChild(blocker);
 		
 		///////////////////////////////// text markers for distance info
-//		float fArrowsZ = -10f;
-		float fArrowsZ = -fBlockerIR*2f;
-		if(rnStore.isBinoculars()){ //mortar recalculations markers
-			rnStore.v3fMarkersCenter = new Vector3f(0,-(rnStore.fBorderOR/5)*2,0);
-			createTextMarkers(rnStore,true,11);
-			createTextMarkers(rnStore,false,11);
-			rnStore.updateDistanceMarkersValues(true,7,6,5,4,3,2,1,0,1,2,3); //vertical
-			rnStore.updateDistanceMarkersValues(false,5,4,3,2,1,0,1,2,3,4,5); //horizontal
-			
-			// arrows
-			float fCenterMargin = 10f;
-			rnStore.attachChild(createArrowLine(rnStore, fArrowsZ, fCenterMargin, EEdge.Left));
-			rnStore.attachChild(createArrowLine(rnStore, fArrowsZ, fCenterMargin, EEdge.Right));
-			rnStore.attachChild(createArrowLine(rnStore, fArrowsZ, fCenterMargin, EEdge.Top));
-			rnStore.attachChild(createArrowLine(rnStore, fArrowsZ, fCenterMargin, EEdge.Bottom));
-		}else{ //bullet drop dists
-			rnStore.v3fMarkersCenter = new Vector3f();
-			createTextMarkers(rnStore,true,5);
-			rnStore.updateDistanceMarkersValues(true,100,200,300,400,500); //vertical
-			
-			// arrows
-			float fCenterMargin = 20f;
-			rnStore.attachChild(createArrowLine(rnStore, fArrowsZ, fCenterMargin, EEdge.Left));
-			rnStore.attachChild(createArrowLine(rnStore, fArrowsZ, fCenterMargin, EEdge.Right));
-			rnStore.attachChild(createArrowLine(rnStore, fArrowsZ, fCenterMargin, EEdge.Bottom));
+		if(isCreateMarkers()) {
+	//		float fArrowsZ = -10f;
+			float fArrowsZ = -fBlockerIR*2f;
+			if(rnStore.isBinoculars()){ //mortar recalculations markers
+				rnStore.v3fMarkersCenter = new Vector3f(0,-(rnStore.fBorderOR/5)*2,0);
+				createTextMarkers(rnStore,true,11);
+				createTextMarkers(rnStore,false,11);
+				rnStore.updateDistanceMarkersValues(true,7,6,5,4,3,2,1,0,1,2,3); //vertical
+				rnStore.updateDistanceMarkersValues(false,5,4,3,2,1,0,1,2,3,4,5); //horizontal
+				
+				// arrows
+				float fCenterMargin = 10f;
+				rnStore.attachChild(createArrowLine(rnStore, fArrowsZ, fCenterMargin, EEdge.Left));
+				rnStore.attachChild(createArrowLine(rnStore, fArrowsZ, fCenterMargin, EEdge.Right));
+				rnStore.attachChild(createArrowLine(rnStore, fArrowsZ, fCenterMargin, EEdge.Top));
+				rnStore.attachChild(createArrowLine(rnStore, fArrowsZ, fCenterMargin, EEdge.Bottom));
+			}else{ //bullet drop dists
+				rnStore.v3fMarkersCenter = new Vector3f();
+				createTextMarkers(rnStore,true,5);
+				rnStore.updateDistanceMarkersValues(true,100,200,300,400,500); //vertical
+				
+				// arrows
+				float fCenterMargin = 20f;
+				rnStore.attachChild(createArrowLine(rnStore, fArrowsZ, fCenterMargin, EEdge.Left));
+				rnStore.attachChild(createArrowLine(rnStore, fArrowsZ, fCenterMargin, EEdge.Right));
+				rnStore.attachChild(createArrowLine(rnStore, fArrowsZ, fCenterMargin, EEdge.Bottom));
+			}
 		}
 		
 		return rnStore;
@@ -589,6 +592,13 @@ public class ReticleI {
 	}
 	public ReticleI setShowRangeTgtInfo(boolean bShowRangeTgtInfo) {
 		this.bShowRangeTgtInfo = bShowRangeTgtInfo;
+		return this; 
+	}
+	public boolean isCreateMarkers() {
+		return bCreateMarkers;
+	}
+	public ReticleI setCreateMarkers(boolean bCreateMarkers) {
+		this.bCreateMarkers = bCreateMarkers;
 		return this; 
 	}
 

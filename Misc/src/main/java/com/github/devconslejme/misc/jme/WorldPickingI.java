@@ -115,7 +115,7 @@ public class WorldPickingI {
 			RayCastResultX rx = acrLastPickList.get(0);
 			geom = rx.getGeom();//getLastWorldPickGeometry(); 
 			spt = getLastWorldPickParentest(geom);
-			pd = rx.getPd();
+			pd = rx.getPD();
 		}
 		for(IPickListener l:aplList){
 			if(l.updatePickingEvent(iButtonIndex,acrLastPickList,pd,geom,spt)){
