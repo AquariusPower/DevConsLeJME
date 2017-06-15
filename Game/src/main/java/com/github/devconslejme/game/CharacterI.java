@@ -1,5 +1,6 @@
 /* 
 	Copyright (c) 2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
+	Copyright (c) 2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 	
 	All rights reserved.
 
@@ -55,6 +56,7 @@ import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.jme.WorldPickingI;
 import com.jme3.bullet.collision.PhysicsCollisionObject;
+import com.jme3.bullet.collision.shapes.infos.ChildCollisionShape;
 import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.ColorRGBA;
@@ -81,6 +83,15 @@ public class CharacterI {
 	private boolean bRunning=false;
 	private FlyByCameraX	flycamx;
 	private LeviCharacter leviPossessed;
+	private TimedDelay tdMoveImpulseInterval = new TimedDelay(1f).setActive(true);
+	private float fDivMassRotToDir=1;
+	private long lMaxJumpHoldDelay=10000;
+	private float fJumpMultImpulse = 1f;
+	private ArrayList<LeviCharacter> alc = new ArrayList<>();
+	private Vector3f v3fMoveDirection = new Vector3f();
+	private Long lJumpStartSimulTimeMilis=null;
+	private Long lJumpEndSimulTimeMilis=null;
+	private boolean bHideHeadOnPossession;
 	
 	/**
 	 * see  {@link BetterCharacterControl}
@@ -200,19 +211,12 @@ public class CharacterI {
 		
 		lc.pdTorso.getPRB().setPhysicsLocation(v3fSpawnAt.add(0,0.25f,0)); //a bit above
 		
-		if(leviPossessed==null)leviPossessed = lc;
+		if(leviPossessed==null)setPossessed(lc);
 		
 		alc.add(lc);
 		
 		return lc;
 	}
-	private ArrayList<LeviCharacter> alc = new ArrayList<>();
-
-	private Vector3f v3fMoveDirection = new Vector3f();
-
-	protected Long lJumpStartSimulTimeMilis=null;
-
-	protected Long lJumpEndSimulTimeMilis=null;
 	
 	@Deprecated
 	public BetterCharacterControlX createBCCX(Vector3f v3fSpawnAt){
@@ -351,7 +355,7 @@ public class CharacterI {
 		releasePossessed();
 		this.leviPossessed=levi;
 		if(leviPossessed!=null) {
-			leviPossessed.nodeHead.setCullHint(CullHint.Always);
+			if(isHideHeadOnPossession())leviPossessed.nodeHead.setCullHint(CullHint.Always);
 		}
 	}
 
@@ -378,8 +382,6 @@ public class CharacterI {
 	public NodeBodyPart getBodyFrom(Spatial spt){
 		return SpatialHierarchyI.i().getParentestOrSelf(spt, NodeBodyPart.class, true, false);
 	}
-	
-	private TimedDelay tdMoveInterval = new TimedDelay(0.25f).setActive(true);
 	
 	private void initUpdateCharacterMovement() {
 		QueueI.i().enqueue(new CallableXAnon() {
@@ -421,20 +423,11 @@ public class CharacterI {
 		}
 		
 		if(v3fMoveDirection.length()>0) {
-			if(tdMoveInterval.isReady(true)) {
-//				Vector3f v3fTorqueImp = null;
+			if(tdMoveImpulseInterval.isReady(true)) {
 				Vector3f v3fDisplacement = v3fMoveDirection.subtract(leviPossessed.pdTorso.getPhysicsRotationCopy().getRotationColumn(2));
-//				if(leviPossessed.pdTorso.getPhysicsRotationCopy().getRotationColumn(2).distance(v3fMoveDirection) > 0.1f) {
-//					v3fTorqueImp = new Vector3f(0f,1f,0f); //TODO find if it is to turn to left or right relatively to move direction..
-//				}
-//				v3fDisplacement.multLocal(leviPossessed.pdTorso.getPRB().getMass()).negateLocal();
-				v3fDisplacement.multLocal(leviPossessed.pdTorso.getPRB().getMass()/1000f).negateLocal();
-//				System.out.println(v3fDisplacement);
+				v3fDisplacement.multLocal(leviPossessed.pdTorso.getPRB().getMass()/getDivMassRotToDir()).negateLocal();
 				PhysicsI.i().applyImpulseLater(leviPossessed.pdTorso,	new ImpTorForce()
-//					.setImpulse(calcMoveImpulse(v3fMoveDirection), null)
 					.setImpulse(calcMoveImpulse(v3fMoveDirection), v3fDisplacement)
-//					.setTorqueImpulse(v3fTorqueImp)
-//					.setTorque(v3fTorqueImp)
 				);
 			}
 		}
@@ -463,9 +456,9 @@ public class CharacterI {
 	 */
 	private float getJumpImpulse(long lJumpDelayMilis) {
 		float fImpulse=leviPossessed.pdTorso.getPRB().getMass();
-		if(lJumpDelayMilis>1000)lJumpDelayMilis=1000; //max
-		fImpulse*=(lJumpDelayMilis/(float)1000);
-		fImpulse*=5f;
+		if(lJumpDelayMilis>getMaxJumpHoldDelay())lJumpDelayMilis=getMaxJumpHoldDelay(); //max
+		fImpulse*=(lJumpDelayMilis/(float)getMaxJumpHoldDelay());
+		fImpulse*=getJumpMultImpulse() ;
 		return fImpulse;
 	}
 
@@ -542,5 +535,45 @@ public class CharacterI {
 		this.bRunning = bRunning;
 		return this; 
 	}
+
+	public float getDivMassRotToDir() {
+		return fDivMassRotToDir;
+	}
+
+	public CharacterI setDivMassRotToDir(float fDivMassRotToDir) {
+		this.fDivMassRotToDir = fDivMassRotToDir;
+		return this; 
+	}
+
+	public boolean isHideHeadOnPossession() {
+		return bHideHeadOnPossession;
+	}
+
+	public CharacterI setHideHeadOnPossession(boolean bHideHeadOnPossession) {
+		this.bHideHeadOnPossession = bHideHeadOnPossession;
+		return this; 
+	}
+
+	public long getMaxJumpHoldDelay() {
+		return lMaxJumpHoldDelay;
+	}
+
+	public CharacterI setMaxJumpHoldDelay(long lMaxJumpHoldDelay) {
+		this.lMaxJumpHoldDelay = lMaxJumpHoldDelay;
+		return this; 
+	}
+
+	public float getJumpMultImpulse() {
+		return fJumpMultImpulse;
+	}
+
+	public CharacterI setJumpMultImpulse(float fJumpMultImpulse) {
+		this.fJumpMultImpulse = fJumpMultImpulse;
+		return this; 
+	}
 	
+	public CharacterI setMoveImpulseInterval(float f) {
+		tdMoveImpulseInterval.resetAndChangeDelayTo(f).setActive(true);
+		return this;
+	}
 }

@@ -95,7 +95,7 @@ public class JavaScriptI implements IGlobalAddListener {
 //	private ArrayList<Method>	amLastReturnValueMethods = new ArrayList<Method>();
 	private ArrayList<Class> aclForbidJS = new ArrayList<Class>();
 	private ArrayList<String> astrCmdHistory = new ArrayList<String>();
-	private ArrayList<String> astrUserInit = new ArrayList<String>();
+	private ArrayList<String> astrAutoInit = new ArrayList<String>();
 	private File	flCmdHistory;
 	private File	flUserInit;
 	private int iNavigateCmdHistoryIndex = 0;
@@ -920,33 +920,36 @@ public class JavaScriptI implements IGlobalAddListener {
 			iNavigateCmdHistoryIndex=astrCmdHistory.size()-1;
 		}
 		
+		File flSetup = new File("./","Setup.cfg");
+		if(flSetup.exists()) {
+			astrAutoInit.addAll(FileI.i().readAllLines(flSetup));
+		}else {
+			FileI.i().appendLine(flSetup, "// internal setup");
+		}
+		
 		// load user init cmds
 		flUserInit = FileI.i().createNewFileHandler("UserInit.cfg", true); //new File(DevConsPluginStateI.i().getStorageFolder(),"UserInit.cfg");
 		if(flUserInit.exists()){
-			for(String str:getUserInit()){
-				astrUserInit.add(str);
-			}
+			astrAutoInit.addAll(getUserInit());
 			
-			QueueI.i().enqueue(new CallableX() {
-				@Override
-				public Boolean call() {
-					processUserInit();
-					return true;
-				}
-			});
+			QueueI.i().enqueue(new CallableXAnon() {@Override public Boolean call() {
+				processUserInit();
+				return true;
+			} });
+			
 		}else{
 			FileI.i().appendLine(flUserInit, "// put initialization commands on this file, one per line");
 		}
 	}
 	
 	public void processUserInit() {
-		if(astrUserInit.size()>0){
+		if(astrAutoInit.size()>0){
 			LoggingI.i().logMarker("UserInit:Begin");
 			QueueI.i().enqueue(new CallableXAnon() {
 				@Override
 				public Boolean call() {
 //					boolean bFail=false;
-					String strCmd = astrUserInit.remove(0);
+					String strCmd = astrAutoInit.remove(0);
 					if(strCmd.isEmpty())return false; //next cmd on next frame
 					
 					LoggingI.i().logSubEntry(strCmd);
@@ -959,7 +962,7 @@ public class JavaScriptI implements IGlobalAddListener {
 						return true; //user cmd failed, end queue
 					}
 					
-					if(astrUserInit.size()>0)return false; //next cmd on next frame
+					if(astrAutoInit.size()>0)return false; //next cmd on next frame
 					
 //					astrUserInit.clear();
 					

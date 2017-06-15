@@ -64,11 +64,14 @@ public class PhysicsProjectileI {
 //	private PhysicsThrowProjectiles ppCamDevDbgTst;
 	private PhysicsThrowProjectiles ppFromCamCurrent;
 	private Geometry geomProjectileFactory;
+	private float fDefaultGravityDivTrick=1f;
+	private float fDefaultDesiredSpeed=1000f;
+	private int iDefaultProjectilesPerSecond=1;
 	
 //	public static class SimpleBatchNode
 	
 	public static class PhysicsThrowProjectiles{
-		private int	iProjectilesPerSecond = (10); //10 seems the default of many guns
+		private int	iProjectilesPerSecond; 
 		private Geometry	geomProjectileFactory;
 //		private Matter mt;
 		private float fDesiredSpeed;
@@ -88,38 +91,12 @@ public class PhysicsProjectileI {
 //			return new PhysicsThrowProjectiles(geomProjectileFactory, fDesiredSpeed, fGravityDivTrick, mt);
 		}
 		
-//		/**
-//		 * 
-//		 * @param geomProjectileFactory
-//		 * @param fDesiredSpeed
-//		 * @param fRadius
-//		 * @param fPhysBoundsScaleDiv (can be null) to initially lower the mass and collision shape size, but will be restored just after to show the geometry properly, it will just have a smaller collider than what it looks
-//		 * @param fGravityDiv (can be null) this trick simulates/helps requiring less speed for a good flying/drop curve w/o stressing the phys engine
-//		 * @param mt
-//		 */
-//		public PhysicsThrowProjectiles(Geometry geomProjectileFactory, float fDesiredSpeed, Float fGravityDiv) {
-//			this.fDesiredSpeed = fDesiredSpeed;
-////			this.fRadius = fRadius;
-////			this.mt = mt;
-//			this.fGravityDivTrick  = fGravityDiv==null ? 1f : fGravityDiv;
-////			this.fPhysBoundsScaleDiv=fPhysBoundsScaleDiv==null?1f:fPhysBoundsScaleDiv;
-//			
-//			if(geomProjectileFactory==null){
-//				geomProjectileFactory=PhysicsProjectileI.i().getDefaultProjectileFactory();
-////				geomProjectileFactory = GeometryI.i().create(new Sphere(3,4,fRadius), ColorRGBA.Cyan);
-////				geomProjectileFactory.scale(0.25f,0.25f,1f);
-////				geomProjectileFactory.scale(1f/fPhysBoundsScaleDiv);
-////				geomProjectileFactory.getMaterial().setColor(EColor.GlowColor.s(), ColorRGBA.Blue.mult(10)); //requires the bloom post processor with glow objects mode
-//			}
-//			this.geomProjectileFactory=geomProjectileFactory;
-//		}
-		
 		public PhysicsThrowProjectiles(MatterStatus mts, float fRealVelocityMetersPerSecond) {
-			this.fDesiredSpeed = 250f; //for the physics engine
+			this.fDesiredSpeed = PhysicsProjectileI.i().getDefaultDesiredSpeed(); //for the physics engine
 			this.fRealVelocityMetersPerSecond = fRealVelocityMetersPerSecond;
-//			this.fRadius = 0.1f;
+			iProjectilesPerSecond = PhysicsProjectileI.i().getDefaultProjectilesPerSecond(); 
 			this.mts=mts;
-			this.fGravityDivTrick=4f; //TODO if the velocity becomes too low, like a shot straight up that begins to fall, or after hitting something, it's gravity should be restored to normal gravity to not look weird like anything else falling faster than a bullet...
+			this.fGravityDivTrick=PhysicsProjectileI.i().getDefaultGravityDivTrick(); //TODO if the velocity becomes too low, like a shot straight up that begins to fall, or after hitting something, it's gravity should be restored to normal gravity to not look weird like anything else falling faster than a bullet...
 			this.geomProjectileFactory=PhysicsProjectileI.i().getDefaultProjectileFactory();
 		}
 
@@ -535,13 +512,32 @@ public class PhysicsProjectileI {
 		this.ppFromCamCurrent = ppFromCamCurrent;
 		return this; 
 	}
+
+	public float getDefaultGravityDivTrick() {
+		return fDefaultGravityDivTrick;
+	}
+
+	public PhysicsProjectileI setDefaultGravityDivTrick(float fDefaultGravityDivTrick) {
+		this.fDefaultGravityDivTrick = fDefaultGravityDivTrick;
+		return this; 
+	}
+
+	public float getDefaultDesiredSpeed() {
+		return fDefaultDesiredSpeed;
+	}
+
+	public PhysicsProjectileI setDefaultDesiredSpeed(float fDefaultDesiredSpeed) {
+		this.fDefaultDesiredSpeed = fDefaultDesiredSpeed;
+		return this; 
+	}
+
+	public int getDefaultProjectilesPerSecond() {
+		return iDefaultProjectilesPerSecond;
+	}
+
+	public PhysicsProjectileI setDefaultProjectilesPerSecond(int iDefaultProjectilesPerSecond) {
+		this.iDefaultProjectilesPerSecond = iDefaultProjectilesPerSecond;
+		return this; 
+	}
 	
-//	public PhysicsProjectileI setProjectileFromCam(PhysicsThrowProjectiles pp) {
-//		this.ppFromCamCurrent = pp;
-//		return this; 
-//	}
-	
-//	public PhysicsThrowProjectiles getProjectileThrowerDevTestDbgCopy(){
-//		return ppCamDevDbgTst.clone();
-//	}
 }
