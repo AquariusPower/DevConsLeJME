@@ -57,6 +57,7 @@ public class AppI {
 	private Spatial	sptCamFollowMove;
 	private FilterPostProcessor	fpp;
 	private BloomFilter	bloomFilter;
+	private boolean bLimitScreenCoordinates;
 	
 	public void configure(Application app){
 		this.app=app;
@@ -104,13 +105,15 @@ public class AppI {
 
 	public Vector3f getScreenCoordinates(Vector3f worldPos){
 		Vector3f v3f = getScreenCoordinatesRaw(worldPos);
-		v3f.x=FastMath.clamp(v3f.x, 0, HWEnvironmentJmeI.i().getDisplay().getWidth());
-		v3f.y=FastMath.clamp(v3f.y, 0, HWEnvironmentJmeI.i().getDisplay().getHeight());
-		if(v3f.z>1f) {
+		if(isLimitScreenCoordinates()) {
 			v3f.x=FastMath.clamp(v3f.x, 0, HWEnvironmentJmeI.i().getDisplay().getWidth());
 			v3f.y=FastMath.clamp(v3f.y, 0, HWEnvironmentJmeI.i().getDisplay().getHeight());
-			v3f.x=HWEnvironmentJmeI.i().getDisplay().getWidth()-v3f.x;
-			v3f.y=(app.getCamera().getLocation().y > worldPos.y ? 0 : HWEnvironmentJmeI.i().getDisplay().getHeight());
+			if(v3f.z>1f) {
+				v3f.x=FastMath.clamp(v3f.x, 0, HWEnvironmentJmeI.i().getDisplay().getWidth());
+				v3f.y=FastMath.clamp(v3f.y, 0, HWEnvironmentJmeI.i().getDisplay().getHeight());
+				v3f.x=HWEnvironmentJmeI.i().getDisplay().getWidth()-v3f.x;
+				v3f.y=(app.getCamera().getLocation().y > worldPos.y ? 0 : HWEnvironmentJmeI.i().getDisplay().getHeight());
+			}
 		}
 		return v3f;
 	}
@@ -199,6 +202,15 @@ public class AppI {
 	public Node getGuiNode() {
 		if(sappOpt==null)return null;
 		return sappOpt.getGuiNode();
+	}
+
+	public boolean isLimitScreenCoordinates() {
+		return bLimitScreenCoordinates;
+	}
+
+	public AppI setLimitScreenCoordinates(boolean bLimitScreenCoordinates) {
+		this.bLimitScreenCoordinates = bLimitScreenCoordinates;
+		return this; 
 	}
 	
 }

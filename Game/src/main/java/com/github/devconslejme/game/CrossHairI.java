@@ -66,6 +66,7 @@ public class CrossHairI {
 	private Material	matTarget;
 	private Vector3f v3fTgtScreenPos=new Vector3f();
 	private Vector3f v3fTgtScreenPosRaw=new Vector3f();
+	private boolean bLimitTargetSize;
 	
 	public void configure(Node nodeToAttach){
 //		sappOpt=G.i(SimpleApplication.class);
@@ -110,8 +111,7 @@ public class CrossHairI {
 				
 				float fAreaAtScreen = AreaUtils.calcScreenArea(tgt.getGeometryHit().getWorldBound(), tgt.getDistance(), HWEnvironmentJmeI.i().getDisplay().getWidth());
 				float fPseudoRadiusAtScreen = FastMath.sqrt(fAreaAtScreen);
-//				nodeTarget.setLocalScale(fPseudoRadiusAtScreen/fScale);
-				float fFinalScale=FastMath.clamp(fPseudoRadiusAtScreen/(fScale/2f), 5f, 50f);
+				float fFinalScale=isLimitTargetSize() ? FastMath.clamp(fPseudoRadiusAtScreen/(fScale/2f), 5f, 50f) : fPseudoRadiusAtScreen;
 				nodeTarget.setLocalScale(fFinalScale);
 			}
 		}
@@ -197,5 +197,14 @@ public class CrossHairI {
 
 	public Object debugTest(Object... aobj){
 		return null;
+	}
+
+	public boolean isLimitTargetSize() {
+		return bLimitTargetSize;
+	}
+
+	public CrossHairI setLimitTargetSize(boolean bLimitTargetSize) {
+		this.bLimitTargetSize = bLimitTargetSize;
+		return this; 
 	}
 }
