@@ -47,6 +47,7 @@ import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.SimulationTimeI;
+import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.TimeFormatI;
 import com.github.devconslejme.misc.TimedDelay;
@@ -1461,13 +1462,18 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			PhysicsData pdLevi = getPhysicsDataFrom(prb);
 			if(!pdLevi.isLevitating())continue;
 			
+			float fNearMargin = (pdLevi.getLevitationHeight()*0.05f);
+			
 			ArrayList<RayCastResultX> resultsx = rayCastSortNearest(
 				prb.getPhysicsLocation(), 
-				prb.getPhysicsLocation().add(0,-pdLevi.getLevitationHeight(),0), false, 
+				// will try a bit farer to prevent falling too often unnecessarily
+				prb.getPhysicsLocation().add(0, -(pdLevi.getLevitationHeight()+2f*fNearMargin), 0), false, 
 				true, true, pdLevi
 			);
 			
-//			RayCastResultX resHitBelow = (resultsx.size()>0) ? resultsx.get(0) : null;
+			/**
+			 * ignore/skip these ones
+			 */
 			RayCastResultX resHitBelow = null;
 			for(RayCastResultX r:resultsx) { 
 				if(r.getPD().getLeviFollow()==pdLevi)continue; //ignore the followers
@@ -1502,9 +1508,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				// positioning above
 				float fDistCurrent = prb.getPhysicsLocation().subtract(resHitBelow.getWHitPos()).length();
 				float fDistRemainingToReach = pdLevi.getLevitationHeight()-fDistCurrent;
-				float fNearMargin = (pdLevi.getLevitationHeight()*0.05f);
 				if(fDistRemainingToReach > fNearMargin) {
-					float fFinalHeight = pdLevi.getLevitationHeight()-fNearMargin;
+					float fFinalHeight = pdLevi.getLevitationHeight()-fNearMargin; //will be a bit lower, the imprecision helps on making it more stable
 					pdLevi.setPhysicsLocationAtMainThread(resHitBelow.getWHitPos().add(0,fFinalHeight,0));
 				}
 				
@@ -1797,6 +1802,14 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		if(pdA.containsPhysicsDataSkipCollisionGroup(pdB))return false;
 		if(pdB.containsPhysicsDataSkipCollisionGroup(pdA))return false;
 		
+		//	ignore the followers
+		if(pdA.getLeviFollow()==pdB)return false; 
+		if(pdB.getLeviFollow()==pdA)return false; 
+		
+		//ignored grabbeds, prevents levitation trick/glitch 
+		if(pdA.isGrabbedBy(pdB))return false; 
+		if(pdB.isGrabbedBy(pdA))return false;
+		
 //		/** these two may not be working because the order of the collision may not be the expected, and the glue where would be set after other collisions on the same tick */
 //		if(pdA.pdGlueWhere!=null)return pdA.pdGlueWhere==pdB; //TODO this seems useless
 //		if(pdB.pdGlueWhere!=null)return pdB.pdGlueWhere==pdA; //TODO this seems useless
@@ -2048,6 +2061,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		if(ares.size()>0){
 			RayCastResultX res = ares.get(0);
 			if(fImpulse==null)fImpulse=res.pd.getPRB().getMass();
+			v3fDir=v3fDir.normalize();
+			v3fDir.multLocal(fImpulse);
 			applyImpulseLater(res.pd,	new ImpTorForce().setImpulse(v3fDir,res.getLocalHitPos())	);
 			return res;
 		}
@@ -2138,26 +2153,39 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		return pspace.getGravity(new Vector3f());
 	}
 	
-	/**
-	 * 
-	 * @param color can be null
-	 * @param fVolume
-	 * @param str
-	 * @param v3fPos
-	 * @return
-	 */
-	public PhysicsData spawnVolumeBox(ColorRGBA color, float fVolume, String str, Vector3f v3fPos){
-		if(color==null)color=ColorRGBA.Gray;
+	public PhysicsData spawnVolumeBox(float fVolumeM3, Float fMassKg){
+		return spawnVolumeBox(null, fVolumeM3, "", null, fMassKg);
+	}
+	public PhysicsData spawnVolumeBox(ColorRGBA color, float fVolumeM3, String strName, Vector3f v3fPos, Float fMassKg){
+		if(color==null) {
+			color=ColorRGBA.Gray.clone();
+			color.a=0.5f;
+		}
 		
-		Geometry geom = GeometryI.i().create(MeshI.i().box((float) (Math.cbrt(fVolume)/2f)), color);
-		geom.setName("Box"+str);
+		Geometry geom = GeometryI.i().create(MeshI.i().box((float) (Math.cbrt(fVolumeM3)/2f)), color);
+		geom.setName("Box"+strName);
 		
 //		/** to be on a node is important to let other things be attached to it like stuck projectiles */
 //		Node node = new Node("TestBox"+str);
 //		node.attachChild(geom);
 		
-		if(v3fPos!=null)geom.move(v3fPos); //b4 physics
-		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geom,new MatterStatus(EMatter.Generic1KgPerM3.get()),new Node());
+		if(v3fPos==null) {
+			ArrayList<RayCastResultX> resx = WorldPickingI.i().raycastPiercingAtCenter(null);
+			if(resx.size()>0) {
+				v3fPos = resx.get(0).getWHitPos();
+			}else {
+				return null;
+			}
+		}
+		geom.move(v3fPos); //b4 physics
+		
+		Matter mt = EMatter.Generic1KgPerM3.get();
+		if(fMassKg!=null) {
+//			mt = new Matter(strName+StringI.i().getNextUniqueGlobalId(),(fMassKg*1000)/fVolumeM3);
+			mt = new Matter(strName+StringI.i().getNextUniqueGlobalId(), fMassKg, fVolumeM3);
+		}
+		
+		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geom,new MatterStatus(mt),new Node());
 		
 		AppI.i().getRootNode().attachChild(pd.getSpatialWithPhysics());
 		

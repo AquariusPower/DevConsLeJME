@@ -41,7 +41,7 @@ import com.google.common.base.Strings;
 public class StringI {
 	public static StringI i(){return GlobalManagerI.i().get(StringI.class);}
 	
-	private String	strLastUid="0";
+	private String	strLastGlobalUid="0";
 	private int	iUIdRadix = Character.MAX_RADIX;
 	
 	public static enum EStringMatchMode{
@@ -136,12 +136,13 @@ public class StringI {
 	}
 	
 	/**
-	 * This uses a global uid.
+	 * This uses a global uid, mainly useful for things that must have an id that doesnt conflict with others,
+	 * but not necessarily requires to be sequential on its list, like randomly spawning boxes.
 	 * @return
 	 */
-	public String getNextUniqueId(){
-		strLastUid=getNextUniqueId(strLastUid);
-		return strLastUid;
+	public String getNextUniqueGlobalId(){
+		strLastGlobalUid=getNextUniqueId(strLastGlobalUid);
+		return strLastGlobalUid;
 	}
 	
 	public boolean isBlank(char ch){

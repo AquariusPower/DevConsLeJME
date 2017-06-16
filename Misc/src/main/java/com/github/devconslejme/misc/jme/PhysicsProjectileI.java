@@ -67,6 +67,7 @@ public class PhysicsProjectileI {
 	private float fDefaultGravityDivTrick=1f;
 	private float fDefaultDesiredSpeed=10f;
 	private int iDefaultProjectilesPerSecond=1;
+	private boolean bGlowingProjectile;
 	
 //	public static class SimpleBatchNode
 	
@@ -130,11 +131,10 @@ public class PhysicsProjectileI {
 			float fScaleXY=0.25f;
 			geomProjectileFactory = GeometryI.i().create(new Sphere(3,4,fRadius), ColorRGBA.Cyan);
 			geomProjectileFactory.scale(fScaleXY,fScaleXY,1f); //this wont affect the bounding sphere
-//			geomProjectileFactory.setModelBound(new BoundingSphere(0.025f,new Vector3f())); //this will become a tiny collider
 			geomProjectileFactory.setModelBound(new BoundingSphere(fRadius*fScaleXY,new Vector3f())); //this will become a tiny collider
-//			geomProjectileFactory.getWorldBound();
-//			geomProjectileFactory.scale(1f/fPhysBoundsScaleDiv);
-			geomProjectileFactory.getMaterial().setColor(EColor.GlowColor.s(), ColorRGBA.Blue.mult(10)); //requires the bloom post processor with glow objects mode
+			if(isGlowingProjectile()) {
+				geomProjectileFactory.getMaterial().setColor(EColor.GlowColor.s(), ColorRGBA.Blue.mult(10)); //requires the bloom post processor with glow objects mode
+			}
 		}
 		
 		return geomProjectileFactory;
@@ -532,6 +532,15 @@ public class PhysicsProjectileI {
 
 	public PhysicsProjectileI setDefaultProjectilesPerSecond(int iDefaultProjectilesPerSecond) {
 		this.iDefaultProjectilesPerSecond = iDefaultProjectilesPerSecond;
+		return this; 
+	}
+
+	public boolean isGlowingProjectile() {
+		return bGlowingProjectile;
+	}
+
+	public PhysicsProjectileI setGlowingProjectile(boolean bGlowingProjectile) {
+		this.bGlowingProjectile = bGlowingProjectile;
 		return this; 
 	}
 	

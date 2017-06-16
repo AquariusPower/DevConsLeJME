@@ -86,6 +86,9 @@ public class MatterI {
 		private String	strId;
 		private double fDensityGramsPerCm3;
 		
+		public Matter(String strId, double fMassKg, double fVolumeM3){
+			this(strId, (fMassKg*1000f)/(fVolumeM3*fM3toCm3));
+		}
 		public Matter(String strId, double fDensityGramsPerCm3){
 			this.strId = strId;
 			this.fDensityGramsPerCm3=fDensityGramsPerCm3;

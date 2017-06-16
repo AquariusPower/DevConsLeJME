@@ -232,7 +232,8 @@ public class ManipulatorI {
 			spt.rotateUpTo(Vector3f.UNIT_Y);
 			AppI.i().placeAtCamWPos(pdManipulating, fDist, pdManipulating.isActivatable());
 			
-			PhysicsI.i().resetForces(pdManipulating); //prevent falling flickering glitch
+//			PhysicsI.i().resetForces(pdManipulating); //prevent falling flickering glitch
+			pdManipulating.setNewGravityAtMainThread(Vector3f.ZERO); //prevent falling flickering glitch
 		}else {
 			Vector3f v3fFrom = pdManipulating.getPRB().getPhysicsLocation();
 			Vector3f v3fInfrontCamPos = AppI.i().getCamWPos(fMinDist);
