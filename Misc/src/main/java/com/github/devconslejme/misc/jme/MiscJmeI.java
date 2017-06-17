@@ -58,9 +58,9 @@ public class MiscJmeI {
 	public static MiscJmeI i(){return GlobalManagerI.i().get(MiscJmeI.class);}
 
 	private Float	fAboveAllAtGuiNode=null;
-	private Application	app;
+//	private Application	app;
 	private Node	nodeVirtualWorld;
-	private SimpleApplication	sappOptional;
+//	private SimpleApplication	sappOptional;
 //	private RotateHelper	rhRotAround;
 //	private RotateHelper	rhRotVec;
 //	
@@ -78,13 +78,14 @@ public class MiscJmeI {
 	 * @param nodeVirtualWorld if null, will try to auto-set from simple application
 	 */
 	public void configure(Node nodeVirtualWorld){
-		this.app=GlobalManagerI.i().get(Application.class);
-		if (this.app instanceof SimpleApplication)sappOptional = (SimpleApplication) this.app;
+//		this.app=GlobalManagerI.i().get(Application.class);
+//		if (this.app instanceof SimpleApplication)sappOptional = (SimpleApplication) this.app;
 		
 		setNodeVirtualWorld(nodeVirtualWorld);
-		if(isSimpleApplication() && getNodeVirtualWorld()==null){
-			setNodeVirtualWorld(sappOptional.getRootNode());
-		}
+		if(getNodeVirtualWorld()==null)setNodeVirtualWorld(AppI.i().getRootNode());
+//		if(isSimpleApplication() && getNodeVirtualWorld()==null){
+//			setNodeVirtualWorld(sappOptional.getRootNode());
+//		}
 		
 		AssertionsI.i().putAssertRemainUnmodified(Vector3f.NEGATIVE_INFINITY, Vector3f.NEGATIVE_INFINITY.clone());
 		AssertionsI.i().putAssertRemainUnmodified(Vector3f.POSITIVE_INFINITY, Vector3f.POSITIVE_INFINITY.clone());
@@ -282,14 +283,14 @@ public class MiscJmeI {
 //	public Application getApp() {
 //		return app;
 //	}
-	
-	public boolean isSimpleApplication(){
-		return sappOptional!=null;
-	}
-	
-	public SimpleApplication getSApp(){
-		return sappOptional;
-	}
+//	
+//	public boolean isSimpleApplication(){
+//		return sappOptional!=null;
+//	}
+//	
+//	public SimpleApplication getSApp(){
+//		return sappOptional;
+//	}
 	
 	/**
 	 * will keep trying to unregister until all are found
@@ -301,8 +302,9 @@ public class MiscJmeI {
 			@Override
 			public Boolean call() {
 				for(String str:astrList.toArray(new String[0])){
-					if(app.getInputManager().hasMapping(str)){
-						app.getInputManager().deleteMapping(str);
+					if(AppI.i().removeMapping(str)) {
+//					if(app.getInputManager().hasMapping(str)){
+//						app.getInputManager().deleteMapping(str);
 						astrList.remove(str);
 					}
 				}
@@ -395,11 +397,11 @@ public class MiscJmeI {
 //		}
 //		
 //	}
-	
-	public float getTPF(){
-		return app.getTimer().getTimePerFrame();
-	}
-
+//	
+//	public float getTPF(){
+//		return app.getTimer().getTimePerFrame();
+//	}
+//
 //	public Vector3f rotateVector(Vector3f v3fTipToRotate, Vector3f v3fUp, float fAddAngleRadians) {
 //		if(rhRotVec==null)rhRotVec=new RotateHelper();
 //		

@@ -75,7 +75,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 	private boolean bHightlightToo = true;
 	private Vector3f	v3fDistToCursor;
 	private Panel	pnlParentestBeingDragged;
-	private FocusManagerState	focusman;
+//	private FocusManagerState	focusman;
 	private Vector3f	v3fInitialDragPos;
 	private Vector3f	v3fInitialCurPos;
 	private boolean	bIsReallyDragging;
@@ -84,8 +84,8 @@ public class DragParentestPanelListenerI implements CursorListener{
 	private Node	nodeGui;
 	
 	private static class MouseDragEffect{
-		private Application	app;
-		private InputManager	inputman;
+//		private Application	app;
+//		private InputManager	inputman;
 		private Vector3f	v3fPressedPos;
 		private EffectArrow	efDisplaced = new EffectArrow();//new EffectElectricity();
 		private GeomIndicator	indicatorFrom;
@@ -107,8 +107,8 @@ public class DragParentestPanelListenerI implements CursorListener{
 			indicatorFrom.addModes(EIndicatorMode.PulseScaling);
 			indicatorFrom.removeModes(EIndicatorMode.MoveBouncing);
 			
-			app = GlobalManagerI.i().get(Application.class);
-			inputman = app.getInputManager();
+//			app = GlobalManagerI.i().get(Application.class);
+//			inputman = app.getInputManager();
 			
 			QueueI.i().enqueue(new CallableXAnon() {
 				@Override
@@ -116,14 +116,14 @@ public class DragParentestPanelListenerI implements CursorListener{
 					updateMouseEffect();
 					return true;
 				}
-
 			}.enableLoopMode().setDelaySeconds(0.1f));
 		}
 		
 		private void updateMouseEffect() {
 			if(HWEnvironmentJmeI.i().getMouse().isCursorVisible() && HWEnvironmentJmeI.i().getMouse().isMouseCursorPressedButtons()>0){
 				if(v3fPressedPos==null){
-					v3fPressedPos = MiscJmeI.i().toV3fZAA(inputman.getCursorPosition());
+//					v3fPressedPos = MiscJmeI.i().toV3fZAA(inputman.getCursorPosition());
+					v3fPressedPos = HWEnvironmentJmeI.i().getMouse().getPos3D();
 //					v3fPressedPos.z=MiscJmeI.i().getZAboveAllAtGuiNode();
 					efDisplaced.setFrom(v3fPressedPos);
 					efDisplaced.setPlay(true);
@@ -142,7 +142,7 @@ public class DragParentestPanelListenerI implements CursorListener{
 	
 	public void configure(Node nodeGui){
 		this.nodeGui=nodeGui;
-		focusman = GlobalManagerI.i().get(Application.class).getStateManager().getState(FocusManagerState.class);
+//		focusman = GlobalManagerI.i().get(Application.class).getStateManager().getState(FocusManagerState.class);
 		new MouseDragEffect(nodeGui);
 	}
 	

@@ -47,7 +47,8 @@ public class SimulationTimeStateI extends SimpleAppState implements Savable,ISav
 	public static SimulationTimeStateI i(){return GlobalManagerI.i().get(SimulationTimeStateI.class);}
 	
 	public void configure(){
-		GlobalManagerI.i().get(Application.class).getStateManager().attach(this);
+		AppI.i().attatchAppState(this);
+//		GlobalManagerI.i().get(Application.class).getStateManager().attach(this);
 	}
 	
 	@Override

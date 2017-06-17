@@ -37,6 +37,7 @@ import com.github.devconslejme.misc.FileI;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.TimeFormatI;
+import com.github.devconslejme.misc.jme.AppI;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
@@ -143,8 +144,10 @@ public class LoggingI {
 	public String prepareLogMarkerText(String strInfo){ //center
 		strInfo = "[R="+TimeFormatI.i().getRealTimeFormatted(null,"HH:mm:ss")+"] "+strInfo;
 		//TODO start app time at year0 month0 day0 ... 
-		Timer tm=GlobalManagerI.i().get(Application.class).getTimer();
-		strInfo = strInfo+" [A="+TimeFormatI.i().formatElapsed(tm.getResolution(),tm.getTime())+"]";
+//		Timer tm=GlobalManagerI.i().get(Application.class).getTimer();
+//		strInfo = strInfo+" [A="+TimeFormatI.i().formatElapsed(tm.getResolution(),tm.getTime())+"]";
+		strInfo = strInfo+" [A="+TimeFormatI.i().formatElapsed(
+			AppI.i().getTimerResolution(),AppI.i().getTime())+"]";
 		return strInfo;
 	}
 	/**

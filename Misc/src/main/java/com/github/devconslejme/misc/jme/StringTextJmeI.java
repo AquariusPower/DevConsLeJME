@@ -92,7 +92,8 @@ public class StringTextJmeI extends StringI {
    * @return
    */
   public BitmapFont loadFont(String strPath) {
-  	return GlobalManagerI.i().get(Application.class).getAssetManager().loadFont(strPath);
+  	return AppI.i().loadFont(strPath);
+//  	return GlobalManagerI.i().get(Application.class).getAssetManager().loadFont(strPath);
   }
 
 	public void recursivelyApplyTextNoWrap(Node nodeParent) {

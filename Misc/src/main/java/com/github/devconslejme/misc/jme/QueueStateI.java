@@ -37,18 +37,20 @@ import com.jme3.app.Application;
 public class QueueStateI extends SimpleAppState{
 	public static QueueStateI i(){return GlobalManagerI.i().get(QueueStateI.class);}
 	
-	private Application	app;
+//	private Application	app;
 
 	public void configure(){
-		this.app=GlobalManagerI.i().get(Application.class);
-		app.getStateManager().attach(this);
+		AppI.i().attatchAppState(this);
+//		this.app=GlobalManagerI.i().get(Application.class);
+//		app.getStateManager().attach(this);
 		
-		QueueI.i().configure(app.getTimer().getResolution());
+//		QueueI.i().configure(app.getTimer().getResolution());
+		QueueI.i().configure(AppI.i().getTimerResolution());
 	}
 	
 	@Override
 	public void update(float tpf) {
 		super.update(tpf);
-		QueueI.i().update(app.getTimer().getTime(), tpf);
+		QueueI.i().update(AppI.i().getTime(), tpf);
 	}
 }

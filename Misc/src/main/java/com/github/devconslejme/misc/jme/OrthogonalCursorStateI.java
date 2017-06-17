@@ -51,7 +51,7 @@ public class OrthogonalCursorStateI extends SimpleAppState{
 	public static OrthogonalCursorStateI i(){return GlobalManagerI.i().get(OrthogonalCursorStateI.class);}
 
 	private Geometry	geom;
-	private Application	app;
+//	private Application	app;
 	private Node	nodeParent;
 //	private InputManager	inputman;
 	private int	fSize;
@@ -74,19 +74,14 @@ public class OrthogonalCursorStateI extends SimpleAppState{
 	
 	public OrthogonalCursorStateI() {
 		bRotateOnlyIfMouseMoves=true;
-//		fAboveLemurCursorRayCast = MiscJmeI.i().getZAboveAllAtGuiNode(); 
 		fRotateSpeed=1f;
 		fDistanceToCursor=100;
-//		v2fCursorPosPrevious = new Vector2f();
 		v3fCursorPosPrevious = new Vector3f();
 		fGoodReadableRotateSpeedZ = -0.0025f;
 	}
 	
 	public void configure(Node nodeParent){
-		app = GlobalManagerI.i().get(Application.class);
-//		sappOpt = GlobalManagerI.i().get(SimpleApplication.class,false);
-		app.getStateManager().attach(this);
-//		inputman=app.getInputManager();
+		AppI.i().attatchAppState(this);
 		this.nodeParent=nodeParent;
 	}
 	
@@ -99,7 +94,7 @@ public class OrthogonalCursorStateI extends SimpleAppState{
 		fSize=Math.max(HWEnvironmentJmeI.i().getDisplay().getWidth(),HWEnvironmentJmeI.i().getDisplay().getHeight())+10; //a bit more to hide the borders
 		geom.setMesh(new Grid(3,3,fSize));
 //		geom.lookAt(new Vector3f(v2f.x,v2f.y-1000000,0), Vector3f.UNIT_Z.mult(1000));
-		geom.lookAt(new Vector3f(0,-1000000,0), Vector3f.UNIT_Z.mult(1000));
+		geom.lookAt(new Vector3f(0,-1000000,0), Vector3f.UNIT_Z.mult(1000)); //TODO the huge Y and Z gave precision/quality, why?
 		color = ColorRGBA.Yellow.clone();
 		geom.setMaterial(ColorI.i().retrieveMaterialUnshadedColor(
 			ColorI.i().colorChangeCopy(color, 0f, 0.1f)));
@@ -107,9 +102,6 @@ public class OrthogonalCursorStateI extends SimpleAppState{
 		
 		// info
 		bt = StringTextJmeI.i().createBitmapTextMono("", ColorI.i().colorChangeCopy(color, 0f, 0.3f));
-//		bt = StringTextJmeI.i().loadDefaultMonoFont().createLabel("");
-//		bt.setColor(ColorI.i().colorChangeCopy(color, 0f, 0.3f));
-//		bt.setSize(13);
 		nodeInfo=new Node("OrthoInfo");
 		nodeHook = new Node();
 		nodeHook.attachChild(bt);

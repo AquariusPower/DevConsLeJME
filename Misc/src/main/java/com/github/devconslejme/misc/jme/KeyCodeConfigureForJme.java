@@ -58,7 +58,7 @@ public class KeyCodeConfigureForJme {//implements AnalogListener,ActionListener{
 	
 //	private ActionListener	alGeneralJmeTriggerListener;
 //	private boolean	bCaptureKeyModifiersMode;
-	private InputManager	inputman;
+//	private InputManager	inputman;
 //	private ActionListener	alGeneralJmeAnalogListener;
 	private Key[]	akAxis;
 	
@@ -73,7 +73,7 @@ public class KeyCodeConfigureForJme {//implements AnalogListener,ActionListener{
   	addSpecialKeys();
   	
   	// JME listener/mapping
-  	inputman = GlobalManagerI.i().get(Application.class).getInputManager();
+//  	inputman = GlobalManagerI.i().get(Application.class).getInputManager();
   	
 //		alGeneralJmeTriggerListener = new ActionListener() {@Override	public void onAction(String strKeyId, boolean bPressed, float tpf) {
 //			KeyCodeManagerI.i().refreshPressedState(strKeyId, bPressed);	
@@ -111,14 +111,15 @@ public class KeyCodeConfigureForJme {//implements AnalogListener,ActionListener{
 			if(key.getKeyCode()<=255){ //keytrigger limit TODO JME's only? or is a default to all keyboards?
 				String strMapping=key.getFullId();
 				
-				if(!inputman.hasMapping(strMapping)){
-					inputman.addMapping(strMapping, new KeyTrigger(key.getKeyCode()));
-				}
-				
-				/**
-				 * if the "keycode id" mapping already existed, it will just add a listener to it!
-				 */
-				inputman.addListener(aclTriggers, strMapping);
+				AppI.i().addKeyMappingAndListener(strMapping,new KeyTrigger(key.getKeyCode()),aclTriggers);
+//				if(!inputman.hasMapping(strMapping)){
+//					inputman.addMapping(strMapping, new KeyTrigger(key.getKeyCode()));
+//				}
+//				
+//				/**
+//				 * if the "keycode id" mapping already existed, it will just add a listener to it!
+//				 */
+//				inputman.addListener(aclTriggers, strMapping);
 			}
 		}
 		
@@ -126,8 +127,9 @@ public class KeyCodeConfigureForJme {//implements AnalogListener,ActionListener{
 		for(int i=0;i<iMaxMouseButtons;i++){
 			Key key = KeyCodeManagerI.i().addMouseTriggerCode(i);
 			String strId=key.getFullId();
-			inputman.addMapping(strId, new MouseButtonTrigger(i));
-			inputman.addListener(aclTriggers,strId);
+			AppI.i().addKeyMappingAndListener(strId,new MouseButtonTrigger(i),aclTriggers);
+//			inputman.addMapping(strId, new MouseButtonTrigger(i));
+//			inputman.addListener(aclTriggers,strId);
 		}
 		
 		// mouse axes
@@ -139,8 +141,9 @@ public class KeyCodeConfigureForJme {//implements AnalogListener,ActionListener{
 				Key key=KeyCodeManagerI.i().getMouseAxisKey(iAxis,bPositive);
 				akAxis[iCount++]=key;
 				String strId=key.getFullId();
-		    inputman.addMapping(strId, new MouseAxisTrigger(iAxis,!bPositive));
-		    inputman.addListener(anlAxis,strId);
+				AppI.i().addKeyMappingAndListener(strId,new MouseAxisTrigger(iAxis,!bPositive),anlAxis);
+//		    inputman.addMapping(strId, new MouseAxisTrigger(iAxis,!bPositive));
+//		    inputman.addListener(anlAxis,strId);
 //				inputman.addListener(alGeneralJmeAnalogListener,strId);
 			}
 		}
@@ -303,10 +306,13 @@ public class KeyCodeConfigureForJme {//implements AnalogListener,ActionListener{
 	@Deprecated
 	private void removeKeyCodeMaping(Key key){
 		String strMapping=key.getFullId();
+		/*******************************************************
+		 **************************** KEEP *********************
 		if(inputman.hasMapping(strMapping)){
 			MessagesI.i().warnMsg(this,"removing already existing keycode mapping", strMapping,key);
 			inputman.deleteMapping(strMapping);
 		}
+		*/
 	}
 
 //	/**

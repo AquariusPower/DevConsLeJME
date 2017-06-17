@@ -41,6 +41,7 @@ import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ActivatorI;
+import com.github.devconslejme.misc.jme.AppI;
 import com.github.devconslejme.misc.jme.ActivatorI.ActivetableListenerAbs;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
@@ -72,13 +73,13 @@ public class TargetI {
 	private HashMap<Geometry,TargetGeom> hmGeomTgt = new HashMap();
 	private Vector3f v3fRayCastFromXY;
 	private Node	nodeWorld;
-	private Application	app;
+//	private Application	app;
 	private FlyByCameraX	flycamx;
 	private boolean bHighlightTargets;
 	
 	public void configure(Node nodeWorld, FlyByCameraX flycamx){
 		this.flycamx = flycamx;
-		this.app=G.i(Application.class);
+//		this.app=G.i(Application.class);
 		
 		this.nodeWorld=nodeWorld;
 		
@@ -274,8 +275,7 @@ public class TargetI {
 	protected void updateTarget(TargetGeom tgt, Float fTPF){
 //				tgtLast = TargetI.i().getLastTarget();
 //		if(tgt.getRootSpatial().hasAncestor(nodeWorld)){ //TODO is this necessary?
-		tgt.fTargetDist=(app.getCamera().getLocation().distance(
-			tgt.getRootSpatial().getWorldTranslation()));
+		tgt.fTargetDist=AppI.i().getCamWPosCopy(0f).distance(tgt.getRootSpatial().getWorldTranslation());
 		
 		if(isHighlightTargets())HighlighterI.i().applyAt(tgt.getGeometryHit());
 //		}

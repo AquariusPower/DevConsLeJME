@@ -49,7 +49,6 @@ import com.github.devconslejme.misc.Annotations.SimpleVarReadOnly;
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.ESimpleType;
-import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.JavaLangI;
 import com.github.devconslejme.misc.JavaLangI.LinkedHashMapX;
 import com.github.devconslejme.misc.MessagesI;
@@ -58,6 +57,7 @@ import com.github.devconslejme.misc.MultiClickI.CallMultiClickUpdate;
 import com.github.devconslejme.misc.MultiClickI.MultiClick;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.jme.AppI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.StringTextJmeI;
@@ -70,7 +70,6 @@ import com.github.devconslejme.misc.lemur.PopupHintHelpListenerI;
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.github.devconslejme.misc.lemur.SizeAndLocationI;
 import com.google.common.base.Function;
-import com.jme3.app.Application;
 import com.jme3.input.KeyInput;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
@@ -806,7 +805,7 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	}
 	
 	private void initBase(){
-		focusman = GlobalManagerI.i().get(Application.class).getStateManager().getState(FocusManagerState.class);
+		focusman = AppI.i().getState(FocusManagerState.class);
 		
 		curlisExtraClickCmd = new CursorListenerX(){
 			@Override

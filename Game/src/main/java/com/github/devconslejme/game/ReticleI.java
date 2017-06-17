@@ -71,7 +71,7 @@ public class ReticleI {
 	private Float	fRangeDist;
 //	private Spatial	sptTarget;
 //	private SimpleApplication	sappOpt;
-	private Application	app;
+//	private Application	app;
 //	private Geometry	geomTarget;
 	private float	fBorderRadiusMarginPerc=0.1f;
 	protected TargetGeom	tgtLast;
@@ -493,7 +493,7 @@ public class ReticleI {
 	public void autoRecreate(ReticleNode rnStore){
 		if(rnLastConfigured!=null)rnLastConfigured.removeFromParent();
 		
-		app = G.i(Application.class);
+//		app = G.i(Application.class);
 //		sappOpt = G.i(SimpleApplication.class);
 //		if(sappOpt!=null){ //TODO it cannot really independ of flycamX and sapp yet...
 //			FlyByCamera flycam = sappOpt.getFlyByCamera();

@@ -74,8 +74,8 @@ public class PkgCfgI extends PkgCfgAbs{
 		/**
 		 * FIRST!
 		 */
-		GlobalManagerI.i().putGlobal(Application.class, app);
-		AppI.i().configure(app);
+//		GlobalManagerI.i().putGlobal(Application.class, app);
+		AppI.i().configure(app); //Protect access to Application thru AppI to avoid allowing everything everywhere unsafely
 		FlyByCamera flycam=null;
 		if(app instanceof SimpleApplication){
 			/**

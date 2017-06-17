@@ -60,8 +60,8 @@ public class TestFrustum extends SimpleApplicationAndStateAbs {
 	public void initTest() {
 		super.initTest();
 		
-		for(int i=0;i<100000;i+=100) {
-			BitmapText bt = StringTextJmeI.i().createBitmapTextMono("z="+i, ColorRGBA.Yellow);
+		for(int i=0;i<10000;i+=100) { //earth surface curves at 5Km distance...
+			BitmapText bt = StringTextJmeI.i().createBitmapTextMono("z="+i, ColorRGBA.Blue);
 			bt.rotate(0, 180*FastMath.RAD_TO_DEG, 0);
 			bt.scale(0.1f);
 			bt.move(0, i/10, i);

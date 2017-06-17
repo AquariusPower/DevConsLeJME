@@ -410,7 +410,7 @@ public class CharacterI {
 		if(!isPossessing())return;
 		
 		if(bForward!=null){
-			Vector3f v3f=AppI.i().getCamLookingAtDir();
+			Vector3f v3f=AppI.i().getCamLookingAtDirCopy();
 			v3f.y=0;
 			v3f.normalizeLocal();//.multLocal(getSpeed());
 			if(!bForward)v3f.negateLocal();
@@ -418,7 +418,7 @@ public class CharacterI {
 		}
 		
 		if(bStrafeLeft!=null){
-			Vector3f v3f=AppI.i().getCamLeftDir();
+			Vector3f v3f=AppI.i().getCamLeftDirCopy();
 			v3f.y=0;
 			v3f.normalizeLocal();//.multLocal(getSpeed());
 			if(!bStrafeLeft)v3f.negateLocal();

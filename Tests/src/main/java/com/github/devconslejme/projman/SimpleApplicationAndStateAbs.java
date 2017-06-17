@@ -26,7 +26,9 @@
 */
 package com.github.devconslejme.projman;
 
+import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI.G;
+import com.github.devconslejme.misc.jme.AppI;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.tests.TestDevConsFull;
 import com.jme3.app.Application;
@@ -46,8 +48,8 @@ import com.jme3.scene.Node;
 public abstract class SimpleApplicationAndStateAbs extends SimpleApplication implements AppState{
   private boolean bInit = false;
   private boolean bEnabled = false;
-  private Application	app;
-  private SimpleApplication	sapp;
+//  private Application	app;
+//  private SimpleApplication	sapp;
   
   private boolean bUseFullTestPipe=true; //this prevents the specific test being run directly
   
@@ -83,37 +85,42 @@ public abstract class SimpleApplicationAndStateAbs extends SimpleApplication imp
 //  protected abstract void initTest();
   protected void initTest(){
 		bEnabled=true;
-		app=(G.i(Application.class));
-		sapp=G.i(SimpleApplication.class);
-		app.getStateManager().attach(this); //can be another applicaiton using this as a app state only
+//		app=(G.i(Application.class));
+//		sapp=G.i(SimpleApplication.class);
+//		app.getStateManager().attach(this); //can be another applicaiton using this as a app state only
+		AppI.i().attatchAppState(this); //can be another applicaiton using this as a app state only
   }
   
   //TODO add all other alt-app methods
   
   @Override
   public FlyByCamera getFlyByCamera() {
-  	return sapp!=null&&sapp!=this ? sapp.getFlyByCamera():super.getFlyByCamera();
+//  	return sapp!=null&&sapp!=this ? sapp.getFlyByCamera():super.getFlyByCamera();
+  	return G.i(FlyByCameraX.class);
   }
-  public boolean isFlyByCameraX(){
-  	return (getFlyByCamera() instanceof FlyByCameraX);
-  }
-  public FlyByCameraX getFlyByCameraX() {
-  	return (FlyByCameraX)getFlyByCamera();
-  }
+//  public boolean isFlyByCameraX(){
+//  	return (getFlyByCamera() instanceof FlyByCameraX);
+//  }
+//  public FlyByCameraX getFlyByCameraX() {
+//  	return (FlyByCameraX)getFlyByCamera();
+//  }
   
   @Override
   public Camera getCamera() {
-  	return sapp!=null&&sapp!=this ? sapp.getCamera():super.getCamera();
+//  	return sapp!=null&&sapp!=this ? sapp.getCamera():super.getCamera();
+  	throw new DetailedException("forbidden, use "+AppI.class);
   }
   
   @Override
   public Node getRootNode() {
-  	return sapp!=null&&sapp!=this ? sapp.getRootNode():super.getRootNode();
+//  	return sapp!=null&&sapp!=this ? sapp.getRootNode():super.getRootNode();
+  	return AppI.i().getRootNode();
   }
   
   @Override
   public Node getGuiNode() {
-  	return sapp!=null&&sapp!=this ? sapp.getGuiNode():super.getGuiNode();
+//  	return sapp!=null&&sapp!=this ? sapp.getGuiNode():super.getGuiNode();
+  	return AppI.i().getGuiNode();
   }
   
 	@Override

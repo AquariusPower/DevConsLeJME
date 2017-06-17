@@ -60,6 +60,7 @@ import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.jme.AppI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.SimpleAppState;
@@ -143,7 +144,7 @@ public class DevConsPluginStateI extends SimpleAppState implements IDialogHierar
 	private VersionedReference<List<String>>	vrListBoxChangedToAutoScrollToBottom;
 	private VersionedReference<Double>	vrSliderChangedToSuspendAutoScrollBottom;
 	private ResizablePanel	rzpMain;
-	private Application	app;
+//	private Application	app;
 	private ResizablePanel	rzpVarBar;
 //	private Button	btnShowVarMon;
 	private boolean	bRequestUpdateNoWrap;
@@ -299,7 +300,7 @@ public class DevConsPluginStateI extends SimpleAppState implements IDialogHierar
 	}
 	
 	public void configure(Integer iOpenDevConsKeyCode, Node nodeParent) {
-		this.app=GlobalManagerI.i().get(Application.class);
+//		this.app=GlobalManagerI.i().get(Application.class);
 		
 //		font = StringTextJmeI.i().loadFont("Interface/Fonts/DroidSansMono.fnt"); 
 		font = StringTextDevConsI.i().getDefaultMonoFont(); 
@@ -311,7 +312,8 @@ public class DevConsPluginStateI extends SimpleAppState implements IDialogHierar
 		
 		this.nodeParent = nodeParent;
 		
-		app.getStateManager().attach(this);
+		AppI.i().attatchAppState(this);
+//		app.getStateManager().attach(this);
 		
 		LoggingI.i().configure();
 		JavaScriptI.i().configure(); //before all others TODO why? it is already a globals listener...
@@ -636,7 +638,8 @@ public class DevConsPluginStateI extends SimpleAppState implements IDialogHierar
 		VarMon vmCursorPos = createVarMon(EStatPriority.Normal, "CursorPos", "Mouse Cursor Position on the application",new CallableVarMonX() {
 			@Override
 			public Boolean call() {
-				Vector2f v2fCursor = app.getInputManager().getCursorPosition();
+//				Vector2f v2fCursor = app.getInputManager().getCursorPosition();
+				Vector2f v2fCursor = HWEnvironmentJmeI.i().getMouse().getPos2D();//app.getInputManager().getCursorPosition();
 				getVarMon().set( String.format("%.0f,%.0f", v2fCursor.x, v2fCursor.y) );
 				return true;
 			}
@@ -646,7 +649,8 @@ public class DevConsPluginStateI extends SimpleAppState implements IDialogHierar
 		createVarMon(EStatPriority.Normal, "AppTime", "Application Elapsed Time from its start time",new CallableVarMonX() {
 			@Override
 			public Boolean call() {
-				getVarMon().set( String.format("%.3f", app.getTimer().getTimeInSeconds()) );
+//				getVarMon().set( String.format("%.3f", app.getTimer().getTimeInSeconds()) );
+				getVarMon().set( String.format("%.3f", AppI.i().getTimeInSeconds()) );
 				return true;
 			}
 		});
@@ -1509,8 +1513,8 @@ public class DevConsPluginStateI extends SimpleAppState implements IDialogHierar
 		builder.append(vrSliderChangedToSuspendAutoScrollBottom);
 		builder.append(", rzpMain=");
 		builder.append(rzpMain);
-		builder.append(", app=");
-		builder.append(app);
+//		builder.append(", app=");
+//		builder.append(app);
 		builder.append(", rzpVarBar=");
 		builder.append(rzpVarBar);
 		builder.append(", bUpdateNoWrap=");
@@ -1604,14 +1608,15 @@ public class DevConsPluginStateI extends SimpleAppState implements IDialogHierar
 		this.iKeyCodeToggleConsole = iKeyCodeToggleConsole;
 		
 //		if(alToggleConsole!=null){ //otherwise will be called again during initialize
-			if(app.getInputManager().hasMapping(strInputMappingToggleDeveloperConsole)){
-				app.getInputManager().deleteMapping(strInputMappingToggleDeveloperConsole);
-			}
-			
-			app.getInputManager().addMapping(strInputMappingToggleDeveloperConsole, 
-				new KeyTrigger(iKeyCodeToggleConsole));
-			
-			app.getInputManager().addListener(alToggleConsole, strInputMappingToggleDeveloperConsole);
+		AppI.i().removeMapping(strInputMappingToggleDeveloperConsole);
+//			if(app.getInputManager().hasMapping(strInputMappingToggleDeveloperConsole)){
+//				app.getInputManager().deleteMapping(strInputMappingToggleDeveloperConsole);
+//			}
+		AppI.i().addKeyMappingAndListener(strInputMappingToggleDeveloperConsole, new KeyTrigger(iKeyCodeToggleConsole), alToggleConsole);
+//			app.getInputManager().addMapping(strInputMappingToggleDeveloperConsole, 
+//				new KeyTrigger(iKeyCodeToggleConsole));
+//			
+//			app.getInputManager().addListener(alToggleConsole, strInputMappingToggleDeveloperConsole);
 //		}
 		
 		String strKey = KeyCodeManagerI.i().getKeyIdFromCode(iKeyCodeToggleConsole);

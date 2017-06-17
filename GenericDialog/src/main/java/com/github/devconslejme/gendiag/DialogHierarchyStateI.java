@@ -36,15 +36,18 @@ import com.github.devconslejme.es.DialogHierarchySystemI;
 import com.github.devconslejme.gendiag.MinimizedDialogsPanelI.ButtonMinimized;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.SystemAlertI;
+import com.github.devconslejme.misc.jme.AppI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.EffectArrow;
 import com.github.devconslejme.misc.jme.EffectElectricity;
 import com.github.devconslejme.misc.jme.EffectManagerStateI;
+import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.IEffect;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.SimpleAppState;
@@ -60,8 +63,6 @@ import com.github.devconslejme.misc.lemur.MouseCursorButtonGlobalListenerDelegat
 import com.github.devconslejme.misc.lemur.ResizablePanel;
 import com.github.devconslejme.misc.lemur.ResizablePanel.IResizableListener;
 import com.github.devconslejme.misc.lemur.SystemAlertLemurI;
-import com.jme3.app.Application;
-import com.jme3.app.SimpleApplication;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.input.FlyByCamera;
 import com.jme3.math.ColorRGBA;
@@ -105,7 +106,7 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 		}
 	};
 
-	private Application	app;
+//	private Application	app;
 	/** dialogs may close, but not be discarded TODO confirm this:  */
 	private ArrayList<DialogVisuals> arzpAllCreatedDialogs = new ArrayList<DialogVisuals>();
 	private float	fBeginOrderPosZ;
@@ -131,7 +132,7 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 //	protected ResizablePanel	minimizedDiags;
 //	protected Container	cntrMinimized;
 	private boolean	bAllowSuspendFlyCam=true;
-	private SimpleApplication	sappOptional;
+//	private SimpleApplication	sappOptional;
 	private FlyByCamera	flycam;
 	
 	public static class BlockerCursorListenerX extends CursorListenerX{
@@ -273,12 +274,15 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 		this.fBeginOrderPosZ=fBeginOrderZ;
 		this.nodeToMonitor=nodeToMonitor;
 		
-		app=GlobalManagerI.i().get(Application.class);
-    app.getStateManager().attach(this);
-		focusState=app.getStateManager().getState(FocusManagerState.class);
+//		app=GlobalManagerI.i().get(Application.class);
+//    app.getStateManager().attach(this);
+    AppI.i().attatchAppState(this);
+//		focusState=app.getStateManager().getState(FocusManagerState.class);
+		focusState=AppI.i().getState(FocusManagerState.class);
 		
-		if(app instanceof SimpleApplication)this.sappOptional=(SimpleApplication) app;
-		if(sappOptional!=null)setFlycam(sappOptional.getFlyByCamera());
+//		if(app instanceof SimpleApplication)this.sappOptional=(SimpleApplication) app;
+//		if(sappOptional!=null)setFlycam(sappOptional.getFlyByCamera());
+		flycam = G.i(FlyByCameraX.class);
 		
 		vriResizableBorderSize = ResizablePanel.getResizableBorderSizeDefaultVersionedReference();
     
@@ -420,7 +424,7 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 		
 		sys.setHierarchyComp(entid,new DiagCompBean()
 			.setOpened(true)
-			.setLastFocusTime(app.getTimer().getTime())
+			.setLastFocusTime(AppI.i().getTime())
 		);
 		
 		setFocusRecursively(entid);
@@ -479,7 +483,7 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 	public void update(float tpf) {
 		super.update(tpf);
 		
-		sys.update(tpf, app.getTimer().getTime());
+		sys.update(tpf, AppI.i().getTime());
 		
 		updateDialogsResizableBorderSize();
 		
@@ -786,7 +790,7 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 	private void setFocus(EntityId entid, boolean bRecursive){
 		ResizablePanel rzp = getOpenDialog(entid);
 		GuiGlobals.getInstance().requestFocus(rzp);
-		sys.updateLastFocusAppTimeNano(entid, app.getTimer().getTime());
+		sys.updateLastFocusAppTimeNano(entid, AppI.i().getTimeNano());
 		
 		if(bRecursive){
 			for(Entity ent:sys.getAllOpenedDialogs(entid)){
@@ -830,14 +834,14 @@ public class DialogHierarchyStateI extends SimpleAppState implements IResizableL
 		return this;
 	}
 
-	public FlyByCamera getFlycam() {
-		return flycam;
-	}
-
-	public DialogHierarchyStateI setFlycam(FlyByCamera flycam) {
-		this.flycam = flycam;
-		return this;
-	}
+//	public FlyByCamera getFlycam() {
+//		return flycam;
+//	}
+//
+//	public DialogHierarchyStateI setFlycam(FlyByCamera flycam) {
+//		this.flycam = flycam;
+//		return this;
+//	}
 
 	public IGUIUserInteraction getGlobalUserInteractionListener() {
 		return iuiGlobalUserInteractionListener;

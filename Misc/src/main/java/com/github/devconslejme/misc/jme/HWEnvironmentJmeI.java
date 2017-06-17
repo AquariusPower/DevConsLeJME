@@ -39,7 +39,6 @@ import com.github.devconslejme.misc.HWEnvironmentI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI;
 import com.github.devconslejme.misc.KeyBindCommandManagerI.CallBoundKeyCmd;
 import com.github.devconslejme.misc.TimedDelay;
-import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.font.BitmapText;
 import com.jme3.font.LineWrapMode;
@@ -48,7 +47,6 @@ import com.jme3.input.InputManager;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
-import com.jme3.renderer.Camera;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Quad;
@@ -78,9 +76,9 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 	private Node	nodeGui;
 	private Node nodeInfo=new Node();
 	private Geometry geomInfoBkg = new Geometry();
-	private Application	app;
-	private InputManager	inputman;
-	private Camera	cam;
+//	private Application	app;
+//	private InputManager	inputman;
+//	private Camera	cam;
 	private boolean	bShowMouseCursorPos;
 	private SimpleApplication	sappOpt;
 	private boolean bShowCustomInfo;
@@ -89,12 +87,14 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 	public void configure(Node nodeGui){
 //		GlobalManagerI.i().putGlobal(EnvironmentI.class, this);
 		
-		app=G.i(Application.class);
-		cam=app.getCamera();
-		inputman=app.getInputManager();
-		mouse = new MouseI(inputman);
+//		app=G.i(Application.class);
+//		cam=app.getCamera();
+//		inputman=app.getInputManager();
+//		mouse = new MouseI(inputman);
+		mouse = new MouseI();
 		
-		app.getStateManager().attach(new EnvState());
+//		app.getStateManager().attach(new EnvState());
+		AppI.i().attatchAppState(new EnvState());
 		this.nodeGui=nodeGui;
 		this.sappOpt=G.i(SimpleApplication.class);
 		if(this.nodeGui==null){
@@ -197,12 +197,12 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 	}
 
 	public static class MouseI{
-		private InputManager	inputman;
+//		private InputManager	inputman;
 		private Vector2f	v2fLastPosWhileVisible = new Vector2f();
 
-		public MouseI(InputManager inputman) {
-			this.inputman = inputman;
-		}
+//		public MouseI(InputManager inputman) {
+//			this.inputman = inputman;
+//		}
 
 		public boolean isButtonDown(int i){
 			return Mouse.isButtonDown(i);
@@ -263,6 +263,10 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 		public void forceUngrab(){
 			Mouse.setGrabbed(false);
 		}
+
+		public void setCursorVisible(boolean bEnable) {
+			AppI.i().setCursorVisible(bEnable);
+		}
 	}
 	
 	public MouseI getMouse() {
@@ -303,13 +307,13 @@ public class HWEnvironmentJmeI extends HWEnvironmentI{
 			if(bShowMouseCursorPos)sb.append("MouseXY="+getMouse().getPos2D()+strSep2);
 			if(bShowCamPos){
 				sb.append("CamPos="
-					+StringTextJmeI.i().fmtVector3f(cam.getLocation(),2)
+					+StringTextJmeI.i().fmtVector3f(AppI.i().getCamWPosCopy(0f),2)
 					+strSep2);
 			}
 			if(bShowCamRot){
 				//TODO show a drawn line about Z at XY plane rotation, and another about up/downwards degrees
 				sb.append("CamRotDeg="
-					+StringTextJmeI.i().fmtToDegrees(cam.getRotation(),1)
+					+StringTextJmeI.i().fmtToDegrees(AppI.i().getCamRotCopy(),1)
 					+strSep2);
 			}
 			

@@ -178,7 +178,7 @@ public class WorldPickingI {
 		Vector3f v3fDisplayCenter = HWEnvironmentJmeI.i().getDisplay().getCenter(0f);
 		boolean bIsCenter=v3fGuiNodeXYZproj.x==v3fDisplayCenter.x && v3fGuiNodeXYZproj.y==v3fDisplayCenter.y;
 		if(bIsCenter && isRayCastFromCenterUseCamPos()) {
-			v3fCursorAtVirtualWorld3D = AppI.i().getCamWPos(v3fGuiNodeXYZproj.z);
+			v3fCursorAtVirtualWorld3D = AppI.i().getCamWPosCopy(v3fGuiNodeXYZproj.z);
 		}else {
 			v3fCursorAtVirtualWorld3D = AppI.i().getScreenPosAtWorldCoordinatesForRayCasting(v3fGuiNodeXYZproj);
 		}

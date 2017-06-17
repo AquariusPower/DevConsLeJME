@@ -149,7 +149,7 @@ public class ManipulatorI {
 					if(tg!=null) {
 						grab(
 							tg.getPhysicsData(), 
-							AppI.i().getCamWPos(0f).distance( tg.getPhysicsData().getPhysicsLocationCopy() )
+							AppI.i().getCamWPosCopy(0f).distance( tg.getPhysicsData().getPhysicsLocationCopy() )
 						);
 					}
 				}
@@ -237,7 +237,7 @@ public class ManipulatorI {
 			pdManipulating.setNewGravityAtMainThread(Vector3f.ZERO); //prevent falling flickering glitch
 		}else {
 			Vector3f v3fFrom = pdManipulating.getPhysicsLocationCopy();
-			Vector3f v3fInfrontCamPos = AppI.i().getCamWPos(fMinDist);
+			Vector3f v3fInfrontCamPos = AppI.i().getCamWPosCopy(fMinDist);
 			ArrayList<RayCastResultX> aresx = PhysicsI.i().rayCastSortNearest(v3fFrom, v3fInfrontCamPos, false, true, true, pdManipulating);//TODO possessed pds
 			if(aresx.size()==0) { //must have a clean line of sight!
 				float fDistRest=0.01f;
@@ -269,7 +269,7 @@ public class ManipulatorI {
 		}
 		
 		if(pdManipulating.isActivatable()) {
-			spt.lookAt(spt.getLocalTranslation().add(AppI.i().getCamLookingAtDir()), Vector3f.UNIT_Y);
+			spt.lookAt(spt.getLocalTranslation().add(AppI.i().getCamLookingAtDirCopy()), Vector3f.UNIT_Y);
 			PhysicsI.i().syncPhysTransfFromSpt(pdManipulating,false,true);
 		}
 		

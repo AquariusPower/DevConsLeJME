@@ -53,7 +53,7 @@ public class DebugTrackProblemsJME implements ICheckProblems{
 	public static DebugTrackProblemsJME i(){return GlobalManagerI.i().get(DebugTrackProblemsJME.class);}
 
 	private ArrayList<Node>	anodeList = new ArrayList<Node>();
-	private Application	app;
+//	private Application	app;
 	
 	@Override
 	public int checkProblems(Throwable thr){
@@ -62,7 +62,7 @@ public class DebugTrackProblemsJME implements ICheckProblems{
 	
 	public void configure(Node... anode){
 		this.anodeList.addAll(Arrays.asList(anode));
-		app = GlobalManagerI.i().get(Application.class);
+//		app = GlobalManagerI.i().get(Application.class);
 	}
 	
 	private ArrayList<Spatial> checkForSpatialsImproperlyModified(Throwable thr, boolean bDumpMessage){

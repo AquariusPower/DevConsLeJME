@@ -47,7 +47,8 @@ public class EffectManagerStateI extends SimpleAppState {
 	private int	iFPStarget=15;
 	
 	public void configure(){
-		GlobalManagerI.i().get(Application.class).getStateManager().attach(this);
+		AppI.i().attatchAppState(this);
+//		GlobalManagerI.i().get(Application.class).getStateManager().attach(this);
 	}
 	
 	public void add(IEffect i){

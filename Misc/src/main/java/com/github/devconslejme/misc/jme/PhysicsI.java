@@ -1320,8 +1320,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		return applyImpulseHitTarget(v3fPos,v3fDir,fImpulse);
 	}
 	public RayCastResultX applyImpulseHitTargetFromCam(Float fImpulse){
-		Vector3f v3fDir = AppI.i().getCamLookingAtDir();
-		Vector3f v3fPos = AppI.i().getCamWPos(0);
+		Vector3f v3fDir = AppI.i().getCamLookingAtDirCopy();
+		Vector3f v3fPos = AppI.i().getCamWPosCopy(0);
 		return applyImpulseHitTarget(v3fPos,v3fDir,fImpulse);
 	}
 	/**
@@ -1371,9 +1371,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //			return pd;
 //		}
 		ArrayList<RayCastResultX> a = rayCastSortNearest(
-			AppI.i().getCamWPos(0f), 
+			AppI.i().getCamWPosCopy(0f), 
 //			AppI.i().getCamWPos(0f).add(AppI.i().getCamLookingAtDir().mult(getPhysicsRayCastRange())), 
-			AppI.i().getCamLookingAtDir(), true,
+			AppI.i().getCamLookingAtDirCopy(), true,
 			bIgnoreProjectiles, bFirstOnly, apdSkip);
 		if(a.size()>0)return a.get(0);
 		return null;

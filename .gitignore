@@ -24,6 +24,8 @@ Console-*
 /.jme3
 *.cfg
 output.graphml
+/**/nohup.out
+/.allScrEasyGrep/
 
 !lib/**/*.jar
 !.gitignore

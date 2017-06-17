@@ -84,7 +84,7 @@ public class FlyByCameraX extends FlyByCamera {
 	private ArrayList<CallableX> acxList=new ArrayList<CallableX>();
 	private boolean	bRotationAllowed=true;
 	private float fFlyAcceleration=0.1f;
-	private InputManager	inputman;
+//	private InputManager	inputman;
 	private float	fMinFOVdeg;
 	private float	fMaxFOVdeg;
 //	private Float	fFOVstep;
@@ -107,6 +107,7 @@ public class FlyByCameraX extends FlyByCamera {
 	private boolean bZoomUpdating;
 	private TimedDelay tdAutoFrustum = new TimedDelay(1f).setActive(true);
 	private Camera camBkp;
+	private float fDefaultFrustumNear=1f;
 	
 	public boolean lazyPrepareKeyBindings(){
 		Key keyMWU=KeyCodeManagerI.i().getMouseAxisKey(2,true);
@@ -533,35 +534,37 @@ public class FlyByCameraX extends FlyByCamera {
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
-				if(getInputman()==null)return false;
-				setEnabledRawTrick(bEnable);
+				if(!AppI.i().isInputManagerReady())return false;
+//				setEnabledRawTrick(bEnable);
+				AppI.i().setCursorVisible(!bEnable);
 				return true;
 			}
 		});
 	}
 	
-	@Workaround
-	protected void setEnabledRawTrick(boolean bEnable){
-		/**
-		 * Inversed request first!
-		 * this trick is required to grant the cursor visibility state will
-		 * actually be modified/applied/changed, otherwise it would be ignored as 
-		 * the internal boolean would not have changed!
-		 */
-		getInputman().setCursorVisible(bEnable);
-		
-		// apply requested state
-		getInputman().setCursorVisible(!bEnable);
-	}
+//	@Workaround
+//	protected void setEnabledRawTrick(boolean bEnable){
+//		/**
+//		 * Inversed request first!
+//		 * this trick is required to grant the cursor visibility state will
+//		 * actually be modified/applied/changed, otherwise it would be ignored as 
+//		 * the internal boolean would not have changed!
+//		 */
+//		HWEnvironmentJmeI.i().getMouse().setCursorVisible(bEnable);
+//		
+//		// apply requested state
+//		HWEnvironmentJmeI.i().getMouse().setCursorVisible(!bEnable);
+////		getInputman().setCursorVisible(!bEnable);
+//	}
 
-	protected InputManager getInputman(){
-		if(inputman==null){
-			if(G.i(Application.class)!=null){
-				inputman=G.i(Application.class).getInputManager();
-			}
-		}
-		return inputman;
-	}
+//	protected InputManager getInputman(){
+//		if(inputman==null){
+//			if(G.i(Application.class)!=null){
+//				inputman=G.i(Application.class).getInputManager();
+//			}
+//		}
+//		return inputman;
+//	}
 	
 	
 	public void update(float fTPF){
@@ -575,7 +578,8 @@ public class FlyByCameraX extends FlyByCamera {
 		keyFlyCamMod.setPressedSpecialExternalContextKeyMode(cc,isEnabled()&&isAllowMove());
 		
 		acrLast = WorldPickingI.i().raycastPiercingAtCenter(null);
-		boolean bSuspendZooming=false;
+//		boolean bSuspendZooming=false;
+		boolean bInstaZoom=false;
 		if(acrLast.size()>0) {
 			RayCastResultX resx = null;
 			for(RayCastResultX resxChk:acrLast) {
@@ -589,12 +593,13 @@ public class FlyByCameraX extends FlyByCamera {
 			if(resx!=null) {
 				if(!bZoomUpdating && isAutoFrustum()) {
 					if(tdAutoFrustum .isReady(true)) {
-						if(resx.getDistance()>1f) {// && resx.getDistance()<1000) {
-							AppI.i().setCameraFrustum(1f); //cant be too big the near, or will remove many things nearby, pointless
+						if(resx.getDistance()>getDefaultFrustumNear()) {// && resx.getDistance()<1000) {
+							AppI.i().setCameraFrustum(getDefaultFrustumNear()); //cant be too big the near, or will remove many things nearby, pointless
 						}else {
 //							AppI.i().setCameraFrustum(resx.getDistance() < getMinFrustumNear() ? getMinFrustumNear() : resx.getDistance());
 							AppI.i().setCameraFrustum(getMinFrustumNear());
-							bSuspendZooming=true;
+//							bSuspendZooming=true;
+							bInstaZoom=true;
 						}
 					}
 				}
@@ -608,52 +613,58 @@ public class FlyByCameraX extends FlyByCamera {
 		
 		// fix/apply fov
 		boolean bTargetZoomReached=true;
-		if(bEnableZoomStepsAndLimits && !bSuspendZooming){
-			fixZoomIndexLimits();
-			
-			if(getFOV()<=0)fixCameraFrustum();
-//			if(getFOV()>afFOVDegList.get(afFOVDegList.size()-1)+fZoomErrorMarginFOV*2) {
-//				
-//			}
-//			if(bSmoothZoomMode) {
-				/**
-				 * automatically zoom in/out to reach the requested zoom step value
-				 */
-				if(Math.abs(getFOV() - afFOVDegList.get(iCurrentFOVDegStepIndex)) > getZoomErrorMarginFOV()){ //compare with error margin
-					float fBaseZoomStepFOV = (isZoomInverted()?1:-1)*(fChangeZoomStepSpeed*fTPF);
-					if(getFOV() < afFOVDegList.get(iCurrentFOVDegStepIndex)){
-						fBaseZoomStepFOV*=-1f; //invert
-						fBaseZoomStepFOV*=4f; //zoom out faster
-						if(bZoomingDirectionOut==null)bZoomingDirectionOut=true;
-						
-						if(!bZoomingDirectionOut)bZoomPrecisely=true;
-					}else {
-						if(bZoomingDirectionOut==null)bZoomingDirectionOut=false;
-						
-						if(bZoomingDirectionOut)bZoomPrecisely=true;
-					}
-					
-//					if(!bZoomLimitsJustConfigured && bZoomPrecisely)fBaseZoomStepFOV/=10f;
-					if(bZoomLimitsJustConfigured){
-						/**
-						 * this just looks messy...
-						fBaseZoomStepFOV*=10f; //faster setup
-						 */
-					}else {
-						if(bAllowZoomPrecisely && bZoomPrecisely) {
-							fBaseZoomStepFOV/=10f;
+//		if(bEnableZoomStepsAndLimits && !bSuspendZooming){
+		if(bEnableZoomStepsAndLimits){
+			while(true) {
+				fixZoomIndexLimits();
+				
+				if(getFOV()<=0)fixCameraFrustum();
+	//			if(getFOV()>afFOVDegList.get(afFOVDegList.size()-1)+fZoomErrorMarginFOV*2) {
+	//				
+	//			}
+	//			if(bSmoothZoomMode) {
+					/**
+					 * automatically zoom in/out to reach the requested zoom step value
+					 */
+					if(Math.abs(getFOV() - afFOVDegList.get(iCurrentFOVDegStepIndex)) > getZoomErrorMarginFOV()){ //compare with error margin
+						float fBaseZoomStepFOV = (isZoomInverted()?1:-1)*(fChangeZoomStepSpeed*fTPF);
+						if(getFOV() < afFOVDegList.get(iCurrentFOVDegStepIndex)){
+							fBaseZoomStepFOV*=-1f; //invert
+							fBaseZoomStepFOV*=4f; //zoom out faster
+							if(bZoomingDirectionOut==null)bZoomingDirectionOut=true;
+							
+							if(!bZoomingDirectionOut)bZoomPrecisely=true;
+						}else {
+							if(bZoomingDirectionOut==null)bZoomingDirectionOut=false;
+							
+							if(bZoomingDirectionOut)bZoomPrecisely=true;
 						}
+						
+	//					if(!bZoomLimitsJustConfigured && bZoomPrecisely)fBaseZoomStepFOV/=10f;
+						if(bZoomLimitsJustConfigured){
+							/**
+							 * this just looks messy...
+							fBaseZoomStepFOV*=10f; //faster setup
+							 */
+						}else {
+							if(bAllowZoomPrecisely && bZoomPrecisely) {
+								fBaseZoomStepFOV/=10f;
+							}
+						}
+						
+						super.zoomCamera(fBaseZoomStepFOV);
+						bTargetZoomReached=false;
+						bZoomUpdating=true;
+					}else {
+						resetZooming();
+						if(bInstaZoom)break;
 					}
-					
-					super.zoomCamera(fBaseZoomStepFOV);
-					bTargetZoomReached=false;
-					bZoomUpdating=true;
-				}else {
-					resetZooming();
-				}
-			
-//			fZoomedRotationSpeed=afFOVList.get(iCurrentFOVStepIndex)/fMaxFOVdeg;
-			fZoomedRotationSpeed=getFOV()/fMaxFOVdeg;
+				
+	//			fZoomedRotationSpeed=afFOVList.get(iCurrentFOVStepIndex)/fMaxFOVdeg;
+				fZoomedRotationSpeed=getFOV()/fMaxFOVdeg;
+				
+				if(!bInstaZoom)break;
+			}
 		}
 		
 		if(tdMouseInfo.isReady(true)){
@@ -861,6 +872,15 @@ public class FlyByCameraX extends FlyByCamera {
 
 	public FlyByCameraX setAutoFrustum(boolean bAutoFrustum) {
 		this.bAutoFrustum = bAutoFrustum;
+		return this; 
+	}
+
+	public float getDefaultFrustumNear() {
+		return fDefaultFrustumNear;
+	}
+
+	public FlyByCameraX setDefaultFrustumNear(float fDefaultFrustumNear) {
+		this.fDefaultFrustumNear = fDefaultFrustumNear;
 		return this; 
 	}
 	

@@ -232,8 +232,8 @@ public class ColorI {
 		int i = color.asIntRGBA();
 		Material mat = hmMatUnshadedColor.get(i);
 		if(mat==null){
-			mat = new Material(GlobalManagerI.i().get(Application.class).getAssetManager(), 
-				"Common/MatDefs/Misc/Unshaded.j3md");
+//			mat = new Material(AppI.i().getAssetManager(),"Common/MatDefs/Misc/Unshaded.j3md");
+			mat = AppI.i().newMaterial("Common/MatDefs/Misc/Unshaded.j3md");
 			mat.setColor(EColor.Color.s(), color);
 			if(color.a<1f)mat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
       //			mat.setTransparent(color.a<1f);
