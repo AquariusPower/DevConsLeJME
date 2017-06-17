@@ -28,11 +28,10 @@ package com.github.devconslejme.tests;
 
 import com.github.devconslejme.game.CharacterI;
 import com.github.devconslejme.misc.jme.ColorI;
+import com.github.devconslejme.misc.jme.PhysicsData;
 import com.github.devconslejme.misc.jme.PhysicsI;
-import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.github.devconslejme.misc.jme.PhysicsProjectileI;
 import com.github.devconslejme.misc.jme.PhysicsProjectileI.EGun;
-import com.github.devconslejme.misc.jme.PhysicsProjectileI.PhysicsGun;
 import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;

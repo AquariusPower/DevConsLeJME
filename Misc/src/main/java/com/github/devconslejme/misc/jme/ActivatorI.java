@@ -29,7 +29,6 @@ package com.github.devconslejme.misc.jme;
 import java.util.ArrayList;
 
 import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 

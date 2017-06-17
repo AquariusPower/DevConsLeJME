@@ -58,7 +58,7 @@ import com.github.devconslejme.misc.jme.HWEnvironmentJmeI.IEnvironmentListener;
 import com.github.devconslejme.misc.jme.MiscJmeI;
 import com.github.devconslejme.misc.jme.NodeX;
 import com.github.devconslejme.misc.jme.OriginDevice;
-import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
+import com.github.devconslejme.misc.jme.PhysicsData;
 import com.github.devconslejme.misc.jme.PhysicsI.RayCastResultX;
 import com.github.devconslejme.misc.jme.SimpleAppState;
 import com.github.devconslejme.misc.jme.StringTextJmeI;

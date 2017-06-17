@@ -40,9 +40,7 @@ import com.github.devconslejme.misc.KeyCodeManagerI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.TimedDelay;
-import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.github.devconslejme.misc.jme.PhysicsI.RayCastResultX;
-import com.jme3.collision.CollisionResult;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
@@ -77,7 +75,7 @@ public class ManipulatorI {
 
 	private float fMinDist=2f;
 
-	private boolean bGrabForcePlacement;
+	private boolean bGrabForcePlacement=true;
 	
 	/**
 	 * 
@@ -149,7 +147,10 @@ public class ManipulatorI {
 				if(!drop()) {
 					TargetGeom tg = TargetI.i().getLastSingleTarget();
 					if(tg!=null) {
-						grab(tg.getPhysicsData(), AppI.i().getCamWPos(0f).distance(tg.getPhysicsData().getPRB().getPhysicsLocation()));
+						grab(
+							tg.getPhysicsData(), 
+							AppI.i().getCamWPos(0f).distance( tg.getPhysicsData().getPhysicsLocationCopy() )
+						);
 					}
 				}
 				return true;
@@ -235,7 +236,7 @@ public class ManipulatorI {
 //			PhysicsI.i().resetForces(pdManipulating); //prevent falling flickering glitch
 			pdManipulating.setNewGravityAtMainThread(Vector3f.ZERO); //prevent falling flickering glitch
 		}else {
-			Vector3f v3fFrom = pdManipulating.getPRB().getPhysicsLocation();
+			Vector3f v3fFrom = pdManipulating.getPhysicsLocationCopy();
 			Vector3f v3fInfrontCamPos = AppI.i().getCamWPos(fMinDist);
 			ArrayList<RayCastResultX> aresx = PhysicsI.i().rayCastSortNearest(v3fFrom, v3fInfrontCamPos, false, true, true, pdManipulating);//TODO possessed pds
 			if(aresx.size()==0) { //must have a clean line of sight!
@@ -252,7 +253,7 @@ public class ManipulatorI {
 				pdManipulating.setTempGravityTowards(v3fInfrontCamPos, fDist>fDistRest ? fAcceleration : 0f);
 				
 				Vector3f v3fStraightDir = v3fInfrontCamPos.subtract(v3fFrom).normalize();
-				Vector3f v3fMoveDir = pdManipulating.getPRB().getLinearVelocity().normalize();
+				Vector3f v3fMoveDir = pdManipulating.getLinearVelocityCopy().normalize();
 				
 				boolean bResetF=false;
 				if(v3fStraightDir.distance(v3fMoveDir)>0.1f)bResetF=true; /** if the direction is too way off, reset once */

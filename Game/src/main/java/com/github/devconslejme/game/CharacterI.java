@@ -48,15 +48,14 @@ import com.github.devconslejme.misc.jme.GeometryI;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.NodeX;
+import com.github.devconslejme.misc.jme.PhysicsData;
 import com.github.devconslejme.misc.jme.PhysicsI;
 import com.github.devconslejme.misc.jme.PhysicsI.ImpTorForce;
-import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.github.devconslejme.misc.jme.PhysicsI.RayCastResultX;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.UserDataI;
 import com.github.devconslejme.misc.jme.WorldPickingI;
 import com.jme3.bullet.collision.PhysicsCollisionObject;
-import com.jme3.bullet.collision.shapes.infos.ChildCollisionShape;
 import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.ColorRGBA;
@@ -167,10 +166,10 @@ public class CharacterI {
 			}
 			
 			float fLinearDamp=0.85f;
-			if(pdTorso.getPRB().getGravity().length()>0) {
+			if(pdTorso.getGravityCopy().length()>0) {
 				fLinearDamp=0f;
 			}
-			pdTorso.getPRB().setDamping(fLinearDamp, 0.75f); //TODO understand and improve this..., lower damping when over slipping surfaces like ice
+			pdTorso.setNewDampingAtMainThread(fLinearDamp, 0.75f); //TODO understand and improve this..., lower damping when over slipping surfaces like ice
 //			pdHead.getPRB().setPhysicsLocation(
 //				pdTorso.getPRB().getPhysicsLocation()
 //					.add(0,fTorsoHeight/2f+fNeckHeight+fHeadRadius,0));
@@ -209,7 +208,7 @@ public class CharacterI {
 
 		AppI.i().getRootNode().attachChild(lc.nodeTorso);
 		
-		lc.pdTorso.getPRB().setPhysicsLocation(v3fSpawnAt.add(0,0.25f,0)); //a bit above
+		lc.pdTorso.setPhysicsLocationAtMainThread(v3fSpawnAt.add(0,0.25f,0)); //a bit above
 		
 		if(leviPossessed==null)setPossessed(lc);
 		
@@ -425,7 +424,7 @@ public class CharacterI {
 		if(v3fMoveDirection.length()>0) {
 			if(tdMoveImpulseInterval.isReady(true)) {
 				Vector3f v3fDisplacement = v3fMoveDirection.subtract(leviPossessed.pdTorso.getPhysicsRotationCopy().getRotationColumn(2));
-				v3fDisplacement.multLocal(leviPossessed.pdTorso.getPRB().getMass()/getDivMassRotToDir()).negateLocal();
+				v3fDisplacement.multLocal(leviPossessed.pdTorso.getMass()/getDivMassRotToDir()).negateLocal();
 				PhysicsI.i().applyImpulseLater(leviPossessed.pdTorso,	new ImpTorForce()
 					.setImpulse(calcMoveImpulse(v3fMoveDirection), v3fDisplacement)
 				);
@@ -444,7 +443,7 @@ public class CharacterI {
 	private Vector3f calcMoveImpulse(Vector3f v3fMoveDir) {
 		v3fMoveDir=v3fMoveDir.clone();
 		v3fMoveDir.normalizeLocal();
-		v3fMoveDir.multLocal(leviPossessed.pdTorso.getPRB().getMass());
+		v3fMoveDir.multLocal(leviPossessed.pdTorso.getMass());
 		v3fMoveDir.multLocal(getSpeed());
 		return v3fMoveDir;
 	}
@@ -455,7 +454,7 @@ public class CharacterI {
 	 * @return
 	 */
 	private float getJumpImpulse(long lJumpDelayMilis) {
-		float fImpulse=leviPossessed.pdTorso.getPRB().getMass();
+		float fImpulse=leviPossessed.pdTorso.getMass();
 		if(lJumpDelayMilis>getMaxJumpHoldDelay())lJumpDelayMilis=getMaxJumpHoldDelay(); //max
 		fImpulse*=(lJumpDelayMilis/(float)getMaxJumpHoldDelay());
 		fImpulse*=getJumpMultImpulse() ;

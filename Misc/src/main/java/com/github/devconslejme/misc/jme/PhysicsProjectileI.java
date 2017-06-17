@@ -39,11 +39,9 @@ import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ActivatorI.ActivetableListenerAbs;
 import com.github.devconslejme.misc.jme.ColorI.EColor;
 import com.github.devconslejme.misc.jme.PhysicsI.ImpTorForce;
-import com.github.devconslejme.misc.jme.PhysicsI.PhysicsData;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
@@ -258,7 +256,7 @@ public class PhysicsProjectileI {
 				 * the good resulting values are similar to the gun mass!
 				 * so well, lets just use it!
 				 */
-				fImpulseRecoil = gun.pd.getPRB().getMass();
+				fImpulseRecoil = gun.pd.getMass();
 				fDisplacementUpwards = 0.5f;
 				break;
 			case 4:
@@ -267,7 +265,7 @@ public class PhysicsProjectileI {
 				 * so well, lets just use it!
 				 * This effect looks excellent!!!
 				 */
-				fImpulseRecoil = gun.pd.getPRB().getMass()/2f;
+				fImpulseRecoil = gun.pd.getMass()/2f;
 				fDisplacementUpwards = 0.25f;
 				break;
 			case 5:
@@ -275,7 +273,7 @@ public class PhysicsProjectileI {
 				 * the good resulting values are similar to the gun mass!
 				 * so well, lets just use it!
 				 */
-				fImpulseRecoil = gun.pd.getPRB().getMass()/4f;
+				fImpulseRecoil = gun.pd.getMass()/4f;
 				fDisplacementUpwards = 0.25f;
 				break;
 			case 6:
@@ -284,8 +282,8 @@ public class PhysicsProjectileI {
 				 * so well, lets just use it!
 				 * This effect looks excellent!!!
 				 */
-				fImpulseRecoil = gun.pd.getPRB().getMass()/2f;
-				gun.pd.getPRB().setFriction(1f); //TODO friction may require to be adjusted depending on the terrain?
+				fImpulseRecoil = gun.pd.getMass()/2f;
+				gun.pd.setFrictionAtMainThread(1f); //TODO friction may require to be adjusted depending on the terrain?
 				fDisplacementUpwards = 0.5f;
 				break;
 		}
@@ -300,8 +298,12 @@ public class PhysicsProjectileI {
 		PhysicsData pdPjtl = prepareProjectile(pgun.pp);
 		pdPjtl.addPhysicsDataSkipCollisionGroup(pgun.pd);
 		
-		pdPjtl.getPRB().setPhysicsLocation(pgun.pd.getPRB().getPhysicsLocation());
-		pdPjtl.getPRB().setPhysicsRotation(pgun.pd.getPRB().getPhysicsRotation());
+		pdPjtl.setPhysicsLocationAtMainThread(pgun.pd.getPhysicsLocationCopy());
+//		pdPjtl.applyNewPhysLocationAtMainThread();
+		pdPjtl.setPhysicsRotationAtMainThread(pgun.pd.getPhysicsRotationCopy());
+//		pdPjtl.applyNewPhysRotationAtMainThread();
+//		pdPjtl.getPRB().setPhysicsLocation(pgun.pd.getPRB().getPhysicsLocation());
+//		pdPjtl.getPRB().setPhysicsRotation(pgun.pd.getPRB().getPhysicsRotation());
 		
 		ImpTorForce impPjtl = PhysicsI.i().throwAtSelfDirImpulse(pdPjtl, pgun.pp.fDesiredSpeed);
 		
@@ -324,9 +326,17 @@ public class PhysicsProjectileI {
 		
 		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone, pp.mts, null);
 //		geomClone.scale(pp.fPhysBoundsScaleDiv); //to restore the good looking size
+		
 		pd.setAllowDisintegration(true);
+//		PhysicsI.i().hmDisintegratables.put(pd.getPRB(), pd);
+		
 		pd.setProjectile(true);
-		pd.getPRB().setGravity(PhysicsI.i().getGravityCopy().divide(pp.fGravityDivTrick));
+//		PhysicsI.i().hmProjectiles.put(pd.getPRB(), pd);
+		
+		PhysicsI.i().assimilatePhysicsData(pd);
+		
+//		pd.getPRB().setGravity(PhysicsI.i().getGravityCopy().divide(pp.fGravityDivTrick));
+		pd.setNewGravityAtMainThread(PhysicsI.i().getGravityCopy().divide(pp.fGravityDivTrick));
 		
 //		disableCcdToLetCollisionGroupsWork(pd);
 		
@@ -455,7 +465,7 @@ public class PhysicsProjectileI {
 			pdWhere!=null &&
 			!pdWhere.isProjectile() && 
 			!pd.isDisintegrated() && 
-			!pd.isbGlueApplied() && 
+			!pd.isGlueApplied() && 
 			pd.getGlueWhere()==pdWhere &&
 			pd.isReadyToGlue() 
 //			&& !pd.isHasGlueTargetDeflected()
