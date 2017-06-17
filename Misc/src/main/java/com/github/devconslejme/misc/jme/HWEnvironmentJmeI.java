@@ -64,7 +64,7 @@ import com.jme3.scene.shape.Quad;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class HWEnvironmentJmeI extends HWEnvironmentI{
-	public static HWEnvironmentJmeI i(){return GlobalManagerI.i().retrieveOverridingSupers(HWEnvironmentJmeI.class,true,HWEnvironmentI.class);}
+	public static HWEnvironmentJmeI i(){return GlobalManagerI.i().retrieveOverridingSupers(HWEnvironmentJmeI.class,null,HWEnvironmentI.class);}
 	
 	private MouseI mouse;
 	private DisplayI display = new DisplayI();

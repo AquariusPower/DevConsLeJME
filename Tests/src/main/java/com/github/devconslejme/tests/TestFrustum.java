@@ -24,60 +24,50 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+package com.github.devconslejme.tests;
 
-package com.github.devconslejme.misc.jme;
+import java.awt.Color;
 
-import java.util.HashMap;
-
-import com.github.devconslejme.misc.GlobalManagerI;
-import com.github.devconslejme.misc.InfoI;
-import com.github.devconslejme.misc.InfoI.Info;
-import com.github.devconslejme.misc.StringI;
-import com.jme3.math.Vector3f;
+import com.github.devconslejme.misc.jme.StringTextJmeI;
+import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
+import com.jme3.font.BitmapText;
+import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
 
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class InfoJmeI extends InfoI{
-	public static InfoJmeI i(){return GlobalManagerI.i().retrieveOverridingSupers(InfoJmeI.class, null, InfoI.class);}
-	
-	/** do not create the hashmaps with this one, use only the super, this is just for the constructor */
-	public static class InfoJme extends Info{
-		public InfoJme(String strKey, Vector3f v3f, int iFloatScale) {
-			super(strKey,v3f);
-			super.iFloatScale=iFloatScale;
-		}
+public class TestFrustum extends SimpleApplicationAndStateAbs {
+	public static void main(String[] args) {
+		TestFrustum test = new TestFrustum();
+		test.start();
 	}
-	
-	/**
-	 * 
-	 * @param hm
-	 * @param strKey
-	 * @param v3f if null, will remove the key too
-	 * @param iFloatScale
-	 */
-	public void putAt(HashMap<String,Info> hm, String strKey,Vector3f v3f, int iFloatScale) {
-		if(chkRemove(hm, strKey, v3f))return;
-//		if(v3f==null)hm.remove(strKey);
-		hm.put(strKey, new InfoJme(strKey,v3f,iFloatScale));
+
+	@Override
+	public void simpleInitApp() {
+		//TODO com.github.devconslejme.misc.TODO.PkgCfgI.i().configure();
+		initTest();
 	}
 	
 	@Override
-	public String fmtInfoValue(Info inf) {
-		if(Vector3f.class.isInstance(inf.getValue())){
-			return StringTextJmeI.i().fmtVector3f(
-				inf.getValue(), 
-				inf.getFloatScale()==null ? getInfoValueFloatScale() : inf.getFloatScale()
-			);
-		}
-		
-		return super.fmtInfoValue(inf);
+	public void update(float tpf) {
 	}
-
-//	@Override
-//	public <T extends InfoJme> HashMap<String,T> createHashMap() {
-//		return new HashMap<String, InfoJme>();
-//	}
+	
+	/**
+	 * public so can be called from devcons user cmds
+	 */
+	@Override
+	public void initTest() {
+		super.initTest();
+		
+		for(int i=0;i<100000;i+=100) {
+			BitmapText bt = StringTextJmeI.i().createBitmapTextMono("z="+i, ColorRGBA.Yellow);
+			bt.rotate(0, 180*FastMath.RAD_TO_DEG, 0);
+			bt.scale(0.1f);
+			bt.move(0, i/10, i);
+			getRootNode().attachChild(bt);
+		}
+	}
 
 }
 

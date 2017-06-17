@@ -559,14 +559,14 @@ public  class PhysicsData{
 		return this;
 	}
 
-	public boolean isbAllowDisintegration() {
-		return bAllowDisintegration;
-	}
-
-	public PhysicsData setbAllowDisintegration(boolean bAllowDisintegration) {
-		this.bAllowDisintegration = bAllowDisintegration;
-		return this;
-	}
+//	public boolean isbAllowDisintegration() {
+//		return bAllowDisintegration;
+//	}
+//
+//	public PhysicsData setbAllowDisintegration(boolean bAllowDisintegration) {
+//		this.bAllowDisintegration = bAllowDisintegration;
+//		return this;
+//	}
 
 	public Vector3f getV3fLastSafeSpot() {
 		return v3fLastSafeSpot;

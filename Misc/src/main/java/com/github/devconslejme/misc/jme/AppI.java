@@ -57,6 +57,7 @@ public class AppI {
 	private FilterPostProcessor	fpp;
 	private BloomFilter	bloomFilter;
 	private boolean bLimitScreenCoordinates;
+	private float fMaxFrustum=1000;
 	
 	public void configure(Application app){
 		this.app=app;
@@ -69,7 +70,16 @@ public class AppI {
 	public void setBloomFilterEnabled(boolean enabled) {
 		bloomFilter.setEnabled(enabled);
 	}
-
+	
+	/**
+	 * frustum far will be near * maxFrustum to avoid glitches TODO test case, transparencies? shadows? with frustum diff > 10000?
+	 * @param fFrustumNearBase
+	 */
+	public void setCameraFrustum(float fFrustumNearBase) {
+		app.getCamera().setFrustumNear(fFrustumNearBase);
+		app.getCamera().setFrustumFar(fFrustumNearBase*getMaxFrustum());
+	}
+	
 	private void initFilters() {
     fpp = new FilterPostProcessor(app.getAssetManager());
     bloomFilter = new BloomFilter(BloomFilter.GlowMode.Objects);
@@ -197,6 +207,10 @@ public class AppI {
 		this.sptCamFollowMove=spt;
 		return this;
 	}
+	
+	public Spatial getCamFollow() {
+		return sptCamFollowMove;
+	}
 
 	public Node getGuiNode() {
 		if(sappOpt==null)return null;
@@ -209,6 +223,15 @@ public class AppI {
 
 	public AppI setLimitScreenCoordinates(boolean bLimitScreenCoordinates) {
 		this.bLimitScreenCoordinates = bLimitScreenCoordinates;
+		return this; 
+	}
+
+	public float getMaxFrustum() {
+		return fMaxFrustum;
+	}
+
+	public AppI setMaxFrustum(float fMaxFrustum) {
+		this.fMaxFrustum = fMaxFrustum;
 		return this; 
 	}
 	

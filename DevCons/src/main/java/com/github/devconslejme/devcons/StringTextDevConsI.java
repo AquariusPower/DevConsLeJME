@@ -35,7 +35,7 @@ import com.jme3.font.BitmapFont;
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
 public class StringTextDevConsI extends StringTextJmeI {
-	public static StringTextJmeI i(){return GlobalManagerI.i().retrieveOverridingSupers(StringTextDevConsI.class,true,StringTextJmeI.class,StringI.class);}
+	public static StringTextJmeI i(){return GlobalManagerI.i().retrieveOverridingSupers(StringTextDevConsI.class,null,StringTextJmeI.class,StringI.class);}
 	
 //	public void configure() {
 //		setDefaultMonoFontOverride(loadFont("Interface/Fonts/DroidSansMono.fnt"));

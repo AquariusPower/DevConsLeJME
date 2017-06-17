@@ -34,6 +34,7 @@ import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.QueueI.CallableWeak;
 import com.github.devconslejme.misc.QueueI.CallableX;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 
@@ -368,5 +369,13 @@ public class SpatialHierarchyI {
 				func.apply(new SpatialInfo().setSpatial(spt));
 			}
 		}
+	}
+
+	public boolean isRelated(Spatial sptA, Spatial sptB) {
+		if(sptA==sptB)return true;
+		if(sptA.getParent()==sptB.getParent())return true;
+		if(getAllParents(sptA,false).contains(sptB))return true;
+		if(getAllParents(sptB,false).contains(sptA))return true;
+		return false;
 	}
 }

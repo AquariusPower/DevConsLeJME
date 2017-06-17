@@ -30,6 +30,7 @@ import java.util.ArrayList;
 
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
+import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.ICompositeRestrictedAccessControl;
 import com.github.devconslejme.misc.Key;
@@ -63,9 +64,18 @@ import com.jme3.scene.Spatial;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class FlyByCameraX extends FlyByCamera {
+	private static class CompositeControl implements ICompositeRestrictedAccessControl{
+		private CompositeControl(){}; 
+	}; private CompositeControl cc;
+	private boolean bZoomPrecisely;
+	private boolean bAllowZoomPrecisely;
+	private float fZoomErrorMarginFOV;
 	private boolean	bAllowZooming=false; //only with scope or eagle eye
 	private boolean	bAllowMove=true; //as it is a flycam, must be default true
 	private boolean	bOverrideKeepFlyCamDisabled;
+	private String	strAllZoomSteps;
+	private ArrayList<RayCastResultX>	acrLast;
+	private Boolean bZoomingDirectionOut;
 	
 	/** stores user is constantly flying for how much time, until keys are released */
 	private float	fAccMvTm;
@@ -91,6 +101,12 @@ public class FlyByCameraX extends FlyByCamera {
 	private Key	keyFlyCamMod;
 	private Spatial	sptReticle;
 	private Node	nodeReticleParent;
+	private boolean bZoomLimitsJustConfigured;
+	private float fMinFrustumNear=0.001f;
+	private boolean bAutoFrustum;
+	private boolean bZoomUpdating;
+	private TimedDelay tdAutoFrustum = new TimedDelay(1f).setActive(true);
+	private Camera camBkp;
 	
 	public boolean lazyPrepareKeyBindings(){
 		Key keyMWU=KeyCodeManagerI.i().getMouseAxisKey(2,true);
@@ -215,7 +231,8 @@ public class FlyByCameraX extends FlyByCamera {
 		
 		if(iBkpFOVStepIndex!=iCurrentFOVDegStepIndex){
 			iCurrentFOVDegStepIndex=iBkpFOVStepIndex;
-			fixZoom();
+			fixZoomIndexLimits();
+			resetZooming();
 		}else{
 			iCurrentFOVDegStepIndex=getNoZoomStepIndex();
 		}
@@ -272,8 +289,14 @@ public class FlyByCameraX extends FlyByCamera {
 	public FlyByCameraX(Camera cam) {
 		super(cam);
 		
+//		GlobalManagerI.i().putGlobal(FlyByCameraX.class, this);
+		GlobalManagerI.i().retrieveOverridingSupers(FlyByCameraX.class, this, FlyByCamera.class);
+		
     // FlyCam key! Contextualized keybindings!
     keyFlyCamMod = KeyCodeManagerI.i().createSpecialExternalContextKey(cc,"FlyCamContext");
+    
+    camBkp=new Camera(1,1);
+    camBkp.copyFrom(cam);
     
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
@@ -315,7 +338,8 @@ public class FlyByCameraX extends FlyByCamera {
 			}else{
 				iCurrentFOVDegStepIndex+=(isZoomInverted()?1:-1);
 			}
-			fixZoom();
+			fixZoomIndexLimits();
+			resetZooming();
 			//			bZoomApplied=true;
 			iBkpFOVStepIndex=iCurrentFOVDegStepIndex;
 		}else{ //direct controls it
@@ -471,6 +495,8 @@ public class FlyByCameraX extends FlyByCamera {
 		String[] astr = StringI.i().fmtFloat(2,afFOVDegList.toArray(new Float[0]));
 		strAllZoomSteps=""+astr.length+"["+String.join(",", astr)+"]";
 		
+		bZoomLimitsJustConfigured=true;
+		
 		return this; //for beans setter
 	}
 	
@@ -537,12 +563,6 @@ public class FlyByCameraX extends FlyByCamera {
 		return inputman;
 	}
 	
-	private static class CompositeControl implements ICompositeRestrictedAccessControl{
-		private CompositeControl(){}; 
-	}; private CompositeControl cc;
-	
-	private String	strAllZoomSteps;
-	private ArrayList<RayCastResultX>	acrLast;
 	
 	public void update(float fTPF){
 		if(tdMouseGrab.isReady(true)){
@@ -554,31 +574,87 @@ public class FlyByCameraX extends FlyByCamera {
 		
 		keyFlyCamMod.setPressedSpecialExternalContextKeyMode(cc,isEnabled()&&isAllowMove());
 		
+		acrLast = WorldPickingI.i().raycastPiercingAtCenter(null);
+		boolean bSuspendZooming=false;
+		if(acrLast.size()>0) {
+			RayCastResultX resx = null;
+			for(RayCastResultX resxChk:acrLast) {
+				if(AppI.i().getCamFollow()!=null) {
+					if(SpatialHierarchyI.i().isRelated(resxChk.getGeom(),AppI.i().getCamFollow()))continue;
+				}
+				resx=resxChk;
+				break;
+			}
+			
+			if(resx!=null) {
+				if(!bZoomUpdating && isAutoFrustum()) {
+					if(tdAutoFrustum .isReady(true)) {
+						if(resx.getDistance()>1f) {// && resx.getDistance()<1000) {
+							AppI.i().setCameraFrustum(1f); //cant be too big the near, or will remove many things nearby, pointless
+						}else {
+//							AppI.i().setCameraFrustum(resx.getDistance() < getMinFrustumNear() ? getMinFrustumNear() : resx.getDistance());
+							AppI.i().setCameraFrustum(getMinFrustumNear());
+							bSuspendZooming=true;
+						}
+					}
+				}
+				
+				HWEnvironmentJmeI.i().putCustomInfo("CamLastHitSpot", ""+resx.getWHitPos()
+					+",dist="+resx.getDistance()+",frustum:"+cam.getFrustumNear()+"/"+cam.getFrustumFar()+",nm="+resx
+					+",from="+resx.getfRayCastFrom()
+				);
+			}
+		}
+		
 		// fix/apply fov
 		boolean bTargetZoomReached=true;
-		if(bEnableZoomStepsAndLimits){
-			fixZoom();
+		if(bEnableZoomStepsAndLimits && !bSuspendZooming){
+			fixZoomIndexLimits();
 			
-			/**
-			 * automatically zoom in/out to reach the requested zoom step value
-			 */
-			float fErrorMargin=0.5f;//1f
-			if(Math.abs(getFOV() - afFOVDegList.get(iCurrentFOVDegStepIndex)) > fErrorMargin){ //compare with error margin
-				float fZooming = (isZoomInverted()?1:-1)*(fChangeZoomStepSpeed*fTPF);
-				if(getFOV() < afFOVDegList.get(iCurrentFOVDegStepIndex)){
-					fZooming*=-1f; //invert
-					fZooming*=4f; //zoom out faster
+			if(getFOV()<=0)fixCameraFrustum();
+//			if(getFOV()>afFOVDegList.get(afFOVDegList.size()-1)+fZoomErrorMarginFOV*2) {
+//				
+//			}
+//			if(bSmoothZoomMode) {
+				/**
+				 * automatically zoom in/out to reach the requested zoom step value
+				 */
+				if(Math.abs(getFOV() - afFOVDegList.get(iCurrentFOVDegStepIndex)) > getZoomErrorMarginFOV()){ //compare with error margin
+					float fBaseZoomStepFOV = (isZoomInverted()?1:-1)*(fChangeZoomStepSpeed*fTPF);
+					if(getFOV() < afFOVDegList.get(iCurrentFOVDegStepIndex)){
+						fBaseZoomStepFOV*=-1f; //invert
+						fBaseZoomStepFOV*=4f; //zoom out faster
+						if(bZoomingDirectionOut==null)bZoomingDirectionOut=true;
+						
+						if(!bZoomingDirectionOut)bZoomPrecisely=true;
+					}else {
+						if(bZoomingDirectionOut==null)bZoomingDirectionOut=false;
+						
+						if(bZoomingDirectionOut)bZoomPrecisely=true;
+					}
+					
+//					if(!bZoomLimitsJustConfigured && bZoomPrecisely)fBaseZoomStepFOV/=10f;
+					if(bZoomLimitsJustConfigured){
+						/**
+						 * this just looks messy...
+						fBaseZoomStepFOV*=10f; //faster setup
+						 */
+					}else {
+						if(bAllowZoomPrecisely && bZoomPrecisely) {
+							fBaseZoomStepFOV/=10f;
+						}
+					}
+					
+					super.zoomCamera(fBaseZoomStepFOV);
+					bTargetZoomReached=false;
+					bZoomUpdating=true;
+				}else {
+					resetZooming();
 				}
-				super.zoomCamera(fZooming);
-				bTargetZoomReached=false;
-			}
 			
 //			fZoomedRotationSpeed=afFOVList.get(iCurrentFOVStepIndex)/fMaxFOVdeg;
 			fZoomedRotationSpeed=getFOV()/fMaxFOVdeg;
 		}
-		
-		acrLast = WorldPickingI.i().raycastPiercingAtCenter(null);
-		if(acrLast.size()>0)HWEnvironmentJmeI.i().putCustomInfo("CamLastHitSpot", ""+acrLast.get(0).getWHitPos());
 		
 		if(tdMouseInfo.isReady(true)){
 			String strFOV="{ ";
@@ -587,10 +663,6 @@ public class FlyByCameraX extends FlyByCamera {
 			strFOV+="FoV=";
 			strFOV+=StringI.i().fmtFloat(getFOV(),2);
 			if(bEnableZoomStepsAndLimits){
-				/** (current zoom/toggleBkpZoom) [zoom list], zoomRotateSpeed */
-//				strFOV+="("+StringI.i().fmtFloat(afFOVDegList.get(iCurrentFOVDegStepIndex),2)
-////						+"/"+getBkpZoomFOV()+") ";
-//					+"/"+afFOVDegList.get(iBkpFOVStepIndex)+") ";
 				strFOV+="of"+strAllZoomSteps.replaceFirst("[^0-9]"+strCurrent+"[^0-9]","<"+strCurrent+">")+", ";
 				strFOV+="zmRtSpd="+StringI.i().fmtFloat(fZoomedRotationSpeed,3);
 			}
@@ -610,6 +682,17 @@ public class FlyByCameraX extends FlyByCamera {
 		
 	}
 	
+	private void fixCameraFrustum() {
+		cam.copyFrom(camBkp);
+	}
+
+	private void resetZooming() {
+		bZoomingDirectionOut=null; //reset direction
+		bZoomPrecisely=false; //reset precise mode
+		bZoomLimitsJustConfigured=false;
+		bZoomUpdating=false;
+	}
+
 	public ArrayList<RayCastResultX> getLastWorldPickRayCastPiercingAtCamCenter(){
 		return new ArrayList<RayCastResultX>(acrLast);
 	}
@@ -629,7 +712,7 @@ public class FlyByCameraX extends FlyByCamera {
 		return getNoZoomStepIndex()!=iCurrentFOVDegStepIndex;
 	}
 
-	private void fixZoom() {
+	private void fixZoomIndexLimits() {
 		if(iCurrentFOVDegStepIndex<0)iCurrentFOVDegStepIndex=0;
 		if(iCurrentFOVDegStepIndex>getNoZoomStepIndex())iCurrentFOVDegStepIndex=getNoZoomStepIndex();
 	}
@@ -726,12 +809,14 @@ public class FlyByCameraX extends FlyByCamera {
 	
 	public int zoomIn(){
 		iCurrentFOVDegStepIndex--;
-		fixZoom();
+		fixZoomIndexLimits();
+		resetZooming();
 		return iCurrentFOVDegStepIndex;
 	}
 	public int zoomOut(){
 		iCurrentFOVDegStepIndex++;
-		fixZoom();
+		fixZoomIndexLimits();
+		resetZooming();
 		return iCurrentFOVDegStepIndex;
 	}
 
@@ -741,6 +826,42 @@ public class FlyByCameraX extends FlyByCamera {
 
 	public int getCurrentZoomLevelIndex() {
 		return iCurrentFOVDegStepIndex;
+	}
+
+	public float getZoomErrorMarginFOV() {
+		return fZoomErrorMarginFOV;
+	}
+
+	public FlyByCameraX setZoomErrorMarginFOV(float fZoomErrorMarginFOV) {
+		this.fZoomErrorMarginFOV = fZoomErrorMarginFOV;
+		return this; 
+	}
+
+	public boolean isAllowZoomPrecisely() {
+		return bAllowZoomPrecisely;
+	}
+
+	public FlyByCameraX setAllowZoomPrecisely(boolean bAllowZoomPrecisely) {
+		this.bAllowZoomPrecisely = bAllowZoomPrecisely;
+		return this; 
+	}
+
+	public float getMinFrustumNear() {
+		return fMinFrustumNear;
+	}
+
+	public FlyByCameraX setMinFrustumNear(float fMinFrustumNear) {
+		this.fMinFrustumNear = fMinFrustumNear;
+		return this; 
+	}
+
+	public boolean isAutoFrustum() {
+		return bAutoFrustum;
+	}
+
+	public FlyByCameraX setAutoFrustum(boolean bAutoFrustum) {
+		this.bAutoFrustum = bAutoFrustum;
+		return this; 
 	}
 	
 }

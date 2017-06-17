@@ -62,7 +62,7 @@ import com.simsilica.lemur.event.CursorEventControl;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class SystemAlertLemurI extends SystemAlertJmeI {
-	public static SystemAlertLemurI i(){return GlobalManagerI.i().retrieveOverridingSupers(SystemAlertLemurI.class, true, SystemAlertJmeI.class, SystemAlertI.class);}
+	public static SystemAlertLemurI i(){return GlobalManagerI.i().retrieveOverridingSupers(SystemAlertLemurI.class, null, SystemAlertJmeI.class, SystemAlertI.class);}
 	
 	private Container	cntrAlert;
 	private Label	lblAlertMsg;

@@ -393,14 +393,18 @@ public class CharacterI {
 				updatePossessed(getTPF());
 //				updatePossessedBCC(getTPF());
 				
-				AppI.i().setCamFollow(getPossessedHead());
-				flycamx.setAllowMove(!keyContext.isPressed());
+				updateFlyCameraFollow();
 				
 				return true;
 			}
 		}).enableLoopMode();//.setDelaySeconds(0.1f);
 	}
 	
+	protected void updateFlyCameraFollow() {
+		AppI.i().setCamFollow(getPossessedHead());
+		flycamx.setAllowMove(!keyContext.isPressed());
+	}
+
 	protected void updatePossessed(float tpf) {
 		v3fMoveDirection.set(0,0,0);
 		if(!isPossessing())return;

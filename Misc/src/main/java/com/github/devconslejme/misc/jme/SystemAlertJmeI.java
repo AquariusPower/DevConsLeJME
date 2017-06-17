@@ -35,7 +35,7 @@ import com.jme3.scene.Spatial;
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class SystemAlertJmeI extends SystemAlertI {
-	public static SystemAlertJmeI i(){return GlobalManagerI.i().retrieveOverridingSupers(SystemAlertJmeI.class, true, SystemAlertI.class);}
+	public static SystemAlertJmeI i(){return GlobalManagerI.i().retrieveOverridingSupers(SystemAlertJmeI.class, null, SystemAlertI.class);}
 	
 	private Spatial	sptAlert;
 	

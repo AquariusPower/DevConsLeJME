@@ -28,6 +28,7 @@ package com.github.devconslejme.projman;
 
 import com.github.devconslejme.misc.GlobalManagerI.G;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
+import com.github.devconslejme.tests.TestDevConsFull;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AppState;
@@ -47,7 +48,18 @@ public abstract class SimpleApplicationAndStateAbs extends SimpleApplication imp
   private boolean bEnabled = false;
   private Application	app;
   private SimpleApplication	sapp;
-
+  
+  private boolean bUseFullTestPipe=true; //this prevents the specific test being run directly
+  
+  @Override
+  public void start() {
+  	if(bUseFullTestPipe) {
+  		TestDevConsFull.main(null); 
+  	}else {
+  		super.start();
+  	}
+  }
+  
 	/**
 	 * This 1 line code below can only be used when overriding this method!   
 	 * com.github.devconslejme.TODO.PkgCfgI.i().configure();

@@ -99,25 +99,27 @@ public class GlobalManagerI {
    * @return
    */
   public <T> T get(Class<T> cl){
-  	return retrieveOverridingSupers(cl,true);
+  	return retrieveOverridingSupers(cl,null);
   }
   /**
    * Use this one to auto set/put global overrides
    * 
-   * @param cl
-   * @param bCreateNewInstanceIfNull
+   * @param clCurrent
+   * @param newInstance if null, will try to create new instance automatically
    * @param aclSuperAttrToo super class types to attribute this instance to them too, on the hashmap
    * @return
    */
   @SuppressWarnings("unchecked")
-	public <T> T retrieveOverridingSupers(Class<T> cl, boolean bCreateNewInstanceIfNull, Class... aclSuperAttrToo){
-    Object obj = hmInst.get(cl);
-    if (obj==null && bCreateNewInstanceIfNull){
+	public <T> T retrieveOverridingSupers(Class<T> clCurrent, T newInstance, Class... aclSuperAttrToo){
+    Object existing = hmInst.get(clCurrent);
+    if (existing==null){
       try {
-      	putGlobal(cl, ((T)(obj=cl.newInstance())) );
+      	if(newInstance==null)newInstance=((T)(clCurrent.newInstance()));
+      	putGlobal(clCurrent, newInstance);
       	for(Class clSuper:aclSuperAttrToo){
-      		putGlobal(clSuper,obj);
+      		putGlobal(clSuper,newInstance);
       	}
+      	existing=newInstance;
 //      	putConcrete(obj=cl.newInstance()); // 
 			} catch (InstantiationException | IllegalAccessException ex) {
 				NullPointerException npe = new NullPointerException("unable to create new instance");
@@ -125,7 +127,7 @@ public class GlobalManagerI {
 				throw npe;
 			}
     }
-    return (T)obj;
+    return (T)existing;
   }
   
   /**

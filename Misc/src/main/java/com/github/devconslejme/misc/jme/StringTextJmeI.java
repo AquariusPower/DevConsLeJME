@@ -46,7 +46,7 @@ import com.jme3.scene.Spatial;
 * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 */
 public class StringTextJmeI extends StringI {
-	public static StringTextJmeI i(){return GlobalManagerI.i().retrieveOverridingSupers(StringTextJmeI.class,true,StringI.class);}
+	public static StringTextJmeI i(){return GlobalManagerI.i().retrieveOverridingSupers(StringTextJmeI.class,null,StringI.class);}
 
 	private BitmapFont	bfDefaultMonoFontOverride;
 	

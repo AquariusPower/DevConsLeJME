@@ -56,6 +56,7 @@ public class WorldPickingI {
 	private boolean	bAllowConsume=true;
 //	private Quad quadCamReversedPicking;
 //	private Geometry	geomReversedPicking;
+	private boolean bRayCastFromCenterUseCamPos;
 	
 	public static interface IPickListener{
 		/**
@@ -128,12 +129,6 @@ public class WorldPickingI {
 	}
 	
 	public Vector3f getProjectedLocationAtScreenOfSpatialAtWorld(Spatial sptFrom){
-//		quadCamReversedPicking = new Quad(
-//			HWEnvironmentJmeI.i().getDisplay().getWidth(), 
-//			HWEnvironmentJmeI.i().getDisplay().getHeight());
-//		
-//		geomReversedPicking = GeometryI.i().create(quadCamReversedPicking, ColorRGBA.Red); //if it all red... something went wrong!
-//		
 //		root
 		return AppI.i().getScreenCoordinates(sptFrom.getWorldTranslation());
 	}
@@ -144,7 +139,7 @@ public class WorldPickingI {
 	 * @return
 	 */
 	public ArrayList<RayCastResultX> raycastPiercingAtCursor(Node nodeVirtualWorld){
-		return raycastPiercingAtXY(nodeVirtualWorld, HWEnvironmentJmeI.i().getMouse().getPos3D());
+		return raycastPiercingAtXY(nodeVirtualWorld, HWEnvironmentJmeI.i().getMouse().getPos3D(), false);
 	}
 	
 	/**
@@ -153,7 +148,7 @@ public class WorldPickingI {
 	 * @return
 	 */
 	public ArrayList<RayCastResultX> raycastPiercingAtCenter(Node nodeVirtualWorld){
-		return raycastPiercingAtXY(nodeVirtualWorld, HWEnvironmentJmeI.i().getDisplay().getCenter(0f)); //z will be ignored
+		return raycastPiercingAtXY(nodeVirtualWorld, HWEnvironmentJmeI.i().getDisplay().getCenter(0f), false); //z will be ignored
 	}
 	/**
 	 * 
@@ -162,33 +157,45 @@ public class WorldPickingI {
 	 * @return
 	 */
 	public ArrayList<RayCastResultX> raycastPiercingDisplFromCenter(Node nodeVirtualWorld, Vector3f v3fDisplaceFromCenterXY){
-		return raycastPiercingAtXY(nodeVirtualWorld, HWEnvironmentJmeI.i().getDisplay().getCenter(0f).add(v3fDisplaceFromCenterXY)); //z will be ignored
+		return raycastPiercingAtXY(nodeVirtualWorld, HWEnvironmentJmeI.i().getDisplay().getCenter(0f).add(v3fDisplaceFromCenterXY), false); //z will be ignored
+	}
+	public ArrayList<RayCastResultX> raycastPiercingGeomsOnly(){
+		return raycastPiercingAtXY(null, HWEnvironmentJmeI.i().getDisplay().getCenter(0f), true); //z will be ignored
 	}
 	/**
 	 * if physics is not hit, will try just geometries
 	 * @param nodeVirtualWorld automatic to default if null
-	 * @param v3fGuiNodeXY
+	 * @param v3fGuiNodeXYZproj
 	 * @return can be empty
 	 */
-	public ArrayList<RayCastResultX> raycastPiercingAtXY(Node nodeVirtualWorld, Vector3f v3fGuiNodeXY){
+	public ArrayList<RayCastResultX> raycastPiercingAtXY(Node nodeVirtualWorld, Vector3f v3fGuiNodeXYZproj, boolean bOnlyGeometries){
 		if(nodeVirtualWorld==null)nodeVirtualWorld=MiscJmeI.i().getNodeVirtualWorld();
 		
 		CollisionResults crs = new CollisionResults();
 		
-//		Vector3f v3fCursorAtVirtualWorld3D = MiscJmeI.i().getApp().getCamera().getWorldCoordinates(
-//				EnvironmentJmeI.i().getMouse().getPos2D(), 0f);
-//		Vector2f v2f = MiscJmeI.i().toV2f(v3fGuiNodeXY);
-		v3fGuiNodeXY.z=0;
-		Vector3f v3fCursorAtVirtualWorld3D = AppI.i().getScreenPosAtWorldCoordinatesForRayCasting(v3fGuiNodeXY);
+		v3fGuiNodeXYZproj.z=0;
+		Vector3f v3fCursorAtVirtualWorld3D = null;
+		Vector3f v3fDisplayCenter = HWEnvironmentJmeI.i().getDisplay().getCenter(0f);
+		boolean bIsCenter=v3fGuiNodeXYZproj.x==v3fDisplayCenter.x && v3fGuiNodeXYZproj.y==v3fDisplayCenter.y;
+		if(bIsCenter && isRayCastFromCenterUseCamPos()) {
+			v3fCursorAtVirtualWorld3D = AppI.i().getCamWPos(v3fGuiNodeXYZproj.z);
+		}else {
+			v3fCursorAtVirtualWorld3D = AppI.i().getScreenPosAtWorldCoordinatesForRayCasting(v3fGuiNodeXYZproj);
+		}
 		
-		v3fGuiNodeXY.z=1;
-		Vector3f v3fDirection = AppI.i().getScreenPosAtWorldCoordinatesForRayCasting(v3fGuiNodeXY);
+		v3fGuiNodeXYZproj.z=1;
+		Vector3f v3fDirection = AppI.i().getScreenPosAtWorldCoordinatesForRayCasting(v3fGuiNodeXYZproj);
 		v3fDirection.subtractLocal(v3fCursorAtVirtualWorld3D).normalizeLocal(); //norm just to grant it
-		
-		ArrayList<RayCastResultX> acrList=PhysicsI.i().rayCastSortNearest(
-			v3fCursorAtVirtualWorld3D, v3fDirection, true, false, false);
-		if(acrList.size()>0) {
-			return acrList;
+			
+		ArrayList<RayCastResultX> acrList = null;
+		if(!bOnlyGeometries) {
+			acrList=PhysicsI.i().rayCastSortNearest(
+				v3fCursorAtVirtualWorld3D, v3fDirection, true, false, false);
+			if(acrList.size()>0) {
+				return acrList;
+			}
+		}else {
+			acrList = new ArrayList<RayCastResultX>();
 		}
 		
 		// if no physics found try a simple geometries ray cast 
@@ -200,7 +207,7 @@ public class WorldPickingI {
 			for(CollisionResult cr:Lists.newArrayList(crs.iterator())){
 				RayCastResultX resultx = new RayCastResultX(
 					null, cr, PhysicsI.i().getPhysicsDataFrom(cr.getGeometry()), cr.getGeometry(), cr.getContactPoint(), cr.getContactNormal(), 
-					cr.getDistance());
+					cr.getDistance(), v3fCursorAtVirtualWorld3D, v3fDirection);
 				if(!isSkip(cr.getGeometry()))acrList.add(resultx);
 			}
 		}
@@ -252,5 +259,14 @@ public class WorldPickingI {
 	public WorldPickingI setAllowConsume(boolean bAllowConsume) {
 		this.bAllowConsume = bAllowConsume;
 		return this; //for beans setter
+	}
+
+	public boolean isRayCastFromCenterUseCamPos() {
+		return bRayCastFromCenterUseCamPos;
+	}
+
+	public WorldPickingI setRayCastFromCenterUseCamPos(boolean bRayCastFromCenterUseCamPos) {
+		this.bRayCastFromCenterUseCamPos = bRayCastFromCenterUseCamPos;
+		return this; 
 	}
 }

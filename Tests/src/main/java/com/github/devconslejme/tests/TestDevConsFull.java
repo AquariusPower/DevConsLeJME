@@ -359,6 +359,7 @@ public class TestDevConsFull extends SimpleApplication implements IEnvironmentLi
 		addTest(TestOriginDeviceGame.class);
 		addTest(TestZoomDistances.class);
 		addTest(TestProjectiles.class);
+		addTest(TestFrustum.class);
 		
 	}
 	
