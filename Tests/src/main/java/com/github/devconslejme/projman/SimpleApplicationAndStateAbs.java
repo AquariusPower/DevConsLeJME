@@ -105,6 +105,7 @@ public abstract class SimpleApplicationAndStateAbs extends SimpleApplication imp
 //  	return (FlyByCameraX)getFlyByCamera();
 //  }
   
+  @Deprecated
   @Override
   public Camera getCamera() {
 //  	return sapp!=null&&sapp!=this ? sapp.getCamera():super.getCamera();

@@ -64,8 +64,8 @@ public class TestZoomDistances extends SimpleApplicationAndStateAbs {
 		prepareLandMarks(ColorRGBA.Red,1f);
 		prepareLandMarks(ColorRGBA.Yellow,-1f);
 		
-		getCamera().setLocation(new Vector3f(0,0,86.5f));
-		getCamera().lookAt(Vector3f.ZERO, Vector3f.UNIT_Y);
+//		getCamera().setLocation(new Vector3f(0,0,86.5f));
+//		getCamera().lookAt(Vector3f.ZERO, Vector3f.UNIT_Y);
 //		if(isFlyByCameraX()){
 ////			getFlyByCameraX().setZoomLimits(false, 10,110,11);
 //			getFlyByCameraX().setZoomLimits(true, 10, 110, 11);

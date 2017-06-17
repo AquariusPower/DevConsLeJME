@@ -47,6 +47,7 @@ import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.texture.Texture;
 
 /**
  * to avoid direcly exposing things like the Camera object preventing configuring it from anywhere
@@ -313,6 +314,10 @@ public class AppI {
 
 	public boolean isInputManagerReady() {
 		return app.getInputManager()!=null;
+	}
+
+	public Texture loadTexture(String string) {
+		return app.getAssetManager().loadTexture(string);
 	}
 	
 }

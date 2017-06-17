@@ -27,6 +27,7 @@
 
 package com.github.devconslejme.tests;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.function.Function;
 
@@ -64,6 +65,8 @@ import com.github.devconslejme.misc.jme.SimpleAppState;
 import com.github.devconslejme.misc.jme.StringTextJmeI;
 import com.github.devconslejme.misc.jme.WorldPickingI.IPickListener;
 import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
+import com.google.common.reflect.ClassPath;
+import com.google.common.reflect.ClassPath.ClassInfo;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AppState;
@@ -347,19 +350,22 @@ public class TestDevConsFull extends SimpleApplication implements IEnvironmentLi
 	/**
 	 * so thru devcons user commands can instantiate the other tests
 	 */
+	@SuppressWarnings("unchecked")
 	private void opt_initIntegrateAllOtherTests() {
 		LoggingI.i().logMarker("Can init these tests:");
-		//TODO find the classes and auto add them based on the super class too
-		addTest(TestContextMenu.class);
-		addTest(TestChoiceDialog.class);
-		addTest(TestMultiChildDialog.class);
-		addTest(TestHierarchyResizablePanel.class);
-		addTest(TestMaintenanceDialog.class);
-		addTest(TestResizablePanel.class);
-		addTest(TestOriginDeviceGame.class);
-		addTest(TestZoomDistances.class);
-		addTest(TestProjectiles.class);
-		addTest(TestFrustum.class);
+		try {
+			for(ClassInfo ci:ClassPath.from(Thread.currentThread().getContextClassLoader()).getTopLevelClasses(this.getClass().getPackage().getName())) {
+				if(ci.getSimpleName().startsWith("Test") && !ci.getName().equals(this.getClass().getName())) {
+					Class cl = ci.load();
+					if(SimpleApplicationAndStateAbs.class.isAssignableFrom(cl)) {
+						addTest((Class<SimpleApplicationAndStateAbs>)cl);
+					}
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new DetailedException(e);
+		}
 		
 	}
 	

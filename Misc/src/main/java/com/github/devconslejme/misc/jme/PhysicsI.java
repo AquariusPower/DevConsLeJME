@@ -49,6 +49,7 @@ import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableWeak;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
+import com.github.devconslejme.misc.jme.ParticlesI.EParticle;
 import com.github.devconslejme.misc.SimulationTimeI;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.TimeFormatI;
@@ -1276,6 +1277,12 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			RayCastResultX resx = aresxList.get(0);
 			boolean bGlued = pdProjectile.checkGluedAt(resx);
 			
+			if(bGlued) {
+				ParticlesI.i().createAtMainThread(EParticle.Debris.s(), resx.getWHitPos(), 0.05f, 0.5f);
+			}else {
+				ParticlesI.i().createAtMainThread(EParticle.Fire.s(), resx.getWHitPos(), 0.05f, 1f);
+			}
+			
 //			boolean bDeflected = pdProjectile.isHasGlueTargetDeflected();
 			
 			/**
@@ -1289,6 +1296,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				 */
 				pdProjectile.setStaticPhysics(); //no need to be nested on a spatial when glueing on static terrain TODO instead check if nearest has mass=0? but it may be temporary and be glued would work better...
 				pdProjectile.setPhysicsLocationAtMainThread(pdProjectile.getWorldGlueSpot());
+				pdProjectile.checkExplodeAtMainThread();
 //				pdProjectile.prb.setPhysicsLocation(pdProjectile.v3fWorldGlueSpot); //this positioning works precisely if done here, np, is easier, keep it here...
 			}
 			

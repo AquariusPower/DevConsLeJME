@@ -38,6 +38,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ActivatorI.ActivetableListenerAbs;
 import com.github.devconslejme.misc.jme.ColorI.EColor;
+import com.github.devconslejme.misc.jme.ParticlesI.EParticle;
 import com.github.devconslejme.misc.jme.PhysicsI.ImpTorForce;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
@@ -343,6 +344,15 @@ public class PhysicsProjectileI {
 		return pd;
 	}
 	
+	protected void reparentProjectileLater(SimpleBatchNode nodeNewParent, Geometry sptProjectile){
+		QueueI.i().enqueue(new CallableXAnon() {
+			@Override
+			public Boolean call() {
+				reparentProjectileLater(nodeNewParent, sptProjectile);
+				return true;
+			}
+		});
+	}
 	protected void reparentProjectile(SimpleBatchNode nodeNewParent, Geometry sptProjectile){
 		SimpleBatchNode previousParent = (SimpleBatchNode)sptProjectile.getParent();
 		
@@ -395,26 +405,12 @@ public class PhysicsProjectileI {
 				long lLastGlueSetPosNano=-1; //1st time will always try
 				@Override
 				public Boolean call() {
-//					/**
-//					 * this can be inside a loop over the disintegratables
-//					 */
-//					if(pdWhat.bAllowDisintegration)PhysicsI.i().cancelDisintegration(pdWhat);
-					
-//					if(geomWhat.getControl(RigidBodyControl.class).getPhysicsSpace()!=null){
-//						return false;
-//					}
 					boolean bTryAgain=false;
 					if(pdWhat.getLastPhysUpdateNano()>lLastGlueSetPosNano){
 						bTryAgain=true;
 					}
 					
-//					if(geomWhat.getLocalTranslation().distance(pdWhat.v3fGlueWherePhysLocalPos)>0){
-//						bTryAgain=true;
-//					}
-					
 					if(bTryAgain){
-//						Quaternion quaBkp = geomWhat.getWorldRotation().clone();
-						
 						/**
 						 *  restores the location, based on the target rotation at the physics impact moment
 						 */
@@ -434,21 +430,56 @@ public class PhysicsProjectileI {
 						return false; // to make it sure the physics have not changed it after that 
 					}
 					
-//					pdWhat.setbGlueApplied(true);
 					checkBuggyMissPlacedFew(pdWhat);
+					
+					checkExplodeOvercharge(pdWhat);
 					
 					return true;
 				}
 			});
-//		}else{
-//			pdWhat.rbc.setPhysicsLocation(pdWhat.v3fWorldGlueSpot);
-//		}else{
-//			geomWhat.setLocalTranslation(pdWhat.v3fWorldGlueSpot);
 		}
 	
 		pdWhat.setbGlueApplied(true);
 	}
 	
+	public void checkExplodeOvercharge(PhysicsData pdWhat) {
+		if(!pdWhat.isProjectile())return;
+		
+		Geometry geomWhat = pdWhat.getGeomOriginalInitialLink();
+		SimpleBatchNode sbParent = (SimpleBatchNode)geomWhat.getParent();
+//		if(pdWhat.getGeomOriginalInitialLink().getParent()!=sb) {
+//			sb=pdWhat.getGlueWhere().getSBNodeGluedProjectiles();
+//		}
+//		if(pdWhat.getGeomOriginalInitialLink().getParent()==sbnProjectilesAtWorld) {
+//			sb=sbnProjectilesAtWorld;
+//		}else {
+		if(sbParent==null)return;
+		
+		BoundingSphere bsWhat = (BoundingSphere)pdWhat.getGeomOriginalInitialLink().getWorldBound().clone();
+//		bs.setRadius(0.5f);
+		
+		for(Spatial sptOther:sbParent.getChildren()) {
+			if(sptOther==geomWhat)continue;
+			PhysicsData pdOther = PhysicsI.i().getPhysicsDataFrom(sptOther);
+			if(pdOther==null)continue;
+			if(!pdOther.isProjectile())continue;
+			Vector3f v3fWGOther = pdOther.getWorldGlueSpot();
+			if(v3fWGOther==null)continue;
+			
+//			if(spt.getWorldBound().intersects(bs)) {
+//			if(sptOther.getWorldTranslation().distance(geomWhat.getWorldTranslation())<0.1f) {
+//			if(sptOther.getWorldTranslation().distance(geomWhat.getWorldTranslation())<0.1f) {
+			if(v3fWGOther.distance(pdWhat.getWorldGlueSpot()) < bsWhat.getRadius()*2f) {
+				reparentProjectileLater(null, (Geometry)sptOther);
+				reparentProjectileLater(null, (Geometry)pdWhat.getGeomOriginalInitialLink());
+//				ParticlesI.i().createAtMainThread(EParticle.ShockWave.s(), pdWhat.getPhysicsLocationCopy(), 1f, 0.25f);
+//				ParticlesI.i().createAtMainThread(EParticle.ShockWave.s(), geomWhat.getWorldTranslation(), 1f, 0.25f);
+				ParticlesI.i().createAtMainThread(EParticle.ShockWave.s(), pdWhat.getWorldGlueSpot(), 1f, 0.25f);
+				break;
+			}
+		}
+	}
+
 	protected void checkBuggyMissPlacedFew(PhysicsData pdWhat) {
 		BoundingVolume bvWhat = pdWhat.getGeomOriginalInitialLink().getWorldBound();
 		BoundingVolume bvWhere = pdWhat.getGlueWhere().getGeomOriginalInitialLink().getWorldBound();

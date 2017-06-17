@@ -35,6 +35,7 @@ import com.github.devconslejme.misc.MatterI.MatterStatus;
 import com.github.devconslejme.misc.QueueI.CallableWeak;
 import com.github.devconslejme.misc.SimulationTimeI;
 import com.github.devconslejme.misc.TimeConvertI;
+import com.github.devconslejme.misc.jme.ParticlesI.EParticle;
 import com.github.devconslejme.misc.jme.PhysicsI.ImpTorForce;
 import com.github.devconslejme.misc.jme.PhysicsI.RayCastResultX;
 import com.jme3.bounding.BoundingBox;
@@ -380,6 +381,13 @@ public  class PhysicsData{
 		this.fNewAngularDamping=fNewAngularDamping;
 		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallableWeak() {@Override	public Object call() {
 			applyNewDampingAtMainThread();
+			return null;
+		}});
+	}
+	
+	public void checkExplodeAtMainThread() {
+		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallableWeak() {@Override	public Object call() {
+			PhysicsProjectileI.i().checkExplodeOvercharge(PhysicsData.this);
 			return null;
 		}});
 	}
@@ -854,7 +862,9 @@ public  class PhysicsData{
 		fLastHitAngleAtGluableDeg = 90f-fLastHitAngleAtGluableDeg;
 		boolean bDeflected = fLastHitAngleAtGluableDeg < PhysicsI.i().getDefaultDeflectionAngle();
 		
-		if(!bDeflected) {
+		if(bDeflected) {
+//			ParticlesI.i().createAtMainThread(EParticle.Fire.s(), resx.getWHitPos(), 0.05f, 1f);
+		}else {
 			this.resxGlueTarget=resx;
 			
 			//easifiers
@@ -944,6 +954,7 @@ public  class PhysicsData{
 //		pd.iWaitPhysTicksB4Glueing--; //after the check
 
 	}
+
 
 }
 

@@ -28,7 +28,7 @@
 package com.github.devconslejme.tests;
 
 import com.github.devconslejme.projman.SimpleApplicationAndStateAbs;
-import com.github.devconslejme.projman._TestBasicCodeToCopyFrom_;
+import com.github.devconslejme.projman.TestBasicCodeToCopyFrom;
 import com.jme3.app.SimpleApplication;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.style.BaseStyles;
