@@ -175,7 +175,14 @@ public class ParticlesI{
 		public String s() {return toString();}
 	}
 	
-	public void createAtMainThread(String strId, Vector3f v3fPos, float fScale, float fLifeSpanDelayTimeSeconds) {
+	/**
+	 * 
+	 * @param strId
+	 * @param v3fPos
+	 * @param fScale
+	 * @param fLifeSpanDelayTimeSeconds if null will use high life scaled time
+	 */
+	public void createAtMainThread(String strId, Vector3f v3fPos, float fScale, Float fLifeSpanDelayTimeSeconds) {
 		if(!isAllowParticles())return;
 		
 		/**
@@ -203,6 +210,9 @@ public class ParticlesI{
 					AppI.i().getRootNode().attachChild(pe);
 					
 					if(strId.equals(EParticle.Debris.s()))pe.emitAllParticles();
+					
+					//self queue cfg
+					setDelaySeconds(fLifeSpanDelayTimeSeconds==null?pe.getHighLife():fLifeSpanDelayTimeSeconds);
 				}else {
 					pe.removeFromParent();
 					QueueI.i().removeLoopFromQueue(this);
@@ -210,7 +220,6 @@ public class ParticlesI{
 				return true;
 			}
 		}).setName("Particles:"+strId+v3fPos+fLifeSpanDelayTimeSeconds)
-			.setDelaySeconds(fLifeSpanDelayTimeSeconds)
 			.setInitialDelay(0f)
 			.enableLoopMode();
 	}

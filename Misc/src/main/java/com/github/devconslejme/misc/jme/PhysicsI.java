@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -67,7 +68,9 @@ import com.jme3.bullet.collision.PhysicsCollisionObject;
 import com.jme3.bullet.collision.PhysicsRayTestResult;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
+import com.jme3.bullet.control.GhostControl;
 import com.jme3.bullet.control.RigidBodyControl;
+import com.jme3.bullet.objects.PhysicsGhostObject;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.collision.CollisionResult;
 import com.jme3.math.ColorRGBA;
@@ -97,7 +100,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	private ArrayList<PhysicsData> apdPreventDisintegr = new ArrayList<PhysicsData>();
 	
 	private ArrayList<PhysicsData> apdDisintegrateAtMainThreadQueue = new ArrayList<PhysicsData>();
-	private ArrayList<CallableWeak> acallUpdtPhysAtMainThreadQueue = new ArrayList<>();
+	private ArrayList<CallUpdPhysAtMainThread> acallUpdtPhysAtMainThreadQueue = new ArrayList<>();
 //	private ArrayList<PhysicsData> apdGravityUpdtMainThreadQueue = new ArrayList<>();
 //	private ArrayList<PhysicsData> apdLocationUpdtMainThreadQueue = new ArrayList<>();
 //	private ArrayList<PhysicsData> apdRotationUpdtMainThreadQueue = new ArrayList<>();
@@ -296,8 +299,14 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				 */
 				for(PhysicsData pd:apdSafeSpotRestoreMainThreadQueue)pd.applyRestoreSafeSpotRotAtMainThread();
 				apdSafeSpotRestoreMainThreadQueue.clear();
-				for(CallableWeak call:acallUpdtPhysAtMainThreadQueue)call.call();
-				acallUpdtPhysAtMainThreadQueue.clear();
+				for (Iterator<CallUpdPhysAtMainThread> iterator = acallUpdtPhysAtMainThreadQueue.iterator(); iterator.hasNext();) {
+					CallUpdPhysAtMainThread cx = iterator.next();
+					if(cx.call())iterator.remove(); //removes current one
+				}
+//				for(CallUpdPhysAtMainThread cx:acallUpdtPhysAtMainThreadQueue) {
+//					if(cx.call())acallUpdtPhysAtMainThreadQueue.remove(cx);
+//				}
+//				acallUpdtPhysAtMainThreadQueue.clear();
 //				for(PhysicsData pd:apdLocationUpdtMainThreadQueue)pd.applyNewPhysLocationAtMainThread();
 //				apdLocationUpdtMainThreadQueue.clear();
 //				for(PhysicsData pd:apdRotationUpdtMainThreadQueue)pd.applyNewPhysRotationAtMainThread();
@@ -311,6 +320,72 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				return true;
 			}
 		}).enableLoopMode();
+	}
+	
+	private Node nodePushAllAround;
+//	private SphereCollisionShape scsPushAllAround;
+	private GhostControl gocPushAllAroundMinR = new GhostControl();
+	private GhostControl gocPushAllAroundR25 = new GhostControl();
+	private GhostControl gocPushAllAroundR50 = new GhostControl();
+	private GhostControl gocPushAllAroundR75 = new GhostControl();
+	private GhostControl gocPushAllAroundMaxR = new GhostControl();
+//	private PhysicsGhostObject pgoPushAllAround = new PhysicsGhostObject();
+	public void pushAllAround(Vector3f v3fWorldPos, float fImpulse, float fMinRange, float fMaxRange) {
+//		if(gocPushAllAround==null) {
+//			scsPushAllAround = new SphereCollisionShape(1f);
+//			gocPushAllAround = new GhostControl(scsPushAllAround);
+//			pspace.add(gocPushAllAround);
+//		}
+		if(nodePushAllAround==null) {
+			nodePushAllAround = new Node("PushAllAround");
+			pspace.add(nodePushAllAround);
+		}
+		
+//		gocPushAllAround.setPhysicsLocation(v3fWorldPos);
+		nodePushAllAround.setLocalTranslation(v3fWorldPos);
+		
+		/**
+		 * the positioning will not work until bullet aknowledges it,
+		 * so wait 1 frame
+		 */
+		enqueueUpdatePhysicsAtMainThread(new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
+			if(false) {
+				/**
+				 * scale wont worth with sphere
+				 * TODO setmargin should shrink/grow the collision margin, 0 is original shape, negative is shrink, but nothing changed?
+				scsPushAllAround.setMargin(fMaxRange-1f); //
+				 */
+			}else {
+				gocPushAllAroundMinR.setCollisionShape(new SphereCollisionShape(fMinRange));
+				gocPushAllAroundMaxR.setCollisionShape(new SphereCollisionShape(fMaxRange));
+//				gocPushAllAround.setCollisionShape(new SphereCollisionShape(fMaxRange));
+			}
+			
+			List<PhysicsCollisionObject> apco = gocPushAllAround.getOverlappingObjects();
+			float fDeltaBetweenMinAndMaxRange = fMaxRange - fMinRange;
+			for(PhysicsCollisionObject pco:apco) {
+				if(pco instanceof PhysicsRigidBody) {
+					PhysicsRigidBody prb = (PhysicsRigidBody)pco;
+					Vector3f v3fDiff=prb.getPhysicsLocation().subtract(v3fWorldPos);
+					float fDist = v3fDiff.length(); //distance is relative to the center of the overlapping object!!!
+//					if(fDist>fMaxRange)continue;//this shouldnt happen tho..
+					
+					float fPercImpulse = 1f;
+					if(fDist > fMinRange) { //lower impulse
+						float fDistBeyondMin = fDist-fMinRange;
+						fPercImpulse = 1f - fDistBeyondMin/fDeltaBetweenMinAndMaxRange;
+						if(fPercImpulse<0f)fPercImpulse=0.01f;//
+//						fImpulse*=fPercImpulse;
+					}
+					
+					Vector3f v3fDir = v3fDiff.normalize();
+					applyImpulseLater(getPhysicsDataFrom(pco), new ImpTorForce().setImpulse(v3fDir.mult(fImpulse*fPercImpulse), null));
+				}
+			}
+			
+			return true;
+		}	});
+		
 	}
 	
 	protected void updateProjectiles() {
@@ -1053,6 +1128,9 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			}
 		}
 		
+		if(nodeA instanceof GhostControl)return true;
+		if(nodeB instanceof GhostControl)return true;
+		
 		PhysicsData pdA = getPhysicsDataFrom((Spatial)nodeA.getUserObject());
 		PhysicsData pdB = getPhysicsDataFrom((Spatial)nodeB.getUserObject());
 		
@@ -1244,6 +1322,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		Collections.sort(aprtrList, cmpRayNearest);
 		
 		labelResults:for(PhysicsRayTestResult result:aprtrList){
+			if(result.getCollisionObject() instanceof GhostControl)continue;
+			
 			PhysicsData pdChk = getPhysicsDataFrom(result.getCollisionObject());
 			if(pdChk!=null){ 
 				if(bIgnoreProjectiles && pdChk.isProjectile())continue; //to skip/ignore projectile vs projectile
@@ -1292,10 +1372,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				/**
 				 * will be removed from physics space later
 				 * "GLUE" ON TERRAIN HERE (not actually  glue, but terrain wont move anyway...)
-				 * TODO changing mass here seems safe right?
+				 * TODO changing mass here seems safe right? could/should instead be on phys tick?
 				 */
 				pdProjectile.setStaticPhysics(); //no need to be nested on a spatial when glueing on static terrain TODO instead check if nearest has mass=0? but it may be temporary and be glued would work better...
-				pdProjectile.setPhysicsLocationAtMainThread(pdProjectile.getWorldGlueSpot());
+				pdProjectile.setPhysicsLocationAtMainThread(pdProjectile.getInstaTempWorldGlueSpot());
 				pdProjectile.checkExplodeAtMainThread();
 //				pdProjectile.prb.setPhysicsLocation(pdProjectile.v3fWorldGlueSpot); //this positioning works precisely if done here, np, is easier, keep it here...
 			}
@@ -1598,8 +1678,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		this.fDeflectionAngle = fDeflectionAngle;
 		return this; 
 	}
-
-	public void enqueueUpdatePhysicsAtMainThread(CallableWeak cw) {
+	
+	public static abstract class CallUpdPhysAtMainThread implements CallableWeak<Boolean>{}
+	
+	public void enqueueUpdatePhysicsAtMainThread(CallUpdPhysAtMainThread cw) {
 		if(MainThreadI.i().isCurrentMainThread()) {
 			cw.call();
 		}else {

@@ -35,7 +35,7 @@ import com.github.devconslejme.misc.MatterI.MatterStatus;
 import com.github.devconslejme.misc.QueueI.CallableWeak;
 import com.github.devconslejme.misc.SimulationTimeI;
 import com.github.devconslejme.misc.TimeConvertI;
-import com.github.devconslejme.misc.jme.ParticlesI.EParticle;
+import com.github.devconslejme.misc.jme.PhysicsI.CallUpdPhysAtMainThread;
 import com.github.devconslejme.misc.jme.PhysicsI.ImpTorForce;
 import com.github.devconslejme.misc.jme.PhysicsI.RayCastResultX;
 import com.jme3.bounding.BoundingBox;
@@ -352,9 +352,9 @@ public  class PhysicsData{
 		if(v3f==null)v3f = PhysicsI.i().getGravityCopy().clone(); //restore the bkp
 		if(v3fNewGravity==null || !v3fNewGravity.equals(v3f)) {
 			v3fNewGravity = v3f.clone();
-			PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallableWeak() {@Override	public Object call() {
+			PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
 				applyNewGravityAtMainThread();
-				return null;
+				return true;
 			}});
 //			if(MainThreadI.i().isCurrentMainThread()) {
 //				applyNewGravityAtMainThread();
@@ -379,16 +379,17 @@ public  class PhysicsData{
 	public void setNewDampingAtMainThread(Float fNewLinearDamping, Float fNewAngularDamping) {
 		this.fNewLinearDamping=fNewLinearDamping;
 		this.fNewAngularDamping=fNewAngularDamping;
-		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallableWeak() {@Override	public Object call() {
+		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
 			applyNewDampingAtMainThread();
-			return null;
+			return true;
 		}});
 	}
 	
 	public void checkExplodeAtMainThread() {
-		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallableWeak() {@Override	public Object call() {
-			PhysicsProjectileI.i().checkExplodeOvercharge(PhysicsData.this);
-			return null;
+		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
+			if(!PhysicsData.this.isGlueApplied())return false;
+			PhysicsProjectileI.i().checkProjectilesClashInstabilityExplode(PhysicsData.this);
+			return true;
 		}});
 	}
 
@@ -408,9 +409,9 @@ public  class PhysicsData{
 	}
 	public void setFrictionAtMainThread(float f) {
 		this.fNewFriction=f;
-		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallableWeak() {@Override	public Object call() {
+		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
 			applyNewFrictionAtMainThread();
-			return null;
+			return true;
 		}});
 	}
 	public void applyNewFrictionAtMainThread() {
@@ -423,9 +424,9 @@ public  class PhysicsData{
 	 */
 	public void setPhysicsLocationAtMainThread(Vector3f v3f) {
 		v3fNewPhysLocation=v3f.clone();
-		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallableWeak() {@Override	public Object call() {
+		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
 			applyNewPhysLocationAtMainThread();
-			return null;
+			return true;
 		}});
 //		if(MainThreadI.i().isCurrentMainThread()) {
 //			applyNewPhysLocationAtMainThread();
@@ -440,9 +441,9 @@ public  class PhysicsData{
 	public void setPhysicsRotationAtMainThread(Quaternion qua) {
 		quaNewPhysRotation=qua.clone();
 //		CallableWeak cw = new CallableWeak() {@Override	public Object call() {
-		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallableWeak() {@Override	public Object call() {
+		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
 			applyNewPhysRotationAtMainThread();
-			return null;
+			return true;
 		}});
 //		if(MainThreadI.i().isCurrentMainThread()) {
 //			cw.call();
@@ -657,7 +658,7 @@ public  class PhysicsData{
 		return this;
 	}
 
-	public Vector3f getWorldGlueSpot() {
+	public Vector3f getInstaTempWorldGlueSpot() {
 		return v3fWorldGlueSpot;
 	}
 

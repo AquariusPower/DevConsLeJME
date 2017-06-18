@@ -1,5 +1,6 @@
 package com.github.devconslejme.tests.temp;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.github.devconslejme.misc.CommandLineParser;
@@ -10,7 +11,8 @@ import com.github.devconslejme.misc.TimedDelay;
 
 public class TestSimpleThings {
 	public static void main(String[] args) {
-		tst8();
+		tst9();
+//		tst8();
 //		tst7();
 //		tst6();
 //		tst5();
@@ -20,6 +22,25 @@ public class TestSimpleThings {
 //		tst1();
 	}
 	
+	private static void tst9() {
+		ArrayList<String> a = new ArrayList<>();
+		long lSum=0;
+		int iMax=1000;
+		int iblah=0;
+		for(int i3=0;i3<iMax;i3++) {
+			int i2=0;
+			long l=System.nanoTime();
+			for(int i=0;i<100000;i++) {
+				if(a.iterator().hasNext())i2++; //this seems to be 25% faster!
+				//Object[] array = a.toArray();i2+=array.length;
+			}
+			iblah+=i2;
+			lSum+=(System.nanoTime()-l);
+		}
+		System.out.println(iblah);
+		System.out.println(lSum/iMax);
+	}
+
 	static HashMap<String,HashMap<String,Integer>> hhm=new HashMap<String,HashMap<String,Integer>>();
 	private static void function(HashMap<String,Integer>... array){System.out.println(array);}
 	private static void tst8() {

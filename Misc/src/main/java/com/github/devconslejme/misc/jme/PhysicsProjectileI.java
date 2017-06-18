@@ -348,7 +348,7 @@ public class PhysicsProjectileI {
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
-				reparentProjectileLater(nodeNewParent, sptProjectile);
+				reparentProjectile(nodeNewParent, sptProjectile);
 				return true;
 			}
 		});
@@ -432,7 +432,7 @@ public class PhysicsProjectileI {
 					
 					checkBuggyMissPlacedFew(pdWhat);
 					
-					checkExplodeOvercharge(pdWhat);
+					checkProjectilesClashInstabilityExplode(pdWhat);
 					
 					return true;
 				}
@@ -442,39 +442,44 @@ public class PhysicsProjectileI {
 		pdWhat.setbGlueApplied(true);
 	}
 	
-	public void checkExplodeOvercharge(PhysicsData pdWhat) {
+	public void checkProjectilesClashInstabilityExplode(PhysicsData pdWhat) {
 		if(!pdWhat.isProjectile())return;
 		
 		Geometry geomWhat = pdWhat.getGeomOriginalInitialLink();
 		SimpleBatchNode sbParent = (SimpleBatchNode)geomWhat.getParent();
-//		if(pdWhat.getGeomOriginalInitialLink().getParent()!=sb) {
-//			sb=pdWhat.getGlueWhere().getSBNodeGluedProjectiles();
-//		}
-//		if(pdWhat.getGeomOriginalInitialLink().getParent()==sbnProjectilesAtWorld) {
-//			sb=sbnProjectilesAtWorld;
-//		}else {
 		if(sbParent==null)return;
+//		sbParent.batch();
 		
-		BoundingSphere bsWhat = (BoundingSphere)pdWhat.getGeomOriginalInitialLink().getWorldBound().clone();
-//		bs.setRadius(0.5f);
+		/**
+		 * IMPORTANT!!!
+		 * inside the batch node, the geometries are not updated as that batch node moves on the world,
+		 * this means their world bound are of the last glue; the last batch() update doesnt change that!
+		 * so the world bound stored is of before being added to the batch node!
+		 */
+		BoundingSphere bsWhatFixed = (BoundingSphere)pdWhat.getGeomOriginalInitialLink().getWorldBound().clone();
+		bsWhatFixed.setCenter(geomWhat.getLocalTranslation());
+//		float fRadius = bsWhat.getRadius();
+//		if(fRadius < 0.05f)fRadius=0.05f;
 		
 		for(Spatial sptOther:sbParent.getChildren()) {
 			if(sptOther==geomWhat)continue;
 			PhysicsData pdOther = PhysicsI.i().getPhysicsDataFrom(sptOther);
-			if(pdOther==null)continue;
+			if(pdOther==null)continue; // the batched mesh/geometry is also a child of the batch node, this skips it too
 			if(!pdOther.isProjectile())continue;
-			Vector3f v3fWGOther = pdOther.getWorldGlueSpot();
-			if(v3fWGOther==null)continue;
+//			Geometry geomOther = pdOther.getGeomOriginalInitialLink();
+			Geometry geomOther = (Geometry)sptOther;
+			BoundingSphere bsOtherFixed = (BoundingSphere)geomOther.getWorldBound().clone();
+			bsOtherFixed.setCenter(geomOther.getLocalTranslation());
 			
-//			if(spt.getWorldBound().intersects(bs)) {
-//			if(sptOther.getWorldTranslation().distance(geomWhat.getWorldTranslation())<0.1f) {
-//			if(sptOther.getWorldTranslation().distance(geomWhat.getWorldTranslation())<0.1f) {
-			if(v3fWGOther.distance(pdWhat.getWorldGlueSpot()) < bsWhat.getRadius()*2f) {
-				reparentProjectileLater(null, (Geometry)sptOther);
-				reparentProjectileLater(null, (Geometry)pdWhat.getGeomOriginalInitialLink());
-//				ParticlesI.i().createAtMainThread(EParticle.ShockWave.s(), pdWhat.getPhysicsLocationCopy(), 1f, 0.25f);
-//				ParticlesI.i().createAtMainThread(EParticle.ShockWave.s(), geomWhat.getWorldTranslation(), 1f, 0.25f);
-				ParticlesI.i().createAtMainThread(EParticle.ShockWave.s(), pdWhat.getWorldGlueSpot(), 1f, 0.25f);
+//			float fDist=bsWhat.getCenter().distance(bsOther.getCenter());
+//			float fRadiusSum=bsWhat.getRadius()+bsOther.getRadius();
+//			System.out.println(">5>"+fDist+","+fRadiusSum+bsWhat+bsOther+geomWhat.getLocalTranslation()+geomWhat.getWorldTranslation());
+//			System.out.println(""+bsWhatFixed+bsOtherFixed);
+			if(bsOtherFixed.intersects(bsWhatFixed)) {
+				reparentProjectileLater(null, geomOther);
+				reparentProjectileLater(null, pdWhat.getGeomOriginalInitialLink());
+				ParticlesI.i().createAtMainThread(EParticle.ShockWave.s(), pdWhat.getInstaTempWorldGlueSpot(), 1f, null);
+				PhysicsI.i().pushAllAround(pdWhat.getInstaTempWorldGlueSpot(), 100f, 0.1f, 2f);
 				break;
 			}
 		}

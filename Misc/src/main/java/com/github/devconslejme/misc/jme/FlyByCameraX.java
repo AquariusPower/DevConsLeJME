@@ -648,7 +648,7 @@ public class FlyByCameraX extends FlyByCamera {
 							 */
 						}else {
 							if(bAllowZoomPrecisely && bZoomPrecisely) {
-								fBaseZoomStepFOV/=10f;
+								fBaseZoomStepFOV/=10f; //TODO ? fBaseZoomStepFOV*=fZoomErrorMarginFOV;
 							}
 						}
 						

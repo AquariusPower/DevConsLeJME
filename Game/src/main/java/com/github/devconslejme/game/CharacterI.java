@@ -366,19 +366,20 @@ public class CharacterI {
 	}
 
 	protected LeviCharacter getLeviFrom(Spatial spt) {
-		NodeBodyPart nb = getBodyFrom(spt);
+		NodeBodyPart nb = getBodyPartFrom(spt);
 		if(nb==null)return null;
 		return nb.getLevi();
 	}
-
+	
+	@Deprecated
 	public BetterCharacterControlX getBCCFrom(Spatial spt){
-		NodeBodyPart nb = getBodyFrom(spt);
+		NodeBodyPart nb = getBodyPartFrom(spt);
 		if(nb==null)return null;
 		BetterCharacterControlX bcc = nb.getControl(BetterCharacterControlX.class);
 		return bcc;
 	}
 	
-	public NodeBodyPart getBodyFrom(Spatial spt){
+	public NodeBodyPart getBodyPartFrom(Spatial spt){
 		return SpatialHierarchyI.i().getParentestOrSelf(spt, NodeBodyPart.class, true, false);
 	}
 	
@@ -465,6 +466,12 @@ public class CharacterI {
 		return fImpulse;
 	}
 
+	public boolean isPossessed(Spatial spt) {
+		if(!isPossessing())return false;
+		LeviCharacter levi = getLeviFrom(spt);
+		if(levi==null)return false;
+		return levi==leviPossessed;
+	}
 	public boolean isPossessing() {
 		return leviPossessed!=null;
 	}
@@ -579,4 +586,5 @@ public class CharacterI {
 		tdMoveImpulseInterval.resetAndChangeDelayTo(f).setActive(true);
 		return this;
 	}
+
 }

@@ -101,9 +101,11 @@ public class ManipulatorI {
 		if(pd!=null) {
 			if(!bAllowManipulationOfTerrain && pd.isTerrain())bOk=false;
 			if(!bAllowManipulationOfStatics && pd.isStatic ())bOk=false;
+			if(CharacterI.i().isPossessed(pd.getSpatialWithPhysics()))bOk=false;
 		}else {
 			if(!bAllowManipulationWithoutPhysics)bOk=false;
 		}
+		
 		if(getMaxGrabDist()!=null && fCurrentDistance>getMaxGrabDist()){
 			bOk=false;
 		}
