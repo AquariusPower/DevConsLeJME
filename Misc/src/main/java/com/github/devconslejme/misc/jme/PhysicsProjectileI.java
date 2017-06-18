@@ -502,7 +502,7 @@ public class PhysicsProjectileI {
 			//cascade
 			for(PhysicsData pd:apd) {
 				pd.forceExplode();
-				pd.checkExplodeAtMainThread(true);
+				pd.checkExplodeAtMainThread();
 			}
 		}
 	}

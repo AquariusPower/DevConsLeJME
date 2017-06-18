@@ -30,31 +30,29 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 
 import com.github.devconslejme.misc.Annotations.Bugfix;
 import com.github.devconslejme.misc.Annotations.NotMainThread;
 import com.github.devconslejme.misc.Annotations.Workaround;
-import com.github.devconslejme.game.CharacterI.CompositeControl;
 import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.ICompositeRestrictedAccessControl;
 import com.github.devconslejme.misc.InfoI.Info;
-import com.github.devconslejme.misc.MainThreadI;
 import com.github.devconslejme.misc.MatterI.EMatter;
 import com.github.devconslejme.misc.MatterI.Matter;
 import com.github.devconslejme.misc.MatterI.MatterStatus;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
-import com.github.devconslejme.misc.QueueI.CallableWeak;
+import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
-import com.github.devconslejme.misc.jme.ParticlesI.EParticle;
+import com.github.devconslejme.misc.QueueI.EQPriority;
 import com.github.devconslejme.misc.SimulationTimeI;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.TimeFormatI;
 import com.github.devconslejme.misc.TimedDelay;
+import com.github.devconslejme.misc.jme.ParticlesI.EParticle;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bullet.BulletAppState;
@@ -70,7 +68,6 @@ import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.control.GhostControl;
 import com.jme3.bullet.control.RigidBodyControl;
-import com.jme3.bullet.objects.PhysicsGhostObject;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.collision.CollisionResult;
 import com.jme3.math.ColorRGBA;
@@ -100,11 +97,11 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	private ArrayList<PhysicsData> apdPreventDisintegr = new ArrayList<PhysicsData>();
 	
 	private ArrayList<PhysicsData> apdDisintegrateAtMainThreadQueue = new ArrayList<PhysicsData>();
-	private ArrayList<CallUpdPhysAtMainThread> acallUpdtPhysAtMainThreadQueue = new ArrayList<>();
+//	private ArrayList<CallUpdPhysAtMainThread> acallUpdtPhysAtMainThreadQueue = new ArrayList<>();
 //	private ArrayList<PhysicsData> apdGravityUpdtMainThreadQueue = new ArrayList<>();
 //	private ArrayList<PhysicsData> apdLocationUpdtMainThreadQueue = new ArrayList<>();
 //	private ArrayList<PhysicsData> apdRotationUpdtMainThreadQueue = new ArrayList<>();
-	private ArrayList<PhysicsData> apdSafeSpotRestoreMainThreadQueue = new ArrayList<>();
+//	private ArrayList<PhysicsData> apdSafeSpotRestoreMainThreadQueue = new ArrayList<>();
 	
 	private long	lTickCount=0;
 	private HashMap<PhysicsRigidBody,PhysicsData> hmDisintegratables=new HashMap<PhysicsRigidBody,PhysicsData>(); 
@@ -286,38 +283,6 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				
 				updateLevitators(pspace,getTPF());
 				
-				/**
-				 * these queues may be harder to maintain than a single one, 
-				 * but may help on debugging and to grant their execution order
-				 * without having to filter a single list for the right order
-				 * 
-				 * TODO make such single list auto sorted in the right order?
-				 * The ones with timed delay, would then be checked individually, instead of a single td chk 
-				 */
-				/**
-				 * safe spot (being an auto workaround/fix) must be b4 new location and new rotation (that are requests) 
-				 */
-				for(PhysicsData pd:apdSafeSpotRestoreMainThreadQueue)pd.applyRestoreSafeSpotRotAtMainThread();
-				apdSafeSpotRestoreMainThreadQueue.clear();
-				
-				for(CallUpdPhysAtMainThread cx:acallUpdtPhysAtMainThreadQueue.toArray(new CallUpdPhysAtMainThread[0])) {
-					if(cx.call())acallUpdtPhysAtMainThreadQueue.remove(cx); //removes current one
-				}
-//				for (Iterator<CallUpdPhysAtMainThread> iterator = acallUpdtPhysAtMainThreadQueue.iterator(); iterator.hasNext();) {
-//					CallUpdPhysAtMainThread cx = iterator.next();
-//					if(cx.call())iterator.remove(); //removes current one
-//				}
-//				for(CallUpdPhysAtMainThread cx:acallUpdtPhysAtMainThreadQueue) {
-//					if(cx.call())acallUpdtPhysAtMainThreadQueue.remove(cx);
-//				}
-//				acallUpdtPhysAtMainThreadQueue.clear();
-//				for(PhysicsData pd:apdLocationUpdtMainThreadQueue)pd.applyNewPhysLocationAtMainThread();
-//				apdLocationUpdtMainThreadQueue.clear();
-//				for(PhysicsData pd:apdRotationUpdtMainThreadQueue)pd.applyNewPhysRotationAtMainThread();
-//				apdRotationUpdtMainThreadQueue.clear();
-//				for(PhysicsData pd:apdGravityUpdtMainThreadQueue)pd.applyNewGravityAtMainThread();
-//				apdGravityUpdtMainThreadQueue.clear();
-				
 				updateProjectiles();  //b4 disintegration!!! (so it may even just disintegrate safely)
 				if(tdDisintegrate.isReady(true))updateDisintegratablesAndItsQueue(); //LAST THING
 				
@@ -386,7 +351,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		 * the positioning and shape will not work until bullet aknowledges it,
 		 * so do it on next frame
 		 */
-		enqueueUpdatePhysicsAtMainThread(true,new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
+//		enqueueUpdatePhysicsAtMainThread(true,new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
+		enqueueUpdatePhysicsAtMainThread(new CallableXAnon() {@Override	public Boolean call() {
 			/**
 			 * it is important to go from the min to the max range
 			 */
@@ -919,7 +885,16 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 						if(pd.getLastSafeSpot()!=null){
 //							resetForces(pd);
 //							pd.restoreSafeSpotRot();
-							apdSafeSpotRestoreMainThreadQueue.add(pd);
+//							apdSafeSpotRestoreMainThreadQueue.add(pd);
+							/**
+							 * safe spot (being an auto workaround/fix) must be b4 ex.: new location and new rotation 
+							 * (that are requests) 
+							 * so priority is high to be easily overwritten
+							 */
+							enqueueUpdatePhysicsAtMainThread(new CallableXAnon() {@Override	public Boolean call() {
+								pd.applyRestoreSafeSpotRotAtMainThread();
+								return true;
+							}	}.setPriority(EQPriority.High).setName("RestoreSafeSpot:"+pd) ); // 
 //							pd.restoreSafeSpotRotAtMainThread();
 						}
 					}
@@ -1710,21 +1685,33 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		return this; 
 	}
 	
-	public static abstract class CallUpdPhysAtMainThread implements CallableWeak<Boolean>{}
+//	public static abstract class CallUpdPhysAtMainThread implements CallableWeak<Boolean>{}
 	
-	public void enqueueUpdatePhysicsAtMainThread(boolean bForceLater,CallUpdPhysAtMainThread cw) {
-		if(MainThreadI.i().isCurrentMainThread() && !bForceLater) {
-			cw.call();
-		}else {
-			/**
-			 * if it is always enqueued, the apply order will be granted to work properly
-			 * considering other enqueable things there, but.. this is only really necessary when
-			 * requested from another thread...
-			 */
-			acallUpdtPhysAtMainThreadQueue.add(cw);
-		}
-		
+	@SuppressWarnings("unchecked")
+//	public void enqueueUpdatePhysicsAtMainThread(boolean bForceLater,CallableX cx) {
+	public void enqueueUpdatePhysicsAtMainThread(CallableX cx) {
+		/**
+		 * if it is always enqueued, the apply order will be granted to work properly
+		 * considering other enqueable things there, but.. this is only really necessary when
+		 * requested from another thread...
+		 */
+		QueueI.i().enqueue(cx); //all will be at least on next frame
 	}
+//	@SuppressWarnings("unchecked")
+//	public void enqueueUpdatePhysicsAtMainThread(boolean bForceLater,CallableX cx) {
+//		if(MainThreadI.i().isCurrentMainThread() && !bForceLater) {
+//			cx.call();
+//		}else {
+//			/**
+//			 * if it is always enqueued, the apply order will be granted to work properly
+//			 * considering other enqueable things there, but.. this is only really necessary when
+//			 * requested from another thread...
+//			 */
+//			QueueI.i().enqueue(cx);
+////			acallUpdtPhysAtMainThreadQueue.add(cw);
+//		}
+//		
+//	}
 
 	public void assimilatePhysicsData(PhysicsData pd) {
 		PhysicsRigidBody prb = pd.getPRB(cc);
