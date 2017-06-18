@@ -322,13 +322,29 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}).enableLoopMode();
 	}
 	
+	public static class GhostControlX extends GhostControl{
+		float fPercImpulse=1f;
+		private float fMinRange;
+		private float fMaxRange;
+		public GhostControlX(float fPercImpulse) {
+			super(new SphereCollisionShape(1f));
+			this.fPercImpulse=fPercImpulse;
+		}
+		public void setRefRanges(float fMinRange, float fMaxRange) {
+			this.fMinRange = fMinRange;
+			this.fMaxRange = fMaxRange;
+		}
+		public boolean checkRangesChanged(float fMinRange, float fMaxRange) {
+			return this.fMinRange!=fMinRange || this.fMaxRange!=fMaxRange;
+		}
+	}
 	private Node nodePushAllAround;
 //	private SphereCollisionShape scsPushAllAround;
-	private GhostControl gocPushAllAroundMinR = new GhostControl();
-	private GhostControl gocPushAllAroundR25 = new GhostControl();
-	private GhostControl gocPushAllAroundR50 = new GhostControl();
-	private GhostControl gocPushAllAroundR75 = new GhostControl();
-	private GhostControl gocPushAllAroundMaxR = new GhostControl();
+//	private GhostControl gocPushAllAroundMinR = new GhostControl();
+//	private GhostControl gocPushAllAroundR25 = new GhostControl();
+//	private GhostControl gocPushAllAroundR50 = new GhostControl();
+//	private GhostControl gocPushAllAroundR75 = new GhostControl();
+//	private GhostControl gocPushAllAroundMaxR = new GhostControl();
 //	private PhysicsGhostObject pgoPushAllAround = new PhysicsGhostObject();
 	public void pushAllAround(Vector3f v3fWorldPos, float fImpulse, float fMinRange, float fMaxRange) {
 //		if(gocPushAllAround==null) {
@@ -338,6 +354,17 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //		}
 		if(nodePushAllAround==null) {
 			nodePushAllAround = new Node("PushAllAround");
+			AppI.i().getRootNode().attachChild(nodePushAllAround);
+			for(int i=4;i>=0;i--) {
+				float f=i*0.25f;
+				if(f==0)f=0.01f;
+				nodePushAllAround.addControl(new GhostControlX(f));
+			}
+//			nodePushAllAround.addControl(gocPushAllAroundMinR);
+//			nodePushAllAround.addControl(gocPushAllAroundR25);
+//			nodePushAllAround.addControl(gocPushAllAroundR50);
+//			nodePushAllAround.addControl(gocPushAllAroundR75);
+//			nodePushAllAround.addControl(gocPushAllAroundMaxR);
 			pspace.add(nodePushAllAround);
 		}
 		
@@ -349,6 +376,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		 * so wait 1 frame
 		 */
 		enqueueUpdatePhysicsAtMainThread(new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
+			float fDeltaBetweenMinAndMaxRange = fMaxRange - fMinRange;
 			if(false) {
 				/**
 				 * scale wont worth with sphere
@@ -356,30 +384,54 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				scsPushAllAround.setMargin(fMaxRange-1f); //
 				 */
 			}else {
-				gocPushAllAroundMinR.setCollisionShape(new SphereCollisionShape(fMinRange));
-				gocPushAllAroundMaxR.setCollisionShape(new SphereCollisionShape(fMaxRange));
+//				gocPushAllAroundMinR.setCollisionShape(new SphereCollisionShape(fMinRange));
+//				gocPushAllAroundR25 .setCollisionShape(new SphereCollisionShape(fMinRange+fDeltaBetweenMinAndMaxRange*0.25f));
+//				gocPushAllAroundR50 .setCollisionShape(new SphereCollisionShape(fMinRange+fDeltaBetweenMinAndMaxRange*0.50f));
+//				gocPushAllAroundR75 .setCollisionShape(new SphereCollisionShape(fMinRange+fDeltaBetweenMinAndMaxRange*0.75f));
+//				gocPushAllAroundMaxR.setCollisionShape(new SphereCollisionShape(fMaxRange));
 //				gocPushAllAround.setCollisionShape(new SphereCollisionShape(fMaxRange));
 			}
 			
-			List<PhysicsCollisionObject> apco = gocPushAllAround.getOverlappingObjects();
-			float fDeltaBetweenMinAndMaxRange = fMaxRange - fMinRange;
-			for(PhysicsCollisionObject pco:apco) {
-				if(pco instanceof PhysicsRigidBody) {
-					PhysicsRigidBody prb = (PhysicsRigidBody)pco;
-					Vector3f v3fDiff=prb.getPhysicsLocation().subtract(v3fWorldPos);
-					float fDist = v3fDiff.length(); //distance is relative to the center of the overlapping object!!!
-//					if(fDist>fMaxRange)continue;//this shouldnt happen tho..
+			/**
+			 * it is important to go from the min to the max range
+			 */
+			ArrayList<PhysicsCollisionObject> apcoPushed = new ArrayList<>();
+			for(int i=0;i<nodePushAllAround.getNumControls();i++) {
+//				List<PhysicsCollisionObject> apco = gocPushAllAround.getOverlappingObjects();
+				GhostControlX gc=((GhostControlX)nodePushAllAround.getControl(i));
+				
+				if(gc.checkRangesChanged(fMinRange,fMaxRange)) { //TODO this should be on the node...
+					gc.setCollisionShape(new SphereCollisionShape(fMinRange + fDeltaBetweenMinAndMaxRange*(1f-gc.fPercImpulse)));
+				}
+				gc.setRefRanges(fMinRange,fMaxRange);
+				
+				List<PhysicsCollisionObject> apco = gc.getOverlappingObjects();
+				for(PhysicsCollisionObject pco:apco) {
+					if(apcoPushed.contains(pco))continue; //skip to avoid multiple impulses
 					
-					float fPercImpulse = 1f;
-					if(fDist > fMinRange) { //lower impulse
-						float fDistBeyondMin = fDist-fMinRange;
-						fPercImpulse = 1f - fDistBeyondMin/fDeltaBetweenMinAndMaxRange;
-						if(fPercImpulse<0f)fPercImpulse=0.01f;//
-//						fImpulse*=fPercImpulse;
+					if(pco instanceof PhysicsRigidBody) {
+						PhysicsRigidBody prb = (PhysicsRigidBody)pco;
+						if(prb.getMass()==0)continue;//skip statics
+						Vector3f v3fDiff=prb.getPhysicsLocation().subtract(v3fWorldPos);
+//						float fDist = v3fDiff.length(); //distance is relative to the center of the overlapping object!!!
+	//					if(fDist>fMaxRange)continue;//this shouldnt happen tho..
+						
+//						float fPercImpulse = 1f;
+//						if(fDist > fMinRange) { //lower impulse
+//							float fDistBeyondMin = fDist-fMinRange;
+//							fPercImpulse = 1f - fDistBeyondMin/fDeltaBetweenMinAndMaxRange;
+//							if(fPercImpulse<0f)fPercImpulse=0.01f;//
+//	//						fImpulse*=fPercImpulse;
+//						}
+						
+//						float fPercImpulse=1f;
+						
+						Vector3f v3fDir = v3fDiff.normalize();
+//						applyImpulseLater(getPhysicsDataFrom(pco), new ImpTorForce().setImpulse(v3fDir.mult(fImpulse*fPercImpulse), null));
+						applyImpulseLater(getPhysicsDataFrom(pco), new ImpTorForce().setImpulse(v3fDir.mult(fImpulse*gc.fPercImpulse), null));
+						
+						apcoPushed.add(pco);
 					}
-					
-					Vector3f v3fDir = v3fDiff.normalize();
-					applyImpulseLater(getPhysicsDataFrom(pco), new ImpTorForce().setImpulse(v3fDir.mult(fImpulse*fPercImpulse), null));
 				}
 			}
 			

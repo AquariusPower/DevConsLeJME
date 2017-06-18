@@ -479,7 +479,7 @@ public class PhysicsProjectileI {
 				reparentProjectileLater(null, geomOther);
 				reparentProjectileLater(null, pdWhat.getGeomOriginalInitialLink());
 				ParticlesI.i().createAtMainThread(EParticle.ShockWave.s(), pdWhat.getInstaTempWorldGlueSpot(), 1f, null);
-				PhysicsI.i().pushAllAround(pdWhat.getInstaTempWorldGlueSpot(), 100f, 0.1f, 2f);
+				PhysicsI.i().pushAllAround(pdWhat.getInstaTempWorldGlueSpot(), 10f, 0.1f, 2f);
 				break;
 			}
 		}
