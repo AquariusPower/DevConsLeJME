@@ -68,6 +68,7 @@ public class PhysicsProjectileI {
 	private float fDefaultDesiredSpeed=10f;
 	private int iDefaultProjectilesPerSecond=1;
 	private boolean bGlowingProjectile;
+	private boolean bAllowExplosionCascade;
 	
 //	public static class SimpleBatchNode
 	
@@ -112,7 +113,7 @@ public class PhysicsProjectileI {
 	}
 	
 	public void configure(){
-		sbnProjectilesAtWorld = new SimpleBatchNode("BatchNode");
+		sbnProjectilesAtWorld = new SimpleBatchNode("StaticTerrainWorldBatchNode");
 		AppI.i().getRootNode().attachChild(sbnProjectilesAtWorld);
 		
     KeyBindCommandManagerI.i().putBindCommandsLater("Space",new CallBoundKeyCmd(){
@@ -358,10 +359,17 @@ public class PhysicsProjectileI {
 		SimpleBatchNode previousParent = (SimpleBatchNode)sptProjectile.getParent();
 		
 		if(nodeNewParent!=null){
+			if(nodeNewParent==sbnProjectilesAtWorld) {
+				Vector3f v3fWPos=sptProjectile.getWorldTranslation();
+	//			Vector3f v3fWPos=previousParent.localToWorld(sptProjectile.getLocalTranslation(),null);
+				sptProjectile.setLocalTranslation(v3fWPos);
+//				sptProjectile.setLocalTranslation(sptProjectile.worldToLocal(v3fWPos, null));
+			}
 			nodeNewParent.attachChild(sptProjectile);
 			nodeNewParent.batch();
 		}else {
 			sptProjectile.removeFromParent();
+			PhysicsI.i().removeFromPhysicsSpace(sptProjectile);
 		}
 		
 		if(previousParent!=null)previousParent.batch();
@@ -389,16 +397,18 @@ public class PhysicsProjectileI {
 		
 		Geometry geomWhat = pdWhat.getInitialOriginalGeometry();
 		
-		PhysicsI.i().removeFromPhysicsSpace(geomWhat); //this prevents further updates from physics space
+		if(!pdGlueWhere.isTerrain()) { //terrain ones are insta static with mass 0 np
+			PhysicsI.i().removeFromPhysicsSpace(geomWhat); //this prevents further updates from physics space
+		}
 		
 		if(pdGlueWhere.isEnclosed() && !pdGlueWhere.isTerrain()){ //will glue at dynamic parent surface
-			if(pdGlueWhere.getSBNodeGluedProjectiles()==null){
+			if(pdGlueWhere.getSBatchNodeGluedProjectilesOnMe()==null){
 				pdGlueWhere.setSBNodeGluedProjectiles(new SimpleBatchNode(SimpleBatchNode.class.getName()+":LocalGluedProjectiles"));
-				((Node)pdGlueWhere.getSpatialWithPhysics()).attachChild(pdGlueWhere.getSBNodeGluedProjectiles());
+				((Node)pdGlueWhere.getSpatialWithPhysics()).attachChild(pdGlueWhere.getSBatchNodeGluedProjectilesOnMe());
 			}
 			
 			Quaternion quaWhatWRotBkp = geomWhat.getWorldRotation().clone();
-			reparentProjectile(pdGlueWhere.getSBNodeGluedProjectiles(), pdWhat.getInitialOriginalGeometry());
+			reparentProjectile(pdGlueWhere.getSBatchNodeGluedProjectilesOnMe(), pdWhat.getInitialOriginalGeometry());
 			
 			PhysicsI.i().cancelDisintegration(pdWhat);
 			
@@ -440,7 +450,7 @@ public class PhysicsProjectileI {
 			});
 		}
 	
-		pdWhat.setbGlueApplied(true);
+		pdWhat.setGlueApplied(true);
 	}
 	
 	public void checkProjectilesClashInstabilityExplode(PhysicsData pdWhat) {
@@ -498,7 +508,7 @@ public class PhysicsProjectileI {
 			}
 		}
 		
-		if(bDoExplode) {
+		if(bDoExplode && isAllowExplosionCascade()) {
 			//cascade
 			for(PhysicsData pd:apd) {
 				pd.forceExplode();
@@ -508,9 +518,19 @@ public class PhysicsProjectileI {
 	}
 	
 	public void explode(PhysicsData pdWhat, float fMinRadius, float fMaxRadius) {
-		reparentProjectileLater(null, pdWhat.getGeomOriginalInitialLink());
-		ParticlesI.i().createAtMainThread(EParticle.ShockWave.s(), pdWhat.getInstaTempWorldGlueSpot(), 1f, null);
-		PhysicsI.i().pushAllAround(pdWhat.getInstaTempWorldGlueSpot(), pdWhat.getExplosionForce(), fMinRadius, fMaxRadius);
+		Vector3f v3fPos = null;
+		Geometry geomWhat = pdWhat.getGeomOriginalInitialLink();
+		if(pdWhat.getGlueWhere().isTerrain()) {
+//			v3fPos = pdWhat.getInstaTempWorldGlueSpot();
+			v3fPos = geomWhat.getWorldTranslation();
+			reparentProjectile(null, geomWhat);
+		}else {
+			reparentProjectile(sbnProjectilesAtWorld, geomWhat); //to position properly in the world
+			v3fPos = geomWhat.getWorldTranslation().clone();
+			reparentProjectile(null, geomWhat);
+		}
+		ParticlesI.i().createAtMainThread(EParticle.ShockWave.s(), v3fPos, 1f, null);
+		PhysicsI.i().pushAllAround(v3fPos, pdWhat.getExplosionForce(), fMinRadius, fMaxRadius);
 	}
 
 	protected void checkBuggyMissPlacedFew(PhysicsData pdWhat) {
@@ -615,6 +635,15 @@ public class PhysicsProjectileI {
 
 	public PhysicsProjectileI setGlowingProjectile(boolean bGlowingProjectile) {
 		this.bGlowingProjectile = bGlowingProjectile;
+		return this; 
+	}
+
+	public boolean isAllowExplosionCascade() {
+		return bAllowExplosionCascade;
+	}
+
+	public PhysicsProjectileI setAllowExplosionCascade(boolean bAllowExplosionCascade) {
+		this.bAllowExplosionCascade = bAllowExplosionCascade;
 		return this; 
 	}
 	

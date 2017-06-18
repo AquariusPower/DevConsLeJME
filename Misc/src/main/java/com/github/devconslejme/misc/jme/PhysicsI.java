@@ -621,7 +621,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			InfoJmeI.i().putAt(hmStore,"vol",pd.getMatterStatus().getVolumeM3(),3);
 			InfoJmeI.i().putAt(hmStore,"grav",pd.getGravityCopy(),1);
 			InfoJmeI.i().putAt(hmStore,"rest",pd.isResting());
-			if(pd.getSBNodeGluedProjectiles()!=null)InfoJmeI.i().putAt(hmStore,"GluePrjc",pd.getSBNodeGluedProjectiles().getChildren().size());
+			if(pd.getSBatchNodeGluedProjectilesOnMe()!=null)InfoJmeI.i().putAt(hmStore,"GluePrjc",pd.getSBatchNodeGluedProjectilesOnMe().getChildren().size());
 			
 			// last as may change too much
 			InfoJmeI.i().putAt(hmStore,"spd",pd.getLinearVelocityCopy(),2);
@@ -1687,6 +1687,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	
 //	public static abstract class CallUpdPhysAtMainThread implements CallableWeak<Boolean>{}
 	
+	/**
+	 * @DevSelfNote use this instead of direct calling queueI, to easify future maintenances
+	 * @param cx
+	 */
 	@SuppressWarnings("unchecked")
 //	public void enqueueUpdatePhysicsAtMainThread(boolean bForceLater,CallableX cx) {
 	public void enqueueUpdatePhysicsAtMainThread(CallableX cx) {

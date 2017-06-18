@@ -29,13 +29,16 @@ package com.github.devconslejme.misc.jme;
 import java.util.ArrayList;
 
 import com.github.devconslejme.game.CharacterI.LeviCharacter;
-import com.github.devconslejme.misc.DetailedException;
 import com.github.devconslejme.misc.ICompositeRestrictedAccessControl;
 import com.github.devconslejme.misc.MainThreadI;
 import com.github.devconslejme.misc.MatterI.MatterStatus;
+import com.github.devconslejme.misc.QueueI.CallableWeak;
+import com.github.devconslejme.misc.QueueI.CallableX;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.SimulationTimeI;
 import com.github.devconslejme.misc.TimeConvertI;
+import com.github.devconslejme.misc.TimedDelay;
+import com.github.devconslejme.misc.jme.ColorI.EColor;
 import com.github.devconslejme.misc.jme.PhysicsI.ImpTorForce;
 import com.github.devconslejme.misc.jme.PhysicsI.RayCastResultX;
 import com.jme3.bounding.BoundingBox;
@@ -44,6 +47,7 @@ import com.jme3.bounding.BoundingVolume;
 import com.jme3.bullet.collision.PhysicsCollisionObject;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.objects.PhysicsRigidBody;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
@@ -353,22 +357,52 @@ public  class PhysicsData{
 		if(v3f==null)v3f = PhysicsI.i().getGravityCopy().clone(); //restore the bkp
 		if(v3fNewGravity==null || !v3fNewGravity.equals(v3f)) {
 			v3fNewGravity = v3f.clone();
-			enqueueUpdatePhysicsAtMainThread(new CallableXAnon() {@Override	public Boolean call() {
+			enqueueUpdatePhysicsAtMainThread(new CallPhysSimple() {@Override	public Boolean call() {
 				applyNewGravityAtMainThread();
 				return true;
 			}});
 		}
 	}
 	
-	private void enqueueUpdatePhysicsAtMainThread(CallableXAnon cx) {
+	/**
+	 * this prevents the highly customizable callableX
+	 * as it may be called instantly, out of the queue
+	 */
+	private static abstract class CallPhysSimple implements CallableWeak{};
+	private void enqueueUpdatePhysicsAtMainThread(CallPhysSimple cx) {
+//		enqueueUpdatePhysicsAtMainThread(false, cx);
+//	}
+//	private void enqueueUpdatePhysicsAtMainThread(boolean bForceLater, CallPhysSimple cx) {
 		if(MainThreadI.i().isCurrentMainThread()) {
-			if(cx.call()!=null) {
-				throw new DetailedException("not using full queue powers");
-			}
+			cx.call();
 		}else {
-			PhysicsI.i().enqueueUpdatePhysicsAtMainThread(cx);
+			PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallableXAnon() {
+				@Override
+				public Boolean call() {
+					cx.call();
+					return true;
+				}
+			});
 		}
 	}
+	private void enqueueUpdatePhysicsAtMainThreadForceLater(CallableX cx) {
+		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(cx);
+	}
+//	private void enqueueUpdatePhysicsAtMainThread(boolean bForceLater, CallPhysSimple cx) {
+//		if(MainThreadI.i().isCurrentMainThread() && !bForceLater) {
+//			cx.call();
+////				throw new DetailedException("not using full queue powers");
+////			}
+//		}else {
+//			PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallableXAnon() {
+//				@Override
+//				public Boolean call() {
+//					cx.call();
+//					return true;
+//				}
+//			});
+//		}
+//	}
 
 	public void applyNewDampingAtMainThread() {
 		MainThreadI.i().assertEqualsCurrentThread();
@@ -381,7 +415,7 @@ public  class PhysicsData{
 	public void setNewDampingAtMainThread(Float fNewLinearDamping, Float fNewAngularDamping) {
 		this.fNewLinearDamping=fNewLinearDamping;
 		this.fNewAngularDamping=fNewAngularDamping;
-		enqueueUpdatePhysicsAtMainThread(new CallableXAnon() {@Override	public Boolean call() {
+		enqueueUpdatePhysicsAtMainThread(new CallPhysSimple() {@Override	public Boolean call() {
 			applyNewDampingAtMainThread();
 			return true;
 		}});
@@ -392,11 +426,14 @@ public  class PhysicsData{
 //	}
 //	public void checkExplodeAtMainThread(boolean bForceLater) {
 //		enqueueUpdatePhysicsAtMainThread(bForceLater, new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
-		enqueueUpdatePhysicsAtMainThread(new CallableXAnon() {@Override	public Boolean call() {
-			if(!PhysicsData.this.isGlueApplied())return false;
-			PhysicsProjectileI.i().checkProjectilesClashInstabilityExplode(PhysicsData.this);
-			return true;
-		}});
+		enqueueUpdatePhysicsAtMainThreadForceLater(new CallableXAnon() {
+			private TimedDelay tdInstabilityGrouth = new TimedDelay(10f).setActive(true);
+			@Override	public Boolean call() {
+				if(!PhysicsData.this.isGlueApplied())return false; //this is required for the terrain/world stuck projectiles
+				if(!tdInstabilityGrouth.isReady(true))return false;
+				PhysicsProjectileI.i().checkProjectilesClashInstabilityExplode(PhysicsData.this);
+				return true;
+			}});
 	}
 
 	public PhysicsData setTempGravityTowards(Vector3f v3fGravityTargetSpot, Float fAcceleration) {
@@ -415,7 +452,7 @@ public  class PhysicsData{
 	}
 	public void setFrictionAtMainThread(float f) {
 		this.fNewFriction=f;
-		enqueueUpdatePhysicsAtMainThread(new CallableXAnon() {@Override	public Boolean call() {
+		enqueueUpdatePhysicsAtMainThread(new CallPhysSimple() {@Override	public Boolean call() {
 			applyNewFrictionAtMainThread();
 			return true;
 		}});
@@ -430,7 +467,7 @@ public  class PhysicsData{
 	 */
 	public void setPhysicsLocationAtMainThread(Vector3f v3f) {
 		v3fNewPhysLocation=v3f.clone();
-		enqueueUpdatePhysicsAtMainThread(new CallableXAnon() {@Override	public Boolean call() {
+		enqueueUpdatePhysicsAtMainThread(new CallPhysSimple() {@Override	public Boolean call() {
 			applyNewPhysLocationAtMainThread();
 			return true;
 		}});
@@ -438,16 +475,10 @@ public  class PhysicsData{
 	public void setPhysicsRotationAtMainThread(Quaternion qua) {
 		quaNewPhysRotation=qua.clone();
 //		CallableWeak cw = new CallableWeak() {@Override	public Object call() {
-		enqueueUpdatePhysicsAtMainThread(new CallableXAnon() {@Override	public Boolean call() {
+		enqueueUpdatePhysicsAtMainThread(new CallPhysSimple() {@Override	public Boolean call() {
 			applyNewPhysRotationAtMainThread();
 			return true;
 		}});
-//		if(MainThreadI.i().isCurrentMainThread()) {
-//			cw.call();
-//		}else {
-//			enqueueUpdatePhysicsAtMainThread(cw);
-////			PhysicsI.i().apdRotationUpdtMainThreadQueue.add(this);
-//		}
 	}
 	
 	public Vector3f getPhysicsLocationCopy() {
@@ -492,7 +523,7 @@ public  class PhysicsData{
 //			return this; 
 //		}
 
-	public SimpleBatchNode getSBNodeGluedProjectiles() {
+	public SimpleBatchNode getSBatchNodeGluedProjectilesOnMe() {
 		return sbnGluedProjectiles;
 	}
 
@@ -676,7 +707,7 @@ public  class PhysicsData{
 		return bGlueApplied;
 	}
 
-	public PhysicsData setbGlueApplied(boolean bGlueApplied) {
+	public PhysicsData setGlueApplied(boolean bGlueApplied) {
 		this.bGlueApplied = bGlueApplied;
 		return this;
 	}
@@ -959,6 +990,8 @@ public  class PhysicsData{
 
 	public void forceExplode() {
 		this.bForceExplode=true;
+		geomOriginalInitialLink.getMaterial().setColor(EColor.Color.s(), new ColorRGBA(0.5f,0,0,1));
+		geomOriginalInitialLink.getMaterial().setColor(EColor.GlowColor.s(), ColorRGBA.Red.mult(10)); //TODO how to glow more/farer? 10 or 100 makes no diff
 	}
 
 	public boolean isForceExplode() {
