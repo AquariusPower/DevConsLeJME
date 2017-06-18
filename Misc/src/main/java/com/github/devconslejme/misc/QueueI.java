@@ -37,8 +37,9 @@ import com.github.devconslejme.misc.Annotations.SimpleVarReadOnly;
  * Queue is mainly usefull for lazy initializations that require pre-conditions.
  * But this one can be used also for delayed loops and other things.
  * 
- * TODO create parallel queues of stuff that can be processed outside of the main thread
+ * TODO use another instance of QueueI in another thread than Main, just to exemplify initially
  * TODO work with java.util.concurrent.DelayQueue?
+ * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class QueueI {
