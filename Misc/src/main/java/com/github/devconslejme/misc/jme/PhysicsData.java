@@ -111,6 +111,7 @@ public  class PhysicsData{
 	private long lLastCollisionNano;
 	private float fNewFriction;
 	private float fMassBkp;
+	private boolean bForceExplode;
 	
 	/**
 	 * radians
@@ -352,7 +353,7 @@ public  class PhysicsData{
 		if(v3f==null)v3f = PhysicsI.i().getGravityCopy().clone(); //restore the bkp
 		if(v3fNewGravity==null || !v3fNewGravity.equals(v3f)) {
 			v3fNewGravity = v3f.clone();
-			PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
+			PhysicsI.i().enqueueUpdatePhysicsAtMainThread(false,new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
 				applyNewGravityAtMainThread();
 				return true;
 			}});
@@ -379,14 +380,17 @@ public  class PhysicsData{
 	public void setNewDampingAtMainThread(Float fNewLinearDamping, Float fNewAngularDamping) {
 		this.fNewLinearDamping=fNewLinearDamping;
 		this.fNewAngularDamping=fNewAngularDamping;
-		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
+		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(false,new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
 			applyNewDampingAtMainThread();
 			return true;
 		}});
 	}
 	
 	public void checkExplodeAtMainThread() {
-		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
+		checkExplodeAtMainThread(false);
+	}
+	public void checkExplodeAtMainThread(boolean bForceLater) {
+		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(bForceLater, new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
 			if(!PhysicsData.this.isGlueApplied())return false;
 			PhysicsProjectileI.i().checkProjectilesClashInstabilityExplode(PhysicsData.this);
 			return true;
@@ -409,7 +413,7 @@ public  class PhysicsData{
 	}
 	public void setFrictionAtMainThread(float f) {
 		this.fNewFriction=f;
-		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
+		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(false,new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
 			applyNewFrictionAtMainThread();
 			return true;
 		}});
@@ -424,7 +428,7 @@ public  class PhysicsData{
 	 */
 	public void setPhysicsLocationAtMainThread(Vector3f v3f) {
 		v3fNewPhysLocation=v3f.clone();
-		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
+		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(false,new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
 			applyNewPhysLocationAtMainThread();
 			return true;
 		}});
@@ -441,7 +445,7 @@ public  class PhysicsData{
 	public void setPhysicsRotationAtMainThread(Quaternion qua) {
 		quaNewPhysRotation=qua.clone();
 //		CallableWeak cw = new CallableWeak() {@Override	public Object call() {
-		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
+		PhysicsI.i().enqueueUpdatePhysicsAtMainThread(false,new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
 			applyNewPhysRotationAtMainThread();
 			return true;
 		}});
@@ -956,6 +960,16 @@ public  class PhysicsData{
 
 	}
 
+	public float getExplosionForce() {
+		return 10f;
+	}
 
+	public void forceExplode() {
+		this.bForceExplode=true;
+	}
+
+	public boolean isForceExplode() {
+		return bForceExplode;
+	}
 }
 

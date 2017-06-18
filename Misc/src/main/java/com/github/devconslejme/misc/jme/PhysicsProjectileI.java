@@ -26,6 +26,7 @@
 */
 package com.github.devconslejme.misc.jme;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.github.devconslejme.misc.GlobalManagerI;
@@ -458,31 +459,58 @@ public class PhysicsProjectileI {
 		 */
 		BoundingSphere bsWhatFixed = (BoundingSphere)pdWhat.getGeomOriginalInitialLink().getWorldBound().clone();
 		bsWhatFixed.setCenter(geomWhat.getLocalTranslation());
-//		float fRadius = bsWhat.getRadius();
-//		if(fRadius < 0.05f)fRadius=0.05f;
 		
+		float fPowerfulRadius=0.1f;
+//		boolean bExploded=false;
+		ArrayList<PhysicsData> apd = new ArrayList<PhysicsData>(); 
+		boolean bDoExplode=false;
 		for(Spatial sptOther:sbParent.getChildren()) {
 			if(sptOther==geomWhat)continue;
 			PhysicsData pdOther = PhysicsI.i().getPhysicsDataFrom(sptOther);
 			if(pdOther==null)continue; // the batched mesh/geometry is also a child of the batch node, this skips it too
 			if(!pdOther.isProjectile())continue;
-//			Geometry geomOther = pdOther.getGeomOriginalInitialLink();
 			Geometry geomOther = (Geometry)sptOther;
 			BoundingSphere bsOtherFixed = (BoundingSphere)geomOther.getWorldBound().clone();
 			bsOtherFixed.setCenter(geomOther.getLocalTranslation());
 			
-//			float fDist=bsWhat.getCenter().distance(bsOther.getCenter());
-//			float fRadiusSum=bsWhat.getRadius()+bsOther.getRadius();
-//			System.out.println(">5>"+fDist+","+fRadiusSum+bsWhat+bsOther+geomWhat.getLocalTranslation()+geomWhat.getWorldTranslation());
-//			System.out.println(""+bsWhatFixed+bsOtherFixed);
-			if(bsOtherFixed.intersects(bsWhatFixed)) {
-				reparentProjectileLater(null, geomOther);
-				reparentProjectileLater(null, pdWhat.getGeomOriginalInitialLink());
-				ParticlesI.i().createAtMainThread(EParticle.ShockWave.s(), pdWhat.getInstaTempWorldGlueSpot(), 1f, null);
-				PhysicsI.i().pushAllAround(pdWhat.getInstaTempWorldGlueSpot(), 10f, 0.1f, 2f);
-				break;
+			if(bsWhatFixed.getCenter().distance(bsOtherFixed.getCenter()) < fPowerfulRadius) {
+				apd.add(pdOther);
+			}
+			
+			if(bDoExplode)continue; //already exploded
+			
+			if(pdWhat.isForceExplode()) {
+				bDoExplode=true;
+			}else
+			if(bsOtherFixed.intersects(bsWhatFixed)) { //this begins the automatic explosion cascade
+				apd.add(pdOther);
+//				reparentProjectileLater(null, geomOther);
+				bDoExplode=true;
+			}
+			
+			if(bDoExplode) {
+				explode(pdWhat,fPowerfulRadius,2f);
+//				reparentProjectileLater(null, pdWhat.getGeomOriginalInitialLink());
+//				ParticlesI.i().createAtMainThread(EParticle.ShockWave.s(), pdWhat.getInstaTempWorldGlueSpot(), 1f, null);
+//				PhysicsI.i().pushAllAround(pdWhat.getInstaTempWorldGlueSpot(), pdWhat.getExplosionForce(), fPowerfulRadius, 2f);
+//				bExploded=true;
+				if(!pdWhat.isForceExplode())break; //wont break to look for others nearby
 			}
 		}
+		
+		if(bDoExplode) {
+			//cascade
+			for(PhysicsData pd:apd) {
+				pd.forceExplode();
+				pd.checkExplodeAtMainThread(true);
+			}
+		}
+	}
+	
+	public void explode(PhysicsData pdWhat, float fMinRadius, float fMaxRadius) {
+		reparentProjectileLater(null, pdWhat.getGeomOriginalInitialLink());
+		ParticlesI.i().createAtMainThread(EParticle.ShockWave.s(), pdWhat.getInstaTempWorldGlueSpot(), 1f, null);
+		PhysicsI.i().pushAllAround(pdWhat.getInstaTempWorldGlueSpot(), pdWhat.getExplosionForce(), fMinRadius, fMaxRadius);
 	}
 
 	protected void checkBuggyMissPlacedFew(PhysicsData pdWhat) {

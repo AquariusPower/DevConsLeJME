@@ -299,10 +299,14 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				 */
 				for(PhysicsData pd:apdSafeSpotRestoreMainThreadQueue)pd.applyRestoreSafeSpotRotAtMainThread();
 				apdSafeSpotRestoreMainThreadQueue.clear();
-				for (Iterator<CallUpdPhysAtMainThread> iterator = acallUpdtPhysAtMainThreadQueue.iterator(); iterator.hasNext();) {
-					CallUpdPhysAtMainThread cx = iterator.next();
-					if(cx.call())iterator.remove(); //removes current one
+				
+				for(CallUpdPhysAtMainThread cx:acallUpdtPhysAtMainThreadQueue.toArray(new CallUpdPhysAtMainThread[0])) {
+					if(cx.call())acallUpdtPhysAtMainThreadQueue.remove(cx); //removes current one
 				}
+//				for (Iterator<CallUpdPhysAtMainThread> iterator = acallUpdtPhysAtMainThreadQueue.iterator(); iterator.hasNext();) {
+//					CallUpdPhysAtMainThread cx = iterator.next();
+//					if(cx.call())iterator.remove(); //removes current one
+//				}
 //				for(CallUpdPhysAtMainThread cx:acallUpdtPhysAtMainThreadQueue) {
 //					if(cx.call())acallUpdtPhysAtMainThreadQueue.remove(cx);
 //				}
@@ -323,35 +327,32 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	}
 	
 	public static class GhostControlX extends GhostControl{
-		float fPercImpulse=1f;
-		private float fMinRange;
-		private float fMaxRange;
+		private float fPercImpulse=1f;
+//		private float fMinRange;
+//		private float fMaxRange;
 		public GhostControlX(float fPercImpulse) {
 			super(new SphereCollisionShape(1f));
 			this.fPercImpulse=fPercImpulse;
 		}
-		public void setRefRanges(float fMinRange, float fMaxRange) {
-			this.fMinRange = fMinRange;
-			this.fMaxRange = fMaxRange;
+		
+		@Override
+		public String toString() {
+			return GhostControlX.class.getSimpleName()+":"+fPercImpulse;
 		}
-		public boolean checkRangesChanged(float fMinRange, float fMaxRange) {
-			return this.fMinRange!=fMinRange || this.fMaxRange!=fMaxRange;
-		}
+//		public void setRefRanges(float fMinRange, float fMaxRange) {
+//			this.fMinRange = fMinRange;
+//			this.fMaxRange = fMaxRange;
+//		}
+//		public boolean checkRangesChanged(float fMinRange, float fMaxRange) {
+//			return this.fMinRange!=fMinRange || this.fMaxRange!=fMaxRange;
+//		}
 	}
 	private Node nodePushAllAround;
-//	private SphereCollisionShape scsPushAllAround;
-//	private GhostControl gocPushAllAroundMinR = new GhostControl();
-//	private GhostControl gocPushAllAroundR25 = new GhostControl();
-//	private GhostControl gocPushAllAroundR50 = new GhostControl();
-//	private GhostControl gocPushAllAroundR75 = new GhostControl();
-//	private GhostControl gocPushAllAroundMaxR = new GhostControl();
-//	private PhysicsGhostObject pgoPushAllAround = new PhysicsGhostObject();
+
+	private boolean bAllowRadialPushes;
 	public void pushAllAround(Vector3f v3fWorldPos, float fImpulse, float fMinRange, float fMaxRange) {
-//		if(gocPushAllAround==null) {
-//			scsPushAllAround = new SphereCollisionShape(1f);
-//			gocPushAllAround = new GhostControl(scsPushAllAround);
-//			pspace.add(gocPushAllAround);
-//		}
+		if(!isAllowRadialPushes())return;
+		
 		if(nodePushAllAround==null) {
 			nodePushAllAround = new Node("PushAllAround");
 			AppI.i().getRootNode().attachChild(nodePushAllAround);
@@ -360,50 +361,39 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				if(f==0)f=0.01f;
 				nodePushAllAround.addControl(new GhostControlX(f));
 			}
-//			nodePushAllAround.addControl(gocPushAllAroundMinR);
-//			nodePushAllAround.addControl(gocPushAllAroundR25);
-//			nodePushAllAround.addControl(gocPushAllAroundR50);
-//			nodePushAllAround.addControl(gocPushAllAroundR75);
-//			nodePushAllAround.addControl(gocPushAllAroundMaxR);
 			pspace.add(nodePushAllAround);
 		}
 		
-//		gocPushAllAround.setPhysicsLocation(v3fWorldPos);
 		nodePushAllAround.setLocalTranslation(v3fWorldPos);
+//		nodePushAllAround.updateLogicalState(HWEnvironmentJmeI.i().getTPF()); //TODO why it was required for a node that has no visuals/geometries?
+//		pspace.add(nodePushAllAround);
+		
+		float fDeltaBetweenMinAndMaxRange = fMaxRange - fMinRange;
+		for(int i=0;i<nodePushAllAround.getNumControls();i++) {
+			GhostControlX gc=((GhostControlX)nodePushAllAround.getControl(i));
+			/**
+			 * scale wont worth with sphere
+			 * TODO setmargin should shrink/grow the collision margin, 0 is original shape, negative is shrink, but nothing changed?
+			scsPushAllAround.setMargin(fMaxRange-1f); //
+			 */
+			float fRadius=fMinRange + fDeltaBetweenMinAndMaxRange*(1f-gc.fPercImpulse);
+			if( ((SphereCollisionShape)gc.getCollisionShape()).getRadius() != fRadius ) {
+				gc.setCollisionShape(new SphereCollisionShape(fRadius));
+			}
+		}
 		
 		/**
-		 * the positioning will not work until bullet aknowledges it,
-		 * so wait 1 frame
+		 * the positioning and shape will not work until bullet aknowledges it,
+		 * so do it on next frame
 		 */
-		enqueueUpdatePhysicsAtMainThread(new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
-			float fDeltaBetweenMinAndMaxRange = fMaxRange - fMinRange;
-			if(false) {
-				/**
-				 * scale wont worth with sphere
-				 * TODO setmargin should shrink/grow the collision margin, 0 is original shape, negative is shrink, but nothing changed?
-				scsPushAllAround.setMargin(fMaxRange-1f); //
-				 */
-			}else {
-//				gocPushAllAroundMinR.setCollisionShape(new SphereCollisionShape(fMinRange));
-//				gocPushAllAroundR25 .setCollisionShape(new SphereCollisionShape(fMinRange+fDeltaBetweenMinAndMaxRange*0.25f));
-//				gocPushAllAroundR50 .setCollisionShape(new SphereCollisionShape(fMinRange+fDeltaBetweenMinAndMaxRange*0.50f));
-//				gocPushAllAroundR75 .setCollisionShape(new SphereCollisionShape(fMinRange+fDeltaBetweenMinAndMaxRange*0.75f));
-//				gocPushAllAroundMaxR.setCollisionShape(new SphereCollisionShape(fMaxRange));
-//				gocPushAllAround.setCollisionShape(new SphereCollisionShape(fMaxRange));
-			}
-			
+		enqueueUpdatePhysicsAtMainThread(true,new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
 			/**
 			 * it is important to go from the min to the max range
 			 */
 			ArrayList<PhysicsCollisionObject> apcoPushed = new ArrayList<>();
 			for(int i=0;i<nodePushAllAround.getNumControls();i++) {
-//				List<PhysicsCollisionObject> apco = gocPushAllAround.getOverlappingObjects();
 				GhostControlX gc=((GhostControlX)nodePushAllAround.getControl(i));
-				
-				if(gc.checkRangesChanged(fMinRange,fMaxRange)) { //TODO this should be on the node...
-					gc.setCollisionShape(new SphereCollisionShape(fMinRange + fDeltaBetweenMinAndMaxRange*(1f-gc.fPercImpulse)));
-				}
-				gc.setRefRanges(fMinRange,fMaxRange);
+				if(!gc.getPhysicsLocation().equals(v3fWorldPos))return false; //will fail the queue to retry, waiting it sync
 				
 				List<PhysicsCollisionObject> apco = gc.getOverlappingObjects();
 				for(PhysicsCollisionObject pco:apco) {
@@ -412,28 +402,17 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 					if(pco instanceof PhysicsRigidBody) {
 						PhysicsRigidBody prb = (PhysicsRigidBody)pco;
 						if(prb.getMass()==0)continue;//skip statics
+						
 						Vector3f v3fDiff=prb.getPhysicsLocation().subtract(v3fWorldPos);
-//						float fDist = v3fDiff.length(); //distance is relative to the center of the overlapping object!!!
-	//					if(fDist>fMaxRange)continue;//this shouldnt happen tho..
-						
-//						float fPercImpulse = 1f;
-//						if(fDist > fMinRange) { //lower impulse
-//							float fDistBeyondMin = fDist-fMinRange;
-//							fPercImpulse = 1f - fDistBeyondMin/fDeltaBetweenMinAndMaxRange;
-//							if(fPercImpulse<0f)fPercImpulse=0.01f;//
-//	//						fImpulse*=fPercImpulse;
-//						}
-						
-//						float fPercImpulse=1f;
-						
 						Vector3f v3fDir = v3fDiff.normalize();
-//						applyImpulseLater(getPhysicsDataFrom(pco), new ImpTorForce().setImpulse(v3fDir.mult(fImpulse*fPercImpulse), null));
 						applyImpulseLater(getPhysicsDataFrom(pco), new ImpTorForce().setImpulse(v3fDir.mult(fImpulse*gc.fPercImpulse), null));
 						
 						apcoPushed.add(pco);
 					}
 				}
 			}
+			
+//			pspace.remove(nodePushAllAround);
 			
 			return true;
 		}	});
@@ -1733,8 +1712,8 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	
 	public static abstract class CallUpdPhysAtMainThread implements CallableWeak<Boolean>{}
 	
-	public void enqueueUpdatePhysicsAtMainThread(CallUpdPhysAtMainThread cw) {
-		if(MainThreadI.i().isCurrentMainThread()) {
+	public void enqueueUpdatePhysicsAtMainThread(boolean bForceLater,CallUpdPhysAtMainThread cw) {
+		if(MainThreadI.i().isCurrentMainThread() && !bForceLater) {
 			cw.call();
 		}else {
 			/**
@@ -1759,6 +1738,15 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 
 	public PhysicsI setAllowGrabbedsPhysInterferences(boolean bAllowGrabbedsPhysInterferences) {
 		this.bAllowGrabbedsPhysInterferences = bAllowGrabbedsPhysInterferences;
+		return this; 
+	}
+
+	public boolean isAllowRadialPushes() {
+		return bAllowRadialPushes;
+	}
+
+	public PhysicsI setAllowRadialPushes(boolean bAllowRadialPushes) {
+		this.bAllowRadialPushes = bAllowRadialPushes;
 		return this; 
 	}
 
