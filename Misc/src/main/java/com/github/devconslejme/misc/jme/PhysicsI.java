@@ -52,6 +52,7 @@ import com.github.devconslejme.misc.SimulationTimeI;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.TimeFormatI;
 import com.github.devconslejme.misc.TimedDelay;
+import com.github.devconslejme.misc.jme.GeometryI.GeometryX;
 import com.github.devconslejme.misc.jme.ParticlesI.EParticle;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
@@ -77,6 +78,7 @@ import com.jme3.math.Transform;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.BatchNode;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
@@ -92,7 +94,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	public static PhysicsI i(){return GlobalManagerI.i().get(PhysicsI.class);}
 	
 	public static class CompositeControl implements ICompositeRestrictedAccessControl{private CompositeControl(){};};
-	private ICompositeRestrictedAccessControl	cc=new CompositeControl();
+	private CompositeControl	cc=new CompositeControl();
 	
 	private ArrayList<PhysicsData> apdPreventDisintegr = new ArrayList<PhysicsData>();
 	
@@ -481,7 +483,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	 * @param mt
 	 * @return
 	 */
-	public PhysicsData imbueFromWBounds(Geometry geom, MatterStatus mts, Node nodeStore){//, Vector3f v3fForceScaleCS){
+	public PhysicsData imbueFromWBounds(GeometryX geom, MatterStatus mts, Node nodeStore){//, Vector3f v3fForceScaleCS){
 		assert !UserDataI.i().contains(geom, PhysicsData.class);
 		
 		if(nodeStore!=null){
@@ -498,52 +500,16 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 		
 		PhysicsData pd = new PhysicsData(nodeStore,geom);
+		UserDataI.i().putSafelyMustNotExist(pd.getSpatialWithPhysics(), pd); //BEFORE adding to phys space as its thread will be trying to retrieve it!
+		
 //		pd.nodexLink=spt;
 		pd.saveSafePosRotFromSpatialLink();
 		
-		/*****************************************
-		 * retrieve correct(default/Original/Aligned) bounding
-		 * bkp rot
-		 */
-		pd.setWRotBkp(geom.getWorldRotation());
-		/**
-		 * reset rot: look at z+1 from where it is, and up to y=1
-		 */
-		geom.lookAt(geom.getWorldTranslation().add(0,0,1), Vector3f.UNIT_Y);
-		
-		/**
-		 * get the bound related to an unmodified rotation 
-		 */
-		pd.setBoundingVolume(geom.getWorldBound().clone()); //the world bound will already be a scaled result...
-		
-		//restore rot
-		geom.lookAt(geom.getWorldTranslation().add(pd.getWRotBkp().getRotationColumn(2)), pd.getWRotBkp().getRotationColumn(1));
-		
-		/***********************************************
-		 *  create collision shape from bounds
-		 */
-		float fPseudoDiameter = 0f;
-		if (pd.getBoundingVolume() instanceof BoundingBox) {
-			pd.setAsBoundingBox();
-			pd.setCollisionShape( new BoxCollisionShape(pd.getBoundingBox().getExtent(null)) );
-			Vector3f v3fExtent = pd.getBoundingBox().getExtent(null);
-			fPseudoDiameter=2f*Math.min(v3fExtent.x,Math.min(v3fExtent.y,v3fExtent.z)); //to make it sure wont fallthru by any direction
-//			fPseudoDiameter=2f*pd.bb.getExtent(null).length();
-		}else
-		if (pd.getBoundingVolume() instanceof BoundingSphere) {
-			pd.setAsBoundingSphere();
-			pd.setCollisionShape( new SphereCollisionShape(pd.getBoundingSphere().getRadius()) );
-			fPseudoDiameter=2f*pd.getBoundingSphere().getRadius();
-		}else{
-			throw new DetailedException("unsupported "+pd.getBoundingVolume().getClass(),geom);
-		}
-		
-		RigidBodyControl rbc = new RigidBodyControl(pd.getCollisionShape());
-		pd.setPRB(rbc);
+		RigidBodyControl rbc = preparePhysics(pd,geom);
 		
 		pd.setMatterStatus(mts);
 		
-		float fCCdMotionThreshold = fPseudoDiameter/2f;
+		float fCCdMotionThreshold = pd.getPseudoDiameter()/2f;
 		pd.setCcdMotionThresholdBkp(fCCdMotionThreshold);
 		rbc.setCcdMotionThreshold(fCCdMotionThreshold);
 		if(isDisableCcdToLetCollisionGroupsWork()) {
@@ -559,18 +525,112 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		 * "The radius is just the radius of the sphere that is swept to do this check, so make it so 
 		 * large that it resembles your object." - https://hub.jmonkeyengine.org/t/ccd-usage/24655/2
 		 */
-		rbc.setCcdSweptSphereRadius(fPseudoDiameter/2f);
+		rbc.setCcdSweptSphereRadius(pd.getPseudoDiameter()/2f);
 		
-		pd.getSpatialWithPhysics().addControl(rbc); //this will put the rbc at spatial's W/L location/rotation
+//		pd.getSpatialWithPhysics().addControl(rbc); //this will put the rbc at spatial's W/L location/rotation
 		
 		pd.setPosAtPreviousTick(pd.getSpatialWithPhysics().getLocalTranslation());
 		
 		pd.updateMaterializedAtTime();
 		
-		UserDataI.i().putSafelyMustNotExist(pd.getSpatialWithPhysics(), pd); //BEFORE adding to phys space as its thread will be trying to retrieve it!
-		pspace.add(pd.getSpatialWithPhysics()); //LAST THING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//		UserDataI.i().putSafelyMustNotExist(pd.getSpatialWithPhysics(), pd); //BEFORE adding to phys space as its thread will be trying to retrieve it!
+//		pspace.add(pd.getSpatialWithPhysics()); //LAST THING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		
 		return pd;
+	}
+	
+	private RigidBodyControl preparePhysics(PhysicsData pd, Geometry geom) {
+		prepareAlignedBounding(pd,geom);
+		createCollisionShapeFromBounds(pd);
+		RigidBodyControl rbc = prepareRigidBodyControl(pd);
+//		syncPhysTransfFromSpt(pd, false, true);
+		return rbc;
+	}
+
+	private RigidBodyControl prepareRigidBodyControl(PhysicsData pd) {
+		RigidBodyControl rbcOld = (RigidBodyControl)pd.getPRB(cc);
+		
+		RigidBodyControl rbc = new RigidBodyControl(pd.getCollisionShape());
+		
+		pd.getSpatialWithPhysics().addControl(rbc); //this will put the rbc at spatial's W/L location/rotation
+		
+		if(rbcOld!=null) {
+			rbc.setPhysicsLocation(rbcOld.getPhysicsLocation());
+			rbc.setPhysicsRotation(rbcOld.getPhysicsRotation());
+			rbc.setMass(rbcOld.getMass());
+			
+			pd.getSpatialWithPhysics().removeControl(rbcOld);
+			pspace.remove(rbcOld);
+		}
+		
+		pd.setPRB(rbc);
+		
+		pspace.add(rbc); // rbc.getPhysicsRotation()
+
+		return rbc;
+	}
+
+	private void createCollisionShapeFromBounds(PhysicsData pd) {
+		/***********************************************
+		 *  create collision shape from bounds
+		 */
+//		float fPseudoDiameter = 0f;
+		if (pd.isBoundingBox()) {
+//			pd.setAsBoundingBox();
+			pd.setCollisionShape( new BoxCollisionShape(pd.getBoundingBox().getExtent(null)) );
+			Vector3f v3fExtent = pd.getBoundingBox().getExtent(null);
+			pd.setPseudoDiameter(2f*Math.min(v3fExtent.x,Math.min(v3fExtent.y,v3fExtent.z))); //to make it sure wont fallthru by any direction
+//			fPseudoDiameter=2f*pd.bb.getExtent(null).length();
+		}else {
+//		if (pd.getBoundingVolume() instanceof BoundingSphere) {
+//			pd.setAsBoundingSphere();
+			pd.setCollisionShape( new SphereCollisionShape(pd.getBoundingSphere().getRadius()) );
+			pd.setPseudoDiameter(2f*pd.getBoundingSphere().getRadius());
+//		}else{
+//			throw new DetailedException("unsupported "+pd.getBoundingVolume().getClass());//,geom);
+		}
+	}
+
+	private void prepareAlignedBounding(PhysicsData pd, Geometry geom) {
+		/*****************************************
+		 * retrieve correct(default/Original/Aligned) bounding
+		 * bkp rot
+		 */
+		if(pd.getWRotBkp()==null)pd.setWRotBkp(geom.getWorldRotation());
+		/**
+		 * reset rot: look at z+1 from where it is, and up to y=1
+		 */
+		geom.lookAt(geom.getWorldTranslation().add(0,0,1), Vector3f.UNIT_Y);
+		
+		/**
+		 * get the bound related to an unmodified rotation 
+		 */
+		pd.setBoundingVolume(geom.getWorldBound().clone()); //the world bound will already be a scaled result...
+		
+		//restore rot
+		geom.lookAt(geom.getWorldTranslation().add(pd.getWRotBkp().getRotationColumn(2)), pd.getWRotBkp().getRotationColumn(1));
+	}
+
+	public void applyStaticColliderFromGeometryBounds(PhysicsData pd) {
+//		pspace.remove(pd.getSpatialWithPhysics());
+
+		GeometryX geom = pd.getGeomOriginalInitialLink();
+		
+		Node parent = geom.getParent();
+		geom.removeFromParent(); //this is required to let the mesh be changed below
+		
+		// recreate the bounding for a full volumetric static thing
+		geom.setMesh(geom.getMeshWhenStatic());
+		geom.getMesh().updateBound();
+		
+		RigidBodyControl rbc = preparePhysics(pd, geom);
+		
+		parent.attachChild(geom);
+		
+		if(parent instanceof BatchNode)((BatchNode)parent).batch();
+		
+//		pspace.add(pd.getSpatialWithPhysics());
+//		pd.setProjectile(false);
 	}
 	
 	/**
@@ -1174,11 +1234,13 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			Boolean b=null;
 			b=threadPhysicsGroupGlueDetectProjectileNextHit(pdA);
 			if(b!=null){
+				if(!b)return pdA.getMass()==0f; //allow glued static to collide
 				return b;
 			}
 			
 			b=threadPhysicsGroupGlueDetectProjectileNextHit(pdB);
 			if(b!=null){
+				if(!b)return pdB.getMass()==0f; //allow glued static to collide
 				return b;
 			}
 			
@@ -1529,7 +1591,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			color.a=0.5f;
 		}
 		
-		Geometry geom = GeometryI.i().create(MeshI.i().box((float) (Math.cbrt(fVolumeM3)/2f)), color);
+		GeometryX geom = GeometryI.i().create(MeshI.i().box((float) (Math.cbrt(fVolumeM3)/2f)), color, false, new GeometryX("Box"));
 		geom.setName("Box"+strName);
 		
 //		/** to be on a node is important to let other things be attached to it like stuck projectiles */
@@ -1577,7 +1639,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		float fLength = v3fTo.distance(v3fFrom);
 		Vector3f v3fDir = v3fTo.subtract(v3fFrom);
 		
-		Geometry geomWall=GeometryI.i().create(new Box(fThickness/2f, fHeightOrWidth/2f, fLength/2f), color);
+		GeometryX geomWall=GeometryI.i().create(new Box(fThickness/2f, fHeightOrWidth/2f, fLength/2f), color, false, new GeometryX("Wall"));
 		geomWall.setName("OrthoWall");
 		AppI.i().getRootNode().attachChild(geomWall);
 		
@@ -1740,6 +1802,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		this.bAllowRadialPushes = bAllowRadialPushes;
 		return this; 
 	}
+
 
 
 }

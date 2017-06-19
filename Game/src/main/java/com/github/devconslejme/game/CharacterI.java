@@ -45,6 +45,7 @@ import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.jme.AppI;
 import com.github.devconslejme.misc.jme.FlyByCameraX;
 import com.github.devconslejme.misc.jme.GeometryI;
+import com.github.devconslejme.misc.jme.GeometryI.GeometryX;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.MeshI;
 import com.github.devconslejme.misc.jme.NodeX;
@@ -190,13 +191,13 @@ public class CharacterI {
 		
 		LeviCharacter lc = new LeviCharacter();
 		
-		Geometry geomBody = GeometryI.i().create(new Box(0.25f,lc.fTorsoHeight/2f,0.075f), ColorRGBA.Orange);
+		GeometryX geomBody = GeometryI.i().create(new Box(0.25f,lc.fTorsoHeight/2f,0.075f), ColorRGBA.Orange, false, new GeometryX("Torso"));
 		lc.nodeTorso = new NodeBodyPart(lc,"Torso");
 		lc.pdTorso = PhysicsI.i().imbueFromWBounds(geomBody,new MatterStatus(EMatter.OrganicBody.get()),lc.nodeTorso);
 		lc.pdTorso.setLevitation(null,lc.fHeight-lc.fTorsoHeight/2f-lc.fHeadRadius*2f);
 //		lc.pdTorso.getPRB().setDamping(0.75f, 0.75f); //TODO understand and improve this..., lower damping when over slipping surfaces like ice
 		
-		Geometry geomHead=GeometryI.i().create(MeshI.i().sphere(lc.fHeadRadius), ColorRGBA.Yellow);
+		GeometryX geomHead=GeometryI.i().create(MeshI.i().sphere(lc.fHeadRadius), ColorRGBA.Yellow, false, new GeometryX("Head"));
 		lc.nodeHead = new NodeBodyPart(lc,"Head");
 		lc.nodeHead.setLocalTranslation(0, lc.fHeight/4f+lc.fHeadRadius, 0);
 		lc.pdHead = PhysicsI.i().imbueFromWBounds(geomHead,new MatterStatus(EMatter.OrganicBody.get()),lc.nodeHead);
@@ -236,7 +237,7 @@ public class CharacterI {
 		
 		bcc.nodeBody = new NodeBodyPart(null,"CharacterBody");
 		
-		Geometry geomBody = GeometryI.i().create(new Box(0.25f,fHeight/2f,0.25f), ColorRGBA.Orange);
+		GeometryX geomBody = GeometryI.i().create(new Box(0.25f,fHeight/2f,0.25f), ColorRGBA.Orange, false, new GeometryX("CharBody"));
 		geomBody.setLocalTranslation(0, fHeight/2f, 0);
 		bcc.nodeBody.attachChild(geomBody);
 		

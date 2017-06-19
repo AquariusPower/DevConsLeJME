@@ -29,7 +29,6 @@ package com.github.devconslejme.misc.jme;
 import java.util.ArrayList;
 
 import com.github.devconslejme.game.CharacterI.LeviCharacter;
-import com.github.devconslejme.misc.ICompositeRestrictedAccessControl;
 import com.github.devconslejme.misc.MainThreadI;
 import com.github.devconslejme.misc.MatterI.MatterStatus;
 import com.github.devconslejme.misc.QueueI.CallableWeak;
@@ -39,6 +38,7 @@ import com.github.devconslejme.misc.SimulationTimeI;
 import com.github.devconslejme.misc.TimeConvertI;
 import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.jme.ColorI.EColor;
+import com.github.devconslejme.misc.jme.GeometryI.GeometryX;
 import com.github.devconslejme.misc.jme.PhysicsI.ImpTorForce;
 import com.github.devconslejme.misc.jme.PhysicsI.RayCastResultX;
 import com.jme3.bounding.BoundingBox;
@@ -65,9 +65,9 @@ public  class PhysicsData{
 	private boolean	bDisintegrated;
 	private Quaternion	quaWRotBkp;
 	private BoundingVolume	bv;
-	private BoundingBox	bb;
+//	private BoundingBox	bb;
 	private CollisionShape	cs;
-	private BoundingSphere	bs;
+//	private BoundingSphere	bs;
 	private PhysicsRigidBody	prb;
 	private boolean	bAllowDisintegration=false;
 	private Vector3f	v3fLastSafeSpot;
@@ -89,7 +89,7 @@ public  class PhysicsData{
 	private Quaternion	quaGlueWherePhysWRotAtImpact;
 	private Vector3f	v3fPosAtPreviousTick;
 	private MatterStatus	mts;
-	private Geometry	geomOriginalInitialLink;
+	private GeometryX	geomOriginalInitialLink;
 	private Node	nodexLink;
 	private int	iForceAwakePhysTickCount;
 	private int	iWaitPhysTicksB4Glueing=1;//1;
@@ -116,6 +116,8 @@ public  class PhysicsData{
 	private float fNewFriction;
 	private float fMassBkp;
 	private boolean bForceExplode;
+	private boolean bInstableExplode;
+	private float fPseudoDiameter;
 	
 	/**
 	 * radians
@@ -150,7 +152,7 @@ public  class PhysicsData{
 		return this; 
 	}
 	
-	public PhysicsData(Node nodex, Geometry geom) {
+	public PhysicsData(Node nodex, GeometryX geom) {
 		this.nodexLink=nodex;
 		this.geomOriginalInitialLink=geom;
 //			this.v3fGravityBkp = new Vector3f(PhysicsI.i().getGravity());
@@ -427,7 +429,7 @@ public  class PhysicsData{
 //	public void checkExplodeAtMainThread(boolean bForceLater) {
 //		enqueueUpdatePhysicsAtMainThread(bForceLater, new CallUpdPhysAtMainThread() {@Override	public Boolean call() {
 		enqueueUpdatePhysicsAtMainThreadForceLater(new CallableXAnon() {
-			private TimedDelay tdInstabilityGrouth = new TimedDelay(10f).setActive(true);
+			private TimedDelay tdInstabilityGrouth = new TimedDelay(3f).setActive(true);
 			@Override	public Boolean call() {
 				if(!PhysicsData.this.isGlueApplied())return false; //this is required for the terrain/world stuck projectiles
 				if(!tdInstabilityGrouth.isReady(true))return false;
@@ -497,7 +499,8 @@ public  class PhysicsData{
 	}
 
 	public void setPRB(PhysicsRigidBody prb) {
-		assert this.prb==null;
+		if(this.prb==prb)return;
+		assert this.prb==null || !this.prb.getCollisionShape().getClass().isAssignableFrom(prb.getCollisionShape().getClass());
 		this.prb=prb;
 	}
 
@@ -561,40 +564,41 @@ public  class PhysicsData{
 	}
 
 	public PhysicsData setBoundingVolume(BoundingVolume bv) {
-		assert this.bv==null;
+		// allow changing the bounding if the mesh bounding was changed only
+		assert this.bv==null || !geomOriginalInitialLink.getMesh().getBound().getClass().isAssignableFrom(this.bv.getClass());
 		this.bv = bv;
 		return this;
 	}
 
 	public BoundingBox getBoundingBox() {
-		return bb;
+		return (BoundingBox)bv;
 	}
 
-	public PhysicsData setAsBoundingBox() {
-		assert this.bb==null;
-		this.bb = (BoundingBox)bv;
-		return this;
-	}
+//	public PhysicsData setAsBoundingBox() {
+//		assert this.bb==null;
+//		this.bb = (BoundingBox)bv;
+//		return this;
+//	}
 
 	public CollisionShape getCollisionShape() {
 		return cs;
 	}
 
 	public PhysicsData setCollisionShape(CollisionShape cs) {
-		assert this.cs==null;
+//		assert this.cs==null;
 		this.cs = cs;
 		return this;
 	}
 
 	public BoundingSphere getBoundingSphere() {
-		return bs;
+		return (BoundingSphere)bv;
 	}
 
-	public PhysicsData setAsBoundingSphere() {
-		assert this.bs==null;
-		this.bs = (BoundingSphere)bv;
-		return this;
-	}
+//	public PhysicsData setAsBoundingSphere() {
+//		assert this.bs==null;
+//		this.bs = (BoundingSphere)bv;
+//		return this;
+//	}
 
 //	public boolean isbAllowDisintegration() {
 //		return bAllowDisintegration;
@@ -772,11 +776,11 @@ public  class PhysicsData{
 //			return this;
 //		}
 
-	public Geometry getGeomOriginalInitialLink() {
+	public GeometryX getGeomOriginalInitialLink() {
 		return geomOriginalInitialLink;
 	}
 
-	public PhysicsData setGeomOriginalInitialLink(Geometry geomOriginalInitialLink) {
+	public PhysicsData setGeomOriginalInitialLink(GeometryX geomOriginalInitialLink) {
 		this.geomOriginalInitialLink = geomOriginalInitialLink;
 		return this;
 	}
@@ -917,7 +921,7 @@ public  class PhysicsData{
 		return prb.getLinearVelocity(); //is a copy
 	}
 
-	public PhysicsRigidBody getPRB(ICompositeRestrictedAccessControl cc) {
+	public PhysicsRigidBody getPRB(PhysicsI.CompositeControl cc) {
 		assert cc!=null;
 		return prb;
 	}
@@ -988,14 +992,39 @@ public  class PhysicsData{
 		return 10f;
 	}
 
-	public void forceExplode() {
+	public void markToExplode() {
 		this.bForceExplode=true;
 		geomOriginalInitialLink.getMaterial().setColor(EColor.Color.s(), new ColorRGBA(0.5f,0,0,1));
 		geomOriginalInitialLink.getMaterial().setColor(EColor.GlowColor.s(), ColorRGBA.Red.mult(10)); //TODO how to glow more/farer? 10 or 100 makes no diff
 	}
 
-	public boolean isForceExplode() {
+	public boolean isMarkedToExplode() {
 		return bForceExplode;
+	}
+
+	public float getPowerfulRadiusMultiplier() {
+		return 2f;
+	}
+
+	public boolean isInstableExplode() {
+		return bInstableExplode;
+	}
+
+	public PhysicsData setInstableExplode(boolean bInstableExplode) {
+		this.bInstableExplode = bInstableExplode;
+		return this; 
+	}
+
+	public void setPseudoDiameter(float fPseudoDiameter) {
+		this.fPseudoDiameter = fPseudoDiameter;
+	}
+
+	public float getPseudoDiameter() {
+		return fPseudoDiameter;
+	}
+
+	public boolean isBoundingBox() {
+		return bv instanceof BoundingBox;
 	}
 }
 

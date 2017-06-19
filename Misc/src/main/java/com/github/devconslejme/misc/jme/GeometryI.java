@@ -47,14 +47,55 @@ public class GeometryI {
 	public static GeometryI i(){return GlobalManagerI.i().get(GeometryI.class);}
 
 	public static class GeometryX extends Geometry{
+		private Mesh meshWhenStatic;
+		private Mesh meshWhenDynamic;
+		
+		@Override
+		public GeometryX clone() {
+			GeometryX gx = (GeometryX)super.clone();
+			gx.meshWhenDynamic=meshWhenDynamic;
+			gx.meshWhenStatic=meshWhenStatic;
+			PhysicsData pd = UserDataI.i().getMustExistOrNull(this, PhysicsData.class);
+			if(pd!=null)UserDataI.i().putSafelyMustNotExist(gx, pd);
+			return gx;
+		}
+		
 		public GeometryX(String name, Mesh mesh) {
 			super(name, mesh);
 		}
 		
+		public GeometryX(String string) {
+			super(string);
+		}
+
 		public GeometryX setNameX(String name) {
 			super.setName(name);
 			return this;
 		}
+
+		public Mesh getMeshWhenStatic() {
+			return meshWhenStatic;
+		}
+
+		public GeometryX setMeshWhenStatic(Mesh meshWhenStatic) {
+			this.meshWhenStatic = meshWhenStatic;
+			return this; 
+		}
+
+		public Mesh getMeshWhenDynamic() {
+			return meshWhenDynamic;
+		}
+
+		public GeometryX setMeshWhenDynamic(Mesh meshWhenDynamic) {
+			this.meshWhenDynamic = meshWhenDynamic;
+			return this; 
+		}
+		
+//		@Override
+//		public Geometry clone() {
+//			GeometryX geomClone = super.clone();
+//			geomClone.meshw
+//		}
 	}
 	
 	public <T extends Geometry> T create(Mesh mesh, ColorRGBA color) {
