@@ -28,7 +28,7 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 
-import com.github.devconslejme.game.CharacterI;
+import com.github.devconslejme.game.CharacterLeviPhysI;
 import com.github.devconslejme.game.TargetI;
 import com.github.devconslejme.game.TargetI.TargetGeom;
 import com.github.devconslejme.misc.GlobalManagerI;
@@ -101,7 +101,7 @@ public class ManipulatorI {
 		if(pd!=null) {
 			if(!bAllowManipulationOfTerrain && pd.isTerrain())bOk=false;
 			if(!bAllowManipulationOfStatics && pd.isStatic ())bOk=false;
-			if(CharacterI.i().isPossessed(pd.getSpatialWithPhysics()))bOk=false;
+			if(CharacterLeviPhysI.i().isPossessed(pd.getSpatialWithPhysics()))bOk=false;
 		}else {
 			if(!bAllowManipulationWithoutPhysics)bOk=false;
 		}
@@ -115,7 +115,7 @@ public class ManipulatorI {
 			pdManipulating.suspendLevitationIfItIs();
 			pdManipulating.setGrabDist(fCurrentDistance);
 			fCurrentSpeed=0f;
-			pdManipulating.setGrabbedBy(CharacterI.i().getPossessed());
+			pdManipulating.setGrabbedBy(CharacterLeviPhysI.i().getPossessed());
 //			pdManipulating.getPRB().setKinematic(true);
 		}
 	}
@@ -131,7 +131,7 @@ public class ManipulatorI {
 			@Override
 			public Boolean callOnKeyReleased(int iClickCountIndex) {
 				if(!drop()) {
-					ArrayList<RayCastResultX> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+					ArrayList<RayCastResultX> acr = WorldPickingI.i().raycastPiercingFromCenter(null);
 					if(acr.size()>0) {
 						PhysicsData pd = acr.get(0).getPD();
 						if(pd!=null) {

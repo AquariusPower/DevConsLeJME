@@ -319,5 +319,9 @@ public class AppI {
 	public Texture loadTexture(String string) {
 		return app.getAssetManager().loadTexture(string);
 	}
+
+	public void stop() {
+		app.stop();
+	}
 	
 }

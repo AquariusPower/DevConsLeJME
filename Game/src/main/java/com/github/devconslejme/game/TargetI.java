@@ -105,7 +105,7 @@ public class TargetI {
 		////////////// acquire target
 		String strK=KeyCodeManagerI.i().getMouseTriggerKey(1).getFullId();
 		String strFK=flycamx.prependFlyCamContextKeyMod(strK);
-		String strPK=CharacterI.i().prependPossessedContextKeyMod(strK);
+		String strPK=CharacterLeviPhysI.i().prependPossessedContextKeyMod(strK);
 		//////// multi
 		CallBoundKeyCmd cmdAddTgtMulti = new CallBoundKeyCmd(){
 			@Override	public Boolean callOnKeyPressed(int iClickCountIndex){

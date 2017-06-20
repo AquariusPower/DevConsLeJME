@@ -142,12 +142,18 @@ public class WorldPickingI {
 		return raycastPiercingAtXY(nodeVirtualWorld, HWEnvironmentJmeI.i().getMouse().getPos3D(), false);
 	}
 	
+	public Vector3f raycastFromCenterHitSpot() {
+		ArrayList<RayCastResultX> a = raycastPiercingAtXY(null, HWEnvironmentJmeI.i().getDisplay().getCenter(0f), false);
+		if(a.size()>0)return a.get(0).getWHitPos();
+		return null;
+	}
+	
 	/**
 	 * 
 	 * @param nodeVirtualWorld see {@link #raycastPiercingAtXY(Node, Vector3f)}
 	 * @return
 	 */
-	public ArrayList<RayCastResultX> raycastPiercingAtCenter(Node nodeVirtualWorld){
+	public ArrayList<RayCastResultX> raycastPiercingFromCenter(Node nodeVirtualWorld){
 		return raycastPiercingAtXY(nodeVirtualWorld, HWEnvironmentJmeI.i().getDisplay().getCenter(0f), false); //z will be ignored
 	}
 	/**

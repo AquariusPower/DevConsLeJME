@@ -26,7 +26,7 @@
 */
 package com.github.devconslejme.tests;
 
-import com.github.devconslejme.game.CharacterI;
+import com.github.devconslejme.game.CharacterLeviPhysI;
 import com.github.devconslejme.misc.jme.ColorI;
 import com.github.devconslejme.misc.jme.PhysicsData;
 import com.github.devconslejme.misc.jme.PhysicsI;
@@ -62,7 +62,7 @@ public class TestProjectiles extends SimpleApplicationAndStateAbs {
 	@Override
 	public void initTest() {
 //		CharacterI.i().createBCCX(Vector3f.ZERO);
-		CharacterI.i().create(Vector3f.ZERO);
+		CharacterLeviPhysI.i().create(Vector3f.ZERO);
 		
 		PhysicsI.i().setBulletDebugVisualsEnabled(true);
 //		SubdivisionSurfaceModifier s = new SubdivisionSurfaceModifier(modifierStructure, blenderContext);

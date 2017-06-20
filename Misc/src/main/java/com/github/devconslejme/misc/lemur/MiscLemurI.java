@@ -37,6 +37,7 @@ import com.github.devconslejme.misc.GlobalManagerI;
 import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableX;
+import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI;
 import com.github.devconslejme.misc.jme.SpatialHierarchyI.SpatialInfo;
 import com.google.common.base.Strings;
@@ -121,7 +122,8 @@ public class MiscLemurI {
 	}
 
 	public boolean isMouseCursorOver(Panel pnl) {
-		Vector2f v2f = GlobalManagerI.i().get(Application.class).getInputManager().getCursorPosition();
+		Vector2f v2f = HWEnvironmentJmeI.i().getMouse().getPos2D();
+//		Vector2f v2f = GlobalManagerI.i().get(Application.class).getInputManager().getCursorPosition();
 		
 		Vector3f v3fPos = pnl.getLocalTranslation();
 		Vector3f v3fSize = pnl.getSize();

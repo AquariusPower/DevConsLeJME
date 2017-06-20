@@ -31,9 +31,11 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ArrowGeometry.EFollowMode;
 import com.jme3.bounding.BoundingSphere;
+import com.jme3.bounding.BoundingVolume;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue.Bucket;
+import com.jme3.scene.BatchNode;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
@@ -89,6 +91,35 @@ public class GeometryI {
 		public GeometryX setMeshWhenDynamic(Mesh meshWhenDynamic) {
 			this.meshWhenDynamic = meshWhenDynamic;
 			return this; 
+		}
+		
+		Node nodeCorrect = new Node();
+		@Override
+		public BoundingVolume getWorldBound() {
+			if(getParent() instanceof BatchNode) {
+				//TODO implement an alternative with nodeCorrect?
+				throw new UnsupportedOperationException("inside batchnode, it will not be correct");
+			}
+			
+			return super.getWorldBound();
+		}
+		
+		@Override
+		public Vector3f getWorldTranslation() {
+			if(getParent() instanceof BatchNode) {
+				/**
+				 * IMPORTANT!!!
+				 * inside the batch node, the geometries are not updated as that batch node moves on the world,
+				 * this means their world bound are of the last glue; the last batch() update doesnt change that!
+				 * so the world bound stored is of before being added to the batch node!
+				 * TODO right?
+				 */
+
+//				nodeCorrectWPos.setLocalTranslation(getLocalTranslation());
+				return getParent().localToWorld(getLocalTranslation(),null);
+			}else {
+				return super.getWorldTranslation();
+			}
 		}
 		
 //		@Override

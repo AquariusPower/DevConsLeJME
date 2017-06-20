@@ -577,7 +577,7 @@ public class FlyByCameraX extends FlyByCamera {
 		
 		keyFlyCamMod.setPressedSpecialExternalContextKeyMode(cc,isEnabled()&&isAllowMove());
 		
-		acrLast = WorldPickingI.i().raycastPiercingAtCenter(null);
+		acrLast = WorldPickingI.i().raycastPiercingFromCenter(null);
 //		boolean bSuspendZooming=false;
 		boolean bInstaZoom=false;
 		if(acrLast.size()>0) {

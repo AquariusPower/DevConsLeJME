@@ -1,6 +1,5 @@
 /* 
 	Copyright (c) 2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
-	Copyright (c) 2017, Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
 	
 	All rights reserved.
 
@@ -69,8 +68,8 @@ import com.jme3.scene.shape.Box;
 /**
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
-public class CharacterI {
-	public static CharacterI i(){return GlobalManagerI.i().get(CharacterI.class);}
+public class CharacterLeviPhysI {
+	public static CharacterLeviPhysI i(){return GlobalManagerI.i().get(CharacterLeviPhysI.class);}
 	
 	public static class CompositeControl implements ICompositeRestrictedAccessControl{private CompositeControl(){};};
 	private ICompositeRestrictedAccessControl	cc=new CompositeControl();
@@ -182,7 +181,7 @@ public class CharacterI {
 			/**
 			 * user target spot
 			 */
-			ArrayList<RayCastResultX> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+			ArrayList<RayCastResultX> acr = WorldPickingI.i().raycastPiercingFromCenter(null);
 			if(acr.size()==0)return null;
 			RayCastResultX cr = acr.get(0);
 			if(!cr.getPD().isTerrain())return null;
@@ -218,79 +217,11 @@ public class CharacterI {
 		return lc;
 	}
 	
-	@Deprecated
-	public BetterCharacterControlX createBCCX(Vector3f v3fSpawnAt){
-		if(v3fSpawnAt==null){
-			/**
-			 * user target spot
-			 */
-			ArrayList<RayCastResultX> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
-			if(acr.size()==0)return null;
-			RayCastResultX cr = acr.get(0);
-			if(!cr.getPD().isTerrain())return null;
-			v3fSpawnAt = cr.getWHitPos();
-		}
-		
-//		PhysicsCharacter pc = new PhysicsCharacter(new CapsuleCollisionShape(), 2f);
-		float fHeight=1.7f;
-		BetterCharacterControlX bcc = new BetterCharacterControlX(0.25f, fHeight, 70f);
-		
-		bcc.nodeBody = new NodeBodyPart(null,"CharacterBody");
-		
-		GeometryX geomBody = GeometryI.i().create(new Box(0.25f,fHeight/2f,0.25f), ColorRGBA.Orange, false, new GeometryX("CharBody"));
-		geomBody.setLocalTranslation(0, fHeight/2f, 0);
-		bcc.nodeBody.attachChild(geomBody);
-		
-		float fHeadRadius=0.15f;
-		bcc.sptHead=GeometryI.i().create(MeshI.i().sphere(fHeadRadius), ColorRGBA.Yellow);
-		bcc.sptHead.setLocalTranslation(0, fHeight+fHeadRadius, 0);
-		bcc.nodeBody.attachChild(bcc.sptHead);
-		
-		bcc.nodeBody.addControl(bcc);
-		
-		AppI.i().getRootNode().attachChild(bcc.nodeBody);
-		
-		PhysicsData pd = new PhysicsData(bcc.nodeBody, geomBody);
-		pd.setPRB(bcc.getPRB());
-		UserDataI.i().putSafelyMustNotExist(pd.getSpatialWithPhysics(), pd); //BEFORE adding to phys space as its thread will be trying to retrieve it!
-		PhysicsI.i().add(bcc.nodeBody);
-		
-		bcc.setPhysicsLocation(v3fSpawnAt.add(0,0.25f,0)); //a bit above
-		
-//		bccPossessed = bcc;
-		
-		return bcc;
-	}
-	
 	protected void updateAllLevis(float tpf) {
 		for(LeviCharacter lc : alc) {
 			lc.update(tpf);
 		}
 	}
-//	@Deprecated
-//	public void updatePossessedBCC(float fTPF){
-//		//TODO if(bccPossessed==null)return;
-//		
-//		Vector3f v3fMove = new Vector3f();
-//		
-//		if(bForward!=null){
-//			Vector3f v3f=AppI.i().getCamLookingAtDir();
-//			v3f.multLocal(getSpeed());
-//			v3f.y=0;
-//			if(!bForward)v3f.negateLocal();
-//			v3fMove.addLocal(v3f);
-//		}
-//		
-//		if(bStrafeLeft!=null){
-//			Vector3f v3f=AppI.i().getCamLeftDir();
-//			v3f.multLocal(getSpeed());
-//			v3f.y=0;
-//			if(!bStrafeLeft)v3f.negateLocal();
-//			v3fMove.addLocal(v3f);
-//		}
-//		
-//		//TODO bccPossessed.setWalkDirection(v3fMove);
-//	}
 	
 	public void configure(FlyByCameraX flycamx){
 		this.flycamx = flycamx;
@@ -303,9 +234,9 @@ public class CharacterI {
 					if(isPossessing()){
 						releasePossessed();
 					}else{
-						ArrayList<RayCastResultX> ar = WorldPickingI.i().raycastPiercingAtCenter(null);
+						ArrayList<RayCastResultX> ar = WorldPickingI.i().raycastPiercingFromCenter(null);
 						if(ar.size()>0){
-							Geometry geom = ar.get(0).getPD().getGeomOriginalInitialLink();
+							Geometry geom = ar.get(0).getPD().getInitialOriginalGeometry();
 							LeviCharacter levi = getLeviFrom(geom);
 							if(levi!=null)setPossessed(levi);
 						}
@@ -372,14 +303,6 @@ public class CharacterI {
 		return nb.getLevi();
 	}
 	
-	@Deprecated
-	public BetterCharacterControlX getBCCFrom(Spatial spt){
-		NodeBodyPart nb = getBodyPartFrom(spt);
-		if(nb==null)return null;
-		BetterCharacterControlX bcc = nb.getControl(BetterCharacterControlX.class);
-		return bcc;
-	}
-	
 	public NodeBodyPart getBodyPartFrom(Spatial spt){
 		return SpatialHierarchyI.i().getParentestOrSelf(spt, NodeBodyPart.class, true, false);
 	}
@@ -393,7 +316,6 @@ public class CharacterI {
 				updateAllLevis(getTPF());
 				
 				updatePossessed(getTPF());
-//				updatePossessedBCC(getTPF());
 				
 				updateFlyCameraFollow();
 				
@@ -513,7 +435,7 @@ public class CharacterI {
 		return isRunning() ? fSpeed*fRunSpeedMult : fSpeed;
 	}
 
-	public CharacterI setSpeed(float fSpeed) {
+	public CharacterLeviPhysI setSpeed(float fSpeed) {
 		this.fSpeed = fSpeed;
 		return this; 
 	}
@@ -522,11 +444,7 @@ public class CharacterI {
 	public boolean isCharacter(PhysicsCollisionObject pco) {
 		return (pco.getUserObject() instanceof NodeBodyPart);
 	}
-	@Deprecated 
-	public boolean isCharacterForSure(PhysicsCollisionObject pco) {
-		return ((Spatial)pco.getUserObject()).getControl(BetterCharacterControlX.class)!=null;
-	}
-
+	
 	public LeviCharacter getPossessed() {
 		return leviPossessed;
 	}
@@ -542,7 +460,7 @@ public class CharacterI {
 		return bRunning;
 	}
 
-	public CharacterI setRunning(boolean bRunning) {
+	public CharacterLeviPhysI setRunning(boolean bRunning) {
 		this.bRunning = bRunning;
 		return this; 
 	}
@@ -551,7 +469,7 @@ public class CharacterI {
 		return fDivMassRotToDir;
 	}
 
-	public CharacterI setDivMassRotToDir(float fDivMassRotToDir) {
+	public CharacterLeviPhysI setDivMassRotToDir(float fDivMassRotToDir) {
 		this.fDivMassRotToDir = fDivMassRotToDir;
 		return this; 
 	}
@@ -560,7 +478,7 @@ public class CharacterI {
 		return bHideHeadOnPossession;
 	}
 
-	public CharacterI setHideHeadOnPossession(boolean bHideHeadOnPossession) {
+	public CharacterLeviPhysI setHideHeadOnPossession(boolean bHideHeadOnPossession) {
 		this.bHideHeadOnPossession = bHideHeadOnPossession;
 		return this; 
 	}
@@ -569,7 +487,7 @@ public class CharacterI {
 		return lMaxJumpHoldDelay;
 	}
 
-	public CharacterI setMaxJumpHoldDelay(long lMaxJumpHoldDelay) {
+	public CharacterLeviPhysI setMaxJumpHoldDelay(long lMaxJumpHoldDelay) {
 		this.lMaxJumpHoldDelay = lMaxJumpHoldDelay;
 		return this; 
 	}
@@ -578,12 +496,12 @@ public class CharacterI {
 		return fJumpMultImpulse;
 	}
 
-	public CharacterI setJumpMultImpulse(float fJumpMultImpulse) {
+	public CharacterLeviPhysI setJumpMultImpulse(float fJumpMultImpulse) {
 		this.fJumpMultImpulse = fJumpMultImpulse;
 		return this; 
 	}
 	
-	public CharacterI setMoveImpulseInterval(float f) {
+	public CharacterLeviPhysI setMoveImpulseInterval(float f) {
 		tdMoveImpulseInterval.resetAndChangeDelayTo(f).setActive(true);
 		return this;
 	}

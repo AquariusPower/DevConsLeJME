@@ -70,6 +70,7 @@ import com.github.devconslejme.misc.ReportI;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.SystemAlertI;
 import com.github.devconslejme.misc.TimeFormatI;
+import com.github.devconslejme.misc.jme.AppI;
 import com.github.devconslejme.misc.jme.HWEnvironmentJmeI;
 import com.github.devconslejme.misc.jme.StringTextJmeI;
 import com.google.common.collect.HashBiMap;
@@ -227,7 +228,8 @@ public class JavaScriptI implements IGlobalAddListener {
 			case quit:
 			case exit:
 				LoggingI.i().logMarker("exiting by user request");
-				G.i(Application.class).stop();
+				AppI.i().stop();
+//				G.i(Application.class).stop();
 				return true;
 			case exec:
 				execFileAndShowRetVal(strParams);

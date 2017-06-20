@@ -28,7 +28,7 @@ package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
 
-import com.github.devconslejme.game.CharacterI.LeviCharacter;
+import com.github.devconslejme.game.CharacterLeviPhysI.LeviCharacter;
 import com.github.devconslejme.misc.MainThreadI;
 import com.github.devconslejme.misc.MatterI.MatterStatus;
 import com.github.devconslejme.misc.QueueI.CallableWeak;
@@ -307,7 +307,7 @@ public  class PhysicsData{
 		prb.setMass((float)this.mts.getMassKg());
 	}
 
-	public Geometry getInitialOriginalGeometry() {
+	public GeometryX getInitialOriginalGeometry() {
 		return geomOriginalInitialLink;
 	}
 
@@ -776,9 +776,9 @@ public  class PhysicsData{
 //			return this;
 //		}
 
-	public GeometryX getGeomOriginalInitialLink() {
-		return geomOriginalInitialLink;
-	}
+//	public GeometryX getGeomOriginalInitialLink() {
+//		return geomOriginalInitialLink;
+//	}
 
 	public PhysicsData setGeomOriginalInitialLink(GeometryX geomOriginalInitialLink) {
 		this.geomOriginalInitialLink = geomOriginalInitialLink;

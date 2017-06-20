@@ -75,7 +75,7 @@ public class DebugVisualsI {
 		KeyBindCommandManagerI.i().putBindCommandsLater("Ctrl+D",new CallBoundKeyCmd(){
 			@Override
 			public Boolean callOnKeyReleased(int iClickCountIndex) {
-				ArrayList<RayCastResultX> acr = WorldPickingI.i().raycastPiercingAtCenter(null);
+				ArrayList<RayCastResultX> acr = WorldPickingI.i().raycastPiercingFromCenter(null);
 				if(acr.size()>0)toggleWorldBoundAndRotAxes(acr.get(0).getGeom());
 				return true;
 			}

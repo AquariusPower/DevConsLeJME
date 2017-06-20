@@ -614,7 +614,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 	public void applyStaticColliderFromGeometryBounds(PhysicsData pd) {
 //		pspace.remove(pd.getSpatialWithPhysics());
 
-		GeometryX geom = pd.getGeomOriginalInitialLink();
+		GeometryX geom = pd.getInitialOriginalGeometry();
 		
 		Node parent = geom.getParent();
 		geom.removeFromParent(); //this is required to let the mesh be changed below
@@ -1328,7 +1328,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			this.v3fRayCastDirOrTo = v3fTo;
 			
 			//TODO could the geometry not be aligned with the current physics position/rotation
-			if(pd!=null)v3fLocalHit = pd.getGeomOriginalInitialLink().worldToLocal(getWHitPos(),null);
+			if(pd!=null)v3fLocalHit = pd.getInitialOriginalGeometry().worldToLocal(getWHitPos(),null);
 		}
 		public CollisionResult getResGeom() {
 			return resGeom;
@@ -1402,7 +1402,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 				assert pdChk.isPRB(result.getCollisionObject());
 				Vector3f v3fHit = v3fFrom.clone().interpolateLocal(v3fTo,result.getHitFraction());
 				RayCastResultX resultx = new RayCastResultX(
-					result, null, pdChk, pdChk.getGeomOriginalInitialLink(), v3fHit, result.getHitNormalLocal().clone(), 
+					result, null, pdChk, pdChk.getInitialOriginalGeometry(), v3fHit, result.getHitNormalLocal().clone(), 
 					v3fFrom.distance(v3fHit), v3fFrom, v3fTo
 				);
 				aresxList.add(resultx);
@@ -1426,7 +1426,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			boolean bGlued = pdProjectile.checkGluedAt(resx);
 			
 			if(bGlued) {
-				ParticlesI.i().createAtMainThread(EParticle.Debris.s(), resx.getWHitPos(), 0.05f, 0.5f);
+				ParticlesI.i().createAtMainThread(EParticle.Debris.s(), resx.getWHitPos(), 1f, null);
 			}else {
 				ParticlesI.i().createAtMainThread(EParticle.Fire.s(), resx.getWHitPos(), 0.05f, 1f);
 			}
@@ -1599,7 +1599,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 //		node.attachChild(geom);
 		
 		if(v3fPos==null) {
-			ArrayList<RayCastResultX> resx = WorldPickingI.i().raycastPiercingAtCenter(null);
+			ArrayList<RayCastResultX> resx = WorldPickingI.i().raycastPiercingFromCenter(null);
 			if(resx.size()>0) {
 				v3fPos = resx.get(0).getWHitPos();
 			}else {
