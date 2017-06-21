@@ -539,7 +539,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		return pd;
 	}
 	
-	private RigidBodyControl preparePhysics(PhysicsData pd, Geometry geom) {
+	private RigidBodyControl preparePhysics(PhysicsData pd, GeometryX geom) {
 		prepareAlignedBounding(pd,geom);
 		createCollisionShapeFromBounds(pd);
 		RigidBodyControl rbc = prepareRigidBodyControl(pd);
@@ -591,7 +591,7 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 		}
 	}
 
-	private void prepareAlignedBounding(PhysicsData pd, Geometry geom) {
+	private void prepareAlignedBounding(PhysicsData pd, GeometryX geom) {
 		/*****************************************
 		 * retrieve correct(default/Original/Aligned) bounding
 		 * bkp rot

@@ -27,6 +27,7 @@
 package com.github.devconslejme.misc.jme;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.github.devconslejme.misc.Annotations.Workaround;
 import com.github.devconslejme.misc.DetailedException;
@@ -44,6 +45,7 @@ import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.TimedDelay;
 import com.github.devconslejme.misc.jme.PhysicsI.RayCastResultX;
+import com.google.common.base.Strings;
 import com.jme3.app.Application;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.MotionAllowedListener;
@@ -53,6 +55,7 @@ import com.jme3.input.InputManager;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.math.FastMath;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.Node;
@@ -242,7 +245,17 @@ public class FlyByCameraX extends FlyByCamera {
 	@Override
 	protected void rotateCamera(float value, Vector3f axis) {
 		if(!isRotationAllowed())return;
+		
+		Quaternion quaBkp = cam.getRotation().clone();
+		
 		super.rotateCamera(value*fZoomedRotationSpeed, axis);
+		
+		// limit up and down
+		float[] afAngles = cam.getRotation().toAngles(null);
+		float fUpDown = afAngles[0]*FastMath.RAD_TO_DEG;
+		if(fUpDown > 90 || fUpDown < -90) {
+			cam.setRotation(quaBkp);
+		}
 	}
 	
 	/**
@@ -884,4 +897,21 @@ public class FlyByCameraX extends FlyByCamera {
 		return this; 
 	}
 	
+	public Object debugTest(Object... aobj) { //KEEP
+		cam.setLocation(Vector3f.ZERO);
+//		cam.lookAt(Vector3f.UNIT_Y.negate(), Vector3f.UNIT_Y);
+		cam.lookAt(Vector3f.UNIT_Y, Vector3f.UNIT_Y);
+		
+		System.out.println(Arrays.toString(cam.getRotation().toAngles(null)));
+		
+		Vector3f axisStore=new Vector3f();
+		float f=cam.getRotation().toAngleAxis(axisStore);
+		System.out.println(axisStore+"a"+f);
+		
+		System.out.println(cam.getRotation().getRotationColumn(0));
+		System.out.println(cam.getRotation().getRotationColumn(1));
+		System.out.println(cam.getRotation().getRotationColumn(2));
+		
+		return null;
+	}
 }

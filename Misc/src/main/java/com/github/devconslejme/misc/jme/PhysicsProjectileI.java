@@ -341,7 +341,7 @@ public class PhysicsProjectileI {
 		sbnProjectilesAtWorld.attachChild(geomClone); //AppI.i().getRootNode().attachChild(geomClone);
 		sbnProjectilesAtWorld.batch();
 		
-		assert geomClone.getWorldBound() instanceof BoundingSphere : "the fastest collider calculus if for spheres, so projectiles must use it";
+		assert geomClone.isWorldBoundingSphere() : "the fastest collider calculus is for spheres, so projectiles must use it";
 		
 		PhysicsData pd = PhysicsI.i().imbueFromWBounds(geomClone, pp.mts, null);
 //		geomClone.scale(pp.fPhysBoundsScaleDiv); //to restore the good looking size
@@ -384,18 +384,9 @@ public class PhysicsProjectileI {
 		
 		if(nodeNewParent!=null){
 			if(nodeNewParent==sbnProjectilesAtWorld) {
-				/**
-				 * IMPORTANT!!!
-				 * inside the batch node, the geometries are not updated as that batch node moves on the world,
-				 * this means their world bound are of the last glue; the last batch() update doesnt change that!
-				 * so the world bound stored is of before being added to the batch node!
-				 * TODO right?
-				 */
-
-//				Vector3f v3fWPos=sptProjectile.getWorldTranslation();
-				Vector3f v3fWPos=previousParent.localToWorld(geomWhat.getLocalTranslation(),null);
-				geomWhat.setLocalTranslation(v3fWPos);
-//				sptProjectile.setLocalTranslation(sptProjectile.worldToLocal(v3fWPos, null));
+//				Vector3f v3fWPos=previousParent.localToWorld(geomWhat.getLocalTranslation(),null);
+//				geomWhat.setLocalTranslation(v3fWPos);
+				geomWhat.setLocalTranslation(geomWhat.getWorldTranslation());
 			}
 			nodeNewParent.attachChild(geomWhat);
 			nodeNewParent.batch();

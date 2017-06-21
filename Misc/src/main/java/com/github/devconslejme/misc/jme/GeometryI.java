@@ -93,6 +93,10 @@ public class GeometryI {
 			return this; 
 		}
 		
+		public boolean isWorldBoundingSphere() {
+			return super.getWorldBound() instanceof BoundingSphere;
+		}
+		
 		Node nodeCorrect = new Node();
 		@Override
 		public BoundingVolume getWorldBound() {

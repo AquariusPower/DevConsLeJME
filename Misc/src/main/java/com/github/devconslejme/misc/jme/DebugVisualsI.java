@@ -49,7 +49,8 @@ import com.jme3.scene.shape.Box;
 
 /**
  * These visuals are to not be integrated as child into other spatials as they would most probably 
- * modify their world bound, possibly causing other troubles.
+ * modify their world bound (the extra axes scaling), possibly causing other troubles on calculations depending 
+ * on correct bounds.
  * 
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
@@ -62,6 +63,7 @@ public class DebugVisualsI {
 	private HashMap<Spatial,NodeDbg> ahmShowWorldBound = new HashMap<Spatial,NodeDbg>();
 	private Node	axesRef;
 	private Vector3f	v3fAxesDisplaceCam;
+	private boolean bEnableDbgVis;
 	
 	public void configure(){ //just to let the global be promptly instantiated
 		QueueI.i().enqueue(new CallableXAnon() {
@@ -85,7 +87,6 @@ public class DebugVisualsI {
 		float fScale=0.1f;
 		axesRef.setLocalScale(fScale);
 		v3fAxesDisplaceCam=new Vector3f(0f,0f,1f+fScale);
-		AppI.i().getRootNode().attachChild(axesRef);
 		
 		Runnable r = new Runnable() {
 //			private long lPrevious=0;
@@ -118,7 +119,12 @@ public class DebugVisualsI {
 //		if(bShowWorldBound)
 		updateShowWorldBound(tpf);
 		
-		AppI.i().placeAtCamWPos(axesRef, v3fAxesDisplaceCam, false); //being at world, must be in the center TODO put at gui node?
+		if(isEnableDbgVis()) {
+			if(axesRef.getParent()==null)AppI.i().getRootNode().attachChild(axesRef);
+			AppI.i().placeAtCamWPos(axesRef, v3fAxesDisplaceCam, false); //being at world, must be in the center TODO put at gui node?
+		}else {
+			if(axesRef.getParent()!=null)(axesRef).removeFromParent();
+		}
 	}
 	
 	public static class NodeAxesDbg extends Node implements IDbg{
@@ -145,6 +151,7 @@ public class DebugVisualsI {
 		private Spatial	sptTarget;
 		
 		private boolean	bShow;
+		private Node nodeParentBkp;
 		public boolean isShow() {
 			return bShow;
 		}
@@ -152,6 +159,16 @@ public class DebugVisualsI {
 		public NodeDbg(Spatial spt) {
 			setName(DebugVisualsI.class.getSimpleName()+":Node");
 			this.sptTarget = spt;
+		}
+		
+		@Override
+		public boolean removeFromParent() {
+			if(getParent()!=null)nodeParentBkp=getParent();
+			return super.removeFromParent();
+		}
+		
+		public void reAttachToPreviousParent() {
+			if(getParent()==null && nodeParentBkp!=null)nodeParentBkp.attachChild(this);
 		}
 		
 //		@Override
@@ -298,48 +315,30 @@ public class DebugVisualsI {
 		Spatial getTarget();
 	}
 	
-//	protected void setShow(NodeDbg nd, boolean bShowWorldBound, boolean bShowAxis) {
-//		this.bShowWorldBound=bShowWorldBound;
-//		
-//		if(!bShowWorldBound){
-//			removeFromParent();
-//		}else{
-//			if(sptTarget.getParent()!=null){
-//				sptTarget.getParent().attachChild(this);
-//			}
-//		}
-//	}
-//	protected void setShow(Spatial spt, boolean b) {
-//		if(b){
-//			Node parent = ((IDbg)spt).getTarget().getParent();
-//			if(parent!=null){
-//				parent.attachChild(spt);
-//			}
-//		}else{
-//			spt.removeFromParent();
-//		}
-//	}
-	
 	protected void updateShowWorldBound(float tpf) {
 		for(Entry<Spatial, NodeDbg> entry:ahmShowWorldBound.entrySet()){
 			Spatial spt = entry.getKey();
-//			GeometryBVolDbg geomBV = entry.getValue().geombv;
-//			if(spt.getParent()==null && geomBV.getParent()!=null){
 			NodeDbg nd = entry.getValue();
-			if(spt.getParent()==null && nd.getParent()!=null){
-				nd.removeFromParent();
-				continue;
+			if(bEnableDbgVis) {
+				if(nd.getParent()==null)nd.reAttachToPreviousParent();
+				
+				if(spt.getParent()==null && nd.getParent()!=null){
+					nd.removeFromParent();
+					continue;
+				}
+				
+				if(spt.getParent()!=null && nd.getParent()==null && nd.isShow()){
+					nd.setShow(true);
+				}
+				
+				updateWorldBoundAndAxes(spt,nd);
+	//			System.out.println("B:"+nd.getLocalTranslation());
+	//			nd.setLocalTranslation(spt.getLocalTranslation().clone());
+				nd.setLocalTranslation(spt.getWorldTranslation().clone());
+	//			System.out.println("A:"+nd.getLocalTranslation());
+			}else {
+				if(nd.getParent()!=null)nd.removeFromParent();
 			}
-			
-			if(spt.getParent()!=null && nd.getParent()==null && nd.isShow()){
-				nd.setShow(true);
-			}
-			
-			updateWorldBoundAndAxes(spt,nd);
-//			System.out.println("B:"+nd.getLocalTranslation());
-//			nd.setLocalTranslation(spt.getLocalTranslation().clone());
-			nd.setLocalTranslation(spt.getWorldTranslation().clone());
-//			System.out.println("A:"+nd.getLocalTranslation());
 		}
 	}
 	
@@ -508,6 +507,15 @@ public class DebugVisualsI {
 			}
 		}
 		return this; //for beans setter
+	}
+
+	public boolean isEnableDbgVis() {
+		return bEnableDbgVis;
+	}
+
+	public DebugVisualsI setEnableDbgVis(boolean bEnableDbgVis) {
+		this.bEnableDbgVis = bEnableDbgVis;
+		return this; 
 	}
 
 	
