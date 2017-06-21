@@ -1424,12 +1424,14 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			RayCastResultX resx = aresxList.get(0);
 			boolean bGlued = pdProjectile.checkGluedAt(resx);
 			
+			Vector3f v3fUp = pdProjectile.getPhysicsRotationCopy().getRotationColumn(1);
+			Vector3f v3fDir = pdProjectile.getPhysicsRotationCopy().getRotationColumn(2);
 			if(bGlued) {
 				ParticlesI.i().createAtMainThread(EParticle.Debris.s(), resx.getWHitPos(), 1f, null);
-				if(resx.pd.isTerrain())DecalI.i().createAtMainThread(null,resx.getWHitPos(),EDecal.Hole);
+				if(resx.pd.isTerrain())DecalI.i().createAtMainThread(null,resx.getWHitPos(),v3fDir,v3fUp,EDecal.Hole);
 			}else {
 				ParticlesI.i().createAtMainThread(EParticle.Fire.s(), resx.getWHitPos(), 0.05f, 1f);
-				if(resx.pd.isTerrain())DecalI.i().createAtMainThread(null,resx.getWHitPos(),EDecal.Burn);
+				if(resx.pd.isTerrain())DecalI.i().createAtMainThread(null,resx.getWHitPos(),resx.getNormal(),v3fDir,EDecal.Burn);
 			}
 			
 //			boolean bDeflected = pdProjectile.isHasGlueTargetDeflected();

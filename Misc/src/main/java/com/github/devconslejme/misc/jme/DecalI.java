@@ -38,6 +38,7 @@ import com.jme3.scene.SimpleBatchNode;
 import com.jme3.scene.shape.Sphere;
 
 /**
+ * TODO these decals are still horrible...
  * @author Henrique Abdalla <https://github.com/AquariusPower><https://sourceforge.net/u/teike/profile/>
  */
 public class DecalI {
@@ -58,12 +59,13 @@ public class DecalI {
 	
 	public void configure() {
 //		geomFactory = GeometryI.i().create(MeshI.i().sphere(0.05f), ColorRGBA.Black);
-		geomFactoryBurn = GeometryI.i().create(new Sphere(4,5,0.025f), ColorRGBA.Black);
-		geomFactoryHole = GeometryI.i().create(new Sphere(4,5,0.025f), ColorRGBA.Yellow);
-		geomFactoryExploded = GeometryI.i().create(new Sphere(4,5,0.05f), ColorRGBA.Cyan);
+		ColorRGBA c = new ColorRGBA(0,0,0,-0.75f);
+		geomFactoryBurn = GeometryI.i().create(new Sphere(4,5,0.025f), ColorRGBA.Black.add(c));
+		geomFactoryHole = GeometryI.i().create(new Sphere(4,5,0.025f), ColorRGBA.Yellow.add(c));
+		geomFactoryExploded = GeometryI.i().create(new Sphere(4,5,0.05f), ColorRGBA.Cyan.add(c));
 	}
 	
-	public void createAtMainThread(Node nodeParent, Vector3f v3fWHitPos, EDecal e) {
+	public void createAtMainThread(Node nodeParent, Vector3f v3fPos, Vector3f v3fUpOrNormal, Vector3f v3fLookAtDir, EDecal e) {
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
 			public Boolean call() {
@@ -71,18 +73,23 @@ public class DecalI {
 				switch(e) {
 					case Burn:
 						geom = geomFactoryBurn.clone();
+						geom.scale(0.5f, 1f, 1); //this will have a direction like effect
 						break;
 					case Exploded:
 						geom = geomFactoryExploded.clone();
+						geom.scale(1f, 0.25f, 1);
 						break;
 					case Hole:
 						geom = geomFactoryHole.clone();
+						geom.scale(1f, 0.25f, 1);
 						break;
 				}
+				geom.scale(1f, 0.1f, 1); //this will be thin
 				
 				if(sbnProjectilesAtWorld.getParent()==null)AppI.i().getRootNode().attachChild(sbnProjectilesAtWorld);
 //				(nodeParent!=null ? nodeParent : AppI.i().getRootNode()).attachChild(geomFactory.clone());
-				geom.setLocalTranslation(v3fWHitPos);
+				geom.setLocalTranslation(v3fPos);
+				geom.lookAt(geom.getWorldTranslation().add(v3fLookAtDir), v3fUpOrNormal);
 				(nodeParent!=null ? nodeParent : sbnProjectilesAtWorld).attachChild(geom);
 				if(nodeParent instanceof BatchNode)((BatchNode)nodeParent).batch();
 				return true;

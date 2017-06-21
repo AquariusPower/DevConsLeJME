@@ -519,15 +519,16 @@ public class PhysicsProjectileI {
 					bDoExplode=true;
 				}else
 				if(pdWhat.isInstableExplode() && bvOtherFixed.intersects(bvWhatFixed)) { //Instability: this begins the automatic explosion cascade
+					if(!apd.contains(pdWhat))apd.add(pdWhat); //so do it later
 					apd.add(pdOther);
 					bDoExplode=true;
 				}
 				
 				if(bDoExplode) {
-					explode(pdWhat,fPowerfulRadius,2f);
-					//TODO terrain ones are not working why?
-					ParticlesI.i().createAtMainThread(EParticle.Smoke.s(), pdWhat.getSpatialWithPhysics(), 0.1f, 100f);
-					if(!pdWhat.isMarkedToExplode())break; //wont break to look for others nearby
+					if(pdWhat.isMarkedToExplode())explode(pdWhat,fPowerfulRadius,2f);
+//					//TODO terrain ones are not working why?
+//					ParticlesI.i().createAtMainThread(EParticle.Smoke.s(), pdWhat.getSpatialWithPhysics(), 0.1f, 100f);
+//					if(!pdWhat.isMarkedToExplode())break; //wont break to look for others nearby
 				}
 			}
 		}
@@ -548,7 +549,10 @@ public class PhysicsProjectileI {
 		if(pdWhat.getGlueWhere().isTerrain()) {
 //			v3fPos = pdWhat.getInstaTempWorldGlueSpot();
 			v3fPos = geomWhat.getWorldTranslation();
-			DecalI.i().createAtMainThread(null,v3fPos,EDecal.Exploded);
+			DecalI.i().createAtMainThread(null,v3fPos,
+				geomWhat.getWorldRotation().getRotationColumn(2),
+				geomWhat.getWorldRotation().getRotationColumn(1),
+				EDecal.Exploded);
 			destroyProjectile(pdWhat);
 		}else {
 			reparentProjectile(sbnProjectilesAtWorld, pdWhat); //to position properly in the world
