@@ -52,10 +52,10 @@ import com.github.devconslejme.misc.SimulationTimeI;
 import com.github.devconslejme.misc.StringI;
 import com.github.devconslejme.misc.TimeFormatI;
 import com.github.devconslejme.misc.TimedDelay;
+import com.github.devconslejme.misc.jme.DecalI.EDecal;
 import com.github.devconslejme.misc.jme.GeometryI.GeometryX;
 import com.github.devconslejme.misc.jme.ParticlesI.EParticle;
 import com.jme3.bounding.BoundingBox;
-import com.jme3.bounding.BoundingSphere;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.BulletAppState.ThreadingType;
 import com.jme3.bullet.PhysicsSpace;
@@ -78,7 +78,6 @@ import com.jme3.math.Transform;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.BatchNode;
 import com.jme3.scene.Geometry;
-import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
@@ -1427,8 +1426,10 @@ public class PhysicsI implements PhysicsTickListener, PhysicsCollisionGroupListe
 			
 			if(bGlued) {
 				ParticlesI.i().createAtMainThread(EParticle.Debris.s(), resx.getWHitPos(), 1f, null);
+				if(resx.pd.isTerrain())DecalI.i().createAtMainThread(null,resx.getWHitPos(),EDecal.Hole);
 			}else {
 				ParticlesI.i().createAtMainThread(EParticle.Fire.s(), resx.getWHitPos(), 0.05f, 1f);
+				if(resx.pd.isTerrain())DecalI.i().createAtMainThread(null,resx.getWHitPos(),EDecal.Burn);
 			}
 			
 //			boolean bDeflected = pdProjectile.isHasGlueTargetDeflected();

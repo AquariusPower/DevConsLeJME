@@ -103,6 +103,7 @@ public class PkgCfgI extends PkgCfgAbs{
 		ManipulatorI.i().configure();
 		PhysicsProjectileI.i().configure();
 		ParticlesI.i().configure();
+		DecalI.i().configure();
 		
 		// non standard cfgs
 //		WorldPickingI.i().addSkipType(DebugVisualsI.GeometryBVolDbg.class);

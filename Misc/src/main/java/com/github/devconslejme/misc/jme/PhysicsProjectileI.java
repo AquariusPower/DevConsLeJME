@@ -39,6 +39,7 @@ import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ActivatorI.ActivetableListenerAbs;
 import com.github.devconslejme.misc.jme.ColorI.EColor;
+import com.github.devconslejme.misc.jme.DecalI.EDecal;
 import com.github.devconslejme.misc.jme.GeometryI.GeometryX;
 import com.github.devconslejme.misc.jme.ParticlesI.EParticle;
 import com.github.devconslejme.misc.jme.PhysicsI.ImpTorForce;
@@ -53,7 +54,6 @@ import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.SimpleBatchNode;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
 
 /**
@@ -525,6 +525,8 @@ public class PhysicsProjectileI {
 				
 				if(bDoExplode) {
 					explode(pdWhat,fPowerfulRadius,2f);
+					//TODO terrain ones are not working why?
+					ParticlesI.i().createAtMainThread(EParticle.Smoke.s(), pdWhat.getSpatialWithPhysics(), 0.1f, 100f);
 					if(!pdWhat.isMarkedToExplode())break; //wont break to look for others nearby
 				}
 			}
@@ -546,6 +548,7 @@ public class PhysicsProjectileI {
 		if(pdWhat.getGlueWhere().isTerrain()) {
 //			v3fPos = pdWhat.getInstaTempWorldGlueSpot();
 			v3fPos = geomWhat.getWorldTranslation();
+			DecalI.i().createAtMainThread(null,v3fPos,EDecal.Exploded);
 			destroyProjectile(pdWhat);
 		}else {
 			reparentProjectile(sbnProjectilesAtWorld, pdWhat); //to position properly in the world

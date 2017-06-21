@@ -26,13 +26,17 @@
 */
 package com.github.devconslejme.misc.jme;
 
+import com.github.devconslejme.misc.Annotations.ToDo;
 import com.github.devconslejme.misc.GlobalManagerI;
+import com.github.devconslejme.misc.MessagesI;
 import com.github.devconslejme.misc.QueueI;
 import com.github.devconslejme.misc.QueueI.CallableXAnon;
 import com.github.devconslejme.misc.jme.ArrowGeometry.EFollowMode;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Quaternion;
+import com.jme3.math.Transform;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.scene.BatchNode;
@@ -100,12 +104,28 @@ public class GeometryI {
 		Node nodeCorrect = new Node();
 		@Override
 		public BoundingVolume getWorldBound() {
-			if(getParent() instanceof BatchNode) {
-				//TODO implement an alternative with nodeCorrect?
-				throw new UnsupportedOperationException("inside batchnode, it will not be correct");
-			}
-			
+			warnBatchNodeParentProblem();
 			return super.getWorldBound();
+		}
+		
+		/**
+		 * find a workaround as done for {@link #getWorldTranslation()}
+		 */
+		@ToDo
+		private void warnBatchNodeParentProblem() {
+			if(getParent() instanceof BatchNode)MessagesI.i().warnMsg(this, "inside batchnode, world bound it may not be correct...", this);
+		}
+
+		@Override
+		public Quaternion getWorldRotation() {
+			warnBatchNodeParentProblem();
+			return super.getWorldRotation();
+		}
+		
+		@Override
+		public Transform getWorldTransform() {
+			warnBatchNodeParentProblem();
+			return super.getWorldTransform();
 		}
 		
 		@Override
