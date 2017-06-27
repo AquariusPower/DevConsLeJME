@@ -52,7 +52,7 @@ public class DecalI {
 		public String s() {return this.toString();}
 	}
 	
-	private SimpleBatchNode	sbnProjectilesAtWorld = new SimpleBatchNode("Decals");
+	private SimpleBatchNode	sbnDecalsAtWorld = new SimpleBatchNode("Decals");
 	private Geometry geomFactoryBurn;
 	private Geometry geomFactoryHole;
 	private Geometry geomFactoryExploded;
@@ -65,6 +65,10 @@ public class DecalI {
 		geomFactoryExploded = GeometryI.i().create(new Sphere(4,5,0.05f), ColorRGBA.Cyan.add(c));
 	}
 	
+//	public void createAtMainThread(Geometry geomApplyAt, Vector3f v3fPosAboveRayCastFrom, Vector3f v3fLookAtDir, EDecal e) {
+//		
+//		createAtMainThread(geomApplyAt.getParent(), v3fPos, v3fUpOrNormal, v3fLookAtDir, e);
+//	}
 	public void createAtMainThread(Node nodeParent, Vector3f v3fPos, Vector3f v3fUpOrNormal, Vector3f v3fLookAtDir, EDecal e) {
 		QueueI.i().enqueue(new CallableXAnon() {
 			@Override
@@ -86,12 +90,16 @@ public class DecalI {
 				}
 				geom.scale(1f, 0.1f, 1); //this will be thin
 				
-				if(sbnProjectilesAtWorld.getParent()==null)AppI.i().getRootNode().attachChild(sbnProjectilesAtWorld);
+				if(sbnDecalsAtWorld.getParent()==null)AppI.i().getRootNode().attachChild(sbnDecalsAtWorld);
 //				(nodeParent!=null ? nodeParent : AppI.i().getRootNode()).attachChild(geomFactory.clone());
 				geom.setLocalTranslation(v3fPos);
 				geom.lookAt(geom.getWorldTranslation().add(v3fLookAtDir), v3fUpOrNormal);
-				(nodeParent!=null ? nodeParent : sbnProjectilesAtWorld).attachChild(geom);
-				if(nodeParent instanceof BatchNode)((BatchNode)nodeParent).batch();
+				
+				Node nodeParentDoIt=nodeParent;
+				if(nodeParentDoIt==null)nodeParentDoIt=sbnDecalsAtWorld;
+				nodeParentDoIt.attachChild(geom);
+				if(nodeParentDoIt instanceof BatchNode)((BatchNode)nodeParentDoIt).batch();
+				
 				return true;
 			}
 		});
