@@ -166,16 +166,6 @@ public class KeyCodeConfigureForJme {//implements AnalogListener,ActionListener{
 		}).enableLoopMode();
 	}
 
-	//	@Workaround
-//	private void pseudoAxisKeyUpdatePressed(String strKeyId,boolean bPressed){
-//		if(!bPressed)return;
-//		
-//		for(Key key:akAxis){
-//			if(key.getFullId().equals(strKeyId)){
-//				key.lPseudoPressedLastFrameId=EnvironmentJmeI.i().getCurrentFrameId();
-//			}
-//		}
-//	}
 	/**
 	 * the listener only receives the "pressed" event, not the "released"
 	 * as being an axis there it no actual trigger (neither press), but... on mouse stop
@@ -201,18 +191,6 @@ public class KeyCodeConfigureForJme {//implements AnalogListener,ActionListener{
 			if(key.isPressed())KeyCodeManagerI.i().refreshState(key.getFullId(), false, 0f);
 		}
 	}
-//	public static class PseudoKeyAxis{
-//		public long	lPseudoPressedLastFrameId;
-//		Key key;
-//		CallableX cxPseudoRelease = new CallableXAnon() {
-//			@Override
-//			public Boolean call() {
-//				if( lPseudoPressedLastFrameId >= EnvironmentJmeI.i().getFrameId(-1) )return false; //wait a gap (a lacking "pressed event" for the axis)
-//				KeyCodeManagerI.i().refreshPressedState(key.getFullId(), false);
-//				return true;
-//			}
-//		};
-//	}
 	
 	/** 
 	 * TODO should this be allowed to be called only once? other classes without conflicts would be no problem tho...
@@ -226,9 +204,6 @@ public class KeyCodeConfigureForJme {//implements AnalogListener,ActionListener{
 	private boolean fillKeyIdCode(){
 		Class<?> cl = KeyInput.class;
 		String strKeyIdPrefixFilter="KEY_";
-//		this.strKeyIdPrefixFilter=strKeyIdPrefixFilter;
-//		this.iKeyCodeForEscape=iKeyCodeForEscape;
-//		this.iKeyCodeForEnter=iKeyCodeForReturn;
 		
 		KeyCodeManagerI.i().setKeyIdPrefixFilter(strKeyIdPrefixFilter);
 		
@@ -278,26 +253,6 @@ public class KeyCodeConfigureForJme {//implements AnalogListener,ActionListener{
 		KeyCodeManagerI.i().addKey("ScrollLock", KeyInput.KEY_SCROLL);
 	}
 
-
-//	private void addKeyCodeMapping(Key key){
-//		assert key.isKeyWithCode();
-//		
-//		String strMapping=key.getFullId();
-//		
-//		if(key.getKeyCode()<=255){ //keytrigger limit TODO JME's only? or is a default to all keyboards?
-//			if(!inputman.hasMapping(strMapping)){
-//				inputman.addMapping(strMapping, new KeyTrigger(key.getKeyCode()));
-//			}
-//			/**
-//			 * if the "keycode id" mapping already existed, it will just add a listener to it!
-//			 */
-//			inputman.addListener(aclTriggers, strMapping);
-//		}else{
-//			throw new DetailedException("not supported keycode by input manager/mapping/trigger",key);
-////			MessagesI.i().warnMsg(this, "still not supported", key);
-//		}
-//	}
-
 	/**
 	 * @DevSelfNote Deprecated! keep as reference/info/reason to prevent reimplementation...
 	 * This would needlessly remove the keycode mappings for other already set before here.
@@ -315,20 +270,4 @@ public class KeyCodeConfigureForJme {//implements AnalogListener,ActionListener{
 		*/
 	}
 
-//	/**
-//	 * TPF ignored as the {@link CallableX#getTPF()} will be available when then
-//	 * related bound command (for the specified keys combination) is called.  
-//	 */
-//	@Override
-//	public void onAction(String strKeyId, boolean bPressed, float fTPF) {
-//		KeyCodeManagerI.i().refreshPressedState(strKeyId, bPressed);
-//	}
-	
-//	/**
-//	 * see {@link #onAction(String, boolean, float)}
-//	 */
-//	@Override
-//	public void onAnalog(String strKeyId, float fValue, float fTPF) {
-//		KeyCodeManagerI.i().refreshAnalogState(strKeyId, fValue);
-//	}
 }

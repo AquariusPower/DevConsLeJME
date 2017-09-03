@@ -1498,7 +1498,9 @@ public class SimpleGenericDialog extends AbstractGenericDialog {
 	}
 	
 	public Object getSelectedOptionValue(){
-		int i=getSelectedOptionIndex();
+		Integer i=getSelectedOptionIndex();
+		if(i==null)return null;
+		
 		OptionData od = vlodOptions.get(i);
 		if(od.isSection())return null;
 //		Object obj = vlodOptions.get(i).getStoredValue();
